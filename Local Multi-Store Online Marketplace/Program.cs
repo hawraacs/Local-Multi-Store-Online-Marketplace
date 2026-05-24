@@ -12,7 +12,8 @@ builder.Services.AddRazorPages();
 
 // Register your ApplicationDbContext (your custom database context)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
