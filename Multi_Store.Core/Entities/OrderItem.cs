@@ -6,36 +6,40 @@ using System.Threading.Tasks;
 
 namespace Multi_Store.Core.Entities
 {
-    public class OrderItem
-    {
-        // Primary Key
-        private int orderItemID;
+  
+        public class OrderItem
+        {
+            // Primary Key
+            public int OrderItemID { get; set; }
 
-        // Foreign Keys
-        private int orderID;
-        private int productID;
-        private int storeID;
+            // Foreign Keys
+            public int OrderID { get; set; }
 
-        // Attributes
-        private string productName;
+            public int ProductID { get; set; }
 
-        private decimal productPrice;
+            public int StoreID { get; set; }
 
-        private int quantity;
+            // Attributes
+            public string ProductName { get; set; } = string.Empty;
 
-        private decimal totalPrice;
+            public decimal ProductPrice { get; set; }
 
-        private bool reviewSubmitted;
+            public int Quantity { get; set; }
 
-        // Relationships
+            public decimal TotalPrice { get; set; }
 
-        // Many OrderItems belong to one Order
-        private Order order;
+            public bool ReviewSubmitted { get; set; }
 
-        // Many OrderItems reference one Product
-        private Product product;
+            // Relationships
 
-        // Many OrderItems belong to one Store
-        private Store store;
-    }
+            // Many OrderItems belong to one Order
+            public Order? Order { get; set; }
+
+            // Many OrderItems reference one Product
+            public Product? Product { get; set; }
+
+            // Many OrderItems belong to one Store
+            public Store? Store { get; set; }
+        }
+    
 }

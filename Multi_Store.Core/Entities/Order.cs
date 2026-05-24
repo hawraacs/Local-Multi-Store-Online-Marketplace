@@ -6,41 +6,50 @@ using System.Threading.Tasks;
 
 namespace Multi_Store.Core.Entities
 {
-    public class Order
-    {
-        // Primary Key
-        private int orderID;
+        public class Order
+        {
+            // Primary Key
+            public int OrderID { get; set; }
 
-        // Foreign Keys
-        private int customerID;
-        private int addressID;
+            // Foreign Keys
+            public int CustomerID { get; set; }
 
-        // Attributes
-        private string orderNumber;
-        private DateTime orderDate;
+            public int AddressID { get; set; }
 
-        private string status;
-        private string paymentMethod;
-        private string paymentStatus;
+            // Attributes
+            public string OrderNumber { get; set; } = string.Empty;
 
-        private decimal subtotal;
-        private decimal deliveryFee;
-        private decimal discountAmount;
-        private decimal taxAmount;
-        private decimal totalAmount;
+            public DateTime OrderDate { get; set; }
 
-        private string cancellationReason;
-        private DateTime? cancelledAt;
+            public string Status { get; set; } = string.Empty;
 
-        private string notes;
+            public string PaymentMethod { get; set; } = string.Empty;
 
-        // Relationships
+            public string PaymentStatus { get; set; } = string.Empty;
 
-        // Many Orders belong to one Customer
-        private Customer customer;
+            public decimal Subtotal { get; set; }
 
-        // Many Orders can use one Address
-        private CustomerAddress address;
-    }
+            public decimal DeliveryFee { get; set; }
 
+            public decimal DiscountAmount { get; set; }
+
+            public decimal TaxAmount { get; set; }
+
+            public decimal TotalAmount { get; set; }
+
+            public string? CancellationReason { get; set; }
+
+            public DateTime? CancelledAt { get; set; }
+
+            public string? Notes { get; set; }
+
+            // Relationships
+
+            // Many Orders belong to one Customer
+            public Customer? Customer { get; set; }
+
+            // Many Orders can use one Address
+            public CustomerAddress? Address { get; set; }
+        }
+    
 }
