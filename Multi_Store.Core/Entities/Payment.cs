@@ -15,7 +15,7 @@ namespace Multi_Store.Core.Entities
         public decimal? RefundAmount { get; set; }
         public DateTime? RefundDate { get; set; }
 
-        // Navigation property
+        // ⚠️ REQUIRED - Navigation property
         public virtual Order Order { get; set; } = null!;
     }
 }

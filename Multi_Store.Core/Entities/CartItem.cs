@@ -1,33 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿// Entities/CartItem.cs
+using System;
 
 namespace Multi_Store.Core.Entities
 {
-
     public class CartItem
     {
-        // Primary Key
-        private int cartItemID;
+        public int CartItemID { get; set; }
+        public int CartID { get; set; }
+        public int ProductID { get; set; }
+        public int Quantity { get; set; }
+        public decimal PriceAtAddTime { get; set; }
+        public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 
-        // Foreign Keys
-        private int cartID;
-        private int productID;
-
-        // Attributes
-        private int quantity;
-
-        // decimal is used in C# for money
-        private decimal priceAtAddTime;
-
-        // DateTime is used in C#
-        private DateTime addedAt;
-
-        // Relationships
-        private Cart cart;
-        private Product product;
+        // ⚠️ THESE NAVIGATION PROPERTIES ARE REQUIRED
+        public virtual Cart Cart { get; set; } = null!;
+        public virtual Product Product { get; set; } = null!;
     }
 }

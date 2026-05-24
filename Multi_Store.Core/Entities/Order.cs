@@ -1,55 +1,45 @@
-﻿using System;
+﻿// Entities/Order.cs
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Multi_Store.Core.Entities
 {
-        public class Order
-        {
-            // Primary Key
-            public int OrderID { get; set; }
+    public class Order
+    {
+        public int OrderID { get; set; }
+        public string OrderNumber { get; set; } = string.Empty;
+        public int CustomerID { get; set; }
+        public int AddressID { get; set; }
+        public DateTime OrderDate { get; set; } = DateTime.UtcNow;
+        public string Status { get; set; } = "Pending";
+        public string PaymentMethod { get; set; } = string.Empty;
+        public string PaymentStatus { get; set; } = "Unpaid";
+        public decimal Subtotal { get; set; }
+        public decimal DeliveryFee { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public decimal TaxAmount { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string? CancellationReason { get; set; }
+        public DateTime? CancelledAt { get; set; }
+        public string? Notes { get; set; }
 
-            // Foreign Keys
-            public int CustomerID { get; set; }
+        // ⚠️ ALL THESE NAVIGATION PROPERTIES ARE REQUIRED
+        public virtual Customer Customer { get; set; } = null!;
+        public virtual CustomerAddress Address { get; set; } = null!;
 
-            public int AddressID { get; set; }
+        // OrderItems collection
+        public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
-            // Attributes
-            public string OrderNumber { get; set; } = string.Empty;
+        // StatusHistory collection
+        public virtual ICollection<OrderStatusHistory> StatusHistory { get; set; } = new List<OrderStatusHistory>();
 
-            public DateTime OrderDate { get; set; }
+        // Payments collection
+        public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
-            public string Status { get; set; } = string.Empty;
+        // RefundRequest (optional one-to-one)
+        public virtual RefundRequest? RefundRequest { get; set; }
 
-            public string PaymentMethod { get; set; } = string.Empty;
-
-            public string PaymentStatus { get; set; } = string.Empty;
-
-            public decimal Subtotal { get; set; }
-
-            public decimal DeliveryFee { get; set; }
-
-            public decimal DiscountAmount { get; set; }
-
-            public decimal TaxAmount { get; set; }
-
-            public decimal TotalAmount { get; set; }
-
-            public string? CancellationReason { get; set; }
-
-            public DateTime? CancelledAt { get; set; }
-
-            public string? Notes { get; set; }
-
-            // Relationships
-
-            // Many Orders belong to one Customer
-            public Customer? Customer { get; set; }
-
-            // Many Orders can use one Address
-            public CustomerAddress? Address { get; set; }
-        }
-    
+        // DeliveryAssignment (optional one-to-one)
+        public virtual DeliveryAssignment? DeliveryAssignment { get; set; }
+    }
 }

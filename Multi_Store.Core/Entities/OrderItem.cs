@@ -1,45 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿// Entities/OrderItem.cs
 namespace Multi_Store.Core.Entities
 {
-  
-        public class OrderItem
-        {
-            // Primary Key
-            public int OrderItemID { get; set; }
+    public class OrderItem
+    {
+        public int OrderItemID { get; set; }
+        public int OrderID { get; set; }
+        public int ProductID { get; set; }
+        public int StoreID { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public decimal ProductPrice { get; set; }
+        public int Quantity { get; set; }
+        public decimal TotalPrice { get; set; }
+        public bool ReviewSubmitted { get; set; } = false;
 
-            // Foreign Keys
-            public int OrderID { get; set; }
+        // Navigation properties
+        public virtual Order Order { get; set; } = null!;
+        public virtual Product Product { get; set; } = null!;
+        public virtual Store Store { get; set; } = null!;
 
-            public int ProductID { get; set; }
-
-            public int StoreID { get; set; }
-
-            // Attributes
-            public string ProductName { get; set; } = string.Empty;
-
-            public decimal ProductPrice { get; set; }
-
-            public int Quantity { get; set; }
-
-            public decimal TotalPrice { get; set; }
-
-            public bool ReviewSubmitted { get; set; }
-
-            // Relationships
-
-            // Many OrderItems belong to one Order
-            public Order? Order { get; set; }
-
-            // Many OrderItems reference one Product
-            public Product? Product { get; set; }
-
-            // Many OrderItems belong to one Store
-            public Store? Store { get; set; }
-        }
-    
+        // ⚠️ Review property - MAKE SURE THIS EXISTS
+        public virtual Review? Review { get; set; }
+    }
 }

@@ -1,40 +1,46 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Local_Multi_Store_Online_Marketplace.Data;
+using Multi_Store.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+// =============================================
+// 1. ADD SERVICES TO THE CONTAINER
+// =============================================
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+// Add Razor Pages support
 builder.Services.AddRazorPages();
+
+// Register your ApplicationDbContext (your custom database context)
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// =============================================
+// 2. SEED THE DATABASE (IMPORTANT!)
+// =============================================
+// This creates Roles (Admin, Customer, StoreOwner, DeliveryStaff)
+// and creates the default Admin user
+using (var scope = app.Services.CreateScope())
 {
-    app.UseMigrationsEndPoint();
+    var services = scope.ServiceProvider;
+    await SeedData.InitializeAsync(services);
 }
-else
+
+// =============================================
+// 3. CONFIGURE HTTP PIPELINE
+// =============================================
+
+if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    app.UseHsts();  // HTTP Strict Transport Security
 }
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseHttpsRedirection();   // Redirect HTTP to HTTPS
+app.UseStaticFiles();         // Serve static files (CSS, JS, Images)
+app.UseRouting();             // Enable routing
+app.UseAuthorization();       // Enable authorization (roles)
+app.MapRazorPages();          // Map Razor Pages endpoints
 
-app.UseRouting();
-
-app.UseAuthorization();
-
-app.MapRazorPages();
-
-app.Run();
+app.Run();  // Run the application
