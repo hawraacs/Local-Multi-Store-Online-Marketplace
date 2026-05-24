@@ -8,12 +8,8 @@ using System.Threading.Tasks;
 namespace Multi_Store.Core.Entities
 {
 
-    import java.Math.BigDecimal;
-    import java.time.LocalDateTime;
-
     public class CartItem
     {
-
         // Primary Key
         private int cartItemID;
 
@@ -23,15 +19,15 @@ namespace Multi_Store.Core.Entities
 
         // Attributes
         private int quantity;
-        private BigDecimal priceAtAddTime;
-        private LocalDateTime addedAt;
+
+        // decimal is used in C# for money
+        private decimal priceAtAddTime;
+
+        // DateTime is used in C#
+        private DateTime addedAt;
 
         // Relationships
-
-        // Many CartItems belong to one Cart
         private Cart cart;
-
-        // Many CartItems reference one Product
         private Product product;
     }
 }
