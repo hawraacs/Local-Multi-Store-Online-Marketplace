@@ -1,29 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Entities/Wishlist.cs
+using System;
 
 namespace Multi_Store.Core.Entities
 {
     public class Wishlist
     {
-        // Primary Key
-        private int wishlistID;
+        public int WishlistID { get; set; }
+        public int CustomerID { get; set; }
+        public int ProductID { get; set; }
+        public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 
-        // Foreign Keys
-        private int customerID;
-        private int productID;
-
-        // Attributes
-        private DateTime addedAt;
-
-        // Relationships
-
-        // Many wishlist entries belong to one customer
-        private Customer customer;
-
-        // Many wishlist entries can reference one product
-        private Product product;
+        // Navigation properties
+        public virtual Customer Customer { get; set; } = null!;
+        public virtual Product Product { get; set; } = null!;
     }
 }

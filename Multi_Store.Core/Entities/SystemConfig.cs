@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 
 namespace Multi_Store.Core.Entities
 {

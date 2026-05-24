@@ -12,7 +12,7 @@ namespace Multi_Store.Core.Entities
         public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
         public string? Notes { get; set; }
 
-        // Navigation property
+        // ⚠️ REQUIRED - Navigation property
         public virtual Order Order { get; set; } = null!;
     }
 }

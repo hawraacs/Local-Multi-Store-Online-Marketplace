@@ -1,38 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Entities/Coupon.cs
+using System;
 
 namespace Multi_Store.Core.Entities
 {
     public class Coupon
     {
-        // Primary Key
-        private int couponID;
+        public int CouponID { get; set; }
+        public int? StoreID { get; set; }
 
-        // Foreign Key (Nullable)
-        private int? storeID;
+        // ⚠️ MAKE SURE THIS EXISTS - CouponCode
+        public string CouponCode { get; set; } = string.Empty;
 
-        // Attributes
-        private string couponCode;
-        private string discountType;
-        private decimal discountValue;
-        private decimal minimumOrderAmount;
-        private decimal maximumDiscountAmount;
+        public string DiscountType { get; set; } = string.Empty;
+        public decimal DiscountValue { get; set; }
+        public decimal? MinimumOrderAmount { get; set; }
+        public decimal? MaximumDiscountAmount { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public int? UsageLimit { get; set; }
+        public int? UsagePerCustomerLimit { get; set; }
+        public int UsedCount { get; set; } = 0;
+        public bool IsActive { get; set; } = true;
 
-        private DateTime startDate;
-        private DateTime endDate;
-
-        private int usageLimit;
-        private int usagePerCustomerLimit;
-        private int usedCount;
-
-        private bool isActive;
-
-        // Relationships
-
-        // Many coupons can belong to one store
-        private Store store;
+        // ⚠️ MAKE SURE THIS EXISTS - Store navigation property
+        public virtual Store? Store { get; set; }
     }
 }
