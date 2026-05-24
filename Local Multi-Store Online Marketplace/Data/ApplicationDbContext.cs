@@ -1,6 +1,4 @@
 ﻿// Data/ApplicationDbContext.cs
-using System.Collections.Generic;
-using System.Reflection.Emit;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 
@@ -10,6 +8,11 @@ namespace Multi_Store.Data
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
+        {
+        }
+
+        // Default constructor for migrations
+        public ApplicationDbContext()
         {
         }
 
@@ -47,6 +50,37 @@ namespace Multi_Store.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // =============================================
+            // EXPLICIT PRIMARY KEYS (Fix for ChatMessage and others)
+            // =============================================
+            modelBuilder.Entity<AuditLog>().HasKey(e => e.AuditLogID);
+            modelBuilder.Entity<Cart>().HasKey(e => e.CartID);
+            modelBuilder.Entity<CartItem>().HasKey(e => e.CartItemID);
+            modelBuilder.Entity<Category>().HasKey(e => e.CategoryID);
+            modelBuilder.Entity<ChatMessage>().HasKey(e => e.MessageID);
+            modelBuilder.Entity<Complaint>().HasKey(e => e.ComplaintID);
+            modelBuilder.Entity<Coupon>().HasKey(e => e.CouponID);
+            modelBuilder.Entity<Customer>().HasKey(e => e.CustomerID);
+            modelBuilder.Entity<CustomerAddress>().HasKey(e => e.AddressID);
+            modelBuilder.Entity<DeliveryArea>().HasKey(e => e.DeliveryAreaID);
+            modelBuilder.Entity<DeliveryAssignment>().HasKey(e => e.AssignmentID);
+            modelBuilder.Entity<DeliveryPerson>().HasKey(e => e.DeliveryPersonID);
+            modelBuilder.Entity<Notification>().HasKey(e => e.NotificationID);
+            modelBuilder.Entity<Order>().HasKey(e => e.OrderID);
+            modelBuilder.Entity<OrderItem>().HasKey(e => e.OrderItemID);
+            modelBuilder.Entity<OrderStatusHistory>().HasKey(e => e.StatusHistoryID);
+            modelBuilder.Entity<Payment>().HasKey(e => e.PaymentID);
+            modelBuilder.Entity<Product>().HasKey(e => e.ProductID);
+            modelBuilder.Entity<ProductImage>().HasKey(e => e.ImageID);
+            modelBuilder.Entity<RefundRequest>().HasKey(e => e.RefundRequestID);
+            modelBuilder.Entity<Review>().HasKey(e => e.ReviewID);
+            modelBuilder.Entity<Role>().HasKey(e => e.RoleID);
+            modelBuilder.Entity<Session>().HasKey(e => e.SessionID);
+            modelBuilder.Entity<Store>().HasKey(e => e.StoreID);
+            modelBuilder.Entity<SystemConfig>().HasKey(e => e.ConfigID);
+            modelBuilder.Entity<User>().HasKey(e => e.UserID);
+            modelBuilder.Entity<Wishlist>().HasKey(e => e.WishlistID);
 
             // =============================================
             // UNIQUE CONSTRAINTS
@@ -296,14 +330,6 @@ namespace Multi_Store.Data
                 .WithMany(u => u.ReceivedMessages)
                 .HasForeignKey(cm => cm.ReceiverID)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // =============================================
-            // MANY-TO-MANY RELATIONSHIPS (Via Junction Tables)
-            // =============================================
-
-            // Product ↔ Cart (via CartItem) - Already configured above
-            // Product ↔ Order (via OrderItem) - Already configured above
-            // Customer ↔ Product (via Wishlist) - Already configured above
 
             // =============================================
             // ADDITIONAL CONFIGURATIONS
