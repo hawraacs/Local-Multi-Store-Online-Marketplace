@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Multi_Store.Data;
+using Multi_Store.Infrastructure.Data;
 
 #nullable disable
 
-namespace Local_Multi_Store_Online_Marketplace.Data.Migrations
+namespace Multi_Store.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260524220653_InitialCreate")]
+    [Migration("20260526155731_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

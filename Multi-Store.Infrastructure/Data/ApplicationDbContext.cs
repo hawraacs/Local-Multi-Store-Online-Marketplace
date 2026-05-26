@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 
-namespace Multi_Store.Data
+namespace Multi_Store.Infrastructure.Data
 {
     public class ApplicationDbContext : DbContext
     {
