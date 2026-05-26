@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class Role
+    public class RoleDTO
     {
         public int RoleID { get; set; }
 

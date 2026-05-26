@@ -2,7 +2,7 @@
 
 namespace Multi_Store.Services.Dtos
 {
-    public class Session
+    public class SessionDTO
     {
         public int SessionID { get; set; }
         public int UserID { get; set; }

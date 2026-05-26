@@ -3,7 +3,7 @@ using System;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class Wishlist
+    public class WishlistDTO
     {
         public int WishlistID { get; set; }
         public int CustomerID { get; set; }

@@ -1,6 +1,6 @@
 namespace Multi_Store.Services.Dtos
 {
-    public class DeliveryArea
+    public class DeliveryAreaDTO
     {
         public int DeliveryAreaID { get; set; }
         public int StoreID { get; set; }

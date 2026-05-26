@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class Store
+    public class StoreDTO
     {
         public int StoreID { get; set; }
         public int OwnerUserID { get; set; }

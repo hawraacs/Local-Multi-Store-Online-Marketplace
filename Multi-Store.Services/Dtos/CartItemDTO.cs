@@ -3,7 +3,7 @@ using System;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class CartItem
+    public class CartItemDTO
     {
         public int CartItemID { get; set; }
         public int CartID { get; set; }

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class Category
+    public class CategoryDTO
     {
         public int CategoryID { get; set; }
 

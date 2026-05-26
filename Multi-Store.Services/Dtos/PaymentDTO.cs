@@ -2,7 +2,7 @@
 
 namespace Multi_Store.Services.Dtos
 {
-    public class Payment
+    public class PaymentDTO
     {
         public int PaymentID { get; set; }
         public int OrderID { get; set; }

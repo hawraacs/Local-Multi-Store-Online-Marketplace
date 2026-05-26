@@ -1,6 +1,6 @@
 namespace Multi_Store.Services.Dtos
 {
-    public class ProductImage
+    public class ProductImageDTO
     {
         public int ImageID { get; set; }
 

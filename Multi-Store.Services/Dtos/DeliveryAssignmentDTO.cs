@@ -2,7 +2,7 @@ using System;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class DeliveryAssignment
+    public class DeliveryAssignmentDTO
     {
         // Primary Key
         public int AssignmentID { get; set; }

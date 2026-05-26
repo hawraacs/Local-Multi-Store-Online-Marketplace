@@ -3,7 +3,7 @@ using System;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class Coupon
+    public class CouponDTO
     {
         public int CouponID { get; set; }
         public int? StoreID { get; set; }

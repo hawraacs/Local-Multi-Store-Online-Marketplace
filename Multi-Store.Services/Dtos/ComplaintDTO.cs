@@ -2,7 +2,7 @@ using System;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class Complaint
+    public class ComplaintDTO
     {
         // Primary Key
         public int ComplaintID { get; set; }
