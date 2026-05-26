@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Multi_Store.Data;
+
+using Multi_Store.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,7 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     await SeedData.InitializeAsync(services);
 }
+
 
 // =============================================
 // 3. CONFIGURE HTTP PIPELINE

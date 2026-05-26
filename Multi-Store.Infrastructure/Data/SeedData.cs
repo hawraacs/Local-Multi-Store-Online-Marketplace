@@ -5,7 +5,7 @@ using Multi_Store.Core.Entities;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Multi_Store.Data
+namespace Multi_Store.Infrastructure.Data
 {
     public static class SeedData
     {
