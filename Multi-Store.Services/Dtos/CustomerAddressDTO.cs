@@ -2,7 +2,7 @@
 namespace Multi_Store.Services.Dtos
 
 {
-    public class CustomerAddress
+    public class CustomerAddressDTO
     {
         public int AddressID { get; set; }
 
