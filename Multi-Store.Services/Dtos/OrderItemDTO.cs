@@ -1,7 +1,7 @@
 ﻿// Entities/OrderItem.cs
 namespace Multi_Store.Services.Dtos
 {
-    public class OrderItem
+    public class OrderItemDTO
     {
         public int OrderItemID { get; set; }
         public int OrderID { get; set; }

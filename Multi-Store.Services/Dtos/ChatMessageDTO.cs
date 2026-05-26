@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class ChatMessage
+    public class ChatMessageDTO
     {
         [Key]
         public int MessageID { get; set; }

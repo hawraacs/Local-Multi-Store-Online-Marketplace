@@ -2,7 +2,7 @@ using System;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class RefundRequest
+    public class RefundRequestDTO
     {
         // Primary Key
         public int RefundRequestID { get; set; }

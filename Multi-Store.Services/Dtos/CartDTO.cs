@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class Cart
+    public class CartDTO
     {
         public int CartID { get; set; }
         public int? CustomerID { get; set; }

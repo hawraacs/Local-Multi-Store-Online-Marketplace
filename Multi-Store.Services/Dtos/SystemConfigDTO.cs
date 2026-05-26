@@ -3,7 +3,7 @@ using System;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class SystemConfig
+    public class SystemConfigDTO
     {
         public int ConfigID { get; set; }
         public string ConfigKey { get; set; } = string.Empty;

@@ -2,7 +2,7 @@
 
 namespace Multi_Store.Services.Dtos
 {
-    public class OrderStatusHistory
+    public class OrderStatusHistoryDTO
     {
         public int StatusHistoryID { get; set; }
         public int OrderID { get; set; }

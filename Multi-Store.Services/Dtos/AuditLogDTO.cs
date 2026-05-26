@@ -2,7 +2,7 @@
 
 namespace Multi_Store.Services.Dtos
 {
-    public class AuditLog
+    public class AuditLogDTO 
     {
         public int AuditLogID { get; set; }
         public int UserID { get; set; }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Multi_Store.Services.Dtos
 {
-    public class Order
+    public class OrderDTO
     {
         public int OrderID { get; set; }
         public string OrderNumber { get; set; } = string.Empty;
