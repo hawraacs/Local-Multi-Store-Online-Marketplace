@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Multi_Store.Core.Reposinterface;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Infrastructure.Repositories;
@@ -42,6 +43,7 @@ builder.Services.AddScoped<IStoreRepository, StoreRepository>();
 builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
+
 var app = builder.Build();
 
 // =============================================
