@@ -23,4 +23,3 @@ namespace Multi_Store.Core.Reposinterface
         Task<IReadOnlyList<Order>> GetRecentOrdersAsync(int count);
     }
 }
-}
