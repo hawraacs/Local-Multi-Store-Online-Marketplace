@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Multi_Store.Core.Entities;
+using System;
 using System.Collections.Generic;
 
 namespace Multi_Store.Services.Dtos

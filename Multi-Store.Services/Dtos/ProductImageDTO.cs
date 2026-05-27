@@ -1,3 +1,5 @@
+using Multi_Store.Core.Entities;
+
 namespace Multi_Store.Services.Dtos
 {
     public class ProductImageDTO
