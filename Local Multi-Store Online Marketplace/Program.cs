@@ -6,9 +6,6 @@ using Multi_Store.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// =============================================
-// 1. ADD SERVICES TO THE CONTAINER
-// =============================================
 
 // Add Razor Pages support
 builder.Services.AddRazorPages();
@@ -16,6 +13,7 @@ builder.Services.AddRazorPages();
 // Register your ApplicationDbContext (your custom database context)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
@@ -46,11 +44,7 @@ builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 
 var app = builder.Build();
 
-// =============================================
-// 2. SEED THE DATABASE (IMPORTANT!)
-// =============================================
-// This creates Roles (Admin, Customer, StoreOwner, DeliveryStaff)
-// and creates the default Admin user
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -58,9 +52,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 
-// =============================================
-// 3. CONFIGURE HTTP PIPELINE
-// =============================================
+
 
 if (!app.Environment.IsDevelopment())
 {
