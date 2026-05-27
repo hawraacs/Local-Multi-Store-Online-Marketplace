@@ -1,4 +1,6 @@
 ﻿// Entities/OrderItem.cs
+using Multi_Store.Core.Entities;
+
 namespace Multi_Store.Services.Dtos
 {
     public class OrderItemDTO

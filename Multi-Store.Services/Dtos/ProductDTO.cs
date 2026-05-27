@@ -1,3 +1,4 @@
+using Multi_Store.Core.Entities;
 using System;
 using System.Collections.Generic;
 
