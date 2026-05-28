@@ -92,5 +92,6 @@ app.UseStaticFiles();         // Serve static files (CSS, JS, Images)
 app.UseRouting();             // Enable routing
 app.UseAuthorization();       // Enable authorization (roles)
 app.MapRazorPages();          // Map Razor Pages endpoints
+app.MapDefaultControllerRoute();
 
 app.Run();  // Run the application
