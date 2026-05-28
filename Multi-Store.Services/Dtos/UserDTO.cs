@@ -7,17 +7,17 @@ namespace Multi_Store.Services.Dtos
     public class UserDTO
     {
         public int UserID { get; set; }
-        public int RoleID { get; set; }
+      
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
-        public string PasswordHash { get; set; } = string.Empty;
+        
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLoginAt { get; set; }
 
         // Navigation properties - MAKE SURE ALL EXIST
-        public virtual Role Role { get; set; } = null!;
+        
 
         // ⚠️ Customer property
         public virtual Customer? Customer { get; set; }
