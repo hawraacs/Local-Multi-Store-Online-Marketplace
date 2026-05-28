@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using sun.security.util;
 
 namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 {
@@ -123,6 +124,8 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                     _logger.LogInformation("User created a new account with password.");
 
                     var userId = await _userManager.GetUserIdAsync(user);
+                    await _userManager.CreateAsync(user);
+                    await _userManager.AddToRoleAsync(user, "Customer");
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                     var callbackUrl = Url.Page(
