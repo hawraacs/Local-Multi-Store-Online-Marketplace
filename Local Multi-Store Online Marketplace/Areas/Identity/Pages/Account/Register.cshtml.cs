@@ -194,7 +194,7 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         }
 
         private User CreateUser()
-        {
+        { 
             try
             {
                 return Activator.CreateInstance<User>();
