@@ -1,6 +1,6 @@
-﻿
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
+
 #nullable disable
 
 using System;
@@ -18,11 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-<<<<<<< HEAD
-using sun.security.util;
-=======
 using Multi_Store.Core.Entities;
->>>>>>> 8dfd57c7bc40d1ccfe815aa86c21453792f45e85
 
 namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 {
@@ -65,7 +61,8 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             [Required]
-            [StringLength(100,
+            [StringLength(
+                100,
                 ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.",
                 MinimumLength = 6)]
             [DataType(DataType.Password)]
@@ -74,11 +71,10 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
-            [Compare("Password",
+            [Compare(
+                "Password",
                 ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
-
-            // Optional extra fields
 
             [Required]
             [Display(Name = "Full Name")]
@@ -93,8 +89,7 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         {
             ReturnUrl = returnUrl;
 
-            ExternalLogins =
-                (await _signInManager
+            ExternalLogins = (await _signInManager
                 .GetExternalAuthenticationSchemesAsync())
                 .ToList();
         }
@@ -103,8 +98,7 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
 
-            ExternalLogins =
-                (await _signInManager
+            ExternalLogins = (await _signInManager
                 .GetExternalAuthenticationSchemesAsync())
                 .ToList();
 
@@ -127,18 +121,19 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                     Input.Email,
                     CancellationToken.None);
 
-                var result =
-                    await _userManager.CreateAsync(
-                        user,
-                        Input.Password);
+                var result = await _userManager.CreateAsync(
+                    user,
+                    Input.Password);
 
                 if (result.Succeeded)
                 {
                     _logger.LogInformation(
                         "User created a new account with password.");
 
-                    // Default Role
-                    await _userManager.AddToRoleAsync(user, "Customer");
+                    // Add default role
+                    await _userManager.AddToRoleAsync(
+                        user,
+                        "Customer");
 
                     var userId =
                         await _userManager.GetUserIdAsync(user);
@@ -150,14 +145,6 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                     code = WebEncoders.Base64UrlEncode(
                         Encoding.UTF8.GetBytes(code));
 
-<<<<<<< HEAD
-                    var userId = await _userManager.GetUserIdAsync(user);
-                    await _userManager.CreateAsync(user);
-                    await _userManager.AddToRoleAsync(user, "Customer");
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-=======
->>>>>>> 8dfd57c7bc40d1ccfe815aa86c21453792f45e85
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
