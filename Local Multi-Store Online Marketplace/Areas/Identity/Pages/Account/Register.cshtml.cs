@@ -56,40 +56,86 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 
         public class InputModel
         {
+<<<<<<< HEAD
+            [Required]
+            [Display(Name = "Full Name")]
+            public string FullName { get; set; }
+
+=======
+>>>>>>> c782227c2431d127b655e8a1e16d2b9e87752166
             [Required]
             [EmailAddress]
             [Display(Name = "Email")]
             public string Email { get; set; }
 
+<<<<<<< HEAD
+            [Phone]
+            [Display(Name = "Phone Number")]
+            public string PhoneNumber { get; set; }
+
+=======
+>>>>>>> c782227c2431d127b655e8a1e16d2b9e87752166
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [StringLength(
+                100,
+                ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.",
+                MinimumLength = 6)]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
             public string Password { get; set; }
 
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
-            [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+            [Compare(
+                "Password",
+                ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
         }
 
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            ExternalLogins =
+                (await _signInManager
+                .GetExternalAuthenticationSchemesAsync())
+                .ToList();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            ExternalLogins =
+                (await _signInManager
+                .GetExternalAuthenticationSchemesAsync())
+                .ToList();
+
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
 
-                await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-                var result = await _userManager.CreateAsync(user, Input.Password);
+                user.FullName = Input.FullName;
+                user.Email = Input.Email;
+                user.PhoneNumber = Input.PhoneNumber;
+                user.UserName = Input.Email;
+                user.IsActive = true;
+                user.CreatedAt = DateTime.UtcNow;
+
+                await _userStore.SetUserNameAsync(
+                    user,
+                    Input.Email,
+                    CancellationToken.None);
+
+                await _emailStore.SetEmailAsync(
+                    user,
+                    Input.Email,
+                    CancellationToken.None);
+
+                var result =
+                    await _userManager.CreateAsync(
+                        user,
+                        Input.Password);
 
                 var result = await _userManager.CreateAsync(
                     user,
@@ -99,12 +145,25 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation(
                         "User created a new account with password.");
+<<<<<<< HEAD
 
-                    var userId = await _userManager.GetUserIdAsync(user);
-                    await _userManager.CreateAsync(user);
-                    await _userManager.AddToRoleAsync(user, "Customer");
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                    // Default role
+                    await _userManager.AddToRoleAsync(
+                        user,
+                        "Customer");
+
+                    var userId =
+                        await _userManager.GetUserIdAsync(user);
+
+                    var code =
+                        await _userManager
+                        .GenerateEmailConfirmationTokenAsync(user);
+
+                    code = WebEncoders.Base64UrlEncode(
+                        Encoding.UTF8.GetBytes(code));
+=======
+>>>>>>> c782227c2431d127b655e8a1e16d2b9e87752166
+
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
@@ -124,7 +183,10 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                         $"<a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>" +
                         $"clicking here</a>.");
 
-                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                    if (_userManager
+                        .Options
+                        .SignIn
+                        .RequireConfirmedAccount)
                     {
                         return RedirectToPage(
                             "RegisterConfirmation",
@@ -153,7 +215,7 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
             return Page();
         }
 
-        private IdentityUser CreateUser()
+        private User CreateUser()
         {
             try
             {
@@ -162,9 +224,13 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
             catch
             {
                 throw new InvalidOperationException(
+<<<<<<< HEAD
+                    $"Can't create an instance of '{nameof(User)}'.");
+=======
                     $"Can't create an instance of '{nameof(User)}'. " +
                     $"Ensure that '{nameof(User)}' is not abstract " +
                     $"and has a parameterless constructor.");
+>>>>>>> c782227c2431d127b655e8a1e16d2b9e87752166
             }
         }
 
