@@ -13,20 +13,17 @@ namespace Multi_Store.Services.Managers
     public class UserManager
     {
         private readonly IUserRepository _userRepository;
-        private readonly IRoleRepository _roleRepository;
         private readonly IAuditLogRepository _auditLogRepository;
         private readonly ISessionRepository _sessionRepository;
         private readonly IMapper _mapper;
 
         public UserManager(
             IUserRepository userRepository,
-            IRoleRepository roleRepository,
             IAuditLogRepository auditLogRepository,
             ISessionRepository sessionRepository,
             IMapper mapper)
         {
             _userRepository = userRepository;
-            _roleRepository = roleRepository;
             _auditLogRepository = auditLogRepository;
             _sessionRepository = sessionRepository;
             _mapper = mapper;
@@ -49,7 +46,7 @@ namespace Multi_Store.Services.Managers
         {
             var user = await _userRepository.GetByIdAsync(id);
 
-            return _mapper.Map<UserDTO>(user);
+            return user == null ? null : _mapper.Map<UserDTO>(user);
         }
 
         // =========================
@@ -59,7 +56,7 @@ namespace Multi_Store.Services.Managers
         {
             var user = await _userRepository.GetByEmailAsync(email);
 
-            return _mapper.Map<UserDTO>(user);
+            return user == null ? null : _mapper.Map<UserDTO>(user);
         }
 
         // =========================
@@ -69,17 +66,7 @@ namespace Multi_Store.Services.Managers
         {
             var user = await _userRepository.GetByPhoneAsync(phone);
 
-            return _mapper.Map<UserDTO>(user);
-        }
-
-        // =========================
-        // Get By Role
-        // =========================
-        public async Task<IEnumerable<UserDTO>> GetByRoleAsync(int roleId)
-        {
-            var users = await _userRepository.GetByRoleAsync(roleId);
-
-            return _mapper.Map<IEnumerable<UserDTO>>(users);
+            return user == null ? null : _mapper.Map<UserDTO>(user);
         }
 
         // =========================
@@ -95,7 +82,7 @@ namespace Multi_Store.Services.Managers
         // =========================
         // Add User
         // =========================
-        public async Task<int> AddUserAsync(
+        public async Task<string> AddUserAsync(
             UserDTO userDTO,
             string ipAddress,
             string userAgent)
@@ -105,11 +92,6 @@ namespace Multi_Store.Services.Managers
 
             if (await _userRepository.PhoneExistsAsync(userDTO.PhoneNumber))
                 throw new Exception("Phone number already exists.");
-
-            var role = await _roleRepository.GetByIdAsync(userDTO.RoleID);
-
-            if (role == null)
-                throw new Exception("Role not found.");
 
             var user = _mapper.Map<User>(userDTO);
 
@@ -121,10 +103,10 @@ namespace Multi_Store.Services.Managers
             // Audit Log
             await _auditLogRepository.AddAsync(new AuditLog
             {
-                UserID = user.UserID,
+                UserID = user.Id,
                 Action = "Register",
                 EntityName = "User",
-                EntityID = user.UserID.ToString(),
+                EntityID = user.Id.ToString(),
                 OldValue = null,
                 NewValue = $"User {user.Email} registered.",
                 IPAddress = ipAddress,
@@ -132,7 +114,7 @@ namespace Multi_Store.Services.Managers
                 ActionDate = DateTime.UtcNow
             });
 
-            return user.UserID;
+            return user.Id.ToString();
         }
 
         // =========================
@@ -165,10 +147,10 @@ namespace Multi_Store.Services.Managers
             // Audit Log
             await _auditLogRepository.AddAsync(new AuditLog
             {
-                UserID = existingUser.UserID,
+                UserID = existingUser.Id,
                 Action = "Update",
                 EntityName = "User",
-                EntityID = existingUser.UserID.ToString(),
+                EntityID = existingUser.Id.ToString(),
                 OldValue = oldValue,
                 NewValue = newValue,
                 IPAddress = ipAddress,
@@ -195,70 +177,16 @@ namespace Multi_Store.Services.Managers
             // Audit Log
             await _auditLogRepository.AddAsync(new AuditLog
             {
-                UserID = user.UserID,
+                UserID = user.Id,
                 Action = "Delete",
                 EntityName = "User",
-                EntityID = user.UserID.ToString(),
+                EntityID = user.Id.ToString(),
                 OldValue = user.Email,
                 NewValue = null,
                 IPAddress = ipAddress,
                 UserAgent = userAgent,
                 ActionDate = DateTime.UtcNow
             });
-        }
-
-        // =========================
-        // Login
-        // =========================
-        public async Task<bool> LoginAsync(
-            string email,
-            string passwordHash,
-            string sessionToken,
-            string ipAddress,
-            string userAgent)
-        {
-            var user = await _userRepository.GetByEmailAsync(email);
-
-            if (user == null)
-                return false;
-
-            if (!user.IsActive)
-                return false;
-
-            if (user.PasswordHash != passwordHash)
-                return false;
-
-            user.LastLoginAt = DateTime.UtcNow;
-
-            await _userRepository.UpdateAsync(user);
-
-            // Create Session
-            await _sessionRepository.AddAsync(new Session
-            {
-                UserID = user.UserID,
-                SessionToken = sessionToken,
-                IPAddress = ipAddress,
-                UserAgent = userAgent,
-                LastActivityAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(30),
-                IsActive = true
-            });
-
-            // Audit Log
-            await _auditLogRepository.AddAsync(new AuditLog
-            {
-                UserID = user.UserID,
-                Action = "Login",
-                EntityName = "User",
-                EntityID = user.UserID.ToString(),
-                OldValue = null,
-                NewValue = "User logged in.",
-                IPAddress = ipAddress,
-                UserAgent = userAgent,
-                ActionDate = DateTime.UtcNow
-            });
-
-            return true;
         }
 
         // =========================
@@ -284,7 +212,7 @@ namespace Multi_Store.Services.Managers
                 UserID = session.UserID,
                 Action = "Logout",
                 EntityName = "Session",
-                EntityID = session.SessionID.ToString(),
+                
                 OldValue = "Active",
                 NewValue = "Inactive",
                 IPAddress = ipAddress,
@@ -328,10 +256,10 @@ namespace Multi_Store.Services.Managers
 
             await _auditLogRepository.AddAsync(new AuditLog
             {
-                UserID = user.UserID,
+                UserID = user.Id,
                 Action = "Block",
                 EntityName = "User",
-                EntityID = user.UserID.ToString(),
+                EntityID = user.Id.ToString(),
                 OldValue = "Active",
                 NewValue = "Blocked",
                 IPAddress = ipAddress,
@@ -344,7 +272,7 @@ namespace Multi_Store.Services.Managers
         // Activate User
         // =========================
         public async Task ActivateUserAsync(
-            int userId,
+           int userId,
             string ipAddress,
             string userAgent)
         {
@@ -359,10 +287,10 @@ namespace Multi_Store.Services.Managers
 
             await _auditLogRepository.AddAsync(new AuditLog
             {
-                UserID = user.UserID,
+                UserID = user.Id,
                 Action = "Activate",
                 EntityName = "User",
-                EntityID = user.UserID.ToString(),
+                EntityID = user.Id.ToString(),
                 OldValue = "Blocked",
                 NewValue = "Active",
                 IPAddress = ipAddress,
