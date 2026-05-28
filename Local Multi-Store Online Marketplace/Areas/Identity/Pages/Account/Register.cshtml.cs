@@ -1,4 +1,5 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+﻿
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 #nullable disable
@@ -61,65 +62,34 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             [Required]
-            [StringLength(
-                100,
-                ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.",
-                MinimumLength = 6)]
+            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
             public string Password { get; set; }
 
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
-            [Compare(
-                "Password",
-                ErrorMessage = "The password and confirmation password do not match.")]
+            [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
-
-            [Required]
-            [Display(Name = "Full Name")]
-            public string FullName { get; set; }
-
-            [Phone]
-            [Display(Name = "Phone Number")]
-            public string PhoneNumber { get; set; }
         }
 
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
-
-            ExternalLogins = (await _signInManager
-                .GetExternalAuthenticationSchemesAsync())
-                .ToList();
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
-
-            ExternalLogins = (await _signInManager
-                .GetExternalAuthenticationSchemesAsync())
-                .ToList();
-
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
 
-                user.FullName = Input.FullName;
-                user.PhoneNumber = Input.PhoneNumber;
-                user.IsActive = true;
-                user.CreatedAt = DateTime.UtcNow;
-
-                await _userStore.SetUserNameAsync(
-                    user,
-                    Input.Email,
-                    CancellationToken.None);
-
-                await _emailStore.SetEmailAsync(
-                    user,
-                    Input.Email,
-                    CancellationToken.None);
+                await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+                var result = await _userManager.CreateAsync(user, Input.Password);
 
                 var result = await _userManager.CreateAsync(
                     user,
@@ -130,21 +100,11 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                     _logger.LogInformation(
                         "User created a new account with password.");
 
-                    // Add default role
-                    await _userManager.AddToRoleAsync(
-                        user,
-                        "Customer");
-
-                    var userId =
-                        await _userManager.GetUserIdAsync(user);
-
-                    var code =
-                        await _userManager
-                        .GenerateEmailConfirmationTokenAsync(user);
-
-                    code = WebEncoders.Base64UrlEncode(
-                        Encoding.UTF8.GetBytes(code));
-
+                    var userId = await _userManager.GetUserIdAsync(user);
+                    await _userManager.CreateAsync(user);
+                    await _userManager.AddToRoleAsync(user, "Customer");
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
@@ -193,8 +153,8 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
             return Page();
         }
 
-        private User CreateUser()
-        { 
+        private IdentityUser CreateUser()
+        {
             try
             {
                 return Activator.CreateInstance<User>();
