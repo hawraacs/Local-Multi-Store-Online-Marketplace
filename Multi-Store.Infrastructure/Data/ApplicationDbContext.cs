@@ -1,10 +1,12 @@
 ﻿// Data/ApplicationDbContext.cs
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 
 namespace Multi_Store.Infrastructure.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -16,11 +18,12 @@ namespace Multi_Store.Infrastructure.Data
         {
         }
 
+        
+
         // =============================================
         // ALL DbSets (27 Tables)
         // =============================================
-        public DbSet<Role> Roles { get; set; }
-        public DbSet<User> Users { get; set; }
+       
         public DbSet<Customer> Customers { get; set; }
         public DbSet<CustomerAddress> CustomerAddresses { get; set; }
         public DbSet<Store> Stores { get; set; }
@@ -75,11 +78,11 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<ProductImage>().HasKey(e => e.ImageID);
             modelBuilder.Entity<RefundRequest>().HasKey(e => e.RefundRequestID);
             modelBuilder.Entity<Review>().HasKey(e => e.ReviewID);
-            modelBuilder.Entity<Role>().HasKey(e => e.RoleID);
+            
             modelBuilder.Entity<Session>().HasKey(e => e.SessionID);
             modelBuilder.Entity<Store>().HasKey(e => e.StoreID);
             modelBuilder.Entity<SystemConfig>().HasKey(e => e.ConfigID);
-            modelBuilder.Entity<User>().HasKey(e => e.UserID);
+           
             modelBuilder.Entity<Wishlist>().HasKey(e => e.WishlistID);
 
             // =============================================
@@ -157,11 +160,8 @@ namespace Multi_Store.Infrastructure.Data
             // =============================================
 
             // Role → User
-            modelBuilder.Entity<User>()
-                .HasOne(u => u.Role)
-                .WithMany(r => r.Users)
-                .HasForeignKey(u => u.RoleID)
-                .OnDelete(DeleteBehavior.Restrict);
+           
+                
 
             // Customer → CustomerAddress
             modelBuilder.Entity<CustomerAddress>()

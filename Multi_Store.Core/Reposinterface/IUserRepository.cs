@@ -15,7 +15,7 @@ namespace Multi_Store.Core.Reposinterface
 
         Task<User?> GetByPhoneAsync(string phoneNumber);
 
-        Task<IReadOnlyList<User>> GetByRoleAsync(int roleId);
+        
 
         Task<IReadOnlyList<User>> GetActiveUsersAsync();
 
