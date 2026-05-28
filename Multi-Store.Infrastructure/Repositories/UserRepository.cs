@@ -20,42 +20,36 @@ namespace Multi_Store.Infrastructure.Repositories
             _context = context;
         }
 
+        // Get user by email
         public async Task<User?> GetByEmailAsync(string email)
         {
             return await _context.Users
-                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
+        // Get user by phone number
         public async Task<User?> GetByPhoneAsync(string phoneNumber)
         {
             return await _context.Users
-                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
         }
 
-        public async Task<IReadOnlyList<User>> GetByRoleAsync(int roleId)
-        {
-            return await _context.Users
-                .Where(u => u.RoleID == roleId)
-                .Include(u => u.Role)
-                .ToListAsync();
-        }
-
+        // Get all active users
         public async Task<IReadOnlyList<User>> GetActiveUsersAsync()
         {
             return await _context.Users
                 .Where(u => u.IsActive)
-                .Include(u => u.Role)
                 .ToListAsync();
         }
 
+        // Check if email exists
         public async Task<bool> EmailExistsAsync(string email)
         {
             return await _context.Users
                 .AnyAsync(u => u.Email == email);
         }
 
+        // Check if phone exists
         public async Task<bool> PhoneExistsAsync(string phoneNumber)
         {
             return await _context.Users

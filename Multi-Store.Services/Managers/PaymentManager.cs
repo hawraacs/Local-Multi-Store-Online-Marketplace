@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Multi_Store.Services.Managers
 {
-    public class PaymentManager
+     public class PaymentManager
     {
         private readonly IPaymentRepository _paymentRepository;
         private readonly IRefundRequestRepository _refundRepository;
