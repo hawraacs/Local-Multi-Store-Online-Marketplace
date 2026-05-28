@@ -56,25 +56,19 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 
         public class InputModel
         {
-<<<<<<< HEAD
             [Required]
             [Display(Name = "Full Name")]
             public string FullName { get; set; }
 
-=======
->>>>>>> c782227c2431d127b655e8a1e16d2b9e87752166
             [Required]
             [EmailAddress]
             [Display(Name = "Email")]
             public string Email { get; set; }
 
-<<<<<<< HEAD
             [Phone]
             [Display(Name = "Phone Number")]
             public string PhoneNumber { get; set; }
 
-=======
->>>>>>> c782227c2431d127b655e8a1e16d2b9e87752166
             [Required]
             [StringLength(
                 100,
@@ -137,15 +131,10 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                         user,
                         Input.Password);
 
-                var result = await _userManager.CreateAsync(
-                    user,
-                    Input.Password);
-
                 if (result.Succeeded)
                 {
                     _logger.LogInformation(
                         "User created a new account with password.");
-<<<<<<< HEAD
 
                     // Default role
                     await _userManager.AddToRoleAsync(
@@ -161,8 +150,6 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 
                     code = WebEncoders.Base64UrlEncode(
                         Encoding.UTF8.GetBytes(code));
-=======
->>>>>>> c782227c2431d127b655e8a1e16d2b9e87752166
 
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
@@ -224,13 +211,7 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
             catch
             {
                 throw new InvalidOperationException(
-<<<<<<< HEAD
                     $"Can't create an instance of '{nameof(User)}'.");
-=======
-                    $"Can't create an instance of '{nameof(User)}'. " +
-                    $"Ensure that '{nameof(User)}' is not abstract " +
-                    $"and has a parameterless constructor.");
->>>>>>> c782227c2431d127b655e8a1e16d2b9e87752166
             }
         }
 
@@ -246,3 +227,4 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         }
     }
 }
+
