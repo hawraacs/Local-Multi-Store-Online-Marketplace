@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Multi_Store.Services.Managers
 {
-    public class CategoryManager
+  public class CategoryManager
     {
         private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
