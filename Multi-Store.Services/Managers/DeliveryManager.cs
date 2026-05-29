@@ -165,5 +165,11 @@ namespace Multi_Store.Services.Managers
                 await _deliveryPersonRepository.UpdateAsync(deliveryPerson);
             }
         }
+        public async Task<bool> IsDeliveryApprovedAsync(int userId)
+        {
+            var delivery = await _deliveryPersonRepository.GetByUserIdAsync(userId);
+
+            return delivery != null && delivery.Status != "Pending" && delivery.Status != "Rejected";
+        }
     }
 }

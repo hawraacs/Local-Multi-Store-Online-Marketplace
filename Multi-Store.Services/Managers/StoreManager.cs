@@ -223,5 +223,12 @@ namespace Multi_Store.Services.Managers
 
             await _storeRepository.DeleteAsync(store);
         }
+
+        public async Task<bool> IsStoreApprovedAsync(int userId)
+{
+         var store = await _storeRepository.GetByOwnerIdAsync(userId);
+
+        return store != null && store.Status == "Approved";
+}
     }
 }

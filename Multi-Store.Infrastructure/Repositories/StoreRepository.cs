@@ -71,5 +71,10 @@ namespace Multi_Store.Infrastructure.Repositories
                     s.Area.Contains(keyword))
                 .ToListAsync();
         }
+        public async Task<Store?> GetByOwnerIdAsync(int ownerUserId)
+        {
+            return await _context.Stores
+                .FirstOrDefaultAsync(s => s.OwnerUserID == ownerUserId);
+        }
     }
 }

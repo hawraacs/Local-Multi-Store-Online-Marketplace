@@ -2,59 +2,133 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Multi_Store.Core.Entities;
+using Multi_Store.Infrastructure.Data;
+using System.ComponentModel.DataAnnotations;
 
-public class RegisterModel : PageModel
+namespace Multi_Store.Web.Pages.Account
 {
-    private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
-
-    public RegisterModel(UserManager<User> userManager, SignInManager<User> signInManager)
+    public class RegisterModel : PageModel
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
-    }
+        private readonly UserManager<User> _userManager;
+        private readonly ApplicationDbContext _context;
 
-    [BindProperty]
-    public InputModel Input { get; set; }
-
-    public class InputModel
-    {
-        public string FullName { get; set; }
-        public string Email { get; set; }
-        public string PhoneNumber { get; set; }
-        public string Password { get; set; }
-        public string ConfirmPassword { get; set; }
-    }
-
-    public async Task<IActionResult> OnPostAsync()
-    {
-        if (!ModelState.IsValid)
-            return Page();
-
-        var user = new User
+        public RegisterModel(
+            UserManager<User> userManager,
+            ApplicationDbContext context)
         {
-            UserName = Input.Email,
-            Email = Input.Email,
-            FullName = Input.FullName,
-            PhoneNumber = Input.PhoneNumber,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        var result = await _userManager.CreateAsync(user, Input.Password);
-
-        if (result.Succeeded)
-        {
-            await _userManager.AddToRoleAsync(user, "Customer");
-            await _signInManager.SignInAsync(user, false);
-            return RedirectToPage("/Index");
+            _userManager = userManager;
+            _context = context;
         }
 
-        foreach (var error in result.Errors)
+        [BindProperty, Required]
+        public string Role { get; set; } = string.Empty;
+
+        [BindProperty, Required]
+        public string FullName { get; set; } = string.Empty;
+
+        [BindProperty, Required, EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [BindProperty, Required]
+        public string PhoneNumber { get; set; } = string.Empty;
+
+        [BindProperty, Required, DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
+
+        [BindProperty, Required, DataType(DataType.Password), Compare(nameof(Password))]
+        public string ConfirmPassword { get; set; } = string.Empty;
+
+        // Store Owner fields
+        [BindProperty]
+        public string? StoreName { get; set; }
+
+        [BindProperty]
+        public string? StoreCode { get; set; }
+
+        [BindProperty]
+        public string? City { get; set; }
+
+        [BindProperty]
+        public string? Area { get; set; }
+
+        // Delivery fields
+        [BindProperty]
+        public string? VehicleType { get; set; }
+
+        [BindProperty]
+        public string? VehicleNumber { get; set; }
+
+        [BindProperty]
+        public string? DrivingLicenseNumber { get; set; }
+
+        public void OnGet()
         {
-            ModelState.AddModelError("", error.Description);
         }
 
-        return Page();
+        public async Task<IActionResult> OnPostAsync()
+        {
+            if (!ModelState.IsValid)
+                return Page();
+
+            var user = new User
+            {
+                UserName = Email,
+                Email = Email,
+                PhoneNumber = PhoneNumber,
+                FullName = FullName,
+                IsActive = true
+            };
+
+            var result = await _userManager.CreateAsync(user, Password);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+
+                return Page();
+            }
+
+            await _userManager.AddToRoleAsync(user, Role);
+
+            if (Role == "Customer")
+            {
+                _context.Customers.Add(new Customer
+                {
+                    UserID = user.Id
+                });
+            }
+
+            if (Role == "StoreOwner")
+            {
+                _context.Stores.Add(new Store
+                {
+                    OwnerUserID = user.Id,
+                    StoreName = StoreName ?? "",
+                    StoreCode = StoreCode ?? "",
+                    City = City ?? "",
+                    Area = Area ?? "",
+                    Email = Email,
+                    PhoneNumber = PhoneNumber,
+                    Status = "Pending"
+                });
+            }
+
+            if (Role == "Delivery")
+            {
+                _context.DeliveryPersons.Add(new DeliveryPerson
+                {
+                    UserID = user.Id,
+                    VehicleType = VehicleType ?? "",
+                    VehicleNumber = VehicleNumber ?? "",
+                    DrivingLicenseNumber = DrivingLicenseNumber ?? "",
+                    Status = "Pending"
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage("/Account/Login");
+        }
     }
 }

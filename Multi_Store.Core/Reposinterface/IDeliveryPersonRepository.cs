@@ -19,5 +19,6 @@ namespace Multi_Store.Core.Reposinterface
         Task<IReadOnlyList<DeliveryPerson>> GetTopRatedAsync(int count);
 
         Task<DeliveryPerson?> GetWithAssignmentsAsync(int deliveryPersonId);
+        
     }
 }

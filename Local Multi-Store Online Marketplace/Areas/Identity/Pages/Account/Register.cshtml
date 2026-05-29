@@ -1,85 +1,232 @@
 ﻿@page
-@model RegisterModel
-@{
-    ViewData["Title"] = "Register";
-}
+@model Multi_Store.Web.Pages.Account.RegisterModel
+
+<div class="register-container">
+
+    <div class="register-card">
+
+        <h1>Create Account</h1>
+        <p>Join our marketplace</p>
+
+        <form method="post">
+
+            <!-- ROLE -->
+            <div class="form-group">
+                <label>Register As</label>
+                <select asp-for="Role" id="roleSelect" class="input">
+                    <option value="">Select Role</option>
+                    <option value="Customer">Customer</option>
+                    <option value="StoreOwner">Store Owner</option>
+                    <option value="Delivery">Delivery Staff</option>
+                </select>
+            </div>
+
+            <!-- BASIC INFO -->
+            <div class="grid">
+
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input asp-for="FullName" class="input" />
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input asp-for="Email" class="input" />
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input asp-for="PhoneNumber" class="input" />
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input asp-for="Password" type="password" class="input" />
+                </div>
+
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input asp-for="ConfirmPassword" type="password" class="input" />
+                </div>
+
+            </div>
+
+            <!-- STORE SECTION -->
+            <div id="storeSection" style="display:none;">
+
+                <h3>Store Information</h3>
+
+                <div class="grid">
+
+                    <div class="form-group">
+                        <label>Store Name</label>
+                        <input asp-for="StoreName" class="input" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Store Code</label>
+                        <input asp-for="StoreCode" class="input" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>City</label>
+                        <input asp-for="City" class="input" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Area</label>
+                        <input asp-for="Area" class="input" />
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- DELIVERY SECTION -->
+            <div id="deliverySection" style="display:none;">
+
+                <h3>Delivery Information</h3>
+
+                <div class="grid">
+
+                    <div class="form-group">
+                        <label>Vehicle Type</label>
+                        <input asp-for="VehicleType" class="input" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Vehicle Number</label>
+                        <input asp-for="VehicleNumber" class="input" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Driving License Number</label>
+                        <input asp-for="DrivingLicenseNumber" class="input" />
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div asp-validation-summary="All" class="error"></div>
+
+            <button type="submit" class="btn">
+                Register
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
 
 <style>
+
     body {
-        background: #f8fafc;
+        background: #f4f6f9;
+        font-family: Arial;
     }
 
-    .register-box {
-        max-width: 420px;
-        margin: 60px auto;
+    .register-container {
+        display: flex;
+        justify-content: center;
+        padding: 40px;
+    }
+
+    .register-card {
+        width: 100%;
+        max-width: 700px;
         background: white;
         padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
 
-    .title {
-        text-align: center;
-        font-size: 28px;
-        font-weight: bold;
+    h1 {
+        margin-bottom: 5px;
+    }
+
+    p {
+        color: gray;
         margin-bottom: 20px;
     }
 
-    .btn-register {
-        width: 100%;
-        background: #ef4444;
-        color: white;
-        border: none;
-        padding: 12px;
-        border-radius: 10px;
-        font-weight: 600;
-        transition: 0.3s;
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
     }
 
-        .btn-register:hover {
-            background: #dc2626;
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 15px;
+    }
+
+    label {
+        font-size: 13px;
+        margin-bottom: 5px;
+        color: #444;
+    }
+
+    .input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        outline: none;
+    }
+
+        .input:focus {
+            border-color: #4a90e2;
+            box-shadow: 0 0 5px rgba(74,144,226,0.3);
         }
 
-    input {
-        border-radius: 10px !important;
+    .btn {
+        width: 100%;
+        padding: 12px;
+        background: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 15px;
     }
+
+        .btn:hover {
+            background: #357bd8;
+        }
+
+    .error {
+        color: red;
+        margin-top: 10px;
+    }
+
 </style>
 
-<div class="register-box">
+<script>
 
-    <div class="title">Create Account</div>
+    const role = document.getElementById("roleSelect");
 
-    <form method="post">
+    const storeSection = document.getElementById("storeSection");
+    const deliverySection = document.getElementById("deliverySection");
 
-        <div class="mb-3">
-            <label>Full Name</label>
-            <input asp-for="Input.FullName" class="form-control" />
-        </div>
+    function toggleSections() {
 
-        <div class="mb-3">
-            <label>Email</label>
-            <input asp-for="Input.Email" class="form-control" />
-        </div>
+        storeSection.style.display = "none";
+        deliverySection.style.display = "none";
 
-        <div class="mb-3">
-            <label>Phone</label>
-            <input asp-for="Input.PhoneNumber" class="form-control" />
-        </div>
+        if (role.value === "StoreOwner") {
+            storeSection.style.display = "block";
+        }
 
-        <div class="mb-3">
-            <label>Password</label>
-            <input asp-for="Input.Password" class="form-control" />
-        </div>
+        if (role.value === "Delivery") {
+            deliverySection.style.display = "block";
+        }
+    }
 
-        <div class="mb-3">
-            <label>Confirm Password</label>
-            <input asp-for="Input.ConfirmPassword" class="form-control" />
-        </div>
+    role.addEventListener("change", toggleSections);
 
-        <button type="submit" class="btn-register">
-            Register
-        </button>
+    toggleSections();
 
-    </form>
-
-</div>
+</script>

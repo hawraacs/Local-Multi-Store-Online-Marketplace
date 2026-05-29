@@ -5,8 +5,14 @@ using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Infrastructure.Repositories;
+using Multi_Store.Services.Managers;
+using AutoMapper;
+using Multi_Store.Services;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 
 // Add Razor Pages support
@@ -48,6 +54,23 @@ builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 
+
+builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
+
+builder.Services.AddScoped<UserManager>();
+builder.Services.AddScoped<StoreManager>();
+builder.Services.AddScoped<ProductManager>();
+builder.Services.AddScoped<CategoryManager>();
+builder.Services.AddScoped<CartManager>();
+builder.Services.AddScoped<OrderManager>();
+builder.Services.AddScoped<PaymentManager>();
+builder.Services.AddScoped<DeliveryManager>();
+builder.Services.AddScoped<ReviewManager>();
+builder.Services.AddScoped<NotificationManager>();
+builder.Services.AddScoped<ComplaintManager>();
+builder.Services.AddScoped<MessagingManager>();
+
+
 var app = builder.Build();
 
 
@@ -81,6 +104,7 @@ using (var scope = app.Services.CreateScope())
         }
     }
 }
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -91,7 +115,14 @@ app.UseHttpsRedirection();   // Redirect HTTP to HTTPS
 app.UseStaticFiles();         // Serve static files (CSS, JS, Images)
 app.UseRouting();             // Enable routing
 app.UseAuthorization();       // Enable authorization (roles)
-app.MapRazorPages();          // Map Razor Pages endpoints
+app.MapRazorPages();
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    await SeedData.InitializeAsync(services);
+}// Map Razor Pages endpoints
 app.MapDefaultControllerRoute();
+
 
 app.Run();  // Run the application

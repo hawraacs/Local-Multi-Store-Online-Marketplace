@@ -1,0 +1,41 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.AdminStoresModel
+@{
+    <h2>🏪 Stores Management</h2>
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Code</th>
+                <th>City</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var s in Model.Stores)
+            {
+                <tr>
+                    <td>@s.StoreName</td>
+                    <td>@s.StoreCode</td>
+                    <td>@s.City</td>
+                    <td>@s.Status</td>
+                    <td>
+                        <form method="post" asp-page-handler="Approve">
+                            <input type="hidden" name="id" value="@s.StoreID" />
+                            <button class="btn approve">Approve</button>
+                        </form>
+
+                        <form method="post" asp-page-handler="Reject">
+                            <input type="hidden" name="id" value="@s.StoreID" />
+                            <button class="btn reject">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
