@@ -1,0 +1,75 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.AdminDeliveryModel
+@{
+    <h1>🚚 Delivery Management</h1>
+
+
+    <hr />
+
+    <h2>🟡 Pending Delivery Requests</h2>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Vehicle</th>
+                <th>License</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var d in Model.PendingDelivery)
+            {
+                <tr>
+                    <td>@d.DeliveryPersonID</td>
+                    <td>@d.VehicleType</td>
+                    <td>@d.DrivingLicenseNumber</td>
+                    <td>@d.Status</td>
+                    <td>
+
+                        <form method="post" asp-page-handler="Approve" style="display:inline;">
+                            <input type="hidden" name="id" value="@d.DeliveryPersonID" />
+                            <button class="btn btn-success btn-sm">Approve</button>
+                        </form>
+
+                        <form method="post" asp-page-handler="Reject" style="display:inline;">
+                            <input type="hidden" name="id" value="@d.DeliveryPersonID" />
+                            <button class="btn btn-danger btn-sm">Reject</button>
+                        </form>
+
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <hr />
+
+    <h2>🟢 Active Delivery Staff</h2>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Vehicle</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var d in Model.ActiveDelivery)
+            {
+                <tr>
+                    <td>@d.DeliveryPersonID</td>
+                    <td>@d.VehicleType</td>
+                    <td>@d.Status</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+
+
+}

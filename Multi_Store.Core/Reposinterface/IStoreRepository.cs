@@ -21,5 +21,6 @@ namespace Multi_Store.Core.Reposinterface
         Task<Store?> GetStoreDetailsAsync(int storeId);
 
         Task<IReadOnlyList<Store>> SearchStoresAsync(string keyword);
+        Task<Store?> GetByOwnerIdAsync(int ownerUserId);
     }
 }

@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using Multi_Store.Core.Entities;
+using Multi_Store.Services.Managers;
 
 namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 {
@@ -22,15 +23,21 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
+        private readonly StoreManager _storeManager;
+        private readonly DeliveryManager _deliveryManager;
         private readonly ILogger<LoginModel> _logger;
 
         public LoginModel(
             SignInManager<User> signInManager,
             UserManager<User> userManager,
+             StoreManager storeManager,
+    DeliveryManager deliveryManager,
             ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
             _userManager = userManager;
+            _storeManager = storeManager;
+            _deliveryManager = deliveryManager;
             _logger = logger;
         }
 
@@ -76,6 +83,22 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                     _logger.LogInformation("User logged in.");
 
                     var user = await _userManager.FindByEmailAsync(Input.Email);
+                    if (await _userManager.IsInRoleAsync(user, "StoreOwner"))
+                    {
+                        if (!await _storeManager.IsStoreApprovedAsync(user.Id))
+                        {
+                            ModelState.AddModelError(string.Empty, "Your store is waiting for admin approval.");
+                            return Page();
+                        }
+                    }
+                    if (await _userManager.IsInRoleAsync(user, "Delivery"))
+                    {
+                        if (!await _deliveryManager.IsDeliveryApprovedAsync(user.Id))
+                        {
+                            ModelState.AddModelError("", "Your delivery account is waiting for admin approval.");
+                            return Page();
+                        }
+                    }
 
                     if (user != null)
                     {
@@ -85,22 +108,22 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 
                         if (roles.Contains("Admin"))
                         {
-                            return RedirectToPage("/Admin/Dashboard/Index");
+                            return RedirectToPage("/Admin1");
                         }
 
                         if (roles.Contains("StoreOwner"))
                         {
-                            return RedirectToPage("/Store/Dashboard/Index");
+                            return RedirectToPage("/Store1");
                         }
 
                         if (roles.Contains("Customer"))
                         {
-                            return RedirectToPage("/Customer/Dashboard/Index");
+                            return RedirectToPage("/Customer1");
                         }
 
                         if (roles.Contains("Delivery"))
                         {
-                            return RedirectToPage("/Delivery/Dashboard/Index");
+                            return RedirectToPage("/Delivery1");
                         }
                     }
 

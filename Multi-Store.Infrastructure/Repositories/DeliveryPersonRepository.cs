@@ -54,5 +54,6 @@ namespace Multi_Store.Infrastructure.Repositories
                 .Include(d => d.Assignments)
                 .FirstOrDefaultAsync(d => d.DeliveryPersonID == deliveryPersonId);
         }
+       
     }
 }
