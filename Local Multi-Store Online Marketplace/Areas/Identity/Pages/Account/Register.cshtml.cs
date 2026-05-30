@@ -5,7 +5,7 @@ using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
 using System.ComponentModel.DataAnnotations;
 
-namespace Multi_Store.Web.Pages.Account
+namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {
@@ -20,55 +20,40 @@ namespace Multi_Store.Web.Pages.Account
             _context = context;
         }
 
-        [BindProperty, Required]
-        public string Role { get; set; } = string.Empty;
-
-        [BindProperty, Required]
-        public string FullName { get; set; } = string.Empty;
-
-        [BindProperty, Required, EmailAddress]
-        public string Email { get; set; } = string.Empty;
-
-        [BindProperty, Required]
-        public string PhoneNumber { get; set; } = string.Empty;
-
-        [BindProperty, Required, DataType(DataType.Password)]
-        public string Password { get; set; } = string.Empty;
-
-        [BindProperty, Required, DataType(DataType.Password), Compare(nameof(Password))]
-        public string ConfirmPassword { get; set; } = string.Empty;
-
-        // Store Owner fields
         [BindProperty]
-        public string? StoreName { get; set; }
+        [Required]
+        public string FullName { get; set; }
 
         [BindProperty]
-        public string? StoreCode { get; set; }
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
 
         [BindProperty]
-        public string? City { get; set; }
+        [Required]
+        public string PhoneNumber { get; set; }
 
         [BindProperty]
-        public string? Area { get; set; }
-
-        // Delivery fields
-        [BindProperty]
-        public string? VehicleType { get; set; }
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
 
         [BindProperty]
-        public string? VehicleNumber { get; set; }
-
-        [BindProperty]
-        public string? DrivingLicenseNumber { get; set; }
+        [Required]
+        [Compare("Password")]
+        public string ConfirmPassword { get; set; }
 
         public void OnGet()
         {
+
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
+            {
                 return Page();
+            }
 
             var user = new User
             {
@@ -84,51 +69,25 @@ namespace Multi_Store.Web.Pages.Account
             if (!result.Succeeded)
             {
                 foreach (var error in result.Errors)
-                    ModelState.AddModelError(string.Empty, error.Description);
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
 
                 return Page();
             }
 
-            await _userManager.AddToRoleAsync(user, Role);
+            await _userManager.AddToRoleAsync(user, "Customer");
 
-            if (Role == "Customer")
+            var customer = new Customer
             {
-                _context.Customers.Add(new Customer
-                {
-                    UserID = user.Id
-                });
-            }
+                UserID = user.Id
+            };
 
-            if (Role == "StoreOwner")
-            {
-                _context.Stores.Add(new Store
-                {
-                    OwnerUserID = user.Id,
-                    StoreName = StoreName ?? "",
-                    StoreCode = StoreCode ?? "",
-                    City = City ?? "",
-                    Area = Area ?? "",
-                    Email = Email,
-                    PhoneNumber = PhoneNumber,
-                    Status = "Pending"
-                });
-            }
-
-            if (Role == "Delivery")
-            {
-                _context.DeliveryPersons.Add(new DeliveryPerson
-                {
-                    UserID = user.Id,
-                    VehicleType = VehicleType ?? "",
-                    VehicleNumber = VehicleNumber ?? "",
-                    DrivingLicenseNumber = DrivingLicenseNumber ?? "",
-                    Status = "Pending"
-                });
-            }
+            _context.Customers.Add(customer);
 
             await _context.SaveChangesAsync();
 
-            return RedirectToPage("/Account/Login");
+            return RedirectToPage("./Login");
         }
     }
 }
