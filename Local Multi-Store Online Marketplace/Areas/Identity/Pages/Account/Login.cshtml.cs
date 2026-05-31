@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
@@ -30,8 +31,8 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         public LoginModel(
             SignInManager<User> signInManager,
             UserManager<User> userManager,
-             StoreManager storeManager,
-    DeliveryManager deliveryManager,
+            StoreManager storeManager,
+            DeliveryManager deliveryManager,
             ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
@@ -65,9 +66,27 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
             public bool RememberMe { get; set; }
         }
 
+        public async Task OnGetAsync(string returnUrl = null)
+        {
+            if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                ModelState.AddModelError(string.Empty, ErrorMessage);
+            }
+
+            returnUrl ??= Url.Content("~/");
+
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            ReturnUrl = returnUrl;
+        }
+
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
+
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
             if (ModelState.IsValid)
             {
@@ -83,51 +102,32 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                     _logger.LogInformation("User logged in.");
 
                     var user = await _userManager.FindByEmailAsync(Input.Email);
-                    if (await _userManager.IsInRoleAsync(user, "StoreOwner"))
-                    {
-                        if (!await _storeManager.IsStoreApprovedAsync(user.Id))
-                        {
-                            ModelState.AddModelError(string.Empty, "Your store is waiting for admin approval.");
-                            return Page();
-                        }
-                    }
-                    if (await _userManager.IsInRoleAsync(user, "Delivery"))
-                    {
-                        if (!await _deliveryManager.IsDeliveryApprovedAsync(user.Id))
-                        {
-                            ModelState.AddModelError("", "Your delivery account is waiting for admin approval.");
-                            return Page();
-                        }
-                    }
 
                     if (user != null)
                     {
-                        var roles = await _userManager.GetRolesAsync(user);
-
-                        // 🔥 ROLE-BASED REDIRECTION (YOUR SYSTEM)
-
-                        if (roles.Contains("Admin"))
+                        if (await _userManager.IsInRoleAsync(user, "StoreOwner"))
                         {
-                            return RedirectToPage("/Admin1");
+                            if (!await _storeManager.IsStoreApprovedAsync(user.Id))
+                            {
+                                await _signInManager.SignOutAsync();
+                                ModelState.AddModelError(string.Empty, "Your store is waiting for admin approval.");
+                                return Page();
+                            }
                         }
 
-                        if (roles.Contains("StoreOwner"))
+                        if (await _userManager.IsInRoleAsync(user, "Delivery"))
                         {
-                            return RedirectToPage("/Store1");
+                            if (!await _deliveryManager.IsDeliveryApprovedAsync(user.Id))
+                            {
+                                await _signInManager.SignOutAsync();
+                                ModelState.AddModelError("", "Your delivery account is waiting for admin approval.");
+                                return Page();
+                            }
                         }
 
-                        if (roles.Contains("Customer"))
-                        {
-                            return RedirectToPage("/Customer1");
-                        }
-
-                        if (roles.Contains("Delivery"))
-                        {
-                            return RedirectToPage("/Delivery1");
-                        }
+                        return await RedirectUserByRoleAsync(user);
                     }
 
-                    // fallback if no role found
                     return RedirectToPage("/Index");
                 }
 
@@ -147,6 +147,185 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
             }
 
             return Page();
+        }
+
+        public IActionResult OnPostExternalLogin(string provider, string returnUrl = null)
+        {
+            returnUrl ??= Url.Content("~/");
+
+            var redirectUrl = Url.Page(
+                "./Login",
+                pageHandler: "ExternalLoginCallback",
+                values: new { returnUrl });
+
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(
+                provider,
+                redirectUrl);
+
+            return new ChallengeResult(provider, properties);
+        }
+
+        public async Task<IActionResult> OnGetExternalLoginCallbackAsync(
+            string returnUrl = null,
+            string remoteError = null)
+        {
+            returnUrl ??= Url.Content("~/");
+
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            if (remoteError != null)
+            {
+                ErrorMessage = $"Error from external provider: {remoteError}";
+                return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
+            }
+
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+
+            if (info == null)
+            {
+                ErrorMessage = "Error loading external login information.";
+                return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
+            }
+
+            var result = await _signInManager.ExternalLoginSignInAsync(
+                info.LoginProvider,
+                info.ProviderKey,
+                isPersistent: false,
+                bypassTwoFactor: true);
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation(
+                    "{Name} logged in with {LoginProvider}.",
+                    info.Principal.Identity.Name,
+                    info.LoginProvider);
+
+                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+                var user = await _userManager.FindByEmailAsync(email);
+
+                if (user != null)
+                {
+                    if (await _userManager.IsInRoleAsync(user, "StoreOwner"))
+                    {
+                        if (!await _storeManager.IsStoreApprovedAsync(user.Id))
+                        {
+                            await _signInManager.SignOutAsync();
+                            ModelState.AddModelError(string.Empty, "Your store is waiting for admin approval.");
+                            return Page();
+                        }
+                    }
+
+                    if (await _userManager.IsInRoleAsync(user, "Delivery"))
+                    {
+                        if (!await _deliveryManager.IsDeliveryApprovedAsync(user.Id))
+                        {
+                            await _signInManager.SignOutAsync();
+                            ModelState.AddModelError("", "Your delivery account is waiting for admin approval.");
+                            return Page();
+                        }
+                    }
+
+                    return await RedirectUserByRoleAsync(user);
+                }
+
+                return RedirectToPage("/Index");
+            }
+
+            if (result.IsLockedOut)
+            {
+                return RedirectToPage("./Lockout");
+            }
+
+            var externalEmail = info.Principal.FindFirstValue(ClaimTypes.Email);
+
+            if (string.IsNullOrEmpty(externalEmail))
+            {
+                ModelState.AddModelError(string.Empty, "Email not received from external provider.");
+                return Page();
+            }
+
+            var existingUser = await _userManager.FindByEmailAsync(externalEmail);
+
+            if (existingUser == null)
+            {
+                existingUser = new User
+                {
+                    UserName = externalEmail,
+                    Email = externalEmail,
+                    EmailConfirmed = true
+                };
+
+                var createResult = await _userManager.CreateAsync(existingUser);
+
+                if (!createResult.Succeeded)
+                {
+                    foreach (var error in createResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+
+                    return Page();
+                }
+
+                var roleResult = await _userManager.AddToRoleAsync(existingUser, "Customer");
+
+                if (!roleResult.Succeeded)
+                {
+                    foreach (var error in roleResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+
+                    return Page();
+                }
+            }
+
+            var addLoginResult = await _userManager.AddLoginAsync(existingUser, info);
+
+            if (!addLoginResult.Succeeded)
+            {
+                foreach (var error in addLoginResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                return Page();
+            }
+
+            await _signInManager.SignInAsync(existingUser, isPersistent: false);
+
+            _logger.LogInformation(
+                "User created or connected an account using {LoginProvider}.",
+                info.LoginProvider);
+
+            return await RedirectUserByRoleAsync(existingUser);
+        }
+
+        private async Task<IActionResult> RedirectUserByRoleAsync(User user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+
+            if (roles.Contains("Admin"))
+            {
+                return RedirectToPage("/Admin1");
+            }
+
+            if (roles.Contains("StoreOwner"))
+            {
+                return RedirectToPage("/Store1");
+            }
+
+            if (roles.Contains("Customer"))
+            {
+                return RedirectToPage("/Customer1");
+            }
+
+            if (roles.Contains("Delivery"))
+            {
+                return RedirectToPage("/Delivery1");
+            }
+
+            return RedirectToPage("/Index");
         }
     }
 }

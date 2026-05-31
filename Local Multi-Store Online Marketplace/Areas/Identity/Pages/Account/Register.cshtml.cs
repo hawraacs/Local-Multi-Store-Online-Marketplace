@@ -10,13 +10,16 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
     public class RegisterModel : PageModel
     {
         private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly ApplicationDbContext _context;
 
         public RegisterModel(
             UserManager<User> userManager,
+            SignInManager<User> signInManager,
             ApplicationDbContext context)
         {
             _userManager = userManager;
+            _signInManager = signInManager;
             _context = context;
         }
 
@@ -41,11 +44,14 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         [BindProperty]
         [Required]
         [Compare("Password")]
+        [DataType(DataType.Password)]
         public string ConfirmPassword { get; set; }
 
         public void OnGet()
         {
-
+            Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["Expires"] = "0";
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -70,14 +76,16 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
             {
                 foreach (var error in result.Errors)
                 {
-                    ModelState.AddModelError("", error.Description);
+                    ModelState.AddModelError(string.Empty, error.Description);
                 }
 
                 return Page();
             }
 
+            // Add Customer Role
             await _userManager.AddToRoleAsync(user, "Customer");
 
+            // Create Customer Record
             var customer = new Customer
             {
                 UserID = user.Id
@@ -87,7 +95,11 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 
             await _context.SaveChangesAsync();
 
-            return RedirectToPage("./Login");
+            // Automatically sign in the user
+            await _signInManager.SignInAsync(user, isPersistent: false);
+
+            // Redirect to Home Page (Index)
+            return RedirectToPage("/Index");
         }
     }
 }
