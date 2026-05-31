@@ -9,11 +9,7 @@ using Multi_Store.Services.Managers;
 using AutoMapper;
 using Multi_Store.Services;
 
-
-
 var builder = WebApplication.CreateBuilder(args);
-
-
 
 // Add Razor Pages support
 builder.Services.AddRazorPages();
@@ -25,6 +21,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddIdentity<User, IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+// Google + Facebook Authentication
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    })
+    .AddFacebook(options =>
+    {
+        options.AppId = builder.Configuration["Authentication:Facebook:AppId"];
+        options.AppSecret = builder.Configuration["Authentication:Facebook:AppSecret"];
+    });
 
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
@@ -54,7 +63,6 @@ builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 
-
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 
 builder.Services.AddScoped<UserManager>();
@@ -70,16 +78,13 @@ builder.Services.AddScoped<NotificationManager>();
 builder.Services.AddScoped<ComplaintManager>();
 builder.Services.AddScoped<MessagingManager>();
 
-
 var app = builder.Build();
-
 
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     await SeedData.InitializeAsync(services);
 }
-
 
 using (var scope = app.Services.CreateScope())
 {
@@ -112,17 +117,14 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();   // Redirect HTTP to HTTPS
-app.UseStaticFiles();         // Serve static files (CSS, JS, Images)
-app.UseRouting();             // Enable routing
-app.UseAuthorization();       // Enable authorization (roles)
-app.MapRazorPages();
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
+app.UseStaticFiles();        // Serve static files (CSS, JS, Images)
 
-    await SeedData.InitializeAsync(services);
-}// Map Razor Pages endpoints
+app.UseRouting();            // Enable routing
+
+app.UseAuthentication();     // Enable authentication (login, Google, Facebook)
+app.UseAuthorization();      // Enable authorization (roles)
+
+app.MapRazorPages();         // Map Razor Pages endpoints
 app.MapDefaultControllerRoute();
 
-
-app.Run();  // Run the application
+app.Run();                   // Run the application
