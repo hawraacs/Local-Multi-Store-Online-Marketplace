@@ -1,21 +1,20 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.CustomerProfileModel
+
 @{
-    ViewData["Title"] = "Customer Profile";
     Layout = null;
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Customer Profile</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <style>
+
         body {
             font-family: Poppins;
             background: #f4f4f7;
@@ -23,126 +22,154 @@
         }
 
         .topbar {
-            display: flex;
-            justify-content: space-between;
-            padding: 20px;
             background: #111;
             color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
         }
 
         .container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            width: 1000px;
+            margin: 30px auto;
+        }
+
+        .profile-card {
+            background: white;
             padding: 30px;
+            border-radius: 12px;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .profile-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #ddd;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 15px;
         }
 
         .card {
             background: white;
             padding: 20px;
             border-radius: 12px;
+            margin-top: 20px;
         }
 
-        .full {
-            grid-column: span 2;
-        }
-
-        label {
-            display: block;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-        }
-
-        button {
-            width: 100%;
-            margin-top: 15px;
-            padding: 12px;
-            border: none;
+        .btn {
+            display: inline-block;
             background: #111;
             color: white;
+            padding: 10px 20px;
+            text-decoration: none;
             border-radius: 8px;
+            margin-top: 10px;
         }
+
     </style>
+
 </head>
 
 <body>
 
     <div class="topbar">
-        <div>Customer Profile</div>
+
         <div>Realnest</div>
+
+        <div>
+            <a href="/Customer1" style="color:white;">Dashboard</a>
+            |
+            <a href="/CustomerProducts" style="color:white;">Shop</a>
+            |
+            <a href="/CustomerCart" style="color:white;">Cart</a>
+            |
+            <a href="/CustomerOrders" style="color:white;">Orders</a>
+        </div>
+
     </div>
 
     <div class="container">
 
-        <!-- ================= PROFILE ================= -->
-        <div class="card">
-            <h3>My Profile</h3>
+        <div class="profile-card">
 
-            <form method="post">
+            <div class="profile-image"></div>
 
-                <label>Full Name</label>
-                <input asp-for="CustomerFullName" />
+            <div>
 
-                <label>Email</label>
-                <input asp-for="CustomerEmail" />
+                <h2>Customer Name</h2>
 
-                <label>Phone</label>
-                <input asp-for="CustomerPhone" />
+                <p>customer@email.com</p>
 
-                <button type="submit">Update Profile</button>
-            </form>
+                <div class="stats">
+
+                    <div>
+                        <strong>12</strong><br />
+                        Orders
+                    </div>
+
+                    <div>
+                        <strong>5</strong><br />
+                        Stores Followed
+                    </div>
+
+                    <div>
+                        <strong>8</strong><br />
+                        Reviews
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
 
-        <!-- ================= STORE REQUEST ================= -->
         <div class="card">
-            <h3>Become Store Owner</h3>
 
-            <form method="post" asp-page-handler="StoreRequest">
+            <h3>Account Settings</h3>
 
-                <label>Store Name</label>
-                <input asp-for="Store.StoreName" />
+            <a class="btn" href="/ChangeProfile">
+                Edit Profile
+            </a>
 
-                <label>Phone</label>
-                <input asp-for="Store.PhoneNumber" />
+            <a class="btn" href="/ChangePassword">
+                Change Password
+            </a>
 
-                <label>Email</label>
-                <input asp-for="Store.Email" />
-
-                <label>Address</label>
-                <input asp-for="Store.AddressLine1" />
-
-                <label>Business License</label>
-                <input asp-for="Store.BusinessLicenseNumber" />
-
-                <button type="submit">Send Request</button>
-            </form>
         </div>
 
-        <!-- ================= DELIVERY REQUEST ================= -->
-        <div class="card full">
+        <div class="card">
+
+            <h3>Become a Store Owner</h3>
+
+            <p>
+                Submit a request and wait for admin approval.
+            </p>
+
+            <a class="btn" href="/StoreRequest">
+                Request Store Owner Account
+            </a>
+
+        </div>
+
+        <div class="card">
+
             <h3>Become Delivery Staff</h3>
 
-            <form method="post" asp-page-handler="DeliveryRequest">
+            <p>
+                Submit your vehicle and license information.
+            </p>
 
-                <label>Vehicle Type</label>
-                <input asp-for="Delivery.VehicleType" />
+            <a class="btn" href="/DeliveryRequest">
+                Request Delivery Account
+            </a>
 
-                <label>Vehicle Number</label>
-                <input asp-for="Delivery.VehicleNumber" />
-
-                <label>Driving License</label>
-                <input asp-for="Delivery.DrivingLicenseNumber" />
-
-                <button type="submit">Send Request</button>
-            </form>
         </div>
 
     </div>
