@@ -9,6 +9,10 @@ using Multi_Store.Infrastructure.Repositories;
 using Multi_Store.Services.Managers;
 using Multi_Store.Services;  // ✅ ADD THIS - for CurrentStoreService
 using AutoMapper;
+<<<<<<< HEAD
+=======
+using Multi_Store.Services;
+>>>>>>> c04741d09f85a7339dc44fc85ca1280b540f5f5b
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,10 +27,26 @@ builder.Services.AddIdentity<User, IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+<<<<<<< HEAD
 // Register HttpContextAccessor (needed for CurrentStoreService)
 builder.Services.AddHttpContextAccessor();  // ✅ ADD THIS
 
 // Register all repositories
+=======
+// Google + Facebook Authentication
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    })
+    .AddFacebook(options =>
+    {
+        options.AppId = builder.Configuration["Authentication:Facebook:AppId"];
+        options.AppSecret = builder.Configuration["Authentication:Facebook:AppSecret"];
+    });
+
+>>>>>>> c04741d09f85a7339dc44fc85ca1280b540f5f5b
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
@@ -54,10 +74,13 @@ builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 
+<<<<<<< HEAD
 // ✅ ADD THIS - Register CurrentStoreService
 builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
 
 // Register AutoMapper
+=======
+>>>>>>> c04741d09f85a7339dc44fc85ca1280b540f5f5b
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 
 // Register all managers
@@ -76,10 +99,23 @@ builder.Services.AddScoped<MessagingManager>();
 
 var app = builder.Build();
 
+<<<<<<< HEAD
 // Seed roles
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider
+=======
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await SeedData.InitializeAsync(services);
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager =
+        scope.ServiceProvider
+>>>>>>> c04741d09f85a7339dc44fc85ca1280b540f5f5b
         .GetRequiredService<RoleManager<IdentityRole<int>>>();
 
     string[] roles =
@@ -113,6 +149,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();   // Redirect HTTP to HTTPS
+<<<<<<< HEAD
 app.UseStaticFiles();         // Serve static files (CSS, JS, Images)
 app.UseRouting();             // Enable routing
 app.UseAuthentication();      // ✅ ADD THIS - Enable authentication
@@ -120,3 +157,16 @@ app.UseAuthorization();       // Enable authorization (roles)
 app.MapRazorPages();          // Map Razor Pages endpoints
 
 app.Run();  // Run the application
+=======
+app.UseStaticFiles();        // Serve static files (CSS, JS, Images)
+
+app.UseRouting();            // Enable routing
+
+app.UseAuthentication();     // Enable authentication (login, Google, Facebook)
+app.UseAuthorization();      // Enable authorization (roles)
+
+app.MapRazorPages();         // Map Razor Pages endpoints
+app.MapDefaultControllerRoute();
+
+app.Run();                   // Run the application
+>>>>>>> c04741d09f85a7339dc44fc85ca1280b540f5f5b
