@@ -1,17 +1,15 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-#nullable disable
+﻿#nullable disable
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+<<<<<<< HEAD
+=======
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+>>>>>>> 56ec6fdf4ac7f423864bcf514949ec6fff61a293
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
@@ -46,7 +44,6 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         public InputModel Input { get; set; }
 
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
-
         public string ReturnUrl { get; set; }
 
         [TempData]
@@ -86,6 +83,22 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
 
+<<<<<<< HEAD
+            if (!ModelState.IsValid)
+                return Page();
+
+            var result = await _signInManager.PasswordSignInAsync(
+                Input.Email,
+                Input.Password,
+                Input.RememberMe,
+                lockoutOnFailure: true
+            );
+
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError("", "Invalid login attempt.");
+                return Page();
+=======
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
             if (ModelState.IsValid)
@@ -144,9 +157,65 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 }
 
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+>>>>>>> 56ec6fdf4ac7f423864bcf514949ec6fff61a293
             }
 
-            return Page();
+            _logger.LogInformation("User logged in.");
+
+            var user = await _userManager.FindByEmailAsync(Input.Email);
+
+            if (user == null)
+            {
+                ModelState.AddModelError("", "User not found.");
+                return Page();
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            // =========================
+            // STORE OWNER CHECK
+            // =========================
+            if (roles.Contains("StoreOwner"))
+            {
+                var storeApproved = await _storeManager.IsStoreApprovedAsync(user.Id);
+
+                if (!storeApproved)
+                {
+                    ModelState.AddModelError("", "Your store is waiting for admin approval.");
+                    return Page();
+                }
+            }
+
+            // =========================
+            // DELIVERY CHECK
+            // =========================
+            if (roles.Contains("Delivery"))
+            {
+                var deliveryApproved = await _deliveryManager.IsDeliveryApprovedAsync(user.Id);
+
+                if (!deliveryApproved)
+                {
+                    ModelState.AddModelError("", "Your delivery account is waiting for admin approval.");
+                    return Page();
+                }
+            }
+
+            // =========================
+            // ROLE REDIRECTION
+            // =========================
+            if (roles.Contains("Admin"))
+                return RedirectToPage("/Admin1");
+
+            if (roles.Contains("StoreOwner"))
+                return RedirectToPage("/Store1");
+
+            if (roles.Contains("Customer"))
+                return RedirectToPage("/Customer1");
+
+            if (roles.Contains("Delivery"))
+                return RedirectToPage("/Delivery1");
+
+            return RedirectToPage("/Index");
         }
 
         public IActionResult OnPostExternalLogin(string provider, string returnUrl = null)
