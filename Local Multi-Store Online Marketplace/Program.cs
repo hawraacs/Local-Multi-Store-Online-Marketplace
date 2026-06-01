@@ -3,17 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface;
+using Multi_Store.Core.Interfaces;  // ✅ ADD THIS - for ICurrentStoreService
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Infrastructure.Repositories;
 using Multi_Store.Services.Managers;
+using Multi_Store.Services;  // ✅ ADD THIS - for CurrentStoreService
 using AutoMapper;
-using Multi_Store.Services;
-
-
 
 var builder = WebApplication.CreateBuilder(args);
-
-
 
 // Add Razor Pages support
 builder.Services.AddRazorPages();
@@ -26,6 +23,10 @@ builder.Services.AddIdentity<User, IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+// Register HttpContextAccessor (needed for CurrentStoreService)
+builder.Services.AddHttpContextAccessor();  // ✅ ADD THIS
+
+// Register all repositories
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
@@ -47,16 +48,19 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
 builder.Services.AddScoped<IRefundRequestRepository, RefundRequestRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<IStoreRepository, StoreRepository>();
 builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 
+// ✅ ADD THIS - Register CurrentStoreService
+builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
 
+// Register AutoMapper
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 
+// Register all managers
 builder.Services.AddScoped<UserManager>();
 builder.Services.AddScoped<StoreManager>();
 builder.Services.AddScoped<ProductManager>();
@@ -70,21 +74,12 @@ builder.Services.AddScoped<NotificationManager>();
 builder.Services.AddScoped<ComplaintManager>();
 builder.Services.AddScoped<MessagingManager>();
 
-
 var app = builder.Build();
 
-
+// Seed roles
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    await SeedData.InitializeAsync(services);
-}
-
-
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager =
-        scope.ServiceProvider
+    var roleManager = scope.ServiceProvider
         .GetRequiredService<RoleManager<IdentityRole<int>>>();
 
     string[] roles =
@@ -99,10 +94,16 @@ using (var scope = app.Services.CreateScope())
     {
         if (!await roleManager.RoleExistsAsync(role))
         {
-            await roleManager.CreateAsync(
-                new IdentityRole<int>(role));
+            await roleManager.CreateAsync(new IdentityRole<int>(role));
         }
     }
+}
+
+// Seed initial data
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await SeedData.InitializeAsync(services);
 }
 
 if (!app.Environment.IsDevelopment())
@@ -114,15 +115,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();   // Redirect HTTP to HTTPS
 app.UseStaticFiles();         // Serve static files (CSS, JS, Images)
 app.UseRouting();             // Enable routing
+app.UseAuthentication();      // ✅ ADD THIS - Enable authentication
 app.UseAuthorization();       // Enable authorization (roles)
-app.MapRazorPages();
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-
-    await SeedData.InitializeAsync(services);
-}// Map Razor Pages endpoints
-app.MapDefaultControllerRoute();
-
+app.MapRazorPages();          // Map Razor Pages endpoints
 
 app.Run();  // Run the application
