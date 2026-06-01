@@ -6,8 +6,7 @@ namespace Multi_Store.Core.Entities
 
         public int ProductID { get; set; }
 
-        public string ImageURL { get; set; } = string.Empty;
-        public string ImageUrl { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
         public int DisplayOrder { get; set; }
 
         public bool IsPrimary { get; set; }

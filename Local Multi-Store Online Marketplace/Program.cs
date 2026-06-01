@@ -3,50 +3,51 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface;
-using Multi_Store.Core.Interfaces;  // ✅ ADD THIS - for ICurrentStoreService
+using Multi_Store.Core.Interfaces;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Infrastructure.Repositories;
-using Multi_Store.Services.Managers;
-using Multi_Store.Services;  // ✅ ADD THIS - for CurrentStoreService
-using AutoMapper;
-<<<<<<< HEAD
-=======
 using Multi_Store.Services;
->>>>>>> c04741d09f85a7339dc44fc85ca1280b540f5f5b
+using Multi_Store.Services.Managers;
+using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Razor Pages support
+// Add Razor Pages
 builder.Services.AddRazorPages();
 
-// Register your ApplicationDbContext (your custom database context)
+// Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Identity
 builder.Services.AddIdentity<User, IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-<<<<<<< HEAD
-// Register HttpContextAccessor (needed for CurrentStoreService)
-builder.Services.AddHttpContextAccessor();  // ✅ ADD THIS
+// HttpContextAccessor
+builder.Services.AddHttpContextAccessor();
 
-// Register all repositories
-=======
 // Google + Facebook Authentication
 builder.Services.AddAuthentication()
     .AddGoogle(options =>
     {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+        options.ClientId =
+            builder.Configuration["Authentication:Google:ClientId"];
+
+        options.ClientSecret =
+            builder.Configuration["Authentication:Google:ClientSecret"];
     })
     .AddFacebook(options =>
     {
-        options.AppId = builder.Configuration["Authentication:Facebook:AppId"];
-        options.AppSecret = builder.Configuration["Authentication:Facebook:AppSecret"];
+        options.AppId =
+            builder.Configuration["Authentication:Facebook:AppId"];
+
+        options.AppSecret =
+            builder.Configuration["Authentication:Facebook:AppSecret"];
     });
 
->>>>>>> c04741d09f85a7339dc44fc85ca1280b540f5f5b
+// Repositories
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
@@ -74,16 +75,13 @@ builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 
-<<<<<<< HEAD
-// ✅ ADD THIS - Register CurrentStoreService
+// Current Store Service
 builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
 
-// Register AutoMapper
-=======
->>>>>>> c04741d09f85a7339dc44fc85ca1280b540f5f5b
+// AutoMapper
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 
-// Register all managers
+// Managers
 builder.Services.AddScoped<UserManager>();
 builder.Services.AddScoped<StoreManager>();
 builder.Services.AddScoped<ProductManager>();
@@ -99,24 +97,11 @@ builder.Services.AddScoped<MessagingManager>();
 
 var app = builder.Build();
 
-<<<<<<< HEAD
-// Seed roles
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider
-=======
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    await SeedData.InitializeAsync(services);
-}
-
+// Seed Roles
 using (var scope = app.Services.CreateScope())
 {
     var roleManager =
-        scope.ServiceProvider
->>>>>>> c04741d09f85a7339dc44fc85ca1280b540f5f5b
-        .GetRequiredService<RoleManager<IdentityRole<int>>>();
+        scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
 
     string[] roles =
     {
@@ -130,43 +115,38 @@ using (var scope = app.Services.CreateScope())
     {
         if (!await roleManager.RoleExistsAsync(role))
         {
-            await roleManager.CreateAsync(new IdentityRole<int>(role));
+            await roleManager.CreateAsync(
+                new IdentityRole<int>(role));
         }
     }
 }
 
-// Seed initial data
+// Seed Initial Data
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     await SeedData.InitializeAsync(services);
 }
 
+// Configure Middleware
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    app.UseHsts();  // HTTP Strict Transport Security
+    app.UseHsts();
 }
 
-app.UseHttpsRedirection();   // Redirect HTTP to HTTPS
-<<<<<<< HEAD
-app.UseStaticFiles();         // Serve static files (CSS, JS, Images)
-app.UseRouting();             // Enable routing
-app.UseAuthentication();      // ✅ ADD THIS - Enable authentication
-app.UseAuthorization();       // Enable authorization (roles)
-app.MapRazorPages();          // Map Razor Pages endpoints
+app.UseHttpsRedirection();
 
-app.Run();  // Run the application
-=======
-app.UseStaticFiles();        // Serve static files (CSS, JS, Images)
+app.UseStaticFiles();
 
-app.UseRouting();            // Enable routing
+app.UseRouting();
 
-app.UseAuthentication();     // Enable authentication (login, Google, Facebook)
-app.UseAuthorization();      // Enable authorization (roles)
+app.UseAuthentication();
 
-app.MapRazorPages();         // Map Razor Pages endpoints
+app.UseAuthorization();
+
+app.MapRazorPages();
+
 app.MapDefaultControllerRoute();
 
-app.Run();                   // Run the application
->>>>>>> c04741d09f85a7339dc44fc85ca1280b540f5f5b
+app.Run();
