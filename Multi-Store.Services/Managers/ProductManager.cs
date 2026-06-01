@@ -67,7 +67,7 @@ namespace Multi_Store.Services.Managers
                     var image = new ProductImage
                     {
                         ProductID = product.ProductID,
-                        ImageURL = img.ImageURL, // ✅ FIXED NAME
+                        ImageUrl = img.ImageUrl,
                         DisplayOrder = img.DisplayOrder,
                         IsPrimary = img.IsPrimary
                     };
