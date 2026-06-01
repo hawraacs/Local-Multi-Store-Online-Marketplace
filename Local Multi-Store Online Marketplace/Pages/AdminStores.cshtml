@@ -1,41 +1,138 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.AdminStoresModel
 @{
-    <h2>🏪 Stores Management</h2>
-
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Code</th>
-                <th>City</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @foreach (var s in Model.Stores)
-            {
-                <tr>
-                    <td>@s.StoreName</td>
-                    <td>@s.StoreCode</td>
-                    <td>@s.City</td>
-                    <td>@s.Status</td>
-                    <td>
-                        <form method="post" asp-page-handler="Approve">
-                            <input type="hidden" name="id" value="@s.StoreID" />
-                            <button class="btn approve">Approve</button>
-                        </form>
-
-                        <form method="post" asp-page-handler="Reject">
-                            <input type="hidden" name="id" value="@s.StoreID" />
-                            <button class="btn reject">Reject</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    Layout = null;
 }
+
+<!DOCTYPE html>
+<html>
+@if (TempData["Email"] != null)
+{
+    <div style="background:#d4edda;padding:15px;margin-bottom:20px;border-radius:8px;">
+        <b>Store Approved Successfully 🎉</b><br />
+        Email: @TempData["Email"] <br />
+        Password: @TempData["Password"]
+    </div>
+}
+<head>
+    <meta charset="utf-8" />
+    <title>Admin Stores</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap"
+          rel="stylesheet">
+
+    <style>
+
+        body {
+            font-family: Poppins;
+            margin: 0;
+            background: #f4f4f7;
+        }
+
+        .topbar {
+            background: #111;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            padding: 30px;
+        }
+
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+
+        th {
+            background: #111;
+            color: white;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .approve {
+            background: green;
+            color: white;
+        }
+
+        .reject {
+            background: red;
+            color: white;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <div>Admin Panel</div>
+        <div>Store Requests</div>
+    </div>
+
+    <div class="container">
+
+        <h2>🏪 Pending Store Requests</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Store Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>City</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var s in Model.Stores)
+                {
+                    <tr>
+                        <td>@s.StoreName</td>
+                        <td>@s.Email</td>
+                        <td>@s.PhoneNumber</td>
+                        <td>@s.City</td>
+                        <td>@s.Status</td>
+                        <td>
+
+                            <form method="post" asp-page-handler="Approve">
+                                <input type="hidden" name="id" value="@s.StoreID" />
+                                <button class="btn approve">Approve</button>
+                            </form>
+
+                            <form method="post" asp-page-handler="Reject">
+                                <input type="hidden" name="id" value="@s.StoreID" />
+                                <button class="btn reject">Reject</button>
+                            </form>
+
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+
+    </div>
+
+</body>
+
+</html>
