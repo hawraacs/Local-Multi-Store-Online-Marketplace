@@ -29,24 +29,28 @@ builder.Services.AddIdentity<User, IdentityRole<int>>()
 builder.Services.AddHttpContextAccessor();
 
 // Google + Facebook Authentication
-builder.Services.AddAuthentication()
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultScheme = IdentityConstants.ApplicationScheme;
+        options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+    })
     .AddGoogle(options =>
     {
         options.ClientId =
-            builder.Configuration["Authentication:Google:ClientId"];
+            builder.Configuration["Authentication:Google:ClientId"]!;
 
         options.ClientSecret =
-            builder.Configuration["Authentication:Google:ClientSecret"];
+            builder.Configuration["Authentication:Google:ClientSecret"]!;
     })
     .AddFacebook(options =>
     {
         options.AppId =
-            builder.Configuration["Authentication:Facebook:AppId"];
+            builder.Configuration["Authentication:Facebook:AppId"]!;
 
         options.AppSecret =
-            builder.Configuration["Authentication:Facebook:AppSecret"];
+            builder.Configuration["Authentication:Facebook:AppSecret"]!;
     });
-
 // Repositories
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
