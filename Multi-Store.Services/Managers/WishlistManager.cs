@@ -23,9 +23,20 @@ namespace Multi_Store.Services.Managers
             return data.Select(w => new WishlistDTO
             {
                 WishlistID = w.WishlistID,
+                CustomerID = w.CustomerID,
                 ProductID = w.ProductID,
-             
-              
+                AddedAt = w.AddedAt,
+
+                ProductName = w.Product.ProductName,
+                Price = w.Product.Price,
+                StoreName = w.Product.Store.StoreName,
+                IsOutOfStock = w.Product.IsOutOfStock,
+
+                ImageUrl = w.Product.Images
+                    .OrderByDescending(i => i.IsPrimary)
+                    .ThenBy(i => i.DisplayOrder)
+                    .Select(i => i.ImageUrl)
+                    .FirstOrDefault() ?? "/images/no-image.png"
             }).ToList();
         }
 

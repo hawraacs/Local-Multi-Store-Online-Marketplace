@@ -564,6 +564,25 @@ namespace Multi_Store.Services.Managers
             var customers = await _customerRepository.GetAllAsync();
             return customers.Count(c => c.IsVerified);
         }
+        public async Task SetDefaultAddressAsync(int customerId, int addressId)
+        {
+            await _customerAddressRepository.SetAllAsNonDefaultAsync(customerId);
+
+            var address = await _customerAddressRepository.GetByIdAsync(addressId);
+
+            if (address == null)
+                return;
+
+            if (address.CustomerID != customerId)
+                return;
+
+            address.IsDefault = true;
+            address.IsActive = true;
+
+            await _customerAddressRepository.UpdateAsync(address);
+
+            await UpdateCustomerDefaultAddress(customerId, addressId);
+        }
 
         // =========================
         // NOTE: Order methods removed because IOrderRepository doesn't have GetByCustomerIdAsync

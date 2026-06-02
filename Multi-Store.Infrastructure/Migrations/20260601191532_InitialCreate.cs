@@ -14,22 +14,11 @@ namespace Multi_Store.Infrastructure.Migrations
                 name: "ImageURL",
                 table: "ProductImages",
                 newName: "ImageUrl");
-
-            migrationBuilder.AddColumn<string>(
-                name: "ImageURL",
-                table: "ProductImages",
-                type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "ImageURL",
-                table: "ProductImages");
-
             migrationBuilder.RenameColumn(
                 name: "ImageUrl",
                 table: "ProductImages",
