@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Identity;
 using Multi_Store.Core.Entities;
 using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
@@ -19,9 +19,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         [BindProperty]
-        public StoreDTO Store { get; set; } = new();
-
-        public void OnGet() { }
+        public StoreDTO Store { get; set; } = new StoreDTO();
 
         public async Task<IActionResult> OnPostAsync()
         {
@@ -30,10 +28,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (user == null)
                 return RedirectToPage("/Identity/Account/Login");
 
-            Store.OwnerUserID = user.Id;   // ✅ REAL USER ID
-            Store.Status = "Pending";
+            Store.OwnerUserID = user.Id;
 
-            await _storeManager.RegisterStoreAsync(Store);
+            var storeId = await _storeManager.RegisterStoreAsync(Store);
+
+            Console.WriteLine($"STORE CREATED: {storeId}");
+            Console.WriteLine($"USER ID: {user.Id}");
 
             return RedirectToPage("/Customer1");
         }
