@@ -78,6 +78,8 @@ builder.Services.AddScoped<IStoreRepository, StoreRepository>();
 builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
+builder.Services.AddScoped<IRecentlyViewedProductRepository,
+    RecentlyViewedProductRepository>();
 
 // Current Store Service
 builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
@@ -98,6 +100,10 @@ builder.Services.AddScoped<ReviewManager>();
 builder.Services.AddScoped<NotificationManager>();
 builder.Services.AddScoped<ComplaintManager>();
 builder.Services.AddScoped<MessagingManager>();
+builder.Services.AddScoped<WishlistManager>();
+builder.Services.AddScoped<CustomerAddressManager>();
+builder.Services.AddScoped<OrderHistoryManager>();
+builder.Services.AddScoped<RecentlyViewedManager>();
 
 var app = builder.Build();
 
