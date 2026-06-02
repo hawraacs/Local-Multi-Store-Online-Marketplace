@@ -1,5 +1,4 @@
-﻿// Entities/Customer.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Multi_Store.Core.Entities
@@ -15,23 +14,35 @@ namespace Multi_Store.Core.Entities
         public int LoyaltyPoints { get; set; } = 0;
         public bool CODBlocked { get; set; } = false;
 
-        // Navigation properties - MAKE SURE ALL EXIST
+        // Navigation properties
         public virtual User User { get; set; } = null!;
         public virtual CustomerAddress? DefaultAddress { get; set; }
-        public virtual ICollection<CustomerAddress> Addresses { get; set; } = new List<CustomerAddress>();
 
-        // ⚠️ Wishlist property
-        public virtual ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
+        public virtual ICollection<CustomerAddress> Addresses { get; set; }
+            = new List<CustomerAddress>();
 
-        // ⚠️ Orders property
-        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+        // Wishlist
+        public virtual ICollection<Wishlist> Wishlists { get; set; }
+            = new List<Wishlist>();
 
-        // ⚠️ Reviews property
-        public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
+        // Orders
+        public virtual ICollection<Order> Orders { get; set; }
+            = new List<Order>();
 
-        // ⚠️ Complaints property
-        public virtual ICollection<Complaint> Complaints { get; set; } = new List<Complaint>();
+        // Reviews
+        public virtual ICollection<Review> Reviews { get; set; }
+            = new List<Review>();
 
-        public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
+        // Complaints
+        public virtual ICollection<Complaint> Complaints { get; set; }
+            = new List<Complaint>();
+
+        // Carts
+        public virtual ICollection<Cart> Carts { get; set; }
+            = new List<Cart>();
+
+        // Recently Viewed Products
+        public virtual ICollection<RecentlyViewedProduct> RecentlyViewedProducts { get; set; }
+            = new List<RecentlyViewedProduct>();
     }
 }

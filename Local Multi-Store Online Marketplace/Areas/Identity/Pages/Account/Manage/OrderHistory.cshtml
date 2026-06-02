@@ -1,0 +1,71 @@
+﻿@page
+@model Multi_Store.Pages.Customer.OrderHistoryModel
+@{
+    ViewData["Title"] = "Order History";
+}
+
+<link rel="stylesheet" href="~/css/customer-dashboard.css" />
+
+<div class="customer-page">
+    <div class="customer-header">
+        <div>
+            <h2>My Orders</h2>
+            <p>View your current and previous orders.</p>
+        </div>
+    </div>
+
+    @if (Model.Orders == null || !Model.Orders.Any())
+    {
+        <div class="empty-state">
+            <h4>No orders yet</h4>
+            <p>Your orders will appear here after checkout.</p>
+        </div>
+    }
+    else
+    {
+        <div class="customer-grid">
+            @foreach (var order in Model.Orders)
+            {
+                var statusClass = order.Status switch
+                {
+                    "Pending" => "status-pending",
+                    "Confirmed" => "status-confirmed",
+                    "Preparing" => "status-confirmed",
+                    "Delivered" => "status-delivered",
+                    "Cancelled" => "status-cancelled",
+                    _ => "status-pending"
+                };
+
+                <div class="customer-card">
+                    <div class="card-title">@order.OrderNumber</div>
+
+                    <div class="card-text">
+                        <strong>Date:</strong> @order.OrderDate.ToString("dd MMM yyyy")
+                    </div>
+
+                    <div class="card-text">
+                        <strong>Payment:</strong> @order.PaymentMethod - @order.PaymentStatus
+                    </div>
+
+                    <div class="card-text">
+                        <strong>Items:</strong> @(order.OrderItems?.Count ?? 0)
+                    </div>
+
+                    <div class="price">$@order.TotalAmount</div>
+
+                    <span class="order-status @statusClass">
+                        @order.Status
+                    </span>
+
+                    <div class="card-actions">
+                        <a asp-page="/Customer/OrderDetails"
+                           asp-route-id="@order.OrderID"
+                           class="btn-secondary-action">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

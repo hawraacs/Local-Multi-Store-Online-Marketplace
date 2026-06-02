@@ -1,0 +1,60 @@
+﻿@page
+@model Multi_Store.Pages.Customer.RecentlyViewedModel
+@{
+    ViewData["Title"] = "Recently Viewed";
+}
+
+<link rel="stylesheet" href="~/css/customer-dashboard.css" />
+
+<div class="customer-page">
+    <div class="customer-header">
+        <div>
+            <h2>Recently Viewed Products</h2>
+            <p>Continue browsing products you opened before.</p>
+        </div>
+    </div>
+
+    @if (Model.Products == null || !Model.Products.Any())
+    {
+        <div class="empty-state">
+            <h4>No recently viewed products</h4>
+            <p>Products you view will appear here.</p>
+        </div>
+    }
+    else
+    {
+        <div class="customer-grid">
+            @foreach (var product in Model.Products)
+            {
+                <div class="customer-card product-card">
+                    <img src="@product.ImageUrl" alt="@product.ProductName" />
+
+                    <div class="card-title">@product.ProductName</div>
+                    <div class="card-text">@product.StoreName</div>
+                    <div class="price">$@product.Price</div>
+
+                    @if (product.IsOutOfStock)
+                    {
+                        <span class="badge-danger">Out of Stock</span>
+                    }
+
+                    <div class="card-actions">
+                        <a asp-page="/ProductDetails"
+                           asp-route-id="@product.ProductID"
+                           class="btn-secondary-action">
+                            View Again
+                        </a>
+
+                        <form method="post"
+                              asp-page-handler="AddToWishlist"
+                              asp-route-productId="@product.ProductID">
+                            <button type="submit" class="btn-edit">
+                                Save
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
