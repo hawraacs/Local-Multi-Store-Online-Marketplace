@@ -1,5 +1,6 @@
 ﻿using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface;
+using Multi_Store.Services.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -237,6 +238,31 @@ namespace Multi_Store.Services.Managers
         private string GenerateOrderNumber()
         {
             return $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString()[..4]}";
+        }
+        public async Task<List<OrderDTO>> GetCustomerOrdersAsync(int customerId)
+        {
+            var orders = await _orderRepository.GetByCustomerAsync(customerId);
+
+            return orders.Select(o => new OrderDTO
+            {
+                OrderID = o.OrderID,
+                OrderNumber = o.OrderNumber,
+                CustomerID = o.CustomerID,
+                AddressID = o.AddressID,
+                OrderDate = o.OrderDate,
+                Status = o.Status,
+                PaymentMethod = o.PaymentMethod,
+                PaymentStatus = o.PaymentStatus,
+                Subtotal = o.Subtotal,
+                DeliveryFee = o.DeliveryFee,
+                DiscountAmount = o.DiscountAmount,
+                TaxAmount = o.TaxAmount,
+                TotalAmount = o.TotalAmount,
+                CancellationReason = o.CancellationReason,
+                CancelledAt = o.CancelledAt,
+                Notes = o.Notes,
+                OrderItems = o.OrderItems
+            }).ToList();
         }
     }
 }

@@ -31,7 +31,7 @@ namespace Multi_Store.Services
             CreateMap<ProductImage, ProductImageDTO>().ReverseMap();
             CreateMap<RefundRequest, RefundRequestDTO>().ReverseMap();
             CreateMap<Review, ReviewDTO>().ReverseMap();
-            
+            CreateMap<RecentlyViewedProduct, RecentlyViewedProductDTO>().ReverseMap();
             CreateMap<Session, SessionDTO>().ReverseMap();
             CreateMap<Store, StoreDTO>().ReverseMap();
             CreateMap<SystemConfig, SystemConfigDTO>().ReverseMap();

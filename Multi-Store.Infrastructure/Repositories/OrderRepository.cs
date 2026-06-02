@@ -30,10 +30,10 @@ namespace Multi_Store.Infrastructure.Repositories
         {
             return await _context.Orders
                 .Where(o => o.CustomerID == customerId)
+                .Include(o => o.OrderItems)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
         }
-
         public async Task<IReadOnlyList<Order>> GetByStatusAsync(string status)
         {
             return await _context.Orders

@@ -1,0 +1,130 @@
+﻿@page
+@model Multi_Store.Pages.Customer.MyAddressesModel
+@{
+    ViewData["Title"] = "My Addresses";
+}
+
+<link rel="stylesheet" href="~/css/customer-addresses.css" />
+
+<div class="addresses-page">
+
+    <div class="addresses-top">
+        <div>
+            <span class="section-label">Customer Management</span>
+            <h1>Delivery Addresses</h1>
+            <p>Manage your saved delivery addresses and choose your default location.</p>
+        </div>
+
+        <a asp-page="/Customer/AddAddress" class="add-address-btn">
+            <span>+</span>
+            Add Address
+        </a>
+    </div>
+
+    <div class="summary-row">
+        <div class="summary-box">
+            <span>Total Addresses</span>
+            <strong>@(Model.Addresses?.Count ?? 0)</strong>
+        </div>
+
+        <div class="summary-box">
+            <span>Default Address</span>
+            <strong>
+                @(Model.Addresses != null && Model.Addresses.Any(a => a.IsDefault) ? "Selected" : "Not Set")
+            </strong>
+        </div>
+
+        <div class="summary-box">
+            <span>Active Addresses</span>
+            <strong>@(Model.Addresses?.Count(a => a.IsActive) ?? 0)</strong>
+        </div>
+    </div>
+
+    @if (Model.Addresses == null || !Model.Addresses.Any())
+    {
+        <div class="empty-address-box">
+            <div class="empty-icon">📍</div>
+            <h3>No delivery addresses yet</h3>
+            <p>Add your first delivery address to make checkout faster and easier.</p>
+
+            <a asp-page="/Customer/AddAddress" class="empty-add-btn">
+                Add Your First Address
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="address-list">
+            @foreach (var address in Model.Addresses)
+            {
+                <div class="address-item @(address.IsDefault ? "default-item" : "")">
+
+                    <div class="address-icon">
+                        📍
+                    </div>
+
+                    <div class="address-content">
+                        <div class="address-title-row">
+                            <h3>@address.Area, @address.City</h3>
+
+                            @if (address.IsDefault)
+                            {
+                                <span class="default-badge">Default</span>
+                            }
+                            else
+                            {
+                                <span class="normal-badge">Saved</span>
+                            }
+                        </div>
+
+                        <p class="main-address">@address.AddressLine1</p>
+
+                        @if (!string.IsNullOrWhiteSpace(address.AddressLine2))
+                        {
+                            <p class="sub-address">@address.AddressLine2</p>
+                        }
+
+                        <div class="address-meta">
+                            @if (!string.IsNullOrWhiteSpace(address.PostalCode))
+                            {
+                                <span>Postal Code: @address.PostalCode</span>
+                            }
+
+                            <span>Status: @(address.IsActive ? "Active" : "Inactive")</span>
+                        </div>
+                    </div>
+
+                    <div class="address-actions">
+                        <a asp-page="/Customer/EditAddress"
+                           asp-route-id="@address.AddressID"
+                           class="action-btn edit-btn">
+                            Edit
+                        </a>
+
+                        @if (!address.IsDefault)
+                        {
+                            <form method="post"
+                                  asp-page-handler="SetDefault"
+                                  asp-route-id="@address.AddressID">
+                                <button type="submit" class="action-btn default-btn">
+                                    Make Default
+                                </button>
+                            </form>
+                        }
+
+                        <form method="post"
+                              asp-page-handler="Delete"
+                              asp-route-id="@address.AddressID">
+                            <button type="submit"
+                                    class="action-btn delete-btn"
+                                    onclick="return confirm('Are you sure you want to delete this address?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            }
+        </div>
+    }
+</div>

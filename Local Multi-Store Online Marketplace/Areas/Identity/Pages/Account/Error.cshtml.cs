@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages
+namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 {
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used

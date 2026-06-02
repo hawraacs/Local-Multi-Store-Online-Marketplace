@@ -25,6 +25,9 @@ namespace Multi_Store.Infrastructure.Repositories
             return await _context.Wishlists
                 .Where(w => w.CustomerID == customerId)
                 .Include(w => w.Product)
+                    .ThenInclude(p => p.Images)
+                .Include(w => w.Product)
+                    .ThenInclude(p => p.Store)
                 .OrderByDescending(w => w.AddedAt)
                 .ToListAsync();
         }

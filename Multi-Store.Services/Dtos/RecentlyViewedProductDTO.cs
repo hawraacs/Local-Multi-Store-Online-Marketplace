@@ -1,14 +1,11 @@
-﻿// Entities/Wishlist.cs
-using Multi_Store.Core.Entities;
-using System;
-namespace Multi_Store.Services.Dtos
+﻿namespace Multi_Store.Services.Dtos
 {
-    public class WishlistDTO
+    public class RecentlyViewedProductDTO
     {
-        public int WishlistID { get; set; }
+        public int Id { get; set; }
         public int CustomerID { get; set; }
         public int ProductID { get; set; }
-        public DateTime AddedAt { get; set; }
+        public DateTime ViewedAt { get; set; }
 
         public string ProductName { get; set; } = string.Empty;
         public decimal Price { get; set; }
