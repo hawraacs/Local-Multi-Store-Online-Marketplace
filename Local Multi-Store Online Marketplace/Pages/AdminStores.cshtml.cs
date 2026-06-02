@@ -11,8 +11,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     {
         private readonly StoreManager _storeManager;
         private readonly UserManager<User> _userManager;
-        public string? GeneratedEmail { get; set; }
-        public string? GeneratedPassword { get; set; }
+
         public AdminStoresModel(StoreManager storeManager, UserManager<User> userManager)
         {
             _storeManager = storeManager;
@@ -23,27 +22,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public async Task OnGetAsync()
         {
-            var stores = await _storeManager.GetAllStoresAsync();
-
-            Stores = stores.ToList();
-
-            // DEBUG (IMPORTANT)
-            foreach (var s in Stores)
-            {
-                Console.WriteLine($"STORE: {s.StoreID} | {s.Status} | {s.Email}");
-            }
+            Stores = (await _storeManager.GetAllStoresAsync()).ToList();
         }
 
         public async Task<IActionResult> OnPostApprove(int id)
         {
-            var account =
-                await _storeManager.ApproveStoreWithAccountAsync(
-                    id,
-                    1,
-                    _userManager);
+            var result = await _storeManager.ApproveStoreWithAccountAsync(
+                id,
+                1,
+                _userManager);
 
-            TempData["Email"] = account.email;
-            TempData["Password"] = account.password;
+            TempData["Email"] = result.email;
+            TempData["Password"] = result.password;
 
             return RedirectToPage();
         }

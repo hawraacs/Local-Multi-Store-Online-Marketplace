@@ -85,7 +85,11 @@ namespace Multi_Store.Infrastructure.Repositories.Base
         public async Task<T> AddAsync(T entity)
         {
             await _dbContext.Set<T>().AddAsync(entity);
-            await _dbContext.SaveChangesAsync();
+
+            var result = await _dbContext.SaveChangesAsync();
+
+            Console.WriteLine($"SaveChanges = {result}");
+
             return entity;
         }
 

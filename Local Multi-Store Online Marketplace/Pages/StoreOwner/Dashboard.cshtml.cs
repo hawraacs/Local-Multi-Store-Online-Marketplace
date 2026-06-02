@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 
     using global::Multi_Store.Core.Entities;
     using global::Multi_Store.Core.Interfaces;
@@ -44,13 +42,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 }
 
                 var store = await _currentStoreService.GetCurrentStoreAsync();
-                if (store == null)
-                {
-                    TempData["ErrorMessage"] = "You need to register a store first.";
-                    return RedirectToPage("/StoreOwner/RegisterStore");
-                }
+            if (store == null)
+            {
+                TempData["ErrorMessage"] = "Store not found. Contact admin.";
+                return Page();
+            }
 
-                Store = store;
+            Store = store;
             ViewData["StoreName"] = store.StoreName;
 
             // Load dashboard statistics
