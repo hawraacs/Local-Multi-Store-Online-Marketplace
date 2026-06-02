@@ -1,14 +1,10 @@
 ﻿#nullable disable
 
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 using Multi_Store.Core.Entities;
 using Multi_Store.Services.Managers;
 
@@ -37,27 +33,29 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         }
 
         [BindProperty]
-        public InputModel Input { get; set; }
+        public InputModel Input { get; set; } = new();
 
-        public string ReturnUrl { get; set; }
+        public string ReturnUrl { get; set; } = string.Empty;
+
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
+            = new List<AuthenticationScheme>();
 
         public class InputModel
         {
             [Required]
             [EmailAddress]
-            public string Email { get; set; }
+            public string Email { get; set; } = string.Empty;
 
             [Required]
             [DataType(DataType.Password)]
-            public string Password { get; set; }
+            public string Password { get; set; } = string.Empty;
 
             public bool RememberMe { get; set; }
         }
 
         public async Task OnGetAsync(string returnUrl = null)
         {
-            ReturnUrl = returnUrl;
+            ReturnUrl = returnUrl ?? Url.Content("~/");
 
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
@@ -70,10 +68,15 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         {
             ReturnUrl = returnUrl ?? Url.Content("~/");
 
-            if (!ModelState.IsValid)
-                return Page();
+            ExternalLogins = (await _signInManager
+                .GetExternalAuthenticationSchemesAsync())
+                .ToList();
 
-            // 1. LOGIN
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
+
             var result = await _signInManager.PasswordSignInAsync(
                 Input.Email,
                 Input.Password,
@@ -82,22 +85,52 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 
             if (!result.Succeeded)
             {
-                ModelState.AddModelError("", "Invalid login attempt.");
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                 return Page();
             }
 
-            // 2. GET USER
             var user = await _userManager.FindByEmailAsync(Input.Email);
 
             if (user == null)
             {
-                ModelState.AddModelError("", "User not found.");
+                ModelState.AddModelError(string.Empty, "User not found.");
                 return Page();
             }
 
+            _logger.LogInformation("User logged in.");
+
+            return await RedirectByRoleAsync(user);
+        }
+
+        public IActionResult OnPostExternalLoginAsync(
+            string provider,
+            string returnUrl = null)
+        {
+            if (string.IsNullOrWhiteSpace(provider))
+            {
+                return RedirectToPage("./Login");
+            }
+
+            var redirectUrl = Url.Page(
+                "./ExternalLogin",
+                pageHandler: "Callback",
+                values: new
+                {
+                    returnUrl = returnUrl ?? Url.Content("~/")
+                });
+
+            var properties = _signInManager
+                .ConfigureExternalAuthenticationProperties(
+                    provider,
+                    redirectUrl);
+
+            return new ChallengeResult(provider, properties);
+        }
+
+        private async Task<IActionResult> RedirectByRoleAsync(User user)
+        {
             var roles = await _userManager.GetRolesAsync(user);
 
-            // 3. STORE APPROVAL CHECK
             if (roles.Contains("StoreOwner"))
             {
                 var approved = await _storeManager.IsStoreApprovedAsync(user.Id);
@@ -105,12 +138,14 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 if (!approved)
                 {
                     await _signInManager.SignOutAsync();
-                    ModelState.AddModelError("", "Your store is waiting for admin approval.");
+                    ModelState.AddModelError(
+                        string.Empty,
+                        "Your store is waiting for admin approval.");
+
                     return Page();
                 }
             }
 
-            // 4. DELIVERY APPROVAL CHECK
             if (roles.Contains("Delivery"))
             {
                 var approved = await _deliveryManager.IsDeliveryApprovedAsync(user.Id);
@@ -118,25 +153,33 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 if (!approved)
                 {
                     await _signInManager.SignOutAsync();
-                    ModelState.AddModelError("", "Your delivery account is waiting for admin approval.");
+                    ModelState.AddModelError(
+                        string.Empty,
+                        "Your delivery account is waiting for admin approval.");
+
                     return Page();
                 }
             }
 
-            _logger.LogInformation("User logged in.");
-
-            // 5. ROLE REDIRECTION
             if (roles.Contains("Admin"))
+            {
                 return RedirectToPage("/Admin1");
+            }
 
             if (roles.Contains("StoreOwner"))
+            {
                 return RedirectToPage("/Store1");
+            }
 
             if (roles.Contains("Customer"))
+            {
                 return RedirectToPage("/Customer1");
+            }
 
             if (roles.Contains("Delivery"))
+            {
                 return RedirectToPage("/Delivery1");
+            }
 
             return RedirectToPage("/Index");
         }

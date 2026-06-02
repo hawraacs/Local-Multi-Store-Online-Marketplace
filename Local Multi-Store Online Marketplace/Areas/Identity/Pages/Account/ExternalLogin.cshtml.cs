@@ -1,86 +1,57 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-#nullable disable
+﻿#nullable disable
 
-using System;
-using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using System.Text;
-using System.Text.Encodings.Web;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Logging;
 using Multi_Store.Core.Entities;
+using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Managers;
 
 namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 {
-    [AllowAnonymous]
     public class ExternalLoginModel : PageModel
     {
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
-        private readonly IUserStore<User> _userStore;
-        private readonly IUserEmailStore<User> _emailStore;
-        private readonly IEmailSender _emailSender;
+        private readonly ApplicationDbContext _context;
+        private readonly StoreManager _storeManager;
+        private readonly DeliveryManager _deliveryManager;
         private readonly ILogger<ExternalLoginModel> _logger;
 
         public ExternalLoginModel(
             SignInManager<User> signInManager,
             UserManager<User> userManager,
-            IUserStore<User> userStore,
-            ILogger<ExternalLoginModel> logger,
-            IEmailSender emailSender)
+            ApplicationDbContext context,
+            StoreManager storeManager,
+            DeliveryManager deliveryManager,
+            ILogger<ExternalLoginModel> logger)
         {
             _signInManager = signInManager;
             _userManager = userManager;
-            _userStore = userStore;
-            _emailStore = GetEmailStore();
+            _context = context;
+            _storeManager = storeManager;
+            _deliveryManager = deliveryManager;
             _logger = logger;
-            _emailSender = emailSender;
         }
-
-        [BindProperty]
-        public InputModel Input { get; set; }
-
-        public string ProviderDisplayName { get; set; }
-
-        public string ReturnUrl { get; set; }
 
         [TempData]
         public string ErrorMessage { get; set; }
 
+        public string ProviderDisplayName { get; set; } = string.Empty;
+
+        public string ReturnUrl { get; set; } = string.Empty;
+
+        public InputModel Input { get; set; } = new();
+
         public class InputModel
         {
-            [Required]
-            [EmailAddress]
-            public string Email { get; set; }
+            public string Email { get; set; } = string.Empty;
         }
 
         public IActionResult OnGet()
         {
             return RedirectToPage("./Login");
-        }
-
-        public IActionResult OnPost(string provider, string returnUrl = null)
-        {
-            var redirectUrl = Url.Page(
-                "./ExternalLogin",
-                pageHandler: "Callback",
-                values: new { returnUrl });
-
-            var properties =
-                _signInManager
-                .ConfigureExternalAuthenticationProperties(
-                    provider,
-                    redirectUrl);
-
-            return new ChallengeResult(provider, properties);
         }
 
         public async Task<IActionResult> OnGetCallbackAsync(
@@ -89,207 +60,201 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
 
-            if (remoteError != null)
+            if (!string.IsNullOrWhiteSpace(remoteError))
             {
-                ErrorMessage =
-                    $"Error from external provider: {remoteError}";
-
-                return RedirectToPage(
-                    "./Login",
-                    new { ReturnUrl = returnUrl });
+                ErrorMessage = $"External provider error: {remoteError}";
+                return RedirectToPage("./Login");
             }
 
-            var info =
-                await _signInManager.GetExternalLoginInfoAsync();
+            var info = await _signInManager.GetExternalLoginInfoAsync();
 
             if (info == null)
             {
-                ErrorMessage =
-                    "Error loading external login information.";
-
-                return RedirectToPage(
-                    "./Login",
-                    new { ReturnUrl = returnUrl });
+                ErrorMessage = "Error loading external login information.";
+                return RedirectToPage("./Login");
             }
 
-            var result =
-                await _signInManager.ExternalLoginSignInAsync(
-                    info.LoginProvider,
-                    info.ProviderKey,
-                    isPersistent: false,
-                    bypassTwoFactor: true);
+            var signInResult = await _signInManager.ExternalLoginSignInAsync(
+                info.LoginProvider,
+                info.ProviderKey,
+                isPersistent: false,
+                bypassTwoFactor: true);
 
-            if (result.Succeeded)
+            if (signInResult.Succeeded)
             {
+                var linkedUser = await _userManager.FindByLoginAsync(
+                    info.LoginProvider,
+                    info.ProviderKey);
+
+                if (linkedUser == null)
+                {
+                    ErrorMessage = "External login user was not found.";
+                    return RedirectToPage("./Login");
+                }
+
                 _logger.LogInformation(
-                    "{Name} logged in with {LoginProvider} provider.",
-                    info.Principal.Identity.Name,
+                    "{Provider} user logged in.",
                     info.LoginProvider);
 
-                return LocalRedirect(returnUrl);
+                return await RedirectByRoleAsync(linkedUser);
             }
 
-            if (result.IsLockedOut)
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+
+            if (string.IsNullOrWhiteSpace(email))
             {
-                return RedirectToPage("./Lockout");
+                ErrorMessage = "Google/Facebook did not return an email address.";
+                return RedirectToPage("./Login");
             }
 
-            ReturnUrl = returnUrl;
-            ProviderDisplayName = info.ProviderDisplayName;
+            var existingUser = await _userManager.FindByEmailAsync(email);
 
-            if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+            if (existingUser != null)
             {
-                Input = new InputModel
+                var existingLogins = await _userManager.GetLoginsAsync(existingUser);
+
+                var alreadyLinked = existingLogins.Any(login =>
+                    login.LoginProvider == info.LoginProvider &&
+                    login.ProviderKey == info.ProviderKey);
+
+                if (!alreadyLinked)
                 {
-                    Email =
-                        info.Principal.FindFirstValue(
-                            ClaimTypes.Email)
-                };
-            }
+                    var addLoginResult = await _userManager.AddLoginAsync(
+                        existingUser,
+                        info);
 
-            return Page();
-        }
-
-        public async Task<IActionResult> OnPostConfirmationAsync(
-            string returnUrl = null)
-        {
-            returnUrl ??= Url.Content("~/");
-
-            var info =
-                await _signInManager.GetExternalLoginInfoAsync();
-
-            if (info == null)
-            {
-                ErrorMessage =
-                    "Error loading external login information during confirmation.";
-
-                return RedirectToPage(
-                    "./Login",
-                    new { ReturnUrl = returnUrl });
-            }
-
-            if (ModelState.IsValid)
-            {
-                var user = CreateUser();
-
-                user.Email = Input.Email;
-                user.UserName = Input.Email;
-                user.IsActive = true;
-                user.CreatedAt = DateTime.UtcNow;
-
-                await _userStore.SetUserNameAsync(
-                    user,
-                    Input.Email,
-                    CancellationToken.None);
-
-                await _emailStore.SetEmailAsync(
-                    user,
-                    Input.Email,
-                    CancellationToken.None);
-
-                var result =
-                    await _userManager.CreateAsync(user);
-
-                if (result.Succeeded)
-                {
-                    // Default Role
-                    await _userManager.AddToRoleAsync(
-                        user,
-                        "Customer");
-
-                    result =
-                        await _userManager.AddLoginAsync(
-                            user,
-                            info);
-
-                    if (result.Succeeded)
+                    if (!addLoginResult.Succeeded)
                     {
-                        _logger.LogInformation(
-                            "User created an account using {Name} provider.",
-                            info.LoginProvider);
+                        ErrorMessage = string.Join(
+                            " ",
+                            addLoginResult.Errors.Select(e => e.Description));
 
-                        var userId =
-                            await _userManager.GetUserIdAsync(user);
-
-                        var code =
-                            await _userManager
-                            .GenerateEmailConfirmationTokenAsync(user);
-
-                        code = WebEncoders.Base64UrlEncode(
-                            Encoding.UTF8.GetBytes(code));
-
-                        var callbackUrl = Url.Page(
-                            "/Account/ConfirmEmail",
-                            pageHandler: null,
-                            values: new
-                            {
-                                area = "Identity",
-                                userId = userId,
-                                code = code
-                            },
-                            protocol: Request.Scheme);
-
-                        await _emailSender.SendEmailAsync(
-                            Input.Email,
-                            "Confirm your email",
-                            $"Please confirm your account by " +
-                            $"<a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>" +
-                            $"clicking here</a>.");
-
-                        if (_userManager.Options
-                            .SignIn
-                            .RequireConfirmedAccount)
-                        {
-                            return RedirectToPage(
-                                "./RegisterConfirmation",
-                                new { Email = Input.Email });
-                        }
-
-                        await _signInManager.SignInAsync(
-                            user,
-                            isPersistent: false,
-                            info.LoginProvider);
-
-                        return LocalRedirect(returnUrl);
+                        return RedirectToPage("./Login");
                     }
                 }
 
-                foreach (var error in result.Errors)
+                await _signInManager.SignInAsync(
+                    existingUser,
+                    isPersistent: false);
+
+                _logger.LogInformation(
+                    "Existing user linked with {Provider}.",
+                    info.LoginProvider);
+
+                return await RedirectByRoleAsync(existingUser);
+            }
+
+            var fullName =
+                info.Principal.FindFirstValue(ClaimTypes.Name)
+                ?? email.Split('@')[0];
+
+            var newUser = new User
+            {
+                UserName = email,
+                Email = email,
+                FullName = fullName,
+                PhoneNumber = string.Empty,
+                IsActive = true,
+                EmailConfirmed = true
+            };
+
+            var createResult = await _userManager.CreateAsync(newUser);
+
+            if (!createResult.Succeeded)
+            {
+                ErrorMessage = string.Join(
+                    " ",
+                    createResult.Errors.Select(e => e.Description));
+
+                return RedirectToPage("./Login");
+            }
+
+            var loginResult = await _userManager.AddLoginAsync(
+                newUser,
+                info);
+
+            if (!loginResult.Succeeded)
+            {
+                ErrorMessage = string.Join(
+                    " ",
+                    loginResult.Errors.Select(e => e.Description));
+
+                return RedirectToPage("./Login");
+            }
+
+            await _userManager.AddToRoleAsync(newUser, "Customer");
+
+            var customer = new Customer
+            {
+                UserID = newUser.Id,
+                IsVerified = true,
+                LoyaltyPoints = 0,
+                CODBlocked = false
+            };
+
+            _context.Customers.Add(customer);
+            await _context.SaveChangesAsync();
+
+            await _signInManager.SignInAsync(
+                newUser,
+                isPersistent: false);
+
+            _logger.LogInformation(
+                "New user created using {Provider}.",
+                info.LoginProvider);
+
+            return RedirectToPage("/Customer1");
+        }
+
+        private async Task<IActionResult> RedirectByRoleAsync(User user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+
+            if (roles.Contains("StoreOwner"))
+            {
+                var approved = await _storeManager.IsStoreApprovedAsync(user.Id);
+
+                if (!approved)
                 {
-                    ModelState.AddModelError(
-                        string.Empty,
-                        error.Description);
+                    await _signInManager.SignOutAsync();
+                    ErrorMessage = "Your store is waiting for admin approval.";
+                    return RedirectToPage("./Login");
                 }
             }
 
-            ProviderDisplayName = info.ProviderDisplayName;
-            ReturnUrl = returnUrl;
-
-            return Page();
-        }
-
-        private User CreateUser()
-        {
-            try
+            if (roles.Contains("Delivery"))
             {
-                return Activator.CreateInstance<User>();
-            }
-            catch
-            {
-                throw new InvalidOperationException(
-                    $"Can't create an instance of '{nameof(User)}'.");
-            }
-        }
+                var approved = await _deliveryManager.IsDeliveryApprovedAsync(user.Id);
 
-        private IUserEmailStore<User> GetEmailStore()
-        {
-            if (!_userManager.SupportsUserEmail)
-            {
-                throw new NotSupportedException(
-                    "The default UI requires a user store with email support.");
+                if (!approved)
+                {
+                    await _signInManager.SignOutAsync();
+                    ErrorMessage = "Your delivery account is waiting for admin approval.";
+                    return RedirectToPage("./Login");
+                }
             }
 
-            return (IUserEmailStore<User>)_userStore;
+            if (roles.Contains("Admin"))
+            {
+                return RedirectToPage("/Admin1");
+            }
+
+            if (roles.Contains("StoreOwner"))
+            {
+                return RedirectToPage("/Store1");
+            }
+
+            if (roles.Contains("Customer"))
+            {
+                return RedirectToPage("/Customer1");
+            }
+
+            if (roles.Contains("Delivery"))
+            {
+                return RedirectToPage("/Delivery1");
+            }
+
+            return RedirectToPage("/Index");
         }
     }
 }
