@@ -1,0 +1,58 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order.IndexModel
+@{
+    ViewData["Title"] = "Orders";
+    Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Orders</h1>
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-table me-1"></i>
+            Order List
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Orders)
+                        {
+                            <tr>
+                                <td>@order.OrderNumber</td>
+                                <td>@order.CustomerName</td>
+                                <td>@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@order.ItemCount</td>
+                                <td>$@order.TotalAmount.ToString("N2")</td>
+                                <td>
+                                    <form method="post" asp-page-handler="UpdateStatus" class="d-inline">
+                                        <input type="hidden" name="orderId" value="@order.OrderID" />
+                                        <select name="newStatus" onchange="this.form.submit()">
+                                            <option value="Pending" selected="@(order.Status == "Pending")">Pending</option>
+                                            <option value="Confirmed" selected="@(order.Status == "Confirmed")">Confirmed</option>
+                                            <option value="Preparing" selected="@(order.Status == "Preparing")">Preparing</option>
+                                            <option value="OutForDelivery" selected="@(order.Status == "OutForDelivery")">Out for Delivery</option>
+                                            <option value="Delivered" selected="@(order.Status == "Delivered")">Delivered</option>
+                                            <option value="Cancelled" selected="@(order.Status == "Cancelled")">Cancelled</option>
+                                        </select>
+                                    </form>
+                                </td>
+                                <td>
+                                    <a href="/StoreOwner/Order/Details?id=@order.OrderID" class="btn btn-sm btn-primary">View</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
