@@ -8,86 +8,123 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>@ViewData["Title"] - Multi Store</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 
 <body>
 
-<header>
+    <header>
+        <!-- DEFAULT TOP NAVBAR: مثل قبل -->
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-0">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-page="/Index">
+                    Local_Multi_Store_Online_Marketplace
+                </a>
 
-@if (SignInManager.IsSignedIn(User))
-{
-    var user = await UserManager.GetUserAsync(User);
-    var roles = await UserManager.GetRolesAsync(user);
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-    <!-- ================= ADMIN ================= -->
-    if (roles.Contains("Admin"))
-    {
-        <nav style="background:#222;padding:15px;color:white;display:flex;gap:20px;">
-            <a href="/Admin1" style="color:white;">Dashboard</a>
-            <a href="/AdminStores" style="color:white;">Stores</a>
-            <a href="/AdminUsers" style="color:white;">Users</a>
-            <a href="/AdminOrders" style="color:white;">Orders</a>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">
+                                Home
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">
+                                Privacy
+                            </a>
+                        </li>
+                    </ul>
+
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
         </nav>
-    }
 
-   
-    else if (roles.Contains("StoreOwner"))
-    {
-        <nav style="background:#111;padding:15px;color:white;display:flex;gap:20px;">
-            <a href="/StoreOwner/Dashboard" style="color:white;">Dashboard</a>
-            <a href="/StoreOwner/Products" style="color:white;">Products</a>
-            <a href="/StoreOrders" style="color:white;">Orders</a>
-            <a href="/StoreAnalytics" style="color:white;">Analytics</a>
-       
-        </nav>
-    }
+        <!-- ROLE NAVBAR: بدون Logout أحمر -->
+        @if (SignInManager.IsSignedIn(User))
+        {
+            var user = await UserManager.GetUserAsync(User);
 
-    
-    else if (roles.Contains("Delivery"))
-    {
-        <nav style="background:#0d6efd;padding:15px;color:white;display:flex;gap:20px;">
-            <a href="/Delivery1" style="color:white;">Dashboard</a>
-            <a href="/DeliveryOrders" style="color:white;">My Deliveries</a>
-            <a href="/DeliveryEarnings" style="color:white;">Earnings</a>
-            <a href="/DeliveryProfile" style="color:white;">Profile</a>
-        </nav>
-    }
+            if (user != null)
+            {
+                var roles = await UserManager.GetRolesAsync(user);
 
-   
-    else if (roles.Contains("Customer"))
-    {
-        <nav style="background:#111;padding:15px;color:white;display:flex;gap:20px;">
-            <a href="/Customer1" style="color:white;">Dashboard</a>
-            <a href="/CustomerProducts" style="color:white;">Products</a>
-            <a href="/CustomerCart" style="color:white;">Cart</a>
-            <a href="/CustomerOrders" style="color:white;">Orders</a>
-            <a href="/CustomerProfile" style="color:white;">Profile</a>
-        </nav>
-    }
-}
+                if (roles.Contains("Admin"))
+                {
+                    <nav style="background:#222;padding:15px;color:white;display:flex;gap:20px;">
+                        <a href="/Admin1" style="color:white;">Dashboard</a>
+                        <a href="/AdminStores" style="color:white;">Stores</a>
+                        <a href="/AdminUsers" style="color:white;">Users</a>
+                        <a href="/AdminOrders" style="color:white;">Orders</a>
+                    </nav>
+                }
+                else if (roles.Contains("StoreOwner"))
+                {
+                    <nav style="background:#111;padding:15px;color:white;display:flex;gap:20px;">
+                        <a href="/StoreOwner/Dashboard" style="color:white;">Dashboard</a>
+                        <a href="/StoreOwner/Products" style="color:white;">Products</a>
+                        <a href="/StoreOrders" style="color:white;">Orders</a>
+                        <a href="/StoreAnalytics" style="color:white;">Analytics</a>
+                    </nav>
+                }
+                else if (roles.Contains("Delivery"))
+                {
+                    <nav style="background:#0d6efd;padding:15px;color:white;display:flex;gap:20px;">
+                        <a href="/Delivery1" style="color:white;">Dashboard</a>
+                        <a href="/DeliveryOrders" style="color:white;">My Deliveries</a>
+                        <a href="/DeliveryEarnings" style="color:white;">Earnings</a>
+                        <a href="/DeliveryProfile" style="color:white;">Profile</a>
+                    </nav>
+                }
+                else if (roles.Contains("Customer"))
+                {
+                    <nav style="background:#111;padding:15px;color:white;display:flex;gap:20px;">
+                        <a href="/Customer1" style="color:white;">Dashboard</a>
+                        <a href="/CustomerProducts" style="color:white;">Products</a>
+                        <a href="/CustomerWishlist" style="color:white;">Wishlist</a>
+                        <a href="/CustomerCart" style="color:white;">Cart</a>
+                        <a href="/CustomerOrders" style="color:white;">Orders</a>
+                        <a href="/CustomerProfile" style="color:white;">Profile</a>
+                    </nav>
+                }
+            }
+        }
+    </header>
 
-</header>
-
-<div class="container">
-    <main role="main" class="pb-3">
-        @RenderBody()
-    </main>
-</div>
-
-<footer class="border-top footer text-muted">
     <div class="container">
-        &copy; 2026 - Multi Store
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
     </div>
-</footer>
 
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2026 - Local_Multi_Store_Online_Marketplace -
+            <a asp-area="" asp-page="/Privacy">Privacy</a>
+        </div>
+    </footer>
 
-@await RenderSectionAsync("Scripts", required: false)
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>

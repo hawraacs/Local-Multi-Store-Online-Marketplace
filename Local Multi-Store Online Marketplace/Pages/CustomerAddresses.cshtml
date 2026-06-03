@@ -1,29 +1,349 @@
 ﻿@page
-@model CustomerAddressesModel
-
-<h2>My Addresses</h2>
-
-<form method="post" asp-page-handler="Add">
-
-    <input asp-for="NewAddress.AddressLine1" placeholder="Address" />
-
-    <input asp-for="NewAddress.City" placeholder="City" />
-
-    <input asp-for="NewAddress.Area" placeholder="Area" />
-
-    <button type="submit">
-        Add Address
-    </button>
-
-</form>
-
-<hr />
-
-@foreach (var item in Model.Addresses)
-{
-    <p>
-        @item.AddressLine1 -
-        @item.City -
-        @item.Area
-    </p>
+@model Local_Multi_Store_Online_Marketplace.Pages.CustomerAddressesModel
+@{
+    Layout = null;
 }
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Addresses</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f4f6f9;
+            font-family: Arial, sans-serif;
+        }
+
+        .address-page {
+            min-height: 100vh;
+            padding: 40px;
+        }
+
+        .address-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+            .address-header h2 {
+                font-size: 34px;
+                margin-bottom: 8px;
+                color: #111827;
+            }
+
+            .address-header p {
+                color: #6b7280;
+                font-size: 15px;
+            }
+
+        .message {
+            max-width: 750px;
+            margin: 0 auto 20px auto;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .address-container {
+            max-width: 950px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 25px;
+            align-items: start;
+        }
+
+        .address-form,
+        .address-list {
+            background: white;
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+        }
+
+            .address-form h3,
+            .address-list h3 {
+                margin-top: 0;
+                color: #111827;
+                font-size: 22px;
+            }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0 15px;
+            color: #374151;
+            font-weight: 700;
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 13px;
+            background: #111827;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .address-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 14px;
+            background: #f9fafb;
+        }
+
+        .address-main {
+            font-weight: 900;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+
+        .address-sub {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+            margin-right: 5px;
+        }
+
+        .default-badge {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .active-badge {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .default-btn {
+            background: #222260;
+            color: white;
+            border: none;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .delete-btn {
+            background: #fee2e2;
+            color: #991b1b;
+            border: none;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .empty-box {
+            text-align: center;
+            color: #6b7280;
+            padding: 30px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            background: #FF6B35;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 900;
+        }
+
+        @@media (max-width: 850px) {
+            .address-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 550px) {
+            .address-page {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="address-page">
+
+        <div class="address-header">
+            <h2>📍 My Addresses</h2>
+            <p>Add a delivery address before checkout.</p>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="message success-message">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="message error-message">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div class="address-container">
+
+            <div class="address-form">
+                <h3>Add New Address</h3>
+
+                <form method="post" asp-page-handler="Add">
+                    <input asp-for="NewAddress.AddressLine1"
+                           class="form-input"
+                           placeholder="Address line 1" />
+
+                    <input asp-for="NewAddress.AddressLine2"
+                           class="form-input"
+                           placeholder="Address line 2 optional" />
+
+                    <input asp-for="NewAddress.City"
+                           class="form-input"
+                           placeholder="City" />
+
+                    <input asp-for="NewAddress.Area"
+                           class="form-input"
+                           placeholder="Area" />
+
+                    <input asp-for="NewAddress.PostalCode"
+                           class="form-input"
+                           placeholder="Postal code optional" />
+
+                    <label class="checkbox-row">
+                        <input asp-for="NewAddress.IsDefault" />
+                        Set as default address
+                    </label>
+
+                    <button type="submit" class="add-btn">
+                        Add Address
+                    </button>
+                </form>
+
+                <a href="/CustomerCart" class="back-link">
+                    Back to Cart
+                </a>
+            </div>
+
+            <div class="address-list">
+                <h3>Saved Addresses</h3>
+
+                @if (Model.Addresses == null || !Model.Addresses.Any())
+                {
+                    <div class="empty-box">
+                        <h4>No addresses yet</h4>
+                        <p>Add your first delivery address.</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var item in Model.Addresses)
+                    {
+                        <div class="address-card">
+                            <div class="address-main">
+                                @item.AddressLine1
+                            </div>
+
+                            <div class="address-sub">
+                                @item.Area, @item.City
+                                @if (!string.IsNullOrWhiteSpace(item.PostalCode))
+                                {
+                                    <span>- @item.PostalCode</span>
+                                }
+                            </div>
+
+                            @if (item.IsDefault)
+                            {
+                                <span class="badge default-badge">
+                                    Default
+                                </span>
+                            }
+
+                            @if (item.IsActive)
+                            {
+                                <span class="badge active-badge">
+                                    Active
+                                </span>
+                            }
+
+                            <div class="actions">
+                                @if (!item.IsDefault)
+                                {
+                                    <form method="post" asp-page-handler="SetDefault">
+                                        <input type="hidden"
+                                               name="addressId"
+                                               value="@item.AddressID" />
+
+                                        <button type="submit" class="default-btn">
+                                            Set Default
+                                        </button>
+                                    </form>
+                                }
+
+                                <form method="post" asp-page-handler="Delete">
+                                    <input type="hidden"
+                                           name="addressId"
+                                           value="@item.AddressID" />
+
+                                    <button type="submit"
+                                            class="delete-btn"
+                                            onclick="return confirm('Delete this address?')">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

@@ -1,25 +1,145 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.CustomerOrdersModel
+@{
+    Layout = null;
+}
 
-<h2>My Orders</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Orders</title>
 
-<table border="1" cellpadding="10">
-    <tr>
-        <th>Order Number</th>
-        <th>Date</th>
-        <th>Status</th>
-        <th>Payment</th>
-        <th>Total</th>
-    </tr>
+    <style>
+        body {
+            margin: 0;
+            background: #f4f6f9;
+            font-family: Arial, sans-serif;
+        }
 
-    @foreach (var order in Model.Orders)
-    {
-        <tr>
-            <td>@order.OrderNumber</td>
-            <td>@order.OrderDate</td>
-            <td>@order.Status</td>
-            <td>@order.PaymentStatus</td>
-            <td>@order.TotalAmount</td>
-        </tr>
-    }
-</table>
+        .orders-page {
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        .orders-box {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+        }
+
+        h2 {
+            text-align: center;
+            color: #111827;
+            margin-bottom: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #111827;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #374151;
+        }
+
+        .empty-box {
+            text-align: center;
+            color: #6b7280;
+            padding: 35px;
+        }
+
+        .shop-link {
+            display: inline-block;
+            margin-top: 15px;
+            background: #111827;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 800;
+        }
+
+        .message {
+            max-width: 700px;
+            margin: 0 auto 25px auto;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="orders-page">
+        <div class="orders-box">
+            <h2>My Orders</h2>
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="message error-message">
+                    @TempData["Error"]
+                </div>
+            }
+
+            @if (Model.Orders == null || !Model.Orders.Any())
+            {
+                <div class="empty-box">
+                    <h3>No orders yet</h3>
+                    <p>Your orders will appear here after checkout.</p>
+
+                    <a href="/CustomerProducts" class="shop-link">
+                        Start Shopping
+                    </a>
+                </div>
+            }
+            else
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order Number</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var order in Model.Orders)
+                        {
+                            <tr>
+                                <td>@order.OrderNumber</td>
+                                <td>@order.OrderDate.ToString("dd MMM yyyy")</td>
+                                <td>@order.Status</td>
+                                <td>@order.PaymentMethod</td>
+                                <td>$@order.TotalAmount.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</body>
+</html>
