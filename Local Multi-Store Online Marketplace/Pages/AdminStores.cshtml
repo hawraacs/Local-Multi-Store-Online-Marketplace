@@ -6,133 +6,424 @@
 
 <!DOCTYPE html>
 <html>
-@if (TempData["Email"] != null)
-{
-    <div style="background:#d4edda;padding:15px;margin-bottom:20px;border-radius:8px;">
-        <b>Store Approved Successfully 🎉</b><br />
-        Email: @TempData["Email"] <br />
-        Password: @TempData["Password"]
-    </div>
-}
 <head>
     <meta charset="utf-8" />
-    <title>Admin Stores</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Stores | Realnest</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap"
-          rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
 
-        body {
-            font-family: Poppins;
-            margin: 0;
-            background: #f4f4f7;
-        }
+            body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+                min-height: 100vh;
+            }
 
-        .topbar {
-            background: #111;
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-        }
+            /* Modern Topbar (consistent with other admin pages) */
+            .topbar {
+                background: rgba(10, 15, 25, 0.92);
+                backdrop-filter: blur(12px);
+                color: white;
+                padding: 16px 40px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
 
-        .container {
-            padding: 30px;
-        }
+                .topbar > div:first-child {
+                    font-size: 26px;
+                    font-weight: 700;
+                    letter-spacing: -0.5px;
+                    background: linear-gradient(135deg, #FFFFFF 0%, #B0C4DE 100%);
+                    -webkit-background-clip: text;
+                    background-clip: text;
+                    color: transparent;
+                }
 
-        table {
-            width: 100%;
-            background: white;
-            border-collapse: collapse;
-            border-radius: 10px;
-            overflow: hidden;
-        }
+                .topbar div:last-child {
+                    display: flex;
+                    gap: 12px;
+                }
 
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            text-align: left;
-        }
+                .topbar a {
+                    color: #eef2ff;
+                    text-decoration: none;
+                    font-weight: 500;
+                    padding: 8px 16px;
+                    border-radius: 40px;
+                    transition: all 0.2s ease;
+                    font-size: 15px;
+                }
 
-        th {
-            background: #111;
-            color: white;
-        }
+                    .topbar a:hover {
+                        background: rgba(255, 255, 255, 0.15);
+                        transform: translateY(-1px);
+                    }
 
-        .btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
+            /* Main container */
+            .container {
+                max-width: 1400px;
+                width: 95%;
+                margin: 32px auto;
+                padding: 0 20px;
+            }
 
-        .approve {
-            background: green;
-            color: white;
-        }
+            /* Page header */
+            .page-header {
+                margin-bottom: 28px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
 
-        .reject {
-            background: red;
-            color: white;
-        }
+                .page-header h2 {
+                    font-size: 28px;
+                    font-weight: 700;
+                    color: #0f172a;
+                    letter-spacing: -0.3px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
 
+                    .page-header h2 i {
+                        color: #FF6B35;
+                    }
+
+            .badge {
+                background: #FF6B3510;
+                color: #FF6B35;
+                border-radius: 40px;
+                padding: 6px 14px;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+            /* TempData success message */
+            .alert-success {
+                background: #d1fae5;
+                border-left: 5px solid #10b981;
+                color: #065f46;
+                padding: 16px 24px;
+                border-radius: 20px;
+                margin-bottom: 28px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 14px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                animation: slideDown 0.4s ease;
+            }
+
+                .alert-success i {
+                    font-size: 24px;
+                    color: #10b981;
+                }
+
+                .alert-success strong {
+                    font-weight: 700;
+                }
+
+            /* Table container for responsive overflow */
+            .table-wrapper {
+                background: white;
+                border-radius: 28px;
+                box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.1);
+                overflow-x: auto;
+                border: 1px solid rgba(0, 0, 0, 0.04);
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+                min-width: 700px;
+            }
+
+            th, td {
+                padding: 16px 20px;
+                text-align: left;
+                border-bottom: 1px solid #eef2f8;
+            }
+
+            th {
+                background: #0f172a;
+                color: white;
+                font-weight: 600;
+                font-size: 15px;
+                letter-spacing: -0.2px;
+            }
+
+                th:first-child {
+                    border-top-left-radius: 28px;
+                }
+
+                th:last-child {
+                    border-top-right-radius: 28px;
+                }
+
+            tr:last-child td {
+                border-bottom: none;
+            }
+
+            tr:hover td {
+                background: #f8fafc;
+            }
+
+            /* Status badge */
+            .status-badge {
+                display: inline-block;
+                padding: 4px 12px;
+                border-radius: 40px;
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            .status-pending {
+                background: #fef3c7;
+                color: #b45309;
+            }
+
+            .status-approved {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+            .status-rejected {
+                background: #fee2e2;
+                color: #b91c1c;
+            }
+
+            /* Action buttons */
+            .action-group {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                padding: 8px 18px;
+                border: none;
+                border-radius: 40px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 13px;
+                transition: all 0.2s ease;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .btn-approve {
+                background: #10b981;
+                color: white;
+            }
+
+                .btn-approve:hover {
+                    background: #059669;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+                }
+
+            .btn-reject {
+                background: #ef4444;
+                color: white;
+            }
+
+                .btn-reject:hover {
+                    background: #dc2626;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+                }
+
+            .btn:active {
+                transform: translateY(1px);
+            }
+
+            /* Empty state */
+            .empty-state {
+                text-align: center;
+                padding: 60px 20px;
+                color: #64748b;
+                font-size: 16px;
+            }
+
+                .empty-state i {
+                    font-size: 64px;
+                    color: #cbd5e1;
+                    margin-bottom: 16px;
+                }
+
+            /* Responsive */
+            @@media (max-width: 768px) {
+                .topbar {
+                    padding: 12px 24px;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+
+                .container {
+                    width: 100%;
+                    padding: 0 16px;
+                }
+
+                .page-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                th, td {
+                    padding: 12px 16px;
+                }
+
+                .btn {
+                    padding: 6px 14px;
+                    font-size: 12px;
+                }
+            }
+
+            @@keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            footer {
+                text-align: center;
+                padding: 28px 20px 32px;
+                color: #5b6e8c;
+                font-size: 13px;
+                border-top: 1px solid rgba(0,0,0,0.05);
+                margin-top: 32px;
+            }
     </style>
 </head>
-
 <body>
 
     <div class="topbar">
-        <div>Admin Panel</div>
-        <div>Store Requests</div>
+        <div>realnest</div>
+        <div>
+            <a href="/Admin1"><i class="fas fa-chalkboard-user"></i> Dashboard</a>
+            <a href="/AdminStores"><i class="fas fa-store"></i> Stores</a>
+            <a href="/AdminDelivery"><i class="fas fa-truck-fast"></i> Delivery</a>
+        </div>
     </div>
 
     <div class="container">
+        <!-- Success message from TempData (moved inside body, properly styled) -->
+        @if (TempData["Email"] != null)
+        {
+            <div class="alert-success">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <strong>Store Approved Successfully 🎉</strong><br />
+                    Email: @TempData["Email"] <br />
+                    Password: @TempData["Password"]
+                </div>
+            </div>
+        }
 
-        <h2>🏪 Pending Store Requests</h2>
+        <div class="page-header">
+            <h2>
+                <i class="fas fa-store"></i>
+                Pending Store Requests
+            </h2>
+            <div class="badge">
+                <i class="fas fa-clock"></i> Awaiting approval
+            </div>
+        </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Store Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>City</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var s in Model.Stores)
-                {
+        <div class="table-wrapper">
+            <table>
+                <thead>
                     <tr>
-                        <td>@s.StoreName</td>
-                        <td>@s.Email</td>
-                        <td>@s.PhoneNumber</td>
-                        <td>@s.City</td>
-                        <td>@s.Status</td>
-                        <td>
-
-                            <form method="post" asp-page-handler="Approve">
-                                <input type="hidden" name="id" value="@s.StoreID" />
-                                <button class="btn approve">Approve</button>
-                            </form>
-
-                            <form method="post" asp-page-handler="Reject">
-                                <input type="hidden" name="id" value="@s.StoreID" />
-                                <button class="btn reject">Reject</button>
-                            </form>
-
-                        </td>
+                        <th>Store Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>City</th>
+                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
-                }
-            </tbody>
+                </thead>
+                <tbody>
+                    @if (Model.Stores != null && Model.Stores.Any())
+                    {
+                        foreach (var s in Model.Stores)
+                        {
+                            // Determine status badge class
+                            string statusClass = "status-pending";
+                            if (s.Status?.ToLower() == "approved") statusClass = "status-approved";
+                            else if (s.Status?.ToLower() == "rejected") statusClass = "status-rejected";
 
-        </table>
-
+                            <tr>
+                                <td><strong>@s.StoreName</strong></td>
+                                <td>@s.Email</td>
+                                <td>@s.PhoneNumber</td>
+                                <td>@s.City</td>
+                                <td>
+                                    <span class="status-badge @statusClass">
+                                        @(s.Status ?? "Pending")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-group">
+                                        <form method="post" asp-page-handler="Approve" style="display: inline;">
+                                            <input type="hidden" name="id" value="@s.StoreID" />
+                                            <button type="submit" class="btn btn-approve">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                        </form>
+                                        <form method="post" asp-page-handler="Reject" style="display: inline;">
+                                            <input type="hidden" name="id" value="@s.StoreID" />
+                                            <button type="submit" class="btn btn-reject">
+                                                <i class="fas fa-times"></i> Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No store requests found.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 
-</body>
+    <footer>
+        <span>✨ Realnest Admin — store management ✨</span>
+    </footer>
 
+</body>
 </html>
