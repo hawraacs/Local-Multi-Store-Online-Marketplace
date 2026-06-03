@@ -1,49 +1,53 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿#nullable disable
+
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {
         private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
         private readonly ApplicationDbContext _context;
 
         public RegisterModel(
             UserManager<User> userManager,
-            SignInManager<User> signInManager,
             ApplicationDbContext context)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
             _context = context;
         }
 
         [BindProperty]
-        [Required]
+        [Required(ErrorMessage = "Full name is required.")]
         public string FullName { get; set; }
 
         [BindProperty]
-        [Required]
-        [EmailAddress]
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
         public string Email { get; set; }
 
         [BindProperty]
-        [Required]
+        [Required(ErrorMessage = "Country code is required.")]
+        public string CountryCode { get; set; } = "+961";
+
+        [BindProperty]
+        [Required(ErrorMessage = "Phone number is required.")]
         public string PhoneNumber { get; set; }
 
         [BindProperty]
-        [Required]
+        [Required(ErrorMessage = "Password is required.")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
 
         [BindProperty]
-        [Required]
-        [Compare("Password")]
+        [Required(ErrorMessage = "Confirm password is required.")]
+        [Compare("Password", ErrorMessage = "Password and confirmation password do not match.")]
         [DataType(DataType.Password)]
         public string ConfirmPassword { get; set; }
 
@@ -56,8 +60,42 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync()
         {
+            FullName = FullName?.Trim();
+            Email = Email?.Trim().ToLower();
+            CountryCode = CountryCode?.Trim();
+            PhoneNumber = PhoneNumber?.Trim();
+
+            if (!IsValidEmailStrict(Email))
+            {
+                ModelState.AddModelError(nameof(Email), "Please enter a valid email address like name@example.com.");
+            }
+
+            var normalizedPhone = NormalizePhoneNumber(CountryCode, PhoneNumber);
+
+            if (normalizedPhone == null)
+            {
+                ModelState.AddModelError(nameof(PhoneNumber), "Please enter a valid phone number for the selected country.");
+            }
+
             if (!ModelState.IsValid)
             {
+                return Page();
+            }
+
+            var existingEmail = await _userManager.FindByEmailAsync(Email);
+
+            if (existingEmail != null)
+            {
+                ModelState.AddModelError(nameof(Email), "This email is already registered.");
+                return Page();
+            }
+
+            var existingPhone = _context.Users
+                .Any(u => u.PhoneNumber == normalizedPhone);
+
+            if (existingPhone)
+            {
+                ModelState.AddModelError(nameof(PhoneNumber), "This phone number is already registered.");
                 return Page();
             }
 
@@ -65,9 +103,11 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
             {
                 UserName = Email,
                 Email = Email,
-                PhoneNumber = PhoneNumber,
+                EmailConfirmed = true,
+                PhoneNumber = normalizedPhone,
                 FullName = FullName,
-                IsActive = true
+                IsActive = false,
+                CreatedAt = DateTime.UtcNow
             };
 
             var result = await _userManager.CreateAsync(user, Password);
@@ -82,24 +122,119 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            // Add Customer Role
             await _userManager.AddToRoleAsync(user, "Customer");
 
-            // Create Customer Record
             var customer = new Customer
             {
                 UserID = user.Id
             };
 
             _context.Customers.Add(customer);
-
             await _context.SaveChangesAsync();
 
-            // Automatically sign in the user
-            await _signInManager.SignInAsync(user, isPersistent: false);
+            TempData["Success"] = "Your account has been created and is waiting for admin approval.";
 
-            // Redirect to Home Page (Index)
-            return RedirectToPage("/Index");
+            return RedirectToPage("./Login");
+        }
+
+        private static bool IsValidEmailStrict(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            var pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$";
+
+            return Regex.IsMatch(email, pattern, RegexOptions.IgnoreCase);
+        }
+
+        private static string? NormalizePhoneNumber(string countryCode, string phone)
+        {
+            if (string.IsNullOrWhiteSpace(countryCode) || string.IsNullOrWhiteSpace(phone))
+                return null;
+
+            var digits = Regex.Replace(phone, @"\D", "");
+
+            if (digits.StartsWith("0"))
+            {
+                digits = digits.Substring(1);
+            }
+
+            if (countryCode == "+961")
+            {
+                if (digits.Length < 7 || digits.Length > 8)
+                    return null;
+            }
+            else if (countryCode == "+966")
+            {
+                if (digits.Length != 9)
+                    return null;
+            }
+            else if (countryCode == "+971")
+            {
+                if (digits.Length != 9)
+                    return null;
+            }
+            else if (countryCode == "+974")
+            {
+                if (digits.Length != 8)
+                    return null;
+            }
+            else if (countryCode == "+965")
+            {
+                if (digits.Length != 8)
+                    return null;
+            }
+            else if (countryCode == "+973")
+            {
+                if (digits.Length != 8)
+                    return null;
+            }
+            else if (countryCode == "+968")
+            {
+                if (digits.Length != 8)
+                    return null;
+            }
+            else if (countryCode == "+962")
+            {
+                if (digits.Length != 9)
+                    return null;
+            }
+            else if (countryCode == "+20")
+            {
+                if (digits.Length < 10 || digits.Length > 11)
+                    return null;
+            }
+            else if (countryCode == "+90")
+            {
+                if (digits.Length != 10)
+                    return null;
+            }
+            else if (countryCode == "+33")
+            {
+                if (digits.Length != 9)
+                    return null;
+            }
+            else if (countryCode == "+49")
+            {
+                if (digits.Length < 10 || digits.Length > 11)
+                    return null;
+            }
+            else if (countryCode == "+44")
+            {
+                if (digits.Length < 10 || digits.Length > 11)
+                    return null;
+            }
+            else if (countryCode == "+1")
+            {
+                if (digits.Length != 10)
+                    return null;
+            }
+            else
+            {
+                return null;
+            }
+
+            return countryCode + digits;
         }
     }
 }

@@ -28,7 +28,7 @@
 
         body {
             width: 100%;
-            height: 100vh;
+            min-height: 100vh;
             background: #1f1f1f;
             display: flex;
             justify-content: center;
@@ -38,7 +38,7 @@
 
         .container {
             width: 1200px;
-            height: 750px;
+            min-height: 750px;
             background: white;
             display: flex;
             border-radius: 15px;
@@ -114,28 +114,48 @@
 
         .subtitle {
             color: gray;
-            margin-bottom: 40px;
+            margin-bottom: 20px;
             font-size: 15px;
         }
 
-        .form-group {
+        .approval-note {
+            background: #fff7ed;
+            color: #9a3412;
+            border: 1px solid #fed7aa;
+            padding: 12px 14px;
+            border-radius: 10px;
             margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
-            .form-group input {
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+            .form-group input,
+            .form-group select {
                 width: 100%;
                 padding: 15px;
                 border: 1px solid #ccc;
                 border-radius: 10px;
                 font-size: 16px;
                 transition: .3s;
+                background: white;
             }
 
-                .form-group input:focus {
+                .form-group input:focus,
+                .form-group select:focus {
                     outline: none;
                     border-color: #1f2b6c;
                     box-shadow: 0 0 5px rgba(31,43,108,0.2);
                 }
+
+        .phone-row {
+            display: grid;
+            grid-template-columns: 190px 1fr;
+            gap: 10px;
+        }
 
         .btn-register {
             width: 100%;
@@ -157,6 +177,25 @@
         .text-danger {
             color: red;
             font-size: 13px;
+        }
+
+        @@media(max-width: 900px) {
+            .left-side {
+                display: none;
+            }
+
+            .right-side {
+                width: 100%;
+                padding: 35px;
+            }
+
+            .container {
+                height: auto;
+            }
+
+            .phone-row {
+                grid-template-columns: 1fr;
+            }
         }
 
     </style>
@@ -195,6 +234,10 @@
                 Register your customer account
             </div>
 
+            <div class="approval-note">
+                After registration, your account will wait for admin approval before login.
+            </div>
+
             <form method="post">
 
                 <div asp-validation-summary="All" class="text-danger"></div>
@@ -210,7 +253,29 @@
                 </div>
 
                 <div class="form-group">
-                    <input asp-for="PhoneNumber" placeholder="Phone Number" />
+                    <div class="phone-row">
+                        <select asp-for="CountryCode">
+                            <option value="">Select Country</option>
+                            <option value="+961">Lebanon +961</option>
+                            <option value="+966">Saudi Arabia +966</option>
+                            <option value="+971">United Arab Emirates +971</option>
+                            <option value="+974">Qatar +974</option>
+                            <option value="+965">Kuwait +965</option>
+                            <option value="+973">Bahrain +973</option>
+                            <option value="+968">Oman +968</option>
+                            <option value="+962">Jordan +962</option>
+                            <option value="+20">Egypt +20</option>
+                            <option value="+90">Turkey +90</option>
+                            <option value="+33">France +33</option>
+                            <option value="+49">Germany +49</option>
+                            <option value="+44">United Kingdom +44</option>
+                            <option value="+1">United States / Canada +1</option>
+                        </select>
+
+                        <input asp-for="PhoneNumber" placeholder="Phone Number" />
+                    </div>
+
+                    <span asp-validation-for="CountryCode" class="text-danger"></span>
                     <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                 </div>
 
