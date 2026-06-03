@@ -1,26 +1,73 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Multi_Store.Services.Dtos;
-using Multi_Store.Services.Managers;
+using Microsoft.EntityFrameworkCore;
+using Multi_Store.Core.Entities;
+using Multi_Store.Infrastructure.Data;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
     public class CustomerOrdersModel : PageModel
     {
-        private readonly OrderHistoryManager _orderManager;
-
-        public List<OrderDTO> Orders { get; set; } = new();
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<User> _userManager;
 
         public CustomerOrdersModel(
-            OrderHistoryManager orderManager)
+            ApplicationDbContext context,
+            UserManager<User> userManager)
         {
-            _orderManager = orderManager;
+            _context = context;
+            _userManager = userManager;
         }
 
-        public async Task OnGetAsync()
+        public List<CustomerOrderViewModel> Orders { get; set; } = new();
+
+        public async Task<IActionResult> OnGetAsync()
         {
-            Orders =
-                await _orderManager
-                .GetCustomerOrdersAsync(1);
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                TempData["Error"] = "Please login as a customer first.";
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+            {
+                TempData["Error"] = "Customer profile was not found.";
+                return Page();
+            }
+
+            Orders = await _context.Orders
+                .Where(o => o.CustomerID == customer.CustomerID)
+                .OrderByDescending(o => o.OrderDate)
+                .Select(o => new CustomerOrderViewModel
+                {
+                    OrderNumber = o.OrderNumber,
+                    OrderDate = o.OrderDate,
+                    Status = o.Status,
+                    PaymentMethod = o.PaymentMethod,
+                    TotalAmount = o.TotalAmount
+                })
+                .ToListAsync();
+
+            return Page();
         }
+    }
+
+    public class CustomerOrderViewModel
+    {
+        public string OrderNumber { get; set; } = string.Empty;
+
+        public DateTime OrderDate { get; set; }
+
+        public string Status { get; set; } = string.Empty;
+
+        public string PaymentMethod { get; set; } = string.Empty;
+
+        public decimal TotalAmount { get; set; }
     }
 }

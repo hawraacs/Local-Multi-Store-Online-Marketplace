@@ -1,14 +1,10 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
-using Multi_Store.Core.Reposinterface;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services.Managers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
@@ -16,88 +12,73 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     {
         private readonly ApplicationDbContext _context;
         private readonly WishlistManager _wishlistManager;
-        private readonly ICustomerRepository _customerRepository;
+        private readonly UserManager<User> _userManager;
 
         public CustomerProductsModel(
             ApplicationDbContext context,
             WishlistManager wishlistManager,
-            ICustomerRepository customerRepository)
+            UserManager<User> userManager)
         {
             _context = context;
             _wishlistManager = wishlistManager;
-            _customerRepository = customerRepository;
+            _userManager = userManager;
         }
 
         public List<ProductDisplayViewModel> Products { get; set; } = new();
-        public string DebugInfo { get; set; } = "";
 
         public async Task OnGetAsync()
         {
-            // Load ALL products (no filters) for debugging
-            var allProducts = await _context.Products
+            Products = await _context.Products
                 .Include(p => p.Images)
                 .Include(p => p.Category)
                 .Include(p => p.Store)
-                .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync();
-
-            // Build debug info
-            DebugInfo = $"<strong>Total products in database:</strong> {allProducts.Count}<br/>";
-            DebugInfo += $"<strong>Products with IsActive=true:</strong> {allProducts.Count(p => p.IsActive)}<br/>";
-            DebugInfo += $"<strong>Products with Quantity>0:</strong> {allProducts.Count(p => p.Quantity > 0)}<br/>";
-            DebugInfo += $"<strong>Products meeting both conditions:</strong> {allProducts.Count(p => p.IsActive && p.Quantity > 0)}<br/>";
-            DebugInfo += "<hr/><strong>Product details:</strong><br/>";
-
-            foreach (var p in allProducts)
-            {
-                DebugInfo += $"ID:{p.ProductID} | Name:{p.ProductName} | Active:{p.IsActive} | Qty:{p.Quantity} | Store:{p.Store?.StoreName ?? "None"} | StoreStatus:{p.Store?.Status ?? "N/A"}<br/>";
-            }
-
-            // Now load only products that should be shown (active + in stock)
-            var visibleProducts = allProducts
                 .Where(p => p.IsActive && p.Quantity > 0)
-                .ToList();
-
-            Products = visibleProducts.Select(p => new ProductDisplayViewModel
-            {
-                ProductID = p.ProductID,
-                ProductName = p.ProductName,
-                Price = p.Price,
-                Description = p.Description,
-                PrimaryImageUrl = p.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? p.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png",
-                StoreName = p.Store?.StoreName ?? "Unknown Store",
-                CategoryName = p.Category?.CategoryName ?? "Uncategorized"
-            }).ToList();
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new ProductDisplayViewModel
+                {
+                    ProductID = p.ProductID,
+                    ProductName = p.ProductName,
+                    Price = p.Price,
+                    Description = p.Description,
+                    PrimaryImageUrl = p.Images
+                        .OrderByDescending(i => i.IsPrimary)
+                        .ThenBy(i => i.DisplayOrder)
+                        .Select(i => i.ImageUrl)
+                        .FirstOrDefault() ?? "/images/no-image.png",
+                    StoreName = p.Store != null ? p.Store.StoreName : "Unknown Store",
+                    CategoryName = p.Category != null ? p.Category.CategoryName : "Uncategorized"
+                })
+                .ToListAsync();
         }
 
         public async Task<IActionResult> OnPostAddWishlistAsync(int productId)
         {
-            // TODO: Get actual logged‑in customer ID (this is a placeholder)
-            int customerId = 1;
-
             try
             {
-                if (productId <= 0)
+                var customerId = await GetCurrentCustomerIdAsync();
+
+                if (customerId == null)
                 {
-                    TempData["Error"] = "Invalid product selected.";
-                    return RedirectToPage();
+                    TempData["Error"] = "Please login as a customer first.";
+                    return RedirectToPage("/Account/Login", new { area = "Identity" });
                 }
 
-                var customer = await _customerRepository.GetByIdAsync(customerId);
-                if (customer == null)
-                {
-                    TempData["Error"] = "Customer not found. Please log in again.";
-                    return RedirectToPage();
-                }
+                var product = await _context.Products
+                    .FirstOrDefaultAsync(p =>
+                        p.ProductID == productId &&
+                        p.IsActive &&
+                        p.Quantity > 0);
 
-                var product = await _context.Products.FindAsync(productId);
-                if (product == null || !product.IsActive || product.Quantity <= 0)
+                if (product == null)
                 {
                     TempData["Error"] = "Product is not available.";
                     return RedirectToPage();
                 }
 
-                await _wishlistManager.AddToWishlistAsync(customerId, productId);
+                await _wishlistManager.AddToWishlistAsync(
+                    customerId.Value,
+                    productId);
+
                 TempData["Success"] = $"{product.ProductName} added to your wishlist!";
             }
             catch (Exception ex)
@@ -107,16 +88,120 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             return RedirectToPage();
         }
+
+        public async Task<IActionResult> OnPostAddCartAsync(int productId)
+        {
+            try
+            {
+                var customerId = await GetCurrentCustomerIdAsync();
+
+                if (customerId == null)
+                {
+                    TempData["Error"] = "Please login as a customer first.";
+                    return RedirectToPage("/Account/Login", new { area = "Identity" });
+                }
+
+                var product = await _context.Products
+                    .FirstOrDefaultAsync(p =>
+                        p.ProductID == productId &&
+                        p.IsActive &&
+                        p.Quantity > 0);
+
+                if (product == null)
+                {
+                    TempData["Error"] = "Product is not available.";
+                    return RedirectToPage();
+                }
+
+                var cart = await _context.Set<Cart>()
+                    .Include(c => c.CartItems)
+                    .FirstOrDefaultAsync(c => c.CustomerID == customerId.Value);
+
+                if (cart == null)
+                {
+                    cart = new Cart
+                    {
+                        CustomerID = customerId.Value,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                        ExpiresAt = DateTime.UtcNow.AddDays(7)
+                    };
+
+                    _context.Set<Cart>().Add(cart);
+                    await _context.SaveChangesAsync();
+                }
+
+                var existingItem = await _context.Set<CartItem>()
+                    .FirstOrDefaultAsync(ci =>
+                        ci.CartID == cart.CartID &&
+                        ci.ProductID == productId);
+
+                if (existingItem != null)
+                {
+                    if (existingItem.Quantity + 1 > product.Quantity)
+                    {
+                        TempData["Error"] = "Not enough stock available.";
+                        return RedirectToPage();
+                    }
+
+                    existingItem.Quantity += 1;
+                }
+                else
+                {
+                    var cartItem = new CartItem
+                    {
+                        CartID = cart.CartID,
+                        ProductID = productId,
+                        Quantity = 1,
+                        PriceAtAddTime = product.Price,
+                        AddedAt = DateTime.UtcNow
+                    };
+
+                    _context.Set<CartItem>().Add(cartItem);
+                }
+
+                cart.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = $"{product.ProductName} added to your cart!";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.InnerException?.Message ?? ex.Message;
+            }
+
+            return RedirectToPage();
+        }
+
+        private async Task<int?> GetCurrentCustomerIdAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return null;
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            return customer?.CustomerID;
+        }
     }
 
     public class ProductDisplayViewModel
     {
         public int ProductID { get; set; }
+
         public string ProductName { get; set; } = string.Empty;
+
         public decimal Price { get; set; }
+
         public string Description { get; set; } = string.Empty;
+
         public string PrimaryImageUrl { get; set; } = "/images/no-image.png";
+
         public string StoreName { get; set; } = string.Empty;
+
         public string CategoryName { get; set; } = string.Empty;
     }
 }
