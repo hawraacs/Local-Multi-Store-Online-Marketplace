@@ -92,17 +92,18 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
             var user = await _userManager.FindByEmailAsync(Input.Email);
 
             if (user == null)
-<<<<<<< HEAD
-=======
+
             {
                 ModelState.AddModelError(string.Empty, "User not found.");
->>>>>>> 0809028a8c3ccd41b58c2433a1a837934c69e3dd
+
                 return Page();
+            }
 
-            _logger.LogInformation("User logged in.");
+                _logger.LogInformation("User logged in.");
 
-            return await RedirectByRoleAsync(user);
-        }
+                return await RedirectByRoleAsync(user);
+            }
+        
 
         public IActionResult OnPostExternalLoginAsync(
             string provider,
@@ -140,14 +141,14 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 if (!approved)
                 {
                     await _signInManager.SignOutAsync();
-<<<<<<< HEAD
+
                     ModelState.AddModelError("", "Store not approved yet.");
-=======
+
                     ModelState.AddModelError(
                         string.Empty,
                         "Your store is waiting for admin approval.");
 
->>>>>>> 0809028a8c3ccd41b58c2433a1a837934c69e3dd
+
                     return Page();
                 }
             }
@@ -159,14 +160,14 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 if (!approved)
                 {
                     await _signInManager.SignOutAsync();
-<<<<<<< HEAD
+
                     ModelState.AddModelError("", "Delivery not approved yet.");
-=======
+
                     ModelState.AddModelError(
                         string.Empty,
                         "Your delivery account is waiting for admin approval.");
 
->>>>>>> 0809028a8c3ccd41b58c2433a1a837934c69e3dd
+
                     return Page();
                 }
             }
