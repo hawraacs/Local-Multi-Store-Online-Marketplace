@@ -1,0 +1,128 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order.DetailsModel
+@{
+    ViewData["Title"] = $"Order #{Model.Order?.OrderNumber}";
+    Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Order Details</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="/StoreOwner/Dashboard">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="/StoreOwner/Order/Index">Orders</a></li>
+        <li class="breadcrumb-item active">@Model.Order?.OrderNumber</li>
+    </ol>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-user me-1"></i>
+                    Customer Information
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> @Model.Order?.CustomerName</p>
+                    <p><strong>Email:</strong> @Model.Order?.CustomerEmail</p>
+                    <p><strong>Phone:</strong> @(Model.Order?.CustomerPhone ?? "Not provided")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-truck me-1"></i>
+                    Shipping Address
+                </div>
+                <div class="card-body">
+                    <p>@(Model.Order?.ShippingAddress ?? "No address provided")</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-boxes me-1"></i>
+            Order Items
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderItems)
+                        {
+                            <tr>
+                                <td>@item.ProductName</td>
+                                <td>@item.Quantity</td>
+                                <td>$@item.Price.ToString("N2")</td>
+                                <td>$@item.TotalPrice.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="3" class="text-end">Subtotal:</th>
+                            <th>$@Model.Order?.Subtotal.ToString("N2")</th>
+                        </tr>
+                        <tr>
+                            <th colspan="3" class="text-end">Delivery Fee:</th>
+                            <th>$@Model.Order?.DeliveryFee.ToString("N2")</th>
+                        </tr>
+                        <tr>
+                            <th colspan="3" class="text-end">Total:</th>
+                            <th>$@Model.Order?.TotalAmount.ToString("N2")</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-cog me-1"></i>
+            Update Status
+        </div>
+        <div class="card-body">
+            <form method="post" asp-page-handler="UpdateStatus">
+                <input type="hidden" name="orderId" value="@Model.Order?.OrderID" />
+                <div class="row">
+                    <div class="col-md-4">
+                        <select name="newStatus" class="form-select">
+                            <option value="Pending" selected="@(Model.Order?.Status == "Pending")">Pending</option>
+                            <option value="Confirmed" selected="@(Model.Order?.Status == "Confirmed")">Confirmed</option>
+                            <option value="Preparing" selected="@(Model.Order?.Status == "Preparing")">Preparing</option>
+                            <option value="OutForDelivery" selected="@(Model.Order?.Status == "OutForDelivery")">Out for Delivery</option>
+                            <option value="Delivered" selected="@(Model.Order?.Status == "Delivered")">Delivered</option>
+                            <option value="Cancelled" selected="@(Model.Order?.Status == "Cancelled")">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary">Update Status</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-2">
+        <a href="/StoreOwner/Orders/Index" class="btn btn-secondary">Back to Orders</a>
+    </div>
+</div>
