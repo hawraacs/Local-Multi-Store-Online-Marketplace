@@ -1,0 +1,258 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.AdminUsersModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Admin Users | Realnest</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: rgba(10, 15, 25, 0.92);
+            color: white;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar-title {
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .topbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 12px;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 500;
+        }
+
+            .topbar a:hover {
+                background: rgba(255,255,255,0.15);
+            }
+
+        .container {
+            width: 92%;
+            max-width: 1200px;
+            margin: 40px auto;
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+        }
+
+            .page-header h1 {
+                font-size: 32px;
+                color: #0f172a;
+                margin-bottom: 8px;
+            }
+
+            .page-header p {
+                color: #64748b;
+            }
+
+        .message {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 14px 30px rgba(15,23,42,0.08);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #0f172a;
+            color: white;
+            padding: 14px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-weight: 800;
+            font-size: 12px;
+        }
+
+        .active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .pending {
+            background: #fff7ed;
+            color: #9a3412;
+        }
+
+        .approve-btn,
+        .deactivate-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 9px 13px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .approve-btn {
+            background: #16a34a;
+            color: white;
+        }
+
+        .deactivate-btn {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <div class="topbar-title">realnest admin</div>
+
+        <div>
+            <a href="/Admin1">Dashboard</a>
+            <a href="/AdminStores">Stores</a>
+            <a href="/AdminDelivery">Delivery</a>
+            <a href="/AdminUsers">Users</a>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="page-header">
+            <h1>User Approval</h1>
+            <p>Approve pending customers before they can login.</p>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="message success">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="message error">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var user in Model.Users)
+                    {
+                        <tr>
+                            <td>@user.FullName</td>
+                            <td>@user.Email</td>
+                            <td>@user.PhoneNumber</td>
+                            <td>@user.Roles</td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge active">Approved</span>
+                                }
+                                else
+                                {
+                                    <span class="badge pending">Pending</span>
+                                }
+                            </td>
+                            <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                            <td>
+                                @if (!user.IsActive)
+                                {
+                                    <form method="post" asp-page-handler="Approve" style="display:inline;">
+                                        <input type="hidden" name="userId" value="@user.UserId" />
+                                        <button type="submit" class="approve-btn">
+                                            Approve
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-page-handler="Deactivate" style="display:inline;">
+                                        <input type="hidden" name="userId" value="@user.UserId" />
+                                        <button type="submit" class="deactivate-btn">
+                                            Deactivate
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</body>
+</html>

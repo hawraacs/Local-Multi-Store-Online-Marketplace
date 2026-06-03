@@ -57,6 +57,11 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         {
             ReturnUrl = returnUrl ?? Url.Content("~/");
 
+            if (TempData["Success"] != null)
+            {
+                ModelState.AddModelError(string.Empty, TempData["Success"].ToString());
+            }
+
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
             ExternalLogins = (await _signInManager
@@ -77,8 +82,27 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 return Page();
             }
 
+            var email = Input.Email.Trim().ToLower();
+
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return Page();
+            }
+
+            if (!user.IsActive)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Your account is waiting for admin approval.");
+
+                return Page();
+            }
+
             var result = await _signInManager.PasswordSignInAsync(
-                Input.Email,
+                email,
                 Input.Password,
                 Input.RememberMe,
                 lockoutOnFailure: true);
@@ -89,22 +113,13 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            var user = await _userManager.FindByEmailAsync(Input.Email);
+            user.LastLoginAt = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
 
-            if (user == null)
+            _logger.LogInformation("User logged in.");
 
-            {
-                ModelState.AddModelError(string.Empty, "User not found.");
-
-                return Page();
-            }
-
-                _logger.LogInformation("User logged in.");
-
-                return await RedirectByRoleAsync(user);
-            }
-        
-
+            return await RedirectByRoleAsync(user);
+        }
         public IActionResult OnPostExternalLoginAsync(
             string provider,
             string returnUrl = null)
@@ -142,12 +157,9 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 {
                     await _signInManager.SignOutAsync();
 
-                    ModelState.AddModelError("", "Store not approved yet.");
-
                     ModelState.AddModelError(
                         string.Empty,
                         "Your store is waiting for admin approval.");
-
 
                     return Page();
                 }
@@ -161,12 +173,9 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 {
                     await _signInManager.SignOutAsync();
 
-                    ModelState.AddModelError("", "Delivery not approved yet.");
-
                     ModelState.AddModelError(
                         string.Empty,
                         "Your delivery account is waiting for admin approval.");
-
 
                     return Page();
                 }
