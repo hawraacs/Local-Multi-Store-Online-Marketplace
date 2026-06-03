@@ -22,6 +22,17 @@ namespace Multi_Store.Services.Managers
         // =====================
         public async Task<int> RegisterStoreAsync(StoreDTO dto)
         {
+            // ✅ Check if user already has a pending or approved store
+            var existingStore = await _storeRepository.GetByOwnerIdAsync(dto.OwnerUserID);
+            if (existingStore != null)
+            {
+                if (existingStore.Status == "Pending")
+                    throw new InvalidOperationException("You already have a pending store request. Please wait for admin approval.");
+                if (existingStore.Status == "Approved")
+                    throw new InvalidOperationException("You are already a store owner.");
+                // If Status == "Rejected", allow new request
+            }
+
             var store = new Store
             {
                 OwnerUserID = dto.OwnerUserID,
@@ -48,9 +59,8 @@ namespace Multi_Store.Services.Managers
             return saved.StoreID;
         }
 
-
         // =====================
-        // APPROVE STORE + ROLE + PASSWORD
+        // APPROVE STORE (NO EMAIL/PASSWORD CHANGE)
         // =====================
         public async Task<(string email, string password)> ApproveStoreWithAccountAsync(
             int storeId,
@@ -67,34 +77,25 @@ namespace Multi_Store.Services.Managers
             if (owner == null)
                 throw new Exception("User not found in AspNetUsers");
 
-            // password
-            string password = $"Store@{store.StoreID}2026";
+            // ✅ DO NOT change the user's email or password
+            // ✅ Only add the StoreOwner role if not already present
 
-            // reset password safely
-            var token = await userManager.GeneratePasswordResetTokenAsync(owner);
-            var reset = await userManager.ResetPasswordAsync(owner, token, password);
-
-            if (!reset.Succeeded)
-                throw new Exception(string.Join(",", reset.Errors.Select(e => e.Description)));
-
-            // update login info
-            owner.Email = store.Email?.Trim();
-            owner.UserName = store.Email?.Trim();
-
-            await userManager.UpdateAsync(owner);
-
-            // IMPORTANT: assign role
             if (!await userManager.IsInRoleAsync(owner, "StoreOwner"))
-                await userManager.AddToRoleAsync(owner, "StoreOwner");
+            {
+                var roleResult = await userManager.AddToRoleAsync(owner, "StoreOwner");
+                if (!roleResult.Succeeded)
+                    throw new Exception(string.Join(",", roleResult.Errors.Select(e => e.Description)));
+            }
 
-            // approve store
+            // Approve store
             store.Status = "Approved";
             store.ApprovedAt = DateTime.UtcNow;
             store.ApprovedBy = adminId;
 
             await _storeRepository.UpdateAsync(store);
 
-            return (owner.Email, password);
+            // Return the existing email (no new password needed)
+            return (owner.Email, "Use your existing password");
         }
 
         // =====================
