@@ -6,79 +6,116 @@
 
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="utf-8" />
     <title>Customer Feed</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-
     <style>
-
-        body {
-            font-family: Poppins;
-            background: #f4f4f7;
-            margin: 0;
-        }
-
-        /* TOP NAV */
-        .topbar {
-            background: #111;
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .menu a {
-            color: white;
-            margin: 0 10px;
-            text-decoration: none;
-        }
-
-        /* FEED */
-        .feed {
-            width: 600px;
-            margin: auto;
-            padding: 20px;
-        }
-
-        .post {
-            background: white;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-            .post img {
-                width: 100%;
-                height: 300px;
-                object-fit: cover;
+            body {
+                font-family: Poppins, sans-serif;
+                background: #f4f4f7;
+                margin: 0;
             }
 
-        .post-body {
-            padding: 15px;
-        }
+            .topbar {
+                background: #111;
+                color: white;
+                padding: 15px 30px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
 
-        .store {
-            font-weight: 600;
-        }
+            .menu a {
+                color: white;
+                margin: 0 10px;
+                text-decoration: none;
+            }
 
-        .actions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
+            .feed {
+                width: 600px;
+                margin: 20px auto;
+                padding: 0 20px;
+            }
 
+            .post {
+                background: white;
+                border-radius: 12px;
+                margin-bottom: 25px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+
+                .post img {
+                    width: 100%;
+                    height: 300px;
+                    object-fit: cover;
+                    background: #e9ecef;
+                }
+
+            .post-body {
+                padding: 18px;
+            }
+
+            .store {
+                font-weight: 600;
+                font-size: 18px;
+                margin-bottom: 6px;
+                color: #2c3e50;
+            }
+
+            .product-name {
+                font-size: 20px;
+                font-weight: 700;
+                margin: 8px 0 4px;
+            }
+
+            .product-price {
+                color: #FF6B35;
+                font-weight: bold;
+                font-size: 20px;
+                margin: 8px 0;
+            }
+
+            .product-description {
+                color: #555;
+                margin: 12px 0;
+                line-height: 1.4;
+            }
+
+            .actions {
+                display: flex;
+                gap: 12px;
+                margin-top: 12px;
+            }
+
+            .btn-like, .btn-cart {
+                padding: 8px 16px;
+                border-radius: 30px;
+                font-family: Poppins;
+                font-weight: 500;
+                cursor: pointer;
+                border: 1px solid #ddd;
+                background: white;
+            }
+
+            .btn-cart {
+                background: #111;
+                color: white;
+                border: none;
+            }
+
+            .empty-message {
+                text-align: center;
+                margin-top: 60px;
+                color: #6c757d;
+            }
     </style>
 </head>
-
 <body>
 
     <div class="topbar">
         <div>Realnest</div>
-
         <div class="menu">
             <a href="/Customer1">Dashboard</a>
             <a href="/CustomerProducts">Shop</a>
@@ -89,37 +126,44 @@
     </div>
 
     <div class="feed">
+        @if (Model.Products.Any())
+        {
+            foreach (var product in Model.Products)
+            {
+                // Get primary image URL or first image
+                string imageUrl = "/images/no-image.png";
+                if (product.Images != null && product.Images.Any())
+                {
+                    var primary = product.Images.FirstOrDefault(i => i.IsPrimary);
+                    imageUrl = (primary ?? product.Images.First()).ImageUrl;
+                }
 
-        <!-- POST -->
-        <div class="post">
-            <img src="/images/p1.jpg" />
-            <div class="post-body">
-                <div class="store">Nike Store</div>
-                <p>New summer collection 🔥</p>
-
-                <div class="actions">
-                    <span>❤️ Like</span>
-                    <span>🛒 Add</span>
+                <div class="post">
+                    <img src="@imageUrl" alt="@product.ProductName" />
+                    <div class="post-body">
+                        <div class="store">@(product.Store?.StoreName ?? "Unknown Store")</div>
+                        <div class="product-name">@product.ProductName</div>
+                        <div class="product-price">$@product.Price.ToString("N2")</div>
+                        <div class="product-description">
+                            @(product.Description?.Length > 120 ? product.Description.Substring(0, 120) + "..." : product.Description)
+                        </div>
+                        <div class="actions">
+                            <form method="post" asp-page-handler="AddToCart" asp-route-productId="@product.ProductID">
+                                <button type="submit" class="btn-cart">🛒 Add to Cart</button>
+                            </form>
+                            <!-- You can add a "Like" button later -->
+                        </div>
+                    </div>
                 </div>
+            }
+        }
+        else
+        {
+            <div class="empty-message">
+                <p>✨ No products available right now. Check back later!</p>
             </div>
-        </div>
-
-        <!-- POST -->
-        <div class="post">
-            <img src="/images/p2.jpg" />
-            <div class="post-body">
-                <div class="store">Adidas Store</div>
-                <p>50% discount today</p>
-
-                <div class="actions">
-                    <span>❤️ Like</span>
-                    <span>🛒 Add</span>
-                </div>
-            </div>
-        </div>
-
+        }
     </div>
 
 </body>
-
 </html>
