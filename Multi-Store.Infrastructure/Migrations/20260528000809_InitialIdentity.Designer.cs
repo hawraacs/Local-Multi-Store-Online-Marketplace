@@ -293,7 +293,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
-                    b.Property<string>("ImageURL")
+                    b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
@@ -320,7 +320,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MessageID"));
 
-                    b.Property<string>("ImageURL")
+                    b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsRead")
@@ -1016,7 +1016,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
-                    b.Property<string>("ImageURL")
+                    b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

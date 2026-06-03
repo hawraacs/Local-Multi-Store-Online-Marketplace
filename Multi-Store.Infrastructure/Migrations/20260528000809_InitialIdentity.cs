@@ -66,7 +66,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     CategoryName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CategorySlug = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ImageURL = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -470,7 +470,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     ImageID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProductID = table.Column<int>(type: "int", nullable: false),
-                    ImageURL = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
                     IsPrimary = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -536,7 +536,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     OrderID = table.Column<int>(type: "int", nullable: true),
                     ProductID = table.Column<int>(type: "int", nullable: true),
                     MessageText = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ImageURL = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsRead = table.Column<bool>(type: "bit", nullable: false),
                     SentAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },

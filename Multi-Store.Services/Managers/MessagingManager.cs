@@ -116,7 +116,7 @@ namespace Multi_Store.Services.Managers
                 throw new Exception("Sender and receiver cannot be the same.");
 
             if (string.IsNullOrWhiteSpace(messageDTO.MessageText)
-                && string.IsNullOrWhiteSpace(messageDTO.ImageURL))
+                && string.IsNullOrWhiteSpace(messageDTO.ImageUrl))
             {
                 throw new Exception("Message text or image is required.");
             }
@@ -166,7 +166,7 @@ namespace Multi_Store.Services.Managers
             var oldValue = existingMessage.MessageText;
 
             existingMessage.MessageText = messageDTO.MessageText;
-            existingMessage.ImageURL = messageDTO.ImageURL;
+            existingMessage.ImageUrl = messageDTO.ImageUrl;
 
             await _chatMessageRepository.UpdateAsync(existingMessage);
 

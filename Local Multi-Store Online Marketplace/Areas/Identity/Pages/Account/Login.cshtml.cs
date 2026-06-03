@@ -179,7 +179,7 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 
             if (roles.Contains("StoreOwner"))
             {
-                return RedirectToPage("/Store1");
+                return RedirectToPage("/StoreOwner/Dashboard");
             }
 
             if (roles.Contains("Customer"))

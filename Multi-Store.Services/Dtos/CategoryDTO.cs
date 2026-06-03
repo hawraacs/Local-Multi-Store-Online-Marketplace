@@ -15,7 +15,7 @@ namespace Multi_Store.Services.Dtos
 
         public string? Description { get; set; }
 
-        public string? ImageURL { get; set; }
+        public string? ImageUrl { get; set; }
 
         public int DisplayOrder { get; set; }
 

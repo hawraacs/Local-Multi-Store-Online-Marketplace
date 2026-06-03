@@ -14,7 +14,7 @@ namespace Multi_Store.Core.Entities
         public int? OrderID { get; set; }
         public int? ProductID { get; set; }
         public string MessageText { get; set; } = string.Empty;
-        public string? ImageURL { get; set; }
+        public string? ImageUrl { get; set; }
         public bool IsRead { get; set; } = false;
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
 

@@ -50,7 +50,7 @@ namespace Multi_Store.Services.Managers
             category.CategoryName = dto.CategoryName;
             category.CategorySlug = dto.CategorySlug;
             category.Description = dto.Description;
-            category.ImageURL = dto.ImageURL;
+            category.ImageUrl = dto.ImageUrl;
             category.DisplayOrder = dto.DisplayOrder;
             category.IsActive = dto.IsActive;
 
