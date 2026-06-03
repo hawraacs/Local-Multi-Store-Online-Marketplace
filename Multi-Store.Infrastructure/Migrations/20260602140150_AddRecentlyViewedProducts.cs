@@ -12,7 +12,7 @@ namespace Multi_Store.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "ImageURL",
+                name: "ImageUrl",
                 table: "ProductImages");
 
             migrationBuilder.CreateTable(
@@ -60,7 +60,7 @@ namespace Multi_Store.Infrastructure.Migrations
                 name: "RecentlyViewedProducts");
 
             migrationBuilder.AddColumn<string>(
-                name: "ImageURL",
+                name: "ImageUrl",
                 table: "ProductImages",
                 type: "nvarchar(max)",
                 nullable: false,

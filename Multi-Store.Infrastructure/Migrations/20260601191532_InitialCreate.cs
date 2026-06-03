@@ -11,7 +11,7 @@ namespace Multi_Store.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.RenameColumn(
-                name: "ImageURL",
+                name: "ImageUrl",
                 table: "ProductImages",
                 newName: "ImageUrl");
         }
@@ -22,7 +22,7 @@ namespace Multi_Store.Infrastructure.Migrations
             migrationBuilder.RenameColumn(
                 name: "ImageUrl",
                 table: "ProductImages",
-                newName: "ImageURL");
+                newName: "ImageUrl");
         }
     }
 }

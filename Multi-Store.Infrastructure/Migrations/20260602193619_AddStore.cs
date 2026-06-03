@@ -12,7 +12,7 @@ namespace Multi_Store.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "ImageURL",
+                name: "IImageUrl",
                 table: "ProductImages");
         }
 
@@ -20,7 +20,7 @@ namespace Multi_Store.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "ImageURL",
+                name: "ImageUrl",
                 table: "ProductImages",
                 type: "nvarchar(max)",
                 nullable: false,
