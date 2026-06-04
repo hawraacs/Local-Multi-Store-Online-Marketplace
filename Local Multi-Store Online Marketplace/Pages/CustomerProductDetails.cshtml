@@ -1,0 +1,278 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.CustomerProductDetailsModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Details | Realnest</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f3f5f8;
+            font-family: Arial, sans-serif;
+            color: #111827;
+        }
+
+        .page {
+            min-height: 100vh;
+            padding: 45px 25px;
+        }
+
+        .top-links {
+            max-width: 1050px;
+            margin: 0 auto 25px auto;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+            .top-links a {
+                background: #111827;
+                color: white;
+                padding: 11px 16px;
+                border-radius: 12px;
+                text-decoration: none;
+                font-weight: 800;
+            }
+
+        .message {
+            max-width: 900px;
+            margin: 0 auto 25px auto;
+            padding: 14px 18px;
+            border-radius: 14px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .details-card {
+            max-width: 1050px;
+            margin: auto;
+            background: white;
+            border-radius: 28px;
+            padding: 28px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .image-box {
+            background: #f9fafb;
+            border-radius: 24px;
+            height: 420px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+            .image-box img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+
+        .stock-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .category {
+            display: inline-block;
+            background: #eef2ff;
+            color: #2563eb;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 34px;
+            margin: 0 0 12px;
+        }
+
+        .store {
+            color: #6b7280;
+            font-weight: 800;
+            margin-bottom: 18px;
+        }
+
+        .price {
+            font-size: 30px;
+            color: #ff5a2c;
+            font-weight: 900;
+            margin-bottom: 18px;
+        }
+
+        .description {
+            color: #4b5563;
+            line-height: 1.65;
+            margin-bottom: 25px;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .wishlist-btn,
+        .cart-btn,
+        .out-stock-btn {
+            width: 100%;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 900;
+            cursor: pointer;
+            color: white;
+        }
+
+        .wishlist-btn {
+            background: #111827;
+        }
+
+        .cart-btn {
+            background: #ff5a2c;
+        }
+
+        .out-stock-btn {
+            background: #e5e7eb;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+
+        @@media (max-width: 800px) {
+            .details-card {
+                grid-template-columns: 1fr;
+            }
+
+            .image-box {
+                height: 300px;
+            }
+
+            .actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+
+        <div class="top-links">
+            <a href="/CustomerProducts">Back to Shop</a>
+            <a href="/CustomerRecentlyViewed">Recently Viewed</a>
+            <a href="/CustomerCart">Cart</a>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="message success-message">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="message error-message">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div class="details-card">
+
+            <div class="image-box">
+                <img src="@Model.Product.ImageUrl"
+                     alt="@Model.Product.ProductName"
+                     onerror="this.onerror=null;this.src='/images/no-image.png';" />
+
+                @if (Model.Product.IsOutOfStock)
+                {
+                    <div class="stock-badge">
+                        Out of Stock
+                    </div>
+                }
+            </div>
+
+            <div>
+                <div class="category">
+                    @Model.Product.CategoryName
+                </div>
+
+                <h1>@Model.Product.ProductName</h1>
+
+                <div class="store">
+                    Store: @Model.Product.StoreName
+                </div>
+
+                <div class="price">
+                    $@Model.Product.Price.ToString("N2")
+                </div>
+
+                <div class="description">
+                    @Model.Product.Description
+                </div>
+
+                <div class="actions">
+                    <form method="post" asp-page-handler="AddWishlist">
+                        <input type="hidden" name="productId" value="@Model.Product.ProductID" />
+
+                        <button type="submit" class="wishlist-btn">
+                            ❤️ Wishlist
+                        </button>
+                    </form>
+
+                    @if (!Model.Product.IsOutOfStock)
+                    {
+                        <form method="post" asp-page-handler="AddCart">
+                            <input type="hidden" name="productId" value="@Model.Product.ProductID" />
+
+                            <button type="submit" class="cart-btn">
+                                🛒 Add Cart
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button type="button" class="out-stock-btn" disabled>
+                            Out of Stock
+                        </button>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

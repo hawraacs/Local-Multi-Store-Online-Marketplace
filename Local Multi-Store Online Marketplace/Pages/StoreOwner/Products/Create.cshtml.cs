@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 {
+    [Authorize(Roles = "StoreOwner")]
     public class CreateModel : PageModel
     {
         private readonly ApplicationDbContext _context;

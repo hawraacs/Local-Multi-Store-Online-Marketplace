@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Multi_Store.Core.Entities;
@@ -6,6 +7,8 @@ using Multi_Store.Services.Managers;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
+    [Authorize(Roles = "Admin")]
+
     public class AdminDeliveryModel : PageModel
     {
         private readonly DeliveryManager _deliveryManager;

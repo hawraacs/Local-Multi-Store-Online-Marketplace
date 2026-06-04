@@ -82,6 +82,77 @@
             border: 1px solid #fca5a5;
         }
 
+        .filter-card {
+            max-width: 1150px;
+            margin: 0 auto 30px auto;
+            background: white;
+            border-radius: 24px;
+            padding: 22px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+            gap: 12px;
+            align-items: end;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 900;
+            color: #374151;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .filter-input,
+        .filter-select {
+            width: 100%;
+            padding: 12px 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-weight: 700;
+            color: #111827;
+            background: white;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .filter-btn,
+        .clear-btn {
+            border: none;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .filter-btn {
+            background: #111827;
+            color: white;
+        }
+
+        .clear-btn {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .results-count {
+            max-width: 1150px;
+            margin: 0 auto 18px auto;
+            color: #6b7280;
+            font-weight: 800;
+        }
+
         .products-grid {
             max-width: 1150px;
             margin: auto;
@@ -97,6 +168,7 @@
             border: 1px solid #e5e7eb;
             box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08);
             transition: box-shadow 0.2s ease, border-color 0.2s ease;
+            position: relative;
         }
 
             .product-card:hover {
@@ -113,6 +185,7 @@
             justify-content: center;
             overflow: hidden;
             margin-bottom: 16px;
+            position: relative;
         }
 
             .image-box img {
@@ -121,6 +194,19 @@
                 object-fit: contain;
                 display: block;
             }
+
+        .stock-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+        }
 
         .product-category {
             display: inline-block;
@@ -163,6 +249,23 @@
             margin-bottom: 18px;
         }
 
+        .details-btn {
+            display: block;
+            width: 100%;
+            background: #111827;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            padding: 13px;
+            border-radius: 14px;
+            font-weight: 900;
+            margin-bottom: 12px;
+        }
+
+            .details-btn:hover {
+                background: #2563eb;
+            }
+
         .product-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -174,19 +277,20 @@
             }
 
         .wishlist-btn,
-        .cart-btn {
+        .cart-btn,
+        .out-stock-btn {
             width: 100%;
             border: none;
             padding: 13px;
             border-radius: 14px;
             font-weight: 900;
-            cursor: pointer;
             color: white;
             transition: background 0.2s ease, box-shadow 0.2s ease;
         }
 
         .wishlist-btn {
             background: #111827;
+            cursor: pointer;
         }
 
             .wishlist-btn:hover {
@@ -196,12 +300,19 @@
 
         .cart-btn {
             background: #ff5a2c;
+            cursor: pointer;
         }
 
             .cart-btn:hover {
                 background: #e64a1f;
                 box-shadow: 0 10px 22px rgba(255, 90, 44, 0.28);
             }
+
+        .out-stock-btn {
+            background: #e5e7eb;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
 
         .empty-box {
             max-width: 750px;
@@ -220,6 +331,12 @@
                 font-size: 25px;
                 margin-bottom: 10px;
             }
+
+        @@media (max-width: 1100px) {
+            .filter-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
 
         @@media (max-width: 950px) {
             .products-grid {
@@ -247,6 +364,14 @@
 
             .product-actions {
                 grid-template-columns: 1fr;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-actions {
+                flex-direction: column;
             }
         }
     </style>
@@ -280,11 +405,99 @@
             </div>
         }
 
+        <div class="filter-card">
+            <form method="get">
+                <div class="filter-grid">
+
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input asp-for="SearchTerm"
+                               class="filter-input"
+                               placeholder="Search product, store, category..." />
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Category</label>
+                        <select asp-for="CategoryId" class="filter-select">
+                            <option value="">All Categories</option>
+                            @foreach (var category in Model.Categories)
+                            {
+                                <option value="@category.CategoryID">
+                                    @category.CategoryName
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Store</label>
+                        <select asp-for="StoreId" class="filter-select">
+                            <option value="">All Stores</option>
+                            @foreach (var store in Model.Stores)
+                            {
+                                <option value="@store.StoreID">
+                                    @store.StoreName
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Area</label>
+                        <select asp-for="Area" class="filter-select">
+                            <option value="">All Areas</option>
+                            @foreach (var area in Model.Areas)
+                            {
+                                <option value="@area">
+                                    @area
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Min Price</label>
+                        <input asp-for="MinPrice"
+                               class="filter-input"
+                               type="number"
+                               step="0.01"
+                               min="0"
+                               placeholder="Min" />
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Max Price</label>
+                        <input asp-for="MaxPrice"
+                               class="filter-input"
+                               type="number"
+                               step="0.01"
+                               min="0"
+                               placeholder="Max" />
+                    </div>
+
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="filter-btn">
+                        Search / Filter
+                    </button>
+
+                    <a href="/CustomerProducts" class="clear-btn">
+                        Clear Filters
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="results-count">
+            Showing @Model.Products.Count product(s)
+        </div>
+
         @if (Model.Products == null || !Model.Products.Any())
         {
             <div class="empty-box">
-                <h3>No products available yet</h3>
-                <p>Products added by store owners will appear here.</p>
+                <h3>No products found</h3>
+                <p>Try changing the search or filter options.</p>
             </div>
         }
         else
@@ -298,6 +511,13 @@
                             <img src="@product.PrimaryImageUrl"
                                  alt="@product.ProductName"
                                  onerror="this.onerror=null;this.src='/images/no-image.png';" />
+
+                            @if (product.IsOutOfStock)
+                            {
+                                <div class="stock-badge">
+                                    Out of Stock
+                                </div>
+                            }
                         </div>
 
                         <div class="product-category">
@@ -322,8 +542,21 @@
                                 : product.Description)
                         </div>
 
+                        <a asp-page="/CustomerProductDetails"
+                           asp-route-id="@product.ProductID"
+                           class="details-btn">
+                            View Details
+                        </a>
+
                         <div class="product-actions">
-                            <form method="post" asp-page-handler="AddWishlist">
+                            <form method="post"
+                                  asp-page-handler="AddWishlist"
+                                  asp-route-searchTerm="@Model.SearchTerm"
+                                  asp-route-categoryId="@Model.CategoryId"
+                                  asp-route-storeId="@Model.StoreId"
+                                  asp-route-area="@Model.Area"
+                                  asp-route-minPrice="@Model.MinPrice"
+                                  asp-route-maxPrice="@Model.MaxPrice">
                                 <input type="hidden"
                                        name="productId"
                                        value="@product.ProductID" />
@@ -333,15 +566,31 @@
                                 </button>
                             </form>
 
-                            <form method="post" asp-page-handler="AddCart">
-                                <input type="hidden"
-                                       name="productId"
-                                       value="@product.ProductID" />
+                            @if (!product.IsOutOfStock)
+                            {
+                                <form method="post"
+                                      asp-page-handler="AddCart"
+                                      asp-route-searchTerm="@Model.SearchTerm"
+                                      asp-route-categoryId="@Model.CategoryId"
+                                      asp-route-storeId="@Model.StoreId"
+                                      asp-route-area="@Model.Area"
+                                      asp-route-minPrice="@Model.MinPrice"
+                                      asp-route-maxPrice="@Model.MaxPrice">
+                                    <input type="hidden"
+                                           name="productId"
+                                           value="@product.ProductID" />
 
-                                <button type="submit" class="cart-btn">
-                                    🛒 Add Cart
+                                    <button type="submit" class="cart-btn">
+                                        🛒 Add Cart
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <button type="button" class="out-stock-btn" disabled>
+                                    Out of Stock
                                 </button>
-                            </form>
+                            }
                         </div>
 
                     </div>
