@@ -46,5 +46,29 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             await _storeManager.RejectStoreAsync(id);
             return RedirectToPage();
         }
+        public async Task<IActionResult> OnPostActivate(int id)
+        {
+            var admin = await _userManager.GetUserAsync(User);
+
+            if (admin == null)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            await _storeManager.ActivateStoreAsync(id, admin.Id);
+
+            TempData["Success"] = "Store activated successfully.";
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeactivate(int id)
+        {
+            await _storeManager.DeactivateStoreAsync(id);
+
+            TempData["Success"] = "Store deactivated successfully.";
+
+            return RedirectToPage();
+        }
     }
 }

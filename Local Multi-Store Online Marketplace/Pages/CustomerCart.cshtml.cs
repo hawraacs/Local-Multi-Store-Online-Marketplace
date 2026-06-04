@@ -251,6 +251,35 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 _context.OrderItems.Add(orderItem);
 
                 item.Product.Quantity -= item.Quantity;
+
+                if (item.Product.Quantity < 0)
+                {
+                    throw new Exception($"Stock error for '{item.Product.ProductName}'.");
+                }
+
+                item.Product.UpdatedAt = DateTime.UtcNow;
+
+                // FR-18: Low Stock Notification
+                if (item.Product.Quantity <= item.Product.LowStockThreshold)
+                {
+                    var store = await _context.Stores
+                        .FirstOrDefaultAsync(s => s.StoreID == item.Product.StoreID);
+
+                    if (store != null)
+                    {
+                        _context.Notifications.Add(new Notification
+                        {
+                            UserID = store.OwnerUserID,
+                            Title = "Low Stock Alert",
+                            Message = $"Product '{item.Product.ProductName}' is low in stock. Current quantity: {item.Product.Quantity}.",
+                            Type = "LowStock",
+                            ReferenceID = item.Product.ProductID,
+                            IsRead = false,
+                            SentAt = DateTime.UtcNow,
+                            SentVia = "System"
+                        });
+                    }
+                }
             }
 
             _context.CartItems.RemoveRange(cart.CartItems);
