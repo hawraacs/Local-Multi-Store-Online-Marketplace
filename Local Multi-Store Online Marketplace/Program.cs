@@ -11,89 +11,34 @@ using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// =========================
-// Razor Pages + Role Protection
-// =========================
-builder.Services.AddRazorPages(options =>
-{
-    // Admin Pages
-    options.Conventions.AuthorizePage("/Admin1", "AdminOnly");
-    options.Conventions.AuthorizePage("/AdminUsers", "AdminOnly");
-    options.Conventions.AuthorizePage("/AdminStores", "AdminOnly");
-    options.Conventions.AuthorizePage("/AdminDelivery", "AdminOnly");
+// Add Razor Pages
+builder.Services.AddRazorPages();
 
-    // Customer Pages
-    options.Conventions.AuthorizePage("/Customer1", "CustomerOnly");
-    options.Conventions.AuthorizePage("/CustomerProducts", "CustomerOnly");
-    options.Conventions.AuthorizePage("/CustomerCart", "CustomerOnly");
-    options.Conventions.AuthorizePage("/CustomerOrders", "CustomerOnly");
-    options.Conventions.AuthorizePage("/CustomerWishlist", "CustomerOnly");
-    options.Conventions.AuthorizePage("/CustomerAddresses", "CustomerOnly");
-    options.Conventions.AuthorizePage("/CustomerProfile", "CustomerOnly");
-    options.Conventions.AuthorizePage("/StoreRequest", "CustomerOnly");
-
-    // Store Owner Pages
-    options.Conventions.AuthorizeFolder("/StoreOwner", "StoreOwnerOnly");
-
-    // Delivery Pages
-    options.Conventions.AuthorizePage("/Delivery1", "DeliveryOnly");
-    options.Conventions.AuthorizePage("/DeliveryOrders", "DeliveryOnly");
-    options.Conventions.AuthorizePage("/DeliveryEarnings", "DeliveryOnly");
-    options.Conventions.AuthorizePage("/DeliveryProfile", "DeliveryOnly");
-});
-
-// =========================
 // Database
-// =========================
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// =========================
 // Identity
-// =========================
 builder.Services.AddIdentity<User, IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// =========================
-// Authorization Policies
-// =========================
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminOnly", policy =>
-        policy.RequireRole("Admin"));
-
-    options.AddPolicy("CustomerOnly", policy =>
-        policy.RequireRole("Customer"));
-
-    options.AddPolicy("StoreOwnerOnly", policy =>
-        policy.RequireRole("StoreOwner"));
-
-    options.AddPolicy("DeliveryOnly", policy =>
-        policy.RequireRole("Delivery"));
-});
-
-// =========================
-// Session / Cookie Timeout
-// =========================
+// ===============================
+// FR-06 Session / Cookie Timeout
+// ===============================
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/Identity/Account/Login";
-    options.LogoutPath = "/Identity/Account/Logout";
-    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-
-    // Auto logout after 30 minutes inactive
     options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     options.SlidingExpiration = true;
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
 });
 
 // HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
 
-// =========================
 // Google + Facebook Authentication
-// =========================
 builder.Services
     .AddAuthentication(options =>
     {
@@ -117,9 +62,7 @@ builder.Services
             builder.Configuration["Authentication:Facebook:AppSecret"]!;
     });
 
-// =========================
 // Repositories
-// =========================
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
@@ -146,7 +89,9 @@ builder.Services.AddScoped<IStoreRepository, StoreRepository>();
 builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
-builder.Services.AddScoped<IRecentlyViewedProductRepository, RecentlyViewedProductRepository>();
+
+builder.Services.AddScoped<IRecentlyViewedProductRepository,
+    RecentlyViewedProductRepository>();
 
 // Current Store Service
 builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
@@ -154,10 +99,8 @@ builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
 // AutoMapper
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 
-// =========================
 // Managers
-// =========================
-builder.Services.AddScoped<Multi_Store.Services.Managers.UserManager>();
+builder.Services.AddScoped<UserManager>();
 builder.Services.AddScoped<StoreManager>();
 builder.Services.AddScoped<ProductManager>();
 builder.Services.AddScoped<CategoryManager>();
@@ -176,9 +119,7 @@ builder.Services.AddScoped<RecentlyViewedManager>();
 
 var app = builder.Build();
 
-// =========================
 // Seed Roles
-// =========================
 using (var scope = app.Services.CreateScope())
 {
     var roleManager =
@@ -202,18 +143,14 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// =========================
 // Seed Initial Data
-// =========================
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     await SeedData.InitializeAsync(services);
 }
 
-// =========================
-// Middleware
-// =========================
+// Configure Middleware
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
