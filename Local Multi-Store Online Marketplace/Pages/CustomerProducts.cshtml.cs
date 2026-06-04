@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -8,6 +9,7 @@ using Multi_Store.Services.Managers;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
+    [Authorize(Roles = "Customer")]
     public class CustomerProductsModel : PageModel
     {
         private readonly ApplicationDbContext _context;
@@ -26,27 +28,101 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public List<ProductDisplayViewModel> Products { get; set; } = new();
 
+        public List<CategoryFilterViewModel> Categories { get; set; } = new();
+
+        public List<StoreFilterViewModel> Stores { get; set; } = new();
+
+        public List<string> Areas { get; set; } = new();
+
+        [BindProperty(SupportsGet = true)]
+        public string? SearchTerm { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? CategoryId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? StoreId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? Area { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public decimal? MinPrice { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public decimal? MaxPrice { get; set; }
+
         public async Task OnGetAsync()
         {
-            Products = await _context.Products
+            await LoadFiltersAsync();
+
+            var query = _context.Products
                 .Include(p => p.Images)
                 .Include(p => p.Category)
                 .Include(p => p.Store)
-                .Where(p => p.IsActive && p.Quantity > 0)
+                .Where(p => p.IsActive)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(SearchTerm))
+            {
+                var search = SearchTerm.Trim();
+
+                query = query.Where(p =>
+                    p.ProductName.Contains(search) ||
+                    p.Description.Contains(search) ||
+                    (p.Store != null && p.Store.StoreName.Contains(search)) ||
+                    (p.Category != null && p.Category.CategoryName.Contains(search)));
+            }
+
+            if (CategoryId.HasValue && CategoryId.Value > 0)
+            {
+                query = query.Where(p => p.CategoryID == CategoryId.Value);
+            }
+
+            if (StoreId.HasValue && StoreId.Value > 0)
+            {
+                query = query.Where(p => p.StoreID == StoreId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(Area))
+            {
+                var selectedArea = Area.Trim();
+
+                query = query.Where(p =>
+                    p.Store != null &&
+                    p.Store.Area == selectedArea);
+            }
+
+            if (MinPrice.HasValue)
+            {
+                query = query.Where(p => p.Price >= MinPrice.Value);
+            }
+
+            if (MaxPrice.HasValue)
+            {
+                query = query.Where(p => p.Price <= MaxPrice.Value);
+            }
+
+            Products = await query
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => new ProductDisplayViewModel
                 {
                     ProductID = p.ProductID,
                     ProductName = p.ProductName,
                     Price = p.Price,
+                    Quantity = p.Quantity,
                     Description = p.Description,
                     PrimaryImageUrl = p.Images
                         .OrderByDescending(i => i.IsPrimary)
                         .ThenBy(i => i.DisplayOrder)
                         .Select(i => i.ImageUrl)
                         .FirstOrDefault() ?? "/images/no-image.png",
-                    StoreName = p.Store != null ? p.Store.StoreName : "Unknown Store",
-                    CategoryName = p.Category != null ? p.Category.CategoryName : "Uncategorized"
+                    StoreName = p.Store != null
+                        ? p.Store.StoreName
+                        : "Unknown Store",
+                    CategoryName = p.Category != null
+                        ? p.Category.CategoryName
+                        : "Uncategorized"
                 })
                 .ToListAsync();
         }
@@ -66,13 +142,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 var product = await _context.Products
                     .FirstOrDefaultAsync(p =>
                         p.ProductID == productId &&
-                        p.IsActive &&
-                        p.Quantity > 0);
+                        p.IsActive);
 
                 if (product == null)
                 {
                     TempData["Error"] = "Product is not available.";
-                    return RedirectToPage();
+                    return RedirectToPage(GetCurrentFiltersRouteValues());
+                }
+
+                var alreadyInWishlist = await _wishlistManager.IsInWishlistAsync(
+                    customerId.Value,
+                    productId);
+
+                if (alreadyInWishlist)
+                {
+                    TempData["Error"] = "This product is already in your wishlist.";
+                    return RedirectToPage(GetCurrentFiltersRouteValues());
                 }
 
                 await _wishlistManager.AddToWishlistAsync(
@@ -86,7 +171,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 TempData["Error"] = ex.InnerException?.Message ?? ex.Message;
             }
 
-            return RedirectToPage();
+            return RedirectToPage(GetCurrentFiltersRouteValues());
         }
 
         public async Task<IActionResult> OnPostAddCartAsync(int productId)
@@ -104,16 +189,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 var product = await _context.Products
                     .FirstOrDefaultAsync(p =>
                         p.ProductID == productId &&
-                        p.IsActive &&
-                        p.Quantity > 0);
+                        p.IsActive);
 
                 if (product == null)
                 {
                     TempData["Error"] = "Product is not available.";
-                    return RedirectToPage();
+                    return RedirectToPage(GetCurrentFiltersRouteValues());
                 }
 
-                var cart = await _context.Set<Cart>()
+                if (product.Quantity <= 0)
+                {
+                    TempData["Error"] = "This product is out of stock.";
+                    return RedirectToPage(GetCurrentFiltersRouteValues());
+                }
+
+                var cart = await _context.Carts
                     .Include(c => c.CartItems)
                     .FirstOrDefaultAsync(c => c.CustomerID == customerId.Value);
 
@@ -127,38 +217,31 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         ExpiresAt = DateTime.UtcNow.AddDays(7)
                     };
 
-                    _context.Set<Cart>().Add(cart);
+                    _context.Carts.Add(cart);
                     await _context.SaveChangesAsync();
                 }
 
-                var existingItem = await _context.Set<CartItem>()
+                var existingItem = await _context.CartItems
                     .FirstOrDefaultAsync(ci =>
                         ci.CartID == cart.CartID &&
                         ci.ProductID == productId);
 
                 if (existingItem != null)
                 {
-                    if (existingItem.Quantity + 1 > product.Quantity)
-                    {
-                        TempData["Error"] = "Not enough stock available.";
-                        return RedirectToPage();
-                    }
-
-                    existingItem.Quantity += 1;
+                    TempData["Error"] = "This product is already in your cart. You can update the quantity from the cart page.";
+                    return RedirectToPage(GetCurrentFiltersRouteValues());
                 }
-                else
+
+                var cartItem = new CartItem
                 {
-                    var cartItem = new CartItem
-                    {
-                        CartID = cart.CartID,
-                        ProductID = productId,
-                        Quantity = 1,
-                        PriceAtAddTime = product.Price,
-                        AddedAt = DateTime.UtcNow
-                    };
+                    CartID = cart.CartID,
+                    ProductID = productId,
+                    Quantity = 1,
+                    PriceAtAddTime = product.Price,
+                    AddedAt = DateTime.UtcNow
+                };
 
-                    _context.Set<CartItem>().Add(cartItem);
-                }
+                _context.CartItems.Add(cartItem);
 
                 cart.UpdatedAt = DateTime.UtcNow;
 
@@ -171,7 +254,48 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 TempData["Error"] = ex.InnerException?.Message ?? ex.Message;
             }
 
-            return RedirectToPage();
+            return RedirectToPage(GetCurrentFiltersRouteValues());
+        }
+
+        private async Task LoadFiltersAsync()
+        {
+            Categories = await _context.Categories
+                .OrderBy(c => c.CategoryName)
+                .Select(c => new CategoryFilterViewModel
+                {
+                    CategoryID = c.CategoryID,
+                    CategoryName = c.CategoryName
+                })
+                .ToListAsync();
+
+            Stores = await _context.Stores
+                .OrderBy(s => s.StoreName)
+                .Select(s => new StoreFilterViewModel
+                {
+                    StoreID = s.StoreID,
+                    StoreName = s.StoreName
+                })
+                .ToListAsync();
+
+            Areas = await _context.Stores
+                .Where(s => s.Area != null && s.Area != "")
+                .Select(s => s.Area!)
+                .Distinct()
+                .OrderBy(a => a)
+                .ToListAsync();
+        }
+
+        private object GetCurrentFiltersRouteValues()
+        {
+            return new
+            {
+                searchTerm = SearchTerm,
+                categoryId = CategoryId,
+                storeId = StoreId,
+                area = Area,
+                minPrice = MinPrice,
+                maxPrice = MaxPrice
+            };
         }
 
         private async Task<int?> GetCurrentCustomerIdAsync()
@@ -196,6 +320,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public decimal Price { get; set; }
 
+        public int Quantity { get; set; }
+
         public string Description { get; set; } = string.Empty;
 
         public string PrimaryImageUrl { get; set; } = "/images/no-image.png";
@@ -203,5 +329,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public string StoreName { get; set; } = string.Empty;
 
         public string CategoryName { get; set; } = string.Empty;
+
+        public bool IsOutOfStock => Quantity <= 0;
+    }
+
+    public class CategoryFilterViewModel
+    {
+        public int CategoryID { get; set; }
+
+        public string CategoryName { get; set; } = string.Empty;
+    }
+
+    public class StoreFilterViewModel
+    {
+        public int StoreID { get; set; }
+
+        public string StoreName { get; set; } = string.Empty;
     }
 }

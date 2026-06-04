@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,6 +8,7 @@ using Multi_Store.Infrastructure.Data;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
+    [Authorize(Roles = "Customer")]
     public class CustomerCartModel : PageModel
     {
         private readonly ApplicationDbContext _context;
@@ -185,7 +187,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (address == null)
             {
                 TempData["Error"] = "Please add an active delivery address before checkout.";
-                return RedirectToPage();
+
+                return RedirectToPage("/CustomerAddresses", new
+                {
+                    returnUrl = "/CustomerCart"
+                });
             }
 
             foreach (var item in cart.CartItems)
@@ -211,7 +217,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var order = new Order
             {
-                OrderNumber = "ORD-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss"),
+                OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString()[..4].ToUpper()}",
                 CustomerID = customerId.Value,
                 AddressID = address.AddressID,
                 OrderDate = DateTime.UtcNow,

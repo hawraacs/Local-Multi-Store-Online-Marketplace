@@ -1,4 +1,6 @@
-﻿namespace Multi_Store.Core.Entities
+﻿using System;
+
+namespace Multi_Store.Core.Entities
 {
     public class RecentlyViewedProduct
     {
@@ -9,9 +11,5 @@
         public int ProductID { get; set; }
 
         public DateTime ViewedAt { get; set; }
-
-        public Customer Customer { get; set; } = null!;
-
-        public Product Product { get; set; } = null!;
     }
 }

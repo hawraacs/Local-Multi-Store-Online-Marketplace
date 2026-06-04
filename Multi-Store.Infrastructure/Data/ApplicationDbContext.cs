@@ -115,7 +115,6 @@ namespace Multi_Store.Infrastructure.Data
                 .HasForeignKey<Review>(r => r.OrderItemID)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // ================= ONE TO MANY =================
             modelBuilder.Entity<CustomerAddress>()
                 .HasOne(ca => ca.Customer)
                 .WithMany(c => c.Addresses)
@@ -235,6 +234,28 @@ namespace Multi_Store.Infrastructure.Data
                 .WithMany(u => u.ReceivedMessages)
                 .HasForeignKey(cm => cm.ReceiverID)
                 .OnDelete(DeleteBehavior.Restrict);
+            // ================= RECENTLY VIEWED PRODUCTS =================
+            modelBuilder.Entity<RecentlyViewedProduct>(entity =>
+            {
+                entity.ToTable("RecentlyViewedProducts");
+
+                entity.HasKey(rv => rv.Id);
+
+                entity.Property(rv => rv.Id)
+                    .HasColumnName("ID");
+
+                entity.Property(rv => rv.CustomerID)
+                    .HasColumnName("CustomerId");
+
+                entity.Property(rv => rv.ProductID)
+                    .HasColumnName("ProductID");
+
+                entity.Property(rv => rv.ViewedAt)
+                    .HasColumnName("ViewedAt");
+
+                entity.HasIndex(rv => new { rv.CustomerID, rv.ProductID })
+                    .IsUnique();
+            });
 
             // ================= CONFIG =================
             modelBuilder.Entity<Product>().Ignore(p => p.IsOutOfStock);
@@ -262,7 +283,7 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<Review>()
                 .ToTable(t => t.HasCheckConstraint("CK_Review_Rating", "Rating >= 1 AND Rating <= 5"));
 
-            // ================= PRECISION (NO DUPLICATES) =================
+            // ================= PRECISION =================
             modelBuilder.Entity<Store>().Property(s => s.CommissionRate).HasPrecision(18, 2);
             modelBuilder.Entity<Store>().Property(s => s.Rating).HasPrecision(18, 2);
             modelBuilder.Entity<Store>().Property(s => s.CODMaxLimit).HasPrecision(18, 2);
@@ -274,7 +295,13 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<Product>().Property(p => p.Rating).HasPrecision(18, 2);
             modelBuilder.Entity<Product>().Property(p => p.Weight).HasPrecision(18, 2);
 
+            modelBuilder.Entity<Order>().Property(o => o.Subtotal).HasPrecision(18, 2);
+            modelBuilder.Entity<Order>().Property(o => o.DeliveryFee).HasPrecision(18, 2);
+            modelBuilder.Entity<Order>().Property(o => o.DiscountAmount).HasPrecision(18, 2);
+            modelBuilder.Entity<Order>().Property(o => o.TaxAmount).HasPrecision(18, 2);
             modelBuilder.Entity<Order>().Property(o => o.TotalAmount).HasPrecision(18, 2);
+
+            modelBuilder.Entity<CartItem>().Property(ci => ci.PriceAtAddTime).HasPrecision(18, 2);
 
             modelBuilder.Entity<OrderItem>().Property(oi => oi.ProductPrice).HasPrecision(18, 2);
             modelBuilder.Entity<OrderItem>().Property(oi => oi.TotalPrice).HasPrecision(18, 2);
