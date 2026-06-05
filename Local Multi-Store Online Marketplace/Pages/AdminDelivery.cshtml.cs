@@ -1,63 +1,80 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
-using Multi_Store.Core.Reposinterface;
+using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
+using System.Data.Entity;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
     public class AdminDeliveryModel : PageModel
     {
+        private readonly ApplicationDbContext _dbContext;
         private readonly DeliveryManager _deliveryManager;
-        private readonly IDeliveryPersonRepository _deliveryRepo;
+        private readonly ILogger<AdminDeliveryModel> _logger;
 
-        public AdminDeliveryModel(
-            DeliveryManager deliveryManager,
-            IDeliveryPersonRepository deliveryRepo)
+
+        public AdminDeliveryModel(DeliveryManager deliveryManager, ILogger<AdminDeliveryModel> logger, ApplicationDbContext dbContext)
         {
             _deliveryManager = deliveryManager;
-            _deliveryRepo = deliveryRepo;
+            _dbContext = dbContext;
+            _logger = logger;
         }
 
-        public List<DeliveryPerson> PendingDelivery { get; set; } = new();
-        public List<DeliveryPerson> ActiveDelivery { get; set; } = new();
+        public List<DeliveryPersonDTO> Deliveries { get; set; } = new();
 
+        // =====================
         public async Task OnGetAsync()
         {
-            var all = await _deliveryRepo.GetAllAsync();
+            _logger.LogInformation("ADMIN DELIVERY PAGE LOADED");
 
-            PendingDelivery = all
-                .Where(x => x.Status == "Pending")
-                .ToList();
+            var list = await _deliveryManager.GetAllAsync();
 
-            ActiveDelivery = all
-                .Where(x => x.Status == "Available")
-                .ToList();
-        }
+            _logger.LogInformation("COUNT = {Count}", list.Count);
 
-        public async Task<IActionResult> OnPostApproveAsync(int id)
-        {
-            var delivery = await _deliveryRepo.GetByIdAsync(id);
+            _logger.LogInformation("ADMIN DB: {DbName}", _dbContext.Database.GetDbConnection().Database);
 
-            if (delivery != null)
+            _logger.LogInformation("RAW DB COUNT: {Count}", list.Count);
+
+            foreach (var item in list)
             {
-                delivery.Status = "Available";
-                await _deliveryRepo.UpdateAsync(delivery);
+                _logger.LogInformation("ID={Id}, Status={Status}",
+                    item.DeliveryPersonID, item.Status);
             }
 
+            Deliveries = list.Where(x => x.Status != null && x.Status.ToLower() == "pending")
+                .Select(x => new DeliveryPersonDTO
+                {
+                    DeliveryPersonID = x.DeliveryPersonID,
+                    FullName = x.FullName,
+                    PhoneNumber = x.PhoneNumber,
+                    VehicleType = x.VehicleType,
+                    VehicleNumber = x.VehicleNumber,
+                    Area = x.Area,
+                    Status = x.Status
+                })
+                .ToList();
+
+            
+
+            _logger.LogInformation("PENDING COUNT = {Count}", Deliveries.Count);
+        }
+
+        // =====================
+        // APPROVE
+        // =====================
+        public async Task<IActionResult> OnPostApprove(int id)
+        {
+            await _deliveryManager.ApproveDeliveryPersonAsync(id);
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostRejectAsync(int id)
+    
+        public async Task<IActionResult> OnPostReject(int id)
         {
-            var delivery = await _deliveryRepo.GetByIdAsync(id);
-
-            if (delivery != null)
-            {
-                delivery.Status = "Rejected";
-                await _deliveryRepo.UpdateAsync(delivery);
-            }
-
+            await _deliveryManager.RejectDeliveryPersonAsync(id);
             return RedirectToPage();
         }
     }

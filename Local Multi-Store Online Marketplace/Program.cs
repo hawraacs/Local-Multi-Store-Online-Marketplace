@@ -137,6 +137,20 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     await SeedData.InitializeAsync(services);
 }
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    Console.WriteLine("DB CONNECTION:");
+    Console.WriteLine(db.Database.GetConnectionString());
+}
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    Console.WriteLine("DB NAME:");
+    Console.WriteLine(db.Database.GetDbConnection().Database);
+}
 
 // Configure Middleware
 if (!app.Environment.IsDevelopment())

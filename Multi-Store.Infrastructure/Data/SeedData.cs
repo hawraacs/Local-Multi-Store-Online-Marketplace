@@ -21,7 +21,7 @@ namespace Multi_Store.Infrastructure.Data
             // =========================
             // 1. CREATE ROLES (Identity)
             // =========================
-            string[] roles = { "Admin", "StoreOwner", "Customer", "DeliveryStaff" };
+            string[] roles = { "Admin", "StoreOwner", "Customer", "Delivery" };
 
             foreach (var role in roles)
             {
@@ -115,7 +115,7 @@ namespace Multi_Store.Infrastructure.Data
 
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(delivery, "DeliveryStaff");
+                    await userManager.AddToRoleAsync(delivery, "Delivery");
                 }
             }
 

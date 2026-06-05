@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Multi_Store.Core.Reposinterface.Base;
 using Multi_Store.Infrastructure.Data;
 using System;
@@ -13,6 +14,8 @@ namespace Multi_Store.Infrastructure.Repositories.Base
     public class Repository<T> : IRepository<T> where T : class
     {
         protected readonly ApplicationDbContext _dbContext;
+        private readonly ILogger<Repository<T> > _logger;
+
 
         public Repository(ApplicationDbContext dbContext)
         {
@@ -85,10 +88,11 @@ namespace Multi_Store.Infrastructure.Repositories.Base
         public async Task<T> AddAsync(T entity)
         {
             await _dbContext.Set<T>().AddAsync(entity);
+                 _logger.LogInformation("BEFORE SAVE");
 
             var result = await _dbContext.SaveChangesAsync();
 
-            Console.WriteLine($"SaveChanges = {result}");
+            _logger.LogInformation("AFTER SAVE");
 
             return entity;
         }
