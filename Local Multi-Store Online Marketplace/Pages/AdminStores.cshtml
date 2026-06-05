@@ -335,6 +335,11 @@
                 border-top: 1px solid rgba(0,0,0,0.05);
                 margin-top: 32px;
             }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
     </style>
 </head>
 <body>
@@ -406,18 +411,44 @@
                                 </td>
                                 <td>
                                     <div class="action-group">
-                                        <form method="post" asp-page-handler="Approve" style="display: inline;">
-                                            <input type="hidden" name="id" value="@s.StoreID" />
-                                            <button type="submit" class="btn btn-approve">
-                                                <i class="fas fa-check"></i> Approve
-                                            </button>
-                                        </form>
-                                        <form method="post" asp-page-handler="Reject" style="display: inline;">
-                                            <input type="hidden" name="id" value="@s.StoreID" />
-                                            <button type="submit" class="btn btn-reject">
-                                                <i class="fas fa-times"></i> Reject
-                                            </button>
-                                        </form>
+                                        @if (s.Status != null && s.Status.Trim().Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <form method="post" asp-page-handler="Approve" style="display: inline;">
+                                                <input type="hidden" name="id" value="@s.StoreID" />
+                                                <button type="submit" class="btn btn-approve">
+                                                    <i class="fas fa-check"></i> Approve
+                                                </button>
+                                            </form>
+
+                                            <form method="post" asp-page-handler="Reject" style="display: inline;">
+                                                <input type="hidden" name="id" value="@s.StoreID" />
+                                                <button type="submit" class="btn btn-reject">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (s.Status != null && s.Status.Trim().Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <form method="post" asp-page-handler="Deactivate" style="display: inline;">
+                                                <input type="hidden" name="id" value="@s.StoreID" />
+                                                <button type="submit" class="btn btn-deactivate">
+                                                    <i class="fas fa-pause"></i> Deactivate
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (s.Status != null && s.Status.Trim().Equals("Inactive", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <form method="post" asp-page-handler="Activate" style="display: inline;">
+                                                <input type="hidden" name="id" value="@s.StoreID" />
+                                                <button type="submit" class="btn btn-activate">
+                                                    <i class="fas fa-play"></i> Activate
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <span style="color:#64748b;font-weight:600;">No action</span>
+                                        }
                                     </div>
                                 </td>
                             </tr>
