@@ -30,13 +30,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public async Task<IActionResult> OnPostApprove(int id)
         {
+            var admin = await _userManager.GetUserAsync(User);
+
+            if (admin == null)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
             var result = await _storeManager.ApproveStoreWithAccountAsync(
                 id,
-                1,
+                admin.Id,
                 _userManager);
 
             TempData["Email"] = result.email;
             TempData["Password"] = result.password;
+            TempData["Success"] = "Store approved successfully.";
 
             return RedirectToPage();
         }
