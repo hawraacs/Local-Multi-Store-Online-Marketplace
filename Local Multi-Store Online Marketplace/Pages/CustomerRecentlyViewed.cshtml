@@ -1,0 +1,334 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.CustomerRecentlyViewedModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recently Viewed | Realnest</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f4f6f9;
+            font-family: Arial, sans-serif;
+            color: #111827;
+        }
+
+        .page {
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        .header {
+            max-width: 1100px;
+            margin: 0 auto 28px auto;
+            background: #111827;
+            color: white;
+            border-radius: 24px;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+        }
+
+            .header h2 {
+                margin: 0;
+                font-size: 32px;
+            }
+
+            .header p {
+                margin: 8px 0 0;
+                color: #d1d5db;
+            }
+
+        .header-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+            .header-links a {
+                background: white;
+                color: #111827;
+                padding: 12px 16px;
+                border-radius: 12px;
+                text-decoration: none;
+                font-weight: 900;
+            }
+
+        .message {
+            max-width: 900px;
+            margin: 0 auto 25px auto;
+            padding: 14px 18px;
+            border-radius: 14px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .grid {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 18px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 12px 28px rgba(15,23,42,0.08);
+        }
+
+        .image-box {
+            height: 220px;
+            border-radius: 16px;
+            background: #f3f4f6;
+            overflow: hidden;
+            position: relative;
+        }
+
+            .image-box img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+
+        .stock-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .category {
+            display: inline-block;
+            background: #eef2ff;
+            color: #2563eb;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 900;
+            margin-top: 14px;
+            text-transform: uppercase;
+        }
+
+        .name {
+            font-size: 20px;
+            font-weight: 900;
+            margin: 12px 0 6px;
+            color: #111827;
+        }
+
+        .store {
+            color: #6b7280;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .price {
+            color: #ff5a2c;
+            font-size: 21px;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+
+        .viewed {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 14px;
+        }
+
+        .card-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .details-link,
+        .wishlist-btn {
+            display: block;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .details-link {
+            background: #111827;
+            color: white;
+        }
+
+        .wishlist-btn {
+            width: 100%;
+            background: #ff5a2c;
+            color: white;
+        }
+
+        .empty {
+            max-width: 700px;
+            margin: 50px auto;
+            background: white;
+            padding: 45px;
+            border-radius: 20px;
+            text-align: center;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+        }
+
+            .empty h3 {
+                color: #111827;
+            }
+
+        @@media (max-width: 900px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @@media (max-width: 600px) {
+            .page {
+                padding: 20px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+
+        <div class="header">
+            <div>
+                <h2>Recently Viewed</h2>
+                <p>Your last viewed products.</p>
+            </div>
+
+            <div class="header-links">
+                <a href="/CustomerProducts">Back to Shop</a>
+                <a href="/CustomerCart">Cart</a>
+            </div>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="message success-message">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="message error-message">
+                @TempData["Error"]
+            </div>
+        }
+
+        @if (Model.Products == null || !Model.Products.Any())
+        {
+            <div class="empty">
+                <h3>No recently viewed products yet</h3>
+                <p>Open a product details page and it will appear here.</p>
+            </div>
+        }
+        else
+        {
+            <div class="grid">
+                @foreach (var product in Model.Products)
+                {
+                    <div class="card">
+
+                        <div class="image-box">
+                            <img src="@product.ImageUrl"
+                                 alt="@product.ProductName"
+                                 onerror="this.onerror=null;this.src='/images/no-image.png';" />
+
+                            @if (product.IsOutOfStock)
+                            {
+                                <div class="stock-badge">
+                                    Out of Stock
+                                </div>
+                            }
+                        </div>
+
+                        <div class="category">
+                            @product.CategoryName
+                        </div>
+
+                        <div class="name">
+                            @product.ProductName
+                        </div>
+
+                        <div class="store">
+                            Store: @product.StoreName
+                        </div>
+
+                        <div class="price">
+                            $@product.Price.ToString("N2")
+                        </div>
+
+                        <div class="viewed">
+                            Viewed: @product.ViewedAt.ToString("dd MMM yyyy HH:mm")
+                        </div>
+
+                        <div class="card-actions">
+                            <a href="/CustomerProductDetails?id=@product.ProductID"
+                               class="details-link">
+                                View Again
+                            </a>
+
+                            <form method="post"
+                                  asp-page-handler="AddToWishlist"
+                                  asp-route-productId="@product.ProductID">
+                                <button type="submit" class="wishlist-btn">
+                                    Save
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</body>
+</html>

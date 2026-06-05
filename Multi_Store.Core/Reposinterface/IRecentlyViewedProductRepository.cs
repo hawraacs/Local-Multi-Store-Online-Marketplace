@@ -6,9 +6,12 @@ namespace Multi_Store.Core.Reposinterface
     public interface IRecentlyViewedProductRepository
         : IRepository<RecentlyViewedProduct>
     {
-        Task<IReadOnlyList<RecentlyViewedProduct>>
-            GetByCustomerAsync(int customerId);
+        Task<IReadOnlyList<RecentlyViewedProduct>> GetByCustomerAsync(int customerId);
 
-        Task AddViewAsync(int customerId, int productId);
+        Task<RecentlyViewedProduct?> GetByCustomerAndProductAsync(
+            int customerId,
+            int productId);
+
+        Task<bool> ExistsAsync(int customerId, int productId);
     }
 }

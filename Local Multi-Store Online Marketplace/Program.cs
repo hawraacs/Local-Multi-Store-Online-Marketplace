@@ -1,34 +1,54 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Multi_Store.Core.Entities;
-using Multi_Store.Core.Reposinterface;
 using Multi_Store.Core.Interfaces;
+using Multi_Store.Core.Reposinterface;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Infrastructure.Repositories;
 using Multi_Store.Services;
 using Multi_Store.Services.Managers;
-using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Razor Pages
+// ===============================
+// Razor Pages
+// ===============================
 builder.Services.AddRazorPages();
 
+// ===============================
 // Database
+// ===============================
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// ===============================
 // Identity
+// ===============================
 builder.Services.AddIdentity<User, IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+// ===============================
+// FR-06 Session / Cookie Timeout
+// ===============================
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    options.SlidingExpiration = true;
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+});
+
+// ===============================
 // HttpContextAccessor
+// ===============================
 builder.Services.AddHttpContextAccessor();
 
+// ===============================
 // Google + Facebook Authentication
+// ===============================
 builder.Services
     .AddAuthentication(options =>
     {
@@ -38,20 +58,23 @@ builder.Services
     .AddGoogle(options =>
     {
         options.ClientId =
-            builder.Configuration["Authentication:Google:ClientId"]!;
+            builder.Configuration["Authentication:Google:ClientId"] ?? string.Empty;
 
         options.ClientSecret =
-            builder.Configuration["Authentication:Google:ClientSecret"]!;
+            builder.Configuration["Authentication:Google:ClientSecret"] ?? string.Empty;
     })
     .AddFacebook(options =>
     {
         options.AppId =
-            builder.Configuration["Authentication:Facebook:AppId"]!;
+            builder.Configuration["Authentication:Facebook:AppId"] ?? string.Empty;
 
         options.AppSecret =
-            builder.Configuration["Authentication:Facebook:AppSecret"]!;
+            builder.Configuration["Authentication:Facebook:AppSecret"] ?? string.Empty;
     });
+
+// ===============================
 // Repositories
+// ===============================
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
@@ -78,17 +101,22 @@ builder.Services.AddScoped<IStoreRepository, StoreRepository>();
 builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
-builder.Services.AddScoped<IRecentlyViewedProductRepository,
-    RecentlyViewedProductRepository>();
+builder.Services.AddScoped<IRecentlyViewedProductRepository, RecentlyViewedProductRepository>();
 
-// Current Store Service
+// ===============================
+// Services
+// ===============================
 builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
 
+// ===============================
 // AutoMapper
+// ===============================
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 
+// ===============================
 // Managers
-builder.Services.AddScoped<UserManager>();
+// ===============================
+builder.Services.AddScoped<Multi_Store.Services.Managers.UserManager>();
 builder.Services.AddScoped<StoreManager>();
 builder.Services.AddScoped<ProductManager>();
 builder.Services.AddScoped<CategoryManager>();
@@ -107,7 +135,9 @@ builder.Services.AddScoped<RecentlyViewedManager>();
 
 var app = builder.Build();
 
+// ===============================
 // Seed Roles
+// ===============================
 using (var scope = app.Services.CreateScope())
 {
     var roleManager =
@@ -125,13 +155,14 @@ using (var scope = app.Services.CreateScope())
     {
         if (!await roleManager.RoleExistsAsync(role))
         {
-            await roleManager.CreateAsync(
-                new IdentityRole<int>(role));
+            await roleManager.CreateAsync(new IdentityRole<int>(role));
         }
     }
 }
 
+// ===============================
 // Seed Initial Data
+// ===============================
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -152,7 +183,9 @@ using (var scope = app.Services.CreateScope())
     Console.WriteLine(db.Database.GetDbConnection().Database);
 }
 
-// Configure Middleware
+// ===============================
+// Middleware
+// ===============================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");

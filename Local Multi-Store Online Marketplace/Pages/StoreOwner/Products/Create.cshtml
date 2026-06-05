@@ -132,16 +132,18 @@
             font-size: 12px;
             color: #6c757d;
             margin-top: 5px;
+            display: block;
         }
     </style>
 }
 
 <div class="form-container">
     <h2 style="margin: 0 0 5px 0;">Add New Product</h2>
-    <p style="color: #6c757d; margin-bottom: 25px;">Fill in the details below to add a new product to your store</p>
+    <p style="color: #6c757d; margin-bottom: 25px;">
+        Fill in the details below to add a new product to your store
+    </p>
 
     <form method="post" enctype="multipart/form-data">
-        <!-- ✅ Changed to "All" to show all validation errors -->
         <div asp-validation-summary="All" class="text-danger" style="margin-bottom: 20px;"></div>
 
         <div class="form-row">
@@ -149,88 +151,134 @@
                 <label asp-for="ProductVM.ProductName">
                     Product Name <span class="required">*</span>
                 </label>
-                <input asp-for="ProductVM.ProductName" class="form-control" placeholder="e.g., iPhone 15 Pro" />
+                <input asp-for="ProductVM.ProductName"
+                       class="form-control"
+                       placeholder="e.g., iPhone 15 Pro" />
                 <span asp-validation-for="ProductVM.ProductName" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="ProductVM.CategoryID">
+                <label asp-for="ProductVM.CategoryName">
                     Category <span class="required">*</span>
                 </label>
-                <select asp-for="ProductVM.CategoryID" class="form-control">
-                    <option value="">-- Select Category --</option>
-                    @foreach (var category in Model.Categories)
-                    {
-                        <option value="@category.CategoryID">@category.CategoryName</option>
-                    }
-                </select>
-                <span asp-validation-for="ProductVM.CategoryID" class="text-danger"></span>
+                <input asp-for="ProductVM.CategoryName"
+                       class="form-control"
+                       placeholder="e.g., Electronics, Shoes, Clothes" />
+                <span asp-validation-for="ProductVM.CategoryName" class="text-danger"></span>
+                <span class="help-text">
+                    If this category does not exist, it will be created automatically.
+                </span>
             </div>
         </div>
 
         <div class="form-group">
-            <label asp-for="ProductVM.Description">Description <span class="required">*</span></label>
-            <textarea asp-for="ProductVM.Description" rows="5" placeholder="Describe your product in detail..."></textarea>
+            <label asp-for="ProductVM.Description">
+                Description <span class="required">*</span>
+            </label>
+            <textarea asp-for="ProductVM.Description"
+                      rows="5"
+                      placeholder="Describe your product in detail..."></textarea>
             <span asp-validation-for="ProductVM.Description" class="text-danger"></span>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label asp-for="ProductVM.Price">Price ($) <span class="required">*</span></label>
-                <input asp-for="ProductVM.Price" type="number" step="0.01" placeholder="0.00" />
+                <label asp-for="ProductVM.Price">
+                    Price ($) <span class="required">*</span>
+                </label>
+                <input asp-for="ProductVM.Price"
+                       type="number"
+                       step="0.01"
+                       placeholder="0.00" />
                 <span asp-validation-for="ProductVM.Price" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="ProductVM.CompareAtPrice">Compare at Price ($)</label>
-                <input asp-for="ProductVM.CompareAtPrice" type="number" step="0.01" placeholder="0.00" />
+                <label asp-for="ProductVM.CompareAtPrice">
+                    Compare at Price ($)
+                </label>
+                <input asp-for="ProductVM.CompareAtPrice"
+                       type="number"
+                       step="0.01"
+                       placeholder="0.00" />
                 <span class="help-text">Original price for showing discount</span>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label asp-for="ProductVM.Quantity">Stock Quantity <span class="required">*</span></label>
-                <input asp-for="ProductVM.Quantity" type="number" min="0" />
+                <label asp-for="ProductVM.Quantity">
+                    Stock Quantity <span class="required">*</span>
+                </label>
+                <input asp-for="ProductVM.Quantity"
+                       type="number"
+                       min="0" />
                 <span asp-validation-for="ProductVM.Quantity" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="ProductVM.LowStockThreshold">Low Stock Threshold</label>
-                <input asp-for="ProductVM.LowStockThreshold" type="number" min="0" />
-                <span class="help-text">You'll be notified when stock reaches this level</span>
+                <label asp-for="ProductVM.LowStockThreshold">
+                    Low Stock Threshold
+                </label>
+                <input asp-for="ProductVM.LowStockThreshold"
+                       type="number"
+                       min="0" />
+                <span class="help-text">
+                    You'll be notified when stock reaches this level
+                </span>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label asp-for="ProductVM.Weight">Weight (kg)</label>
-                <input asp-for="ProductVM.Weight" type="number" step="0.01" placeholder="0.00" />
+                <label asp-for="ProductVM.Weight">
+                    Weight (kg)
+                </label>
+                <input asp-for="ProductVM.Weight"
+                       type="number"
+                       step="0.01"
+                       placeholder="0.00" />
             </div>
 
             <div class="form-group">
                 <label asp-for="ProductVM.IsActive">
                     <input asp-for="ProductVM.IsActive" type="checkbox" /> Active
                 </label>
-                <span class="help-text" style="display: block;">Inactive products won't be visible to customers</span>
+                <span class="help-text">
+                    Inactive products won't be visible to customers
+                </span>
             </div>
         </div>
 
         <div class="form-group">
-            <label>Product Images</label>
+            <label asp-for="ProductVM.UploadedImages">
+                Product Images
+            </label>
+
             <div class="image-upload-area" id="imageUploadArea">
                 <i class="fas fa-cloud-upload-alt"></i>
                 <p>Click or drag images here to upload</p>
-                <input type="file" id="imageInput" name="UploadedImages" multiple accept="image/*" style="display: none;" />
+
+                <input asp-for="ProductVM.UploadedImages"
+                       type="file"
+                       id="imageInput"
+                       multiple
+                       accept="image/*"
+                       style="display: none;" />
             </div>
+
             <div class="image-preview" id="imagePreview"></div>
-            <span class="help-text">Upload up to 5 images. First image will be the primary image.</span>
+
+            <span class="help-text">
+                Upload up to 5 images. First image will be the primary image.
+            </span>
         </div>
 
         <div class="form-actions">
             <button type="submit" class="btn-primary">
                 <i class="fas fa-save"></i> Create Product
             </button>
+
             <a href="/StoreOwner/Products/Index" class="btn-secondary">
                 <i class="fas fa-times"></i> Cancel
             </a>
@@ -240,7 +288,6 @@
 
 @section Scripts {
     <script>
-        // Image upload preview
         const imageUploadArea = document.getElementById('imageUploadArea');
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
@@ -262,7 +309,9 @@
         imageUploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             imageUploadArea.style.borderColor = '#e0e0e0';
+
             const files = e.dataTransfer.files;
+            imageInput.files = files;
             handleFiles(files);
         });
 
@@ -271,19 +320,26 @@
         });
 
         function handleFiles(files) {
+            imagePreview.innerHTML = "";
+
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
+
                 if (file.type.startsWith('image/')) {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+
+                    reader.onload = function (e) {
                         const previewItem = document.createElement('div');
                         previewItem.className = 'preview-item';
+
                         previewItem.innerHTML = `
                             <img src="${e.target.result}" />
                             <button type="button" class="remove-preview" onclick="this.parentElement.remove()">×</button>
                         `;
+
                         imagePreview.appendChild(previewItem);
                     };
+
                     reader.readAsDataURL(file);
                 }
             }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -48,21 +42,25 @@ namespace Multi_Store.Core.ViewModels.StoreOwner
         [Range(0, 1000, ErrorMessage = "Weight must be between 0 and 1000 kg")]
         public decimal? Weight { get; set; }
 
-        [Required(ErrorMessage = "Please select a category")]
         public int CategoryID { get; set; }
+
+        [Required(ErrorMessage = "Category name is required")]
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "Category name must be between 2 and 100 characters")]
+        [Display(Name = "Category")]
+        public string CategoryName { get; set; } = string.Empty;
 
         [Display(Name = "Active")]
         public bool IsActive { get; set; } = true;
 
-        // Image Upload
         [Display(Name = "Product Images")]
         public List<IFormFile>? UploadedImages { get; set; }
 
         public List<ProductImageViewModel>? ExistingImages { get; set; }
 
-        // Display Properties
         public string? PrimaryImageUrl { get; set; }
+
         public bool IsOutOfStock => Quantity <= 0;
+
         public decimal? DiscountPercentage => CompareAtPrice.HasValue && CompareAtPrice > Price
             ? Math.Round(((CompareAtPrice.Value - Price) / CompareAtPrice.Value) * 100, 0)
             : null;
@@ -71,30 +69,52 @@ namespace Multi_Store.Core.ViewModels.StoreOwner
     public class ProductImageViewModel
     {
         public int ImageID { get; set; }
+
         public string ImageUrl { get; set; } = string.Empty;
+
         public int DisplayOrder { get; set; }
+
         public bool IsPrimary { get; set; }
     }
 
     public class ProductListViewModel
     {
         public int ProductID { get; set; }
+
         public string ProductName { get; set; } = string.Empty;
+
         public string Description { get; set; } = string.Empty;
+
         public decimal Price { get; set; }
+
         public decimal? CompareAtPrice { get; set; }
+
         public int Quantity { get; set; }
+
         public int LowStockThreshold { get; set; }
+
         public bool IsActive { get; set; }
+
         public bool IsOutOfStock { get; set; }
+
         public decimal Rating { get; set; }
+
         public string? PrimaryImageUrl { get; set; }
+
         public string CategoryName { get; set; } = string.Empty;
+
         public DateTime CreatedAt { get; set; }
+
         public decimal? DiscountPercentage => CompareAtPrice.HasValue && CompareAtPrice > Price
             ? Math.Round(((CompareAtPrice.Value - Price) / CompareAtPrice.Value) * 100, 0)
             : null;
-        public string StockStatus => IsOutOfStock ? "Out of Stock" : (Quantity <= LowStockThreshold ? "Low Stock" : "In Stock");
-        public string StockStatusClass => IsOutOfStock ? "out" : (Quantity <= LowStockThreshold ? "low" : "normal");
+
+        public string StockStatus => IsOutOfStock
+            ? "Out of Stock"
+            : (Quantity <= LowStockThreshold ? "Low Stock" : "In Stock");
+
+        public string StockStatusClass => IsOutOfStock
+            ? "out"
+            : (Quantity <= LowStockThreshold ? "low" : "normal");
     }
 }

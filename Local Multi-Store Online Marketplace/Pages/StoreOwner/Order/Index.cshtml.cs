@@ -9,9 +9,11 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
 {
+    [Authorize(Roles = "StoreOwner")]
     public class IndexModel : PageModel
         {
             private readonly ApplicationDbContext _context;

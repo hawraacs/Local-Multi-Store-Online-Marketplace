@@ -1,5 +1,25 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Identity
+@using Multi_Store.Core.Entities
+@using Multi_Store.Services.Dtos
+@using Multi_Store.Services.Managers
+@inject UserManager<User> IdentityUserManager
+@inject NotificationManager NotificationManager
+
+@{
     Layout = "/Pages/Shared/_Layout.cshtml";
+
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+
+    var currentUser = await IdentityUserManager.GetUserAsync(User);
+
+    List<NotificationDTO> unreadNotifications = new();
+
+    if (currentUser != null)
+    {
+        unreadNotifications = await NotificationManager.GetUnreadAsync(currentUser.Id);
+    }
+
+    var unreadCount = unreadNotifications.Count;
 }
 
 <!DOCTYPE html>
@@ -7,125 +27,365 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>@ViewData["Title"] - Store Owner Panel</title>
+
     <link rel="stylesheet" href="~/css/store-owner.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
     @await RenderSectionAsync("Styles", required: false)
+
+    <style>
+        .notification-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #111827;
+            transition: 0.2s ease;
+        }
+
+        .notification-bell:hover {
+            background: #f3f4f6;
+        }
+
+        .notification-bell .badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #ef4444;
+            color: white;
+            border-radius: 999px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            font-size: 11px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            width: 360px;
+            max-height: 420px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+            z-index: 9999;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+        }
+
+        .notification-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 900;
+            color: #111827;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-count-text {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .notification-item {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-title {
+            font-weight: 900;
+            color: #111827;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .notification-message {
+            color: #4b5563;
+            font-size: 13px;
+            line-height: 1.45;
+            margin-bottom: 7px;
+        }
+
+        .notification-date {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .empty-notification {
+            padding: 28px 18px;
+            text-align: center;
+            color: #6b7280;
+            font-weight: 700;
+        }
+
+        .user-dropdown {
+            cursor: default;
+        }
+
+        .store-info-card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .store-info-card-link:hover {
+            text-decoration: none;
+            color: inherit;
+            opacity: 0.95;
+        }
+    </style>
 </head>
+
 <body class="store-owner-body">
     <div class="store-owner-wrapper">
+
         <!-- Top Navigation Bar -->
         <nav class="store-top-nav">
             <div class="nav-container">
+
                 <div class="nav-brand">
                     <a href="/StoreOwner/Dashboard">
                         <i class="fas fa-store"></i>
                         <span>Store Owner Panel</span>
                     </a>
                 </div>
+
                 <div class="nav-search">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search orders, products..." id="globalSearch" />
+                    <input type="text"
+                           placeholder="Search orders, products..."
+                           id="globalSearch" />
                 </div>
+
                 <div class="nav-actions">
-                    <div class="notification-bell">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge">3</span>
+
+                    <!-- Dynamic Notifications -->
+                    <div class="notification-wrapper">
+                        <div class="notification-bell" id="notificationBell">
+                            <i class="fas fa-bell"></i>
+
+                            @if (unreadCount > 0)
+                            {
+                                <span class="badge">@unreadCount</span>
+                            }
+                        </div>
+
+                        <div class="notification-dropdown" id="notificationDropdown">
+                            <div class="notification-header">
+                                <span>Notifications</span>
+
+                                @if (unreadCount > 0)
+                                {
+                                    <span class="notification-count-text">
+                                        @unreadCount unread
+                                    </span>
+                                }
+                            </div>
+
+                            @if (unreadNotifications.Any())
+                            {
+                                foreach (var notification in unreadNotifications.Take(10))
+                                {
+                                    <div class="notification-item">
+                                        <div class="notification-title">
+                                            @notification.Title
+                                        </div>
+
+                                        <div class="notification-message">
+                                            @notification.Message
+                                        </div>
+
+                                        <div class="notification-date">
+                                            @notification.SentAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="empty-notification">
+                                    No new notifications
+                                </div>
+                            }
+                        </div>
                     </div>
+
                     <div class="user-dropdown">
-                        <img src="~/images/default-avatar.png" alt="Avatar" class="user-avatar" />
+                        <img src="~/images/default-avatar.png"
+                             alt="Avatar"
+                             class="user-avatar" />
+
                         <span>@User.Identity?.Name</span>
+
                         <i class="fas fa-chevron-down"></i>
                     </div>
+
                 </div>
             </div>
         </nav>
 
         <div class="store-main-container">
+
             <!-- Sidebar -->
             <aside class="store-sidebar">
                 <div class="sidebar-menu">
-                    <div class="menu-item @(ViewContext.RouteData.Values["page"]?.ToString()?.Contains("Dashboard") == true ? "active" : "")">
+
+                    <div class="menu-item @(currentPage.Contains("Dashboard") ? "active" : "")">
                         <a href="/StoreOwner/Dashboard">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
                     </div>
-                    <div class="menu-item @(ViewContext.RouteData.Values["page"]?.ToString()?.Contains("Products") == true ? "active" : "")">
+
+                    <div class="menu-item @(currentPage.Contains("StoreProfile") ? "active" : "")">
+                        <a href="/StoreOwner/StoreProfile">
+                            <i class="fas fa-store"></i>
+                            <span>Store Profile</span>
+                        </a>
+                    </div>
+
+                    <div class="menu-item @(currentPage.Contains("Products") ? "active" : "")">
                         <a href="/StoreOwner/Products/Index">
                             <i class="fas fa-box"></i>
                             <span>Products</span>
                         </a>
                     </div>
-                    <div class="menu-item">
+
+                    <div class="menu-item @(currentPage.Contains("Order") ? "active" : "")">
                         <a href="/StoreOwner/Order/Index">
                             <i class="fas fa-shopping-cart"></i>
                             <span>Orders</span>
                         </a>
                     </div>
-                    <div class="menu-item">
+
+                    <div class="menu-item @(currentPage.Contains("Analytics") ? "active" : "")">
                         <a href="/StoreOwner/Analytics/Index">
                             <i class="fas fa-chart-line"></i>
                             <span>Analytics</span>
                         </a>
                     </div>
-                    <div class="menu-item">
+
+                    <div class="menu-item @(currentPage.Contains("Promotions") ? "active" : "")">
                         <a href="/StoreOwner/Promotions/Index">
                             <i class="fas fa-tags"></i>
                             <span>Promotions</span>
                         </a>
                     </div>
-                    <div class="menu-item">
+
+                    <div class="menu-item @(currentPage.Contains("Chat") ? "active" : "")">
                         <a href="/StoreOwner/Chat/Index">
                             <i class="fas fa-comment-dots"></i>
                             <span>Chat</span>
                         </a>
                     </div>
-                    <div class="menu-item">
+
+                    <div class="menu-item @(currentPage.Contains("Reviews") ? "active" : "")">
                         <a href="/StoreOwner/Reviews/Index">
                             <i class="fas fa-star"></i>
                             <span>Reviews</span>
                         </a>
                     </div>
-                    <div class="menu-item">
+
+                    <div class="menu-item @(currentPage.Contains("Settings") ? "active" : "")">
                         <a href="/StoreOwner/Settings/Index">
                             <i class="fas fa-cog"></i>
                             <span>Settings</span>
                         </a>
                     </div>
+
                 </div>
 
-                <!-- Store Info Card - Use ViewData instead of ViewBag -->
-                <div class="store-info-card">
-                    <div class="store-logo">
-                        <i class="fas fa-store"></i>
+                <!-- Store Info Card -->
+                <a href="/StoreOwner/StoreProfile" class="store-info-card-link">
+                    <div class="store-info-card">
+                        <div class="store-logo">
+                            <i class="fas fa-store"></i>
+                        </div>
+
+                        <div class="store-details">
+                            <h4>@ViewData["StoreName"]</h4>
+                            <span class="store-status active">Active</span>
+                        </div>
                     </div>
-                    <div class="store-details">
-                        <h4>@ViewData["StoreName"]</h4>
-                        <span class="store-status active">Active</span>
-                    </div>
-                </div>
+                </a>
+
             </aside>
 
             <!-- Main Content -->
             <main class="store-main-content">
+
                 <div class="content-header">
                     <h1>@ViewData["Title"]</h1>
+
                     <div class="breadcrumb">
                         <a href="/StoreOwner/Dashboard">Dashboard</a>
                         <i class="fas fa-chevron-right"></i>
                         <span>@ViewData["Title"]</span>
                     </div>
                 </div>
+
                 <div class="content-body">
                     @RenderBody()
                 </div>
+
             </main>
+
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="~/js/store-owner.js"></script>
+    <script src="~/js/store-owner.js" asp-append-version="true"></script>
+
+    <script>
+        const notificationBell = document.getElementById("notificationBell");
+        const notificationDropdown = document.getElementById("notificationDropdown");
+
+        if (notificationBell && notificationDropdown) {
+            notificationBell.addEventListener("click", function (event) {
+                event.stopPropagation();
+                notificationDropdown.classList.toggle("show");
+            });
+
+            document.addEventListener("click", function () {
+                notificationDropdown.classList.remove("show");
+            });
+
+            notificationDropdown.addEventListener("click", function (event) {
+                event.stopPropagation();
+            });
+        }
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
