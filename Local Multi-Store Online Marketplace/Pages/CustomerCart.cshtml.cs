@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,6 +8,7 @@ using Multi_Store.Infrastructure.Data;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
+    [Authorize(Roles = "Customer")]
     public class CustomerCartModel : PageModel
     {
         private readonly ApplicationDbContext _context;
@@ -185,7 +187,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (address == null)
             {
                 TempData["Error"] = "Please add an active delivery address before checkout.";
-                return RedirectToPage();
+
+                return RedirectToPage("/CustomerAddresses", new
+                {
+                    returnUrl = "/CustomerCart"
+                });
             }
 
             foreach (var item in cart.CartItems)
@@ -211,7 +217,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var order = new Order
             {
-                OrderNumber = "ORD-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss"),
+                OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString()[..4].ToUpper()}",
                 CustomerID = customerId.Value,
                 AddressID = address.AddressID,
                 OrderDate = DateTime.UtcNow,
@@ -245,6 +251,35 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 _context.OrderItems.Add(orderItem);
 
                 item.Product.Quantity -= item.Quantity;
+
+                if (item.Product.Quantity < 0)
+                {
+                    throw new Exception($"Stock error for '{item.Product.ProductName}'.");
+                }
+
+                item.Product.UpdatedAt = DateTime.UtcNow;
+
+                // FR-18: Low Stock Notification
+                if (item.Product.Quantity <= item.Product.LowStockThreshold)
+                {
+                    var store = await _context.Stores
+                        .FirstOrDefaultAsync(s => s.StoreID == item.Product.StoreID);
+
+                    if (store != null)
+                    {
+                        _context.Notifications.Add(new Notification
+                        {
+                            UserID = store.OwnerUserID,
+                            Title = "Low Stock Alert",
+                            Message = $"Product '{item.Product.ProductName}' is low in stock. Current quantity: {item.Product.Quantity}.",
+                            Type = "LowStock",
+                            ReferenceID = item.Product.ProductID,
+                            IsRead = false,
+                            SentAt = DateTime.UtcNow,
+                            SentVia = "System"
+                        });
+                    }
+                }
             }
 
             _context.CartItems.RemoveRange(cart.CartItems);

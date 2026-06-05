@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,8 @@ using System.Data.Entity;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
+    [Authorize(Roles = "Admin")]
+
     public class AdminDeliveryModel : PageModel
     {
         private readonly ApplicationDbContext _dbContext;

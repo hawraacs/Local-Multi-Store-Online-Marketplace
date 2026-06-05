@@ -95,7 +95,7 @@ namespace Multi_Store.Services.Managers
             await _storeRepository.UpdateAsync(store);
 
             // Return the existing email (no new password needed)
-            return (owner.Email, "Use your existing password");
+            return (owner.Email ?? string.Empty, "Use your existing password");
         }
 
         // =====================
@@ -129,6 +129,41 @@ namespace Multi_Store.Services.Managers
         {
             var stores = await _storeRepository.GetAllAsync();
             return _mapper.Map<IEnumerable<StoreDTO>>(stores);
+        }
+        // =====================
+        // ACTIVATE STORE
+        // =====================
+        public async Task ActivateStoreAsync(int storeId, int adminId)
+        {
+            var store = await _storeRepository.GetByIdAsync(storeId);
+
+            if (store == null)
+                throw new Exception("Store not found");
+
+            store.Status = "Approved";
+
+            if (store.ApprovedAt == null)
+                store.ApprovedAt = DateTime.UtcNow;
+
+            if (store.ApprovedBy == null)
+                store.ApprovedBy = adminId;
+
+            await _storeRepository.UpdateAsync(store);
+        }
+
+        // =====================
+        // DEACTIVATE STORE
+        // =====================
+        public async Task DeactivateStoreAsync(int storeId)
+        {
+            var store = await _storeRepository.GetByIdAsync(storeId);
+
+            if (store == null)
+                throw new Exception("Store not found");
+
+            store.Status = "Inactive";
+
+            await _storeRepository.UpdateAsync(store);
         }
     }
 }

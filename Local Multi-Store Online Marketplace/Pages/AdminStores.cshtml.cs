@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Multi_Store.Core.Entities;
@@ -7,6 +8,8 @@ using Multi_Store.Services.Managers;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
+    [Authorize(Roles = "Admin")]
+
     public class AdminStoresModel : PageModel
     {
         private readonly StoreManager _storeManager;
@@ -41,6 +44,30 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public async Task<IActionResult> OnPostReject(int id)
         {
             await _storeManager.RejectStoreAsync(id);
+            return RedirectToPage();
+        }
+        public async Task<IActionResult> OnPostActivate(int id)
+        {
+            var admin = await _userManager.GetUserAsync(User);
+
+            if (admin == null)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            await _storeManager.ActivateStoreAsync(id, admin.Id);
+
+            TempData["Success"] = "Store activated successfully.";
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeactivate(int id)
+        {
+            await _storeManager.DeactivateStoreAsync(id);
+
+            TempData["Success"] = "Store deactivated successfully.";
+
             return RedirectToPage();
         }
     }
