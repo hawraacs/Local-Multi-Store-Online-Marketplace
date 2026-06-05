@@ -4,293 +4,527 @@
     ViewData["Title"] = "Home";
 }
 
-<style>
+@section Styles {
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: Arial;
-    }
-
-    body {
-        background: #0f172a;
-        color: white;
-    }
-
-    .hero {
-        width: 100%;
-        min-height: 100vh;
-        background: linear-gradient(rgba(0,0,0,.65), rgba(0,0,0,.65)), url('/images/home-bg.jpg');
-        background-size: cover;
-        background-position: center;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .navbar {
-        width: 100%;
-        padding: 25px 80px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: rgba(15, 23, 42, 0.85);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .logo {
-        font-size: 32px;
-        font-weight: bold;
-        color: white;
-    }
-
-    .nav-links {
-        display: flex;
-        gap: 25px;
-        align-items: center;
-    }
-
-        .nav-links a {
+    <style>
+        .home-wrapper {
+            margin-left: calc(50% - 50vw);
+            margin-right: calc(50% - 50vw);
+            background: #0f172a;
             color: white;
-            text-decoration: none;
-            font-size: 16px;
-            transition: .3s;
+            overflow: hidden;
         }
 
-            .nav-links a:hover {
-                color: #60a5fa;
+        .home-hero {
+            min-height: 86vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px;
+            background: radial-gradient(circle at 16% 18%, rgba(37, 99, 235, 0.24), transparent 34%), radial-gradient(circle at 84% 28%, rgba(255, 90, 44, 0.16), transparent 32%), linear-gradient(135deg, #0f172a 0%, #111827 45%, #020617 100%);
+        }
+
+            .home-hero::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background-image: linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+                background-size: 58px 58px;
+                opacity: 0.38;
+                pointer-events: none;
             }
 
-    .btn-login {
-        padding: 10px 25px;
-        background: #2563eb;
-        border-radius: 30px;
-        color: white !important;
-    }
+            .home-hero::after {
+                content: "";
+                position: absolute;
+                width: 520px;
+                height: 520px;
+                border-radius: 50%;
+                background: rgba(37, 99, 235, 0.18);
+                filter: blur(100px);
+                bottom: -190px;
+                right: -130px;
+                pointer-events: none;
+            }
 
-    .hero-content {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        padding: 20px;
-    }
-
-    .hero-box {
-        max-width: 850px;
-    }
-
-        .hero-box h1 {
-            font-size: 70px;
-            margin-bottom: 25px;
-            line-height: 1.2;
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 1120px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            align-items: center;
+            gap: 50px;
         }
 
-        .hero-box p {
-            font-size: 22px;
-            color: #d1d5db;
-            margin-bottom: 40px;
-            line-height: 1.8;
+        .hero-text-panel {
+            background: rgba(2, 6, 23, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 30px;
+            padding: 52px 46px;
+            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.38);
+            backdrop-filter: blur(14px);
         }
 
-    .buttons {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        flex-wrap: wrap;
-    }
-
-        .buttons a {
-            padding: 16px 40px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-size: 18px;
-            font-weight: bold;
-            transition: .3s;
-        }
-
-    .btn-shop {
-        background: #2563eb;
-        color: white;
-    }
-
-    .btn-register {
-        border: 2px solid white;
-        color: white;
-    }
-
-    .buttons a:hover {
-        transform: translateY(-5px);
-    }
-
-    .features {
-        width: 100%;
-        background: #111827;
-        padding: 80px;
-        display: grid;
-        grid-template-columns: repeat(3,1fr);
-        gap: 30px;
-    }
-
-    .feature-card {
-        background: #1e293b;
-        padding: 40px;
-        border-radius: 18px;
-        text-align: center;
-        transition: .3s;
-    }
-
-        .feature-card:hover {
-            transform: translateY(-8px);
-        }
-
-        .feature-card i {
-            font-size: 45px;
-            color: #60a5fa;
-            margin-bottom: 25px;
-        }
-
-        .feature-card h3 {
-            margin-bottom: 15px;
-            font-size: 25px;
-        }
-
-        .feature-card p {
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
             color: #cbd5e1;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 24px;
+        }
+
+            .hero-badge i {
+                color: #ff6b35;
+            }
+
+        .hero-title {
+            font-size: 58px;
+            line-height: 1.08;
+            letter-spacing: -1.6px;
+            font-weight: 900;
+            margin-bottom: 24px;
+            color: #ffffff;
+        }
+
+            .hero-title span {
+                background: linear-gradient(135deg, #60a5fa, #ff6b35);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+        .hero-description {
+            font-size: 18px;
             line-height: 1.8;
+            color: #d1d5db;
+            margin-bottom: 34px;
+            max-width: 620px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .hero-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 30px;
+            border-radius: 14px;
+            font-weight: 900;
+            text-decoration: none;
+            transition: 0.25s ease;
             font-size: 16px;
         }
 
-    @@media(max-width:900px) {
-
-        .navbar {
-            padding: 20px;
-            flex-direction: column;
-            gap: 20px;
+        .hero-btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            box-shadow: 0 18px 35px rgba(37, 99, 235, 0.36);
         }
 
-        .hero-box h1 {
-            font-size: 45px;
+        .hero-btn-secondary {
+            background: rgba(255,255,255,0.07);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.25);
         }
 
-        .features {
-            grid-template-columns: 1fr;
-            padding: 40px 20px;
+        .hero-btn:hover {
+            transform: translateY(-4px);
+            color: white;
         }
-    }
 
-</style>
+        .hero-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 30px;
+            padding: 24px;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.38);
+            backdrop-filter: blur(18px);
+        }
 
-<div class="hero">
+            .hero-card::before {
+                content: "";
+                position: absolute;
+                inset: -1px;
+                border-radius: 30px;
+                background: linear-gradient(135deg, rgba(96,165,250,0.35), transparent, rgba(255,107,53,0.25));
+                z-index: -1;
+            }
 
-    <div class="navbar">
+        .market-card {
+            background: #ffffff;
+            color: #111827;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 22px 60px rgba(0,0,0,0.25);
+        }
 
-        <div class="logo">
-            RealNest
-        </div>
+        .market-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+        }
 
-        <div class="nav-links">
+        .market-card-title {
+            font-size: 18px;
+            font-weight: 900;
+        }
 
-            <a href="/">Home</a>
+        .market-pill {
+            background: #dcfce7;
+            color: #166534;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+        }
 
-            <a href="#">Stores</a>
+        .product-preview {
+            display: grid;
+            grid-template-columns: 82px 1fr;
+            gap: 16px;
+            align-items: center;
+            padding: 14px;
+            border-radius: 18px;
+            background: #f8fafc;
+            margin-bottom: 14px;
+            border: 1px solid #e5e7eb;
+            transition: 0.2s ease;
+        }
 
-            <a href="#">Products</a>
+            .product-preview:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 12px 26px rgba(15, 23, 42, 0.10);
+            }
 
-            <a href="#">About</a>
+        .product-icon {
+            width: 82px;
+            height: 82px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #dbeafe, #fed7aa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: #2563eb;
+        }
 
-            <a asp-area="Identity"
-               asp-page="/Account/Login"
-               class="btn-login">
+        .product-preview h4 {
+            margin: 0 0 6px;
+            font-size: 16px;
+            font-weight: 900;
+        }
 
-                Login
+        .product-preview p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 13px;
+        }
 
-            </a>
+        .product-preview strong {
+            display: block;
+            margin-top: 8px;
+            color: #ff5a2c;
+            font-size: 16px;
+        }
 
-        </div>
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 18px;
+        }
 
-    </div>
+        .stat-box {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 14px;
+            text-align: center;
+        }
 
-    <div class="hero-content">
+            .stat-box strong {
+                display: block;
+                font-size: 20px;
+                color: #111827;
+                font-weight: 900;
+            }
 
-        <div class="hero-box">
+            .stat-box span {
+                font-size: 12px;
+                color: #6b7280;
+                font-weight: 700;
+            }
 
-            <h1>
-                Multi Store Online Marketplace
-            </h1>
+        .home-features {
+            background: #111827;
+            padding: 78px 24px;
+        }
 
-            <p>
-                Buy products from multiple stores with fast delivery,
-                secure shopping, and the best online marketplace experience.
-            </p>
+        .features-container {
+            max-width: 1120px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
 
-            <div class="buttons">
+        .feature-card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 24px;
+            padding: 36px 28px;
+            text-align: center;
+            transition: 0.25s ease;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.16);
+        }
 
-                <a asp-area="Identity"
-                   asp-page="/Account/Register"
-                   class="btn-shop">
+            .feature-card:hover {
+                transform: translateY(-8px);
+                background: rgba(255,255,255,0.09);
+            }
 
-                    Get Started
+            .feature-card i {
+                width: 66px;
+                height: 66px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(37, 99, 235, 0.16);
+                color: #60a5fa;
+                border-radius: 19px;
+                font-size: 29px;
+                margin-bottom: 22px;
+            }
 
-                </a>
+            .feature-card h3 {
+                color: white;
+                font-size: 23px;
+                font-weight: 900;
+                margin-bottom: 12px;
+            }
 
-                <a asp-area="Identity"
-                   asp-page="/Account/Login"
-                   class="btn-register">
+            .feature-card p {
+                color: #cbd5e1;
+                line-height: 1.75;
+                margin: 0;
+            }
 
-                    Sign In
+        @@media (max-width: 950px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+            }
 
-                </a>
+            .hero-title {
+                font-size: 44px;
+            }
+
+            .hero-text-panel {
+                text-align: center;
+                padding: 42px 24px;
+            }
+
+            .hero-description {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .features-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 560px) {
+            .home-hero {
+                padding: 55px 16px;
+            }
+
+            .hero-title {
+                font-size: 36px;
+            }
+
+            .hero-card {
+                padding: 14px;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+}
+
+<div class="home-wrapper">
+
+    <section class="home-hero">
+
+        <div class="hero-content">
+
+            <div class="hero-text-panel">
+
+                <div class="hero-badge">
+                    <i class="fas fa-bolt"></i>
+                    Fast, secure, and local marketplace
+                </div>
+
+                <h1 class="hero-title">
+                    Multi Store Online <span>Marketplace</span>
+                </h1>
+
+                <p class="hero-description">
+                    Discover trusted local stores, shop products easily,
+                    track your orders, and enjoy a smooth marketplace
+                    experience built for customers, store owners, and delivery teams.
+                </p>
+
+                <div class="hero-actions">
+                    <a asp-area="Identity"
+                       asp-page="/Account/Register"
+                       class="hero-btn hero-btn-primary">
+                        <i class="fas fa-user-plus"></i>
+                        Get Started
+                    </a>
+
+                    <a asp-area="Identity"
+                       asp-page="/Account/Login"
+                       class="hero-btn hero-btn-secondary">
+                        <i class="fas fa-right-to-bracket"></i>
+                        Sign In
+                    </a>
+                </div>
+
+            </div>
+
+            <div class="hero-card">
+
+                <div class="market-card">
+
+                    <div class="market-card-header">
+                        <div class="market-card-title">
+                            Marketplace Preview
+                        </div>
+
+                        <div class="market-pill">
+                            Live
+                        </div>
+                    </div>
+
+                    <div class="product-preview">
+                        <div class="product-icon">
+                            <i class="fas fa-store"></i>
+                        </div>
+
+                        <div>
+                            <h4>Local Stores</h4>
+                            <p>Browse multiple trusted sellers in one place.</p>
+                            <strong>Fast access</strong>
+                        </div>
+                    </div>
+
+                    <div class="product-preview">
+                        <div class="product-icon">
+                            <i class="fas fa-cart-shopping"></i>
+                        </div>
+
+                        <div>
+                            <h4>Easy Shopping</h4>
+                            <p>Add items to cart, checkout, and track orders.</p>
+                            <strong>Secure checkout</strong>
+                        </div>
+                    </div>
+
+                    <div class="product-preview">
+                        <div class="product-icon">
+                            <i class="fas fa-truck-fast"></i>
+                        </div>
+
+                        <div>
+                            <h4>Fast Delivery</h4>
+                            <p>Delivery workflow for customers and delivery teams.</p>
+                            <strong>Reliable service</strong>
+                        </div>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-box">
+                            <strong>24/7</strong>
+                            <span>Access</span>
+                        </div>
+
+                        <div class="stat-box">
+                            <strong>Multi</strong>
+                            <span>Stores</span>
+                        </div>
+
+                        <div class="stat-box">
+                            <strong>Safe</strong>
+                            <span>Shopping</span>
+                        </div>
+                    </div>
+
+                </div>
 
             </div>
 
         </div>
 
-    </div>
+    </section>
+
+    <section class="home-features">
+
+        <div class="features-container">
+
+            <div class="feature-card">
+                <i class="fas fa-store"></i>
+                <h3>Multi Stores</h3>
+                <p>
+                    Customers can browse products from many stores inside one organized marketplace.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <i class="fas fa-truck"></i>
+                <h3>Fast Delivery</h3>
+                <p>
+                    Orders can be managed and delivered through a clear delivery workflow.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Secure Shopping</h3>
+                <p>
+                    Role-based access, authentication, and protected customer experience.
+                </p>
+            </div>
+
+        </div>
+
+    </section>
 
 </div>
-
-<div class="features">
-
-    <div class="feature-card">
-
-        <i class="fas fa-store"></i>
-
-        <h3>Multi Stores</h3>
-
-        <p>
-            Browse products from many stores in one place easily.
-        </p>
-
-    </div>
-
-    <div class="feature-card">
-
-        <i class="fas fa-truck"></i>
-
-        <h3>Fast Delivery</h3>
-
-        <p>
-            Quick and reliable delivery for all customer orders.
-        </p>
-
-    </div>
-
-    <div class="feature-card">
-
-        <i class="fas fa-shield-alt"></i>
-
-        <h3>Secure Shopping</h3>
-
-        <p>
-            Protected accounts and secure online payment experience.
-        </p>
-
-    </div>
-
-</div>
-
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
