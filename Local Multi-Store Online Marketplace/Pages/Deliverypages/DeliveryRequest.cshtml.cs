@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
-using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
 
@@ -13,31 +11,32 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
     {
         private readonly DeliveryManager _deliveryManager;
         private readonly UserManager<User> _userManager;
-        private readonly ApplicationDbContext _dbContext;
         private readonly ILogger<DeliveryRequestModel> _logger;
 
         public DeliveryRequestModel(
             DeliveryManager deliveryManager,
             UserManager<User> userManager,
-            ApplicationDbContext dbContext,
             ILogger<DeliveryRequestModel> logger)
         {
             _deliveryManager = deliveryManager;
             _userManager = userManager;
-            _dbContext = dbContext;
             _logger = logger;
         }
 
         [BindProperty]
         public DeliveryPersonDTO Delivery { get; set; } = new();
 
+        public void OnGet()
+        {
+        }
+
         public async Task<IActionResult> OnPostAsync()
         {
-            _logger.LogInformation("Delivery request POST started");
+            _logger.LogInformation("Delivery request POST started.");
 
             if (!ModelState.IsValid)
             {
-                _logger.LogWarning("ModelState is invalid");
+                _logger.LogWarning("ModelState is invalid.");
                 return Page();
             }
 
@@ -45,17 +44,33 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
             if (user == null)
             {
-                _logger.LogWarning("User not logged in");
-                return RedirectToPage("/Identity/Account/Login");
+                _logger.LogWarning("User not logged in.");
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
             Delivery.UserID = user.Id;
 
-            var id = await _deliveryManager.RegisterDeliveryPersonAsync(Delivery);
+            try
+            {
+                var id = await _deliveryManager.RegisterDeliveryPersonAsync(Delivery);
 
-            _logger.LogInformation("Delivery created with ID: {Id}", id);
+                _logger.LogInformation("Delivery created with ID: {Id}", id);
 
-            return RedirectToPage("/Customer1");
+                TempData["Success"] = "Delivery staff request submitted successfully. Waiting for admin approval.";
+
+                return RedirectToPage("/CustomerProfile");
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return Page();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while submitting delivery request.");
+                ModelState.AddModelError(string.Empty, "An error occurred while submitting your request.");
+                return Page();
+            }
         }
     }
 }

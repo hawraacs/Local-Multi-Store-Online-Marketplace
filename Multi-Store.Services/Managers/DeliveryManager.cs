@@ -1,111 +1,193 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Identity;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface;
-using Multi_Store.Infrastructure.Repositories;
 using Multi_Store.Services.Dtos;
 
 namespace Multi_Store.Services.Managers
 {
     public class DeliveryManager
     {
-        private readonly IDeliveryPersonRepository _deliveryRepo;
-        private readonly IDeliveryAssignmentRepository _assignmentRepo;
-        private readonly IOrderRepository _orderRepo;
-        private readonly ILogger<DeliveryManager> _logger;
+        private readonly IDeliveryPersonRepository _deliveryPersonRepository;
+        private readonly IDeliveryAssignmentRepository _assignmentRepository;
+        private readonly IOrderRepository _orderRepository;
+        private readonly UserManager<User> _userManager;
 
         public DeliveryManager(
-            IDeliveryPersonRepository deliveryRepo,
-            IDeliveryAssignmentRepository assignmentRepo,
-            IOrderRepository orderRepo,
-             ILogger<DeliveryManager> logger)
+            IDeliveryPersonRepository deliveryPersonRepository,
+            IDeliveryAssignmentRepository assignmentRepository,
+            IOrderRepository orderRepository,
+            UserManager<User> userManager)
         {
-            _deliveryRepo = deliveryRepo;
-            _assignmentRepo = assignmentRepo;
-            _orderRepo = orderRepo;
-            _logger = logger;
+            _deliveryPersonRepository = deliveryPersonRepository;
+            _assignmentRepository = assignmentRepository;
+            _orderRepository = orderRepository;
+            _userManager = userManager;
         }
 
         // =========================
-        // REGISTER DELIVERY (CUSTOMER REQUEST)
+        // REGISTER DELIVERY REQUEST
         // =========================
         public async Task<int> RegisterDeliveryPersonAsync(DeliveryPersonDTO dto)
         {
-            _logger.LogInformation("REGISTER DELIVERY STARTED");
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
 
-            var entity = new DeliveryPerson
+            if (dto.UserID <= 0)
+                throw new InvalidOperationException("Invalid user.");
+
+            var existing = await _deliveryPersonRepository.GetByUserIdAsync(dto.UserID);
+
+            if (existing != null)
             {
+                if (existing.Status == "Pending")
+                    throw new InvalidOperationException("You already have a pending delivery request.");
+
+                if (existing.Status == "Approved")
+                    throw new InvalidOperationException("You are already approved as delivery staff.");
+
+                if (existing.Status == "Rejected")
+                {
+                    existing.FullName = dto.FullName;
+                    existing.PhoneNumber = dto.PhoneNumber;
+                    existing.Area = dto.Area;
+                    existing.VehicleType = dto.VehicleType;
+                    existing.VehicleNumber = dto.VehicleNumber;
+                    existing.DrivingLicenseNumber = dto.DrivingLicenseNumber;
+                    existing.Status = "Pending";
+                    existing.IsActive = false;
+                    existing.ApprovedAt = null;
+
+                    await _deliveryPersonRepository.UpdateAsync(existing);
+
+                    return existing.DeliveryPersonID;
+                }
+            }
+
+            var deliveryPerson = new DeliveryPerson
+            {
+                UserID = dto.UserID,
                 FullName = dto.FullName,
                 PhoneNumber = dto.PhoneNumber,
+                Area = dto.Area,
                 VehicleType = dto.VehicleType,
                 VehicleNumber = dto.VehicleNumber,
-                Area = dto.Area,
                 DrivingLicenseNumber = dto.DrivingLicenseNumber,
+                IDProofURL = dto.IDProofURL,
+                CurrentLatitude = dto.CurrentLatitude,
+                CurrentLongitude = dto.CurrentLongitude,
+                LastLocationUpdate = dto.LastLocationUpdate,
                 Status = "Pending",
+                Rating = 0,
                 IsActive = false,
-                UserID = dto.UserID
+                ApprovedAt = null
             };
 
-            await _deliveryRepo.AddAsync(entity);
+            var saved = await _deliveryPersonRepository.AddAsync(deliveryPerson);
 
-            _logger.LogInformation(
-                "DELIVERY SAVED. ID={Id} Name={Name} Status={Status}",
-                entity.DeliveryPersonID,
-                entity.FullName,
-                entity.Status);
-
-            return entity.DeliveryPersonID;
+            return saved.DeliveryPersonID;
         }
-        public async Task<List<DeliveryPerson>> GetPendingDeliveryPersonsAsync()
+
+        // =========================
+        // GET ALL DELIVERY REQUESTS
+        // =========================
+        public async Task<List<DeliveryPersonDTO>> GetAllAsync()
         {
-            var list = await _deliveryRepo.GetAllAsync();
+            var list = await _deliveryPersonRepository.GetAllAsync();
+
+            return list.Select(d => new DeliveryPersonDTO
+            {
+                DeliveryPersonID = d.DeliveryPersonID,
+                UserID = d.UserID,
+                FullName = d.FullName,
+                PhoneNumber = d.PhoneNumber,
+                Area = d.Area,
+                VehicleType = d.VehicleType,
+                VehicleNumber = d.VehicleNumber,
+                DrivingLicenseNumber = d.DrivingLicenseNumber,
+                IDProofURL = d.IDProofURL,
+                CurrentLatitude = d.CurrentLatitude,
+                CurrentLongitude = d.CurrentLongitude,
+                LastLocationUpdate = d.LastLocationUpdate,
+                Status = d.Status,
+                Rating = d.Rating,
+                IsActive = d.IsActive,
+                ApprovedAt = d.ApprovedAt,
+                User = d.User
+            }).ToList();
+        }
+
+        // =========================
+        // GET PENDING DELIVERY REQUESTS
+        // =========================
+        public async Task<List<DeliveryPersonDTO>> GetPendingDeliveryPersonsAsync()
+        {
+            var list = await GetAllAsync();
 
             return list
-                .Where(x => x.Status != null &&
-                            x.Status.Trim().Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                .Where(d => !string.IsNullOrWhiteSpace(d.Status) &&
+                            d.Status.Trim().Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(d => d.DeliveryPersonID)
                 .ToList();
         }
 
         // =========================
-        // APPROVE DELIVERY
-        public async Task ApproveDeliveryPersonAsync(int id)
+        // APPROVE DELIVERY REQUEST
+        // =========================
+        public async Task ApproveDeliveryPersonAsync(int deliveryPersonId)
         {
-            var delivery = await _deliveryRepo.GetByIdAsync(id);
+            var deliveryPerson = await _deliveryPersonRepository.GetByIdAsync(deliveryPersonId);
 
-            if (delivery == null)
-                throw new Exception("Delivery person not found");
+            if (deliveryPerson == null)
+                throw new Exception("Delivery request not found.");
 
-            delivery.Status = "Approved";
-            delivery.IsActive = true;
-            delivery.ApprovedAt = DateTime.UtcNow;
+            deliveryPerson.Status = "Approved";
+            deliveryPerson.IsActive = true;
+            deliveryPerson.ApprovedAt = DateTime.UtcNow;
 
-            await _deliveryRepo.UpdateAsync(delivery);
+            await _deliveryPersonRepository.UpdateAsync(deliveryPerson);
+
+            var user = await _userManager.FindByIdAsync(deliveryPerson.UserID.ToString());
+
+            if (user != null && !await _userManager.IsInRoleAsync(user, "Delivery"))
+            {
+                var result = await _userManager.AddToRoleAsync(user, "Delivery");
+
+                if (!result.Succeeded)
+                {
+                    throw new Exception(
+                        string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
+            }
         }
+
         // =========================
-        // REJECT DELIVERY
+        // REJECT DELIVERY REQUEST
         // =========================
-        public async Task RejectDeliveryPersonAsync(int id)
+        public async Task RejectDeliveryPersonAsync(int deliveryPersonId)
         {
-            var delivery = await _deliveryRepo.GetByIdAsync(id);
+            var deliveryPerson = await _deliveryPersonRepository.GetByIdAsync(deliveryPersonId);
 
-            if (delivery == null)
-                throw new Exception("Delivery person not found");
+            if (deliveryPerson == null)
+                throw new Exception("Delivery request not found.");
 
-            delivery.Status = "Rejected";
-            delivery.IsActive = false;
+            deliveryPerson.Status = "Rejected";
+            deliveryPerson.IsActive = false;
+            deliveryPerson.ApprovedAt = null;
 
-            await _deliveryRepo.UpdateAsync(delivery);
+            await _deliveryPersonRepository.UpdateAsync(deliveryPerson);
         }
 
         // =========================
-        // CHECK APPROVAL (LOGIN FLOW)
+        // CHECK DELIVERY APPROVAL
+        // Used by Login / ExternalLogin
         // =========================
         public async Task<bool> IsDeliveryApprovedAsync(int userId)
         {
-            var delivery = await _deliveryRepo.GetByUserIdAsync(userId);
+            var deliveryPerson = await _deliveryPersonRepository.GetByUserIdAsync(userId);
 
-            return delivery != null &&
-                   delivery.Status == "Approved" &&
-                   delivery.IsActive;
+            return deliveryPerson != null &&
+                   deliveryPerson.Status == "Approved" &&
+                   deliveryPerson.IsActive;
         }
 
         // =========================
@@ -113,34 +195,36 @@ namespace Multi_Store.Services.Managers
         // =========================
         public async Task<int> AssignDeliveryAsync(int orderId)
         {
-            var order = await _orderRepo.GetOrderDetailsAsync(orderId);
+            var order = await _orderRepository.GetOrderDetailsAsync(orderId);
 
             if (order == null)
-                throw new Exception("Order not found");
+                throw new Exception("Order not found.");
 
-            var existing = await _assignmentRepo.GetActiveAssignmentByOrderAsync(orderId);
+            var existingAssignment = await _assignmentRepository
+                .GetActiveAssignmentByOrderAsync(orderId);
 
-            if (existing != null)
-                throw new Exception("Order already assigned");
+            if (existingAssignment != null)
+                throw new Exception("Order already assigned.");
 
-            var available = await _deliveryRepo.GetAvailableAsync();
+            var availableDeliveryPeople = await _deliveryPersonRepository.GetAvailableAsync();
 
-            if (!available.Any())
-                throw new Exception("No delivery available");
+            var selectedDeliveryPerson = availableDeliveryPeople
+                .Where(d => d.IsActive && d.Status == "Approved")
+                .OrderByDescending(d => d.Rating)
+                .FirstOrDefault();
 
-            var selected = available
-                .OrderBy(x => x.Assignments.Count)
-                .First();
+            if (selectedDeliveryPerson == null)
+                throw new Exception("No available delivery person found.");
 
             var assignment = new DeliveryAssignment
             {
                 OrderID = orderId,
-                DeliveryPersonID = selected.DeliveryPersonID,
+                DeliveryPersonID = selectedDeliveryPerson.DeliveryPersonID,
                 Status = "Assigned",
                 AssignedAt = DateTime.UtcNow
             };
 
-            var saved = await _assignmentRepo.AddAsync(assignment);
+            var saved = await _assignmentRepository.AddAsync(assignment);
 
             return saved.AssignmentID;
         }
@@ -148,12 +232,15 @@ namespace Multi_Store.Services.Managers
         // =========================
         // UPDATE DELIVERY STATUS
         // =========================
-        public async Task UpdateDeliveryStatusAsync(int assignmentId, string status, string? proofUrl = null)
+        public async Task UpdateDeliveryStatusAsync(
+            int assignmentId,
+            string status,
+            string? proofUrl = null)
         {
-            var assignment = await _assignmentRepo.GetByIdAsync(assignmentId);
+            var assignment = await _assignmentRepository.GetByIdAsync(assignmentId);
 
             if (assignment == null)
-                throw new Exception("Assignment not found");
+                throw new Exception("Assignment not found.");
 
             assignment.Status = status;
 
@@ -166,26 +253,7 @@ namespace Multi_Store.Services.Managers
             if (!string.IsNullOrWhiteSpace(proofUrl))
                 assignment.DeliveryProofImageURL = proofUrl;
 
-            await _assignmentRepo.UpdateAsync(assignment);
-
-            if (status == "Delivered")
-            {
-                var delivery = await _deliveryRepo.GetByIdAsync(assignment.DeliveryPersonID);
-
-                if (delivery != null)
-                {
-                    delivery.Status = "Available";
-                    await _deliveryRepo.UpdateAsync(delivery);
-                }
-            }
-        }
-
-        // =========================
-        // GET ALL (ADMIN DEBUG)
-        // =========================
-        public async Task<IReadOnlyList<DeliveryPerson>> GetAllAsync()
-        {
-            return await _deliveryRepo.GetAllAsync();
+            await _assignmentRepository.UpdateAsync(assignment);
         }
     }
 }

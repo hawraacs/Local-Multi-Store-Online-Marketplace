@@ -2,39 +2,52 @@
 using Microsoft.Extensions.Logging;
 using Multi_Store.Core.Reposinterface.Base;
 using Multi_Store.Infrastructure.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Multi_Store.Infrastructure.Repositories.Base
 {
     public class Repository<T> : IRepository<T> where T : class
     {
         protected readonly ApplicationDbContext _dbContext;
-        private readonly ILogger<Repository<T> > _logger;
-
+        private readonly ILogger<Repository<T>>? _logger;
 
         public Repository(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
+            _logger = null;
+        }
+
+        public Repository(
+            ApplicationDbContext dbContext,
+            ILogger<Repository<T>> logger)
+        {
+            _dbContext = dbContext;
+            _logger = logger;
         }
 
         public async Task<T> GetByIdAsync(int id)
         {
-            return await _dbContext.Set<T>().FindAsync(id);
+            var entity = await _dbContext.Set<T>().FindAsync(id);
+
+            if (entity == null)
+            {
+                throw new Exception($"{typeof(T).Name} with ID {id} was not found.");
+            }
+
+            return entity;
         }
 
         public async Task<IReadOnlyList<T>> GetAllAsync()
         {
-            return await _dbContext.Set<T>().ToListAsync();
+            return await _dbContext.Set<T>()
+                .ToListAsync();
         }
 
         public async Task<IReadOnlyList<T>> GetAsync(Expression<Func<T, bool>> predicate)
         {
-            return await _dbContext.Set<T>().Where(predicate).ToListAsync();
+            return await _dbContext.Set<T>()
+                .Where(predicate)
+                .ToListAsync();
         }
 
         public async Task<IReadOnlyList<T>> GetAsync(
@@ -46,16 +59,24 @@ namespace Multi_Store.Infrastructure.Repositories.Base
             IQueryable<T> query = _dbContext.Set<T>();
 
             if (disableTracking)
+            {
                 query = query.AsNoTracking();
+            }
 
             if (!string.IsNullOrWhiteSpace(includeString))
+            {
                 query = query.Include(includeString);
+            }
 
             if (predicate != null)
+            {
                 query = query.Where(predicate);
+            }
 
             if (orderBy != null)
+            {
                 return await orderBy(query).ToListAsync();
+            }
 
             return await query.ToListAsync();
         }
@@ -69,44 +90,78 @@ namespace Multi_Store.Infrastructure.Repositories.Base
             IQueryable<T> query = _dbContext.Set<T>();
 
             if (disableTracking)
-                query = query.AsNoTracking();
-
-            if (includes != null)
             {
-                query = includes.Aggregate(query, (current, include) => current.Include(include));
+                query = query.AsNoTracking();
+            }
+
+            if (includes != null && includes.Any())
+            {
+                query = includes.Aggregate(
+                    query,
+                    (current, include) => current.Include(include));
             }
 
             if (predicate != null)
+            {
                 query = query.Where(predicate);
+            }
 
             if (orderBy != null)
+            {
                 return await orderBy(query).ToListAsync();
+            }
 
             return await query.ToListAsync();
         }
 
         public async Task<T> AddAsync(T entity)
         {
+            if (entity == null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
             await _dbContext.Set<T>().AddAsync(entity);
-                 _logger.LogInformation("BEFORE SAVE");
 
-            var result = await _dbContext.SaveChangesAsync();
+            _logger?.LogInformation("BEFORE SAVE {EntityName}", typeof(T).Name);
 
-            _logger.LogInformation("AFTER SAVE");
+            await _dbContext.SaveChangesAsync();
+
+            _logger?.LogInformation("AFTER SAVE {EntityName}", typeof(T).Name);
 
             return entity;
         }
 
         public async Task UpdateAsync(T entity)
         {
+            if (entity == null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
             _dbContext.Entry(entity).State = EntityState.Modified;
+
+            _logger?.LogInformation("BEFORE UPDATE {EntityName}", typeof(T).Name);
+
             await _dbContext.SaveChangesAsync();
+
+            _logger?.LogInformation("AFTER UPDATE {EntityName}", typeof(T).Name);
         }
 
         public async Task DeleteAsync(T entity)
         {
+            if (entity == null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
             _dbContext.Set<T>().Remove(entity);
+
+            _logger?.LogInformation("BEFORE DELETE {EntityName}", typeof(T).Name);
+
             await _dbContext.SaveChangesAsync();
+
+            _logger?.LogInformation("AFTER DELETE {EntityName}", typeof(T).Name);
         }
     }
 }
