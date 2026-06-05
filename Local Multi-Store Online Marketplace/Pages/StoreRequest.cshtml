@@ -6,19 +6,23 @@
 
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="utf-8" />
     <title>Store Owner Request</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
           rel="stylesheet">
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            font-family: Poppins;
+            font-family: Poppins, Arial, sans-serif;
             background: #f4f4f7;
+            color: #111827;
         }
 
         .topbar {
@@ -26,52 +30,159 @@
             color: white;
             padding: 20px 30px;
             font-size: 20px;
-            font-weight: 600;
+            font-weight: 700;
         }
 
-        .container {
-            width: 700px;
-            margin: 40px auto;
+        .page-wrapper {
+            min-height: calc(100vh - 65px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 35px 15px;
         }
 
         .card {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
+            width: 820px;
+            max-width: 100%;
+            padding: 34px;
+            border-radius: 18px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
+            border: 1px solid #e5e7eb;
         }
 
-        h2 {
+        .header-box {
             margin-bottom: 25px;
         }
 
+            .header-box h2 {
+                margin: 0 0 8px;
+                font-size: 26px;
+                font-weight: 700;
+            }
+
+            .header-box p {
+                margin: 0;
+                color: #6b7280;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+
+        .message {
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .error-message {
+            color: #991b1b;
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+        }
+
+        .success-message {
+            color: #166534;
+            background: #dcfce7;
+            border: 1px solid #86efac;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .form-group {
+            width: 100%;
+        }
+
+            .form-group.full {
+                grid-column: 1 / -1;
+            }
+
         label {
             display: block;
-            margin-top: 15px;
-            margin-bottom: 5px;
+            margin-bottom: 7px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
         }
 
-        input, textarea {
+        input,
+        select,
+        textarea {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            padding: 13px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            outline: none;
+            font-family: Poppins, Arial, sans-serif;
+            font-size: 14px;
+            background: white;
         }
 
-        button {
+        textarea {
+            min-height: 95px;
+            resize: vertical;
+        }
+
+            input:focus,
+            select:focus,
+            textarea:focus {
+                border-color: #111827;
+                box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.10);
+            }
+
+        .hint {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .submit-btn {
             margin-top: 25px;
             width: 100%;
-            padding: 14px;
+            padding: 15px;
             border: none;
-            border-radius: 8px;
-            background: #111;
+            border-radius: 10px;
+            background: #111827;
             color: white;
             font-size: 16px;
+            font-weight: 700;
             cursor: pointer;
+            transition: 0.2s ease;
         }
 
-            button:hover {
-                background: #333;
+            .submit-btn:hover {
+                background: #ff6b35;
+                transform: translateY(-1px);
             }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 18px;
+            color: #374151;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+            .back-link:hover {
+                color: #ff6b35;
+            }
+
+        @@media (max-width: 760px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 24px;
+            }
+        }
     </style>
 </head>
 
@@ -81,46 +192,126 @@
         Store Owner Request
     </div>
 
-    <div class="container">
+    <div class="page-wrapper">
 
         <div class="card">
 
-            <h2>Become a Store Owner</h2>
+            <div class="header-box">
+                <h2>Become a Store Owner 🏪</h2>
+                <p>
+                    Fill in your store information carefully. Your request will be reviewed by the admin before your store becomes active.
+                </p>
+            </div>
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="message error-message">
+                    @TempData["Error"]
+                </div>
+            }
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="message success-message">
+                    @TempData["Success"]
+                </div>
+            }
 
             <form method="post">
 
-                <label>Store Name</label>
-                <input asp-for="Store.StoreName" />
+                <div class="form-grid">
 
-                <label>Store Description</label>
-                <textarea asp-for="Store.Description"></textarea>
+                    <div class="form-group">
+                        <label>Store Name</label>
+                        <input asp-for="Store.StoreName"
+                               placeholder="Example: fatima Shop"
+                               required />
+                    </div>
 
-                <label>Phone Number</label>
-                <input asp-for="Store.PhoneNumber" />
+                    <div class="form-group">
+                        <label>Store Email</label>
+                        <input asp-for="Store.Email"
+                               type="email"
+                               placeholder="example@store.com"
+                               required />
+                    </div>
 
-                <label>Email</label>
-                <input asp-for="Store.Email" />
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input asp-for="Store.PhoneNumber"
+                               type="tel"
+                               placeholder="Example: 78 123 456"
+                               pattern="^[0-9+\s-]{6,20}$"
+                               required />
+                        <span class="hint">Use numbers only or +961 format.</span>
+                    </div>
 
-                <label>Address</label>
-                <input asp-for="Store.AddressLine1" />
+                    <div class="form-group">
+                        <label>Business License Number</label>
+                        <input asp-for="Store.BusinessLicenseNumber"
+                               placeholder="Enter license number"
+                               required />
+                    </div>
 
-                <label>City</label>
-                <input asp-for="Store.City" />
+                    <div class="form-group full">
+                        <label>Store Description</label>
+                        <textarea asp-for="Store.Description"
+                                  placeholder="Describe what your store sells, your products, and your business activity..."
+                                  required></textarea>
+                    </div>
 
-                <label>Area</label>
-                <input asp-for="Store.Area" />
+                    <div class="form-group full">
+                        <label>Store Address</label>
+                        <input asp-for="Store.AddressLine1"
+                               placeholder="Street, building, floor, nearby landmark"
+                               required />
+                    </div>
 
-                <label>Business License Number</label>
-                <input asp-for="Store.BusinessLicenseNumber" />
+                    <div class="form-group">
+                        <label>City</label>
+                        <select asp-for="Store.City" required>
+                            <option value="">Select city</option>
+                            <option value="Beirut">Beirut</option>
+                            <option value="Tripoli">Tripoli</option>
+                            <option value="Saida">Saida</option>
+                            <option value="Tyre">Tyre</option>
+                            <option value="Zahle">Zahle</option>
+                            <option value="Jounieh">Jounieh</option>
+                            <option value="Byblos">Byblos</option>
+                            <option value="Nabatieh">Nabatieh</option>
+                            <option value="Aley">Aley</option>
+                            <option value="Baabda">Baabda</option>
+                        </select>
+                    </div>
 
-                <button type="submit">Submit Request</button>
+                    <div class="form-group">
+                        <label>Area</label>
+                        <select asp-for="Store.Area" required>
+                            <option value="">Select area</option>
+                            <option value="Beirut">Beirut</option>
+                            <option value="Mount Lebanon">Mount Lebanon</option>
+                            <option value="North Lebanon">North Lebanon</option>
+                            <option value="South Lebanon">South Lebanon</option>
+                            <option value="Bekaa">Bekaa</option>
+                            <option value="Nabatieh">Nabatieh</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    Submit Store Request
+                </button>
 
             </form>
+
+            <a href="/CustomerProfile" class="back-link">
+                ← Back to Profile
+            </a>
 
         </div>
 
     </div>
 
 </body>
-
 </html>
