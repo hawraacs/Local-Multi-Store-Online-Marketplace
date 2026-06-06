@@ -8,6 +8,8 @@ using Multi_Store.Infrastructure.Data;
 using Multi_Store.Infrastructure.Repositories;
 using Multi_Store.Services;
 using Multi_Store.Services.Managers;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Multi_Store.Services.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,12 +19,21 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 
 // ===============================
+// HttpContextAccessor
+// ===============================
+builder.Services.AddHttpContextAccessor();
+
+
+// ===============================
 // Database
 // ===============================
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
 
+builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
 // ===============================
 // Identity
 // ===============================
@@ -40,11 +51,6 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Identity/Account/Login";
     options.AccessDeniedPath = "/Identity/Account/AccessDenied";
 });
-
-// ===============================
-// HttpContextAccessor
-// ===============================
-builder.Services.AddHttpContextAccessor();
 
 // ===============================
 // Google + Facebook Authentication
@@ -168,16 +174,16 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     await SeedData.InitializeAsync(services);
 }
+
+// ===============================
+// Debug Database Info
+// ===============================
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
     Console.WriteLine("DB CONNECTION:");
     Console.WriteLine(db.Database.GetConnectionString());
-}
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
     Console.WriteLine("DB NAME:");
     Console.WriteLine(db.Database.GetDbConnection().Database);

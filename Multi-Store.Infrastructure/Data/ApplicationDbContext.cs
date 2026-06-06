@@ -43,6 +43,7 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<SystemConfig> SystemConfigs { get; set; }
         public DbSet<Session> Sessions { get; set; }
         public DbSet<RecentlyViewedProduct> RecentlyViewedProducts { get; set; }
+        public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -234,6 +235,26 @@ namespace Multi_Store.Infrastructure.Data
                 .WithMany(u => u.ReceivedMessages)
                 .HasForeignKey(cm => cm.ReceiverID)
                 .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<PasswordResetOtp>(entity =>
+            {
+                entity.HasKey(x => x.PasswordResetOtpID);
+
+                entity.Property(x => x.DeliveryMethod)
+                    .IsRequired()
+                    .HasMaxLength(20);
+
+                entity.Property(x => x.Target)
+                    .IsRequired()
+                    .HasMaxLength(256);
+
+                entity.Property(x => x.OtpHash)
+                    .IsRequired();
+
+                entity.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserID)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
             // ================= RECENTLY VIEWED PRODUCTS =================
             modelBuilder.Entity<RecentlyViewedProduct>(entity =>
             {
