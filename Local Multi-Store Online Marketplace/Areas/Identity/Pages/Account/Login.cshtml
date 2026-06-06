@@ -201,16 +201,35 @@
             align-items: center;
             margin-bottom: 25px;
             font-size: 14px;
+            width: 100%;
+            position: relative;
+            z-index: 5;
         }
 
-            .remember-row a {
-                text-decoration: none;
-                color: #888;
-            }
+        .remember-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            color: #333;
+            margin: 0;
+        }
 
-                .remember-row a:hover {
-                    color: #222260;
-                }
+        #forgotPasswordLink {
+            color: #888;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 6px 0;
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+            #forgotPasswordLink:hover {
+                color: #222260;
+                text-decoration: underline;
+            }
 
         .login-btn {
             width: 100%;
@@ -385,6 +404,7 @@
                         <label asp-for="Input.Email">Email Address</label>
 
                         <input asp-for="Input.Email"
+                               id="loginEmail"
                                class="form-control"
                                placeholder="Enter your email" />
 
@@ -398,7 +418,9 @@
                         <label asp-for="Input.Password">Password</label>
 
                         <input asp-for="Input.Password"
+                               id="loginPassword"
                                class="form-control"
+                               type="password"
                                placeholder="Enter password" />
 
                         <span asp-validation-for="Input.Password"
@@ -408,12 +430,13 @@
 
                     <div class="remember-row">
 
-                        <label>
+                        <label class="remember-label">
                             <input asp-for="Input.RememberMe" />
                             Remember Me
                         </label>
 
-                        <a asp-page="./ForgotPassword">
+                        <a asp-page="./ForgotPassword"
+                           id="forgotPasswordLink">
                             Forgot Password?
                         </a>
 
@@ -499,6 +522,31 @@
         </div>
 
     </div>
+
+    <script>
+        const loginEmailInput = document.getElementById("loginEmail");
+        const loginPasswordInput = document.getElementById("loginPassword");
+        const forgotPasswordLink = document.getElementById("forgotPasswordLink");
+
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener("click", function (e) {
+                const email = loginEmailInput ? loginEmailInput.value.trim() : "";
+                const password = loginPasswordInput ? loginPasswordInput.value.trim() : "";
+
+                if (password.length > 0) {
+                    e.preventDefault();
+                    alert("Please clear the password field before using Forgot Password.");
+                    return;
+                }
+
+                if (email.length > 0) {
+                    e.preventDefault();
+                    window.location.href =
+                        "/Identity/Account/ForgotPassword?email=" + encodeURIComponent(email);
+                }
+            });
+        }
+    </script>
 
     <partial name="_ValidationScriptsPartial" />
 
