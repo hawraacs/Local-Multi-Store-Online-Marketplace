@@ -1,0 +1,272 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.AdminComplaintsModel
+@{
+    ViewData["Title"] = "Complaints & Reviews";
+}
+
+@section Styles {
+    <style>
+        .complaints-card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+            .complaints-card h3 {
+                margin-bottom: 24px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #64748b;
+            transition: 0.2s;
+        }
+
+            .tab-btn.active {
+                color: #FF6B35;
+                border-bottom: 2px solid #FF6B35;
+            }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-pending {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .badge-resolved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .btn-resolve, .btn-refund {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 5px;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .btn-resolve {
+            background: #10b981;
+            color: white;
+        }
+
+            .btn-resolve:hover {
+                background: #059669;
+            }
+
+        .btn-refund {
+            background: #f59e0b;
+            color: white;
+        }
+
+            .btn-refund:hover {
+                background: #d97706;
+            }
+
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        tr:hover td {
+            background: #fef9e8;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+            .empty-state i {
+                font-size: 48px;
+                margin-bottom: 16px;
+            }
+
+        @@media (max-width: 768px) {
+            .complaints-card {
+                padding: 16px;
+            }
+
+            th, td {
+                padding: 8px 12px;
+            }
+        }
+    </style>
+}
+
+<div class="complaints-card">
+    <h3><i class="fas fa-flag"></i> Customer Complaints</h3>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="all">All</button>
+        <button class="tab-btn" data-tab="pending">Pending</button>
+        <button class="tab-btn" data-tab="resolved">Resolved</button>
+    </div>
+
+    <div class="table-responsive">
+        <table id="complaintsTable">
+            <thead>
+                <tr>
+                    <th>Ticket</th>
+                    <th>Customer</th>
+                    <th>Store</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Complaints != null && Model.Complaints.Any())
+                {
+                    foreach (var c in Model.Complaints)
+                    {
+                        var statusLower = c.Status?.ToLower() ?? "pending";
+                        <tr data-status="@statusLower">
+                            <td>#@c.ComplaintId</td>
+                            <td>@c.CustomerName</td>
+                            <td>@c.StoreName</td>
+                            <td>@c.Type</td>
+                            <td>
+                                <span class="badge badge-@(statusLower == "resolved" ? "resolved" : "pending")">
+                                    @c.Status
+                                </span>
+                            </td>
+                            <td>@c.CreatedAt.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <div class="action-buttons">
+                                    @if (statusLower == "pending")
+                                    {
+                                        <button class="btn-resolve" data-id="@c.ComplaintId">
+                                            <i class="fas fa-check-circle"></i> Resolve
+                                        </button>
+                                        <button class="btn-refund" data-id="@c.ComplaintId">
+                                            <i class="fas fa-dollar-sign"></i> Refund
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:#64748b; font-size:12px;">
+                                            <i class="fas fa-check"></i> Completed
+                                        </span>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>No complaints found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const compTabs = document.querySelectorAll('.tabs .tab-btn');
+    const compRows = document.querySelectorAll('#complaintsTable tbody tr');
+
+    function filterComplaints() {
+        const activeTab = document.querySelector('.tabs .tab-btn.active').dataset.tab;
+        compRows.forEach(row => {
+            // Skip the empty state row if it exists
+            if (row.cells.length < 7) return;
+            const status = row.dataset.status;
+            if (activeTab === 'all') {
+                row.style.display = '';
+            } else if (activeTab === 'pending' && status === 'pending') {
+                row.style.display = '';
+            } else if (activeTab === 'resolved' && status === 'resolved') {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    compTabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            compTabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterComplaints();
+        });
+    });
+
+    // Optional: Add event listeners for resolve/refund buttons (you can wire these to POST handlers)
+    document.querySelectorAll('.btn-resolve').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            // Submit form or AJAX call to resolve complaint
+            if (confirm('Mark this complaint as resolved?')) {
+                // Example: fetch(`/api/complaints/${id}/resolve`, { method: 'POST' })
+                alert(`Resolve complaint #${id} (implement backend handler)`);
+            }
+        });
+    });
+
+    document.querySelectorAll('.btn-refund').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            if (confirm('Issue a refund for this complaint?')) {
+                alert(`Refund issued for complaint #${id} (implement backend handler)`);
+            }
+        });
+    });
+</script>
