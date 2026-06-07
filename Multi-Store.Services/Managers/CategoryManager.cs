@@ -2,15 +2,10 @@
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface;
 using Multi_Store.Services.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Multi_Store.Services.Managers
 {
-  public class CategoryManager
+    public class CategoryManager
     {
         private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
@@ -54,9 +49,35 @@ namespace Multi_Store.Services.Managers
             category.DisplayOrder = dto.DisplayOrder;
             category.IsActive = dto.IsActive;
 
+            // Added
+            category.ParentCategoryID = dto.ParentCategoryID;
+
             await _categoryRepository.UpdateAsync(category);
 
             return _mapper.Map<CategoryDTO>(category);
+        }
+
+        // =========================
+        // GET ALL CATEGORIES
+        // =========================
+        public async Task<IReadOnlyList<CategoryDTO>> GetAllCategoriesAsync()
+        {
+            var categories = await _categoryRepository.GetAllAsync();
+
+            return _mapper.Map<IReadOnlyList<CategoryDTO>>(categories);
+        }
+
+        // =========================
+        // DELETE CATEGORY
+        // =========================
+        public async Task DeleteCategoryAsync(int id)
+        {
+            var category = await _categoryRepository.GetByIdAsync(id);
+
+            if (category == null)
+                throw new Exception("Category not found");
+
+            await _categoryRepository.DeleteAsync(category);
         }
 
         // =========================
@@ -65,6 +86,7 @@ namespace Multi_Store.Services.Managers
         public async Task<IReadOnlyList<CategoryDTO>> GetMainCategoriesAsync()
         {
             var categories = await _categoryRepository.GetMainCategoriesAsync();
+
             return _mapper.Map<IReadOnlyList<CategoryDTO>>(categories);
         }
 
@@ -74,6 +96,7 @@ namespace Multi_Store.Services.Managers
         public async Task<IReadOnlyList<CategoryDTO>> GetSubCategoriesAsync(int parentId)
         {
             var categories = await _categoryRepository.GetSubCategoriesAsync(parentId);
+
             return _mapper.Map<IReadOnlyList<CategoryDTO>>(categories);
         }
 
