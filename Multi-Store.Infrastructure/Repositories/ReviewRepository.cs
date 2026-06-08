@@ -23,16 +23,18 @@ namespace Multi_Store.Infrastructure.Repositories
         public async Task<IReadOnlyList<Review>> GetByProductAsync(int productId)
         {
             return await _context.Reviews
+                .Include(r => r.Customer)
+                    .ThenInclude(c => c.User)
                 .Where(r => r.ProductID == productId)
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
         }
-
         public async Task<IReadOnlyList<Review>> GetByStoreAsync(int storeId)
         {
             return await _context.Reviews
+                .Include(r => r.Customer)
+                    .ThenInclude(c => c.User)
                 .Where(r => r.StoreID == storeId)
-                .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
         }
 

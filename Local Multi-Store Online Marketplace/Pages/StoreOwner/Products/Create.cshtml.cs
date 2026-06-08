@@ -45,6 +45,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
             }
 
             ViewData["StoreName"] = store.StoreName;
+            ViewData["StoreId"] = store.StoreID;
 
             return Page();
         }
@@ -93,6 +94,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
                 if (!ModelState.IsValid)
                 {
                     ViewData["StoreName"] = store.StoreName;
+                    ViewData["StoreId"] = store.StoreID;
                     return Page();
                 }
 

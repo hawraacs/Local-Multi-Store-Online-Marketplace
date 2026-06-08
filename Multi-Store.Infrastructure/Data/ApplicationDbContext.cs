@@ -42,6 +42,7 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<SystemConfig> SystemConfigs { get; set; }
         public DbSet<Session> Sessions { get; set; }
+        public DbSet<StoreFollow> StoreFollows { get; set; }
         public DbSet<RecentlyViewedProduct> RecentlyViewedProducts { get; set; }
         public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
 

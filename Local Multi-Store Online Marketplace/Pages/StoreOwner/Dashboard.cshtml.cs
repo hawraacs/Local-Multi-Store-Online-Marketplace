@@ -50,7 +50,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
             Store = store;
             ViewData["StoreName"] = store.StoreName;
-
+            ViewData["StoreId"] = store.StoreID;
             // Load dashboard statistics
             await LoadDashboardStats(store.StoreID);
                 await LoadRecentOrders(store.StoreID);
