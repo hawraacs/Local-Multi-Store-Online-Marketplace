@@ -5,20 +5,18 @@
 namespace Multi_Store.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddStoreDeliveryFeeSettings : Migration
+    public partial class SyncStoreFix : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            
 
-           
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-          
+
         }
     }
 }

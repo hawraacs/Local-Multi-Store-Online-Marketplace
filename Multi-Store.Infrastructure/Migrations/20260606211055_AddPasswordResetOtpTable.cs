@@ -5,38 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Multi_Store.Infrastructure.Migrations
 {
-    /// <inheritdoc />
     public partial class AddPasswordResetOtpTable : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_RecentlyViewedProducts_Customers_CustomerID",
-                table: "RecentlyViewedProducts");
-
-            migrationBuilder.DropIndex(
-                name: "IX_RecentlyViewedProducts_CustomerID",
-                table: "RecentlyViewedProducts");
-
-            migrationBuilder.RenameColumn(
-                name: "CustomerID",
-                table: "RecentlyViewedProducts",
-                newName: "CustomerId");
-
-            migrationBuilder.RenameColumn(
-                name: "Id",
-                table: "RecentlyViewedProducts",
-                newName: "ID");
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "ApprovedAt",
-                table: "DeliveryPersons",
-                type: "datetime2",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "datetime2");
-
             migrationBuilder.CreateTable(
                 name: "PasswordResetOtps",
                 columns: table => new
@@ -55,6 +27,7 @@ namespace Multi_Store.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PasswordResetOtps", x => x.PasswordResetOtpID);
+
                     table.ForeignKey(
                         name: "FK_PasswordResetOtps_AspNetUsers_UserID",
                         column: x => x.UserID,
@@ -64,71 +37,15 @@ namespace Multi_Store.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_RecentlyViewedProducts_CustomerId_ProductID",
-                table: "RecentlyViewedProducts",
-                columns: new[] { "CustomerId", "ProductID" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_PasswordResetOtps_UserID",
                 table: "PasswordResetOtps",
                 column: "UserID");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_RecentlyViewedProducts_Customers_CustomerId",
-                table: "RecentlyViewedProducts",
-                column: "CustomerId",
-                principalTable: "Customers",
-                principalColumn: "CustomerID",
-                onDelete: ReferentialAction.Cascade);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_RecentlyViewedProducts_Customers_CustomerId",
-                table: "RecentlyViewedProducts");
-
             migrationBuilder.DropTable(
                 name: "PasswordResetOtps");
-
-            migrationBuilder.DropIndex(
-                name: "IX_RecentlyViewedProducts_CustomerId_ProductID",
-                table: "RecentlyViewedProducts");
-
-            migrationBuilder.RenameColumn(
-                name: "CustomerId",
-                table: "RecentlyViewedProducts",
-                newName: "CustomerID");
-
-            migrationBuilder.RenameColumn(
-                name: "ID",
-                table: "RecentlyViewedProducts",
-                newName: "Id");
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "ApprovedAt",
-                table: "DeliveryPersons",
-                type: "datetime2",
-                nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                oldClrType: typeof(DateTime),
-                oldType: "datetime2",
-                oldNullable: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RecentlyViewedProducts_CustomerID",
-                table: "RecentlyViewedProducts",
-                column: "CustomerID");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_RecentlyViewedProducts_Customers_CustomerID",
-                table: "RecentlyViewedProducts",
-                column: "CustomerID",
-                principalTable: "Customers",
-                principalColumn: "CustomerID",
-                onDelete: ReferentialAction.Cascade);
         }
     }
 }
