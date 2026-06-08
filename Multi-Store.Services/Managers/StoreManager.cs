@@ -79,6 +79,8 @@ namespace Multi_Store.Services.Managers
                     existingStore.BusinessLicenseURL = dto.BusinessLicenseURL;
                     existingStore.Latitude = dto.Latitude;
                     existingStore.Longitude = dto.Longitude;
+                    existingStore.HasFixedDeliveryFee = dto.HasFixedDeliveryFee;
+                    existingStore.FixedDeliveryFee = dto.FixedDeliveryFee;
                     existingStore.Status = "Pending";
                     existingStore.ApprovedAt = null;
                     existingStore.ApprovedBy = null;
@@ -106,6 +108,8 @@ namespace Multi_Store.Services.Managers
                 // Location fields required for UC-30
                 Latitude = dto.Latitude,
                 Longitude = dto.Longitude,
+                HasFixedDeliveryFee = dto.HasFixedDeliveryFee,
+                FixedDeliveryFee = dto.FixedDeliveryFee,
 
                 StoreCode = "ST-" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
                 Status = "Pending",
@@ -203,6 +207,8 @@ namespace Multi_Store.Services.Managers
                 Area = s.Area,
                 Latitude = s.Latitude,
                 Longitude = s.Longitude,
+                HasFixedDeliveryFee = s.HasFixedDeliveryFee,
+                FixedDeliveryFee = s.FixedDeliveryFee,
                 BusinessLicenseNumber = s.BusinessLicenseNumber,
                 BusinessLicenseURL = s.BusinessLicenseURL,
                 Rating = s.Rating,
