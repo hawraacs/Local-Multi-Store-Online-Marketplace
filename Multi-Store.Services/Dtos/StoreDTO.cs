@@ -53,6 +53,11 @@ namespace Multi_Store.Services.Dtos
 
         public decimal CODMaxLimit { get; set; } = 5000;
 
+        // UC-31: Fixed delivery fee option
+        public bool HasFixedDeliveryFee { get; set; } = false;
+
+        public decimal? FixedDeliveryFee { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? ApprovedAt { get; set; }
