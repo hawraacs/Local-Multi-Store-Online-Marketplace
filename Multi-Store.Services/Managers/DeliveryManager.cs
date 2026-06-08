@@ -2,6 +2,10 @@
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface;
 using Multi_Store.Services.Dtos;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Multi_Store.Services.Managers
 {
@@ -35,7 +39,35 @@ namespace Multi_Store.Services.Managers
             if (dto.UserID <= 0)
                 throw new InvalidOperationException("Invalid user.");
 
+            if (string.IsNullOrWhiteSpace(dto.FullName))
+                throw new InvalidOperationException("Full name is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
+                throw new InvalidOperationException("Phone number is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.VehicleType))
+                throw new InvalidOperationException("Vehicle type is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.VehicleNumber))
+                throw new InvalidOperationException("Vehicle number is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.Area))
+                throw new InvalidOperationException("Area is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.DrivingLicenseNumber))
+                throw new InvalidOperationException("Driving license number is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.IDProofURL))
+                throw new InvalidOperationException("ID proof is required.");
+
             var existing = await _deliveryPersonRepository.GetByUserIdAsync(dto.UserID);
+
+            var phoneExists = await _deliveryPersonRepository.GetByPhoneNumberAsync(dto.PhoneNumber);
+
+            if (phoneExists != null && phoneExists.UserID != dto.UserID)
+            {
+                throw new InvalidOperationException("This phone number is already registered for another delivery request.");
+            }
 
             if (existing != null)
             {
@@ -53,9 +85,14 @@ namespace Multi_Store.Services.Managers
                     existing.VehicleType = dto.VehicleType;
                     existing.VehicleNumber = dto.VehicleNumber;
                     existing.DrivingLicenseNumber = dto.DrivingLicenseNumber;
+                    existing.IDProofURL = dto.IDProofURL;
+                    existing.RejectionReason = null;
                     existing.Status = "Pending";
                     existing.IsActive = false;
                     existing.ApprovedAt = null;
+                    existing.CurrentLatitude = dto.CurrentLatitude;
+                    existing.CurrentLongitude = dto.CurrentLongitude;
+                    existing.LastLocationUpdate = dto.LastLocationUpdate;
 
                     await _deliveryPersonRepository.UpdateAsync(existing);
 
@@ -73,6 +110,7 @@ namespace Multi_Store.Services.Managers
                 VehicleNumber = dto.VehicleNumber,
                 DrivingLicenseNumber = dto.DrivingLicenseNumber,
                 IDProofURL = dto.IDProofURL,
+                RejectionReason = null,
                 CurrentLatitude = dto.CurrentLatitude,
                 CurrentLongitude = dto.CurrentLongitude,
                 LastLocationUpdate = dto.LastLocationUpdate,
@@ -105,6 +143,7 @@ namespace Multi_Store.Services.Managers
                 VehicleNumber = d.VehicleNumber,
                 DrivingLicenseNumber = d.DrivingLicenseNumber,
                 IDProofURL = d.IDProofURL,
+                RejectionReason = d.RejectionReason,
                 CurrentLatitude = d.CurrentLatitude,
                 CurrentLongitude = d.CurrentLongitude,
                 LastLocationUpdate = d.LastLocationUpdate,
@@ -143,6 +182,7 @@ namespace Multi_Store.Services.Managers
             deliveryPerson.Status = "Approved";
             deliveryPerson.IsActive = true;
             deliveryPerson.ApprovedAt = DateTime.UtcNow;
+            deliveryPerson.RejectionReason = null;
 
             await _deliveryPersonRepository.UpdateAsync(deliveryPerson);
 
@@ -163,7 +203,7 @@ namespace Multi_Store.Services.Managers
         // =========================
         // REJECT DELIVERY REQUEST
         // =========================
-        public async Task RejectDeliveryPersonAsync(int deliveryPersonId)
+        public async Task RejectDeliveryPersonAsync(int deliveryPersonId, string? reason)
         {
             var deliveryPerson = await _deliveryPersonRepository.GetByIdAsync(deliveryPersonId);
 
@@ -173,6 +213,9 @@ namespace Multi_Store.Services.Managers
             deliveryPerson.Status = "Rejected";
             deliveryPerson.IsActive = false;
             deliveryPerson.ApprovedAt = null;
+            deliveryPerson.RejectionReason = string.IsNullOrWhiteSpace(reason)
+                ? "Rejected by admin."
+                : reason;
 
             await _deliveryPersonRepository.UpdateAsync(deliveryPerson);
         }
