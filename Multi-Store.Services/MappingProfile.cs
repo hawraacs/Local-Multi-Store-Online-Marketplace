@@ -30,7 +30,12 @@ namespace Multi_Store.Services
             CreateMap<Product, ProductDTO>().ReverseMap();
             CreateMap<ProductImage, ProductImageDTO>().ReverseMap();
             CreateMap<RefundRequest, RefundRequestDTO>().ReverseMap();
-            CreateMap<Review, ReviewDTO>().ReverseMap();
+            CreateMap<Review, ReviewDTO>()
+      .ForMember(d => d.CustomerName,
+          opt => opt.MapFrom(s =>
+              s.Customer != null && s.Customer.User != null
+                  ? s.Customer.User.UserName
+                  : "Unknown"));
             CreateMap<RecentlyViewedProduct, RecentlyViewedProductDTO>().ReverseMap();
             CreateMap<Session, SessionDTO>().ReverseMap();
             CreateMap<Store, StoreDTO>().ReverseMap();

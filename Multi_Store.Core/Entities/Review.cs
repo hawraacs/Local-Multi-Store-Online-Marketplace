@@ -1,46 +1,32 @@
-using System;
-
 namespace Multi_Store.Core.Entities
 {
     public class Review
     {
-        // Primary Key
         public int ReviewID { get; set; }
 
-        // Foreign Keys
         public int CustomerID { get; set; }
+        public Customer Customer { get; set; }
 
-        public int OrderItemID { get; set; }
-
+        // Store is ALWAYS required (fix your FK issue)
         public int StoreID { get; set; }
+        public Store Store { get; set; }
 
+        // Product review optional
         public int? ProductID { get; set; }
+        public Product? Product { get; set; }
 
-        // Attributes
+        // OrderItem only for verified purchase reviews
+        public int? OrderItemID { get; set; }
+        public OrderItem? OrderItem { get; set; }
+
         public int Rating { get; set; }
-
         public string? Comment { get; set; }
 
         public bool IsVerifiedPurchase { get; set; }
 
-        public string Status { get; set; } = string.Empty;
+        public string Status { get; set; } = "Pending";
 
         public DateTime CreatedAt { get; set; }
-
         public DateTime? UpdatedAt { get; set; }
-
-        // Relationships
-
-        // Many Reviews belong to one Customer
-        public Customer? Customer { get; set; }
-
-        // Many Reviews belong to one OrderItem
-        public OrderItem? OrderItem { get; set; }
-
-        // Many Reviews belong to one Store
-        public Store? Store { get; set; }
-
-        // Many Reviews can belong to one Product
-        public Product? Product { get; set; }
     }
 }
