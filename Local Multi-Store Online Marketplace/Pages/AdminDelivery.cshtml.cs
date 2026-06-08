@@ -1,68 +1,66 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
     [Authorize(Roles = "Admin")]
     public class AdminDeliveryModel : PageModel
     {
-        private readonly ApplicationDbContext _dbContext;
         private readonly DeliveryManager _deliveryManager;
         private readonly ILogger<AdminDeliveryModel> _logger;
 
         public AdminDeliveryModel(
             DeliveryManager deliveryManager,
-            ILogger<AdminDeliveryModel> logger,
-            ApplicationDbContext dbContext)
+            ILogger<AdminDeliveryModel> logger)
         {
             _deliveryManager = deliveryManager;
             _logger = logger;
-            _dbContext = dbContext;
         }
 
         public List<DeliveryPersonDTO> Deliveries { get; set; } = new();
 
         public async Task OnGetAsync()
         {
-            _logger.LogInformation("ADMIN DELIVERY PAGE LOADED");
-
-            var list = await _deliveryManager.GetAllAsync();
-
-            _logger.LogInformation(
-                "ADMIN DB: {DbName}",
-                _dbContext.Database.GetDbConnection().Database);
-
-            _logger.LogInformation("DELIVERY COUNT = {Count}", list.Count);
-
-            // IMPORTANT:
-            // Show ALL delivery requests, not only Pending.
-            // This keeps Approved / Rejected rows visible in the table.
-            Deliveries = list
+            Deliveries = (await _deliveryManager.GetAllAsync())
                 .OrderByDescending(d => d.DeliveryPersonID)
                 .ToList();
-
-            _logger.LogInformation("DISPLAY COUNT = {Count}", Deliveries.Count);
         }
 
         public async Task<IActionResult> OnPostApproveAsync(int id)
         {
-            await _deliveryManager.ApproveDeliveryPersonAsync(id);
-
-            TempData["Success"] = "Delivery request approved successfully.";
+            try
+            {
+                await _deliveryManager.ApproveDeliveryPersonAsync(id);
+                TempData["Success"] = "Delivery request approved.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error approving delivery request with ID {Id}", id);
+                TempData["Error"] = "An error occurred while approving the delivery request.";
+            }
 
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostRejectAsync(int id)
+        public async Task<IActionResult> OnPostRejectAsync(int id, string? reason)
         {
-            await _deliveryManager.RejectDeliveryPersonAsync(id);
-
-            TempData["Success"] = "Delivery request rejected successfully.";
+            try
+            {
+                await _deliveryManager.RejectDeliveryPersonAsync(id, reason);
+                TempData["Success"] = "Delivery request rejected.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting delivery request with ID {Id}", id);
+                TempData["Error"] = "An error occurred while rejecting the delivery request.";
+            }
 
             return RedirectToPage();
         }

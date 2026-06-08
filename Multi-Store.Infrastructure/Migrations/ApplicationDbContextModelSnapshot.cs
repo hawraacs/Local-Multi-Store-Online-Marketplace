@@ -688,6 +688,9 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<decimal>("Rating")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -910,6 +913,50 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("OrderID");
 
                     b.ToTable("OrderStatusHistories");
+                });
+
+            modelBuilder.Entity("Multi_Store.Core.Entities.PasswordResetOtp", b =>
+                {
+                    b.Property<int>("PasswordResetOtpID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PasswordResetOtpID"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeliveryMethod")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("OtpHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Target")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int");
+
+                    b.HasKey("PasswordResetOtpID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("PasswordResetOtps");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Payment", b =>
@@ -1300,6 +1347,12 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("FixedDeliveryFee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("HasFixedDeliveryFee")
+                        .HasColumnType("bit");
 
                     b.Property<decimal>("Latitude")
                         .HasPrecision(18, 6)
@@ -1837,6 +1890,17 @@ namespace Multi_Store.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("Multi_Store.Core.Entities.PasswordResetOtp", b =>
+                {
+                    b.HasOne("Multi_Store.Core.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Payment", b =>

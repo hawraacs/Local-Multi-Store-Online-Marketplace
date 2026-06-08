@@ -38,7 +38,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                 if (store == null)
                 {
                     TempData["ErrorMessage"] = "Store not found.";
-                    return RedirectToPage("/StoreOwner/Orders/Index");
+                    return RedirectToPage("/StoreOwner/Order/Index");
                 }
 
                 // Check if this order belongs to the store
@@ -48,7 +48,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                 if (!hasStoreItem)
                 {
                     TempData["ErrorMessage"] = "Unauthorized access to this order.";
-                    return RedirectToPage("/StoreOwner/Orders/Index");
+                    return RedirectToPage("/StoreOwner/Order/Index");
                 }
 
                 // Load order with customer
@@ -60,7 +60,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                 if (order == null)
                 {
                     TempData["ErrorMessage"] = "Order not found.";
-                    return RedirectToPage("/StoreOwner/Orders/Index");
+                    return RedirectToPage("/StoreOwner/Order/Index");
                 }
 
                 // Load only the order items belonging to this store
@@ -119,14 +119,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                 if (!hasStoreItem)
                 {
                     TempData["ErrorMessage"] = "Unauthorized access to this order.";
-                    return RedirectToPage("/StoreOwner/Orders/Index");
+                    return RedirectToPage("/StoreOwner/Order/Index");
                 }
 
                 var order = await _context.Orders.FindAsync(orderId);
                 if (order == null)
                 {
                     TempData["ErrorMessage"] = "Order not found.";
-                    return RedirectToPage("/StoreOwner/Orders/Index");
+                    return RedirectToPage("/StoreOwner/Order/Index");
                 }
 
                 order.Status = newStatus;

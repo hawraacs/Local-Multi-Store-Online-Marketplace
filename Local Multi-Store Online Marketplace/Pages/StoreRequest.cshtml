@@ -13,6 +13,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
           rel="stylesheet">
 
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <style>
         * {
             box-sizing: border-box;
@@ -43,7 +46,7 @@
 
         .card {
             background: white;
-            width: 820px;
+            width: 900px;
             max-width: 100%;
             padding: 34px;
             border-radius: 18px;
@@ -140,6 +143,67 @@
             margin-top: 5px;
             font-size: 12px;
             color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .location-panel {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .location-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .map-btn {
+            padding: 11px 14px;
+            border: none;
+            border-radius: 10px;
+            background: #111827;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: Poppins, Arial, sans-serif;
+        }
+
+            .map-btn:hover {
+                background: #ff6b35;
+            }
+
+        #storeMap {
+            width: 100%;
+            height: 360px;
+            border-radius: 14px;
+            border: 1px solid #d1d5db;
+            background: #e5e7eb;
+        }
+
+        .map-message {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .coordinate-box {
+            display: none;
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            color: #3730a3;
+            font-size: 13px;
+            font-weight: 700;
         }
 
         .submit-btn {
@@ -182,6 +246,10 @@
             .card {
                 padding: 24px;
             }
+
+            #storeMap {
+                height: 300px;
+            }
         }
     </style>
 </head>
@@ -199,7 +267,8 @@
             <div class="header-box">
                 <h2>Become a Store Owner 🏪</h2>
                 <p>
-                    Fill in your store information carefully. Your request will be reviewed by the admin before your store becomes active.
+                    Fill in your store information carefully. Select your store location on the map or use your current location.
+                    Your request will be reviewed by the admin before your store becomes active.
                 </p>
             </div>
 
@@ -224,7 +293,7 @@
                     <div class="form-group">
                         <label>Store Name</label>
                         <input asp-for="Store.StoreName"
-                               placeholder="Example: fatima Shop"
+                               placeholder="Example: Fatima Shop"
                                required />
                     </div>
 
@@ -263,13 +332,20 @@
                     <div class="form-group full">
                         <label>Store Address</label>
                         <input asp-for="Store.AddressLine1"
+                               id="StoreAddress"
                                placeholder="Street, building, floor, nearby landmark"
                                required />
+                        <span class="hint">
+                            You can type manually,Click on the map, drag the marker, use your current location, or enter the address manually if the map is unavailable.
+                        </span>
                     </div>
+
+                    <input asp-for="Store.Latitude" type="hidden" id="StoreLatitude" />
+                    <input asp-for="Store.Longitude" type="hidden" id="StoreLongitude" />
 
                     <div class="form-group">
                         <label>City</label>
-                        <select asp-for="Store.City" required>
+                        <select asp-for="Store.City" id="StoreCity" required>
                             <option value="">Select city</option>
                             <option value="Beirut">Beirut</option>
                             <option value="Tripoli">Tripoli</option>
@@ -286,7 +362,7 @@
 
                     <div class="form-group">
                         <label>Area</label>
-                        <select asp-for="Store.Area" required>
+                        <select asp-for="Store.Area" id="StoreArea" required>
                             <option value="">Select area</option>
                             <option value="Beirut">Beirut</option>
                             <option value="Mount Lebanon">Mount Lebanon</option>
@@ -295,6 +371,28 @@
                             <option value="Bekaa">Bekaa</option>
                             <option value="Nabatieh">Nabatieh</option>
                         </select>
+                    </div>
+
+                    <div class="form-group full">
+                        <label>Store Location on Map</label>
+
+                        <div class="location-panel">
+                            <div class="location-actions">
+                                <button type="button"
+                                        class="map-btn"
+                                        onclick="useCurrentStoreLocation()">
+                                    Use My Current Location
+                                </button>
+                            </div>
+
+                            <div id="storeMap"></div>
+
+                            <div id="storeMapMessage" class="map-message">
+                                Click on the map, drag the marker, or use your current location.
+                            </div>
+
+                            <div id="storeCoordinateBox" class="coordinate-box"></div>
+                        </div>
                     </div>
 
                 </div>
@@ -312,6 +410,161 @@
         </div>
 
     </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        let storeMap;
+        let storeMarker;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            initStoreMap();
+        });
+
+        function initStoreMap() {
+            const defaultLat = 33.8938;
+            const defaultLng = 35.5018;
+
+            storeMap = L.map("storeMap").setView([defaultLat, defaultLng], 12);
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19,
+                attribution: "&copy; OpenStreetMap contributors"
+            }).addTo(storeMap);
+
+            storeMarker = L.marker([defaultLat, defaultLng], {
+                draggable: true
+            }).addTo(storeMap);
+
+            storeMap.on("click", function (e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+
+                storeMarker.setLatLng([lat, lng]);
+                setStoreCoordinates(lat, lng);
+                reverseStoreGeocode(lat, lng);
+            });
+
+            storeMarker.on("dragend", function () {
+                const position = storeMarker.getLatLng();
+
+                setStoreCoordinates(position.lat, position.lng);
+                reverseStoreGeocode(position.lat, position.lng);
+            });
+        }
+
+        function setStoreCoordinates(lat, lng) {
+            document.getElementById("StoreLatitude").value = lat;
+            document.getElementById("StoreLongitude").value = lng;
+
+            document.getElementById("storeMapMessage").innerText =
+                "Selected location: " + lat.toFixed(6) + ", " + lng.toFixed(6);
+
+            const coordinateBox = document.getElementById("storeCoordinateBox");
+            coordinateBox.style.display = "block";
+            coordinateBox.innerText =
+                "Coordinates captured: " + lat.toFixed(6) + ", " + lng.toFixed(6);
+        }
+
+        function useCurrentStoreLocation() {
+            const message = document.getElementById("storeMapMessage");
+
+            if (!navigator.geolocation) {
+                message.innerText = "Location is not supported. Please enter the address manually.";
+                return;
+            }
+
+            message.innerText = "Detecting location...";
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    storeMap.setView([lat, lng], 15);
+                    storeMarker.setLatLng([lat, lng]);
+
+                    setStoreCoordinates(lat, lng);
+                    reverseStoreGeocode(lat, lng);
+                },
+                function () {
+                    message.innerText = "Location permission denied or unavailable. Please enter address manually or click on the map.";
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        async function reverseStoreGeocode(lat, lng) {
+            try {
+                const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data && data.display_name) {
+                    document.getElementById("StoreAddress").value = data.display_name;
+
+                    if (data.address) {
+                        fillStoreAddressParts(data.address);
+                    }
+                } else {
+                    document.getElementById("storeMapMessage").innerText =
+                        "Could not convert location to address. Please enter address manually.";
+                }
+            } catch {
+                document.getElementById("storeMapMessage").innerText =
+                    "Map address service failed. Please enter address manually.";
+            }
+        }
+
+        function fillStoreAddressParts(address) {
+            if (!address) {
+                return;
+            }
+
+            const city =
+                address.city ||
+                address.town ||
+                address.village ||
+                address.municipality ||
+                "";
+
+            const area =
+                address.state ||
+                address.county ||
+                address.region ||
+                "";
+
+            if (city) {
+                setSelectValueIfExists("StoreCity", city);
+            }
+
+            if (area) {
+                setSelectValueIfExists("StoreArea", area);
+            }
+        }
+
+        function setSelectValueIfExists(selectId, value) {
+            const select = document.getElementById(selectId);
+
+            if (!select || !value) {
+                return;
+            }
+
+            const normalizedValue = value.toLowerCase();
+
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value.toLowerCase() === normalizedValue ||
+                    select.options[i].text.toLowerCase() === normalizedValue) {
+                    select.selectedIndex = i;
+                    return;
+                }
+            }
+        }
+    </script>
 
 </body>
 </html>

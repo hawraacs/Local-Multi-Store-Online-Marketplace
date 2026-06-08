@@ -8,100 +8,98 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>@ViewData["Title"] - Multi Store</title>
-
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-
     @await RenderSectionAsync("Styles", required: false)
 </head>
-
 <body>
 
     <header>
-        <!-- DEFAULT TOP NAVBAR: مثل قبل -->
+        <!-- Public navbar -->
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-0">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">
-                    Local_Multi_Store_Online_Marketplace
-                </a>
-
-                <button class="navbar-toggler"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation">
+                <a class="navbar-brand" asp-area="" asp-page="/Index">Local_Multi_Store_Online_Marketplace</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">
-                                Home
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">
-                                Privacy
-                            </a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a></li>
+                        <li class="nav-item"><a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a></li>
                     </ul>
-
                     <partial name="_LoginPartial" />
                 </div>
             </div>
         </nav>
 
-        <!-- ROLE NAVBAR: بدون Logout أحمر -->
+        <!-- Role‑based navigation -->
         @if (SignInManager.IsSignedIn(User))
         {
             var user = await UserManager.GetUserAsync(User);
-
             if (user != null)
             {
                 var roles = await UserManager.GetRolesAsync(user);
 
                 if (roles.Contains("Admin"))
                 {
-                    <nav style="background:#222;padding:15px;color:white;display:flex;gap:20px;">
-                        <a href="/Admin1" style="color:white;">Dashboard</a>
-                        <a href="/AdminStores" style="color:white;">Stores</a>
-                        <a href="/AdminUsers" style="color:white;">Users</a>
-                        <a href="/AdminOrders" style="color:white;">Orders</a>
+                    <nav class="role-nav admin-nav">
+                        <div class="container">
+                            <div class="nav-links">
+                                <a href="/Admin1"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                                <a href="/AdminStores"><i class="fas fa-store"></i> Stores</a>
+                                <a href="/AdminUsers"><i class="fas fa-users"></i> Users</a>
+                                <a href="/AdminOrders"><i class="fas fa-shopping-cart"></i> Orders</a>
+                                <a href="/AdminDelivery"><i class="fas fa-truck"></i> Delivery</a>
+                                <a href="/AdminComplaints"><i class="fas fa-flag"></i> Complaints</a>
+                                <a href="/AdminAnalytics"><i class="fas fa-chart-line"></i> Analytics</a>
+                                <a href="/AdminCategories"><i class="fas fa-tags"></i> Categories</a>
+                                <a href="/AdminAuditLogs"><i class="fas fa-history"></i> Audit Logs</a>
+                                <a href="/AdminSettings"><i class="fas fa-cog"></i> Settings</a>
+                            </div>
+                        </div>
                     </nav>
                 }
                 else if (roles.Contains("StoreOwner"))
                 {
-                    <nav style="background:#111;padding:15px;color:white;display:flex;gap:20px;">
-                        <a href="/StoreOwner/Dashboard" style="color:white;">Dashboard</a>
-                        <a href="/StoreOwner/Products" style="color:white;">Products</a>
-                        <a href="/StoreOrders" style="color:white;">Orders</a>
-                        <a href="/StoreAnalytics" style="color:white;">Analytics</a>
+                    <nav class="role-nav store-nav">
+                        <div class="container">
+                            <div class="nav-links">
+                                <a href="/StoreOwner/Dashboard"><i class="fas fa-chalkboard-user"></i> Dashboard</a>
+                                <a href="/StoreOwner/Products"><i class="fas fa-box"></i> Products</a>
+                                <a href="/StoreOrders"><i class="fas fa-truck"></i> Orders</a>
+                                <a href="/StoreAnalytics"><i class="fas fa-chart-simple"></i> Analytics</a>
+                                <a href="/StoreSettings"><i class="fas fa-gear"></i> Settings</a>
+                            </div>
+                        </div>
                     </nav>
                 }
                 else if (roles.Contains("Delivery"))
                 {
-                    <nav style="background:#0d6efd;padding:15px;color:white;display:flex;gap:20px;">
-                        <a href="/Delivery1" style="color:white;">Dashboard</a>
-                        <a href="/DeliveryOrders" style="color:white;">My Deliveries</a>
-                        <a href="/DeliveryEarnings" style="color:white;">Earnings</a>
-                        <a href="/DeliveryProfile" style="color:white;">Profile</a>
+                    <nav class="role-nav delivery-nav">
+                        <div class="container">
+                            <div class="nav-links">
+                                <a href="/Delivery1"><i class="fas fa-motorcycle"></i> Dashboard</a>
+                                <a href="/DeliveryOrders"><i class="fas fa-list"></i> My Deliveries</a>
+                                <a href="/DeliveryEarnings"><i class="fas fa-dollar-sign"></i> Earnings</a>
+                                <a href="/DeliveryProfile"><i class="fas fa-user"></i> Profile</a>
+                            </div>
+                        </div>
                     </nav>
                 }
                 else if (roles.Contains("Customer"))
                 {
-                    <nav style="background:#111;padding:15px;color:white;display:flex;gap:20px;">
-                        <a href="/Customer1" style="color:white;">Dashboard</a>
-                        <a href="/CustomerProducts" style="color:white;">Products</a>
-                        <a href="/CustomerWishlist" style="color:white;">Wishlist</a>
-                        <a href="/CustomerCart" style="color:white;">Cart</a>
-                        <a href="/CustomerOrders" style="color:white;">Orders</a>
-                        <a href="/CustomerProfile" style="color:white;">Profile</a>
+                    <nav class="role-nav customer-nav">
+                        <div class="container">
+                            <div class="nav-links">
+                                <a href="/Customer1"><i class="fas fa-home"></i> Dashboard</a>
+                                <a href="/CustomerProducts"><i class="fas fa-search"></i> Products</a>
+                                <a href="/CustomerWishlist"><i class="fas fa-heart"></i> Wishlist</a>
+                                <a href="/CustomerCart"><i class="fas fa-shopping-cart"></i> Cart</a>
+                                <a href="/CustomerOrders"><i class="fas fa-truck-fast"></i> Orders</a>
+                                <a href="/CustomerProfile"><i class="fas fa-user-circle"></i> Profile</a>
+                            </div>
+                        </div>
                     </nav>
                 }
             }
@@ -116,15 +114,83 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - Local_Multi_Store_Online_Marketplace -
-            <a asp-area="" asp-page="/Privacy">Privacy</a>
+            &copy; 2026 - Local_Multi_Store_Online_Marketplace - <a asp-area="" asp-page="/Privacy">Privacy</a>
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>
+
+<style>
+    .role-nav {
+    background: #1e293b;
+    padding: 8px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    }
+
+    .role-nav .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    }
+
+    .role-nav a {
+    color: #e2e8f0;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 40px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    }
+
+    .role-nav a:hover {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    transform: translateY(-1px);
+    }
+
+    .role-nav a.active {
+    background: #FF6B35;
+    color: white;
+    }
+
+    .admin-nav {
+    background: #0f172a;
+    }
+
+    .store-nav {
+    background: #2d3e2b;
+    }
+
+    .delivery-nav {
+    background: #1e3a5f;
+    }
+
+    .customer-nav {
+    background: #2d3748;
+    }
+
+    @@media (max-width: 768px) {
+    .role-nav .nav-links {
+    justify-content: center;
+    }
+
+    .role-nav a {
+    padding: 6px 12px;
+    font-size: 12px;
+    }
+    }
+</style>

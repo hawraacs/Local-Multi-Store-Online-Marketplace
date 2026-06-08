@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Multi_Store.Core.Entities;
 using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 {
@@ -26,6 +30,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         [BindProperty]
         public DeliveryPersonDTO Delivery { get; set; } = new();
 
+        [BindProperty]
+        public IFormFile? IDProofFile { get; set; }
+
         public void OnGet()
         {
         }
@@ -33,12 +40,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         public async Task<IActionResult> OnPostAsync()
         {
             _logger.LogInformation("Delivery request POST started.");
-
-            if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("ModelState is invalid.");
-                return Page();
-            }
 
             var user = await _userManager.GetUserAsync(User);
 
@@ -48,6 +49,54 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
+            if (IDProofFile == null || IDProofFile.Length == 0)
+            {
+                ModelState.AddModelError(string.Empty, "ID proof is required.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("ModelState is invalid.");
+                return Page();
+            }
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
+            var extension = Path.GetExtension(IDProofFile!.FileName).ToLower();
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                ModelState.AddModelError(string.Empty, "Only JPG, PNG, and PDF files are allowed.");
+                return Page();
+            }
+
+            var maxFileSize = 5 * 1024 * 1024;
+
+            if (IDProofFile.Length > maxFileSize)
+            {
+                ModelState.AddModelError(string.Empty, "ID proof file size must be less than 5 MB.");
+                return Page();
+            }
+
+            var uploadsFolder = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "uploads",
+                "delivery-id-proofs");
+
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var fileName = $"{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await IDProofFile.CopyToAsync(stream);
+            }
+
+            Delivery.IDProofURL = $"/uploads/delivery-id-proofs/{fileName}";
             Delivery.UserID = user.Id;
 
             try
