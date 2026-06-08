@@ -62,6 +62,10 @@ namespace Multi_Store.Services.Managers
         public async Task<IEnumerable<ReviewDTO>> GetReviewsByStoreAsync(int storeId)
         {
             var reviews = await _reviewRepository.GetByStoreAsync(storeId);
+
+            Console.WriteLine($"STORE ID = {storeId}");
+            Console.WriteLine($"REPOSITORY COUNT = {reviews.Count}");
+
             return _mapper.Map<IEnumerable<ReviewDTO>>(reviews);
         }
 
@@ -99,8 +103,12 @@ namespace Multi_Store.Services.Managers
             if (reviewDTO.CustomerID <= 0)
                 throw new Exception("Invalid customer.");
 
-            if (reviewDTO.OrderItemID <= 0)
+            if (reviewDTO.ProductID != null &&
+      (!reviewDTO.OrderItemID.HasValue ||
+       reviewDTO.OrderItemID <= 0))
+            {
                 throw new Exception("Invalid order item.");
+            }
 
             if (reviewDTO.StoreID <= 0)
                 throw new Exception("Invalid store.");
@@ -109,11 +117,15 @@ namespace Multi_Store.Services.Managers
                 throw new Exception("Rating must be between 1 and 5.");
 
             // Check if review already exists
-            var exists = await _reviewRepository
-                .ExistsForOrderItemAsync(reviewDTO.OrderItemID);
+            if (reviewDTO.OrderItemID.HasValue)
+            {
+                var exists = await _reviewRepository
+                    .ExistsForOrderItemAsync(reviewDTO.OrderItemID.Value);
 
-            if (exists)
-                throw new Exception("Review already exists for this order item.");
+                if (exists)
+                    throw new Exception(
+                        "Review already exists for this order item.");
+            }
 
             var review = _mapper.Map<Review>(reviewDTO);
 

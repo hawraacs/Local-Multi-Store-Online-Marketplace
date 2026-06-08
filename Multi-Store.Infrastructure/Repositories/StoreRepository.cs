@@ -76,5 +76,73 @@ namespace Multi_Store.Infrastructure.Repositories
             return await _context.Stores
                 .FirstOrDefaultAsync(s => s.OwnerUserID == ownerUserId);
         }
+        public async Task<List<Product>> GetFeedProductsAsync(int customerId)
+        {
+            return await _context.Products
+                .Include(p => p.Store)
+                .Include(p => p.Images)
+                .Where(p => _context.StoreFollows
+                    .Any(f => f.CustomerID == customerId && f.StoreID == p.StoreID))
+                .OrderByDescending(p => p.ProductID)
+                .ToListAsync();
+        }
+
+
+        public async Task<int> GetFollowersCountAsync(int storeId)
+        {
+            return await _context.StoreFollows
+                .CountAsync(f => f.StoreID == storeId);
+        }
+
+        public async Task<List<Product>> GetStoreProductsAsync(int storeId)
+        {
+            return await _context.Products
+                .Where(p => p.StoreID == storeId && p.IsActive)
+                .Include(p => p.Images)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+        }
+        public async Task FollowStoreAsync(int customerId, int storeId)
+        {
+            var exists = await _context.StoreFollows
+                .AnyAsync(x => x.CustomerID == customerId && x.StoreID == storeId);
+
+            if (exists) return;
+
+            _context.StoreFollows.Add(new StoreFollow
+            {
+                CustomerID = customerId,
+                StoreID = storeId,
+                FollowedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UnfollowStoreAsync(int customerId, int storeId)
+        {
+            var follow = await _context.StoreFollows
+                .FirstOrDefaultAsync(x => x.CustomerID == customerId && x.StoreID == storeId);
+
+            if (follow == null) return;
+
+            _context.StoreFollows.Remove(follow);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> IsFollowingAsync(int customerId, int storeId)
+        {
+            return await _context.StoreFollows
+                .AnyAsync(x => x.CustomerID == customerId && x.StoreID == storeId);
+        }
+        public async Task<List<Review>> GetStoreReviewsAsync(int storeId)
+        {
+            return await _context.Reviews
+    .Include(r => r.Customer)
+        .ThenInclude(c => c.User)
+    .Where(r => r.StoreID == storeId)
+    .OrderByDescending(r => r.CreatedAt)
+    .ToListAsync();
+        }
     }
 }

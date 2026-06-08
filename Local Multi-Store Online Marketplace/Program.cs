@@ -138,6 +138,7 @@ builder.Services.AddScoped<WishlistManager>();
 builder.Services.AddScoped<CustomerAddressManager>();
 builder.Services.AddScoped<OrderHistoryManager>();
 builder.Services.AddScoped<RecentlyViewedManager>();
+builder.Services.AddScoped<CustomerManager>();
 
 var app = builder.Build();
 
