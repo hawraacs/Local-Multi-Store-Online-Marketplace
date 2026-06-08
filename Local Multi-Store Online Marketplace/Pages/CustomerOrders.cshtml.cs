@@ -53,7 +53,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     OrderDate = o.OrderDate,
                     Status = o.Status,
                     PaymentMethod = o.PaymentMethod,
-                    TotalAmount = o.TotalAmount
+                    TotalAmount = o.TotalAmount,
+
+                    HasDeliveryAssignment = _context.DeliveryAssignments.Any(a =>
+                        a.OrderID == o.OrderID &&
+                        a.Status != "Cancelled" &&
+                        a.Status != "Failed")
                 })
                 .ToListAsync();
 
@@ -75,8 +80,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public decimal TotalAmount { get; set; }
 
+        public bool HasDeliveryAssignment { get; set; }
+
         public bool CanTrack =>
-            Status == "Out for Delivery" ||
-            Status == "OutForDelivery";
+            HasDeliveryAssignment &&
+            (
+                Status == "Out for Delivery" ||
+                Status == "OutForDelivery" ||
+                Status == "Delivered"
+            );
     }
 }
