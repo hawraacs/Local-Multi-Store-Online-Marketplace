@@ -43,6 +43,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             }
 
             ViewData["StoreName"] = store.StoreName;
+            ViewData["StoreId"] = store.StoreID;
 
             StoreVM = new StoreProfileInputModel
             {
@@ -134,6 +135,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 StoreVM.Status = store.Status;
                 StoreVM.BusinessLicenseURL = store.BusinessLicenseURL;
                 ViewData["StoreName"] = store.StoreName;
+                ViewData["StoreId"] = store.StoreID;
                 return Page();
             }
 
@@ -148,7 +150,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     StoreVM.LogoURL = store.LogoURL;
                     StoreVM.Status = store.Status;
                     ViewData["StoreName"] = store.StoreName;
+                    ViewData["StoreId"] = store.StoreID;
                     return Page();
+
                 }
 
                 store.LogoURL = await SaveStoreLogoAsync(store.StoreID, StoreVM.LogoFile);

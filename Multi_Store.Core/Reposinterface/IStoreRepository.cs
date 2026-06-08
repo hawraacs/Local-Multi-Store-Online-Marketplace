@@ -22,5 +22,13 @@ namespace Multi_Store.Core.Reposinterface
 
         Task<IReadOnlyList<Store>> SearchStoresAsync(string keyword);
         Task<Store?> GetByOwnerIdAsync(int ownerUserId);
+        Task<List<Product>> GetFeedProductsAsync(int customerId);
+        Task<int> GetFollowersCountAsync(int storeId);
+        Task<List<Product>> GetStoreProductsAsync(int storeId);
+
+        Task FollowStoreAsync(int customerId, int storeId);
+        Task UnfollowStoreAsync(int customerId, int storeId);
+        Task<bool> IsFollowingAsync(int customerId, int storeId);
+        Task<List<Review>> GetStoreReviewsAsync(int storeId);
     }
 }
