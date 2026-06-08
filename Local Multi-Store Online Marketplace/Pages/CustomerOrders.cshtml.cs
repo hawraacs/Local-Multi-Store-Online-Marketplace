@@ -48,6 +48,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .OrderByDescending(o => o.OrderDate)
                 .Select(o => new CustomerOrderViewModel
                 {
+                    OrderID = o.OrderID,
                     OrderNumber = o.OrderNumber,
                     OrderDate = o.OrderDate,
                     Status = o.Status,
@@ -62,6 +63,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
     public class CustomerOrderViewModel
     {
+        public int OrderID { get; set; }
+
         public string OrderNumber { get; set; } = string.Empty;
 
         public DateTime OrderDate { get; set; }
@@ -71,5 +74,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public string PaymentMethod { get; set; } = string.Empty;
 
         public decimal TotalAmount { get; set; }
+
+        public bool CanTrack =>
+            Status == "Out for Delivery" ||
+            Status == "OutForDelivery";
     }
 }

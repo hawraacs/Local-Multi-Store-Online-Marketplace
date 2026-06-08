@@ -22,7 +22,7 @@
         }
 
         .orders-box {
-            max-width: 900px;
+            max-width: 1000px;
             margin: auto;
             background: white;
             padding: 25px;
@@ -55,6 +55,37 @@
             color: #374151;
         }
 
+        .status-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .track-btn {
+            display: inline-block;
+            background: #111827;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 13px;
+        }
+
+            .track-btn:hover {
+                background: #ff6b35;
+            }
+
+        .disabled-track {
+            color: #9ca3af;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
         .empty-box {
             text-align: center;
             color: #6b7280;
@@ -85,6 +116,20 @@
             background: #fee2e2;
             color: #991b1b;
             border: 1px solid #fca5a5;
+        }
+
+        @@media (max-width: 750px) {
+            .orders-page {
+                padding: 20px;
+            }
+
+            .orders-box {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 850px;
+            }
         }
     </style>
 </head>
@@ -122,6 +167,7 @@
                             <th>Status</th>
                             <th>Payment</th>
                             <th>Total</th>
+                            <th>Tracking</th>
                         </tr>
                     </thead>
 
@@ -131,9 +177,27 @@
                             <tr>
                                 <td>@order.OrderNumber</td>
                                 <td>@order.OrderDate.ToString("dd MMM yyyy")</td>
-                                <td>@order.Status</td>
+                                <td>
+                                    <span class="status-badge">
+                                        @order.Status
+                                    </span>
+                                </td>
                                 <td>@order.PaymentMethod</td>
                                 <td>$@order.TotalAmount.ToString("N2")</td>
+                                <td>
+                                    @if (order.CanTrack)
+                                    {
+                                        <a class="track-btn" href="/TrackDelivery?orderId=@order.OrderID">
+                                            Track Delivery
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="disabled-track">
+                                            Available when out for delivery
+                                        </span>
+                                    }
+                                </td>
                             </tr>
                         }
                     </tbody>
