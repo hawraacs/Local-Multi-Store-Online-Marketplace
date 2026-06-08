@@ -181,6 +181,30 @@
             font-weight: 700;
         }
 
+        .summary-note {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            color: #9a3412;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .summary-free {
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: #166534;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
         .summary-total {
             display: flex;
             justify-content: space-between;
@@ -377,10 +401,36 @@
                         <span>$@Model.TotalAmount.ToString("N2")</span>
                     </div>
 
-                    <div class="summary-total">
-                        <span>Total</span>
-                        <span>$@Model.TotalAmount.ToString("N2")</span>
-                    </div>
+                    @if (Model.HasActiveAddress)
+                    {
+                        <div class="summary-row">
+                            <span>Delivery Fee</span>
+                            <span>$@Model.EstimatedDeliveryFee.ToString("N2")</span>
+                        </div>
+
+                        @if (Model.TotalAmount > 50)
+                        {
+                            <div class="summary-free">
+                                Free delivery applied because your subtotal is above $50.
+                            </div>
+                        }
+
+                        <div class="summary-total">
+                            <span>Total</span>
+                            <span>$@Model.GrandTotal.ToString("N2")</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="summary-note">
+                            Add a delivery address to calculate the delivery fee.
+                        </div>
+
+                        <div class="summary-total">
+                            <span>Total</span>
+                            <span>$@Model.TotalAmount.ToString("N2")</span>
+                        </div>
+                    }
 
                     <form method="post" asp-page-handler="Checkout">
                         <button type="submit"

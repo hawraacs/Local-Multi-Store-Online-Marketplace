@@ -7,43 +7,54 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8" />
     <title>My Addresses</title>
 
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             background: #f4f6f9;
             font-family: Arial, sans-serif;
+            color: #111827;
         }
 
         .address-page {
             min-height: 100vh;
-            padding: 40px;
+            padding: 40px 20px;
         }
 
         .address-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 26px;
         }
 
             .address-header h2 {
                 font-size: 34px;
-                margin-bottom: 8px;
+                margin: 0 0 8px;
                 color: #111827;
             }
 
             .address-header p {
                 color: #6b7280;
                 font-size: 15px;
+                margin: 0;
             }
 
         .message {
-            max-width: 750px;
+            max-width: 780px;
             margin: 0 auto 20px auto;
             padding: 14px 18px;
             border-radius: 12px;
             font-weight: 700;
             text-align: center;
+            font-size: 14px;
         }
 
         .success-message {
@@ -59,10 +70,10 @@
         }
 
         .address-container {
-            max-width: 950px;
+            max-width: 1120px;
             margin: auto;
             display: grid;
-            grid-template-columns: 360px 1fr;
+            grid-template-columns: 440px 1fr;
             gap: 25px;
             align-items: start;
         }
@@ -78,10 +89,79 @@
 
             .address-form h3,
             .address-list h3 {
-                margin-top: 0;
+                margin: 0 0 18px;
                 color: #111827;
                 font-size: 22px;
             }
+
+        .map-tools {
+            margin-bottom: 16px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 14px;
+            border-radius: 16px;
+        }
+
+        .detect-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: #111827;
+            color: white;
+            font-weight: 900;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+            .detect-btn:hover {
+                background: #ff6b35;
+            }
+
+        #customerMap {
+            width: 100%;
+            height: 285px;
+            border-radius: 14px;
+            border: 1px solid #d1d5db;
+            margin-bottom: 10px;
+            background: #e5e7eb;
+        }
+
+        .map-message {
+            display: block;
+            color: #374151;
+            background: white;
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .coordinate-box {
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 12px;
+            color: #3730a3;
+            margin-top: 10px;
+            display: none;
+            font-weight: 700;
+        }
+
+        .manual-hint {
+            background: #fff7ed;
+            color: #9a3412;
+            border: 1px solid #fed7aa;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
 
         .form-input {
             width: 100%;
@@ -92,6 +172,12 @@
             font-weight: 600;
         }
 
+            .form-input:focus {
+                outline: none;
+                border-color: #111827;
+                box-shadow: 0 0 0 3px rgba(17,24,39,0.10);
+            }
+
         .checkbox-row {
             display: flex;
             align-items: center;
@@ -99,6 +185,7 @@
             margin: 8px 0 15px;
             color: #374151;
             font-weight: 700;
+            font-size: 14px;
         }
 
         .add-btn {
@@ -112,6 +199,25 @@
             cursor: pointer;
         }
 
+            .add-btn:hover {
+                background: #ff6b35;
+            }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            background: #ff6b35;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 900;
+        }
+
+            .back-link:hover {
+                background: #111827;
+            }
+
         .address-card {
             border: 1px solid #e5e7eb;
             border-radius: 14px;
@@ -124,6 +230,7 @@
             font-weight: 900;
             color: #111827;
             margin-bottom: 6px;
+            line-height: 1.4;
         }
 
         .address-sub {
@@ -139,6 +246,7 @@
             font-size: 12px;
             font-weight: 900;
             margin-right: 5px;
+            margin-bottom: 5px;
         }
 
         .default-badge {
@@ -151,10 +259,26 @@
             color: #1e40af;
         }
 
+        .location-badge {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .address-coordinates {
+            color: #4b5563;
+            background: white;
+            border: 1px solid #e5e7eb;
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
         .actions {
             display: flex;
             gap: 10px;
             margin-top: 12px;
+            flex-wrap: wrap;
         }
 
         .default-btn {
@@ -177,24 +301,23 @@
             cursor: pointer;
         }
 
+            .default-btn:hover,
+            .delete-btn:hover {
+                opacity: 0.85;
+            }
+
         .empty-box {
             text-align: center;
             color: #6b7280;
             padding: 30px;
         }
 
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            background: #FF6B35;
-            color: white;
-            padding: 12px 18px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 900;
-        }
+            .empty-box h4 {
+                color: #111827;
+                margin-bottom: 8px;
+            }
 
-        @@media (max-width: 850px) {
+        @@media (max-width: 950px) {
             .address-container {
                 grid-template-columns: 1fr;
             }
@@ -202,7 +325,15 @@
 
         @@media (max-width: 550px) {
             .address-page {
-                padding: 20px;
+                padding: 22px 14px;
+            }
+
+            .address-header h2 {
+                font-size: 28px;
+            }
+
+            #customerMap {
+                height: 250px;
             }
         }
     </style>
@@ -213,7 +344,7 @@
 
         <div class="address-header">
             <h2>📍 My Addresses</h2>
-            <p>Add a delivery address before checkout.</p>
+            <p>Add a delivery address before checkout. Use the map or enter the address manually.</p>
         </div>
 
         @if (TempData["Success"] != null)
@@ -235,12 +366,35 @@
             <div class="address-form">
                 <h3>Add New Address</h3>
 
+                <div class="manual-hint">
+                    You can select your location on the map, use your current location, or type the address manually if location detection is unavailable.
+                </div>
+
+                <div class="map-tools">
+                    <button type="button" class="detect-btn" onclick="useCustomerCurrentLocation()">
+                        Detect My Location
+                    </button>
+
+                    <div id="customerMap"></div>
+
+                    <span id="customerMapMessage" class="map-message">
+                        Click on the map, drag the marker, use your current location, or enter the address manually.
+                    </span>
+
+                    <div id="coordinateBox" class="coordinate-box"></div>
+                </div>
+
                 <form method="post" asp-page-handler="Add">
-                    <input type="hidden" asp-for="ReturnUrl" />
+                    <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+
+                    <input asp-for="NewAddress.Latitude" type="hidden" id="CustomerLatitude" />
+                    <input asp-for="NewAddress.Longitude" type="hidden" id="CustomerLongitude" />
 
                     <input asp-for="NewAddress.AddressLine1"
                            class="form-input"
-                           placeholder="Address line 1" />
+                           id="CustomerAddressLine1"
+                           placeholder="Address line 1"
+                           required />
 
                     <input asp-for="NewAddress.AddressLine2"
                            class="form-input"
@@ -248,14 +402,19 @@
 
                     <input asp-for="NewAddress.City"
                            class="form-input"
-                           placeholder="City" />
+                           id="CustomerCity"
+                           placeholder="City"
+                           required />
 
                     <input asp-for="NewAddress.Area"
                            class="form-input"
-                           placeholder="Area" />
+                           id="CustomerArea"
+                           placeholder="Area"
+                           required />
 
                     <input asp-for="NewAddress.PostalCode"
                            class="form-input"
+                           id="CustomerPostalCode"
                            placeholder="Postal code optional" />
 
                     <label class="checkbox-row">
@@ -292,6 +451,13 @@
                                 @item.AddressLine1
                             </div>
 
+                            @if (!string.IsNullOrWhiteSpace(item.AddressLine2))
+                            {
+                                <div class="address-sub">
+                                    @item.AddressLine2
+                                </div>
+                            }
+
                             <div class="address-sub">
                                 @item.Area, @item.City
                                 @if (!string.IsNullOrWhiteSpace(item.PostalCode))
@@ -302,25 +468,30 @@
 
                             @if (item.IsDefault)
                             {
-                                <span class="badge default-badge">
-                                    Default
-                                </span>
+                                <span class="badge default-badge">Default</span>
                             }
 
                             @if (item.IsActive)
                             {
-                                <span class="badge active-badge">
-                                    Active
-                                </span>
+                                <span class="badge active-badge">Active</span>
+                            }
+
+                            @if (item.Latitude.HasValue && item.Longitude.HasValue)
+                            {
+                                <span class="badge location-badge">Location Saved</span>
+
+                                <div class="address-coordinates">
+                                    Lat: @item.Latitude.Value.ToString("F6"),
+                                    Lng: @item.Longitude.Value.ToString("F6")
+                                </div>
                             }
 
                             <div class="actions">
                                 @if (!item.IsDefault)
                                 {
                                     <form method="post" asp-page-handler="SetDefault">
-                                        <input type="hidden"
-                                               name="addressId"
-                                               value="@item.AddressID" />
+                                        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+                                        <input type="hidden" name="addressId" value="@item.AddressID" />
 
                                         <button type="submit" class="default-btn">
                                             Set Default
@@ -329,9 +500,7 @@
                                 }
 
                                 <form method="post" asp-page-handler="Delete">
-                                    <input type="hidden"
-                                           name="addressId"
-                                           value="@item.AddressID" />
+                                    <input type="hidden" name="addressId" value="@item.AddressID" />
 
                                     <button type="submit"
                                             class="delete-btn"
@@ -347,5 +516,148 @@
 
         </div>
     </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        let customerMap;
+        let customerMarker;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            initCustomerAddressMap();
+        });
+
+        function initCustomerAddressMap() {
+            const defaultLat = 33.8938;
+            const defaultLng = 35.5018;
+
+            customerMap = L.map("customerMap").setView([defaultLat, defaultLng], 12);
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19,
+                attribution: "&copy; OpenStreetMap contributors"
+            }).addTo(customerMap);
+
+            customerMarker = L.marker([defaultLat, defaultLng], {
+                draggable: true
+            }).addTo(customerMap);
+
+            customerMap.on("click", function (e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+
+                customerMarker.setLatLng([lat, lng]);
+                setCustomerCoordinates(lat, lng);
+                reverseCustomerGeocode(lat, lng);
+            });
+
+            customerMarker.on("dragend", function () {
+                const position = customerMarker.getLatLng();
+
+                setCustomerCoordinates(position.lat, position.lng);
+                reverseCustomerGeocode(position.lat, position.lng);
+            });
+        }
+
+        function useCustomerCurrentLocation() {
+            const message = document.getElementById("customerMapMessage");
+
+            if (!navigator.geolocation) {
+                message.innerText = "Location is not supported. Please enter the address manually.";
+                return;
+            }
+
+            message.innerText = "Detecting your location...";
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    customerMap.setView([lat, lng], 15);
+                    customerMarker.setLatLng([lat, lng]);
+
+                    setCustomerCoordinates(lat, lng);
+                    reverseCustomerGeocode(lat, lng);
+                },
+                function () {
+                    message.innerText = "Location permission denied or unavailable. Please enter the address manually or click on the map.";
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        function setCustomerCoordinates(lat, lng) {
+            document.getElementById("CustomerLatitude").value = lat;
+            document.getElementById("CustomerLongitude").value = lng;
+
+            const message = document.getElementById("customerMapMessage");
+            message.innerText = "Selected location: " + lat.toFixed(6) + ", " + lng.toFixed(6);
+
+            const coordinateBox = document.getElementById("coordinateBox");
+            coordinateBox.style.display = "block";
+            coordinateBox.innerText = "Coordinates captured: " + lat.toFixed(6) + ", " + lng.toFixed(6);
+        }
+
+        async function reverseCustomerGeocode(lat, lng) {
+            try {
+                const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data && data.display_name) {
+                    document.getElementById("CustomerAddressLine1").value = data.display_name;
+
+                    if (data.address) {
+                        fillAddressParts(data.address);
+                    }
+                } else {
+                    document.getElementById("customerMapMessage").innerText =
+                        "Could not convert location to address. Please enter address manually.";
+                }
+            } catch {
+                document.getElementById("customerMapMessage").innerText =
+                    "Map address service failed. Please enter address manually.";
+            }
+        }
+
+        function fillAddressParts(address) {
+            if (!address) {
+                return;
+            }
+
+            const city =
+                address.city ||
+                address.town ||
+                address.village ||
+                address.municipality ||
+                "";
+
+            const area =
+                address.state ||
+                address.county ||
+                address.region ||
+                "";
+
+            const postalCode = address.postcode || "";
+
+            if (city) {
+                document.getElementById("CustomerCity").value = city;
+            }
+
+            if (area) {
+                document.getElementById("CustomerArea").value = area;
+            }
+
+            if (postalCode) {
+                document.getElementById("CustomerPostalCode").value = postalCode;
+            }
+        }
+    </script>
 </body>
 </html>

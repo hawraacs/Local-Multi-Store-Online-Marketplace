@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
+using System.Text.Json;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
@@ -13,6 +14,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
+
+        private const decimal FreeDeliveryThreshold = 50m;
+        private const decimal BaseDeliveryFee = 2.00m;
+        private const decimal RatePerKm = 0.50m;
+        private const decimal DefaultDeliveryFeePerStore = 3.00m;
+
+        private static readonly HttpClient DistanceHttpClient = new()
+        {
+            Timeout = TimeSpan.FromSeconds(6)
+        };
 
         public CustomerCartModel(
             ApplicationDbContext context,
@@ -26,6 +37,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public decimal TotalAmount { get; set; }
 
+        public decimal EstimatedDeliveryFee { get; set; }
+
+        public decimal GrandTotal { get; set; }
+
+        public bool HasActiveAddress { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public bool CheckoutAfterAddress { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
             var customerId = await GetCurrentCustomerIdAsync();
@@ -34,6 +54,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 TempData["Error"] = "Please login as a customer first.";
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            if (CheckoutAfterAddress)
+            {
+                return await PlaceOrderFromCartAsync(customerId.Value);
             }
 
             await LoadCartAsync(customerId.Value);
@@ -159,9 +184,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
+            return await PlaceOrderFromCartAsync(customerId.Value);
+        }
+
+        private async Task<IActionResult> PlaceOrderFromCartAsync(int customerId)
+        {
             var customer = await _context.Customers
                 .Include(c => c.Addresses)
-                .FirstOrDefaultAsync(c => c.CustomerID == customerId.Value);
+                .FirstOrDefaultAsync(c => c.CustomerID == customerId);
 
             if (customer == null)
             {
@@ -172,7 +202,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                     .ThenInclude(ci => ci.Product)
-                .FirstOrDefaultAsync(c => c.CustomerID == customerId.Value);
+                .FirstOrDefaultAsync(c => c.CustomerID == customerId);
 
             if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
             {
@@ -190,7 +220,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 return RedirectToPage("/CustomerAddresses", new
                 {
-                    returnUrl = "/CustomerCart"
+                    returnUrl = "/CustomerCart?CheckoutAfterAddress=true"
                 });
             }
 
@@ -210,7 +240,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
 
             var subtotal = cart.CartItems.Sum(i => i.PriceAtAddTime * i.Quantity);
-            var deliveryFee = 0m;
+
+            var deliveryFee = await CalculateDeliveryFeeAsync(
+                cart.CartItems.ToList(),
+                address,
+                subtotal);
+
             var discountAmount = 0m;
             var taxAmount = 0m;
             var totalAmount = subtotal + deliveryFee + taxAmount - discountAmount;
@@ -218,7 +253,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var order = new Order
             {
                 OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString()[..4].ToUpper()}",
-                CustomerID = customerId.Value,
+                CustomerID = customerId,
                 AddressID = address.AddressID,
                 OrderDate = DateTime.UtcNow,
                 Status = "Pending",
@@ -259,7 +294,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 item.Product.UpdatedAt = DateTime.UtcNow;
 
-                // FR-18: Low Stock Notification
                 if (item.Product.Quantity <= item.Product.LowStockThreshold)
                 {
                     var store = await _context.Stores
@@ -288,9 +322,121 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Order placed successfully.";
+            TempData["Success"] = $"Order placed successfully. Delivery fee: ${deliveryFee:N2}";
 
             return RedirectToPage("/CustomerOrders");
+        }
+
+        private async Task<decimal> CalculateDeliveryFeeAsync(
+            List<CartItem> cartItems,
+            CustomerAddress customerAddress,
+            decimal subtotal)
+        {
+            if (subtotal > FreeDeliveryThreshold)
+            {
+                return 0m;
+            }
+
+            var storeIds = cartItems
+                .Where(i => i.Product != null)
+                .Select(i => i.Product.StoreID)
+                .Distinct()
+                .ToList();
+
+            if (!storeIds.Any())
+            {
+                return DefaultDeliveryFeePerStore;
+            }
+
+            var stores = await _context.Stores
+                .Where(s => storeIds.Contains(s.StoreID))
+                .ToListAsync();
+
+            var totalDeliveryFee = 0m;
+
+            foreach (var store in stores)
+            {
+                if (store.HasFixedDeliveryFee && store.FixedDeliveryFee.HasValue)
+                {
+                    totalDeliveryFee += store.FixedDeliveryFee.Value;
+                    continue;
+                }
+
+                if (store.Latitude == 0 ||
+                    store.Longitude == 0 ||
+                    !customerAddress.Latitude.HasValue ||
+                    !customerAddress.Longitude.HasValue)
+                {
+                    totalDeliveryFee += DefaultDeliveryFeePerStore;
+                    continue;
+                }
+
+                var distanceKm = await TryGetDrivingDistanceKmAsync(
+                    Convert.ToDouble(store.Latitude),
+                    Convert.ToDouble(store.Longitude),
+                    customerAddress.Latitude.Value,
+                    customerAddress.Longitude.Value);
+
+                if (distanceKm == null || distanceKm <= 0)
+                {
+                    totalDeliveryFee += DefaultDeliveryFeePerStore;
+                    continue;
+                }
+
+                var storeDeliveryFee =
+                    BaseDeliveryFee + (RatePerKm * (decimal)distanceKm.Value);
+
+                totalDeliveryFee += Math.Round(storeDeliveryFee, 2);
+            }
+
+            if (totalDeliveryFee < 0)
+            {
+                return DefaultDeliveryFeePerStore;
+            }
+
+            return Math.Round(totalDeliveryFee, 2);
+        }
+
+        private async Task<double?> TryGetDrivingDistanceKmAsync(
+            double storeLat,
+            double storeLng,
+            double customerLat,
+            double customerLng)
+        {
+            try
+            {
+                var url =
+                    $"https://router.project-osrm.org/route/v1/driving/{storeLng},{storeLat};{customerLng},{customerLat}?overview=false";
+
+                using var response = await DistanceHttpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return null;
+                }
+
+                await using var stream = await response.Content.ReadAsStreamAsync();
+
+                using var json = await JsonDocument.ParseAsync(stream);
+
+                if (!json.RootElement.TryGetProperty("routes", out var routes))
+                {
+                    return null;
+                }
+
+                if (routes.GetArrayLength() == 0)
+                {
+                    return null;
+                }
+
+                var distanceMeters = routes[0].GetProperty("distance").GetDouble();
+
+                return distanceMeters / 1000.0;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private async Task LoadCartAsync(int customerId)
@@ -308,6 +454,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 CartItems = new List<CustomerCartItemViewModel>();
                 TotalAmount = 0;
+                EstimatedDeliveryFee = 0;
+                GrandTotal = 0;
+                HasActiveAddress = false;
                 return;
             }
 
@@ -336,6 +485,30 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .ToList();
 
             TotalAmount = CartItems.Sum(x => x.TotalPrice);
+
+            var customer = await _context.Customers
+                .Include(c => c.Addresses)
+                .FirstOrDefaultAsync(c => c.CustomerID == customerId);
+
+            var address = customer?.Addresses
+                .FirstOrDefault(a => a.IsDefault && a.IsActive)
+                ?? customer?.Addresses.FirstOrDefault(a => a.IsActive);
+
+            HasActiveAddress = address != null;
+
+            if (address != null)
+            {
+                EstimatedDeliveryFee = await CalculateDeliveryFeeAsync(
+                    cart.CartItems.ToList(),
+                    address,
+                    TotalAmount);
+            }
+            else
+            {
+                EstimatedDeliveryFee = 0m;
+            }
+
+            GrandTotal = TotalAmount + EstimatedDeliveryFee;
         }
 
         private async Task<int?> GetCurrentCustomerIdAsync()
