@@ -1,4 +1,4 @@
-﻿// Entities/Store.cs
+﻿
 using System;
 using System.Collections.Generic;
 
@@ -76,5 +76,7 @@ namespace Multi_Store.Core.Entities
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
         public virtual ICollection<Complaint> Complaints { get; set; } = new List<Complaint>();
+        public virtual ICollection<StoreFollow> Followers { get; set; }
+     = new List<StoreFollow>();
     }
 }

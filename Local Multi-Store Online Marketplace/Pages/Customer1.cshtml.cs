@@ -26,6 +26,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _wishlistManager = wishlistManager;
         }
 
+
+        
+        public List<int> FollowingStoreIds { get; set; } = new();
+
         public List<Product> Products { get; set; } = new();
 
         public async Task OnGetAsync()
@@ -151,6 +155,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         private async Task LoadProductsAsync()
         {
+            var customerId = await GetCurrentCustomerIdAsync();
+
+            if (customerId == null)
+            {
+                Products = new();
+                FollowingStoreIds = new();
+                return;
+            }
+
+            
+            FollowingStoreIds = await _context.StoreFollows
+                .Where(f => f.CustomerID == customerId.Value)
+                .Select(f => f.StoreID)
+                .ToListAsync();
+
+           
             Products = await _context.Products
                 .Include(p => p.Images)
                 .Include(p => p.Store)
@@ -171,5 +191,59 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             return customer?.CustomerID;
         }
+
+        public async Task<IActionResult> OnPostFollowStoreAsync(int storeId)
+        {
+            var customerId = await GetCurrentCustomerIdAsync();
+
+            if (customerId == null)
+                return RedirectToPage();
+
+            bool exists = await _context.StoreFollows
+                .AnyAsync(x =>
+                    x.CustomerID == customerId.Value &&
+                    x.StoreID == storeId);
+
+            if (!exists)
+            {
+                _context.StoreFollows.Add(new StoreFollow
+                {
+                    CustomerID = customerId.Value,
+                    StoreID = storeId,
+                    FollowedAt = DateTime.UtcNow
+                });
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Store followed successfully.";
+            }
+
+            return RedirectToPage();
+        }
+        public async Task<IActionResult> OnPostUnfollowStoreAsync(int storeId)
+        {
+            var customerId = await GetCurrentCustomerIdAsync();
+
+            if (customerId == null)
+                return RedirectToPage();
+
+            var follow = await _context.StoreFollows
+                .FirstOrDefaultAsync(f =>
+                    f.CustomerID == customerId.Value &&
+                    f.StoreID == storeId);
+
+            if (follow != null)
+            {
+                _context.StoreFollows.Remove(follow);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Unfollowed store";
+            }
+
+            return RedirectToPage();
+        }
+
+
+
     }
 }
