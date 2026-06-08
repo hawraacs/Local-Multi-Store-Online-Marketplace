@@ -14,15 +14,15 @@ using Multi_Store.Services.Email;
 var builder = WebApplication.CreateBuilder(args);
 
 // ===============================
-// Razor Pages
+// Razor Pages + Controllers
 // ===============================
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
 
 // ===============================
 // HttpContextAccessor
 // ===============================
 builder.Services.AddHttpContextAccessor();
-
 
 // ===============================
 // Database
@@ -30,10 +30,15 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// ===============================
+// Email Settings
+// ===============================
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 
 builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+
 // ===============================
 // Identity
 // ===============================
@@ -208,7 +213,12 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+// ===============================
+// Endpoints
+// ===============================
 app.MapRazorPages();
+
+app.MapControllers();
 
 app.MapDefaultControllerRoute();
 
