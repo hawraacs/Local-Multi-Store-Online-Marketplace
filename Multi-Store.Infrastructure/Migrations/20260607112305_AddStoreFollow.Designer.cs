@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Multi_Store.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Multi_Store.Infrastructure.Data;
 namespace Multi_Store.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260607112305_AddStoreFollow")]
+    partial class AddStoreFollow
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1163,7 +1166,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<bool>("IsVerifiedPurchase")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("OrderItemID")
+                    b.Property<int>("OrderItemID")
                         .HasColumnType("int");
 
                     b.Property<int?>("ProductID")
@@ -1187,8 +1190,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("CustomerID");
 
                     b.HasIndex("OrderItemID")
-                        .IsUnique()
-                        .HasFilter("[OrderItemID] IS NOT NULL");
+                        .IsUnique();
 
                     b.HasIndex("ProductID");
 
@@ -1925,7 +1927,8 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasOne("Multi_Store.Core.Entities.OrderItem", "OrderItem")
                         .WithOne("Review")
                         .HasForeignKey("Multi_Store.Core.Entities.Review", "OrderItemID")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Multi_Store.Core.Entities.Product", "Product")
                         .WithMany()

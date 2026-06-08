@@ -16,6 +16,12 @@ namespace Multi_Store.Services.Managers
             _storeRepository = storeRepository;
             _mapper = mapper;
         }
+        public async Task<Store?> GetByUserIdAsync(int userId)
+        {
+            var stores = await _storeRepository.GetAllAsync();
+
+            return stores.FirstOrDefault(s => s.OwnerUserID == userId);
+        }
 
         // =====================
         // REGISTER STORE
@@ -165,5 +171,28 @@ namespace Multi_Store.Services.Managers
 
             await _storeRepository.UpdateAsync(store);
         }
+        public async Task<List<Product>> GetFeedProductsAsync(int customerId)
+        {
+            return await _storeRepository.GetFeedProductsAsync(customerId);
+        }
+        public Task<Store?> GetStoreByIdAsync(int id)
+       => _storeRepository.GetByIdAsync(id);
+
+        public Task<int> GetFollowersCountAsync(int id)
+        => _storeRepository.GetFollowersCountAsync(id);
+
+        public Task<List<Product>> GetStoreProductsAsync(int id)
+            => _storeRepository.GetStoreProductsAsync(id);
+
+        public Task FollowStoreAsync(int customerId, int storeId)
+    => _storeRepository.FollowStoreAsync(customerId, storeId);
+
+        public Task UnfollowStoreAsync(int customerId, int storeId)
+            => _storeRepository.UnfollowStoreAsync(customerId, storeId);
+
+        public Task<bool> IsFollowingAsync(int customerId, int storeId)
+            => _storeRepository.IsFollowingAsync(customerId, storeId);
+        public Task<List<Review>> GetStoreReviewsAsync(int storeId)
+         => _storeRepository.GetStoreReviewsAsync(storeId);
     }
 }

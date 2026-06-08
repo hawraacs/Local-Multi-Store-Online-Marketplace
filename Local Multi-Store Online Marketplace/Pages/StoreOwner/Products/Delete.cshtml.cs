@@ -59,6 +59,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 
                 StoreName = store.StoreName;
             ViewData["StoreName"] = store.StoreName;
+            ViewData["StoreId"] = store.StoreID;
 
             // Load product with images and check for orders
             Product = await _context.Products
