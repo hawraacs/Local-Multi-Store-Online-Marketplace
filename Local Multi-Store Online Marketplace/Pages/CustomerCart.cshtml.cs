@@ -26,6 +26,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public decimal TotalAmount { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public bool CheckoutAfterAddress { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
             var customerId = await GetCurrentCustomerIdAsync();
@@ -34,6 +37,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 TempData["Error"] = "Please login as a customer first.";
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            if (CheckoutAfterAddress)
+            {
+                return await PlaceOrderFromCartAsync(customerId.Value);
             }
 
             await LoadCartAsync(customerId.Value);
@@ -159,9 +167,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
+            return await PlaceOrderFromCartAsync(customerId.Value);
+        }
+
+        private async Task<IActionResult> PlaceOrderFromCartAsync(int customerId)
+        {
             var customer = await _context.Customers
                 .Include(c => c.Addresses)
-                .FirstOrDefaultAsync(c => c.CustomerID == customerId.Value);
+                .FirstOrDefaultAsync(c => c.CustomerID == customerId);
 
             if (customer == null)
             {
@@ -172,7 +185,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                     .ThenInclude(ci => ci.Product)
-                .FirstOrDefaultAsync(c => c.CustomerID == customerId.Value);
+                .FirstOrDefaultAsync(c => c.CustomerID == customerId);
 
             if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
             {
@@ -190,7 +203,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 return RedirectToPage("/CustomerAddresses", new
                 {
-                    returnUrl = "/CustomerCart"
+                    returnUrl = "/CustomerCart?CheckoutAfterAddress=true"
                 });
             }
 
@@ -218,7 +231,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var order = new Order
             {
                 OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString()[..4].ToUpper()}",
-                CustomerID = customerId.Value,
+                CustomerID = customerId,
                 AddressID = address.AddressID,
                 OrderDate = DateTime.UtcNow,
                 Status = "Pending",
@@ -259,7 +272,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 item.Product.UpdatedAt = DateTime.UtcNow;
 
-                // FR-18: Low Stock Notification
                 if (item.Product.Quantity <= item.Product.LowStockThreshold)
                 {
                     var store = await _context.Stores
