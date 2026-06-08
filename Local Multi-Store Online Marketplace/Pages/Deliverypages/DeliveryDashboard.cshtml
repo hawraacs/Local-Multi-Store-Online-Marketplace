@@ -1,4 +1,333 @@
-﻿@page
+﻿@page "/DeliveryDashboard"
 @model Local_Multi_Store_Online_Marketplace.Pages.Deliverypages.DeliveryDashboardModel
 @{
+    Layout = null;
 }
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Delivery Dashboard</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f4f6f9;
+            font-family: Arial, sans-serif;
+            color: #111827;
+        }
+
+        .page {
+            padding: 35px;
+            min-height: 100vh;
+        }
+
+        .box {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            color: #111827;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 22px;
+        }
+
+        .location-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 18px;
+        }
+
+        .location-status {
+            font-weight: 800;
+            color: #374151;
+            line-height: 1.5;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .assignment {
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 14px;
+        }
+
+            .assignment strong {
+                color: #111827;
+            }
+
+            .assignment p {
+                margin: 7px 0;
+                color: #374151;
+            }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .start-btn {
+            background: #111827;
+            color: white;
+        }
+
+            .start-btn:hover {
+                background: #ff6b35;
+            }
+
+        .done-btn {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+            .done-btn:hover {
+                opacity: 0.85;
+            }
+
+        .empty {
+            text-align: center;
+            color: #6b7280;
+            padding: 35px;
+        }
+
+        .gps-good {
+            color: #166534;
+        }
+
+        .gps-bad {
+            color: #991b1b;
+        }
+
+        @@media (max-width: 650px) {
+            .page {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <div class="box">
+            <h2>Delivery Dashboard</h2>
+
+            <p class="subtitle">
+                Keep this page open while delivering. Your location updates every second for demo tracking.
+            </p>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="message success">@TempData["Success"]</div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="message error">@TempData["Error"]</div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <div class="message error">@Model.ErrorMessage</div>
+            }
+
+            <div class="location-box">
+                <div class="location-status" id="locationStatus">
+                    Location tracking will update automatically every second.
+                </div>
+            </div>
+
+            @if (Model.Assignments == null || !Model.Assignments.Any())
+            {
+                <div class="empty">
+                    <h3>No active assignments</h3>
+                    <p>Your assigned deliveries will appear here.</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var item in Model.Assignments)
+                {
+                    <div class="assignment">
+                        <p><strong>Order:</strong> @item.OrderNumber</p>
+                        <p><strong>Order Status:</strong> <span class="badge">@item.OrderStatus</span></p>
+                        <p><strong>Assignment Status:</strong> <span class="badge">@item.AssignmentStatus</span></p>
+                        <p><strong>Address:</strong> @item.CustomerAddress</p>
+                        <p><strong>Assigned:</strong> @item.AssignedAt.ToString("dd MMM yyyy HH:mm")</p>
+
+                        <div class="actions">
+                            @if (item.AssignmentStatus != "OutForDelivery")
+                            {
+                                <form method="post" asp-page-handler="StartDelivery">
+                                    <input type="hidden" name="assignmentId" value="@item.AssignmentID" />
+                                    <button type="submit" class="start-btn">
+                                        Start Delivery
+                                    </button>
+                                </form>
+                            }
+
+                            <form method="post" asp-page-handler="MarkDelivered">
+                                <input type="hidden" name="assignmentId" value="@item.AssignmentID" />
+                                <button type="submit"
+                                        class="done-btn"
+                                        onclick="return confirm('Mark this order as delivered?')">
+                                    Mark Delivered
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            updateMyLocation();
+            setInterval(updateMyLocation, 1000);
+        });
+
+        function updateMyLocation() {
+            const status = document.getElementById("locationStatus");
+
+            if (!navigator.geolocation) {
+                status.className = "location-status gps-bad";
+                status.innerText = "GPS is not supported on this device.";
+                return;
+            }
+
+            status.className = "location-status";
+            status.innerText = "Getting GPS location...";
+
+            navigator.geolocation.getCurrentPosition(
+                async function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+
+                    try {
+                        const response = await fetch("/api/delivery-tracking/update-location", {
+                            method: "POST",
+                            credentials: "same-origin",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                latitude: lat,
+                                longitude: lng
+                            })
+                        });
+
+                        let data = null;
+
+                        try {
+                            data = await response.json();
+                        } catch {
+                            data = null;
+                        }
+
+                        if (!response.ok) {
+                            status.className = "location-status gps-bad";
+                            status.innerText =
+                                data?.message || "Could not update location. Please login as approved delivery staff.";
+                            return;
+                        }
+
+                        if (data && data.success) {
+                            status.className = "location-status gps-good";
+                            status.innerText =
+                                "Location updated: " +
+                                lat.toFixed(6) +
+                                ", " +
+                                lng.toFixed(6) +
+                                " | Accuracy: " +
+                                Math.round(accuracy) +
+                                "m | Time: " +
+                                (data.updatedAt || "now");
+                        } else {
+                            status.className = "location-status gps-bad";
+                            status.innerText =
+                                data?.message || "Could not update location.";
+                        }
+                    } catch {
+                        status.className = "location-status gps-bad";
+                        status.innerText = "Could not update location. Check your connection.";
+                    }
+                },
+                function (error) {
+                    status.className = "location-status gps-bad";
+
+                    if (error.code === error.PERMISSION_DENIED) {
+                        status.innerText = "GPS permission denied. Click the lock icon near the URL and allow Location.";
+                    } else if (error.code === error.POSITION_UNAVAILABLE) {
+                        status.innerText = "GPS position unavailable. Enable device location and try again.";
+                    } else if (error.code === error.TIMEOUT) {
+                        status.innerText = "GPS timeout. Trying again in 1 second.";
+                    } else {
+                        status.innerText = "GPS is off. Location update temporarily unavailable.";
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 500
+                }
+            );
+        }
+    </script>
+</body>
+</html>

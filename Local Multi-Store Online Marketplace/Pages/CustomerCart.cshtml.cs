@@ -95,7 +95,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage();
             }
 
-            if (cartItem.Product.Quantity < quantity)
+            if (cartItem.Product == null || cartItem.Product.Quantity < quantity)
             {
                 TempData["Error"] = "Not enough stock available.";
                 return RedirectToPage();
@@ -272,6 +272,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             foreach (var item in cart.CartItems.ToList())
             {
+                if (item.Product == null)
+                {
+                    TempData["Error"] = "One of the products is no longer available.";
+                    return RedirectToPage();
+                }
+
                 var orderItem = new OrderItem
                 {
                     OrderID = order.OrderID,
@@ -316,15 +322,193 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 }
             }
 
+            var deliveryAssigned = await TryAutoAssignDeliveryAndNotifyAsync(order, address);
+
             _context.CartItems.RemoveRange(cart.CartItems);
 
             cart.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"Order placed successfully. Delivery fee: ${deliveryFee:N2}";
+            if (deliveryAssigned)
+            {
+                TempData["Success"] =
+                    $"Order placed successfully. Delivery fee: ${deliveryFee:N2}. Online delivery staff has been assigned.";
+            }
+            else
+            {
+                TempData["Success"] =
+                    $"Order placed successfully. Delivery fee: ${deliveryFee:N2}. Delivery assignment is pending because no online delivery staff is available.";
+            }
 
             return RedirectToPage("/CustomerOrders");
+        }
+
+        private async Task<bool> TryAutoAssignDeliveryAndNotifyAsync(
+    Order order,
+    CustomerAddress customerAddress)
+        {
+            var alreadyAssigned = await _context.DeliveryAssignments
+                .AnyAsync(a =>
+                    a.OrderID == order.OrderID &&
+                    a.Status != "Delivered" &&
+                    a.Status != "Cancelled" &&
+                    a.Status != "Failed");
+
+            if (alreadyAssigned)
+            {
+                return true;
+            }
+
+            var customerArea = customerAddress.Area?.Trim().ToLower();
+
+            if (string.IsNullOrWhiteSpace(customerArea))
+            {
+                order.Status = "Pending";
+
+                await NotifyAdminsAsync(
+                    "Delivery Assignment Needed",
+                    $"Order {order.OrderNumber} was placed, but the customer area is missing.",
+                    "DeliveryAssignmentPending",
+                    order.OrderID);
+
+                return false;
+            }
+
+            var onlineLimit = DateTime.UtcNow.AddMinutes(-5);
+
+            var onlineSameAreaDeliveryPeople = await _context.DeliveryPersons
+                .Where(d =>
+                    d.IsActive &&
+                    d.Status == "Approved" &&
+                    d.LastLocationUpdate.HasValue &&
+                    d.LastLocationUpdate.Value >= onlineLimit &&
+                    d.CurrentLatitude.HasValue &&
+                    d.CurrentLongitude.HasValue &&
+                    !string.IsNullOrWhiteSpace(d.Area) &&
+                    d.Area.Trim().ToLower() == customerArea)
+                .ToListAsync();
+
+            if (!onlineSameAreaDeliveryPeople.Any())
+            {
+                order.Status = "Pending";
+
+                await NotifyAdminsAsync(
+                    "Delivery Assignment Needed",
+                    $"Order {order.OrderNumber} was placed for area {customerAddress.Area}, but no online delivery staff is available in that area.",
+                    "DeliveryAssignmentPending",
+                    order.OrderID);
+
+                return false;
+            }
+
+            DeliveryPerson selectedDeliveryPerson;
+
+            if (customerAddress.Latitude.HasValue &&
+                customerAddress.Longitude.HasValue)
+            {
+                selectedDeliveryPerson = onlineSameAreaDeliveryPeople
+                    .OrderBy(d => CalculateDistanceKm(
+                        Convert.ToDouble(d.CurrentLatitude!.Value),
+                        Convert.ToDouble(d.CurrentLongitude!.Value),
+                        customerAddress.Latitude.Value,
+                        customerAddress.Longitude.Value))
+                    .ThenByDescending(d => d.Rating)
+                    .ThenBy(d => d.DeliveryPersonID)
+                    .First();
+            }
+            else
+            {
+                selectedDeliveryPerson = onlineSameAreaDeliveryPeople
+                    .OrderByDescending(d => d.Rating)
+                    .ThenBy(d => d.DeliveryPersonID)
+                    .First();
+            }
+
+            var assignment = new DeliveryAssignment
+            {
+                OrderID = order.OrderID,
+                DeliveryPersonID = selectedDeliveryPerson.DeliveryPersonID,
+                AssignedAt = DateTime.UtcNow,
+                Status = "Assigned",
+                DeliveryProofImageURL = null
+            };
+
+            _context.DeliveryAssignments.Add(assignment);
+
+            order.Status = "Out for Delivery";
+
+            _context.Notifications.Add(new Notification
+            {
+                UserID = selectedDeliveryPerson.UserID,
+                Title = "New Delivery Assigned",
+                Message = $"You have been assigned to deliver order {order.OrderNumber}. Customer area: {customerAddress.Area}.",
+                Type = "DeliveryAssignment",
+                ReferenceID = order.OrderID,
+                IsRead = false,
+                SentAt = DateTime.UtcNow,
+                SentVia = "System"
+            });
+
+            await NotifyAdminsAsync(
+                "Delivery Assigned Automatically",
+                $"Order {order.OrderNumber} was assigned to {selectedDeliveryPerson.FullName} for area {customerAddress.Area}.",
+                "DeliveryAssigned",
+                order.OrderID);
+
+            return true;
+        }
+
+        private static double CalculateDistanceKm(
+            double lat1,
+            double lon1,
+            double lat2,
+            double lon2)
+        {
+            const double earthRadiusKm = 6371;
+
+            var dLat = DegreesToRadians(lat2 - lat1);
+            var dLon = DegreesToRadians(lon2 - lon1);
+
+            var a =
+                Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(DegreesToRadians(lat1)) *
+                Math.Cos(DegreesToRadians(lat2)) *
+                Math.Sin(dLon / 2) *
+                Math.Sin(dLon / 2);
+
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+            return earthRadiusKm * c;
+        }
+
+        private static double DegreesToRadians(double degrees)
+        {
+            return degrees * Math.PI / 180;
+        }
+
+        private async Task NotifyAdminsAsync(
+            string title,
+            string message,
+            string type,
+            int referenceId)
+        {
+            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+
+            foreach (var admin in admins)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    UserID = admin.Id,
+                    Title = title,
+                    Message = message,
+                    Type = type,
+                    ReferenceID = referenceId,
+                    IsRead = false,
+                    SentAt = DateTime.UtcNow,
+                    SentVia = "System"
+                });
+            }
         }
 
         private async Task<decimal> CalculateDeliveryFeeAsync(
@@ -516,7 +700,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var user = await _userManager.GetUserAsync(User);
 
             if (user == null)
+            {
                 return null;
+            }
 
             var customer = await _context.Customers
                 .FirstOrDefaultAsync(c => c.UserID == user.Id);
