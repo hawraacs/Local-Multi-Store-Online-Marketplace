@@ -120,6 +120,7 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 
             return await RedirectByRoleAsync(user);
         }
+
         public IActionResult OnPostExternalLoginAsync(
             string provider,
             string returnUrl = null)
@@ -149,38 +150,6 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         {
             var roles = await _userManager.GetRolesAsync(user);
 
-            if (roles.Contains("StoreOwner"))
-            {
-                var approved = await _storeManager.IsStoreApprovedAsync(user.Id);
-
-                if (!approved)
-                {
-                    await _signInManager.SignOutAsync();
-
-                    ModelState.AddModelError(
-                        string.Empty,
-                        "Your store is waiting for admin approval.");
-
-                    return Page();
-                }
-            }
-
-            if (roles.Contains("Delivery"))
-            {
-                var approved = await _deliveryManager.IsDeliveryApprovedAsync(user.Id);
-
-                if (!approved)
-                {
-                    await _signInManager.SignOutAsync();
-
-                    ModelState.AddModelError(
-                        string.Empty,
-                        "Your delivery account is waiting for admin approval.");
-
-                    return Page();
-                }
-            }
-
             if (roles.Contains("Admin"))
             {
                 return RedirectToPage("/Admin1");
@@ -198,7 +167,7 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 
             if (roles.Contains("Delivery"))
             {
-                return RedirectToPage("/Delivery1");
+                return RedirectToPage("/Deliverypages/DeliveryDashboard");
             }
 
             return RedirectToPage("/Index");
