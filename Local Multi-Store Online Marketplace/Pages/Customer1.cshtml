@@ -15,7 +15,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
-        /* 🔥 YOUR FULL CSS KEPT EXACTLY SAME (NO CHANGES) */
         * {
             margin: 0;
             padding: 0;
@@ -23,14 +22,12 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(145deg, #f6f9fc 0%, #edf2f7 100%);
-            margin: 0;
-            min-height: 100vh;
         }
 
         .topbar {
-            background: rgba(10, 15, 25, 0.92);
+            background: rgba(10,15,25,0.92);
             backdrop-filter: blur(12px);
             color: white;
             padding: 16px 40px;
@@ -39,105 +36,78 @@
             align-items: center;
             position: sticky;
             top: 0;
-            z-index: 100;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-            .topbar > div:first-child {
-                font-size: 26px;
-                font-weight: 700;
-                letter-spacing: -0.5px;
-                background: linear-gradient(135deg, #FFFFFF 0%, #B0C4DE 100%);
-                -webkit-background-clip: text;
-                background-clip: text;
-                color: transparent;
-            }
-
-        .menu {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+        .menu a {
+            color: #eef2ff;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 40px;
         }
 
-            .menu a {
-                color: #eef2ff;
-                margin: 0 6px;
-                text-decoration: none;
-                font-weight: 500;
-                padding: 8px 16px;
-                border-radius: 40px;
-                transition: all 0.2s ease;
-                font-size: 15px;
+            .menu a:hover {
+                background: rgba(255,255,255,0.15);
             }
-
-                .menu a:hover {
-                    background: rgba(255, 255, 255, 0.15);
-                    color: white;
-                }
 
         .feed {
             max-width: 720px;
-            width: 90%;
             margin: 40px auto;
-            padding: 0 16px;
         }
 
         .post {
-            background: rgba(255, 255, 255, 0.98);
+            background: white;
             border-radius: 28px;
             margin-bottom: 32px;
             overflow: hidden;
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.08);
         }
 
             .post img {
                 width: 100%;
-                height: 340px;
+                height: 220px;
                 object-fit: cover;
             }
 
         .post-body {
-            padding: 22px 24px 26px;
+            padding: 22px;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
 
         .store {
             font-weight: 600;
-            font-size: 15px;
             color: #FF6B35;
-            margin-bottom: 8px;
         }
 
         .product-name {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
+            margin-top: 10px;
         }
 
         .product-price {
-            color: #e67e22;
+            font-size: 24px;
             font-weight: 800;
-            font-size: 26px;
-        }
-
-        .product-description {
-            color: #2c3e44;
-            margin: 16px 0;
+            color: #e67e22;
         }
 
         .actions {
             display: flex;
-            gap: 16px;
-            margin-top: 6px;
+            gap: 12px;
+            margin-top: 10px;
         }
 
         .btn-like,
         .btn-cart {
-            padding: 10px 22px;
-            border-radius: 60px;
-            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 50px;
+            border: 1px solid #ddd;
             cursor: pointer;
-            border: 1px solid #e2e8f0;
             background: white;
         }
 
@@ -159,12 +129,12 @@
         <div>realnest</div>
 
         <div class="menu">
-            <a href="/Customer1"><i class="fas fa-home"></i> Explore</a>
-            <a href="/CustomerFeed"><i class="fas fa-rss"></i> Feed</a>
-            <a href="/CustomerProducts"><i class="fas fa-store"></i> Shop</a>
-            <a href="/CustomerCart"><i class="fas fa-shopping-cart"></i> Cart</a>
-            <a href="/CustomerOrders"><i class="fas fa-truck"></i> Orders</a>
-            <a href="/CustomerProfile"><i class="fas fa-user-circle"></i> Profile</a>
+            <a href="/Customer1">Explore</a>
+            <a href="/CustomerFeed">Feed</a>
+            <a href="/CustomerProducts">Shop</a>
+            <a href="/CustomerCart">Cart</a>
+            <a href="/CustomerOrders">Orders</a>
+            <a href="/CustomerProfile">Profile</a>
         </div>
     </div>
 
@@ -172,23 +142,21 @@
 
         @if (TempData["Success"] != null)
         {
-            <div class="message success-message">@TempData["Success"]</div>
+            <div>@TempData["Success"]</div>
         }
 
         @if (TempData["Error"] != null)
         {
-            <div class="message error-message">@TempData["Error"]</div>
+            <div>@TempData["Error"]</div>
         }
 
         @if (Model.Products.Any())
         {
             foreach (var product in Model.Products)
             {
-                // 🔥 STEP 4 ADDED HERE (IMPORTANT)
                 var isFollowing = Model.FollowingStoreIds.Contains(product.StoreID);
 
                 string imageUrl = "/images/no-image.png";
-
                 if (product.Images != null && product.Images.Any())
                 {
                     var primary = product.Images.FirstOrDefault(i => i.IsPrimary);
@@ -197,70 +165,67 @@
 
                 <div class="post">
 
-                    <img src="@imageUrl" />
-
                     <div class="post-body">
 
-                        <div class="store">
-                            🏪 @(product.Store?.StoreName ?? "Unknown Store")
+                        <!-- HEADER -->
+                        <div class="post-header">
+
+                            <div class="store">
+                                🏪 @(product.Store?.StoreName ?? "Unknown Store")
+                            </div>
+
+                            @if (isFollowing)
+                            {
+                                <form method="post" asp-page-handler="UnfollowStore" asp-route-storeId="@product.StoreID">
+                                    <button type="submit" class="btn-like" style="background:#fee2e2;color:#991b1b;">
+                                        Unfollow
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form method="post" asp-page-handler="FollowStore" asp-route-storeId="@product.StoreID">
+                                    <button type="submit" class="btn-like" style="background:#dcfce7;color:#166534;">
+                                        Follow
+                                    </button>
+                                </form>
+                            }
+
                         </div>
 
+                        <!-- IMAGE -->
+                        <img src="@imageUrl" />
+
+                        <!-- PRODUCT -->
                         <div class="product-name">@product.ProductName</div>
 
-                        <div class="product-price">$@product.Price.ToString("N2")</div>
+                        <div class="product-price">
+                            $@product.Price.ToString("N2")
+                        </div>
 
                         <div class="product-description">
                             @product.Description
                         </div>
 
+                        <!-- ACTIONS (WITH CORRECT ROUTING) -->
                         <div class="actions">
 
                             <form method="post"
                                   asp-page-handler="AddWishlist"
                                   asp-route-productId="@product.ProductID">
-
-                                <button class="btn-like">
-                                    ❤️ Like
-                                </button>
-
+                                <button type="submit" class="btn-like">❤️ Like</button>
                             </form>
 
                             <form method="post"
                                   asp-page-handler="AddToCart"
                                   asp-route-productId="@product.ProductID">
-
-                                <button class="btn-cart">
-                                    🛒 Add to Cart
-                                </button>
-
+                                <button type="submit" class="btn-cart">🛒 Add To Cart</button>
                             </form>
 
-                            @* 🔥 FOLLOW / UNFOLLOW (ADDED STEP 4 ONLY) *@
-
-                            @if (isFollowing)
-                            {
-                                <form method="post"
-                                      asp-page-handler="UnfollowStore"
-                                      asp-route-storeId="@product.StoreID">
-
-                                    <button class="btn-like" style="background:#fee2e2;color:#991b1b;">
-                                        Unfollow
-                                    </button>
-
-                                </form>
-                            }
-                            else
-                            {
-                                <form method="post"
-                                      asp-page-handler="FollowStore"
-                                      asp-route-storeId="@product.StoreID">
-
-                                    <button class="btn-like" style="background:#dcfce7;color:#166534;">
-                                        Follow
-                                    </button>
-
-                                </form>
-                            }
+                            <a class="btn-like"
+                               href="/CreateProductReview?storeId=@product.StoreID">
+                                ⭐ Review
+                            </a>
 
                         </div>
 
