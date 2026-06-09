@@ -40,6 +40,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (customer == null)
             {
                 TempData["Error"] = "Customer profile was not found.";
+                Orders = new List<CustomerOrderViewModel>();
                 return Page();
             }
 
@@ -82,12 +83,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public bool HasDeliveryAssignment { get; set; }
 
-        public bool CanTrack =>
-            HasDeliveryAssignment &&
-            (
-                Status == "Out for Delivery" ||
-                Status == "OutForDelivery" ||
-                Status == "Delivered"
-            );
+        public bool CanTrack
+        {
+            get
+            {
+                var cleanStatus = Status?.Trim();
+
+                return HasDeliveryAssignment &&
+                       (
+                           cleanStatus == "Out for Delivery" ||
+                           cleanStatus == "OutForDelivery" ||
+                           cleanStatus == "Delivered"
+                       );
+            }
+        }
     }
 }

@@ -84,11 +84,40 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
         public async Task<IActionResult> OnPostStartDeliveryAsync(int assignmentId)
         {
-            var assignment = await GetAssignmentForCurrentDeliveryPersonAsync(assignmentId);
+            var deliveryPerson = await GetCurrentDeliveryPersonAsync();
+
+            if (deliveryPerson == null)
+            {
+                TempData["Error"] = "Approved delivery profile was not found.";
+                return RedirectToPage();
+            }
+
+            var assignment = await _context.DeliveryAssignments
+                .Include(a => a.Order)
+                .FirstOrDefaultAsync(a =>
+                    a.AssignmentID == assignmentId &&
+                    a.DeliveryPersonID == deliveryPerson.DeliveryPersonID);
 
             if (assignment == null || assignment.Order == null)
             {
                 TempData["Error"] = "Assignment not found.";
+                return RedirectToPage();
+            }
+
+            if (!deliveryPerson.CurrentLatitude.HasValue ||
+                !deliveryPerson.CurrentLongitude.HasValue ||
+                !deliveryPerson.LastLocationUpdate.HasValue)
+            {
+                TempData["Error"] = "Please allow GPS first. Keep the page open until your location appears, then click Start Delivery.";
+                return RedirectToPage();
+            }
+
+            var lastGpsAgeSeconds =
+                Math.Abs((DateTime.UtcNow - deliveryPerson.LastLocationUpdate.Value).TotalSeconds);
+
+            if (lastGpsAgeSeconds > 60)
+            {
+                TempData["Error"] = "Your GPS is old. Please wait for location update, then click Start Delivery again.";
                 return RedirectToPage();
             }
 
@@ -98,11 +127,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Delivery started. Location tracking is now active.";
+            TempData["Success"] = "Delivery started. Customer can now track your movement.";
 
             return RedirectToPage();
         }
-
         public async Task<IActionResult> OnPostMarkDeliveredAsync(int assignmentId)
         {
             var assignment = await GetAssignmentForCurrentDeliveryPersonAsync(assignmentId);

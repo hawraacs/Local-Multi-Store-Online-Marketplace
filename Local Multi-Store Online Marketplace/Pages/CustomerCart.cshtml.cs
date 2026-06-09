@@ -345,8 +345,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         private async Task<bool> TryAutoAssignDeliveryAndNotifyAsync(
-    Order order,
-    CustomerAddress customerAddress)
+     Order order,
+     CustomerAddress customerAddress)
         {
             var alreadyAssigned = await _context.DeliveryAssignments
                 .AnyAsync(a =>
