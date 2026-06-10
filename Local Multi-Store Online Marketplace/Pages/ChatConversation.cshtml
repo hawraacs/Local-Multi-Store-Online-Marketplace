@@ -1,0 +1,46 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.ChatConversationModel
+
+<h3 style="text-align:center;">Conversation</h3>
+
+<div style="width:500px;margin:auto;border:1px solid #ddd;border-radius:10px;">
+
+    <!-- HEADER -->
+    <div style="padding:10px;border-bottom:1px solid #ddd;font-weight:bold;">
+        @Model.OtherUser?.FullName
+    </div>
+
+    <!-- MESSAGES -->
+    <div style="height:400px;overflow-y:auto;padding:10px;background:#f7f7f7;">
+        @foreach (var m in Model.Messages)
+        {
+            <div style="margin:5px;padding:8px;border-radius:10px;
+                        background:@(m.SenderID == Model.CurrentUserId ? "#dcf8c6" : "white");
+                        text-align:@(m.SenderID == Model.CurrentUserId ? "right" : "left");">
+
+                @m.MessageText
+
+                @if (m.SenderID == Model.CurrentUserId)
+                {
+                    <form method="post" asp-page-handler="Delete" style="display:inline;">
+                        <input type="hidden" name="messageId" value="@m.MessageID" />
+                        <input type="hidden" name="userId" value="@Model.ReceiverId" />
+                        <button style="font-size:10px;">x</button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- INPUT -->
+    <form method="post" asp-page-handler="Send" asp-route-receiverId="@Model.ReceiverId"
+          style="display:flex;padding:10px;border-top:1px solid #ddd;">
+
+        <input asp-for="MessageText"
+               placeholder="Type message..."
+               style="flex:1;padding:8px;border:1px solid #ccc;border-radius:5px;" />
+
+        <button type="submit" style="margin-left:5px;">Send</button>
+    </form>
+
+</div>

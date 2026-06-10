@@ -24,5 +24,6 @@ namespace Multi_Store.Core.Reposinterface
 
         // Get messages related to a product
         Task<IReadOnlyList<ChatMessage>> GetMessagesByProductAsync(int productId);
+        Task<List<ChatMessage>> GetMessagesByUserAsync(int userId);
     }
 }
