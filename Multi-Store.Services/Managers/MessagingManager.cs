@@ -134,7 +134,7 @@ namespace Multi_Store.Services.Managers
                 UserID = message.SenderID,
                 Action = "SendMessage",
                 EntityName = "ChatMessage",
-                EntityID = message.MessageID.ToString(),
+                EntityID = Guid.NewGuid().ToString(),
                 OldValue = null,
                 NewValue = $"Message sent to UserID: {message.ReceiverID}",
                 IPAddress = ipAddress,
@@ -238,7 +238,7 @@ namespace Multi_Store.Services.Managers
                 UserID = receiverId,
                 Action = "MarkMessagesAsRead",
                 EntityName = "ChatMessage",
-                EntityID = null,
+                EntityID = $"{senderId}-{receiverId}",
                 OldValue = "Unread",
                 NewValue = $"Messages from UserID {senderId} marked as read",
                 IPAddress = ipAddress,
@@ -372,6 +372,14 @@ namespace Multi_Store.Services.Managers
                     .OrderByDescending(m => m.SentAt)
                     .FirstOrDefault()?.SentAt
             };
+        }
+
+        public async Task<List<ChatMessageDTO>> GetMessagesForUserAsync(int userId)
+        {
+            var messages = await _chatMessageRepository
+                .GetMessagesByUserAsync(userId);
+
+            return _mapper.Map<List<ChatMessageDTO>>(messages);
         }
     }
 }
