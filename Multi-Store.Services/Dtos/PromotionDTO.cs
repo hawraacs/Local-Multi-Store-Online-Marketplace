@@ -34,5 +34,25 @@ namespace Multi_Store.Core.DTOs
         public DateTime CreatedAt { get; set; }
 
         public DateTime? SentAt { get; set; }
+
+        // Coupon creation fields
+        public bool CreateCoupon { get; set; } = false;
+
+        public string DiscountType { get; set; } = "Percentage";
+
+        [Range(0, 999999)]
+        public decimal DiscountValue { get; set; }
+
+        [Range(0, 999999)]
+        public decimal? MinimumOrderAmount { get; set; }
+
+        [Range(0, 999999)]
+        public decimal? MaximumDiscountAmount { get; set; }
+
+        public DateTime? CouponEndDate { get; set; }
+
+        public int? UsageLimit { get; set; } = 100;
+
+        public int? UsagePerCustomerLimit { get; set; } = 1;
     }
 }
