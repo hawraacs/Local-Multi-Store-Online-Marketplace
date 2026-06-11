@@ -1,0 +1,61 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.CustomerPromotionsModel
+@{
+    ViewData["Title"] = "My Promotions";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">My Promotions</h2>
+
+    @if (Model.Promotions == null || !Model.Promotions.Any())
+    {
+        <div class="alert alert-info">
+            No promotions available.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model.Promotions)
+            {
+                <div class="col-md-6 mb-3">
+                    <div class="card shadow-sm @(item.IsRead ? "" : "border-primary")">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <h5>@item.Promotion?.Title</h5>
+
+                                @if (!item.IsRead)
+                                {
+                                    <span class="badge bg-primary">New</span>
+                                }
+                            </div>
+
+                            <p>@item.Promotion?.Message</p>
+
+                            @if (!string.IsNullOrWhiteSpace(item.Promotion?.CouponCode))
+                            {
+                                <div class="alert alert-success py-2">
+                                    Coupon Code: <strong>@item.Promotion.CouponCode</strong>
+                                </div>
+                            }
+
+                            <small class="text-muted">
+                                Sent: @item.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </small>
+
+                            @if (!item.IsRead)
+                            {
+                                <form method="post" class="mt-3">
+                                    <input type="hidden" name="promotionRecipientId" value="@item.PromotionRecipientID" />
+                                    <button asp-page-handler="MarkAsRead" class="btn btn-sm btn-outline-primary">
+                                        Mark as read
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

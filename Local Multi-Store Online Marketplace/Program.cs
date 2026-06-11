@@ -10,6 +10,7 @@ using Multi_Store.Services;
 using Multi_Store.Services.Managers;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Multi_Store.Services.Email;
+using Multi_Store.Core.Managers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -113,6 +114,7 @@ builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 builder.Services.AddScoped<IRecentlyViewedProductRepository, RecentlyViewedProductRepository>();
+builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 
 // ===============================
 // Services
@@ -144,6 +146,8 @@ builder.Services.AddScoped<CustomerAddressManager>();
 builder.Services.AddScoped<OrderHistoryManager>();
 builder.Services.AddScoped<RecentlyViewedManager>();
 builder.Services.AddScoped<CustomerManager>();
+builder.Services.AddScoped<IPromotionManager, PromotionManager>();
+
 
 var app = builder.Build();
 
