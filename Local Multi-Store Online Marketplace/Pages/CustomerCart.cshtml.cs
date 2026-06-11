@@ -39,9 +39,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public decimal EstimatedDeliveryFee { get; set; }
 
+        public decimal DiscountAmount { get; set; }
+
         public decimal GrandTotal { get; set; }
 
+        public decimal FinalTotal { get; set; }
+
         public bool HasActiveAddress { get; set; }
+
+        public string? CouponMessage { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? AppliedCouponCode { get; set; }
 
         [BindProperty(SupportsGet = true)]
         public bool CheckoutAfterAddress { get; set; }
@@ -58,7 +67,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (CheckoutAfterAddress)
             {
-                return await PlaceOrderFromCartAsync(customerId.Value);
+                return await PlaceOrderFromCartAsync(customerId.Value, AppliedCouponCode);
             }
 
             await LoadCartAsync(customerId.Value);
@@ -79,7 +88,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (quantity <= 0)
             {
                 TempData["Error"] = "Quantity must be greater than 0.";
-                return RedirectToPage();
+                return RedirectToPage(new { AppliedCouponCode });
             }
 
             var cartItem = await _context.CartItems
@@ -92,13 +101,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (cartItem == null)
             {
                 TempData["Error"] = "Cart item not found.";
-                return RedirectToPage();
+                return RedirectToPage(new { AppliedCouponCode });
             }
 
             if (cartItem.Product == null || cartItem.Product.Quantity < quantity)
             {
                 TempData["Error"] = "Not enough stock available.";
-                return RedirectToPage();
+                return RedirectToPage(new { AppliedCouponCode });
             }
 
             cartItem.Quantity = quantity;
@@ -108,7 +117,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             TempData["Success"] = "Cart updated successfully.";
 
-            return RedirectToPage();
+            return RedirectToPage(new { AppliedCouponCode });
         }
 
         public async Task<IActionResult> OnPostRemoveAsync(int cartItemId)
@@ -130,7 +139,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (cartItem == null)
             {
                 TempData["Error"] = "Cart item not found.";
-                return RedirectToPage();
+                return RedirectToPage(new { AppliedCouponCode });
             }
 
             cartItem.Cart.UpdatedAt = DateTime.UtcNow;
@@ -141,7 +150,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             TempData["Success"] = "Item removed from cart.";
 
-            return RedirectToPage();
+            return RedirectToPage(new { AppliedCouponCode });
         }
 
         public async Task<IActionResult> OnPostClearAsync()
@@ -174,7 +183,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostCheckoutAsync()
+        public async Task<IActionResult> OnPostApplyCouponAsync(string couponCode)
         {
             var customerId = await GetCurrentCustomerIdAsync();
 
@@ -184,10 +193,63 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            return await PlaceOrderFromCartAsync(customerId.Value);
+            if (string.IsNullOrWhiteSpace(couponCode))
+            {
+                TempData["Error"] = "Please enter a coupon code.";
+                return RedirectToPage();
+            }
+
+            var cleanCode = couponCode.Trim().ToUpper();
+
+            var cart = await _context.Carts
+                .Include(c => c.CartItems)
+                    .ThenInclude(ci => ci.Product)
+                .FirstOrDefaultAsync(c => c.CustomerID == customerId.Value);
+
+            if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
+            {
+                TempData["Error"] = "Your cart is empty.";
+                return RedirectToPage();
+            }
+
+            var subtotal = cart.CartItems.Sum(i => i.PriceAtAddTime * i.Quantity);
+
+            var result = await CalculateCouponDiscountAsync(
+                cleanCode,
+                cart.CartItems.ToList(),
+                subtotal);
+
+            if (!result.IsValid)
+            {
+                TempData["Error"] = result.Message;
+                return RedirectToPage();
+            }
+
+            TempData["Success"] = $"Coupon {cleanCode} applied successfully. Discount: ${result.DiscountAmount:N2}.";
+
+            return RedirectToPage(new { AppliedCouponCode = cleanCode });
         }
 
-        private async Task<IActionResult> PlaceOrderFromCartAsync(int customerId)
+        public IActionResult OnPostRemoveCoupon()
+        {
+            TempData["Success"] = "Coupon removed.";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostCheckoutAsync(string? appliedCouponCode)
+        {
+            var customerId = await GetCurrentCustomerIdAsync();
+
+            if (customerId == null)
+            {
+                TempData["Error"] = "Please login as a customer first.";
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            return await PlaceOrderFromCartAsync(customerId.Value, appliedCouponCode);
+        }
+
+        private async Task<IActionResult> PlaceOrderFromCartAsync(int customerId, string? appliedCouponCode)
         {
             var customer = await _context.Customers
                 .Include(c => c.Addresses)
@@ -220,7 +282,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 return RedirectToPage("/CustomerAddresses", new
                 {
-                    returnUrl = "/CustomerCart?CheckoutAfterAddress=true"
+                    returnUrl = $"/CustomerCart?CheckoutAfterAddress=true&AppliedCouponCode={appliedCouponCode}"
                 });
             }
 
@@ -229,13 +291,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 if (item.Product == null || !item.Product.IsActive)
                 {
                     TempData["Error"] = "One of the products is no longer available.";
-                    return RedirectToPage();
+                    return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
                 }
 
                 if (item.Product.Quantity < item.Quantity)
                 {
                     TempData["Error"] = $"Not enough stock available for {item.Product.ProductName}.";
-                    return RedirectToPage();
+                    return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
                 }
             }
 
@@ -246,9 +308,25 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 address,
                 subtotal);
 
-            var discountAmount = 0m;
+            var couponResult = await CalculateCouponDiscountAsync(
+                appliedCouponCode,
+                cart.CartItems.ToList(),
+                subtotal);
+
+            if (!couponResult.IsValid && !string.IsNullOrWhiteSpace(appliedCouponCode))
+            {
+                TempData["Error"] = couponResult.Message;
+                return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
+            }
+
+            var discountAmount = couponResult.DiscountAmount;
             var taxAmount = 0m;
             var totalAmount = subtotal + deliveryFee + taxAmount - discountAmount;
+
+            if (totalAmount < 0)
+            {
+                totalAmount = 0;
+            }
 
             var order = new Order
             {
@@ -270,12 +348,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             await _context.SaveChangesAsync();
 
+            if (couponResult.Coupon != null && discountAmount > 0)
+            {
+                couponResult.Coupon.UsedCount += 1;
+                await _context.SaveChangesAsync();
+            }
+
             foreach (var item in cart.CartItems.ToList())
             {
                 if (item.Product == null)
                 {
                     TempData["Error"] = "One of the products is no longer available.";
-                    return RedirectToPage();
+                    return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
                 }
 
                 var orderItem = new OrderItem
@@ -333,20 +417,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (deliveryAssigned)
             {
                 TempData["Success"] =
-                    $"Order placed successfully. Delivery fee: ${deliveryFee:N2}. Online delivery staff has been assigned.";
+                    $"Order placed successfully. Delivery fee: ${deliveryFee:N2}. Discount: ${discountAmount:N2}. Online delivery staff has been assigned.";
             }
             else
             {
                 TempData["Success"] =
-                    $"Order placed successfully. Delivery fee: ${deliveryFee:N2}. Delivery assignment is pending because no online delivery staff is available.";
+                    $"Order placed successfully. Delivery fee: ${deliveryFee:N2}. Discount: ${discountAmount:N2}. Delivery assignment is pending because no online delivery staff is available.";
             }
 
             return RedirectToPage("/CustomerOrders");
         }
 
         private async Task<bool> TryAutoAssignDeliveryAndNotifyAsync(
-     Order order,
-     CustomerAddress customerAddress)
+            Order order,
+            CustomerAddress customerAddress)
         {
             var alreadyAssigned = await _context.DeliveryAssignments
                 .AnyAsync(a =>
@@ -623,6 +707,152 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
         }
 
+        private async Task<CouponCalculationResult> CalculateCouponDiscountAsync(
+            string? couponCode,
+            List<CartItem> cartItems,
+            decimal subtotal)
+        {
+            if (string.IsNullOrWhiteSpace(couponCode))
+            {
+                return new CouponCalculationResult
+                {
+                    IsValid = true,
+                    DiscountAmount = 0,
+                    Message = string.Empty
+                };
+            }
+
+            var cleanCode = couponCode.Trim().ToUpper();
+
+            var coupon = await _context.Coupons
+                .FirstOrDefaultAsync(c => c.CouponCode.ToUpper() == cleanCode);
+
+            if (coupon == null)
+            {
+                return new CouponCalculationResult
+                {
+                    IsValid = false,
+                    DiscountAmount = 0,
+                    Message = "Invalid coupon code."
+                };
+            }
+
+            if (!coupon.IsActive)
+            {
+                return new CouponCalculationResult
+                {
+                    IsValid = false,
+                    DiscountAmount = 0,
+                    Message = "This coupon is not active."
+                };
+            }
+
+            var now = DateTime.UtcNow;
+
+            if (coupon.StartDate > now)
+            {
+                return new CouponCalculationResult
+                {
+                    IsValid = false,
+                    DiscountAmount = 0,
+                    Message = "This coupon is not active yet."
+                };
+            }
+
+            if (coupon.EndDate < now)
+            {
+                return new CouponCalculationResult
+                {
+                    IsValid = false,
+                    DiscountAmount = 0,
+                    Message = "This coupon has expired."
+                };
+            }
+
+            if (coupon.UsageLimit.HasValue && coupon.UsedCount >= coupon.UsageLimit.Value)
+            {
+                return new CouponCalculationResult
+                {
+                    IsValid = false,
+                    DiscountAmount = 0,
+                    Message = "Coupon usage limit reached."
+                };
+            }
+
+            decimal eligibleSubtotal = subtotal;
+
+            if (coupon.StoreID.HasValue)
+            {
+                eligibleSubtotal = cartItems
+                    .Where(i => i.Product != null && i.Product.StoreID == coupon.StoreID.Value)
+                    .Sum(i => i.PriceAtAddTime * i.Quantity);
+
+                if (eligibleSubtotal <= 0)
+                {
+                    return new CouponCalculationResult
+                    {
+                        IsValid = false,
+                        DiscountAmount = 0,
+                        Message = "This coupon is not valid for the products in your cart."
+                    };
+                }
+            }
+
+            var minimumOrderAmount = coupon.MinimumOrderAmount ?? 0;
+
+            if (eligibleSubtotal < minimumOrderAmount)
+            {
+                return new CouponCalculationResult
+                {
+                    IsValid = false,
+                    DiscountAmount = 0,
+                    Message = $"Minimum order amount for this coupon is ${minimumOrderAmount:N2}."
+                };
+            }
+
+            decimal discountAmount;
+
+            if (coupon.DiscountType.Equals("Percentage", StringComparison.OrdinalIgnoreCase))
+            {
+                discountAmount = eligibleSubtotal * (coupon.DiscountValue / 100m);
+            }
+            else if (coupon.DiscountType.Equals("Fixed", StringComparison.OrdinalIgnoreCase))
+            {
+                discountAmount = coupon.DiscountValue;
+            }
+            else
+            {
+                return new CouponCalculationResult
+                {
+                    IsValid = false,
+                    DiscountAmount = 0,
+                    Message = "Invalid coupon discount type."
+                };
+            }
+
+            if (coupon.MaximumDiscountAmount.HasValue &&
+                coupon.MaximumDiscountAmount.Value > 0 &&
+                discountAmount > coupon.MaximumDiscountAmount.Value)
+            {
+                discountAmount = coupon.MaximumDiscountAmount.Value;
+            }
+
+            if (discountAmount > eligibleSubtotal)
+            {
+                discountAmount = eligibleSubtotal;
+            }
+
+            discountAmount = Math.Round(discountAmount, 2);
+
+            return new CouponCalculationResult
+            {
+                IsValid = true,
+                DiscountAmount = discountAmount,
+                Message = "Coupon applied successfully.",
+                Coupon = coupon
+            };
+        }
+
         private async Task LoadCartAsync(int customerId)
         {
             var cart = await _context.Carts
@@ -639,8 +869,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 CartItems = new List<CustomerCartItemViewModel>();
                 TotalAmount = 0;
                 EstimatedDeliveryFee = 0;
+                DiscountAmount = 0;
                 GrandTotal = 0;
+                FinalTotal = 0;
                 HasActiveAddress = false;
+                CouponMessage = null;
                 return;
             }
 
@@ -692,7 +925,38 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 EstimatedDeliveryFee = 0m;
             }
 
-            GrandTotal = TotalAmount + EstimatedDeliveryFee;
+            var couponResult = await CalculateCouponDiscountAsync(
+                AppliedCouponCode,
+                cart.CartItems.ToList(),
+                TotalAmount);
+
+            if (!string.IsNullOrWhiteSpace(AppliedCouponCode))
+            {
+                if (couponResult.IsValid)
+                {
+                    DiscountAmount = couponResult.DiscountAmount;
+                    CouponMessage = couponResult.Message;
+                }
+                else
+                {
+                    DiscountAmount = 0;
+                    CouponMessage = couponResult.Message;
+                }
+            }
+            else
+            {
+                DiscountAmount = 0;
+                CouponMessage = null;
+            }
+
+            GrandTotal = TotalAmount + EstimatedDeliveryFee - DiscountAmount;
+
+            if (GrandTotal < 0)
+            {
+                GrandTotal = 0;
+            }
+
+            FinalTotal = GrandTotal;
         }
 
         private async Task<int?> GetCurrentCustomerIdAsync()
@@ -730,5 +994,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public int AvailableStock { get; set; }
 
         public string ImageUrl { get; set; } = "/images/no-image.png";
+    }
+
+    public class CouponCalculationResult
+    {
+        public bool IsValid { get; set; }
+
+        public decimal DiscountAmount { get; set; }
+
+        public string Message { get; set; } = string.Empty;
+
+        public Coupon? Coupon { get; set; }
     }
 }

@@ -20,10 +20,66 @@ namespace Multi_Store.Core.Managers
             if (storeId == null)
                 throw new InvalidOperationException("You do not have a store connected to your account.");
 
-            var customerIds = await _promotionRepository.GetAllCustomerIdsAsync();
+            var customerIds = await _promotionRepository.GetAudienceCustomerIdsAsync(
+    dto.AudienceType,
+    storeId.Value);
 
             if (customerIds.Count == 0)
-                throw new InvalidOperationException("No customers found to receive this promotion.");
+                throw new InvalidOperationException("No customers found for the selected audience.");
+
+            string? cleanCouponCode = string.IsNullOrWhiteSpace(dto.CouponCode)
+                ? null
+                : dto.CouponCode.Trim().ToUpper();
+
+            if (dto.CreateCoupon)
+            {
+                if (string.IsNullOrWhiteSpace(cleanCouponCode))
+                    throw new InvalidOperationException("Coupon code is required when creating a usable coupon.");
+
+                if (dto.DiscountValue <= 0)
+                    throw new InvalidOperationException("Discount value must be greater than zero.");
+
+                if (dto.DiscountType != "Percentage" && dto.DiscountType != "Fixed")
+                    throw new InvalidOperationException("Invalid discount type.");
+
+                if (dto.DiscountType == "Percentage" && dto.DiscountValue > 100)
+                    throw new InvalidOperationException("Percentage discount cannot be greater than 100%.");
+
+                if (dto.CouponEndDate == null)
+                    throw new InvalidOperationException("Coupon end date is required.");
+
+                if (dto.CouponEndDate.Value.Date < DateTime.Today)
+                    throw new InvalidOperationException("Coupon end date cannot be in the past.");
+
+                if (dto.UsageLimit != null && dto.UsageLimit <= 0)
+                    throw new InvalidOperationException("Usage limit must be greater than zero.");
+
+                if (dto.UsagePerCustomerLimit != null && dto.UsagePerCustomerLimit <= 0)
+                    throw new InvalidOperationException("Usage per customer limit must be greater than zero.");
+
+                bool couponExists = await _promotionRepository.CouponCodeExistsAsync(cleanCouponCode);
+
+                if (couponExists)
+                    throw new InvalidOperationException("This coupon code already exists. Please choose another code.");
+
+                var coupon = new Coupon
+                {
+                    StoreID = storeId.Value,
+                    CouponCode = cleanCouponCode,
+                    DiscountType = dto.DiscountType,
+                    DiscountValue = dto.DiscountValue,
+                    MinimumOrderAmount = dto.MinimumOrderAmount ?? 0,
+                    MaximumDiscountAmount = dto.MaximumDiscountAmount,
+                    StartDate = DateTime.UtcNow,
+                    EndDate = dto.CouponEndDate.Value.Date.AddDays(1).AddTicks(-1),
+                    UsageLimit = dto.UsageLimit ?? 100,
+                    UsagePerCustomerLimit = dto.UsagePerCustomerLimit ?? 1,
+                    UsedCount = 0,
+                    IsActive = true
+                };
+
+                await _promotionRepository.AddCouponAsync(coupon);
+            }
 
             var promotion = new Promotion
             {
@@ -32,7 +88,7 @@ namespace Multi_Store.Core.Managers
                 Title = dto.Title.Trim(),
                 Message = dto.Message.Trim(),
                 AudienceType = dto.AudienceType,
-                CouponCode = string.IsNullOrWhiteSpace(dto.CouponCode) ? null : dto.CouponCode.Trim(),
+                CouponCode = cleanCouponCode,
                 RecipientCount = customerIds.Count,
                 IsSent = true,
                 Status = "Sent",
