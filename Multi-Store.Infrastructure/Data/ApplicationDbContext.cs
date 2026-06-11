@@ -45,6 +45,8 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<StoreFollow> StoreFollows { get; set; }
         public DbSet<RecentlyViewedProduct> RecentlyViewedProducts { get; set; }
         public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
+        public DbSet<Promotion> Promotions { get; set; }
+        public DbSet<PromotionRecipient> PromotionRecipients { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -256,6 +258,29 @@ namespace Multi_Store.Infrastructure.Data
                     .HasForeignKey(x => x.UserID)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+            modelBuilder.Entity<Promotion>()
+    .HasKey(p => p.PromotionID);
+
+            modelBuilder.Entity<Promotion>()
+                .HasOne(p => p.Store)
+                .WithMany()
+                .HasForeignKey(p => p.StoreID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PromotionRecipient>()
+                .HasKey(pr => pr.PromotionRecipientID);
+
+            modelBuilder.Entity<PromotionRecipient>()
+                .HasOne(pr => pr.Promotion)
+                .WithMany(p => p.PromotionRecipients)
+                .HasForeignKey(pr => pr.PromotionID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PromotionRecipient>()
+                .HasOne(pr => pr.Customer)
+                .WithMany()
+                .HasForeignKey(pr => pr.CustomerID)
+                .OnDelete(DeleteBehavior.Restrict);
             // ================= RECENTLY VIEWED PRODUCTS =================
             modelBuilder.Entity<RecentlyViewedProduct>(entity =>
             {

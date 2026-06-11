@@ -1,0 +1,69 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions.IndexModel
+@{
+    ViewData["Title"] = "Promotions";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Promotions</h2>
+        <a asp-page="/StoreOwner/Promotions/Create" class="btn btn-primary">
+            Send New Promotion
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (Model.Promotions == null || !Model.Promotions.Any())
+    {
+        <div class="alert alert-info">
+            No promotions sent yet.
+        </div>
+    }
+    else
+    {
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Message</th>
+                    <th>Coupon</th>
+                    <th>Recipients</th>
+                    <th>Status</th>
+                    <th>Sent At</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var promotion in Model.Promotions)
+                {
+                    <tr>
+                        <td>@promotion.Title</td>
+                        <td>@promotion.Message</td>
+                        <td>
+                            @if (string.IsNullOrWhiteSpace(promotion.CouponCode))
+                            {
+                                <span class="text-muted">No coupon</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">@promotion.CouponCode</span>
+                            }
+                        </td>
+                        <td>@promotion.RecipientCount</td>
+                        <td>
+                            <span class="badge bg-primary">@promotion.Status</span>
+                        </td>
+                        <td>
+                            @(promotion.SentAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
