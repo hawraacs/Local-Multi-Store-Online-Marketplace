@@ -29,6 +29,33 @@ namespace Multi_Store.Infrastructure.Repositories
                 .Distinct()
                 .ToListAsync();
         }
+        public async Task<List<int>> GetAudienceCustomerIdsAsync(string audienceType, int storeId)
+        {
+            if (audienceType == "PreviousCustomers")
+            {
+                return await _context.OrderItems
+                    .Include(oi => oi.Order)
+                    .Where(oi => oi.StoreID == storeId && oi.Order != null)
+                    .Select(oi => oi.Order.CustomerID)
+                    .Distinct()
+                    .ToListAsync();
+            }
+
+            if (audienceType == "WishlistCustomers")
+            {
+                return await (
+                    from wishlist in _context.Wishlists
+                    join product in _context.Products
+                        on wishlist.ProductID equals product.ProductID
+                    where product.StoreID == storeId
+                    select wishlist.CustomerID
+                )
+                .Distinct()
+                .ToListAsync();
+            }
+
+            return await GetAllCustomerIdsAsync();
+        }
 
         public async Task AddPromotionWithRecipientsAsync(Promotion promotion, List<int> customerIds)
         {
@@ -91,6 +118,23 @@ namespace Multi_Store.Infrastructure.Repositories
                 return;
 
             recipient.IsRead = true;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> CouponCodeExistsAsync(string couponCode)
+        {
+            if (string.IsNullOrWhiteSpace(couponCode))
+                return false;
+
+            string cleanCode = couponCode.Trim().ToUpper();
+
+            return await _context.Coupons
+                .AnyAsync(c => c.CouponCode.ToUpper() == cleanCode);
+        }
+
+        public async Task AddCouponAsync(Coupon coupon)
+        {
+            await _context.Coupons.AddAsync(coupon);
             await _context.SaveChangesAsync();
         }
     }
