@@ -1,0 +1,549 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.OnlinePaymentModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Secure Online Payment</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at top left, rgba(255, 107, 53, 0.16), transparent 32%), radial-gradient(circle at bottom right, rgba(17, 24, 39, 0.08), transparent 35%), linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+            font-family: Arial, sans-serif;
+            color: #111827;
+        }
+
+        .payment-page {
+            min-height: 100vh;
+            padding: 45px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .payment-shell {
+            width: 100%;
+            max-width: 980px;
+            display: grid;
+            grid-template-columns: 1fr 1.05fr;
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .payment-info {
+            background: #111827;
+            color: white;
+            border-radius: 30px;
+            padding: 34px;
+            box-shadow: 0 26px 70px rgba(15, 23, 42, 0.18);
+            position: relative;
+            overflow: hidden;
+        }
+
+            .payment-info::before {
+                content: "";
+                position: absolute;
+                width: 230px;
+                height: 230px;
+                border-radius: 50%;
+                background: rgba(255, 107, 53, 0.22);
+                right: -80px;
+                top: -80px;
+            }
+
+            .payment-info::after {
+                content: "";
+                position: absolute;
+                width: 160px;
+                height: 160px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.08);
+                left: -60px;
+                bottom: -60px;
+            }
+
+        .payment-info-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .secure-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.10);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            padding: 9px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+            color: #fed7aa;
+            margin-bottom: 22px;
+        }
+
+        .payment-info h1 {
+            margin: 0;
+            font-size: 38px;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            font-weight: 900;
+        }
+
+        .payment-info p {
+            color: #cbd5e1;
+            line-height: 1.6;
+            font-weight: 700;
+            margin: 16px 0 26px 0;
+            font-size: 14px;
+        }
+
+        .mini-card {
+            background: linear-gradient(135deg, #ff6b35, #ff9f70);
+            border-radius: 22px;
+            padding: 22px;
+            min-height: 170px;
+            box-shadow: 0 16px 35px rgba(255, 107, 53, 0.22);
+            margin-top: 25px;
+        }
+
+        .mini-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-weight: 900;
+            font-size: 14px;
+        }
+
+        .chip {
+            width: 42px;
+            height: 30px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .card-number-preview {
+            margin-top: 28px;
+            color: white;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        .card-bottom {
+            margin-top: 22px;
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            font-size: 12px;
+            font-weight: 900;
+            opacity: 0.95;
+        }
+
+        .test-cards {
+            margin-top: 24px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .test-card-row {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #e5e7eb;
+            line-height: 1.5;
+        }
+
+            .test-card-row strong {
+                color: white;
+            }
+
+        .success-text {
+            color: #86efac;
+        }
+
+        .decline-text {
+            color: #fca5a5;
+        }
+
+        .payment-card {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 26px 70px rgba(15, 23, 42, 0.12);
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+
+        .payment-card-header {
+            padding: 28px 30px 18px 30px;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+            .payment-card-header h2 {
+                margin: 0;
+                font-size: 28px;
+                color: #0f172a;
+                font-weight: 900;
+                letter-spacing: -0.5px;
+            }
+
+            .payment-card-header p {
+                margin: 8px 0 0 0;
+                color: #64748b;
+                font-size: 14px;
+                font-weight: 700;
+            }
+
+        .payment-body {
+            padding: 26px 30px 30px 30px;
+        }
+
+        .summary {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 9px 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 800;
+            color: #334155;
+            font-size: 14px;
+        }
+
+            .summary-row:last-child {
+                border-bottom: none;
+            }
+
+            .summary-row span:last-child {
+                color: #111827;
+                text-align: right;
+            }
+
+        .summary-total {
+            font-size: 20px;
+            color: #111827;
+            font-weight: 900;
+        }
+
+        .hint {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            color: #9a3412;
+            padding: 13px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.55;
+            margin-bottom: 18px;
+        }
+
+        .message {
+            padding: 13px 14px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            font-weight: 900;
+            text-align: center;
+            line-height: 1.5;
+            font-size: 13px;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .field {
+            margin-bottom: 15px;
+        }
+
+            .field label {
+                display: block;
+                margin-bottom: 7px;
+                font-size: 13px;
+                font-weight: 900;
+                color: #111827;
+            }
+
+            .field input {
+                width: 100%;
+                padding: 14px 15px;
+                border: 1px solid #d1d5db;
+                border-radius: 15px;
+                font-weight: 800;
+                color: #111827;
+                outline: none;
+                background: white;
+                transition: 0.2s ease;
+            }
+
+                .field input:focus {
+                    border-color: #ff6b35;
+                    box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.13);
+                }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .btn {
+            flex: 1;
+            border: none;
+            border-radius: 16px;
+            padding: 14px;
+            font-weight: 900;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            font-size: 14px;
+            transition: 0.2s ease;
+        }
+
+        .pay-btn {
+            background: #ff6b35;
+            color: white;
+            box-shadow: 0 12px 25px rgba(255, 107, 53, 0.28);
+        }
+
+        .back-btn {
+            background: #111827;
+            color: white;
+            box-shadow: 0 12px 25px rgba(17, 24, 39, 0.18);
+        }
+
+        .btn:hover {
+            opacity: 0.94;
+            transform: translateY(-1px);
+        }
+
+        .locked {
+            font-size: 12px;
+            color: #64748b;
+            text-align: center;
+            margin-top: 16px;
+            font-weight: 800;
+        }
+
+        @@media (max-width: 900px) {
+            .payment-shell {
+                grid-template-columns: 1fr;
+                max-width: 560px;
+            }
+
+            .payment-info {
+                display: none;
+            }
+        }
+
+        @@media (max-width: 520px) {
+            .payment-page {
+                padding: 22px 14px;
+            }
+
+            .payment-card-header,
+            .payment-body {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .row {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="payment-page">
+        <div class="payment-shell">
+
+            <div class="payment-info">
+                <div class="payment-info-content">
+                    <div class="secure-badge">
+                        🔒 Demo Secure Gateway
+                    </div>
+
+                    <h1>Complete your online payment safely.</h1>
+
+                    <p>
+                        This page simulates a real online payment process.
+                        The order remains pending until the payment gateway confirms success.
+                    </p>
+
+                    <div class="mini-card">
+                        <div class="mini-card-top">
+                            <span>LOCAL STORE CARD</span>
+                            <span class="chip"></span>
+                        </div>
+
+                        <div class="card-number-preview">
+                            4242 4242 4242 4242
+                        </div>
+
+                        <div class="card-bottom">
+                            <span>TEST USER</span>
+                            <span>12/30</span>
+                        </div>
+                    </div>
+
+                    <div class="test-cards">
+                        <div class="test-card-row">
+                            <strong>4242 4242 4242 4242</strong><br />
+                            <span class="success-text">Successful Visa payment</span>
+                        </div>
+
+                        <div class="test-card-row">
+                            <strong>5555 5555 5555 4444</strong><br />
+                            <span class="success-text">Successful Mastercard payment</span>
+                        </div>
+
+                        <div class="test-card-row">
+                            <strong>4000 0000 0000 0002</strong><br />
+                            <span class="decline-text">Declined payment simulation</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="payment-card">
+                <div class="payment-card-header">
+                    <h2>Secure Online Payment</h2>
+                    <p>Enter the test card details to confirm this order.</p>
+                </div>
+
+                <div class="payment-body">
+                    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                    {
+                        <div class="message error">
+                            @Model.ErrorMessage
+                        </div>
+                    }
+
+                    @if (Model.Order == null)
+                    {
+                        <div class="message error">
+                            Payment order not found or you are not allowed to access it.
+                        </div>
+
+                        <div class="actions">
+                            <a href="/CustomerOrders" class="btn back-btn">
+                                Back to Orders
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="summary">
+                            <div class="summary-row">
+                                <span>Order Number</span>
+                                <span>@Model.Order.OrderNumber</span>
+                            </div>
+
+                            <div class="summary-row">
+                                <span>Payment Method</span>
+                                <span>@Model.Order.PaymentMethod</span>
+                            </div>
+
+                            <div class="summary-row summary-total">
+                                <span>Total</span>
+                                <span>$@Model.Order.TotalAmount.ToString("N2")</span>
+                            </div>
+                        </div>
+
+                        <div class="hint">
+                            Use only accepted demo cards. Random card numbers will be rejected by the demo gateway.
+                        </div>
+
+                        <form method="post">
+                            <input type="hidden" asp-for="OrderId" />
+
+                            <div class="field">
+                                <label>Cardholder Name</label>
+                                <input asp-for="CardholderName"
+                                       placeholder="Example: Test User"
+                                       autocomplete="off" />
+                            </div>
+
+                            <div class="field">
+                                <label>Card Number</label>
+                                <input asp-for="CardNumber"
+                                       maxlength="19"
+                                       placeholder="4242 4242 4242 4242"
+                                       autocomplete="off" />
+                            </div>
+
+                            <div class="row">
+                                <div class="field">
+                                    <label>Expiry Date</label>
+                                    <input asp-for="ExpiryDate"
+                                           maxlength="5"
+                                           placeholder="MM/YY"
+                                           autocomplete="off" />
+                                </div>
+
+                                <div class="field">
+                                    <label>CVV</label>
+                                    <input asp-for="Cvv"
+                                           maxlength="3"
+                                           placeholder="123"
+                                           autocomplete="off" />
+                                </div>
+                            </div>
+
+                            <div class="actions">
+                                <a href="/CustomerOrders" class="btn back-btn">
+                                    Cancel
+                                </a>
+
+                                <button type="submit"
+                                        class="btn pay-btn"
+                                        onclick="return confirm('Confirm online payment?')">
+                                    Pay Now
+                                </button>
+                            </div>
+
+                            <div class="locked">
+                                🔒 Simulated secure payment gateway for final year project demo.
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

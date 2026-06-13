@@ -54,6 +54,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     OrderDate = o.OrderDate,
                     Status = o.Status,
                     PaymentMethod = o.PaymentMethod,
+                    PaymentStatus = o.PaymentStatus,
                     TotalAmount = o.TotalAmount,
 
                     HasDeliveryAssignment = _context.DeliveryAssignments.Any(a =>
@@ -79,6 +80,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public string PaymentMethod { get; set; } = string.Empty;
 
+        public string PaymentStatus { get; set; } = string.Empty;
+
         public decimal TotalAmount { get; set; }
 
         public bool HasDeliveryAssignment { get; set; }
@@ -95,6 +98,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                            cleanStatus == "OutForDelivery" ||
                            cleanStatus == "Delivered"
                        );
+            }
+        }
+
+        public bool CanViewInvoice
+        {
+            get
+            {
+                var cleanPayment = PaymentStatus?.Trim();
+
+                return cleanPayment == "Paid" ||
+                       Status == "Delivered";
             }
         }
     }
