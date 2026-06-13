@@ -29,10 +29,10 @@
             color: #64748b;
         }
 
-            .tab-btn.active {
-                color: #FF6B35;
-                border-bottom: 2px solid #FF6B35;
-            }
+        .tab-btn.active {
+            color: #FF6B35;
+            border-bottom: 2px solid #FF6B35;
+        }
 
         .status-badge {
             padding: 4px 10px;
@@ -40,20 +40,9 @@
             font-size: 12px;
         }
 
-        .status-pending {
-            background: #fef3c7;
-            color: #b45309;
-        }
-
-        .status-approved {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .status-inactive {
-            background: #e2e8f0;
-            color: #334155;
-        }
+        .status-pending { background: #fef3c7; color: #b45309; }
+        .status-approved { background: #d1fae5; color: #065f46; }
+        .status-inactive { background: #e2e8f0; color: #334155; }
 
         .btn-approve, .btn-reject, .btn-deactivate, .btn-activate {
             border: none;
@@ -63,29 +52,12 @@
             margin-right: 5px;
         }
 
-        .btn-approve {
-            background: #10b981;
-            color: white;
-        }
+        .btn-approve { background: #10b981; color: white; }
+        .btn-reject { background: #ef4444; color: white; }
+        .btn-deactivate { background: #f59e0b; color: white; }
+        .btn-activate { background: #2563eb; color: white; }
 
-        .btn-reject {
-            background: #ef4444;
-            color: white;
-        }
-
-        .btn-deactivate {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .btn-activate {
-            background: #2563eb;
-            color: white;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-        }
+        .table-responsive { overflow-x: auto; }
 
         table {
             width: 100%;
@@ -94,7 +66,6 @@
 
         th, td {
             padding: 12px;
-            text-align: left;
             border-bottom: 1px solid #e2e8f0;
         }
     </style>
@@ -102,6 +73,16 @@
 
 <div class="stores-card">
     <h3>Store Management</h3>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
 
     <div class="tabs">
         <button class="tab-btn active" data-tab="all">All Stores</button>
@@ -119,92 +100,129 @@
                     <th>Email</th>
                     <th>City</th>
                     <th>Status</th>
+
+                    <!-- NEW -->
+                    <th>Subscription</th>
+                    <th>Expiry Date</th>
+
                     <th>Actions</th>
                 </tr>
             </thead>
+
             <tbody>
-                @if (Model.Stores != null && Model.Stores.Any())
+            @if (Model.Stores != null && Model.Stores.Any())
+            {
+                foreach (var store in Model.Stores)
                 {
-                    foreach (var store in Model.Stores)
-                    {
-                        if (store == null) continue;
+                    if (store == null) continue;
 
-                        string storeName = store.StoreName ?? "N/A";
-                        string ownerName = store.Owner?.FullName ?? "Unknown";
-                        string email = store.Email ?? "";
-                        string city = store.City ?? "";
-                        string status = store.Status ?? "Pending";
-                        string statusKey = status.ToLower();
+                    var status = store.Status ?? "Pending";
+                    var statusKey = status.ToLower();
 
-                        <tr data-status="@statusKey">
-                            <td>@storeName</td>
-                            <td>@ownerName</td>
-                            <td>@email</td>
-                            <td>@city</td>
-                            <td>
-                                <span class="status-badge
-                                    @(statusKey == "approved" ? "status-approved" :
-                                        (statusKey == "pending" ? "status-pending" : "status-inactive"))">
-                                    @status
-                                </span>
-                            </td>
-                            <td>
-                                @if (statusKey == "pending")
-                                {
-                                    <form method="post" asp-page-handler="Approve" style="display:inline;">
-                                        <input type="hidden" name="id" value="@store.StoreID" />
-                                        <button type="submit" class="btn-approve"><i class="fas fa-check"></i> Approve</button>
-                                    </form>
-                                    <form method="post" asp-page-handler="Reject" style="display:inline;">
-                                        <input type="hidden" name="id" value="@store.StoreID" />
-                                        <button type="submit" class="btn-reject"><i class="fas fa-times"></i> Reject</button>
-                                    </form>
-                                }
-                                else if (statusKey == "approved")
-                                {
-                                    <form method="post" asp-page-handler="Deactivate" style="display:inline;">
-                                        <input type="hidden" name="id" value="@store.StoreID" />
-                                        <button type="submit" class="btn-deactivate">Deactivate</button>
-                                    </form>
-                                }
-                                else if (statusKey == "inactive")
-                                {
-                                    <form method="post" asp-page-handler="Activate" style="display:inline;">
-                                        <input type="hidden" name="id" value="@store.StoreID" />
-                                        <button type="submit" class="btn-activate">Activate</button>
-                                    </form>
-                                }
-                            </td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="6" style="text-align:center; padding:40px;">No stores found.</td>
+                    var subStatus = store.SubscriptionStatus ?? "Active";
+
+                    <tr data-status="@statusKey">
+                        <td>@store.StoreName</td>
+                        <td>@store.Owner?.FullName</td>
+                        <td>@store.OwnerEmail</td>
+                        <td>@store.City</td>
+
+                        <td>
+                            <span class="status-badge
+                                @(statusKey == "approved" ? "status-approved" :
+                                  statusKey == "pending" ? "status-pending" :
+                                  "status-inactive")">
+                                @status
+                            </span>
+                        </td>
+
+                        <!-- Subscription -->
+                        <td>
+                            <span class="status-badge
+                                @(subStatus == "Active" ? "status-approved" :
+                                  subStatus == "Expired" ? "status-pending" :
+                                  "status-inactive")">
+                                @subStatus
+                            </span>
+                        </td>
+
+                        <td>
+                            @(store.SubscriptionExpiryDate?.ToString("yyyy-MM-dd") ?? "Never")
+                        </td>
+
+                        <td>
+                            <!-- STORE ACTIONS -->
+                            @if (statusKey == "pending")
+                            {
+                                <form method="post" asp-page-handler="Approve" style="display:inline;">
+                                    <input type="hidden" name="id" value="@store.StoreID" />
+                                    <button class="btn-approve">Approve</button>
+                                </form>
+
+                                <form method="post" asp-page-handler="Reject" style="display:inline;">
+                                    <input type="hidden" name="id" value="@store.StoreID" />
+                                    <button class="btn-reject">Reject</button>
+                                </form>
+                            }
+                            else if (statusKey == "approved")
+                            {
+                                <form method="post" asp-page-handler="Deactivate" style="display:inline;">
+                                    <input type="hidden" name="id" value="@store.StoreID" />
+                                    <button class="btn-deactivate">Deactivate</button>
+                                </form>
+                            }
+                            else if (statusKey == "inactive")
+                            {
+                                <form method="post" asp-page-handler="ActivateSubscription" style="display:inline;">
+                                    <input type="hidden" name="id" value="@store.StoreID" />
+                                    <button class="btn-activate">Activate</button>
+                                </form>
+                            }
+
+                            <!-- SUBSCRIPTION ACTIONS -->
+                            <form method="post" asp-page-handler="Extend" style="display:inline;">
+                                <input type="hidden" name="id" value="@store.StoreID" />
+                                <button class="btn-activate">Extend (+30d)</button>
+                            </form>
+
+                            <form method="post" asp-page-handler="Suspend" style="display:inline;">
+                                <input type="hidden" name="id" value="@store.StoreID" />
+                                <button class="btn-deactivate">Suspend</button>
+                            </form>
+
+                            <form method="post" asp-page-handler="ActivateSubscription" style="display:inline;">
+                                <input type="hidden" name="id" value="@store.StoreID" />
+                                <button class="btn-approve">Activate Sub</button>
+                            </form>
+                        </td>
                     </tr>
                 }
+            }
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-    const tabs = document.querySelectorAll('.tab-btn'); 
-    const storeRows = document.querySelectorAll('#storesTable tbody tr');
-    tabs.forEach(btn => {
-        btn.addEventListener('click', () => {
-            tabs.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const tab = btn.dataset.tab;
-            storeRows.forEach(row => {
-                const status = row.dataset.status;
-                if (tab === 'all') row.style.display = '';
-                else if (tab === 'pending' && status === 'pending') row.style.display = '';
-                else if (tab === 'active' && status === 'approved') row.style.display = '';
-                else if (tab === 'inactive' && status === 'inactive') row.style.display = '';
-                else row.style.display = 'none';
-            });
+const tabs = document.querySelectorAll('.tab-btn');
+const rows = document.querySelectorAll('#storesTable tbody tr');
+
+tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+        tabs.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const tab = btn.dataset.tab;
+
+        rows.forEach(row => {
+            const status = row.dataset.status;
+
+            if (tab === 'all') row.style.display = '';
+            else if (tab === 'pending' && status === 'pending') row.style.display = '';
+            else if (tab === 'active' && status === 'approved') row.style.display = '';
+            else if (tab === 'inactive' && status === 'inactive') row.style.display = '';
+            else row.style.display = 'none';
         });
     });
+});
 </script>

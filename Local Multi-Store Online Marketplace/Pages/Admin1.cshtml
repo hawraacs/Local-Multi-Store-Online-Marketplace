@@ -6,6 +6,7 @@
 
 @section Styles {
     <link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" rel="preload" as="script">
+
     <style>
         .stats-grid {
             display: grid;
@@ -13,6 +14,7 @@
             gap: 24px;
             margin-bottom: 32px;
         }
+
         .stat-card {
             background: white;
             border-radius: 24px;
@@ -20,11 +22,18 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             transition: 0.2s;
         }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px -8px rgba(0,0,0,0.1); }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px -8px rgba(0,0,0,0.1);
+        }
+
         .stat-title { color: #64748b; font-size: 14px; margin-bottom: 8px; }
         .stat-value { font-size: 32px; font-weight: 700; color: #0f172a; }
         .stat-change { font-size: 13px; margin-top: 8px; }
+
         .positive { color: #10b981; }
+
         .chart-container, .recent-orders {
             background: white;
             border-radius: 24px;
@@ -32,35 +41,59 @@
             margin-bottom: 32px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-        .recent-orders table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        .badge { padding: 4px 10px; border-radius: 40px; font-size: 12px; font-weight: 600; }
+
+        .recent-orders table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
         .badge-delivered { background: #d1fae5; color: #065f46; }
         .badge-pending { background: #fef3c7; color: #b45309; }
     </style>
 }
 
 <div class="stats-grid">
+
     <div class="stat-card">
-        <div class="stat-title">Total Revenue</div>
-        <div class="stat-value">$@Model.TotalRevenue.ToString("N0")</div>
-        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +12% vs last month</div>
+        <div class="stat-title">Platform Revenue</div>
+        <div class="stat-value">$@Model.TotalPlatformRevenue.ToString("N0")</div>
+        <div class="stat-change">
+            ($@Model.TotalCommission.ToString("N0") commission +
+            $@Model.TotalSubscriptionRevenue.ToString("N0") subscriptions)
+        </div>
     </div>
+
     <div class="stat-card">
         <div class="stat-title">Total Orders</div>
         <div class="stat-value">@Model.TotalOrders</div>
-        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +8%</div>
+        <div class="stat-change positive">+8%</div>
     </div>
+
     <div class="stat-card">
         <div class="stat-title">Active Stores</div>
         <div class="stat-value">@Model.ActiveStores</div>
-        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +3 new</div>
+        <div class="stat-change positive">+3 new</div>
     </div>
+
     <div class="stat-card">
         <div class="stat-title">Total Users</div>
         <div class="stat-value">@Model.TotalUsers</div>
-        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +15%</div>
+        <div class="stat-change positive">+15%</div>
     </div>
+
 </div>
 
 <div class="chart-container">
@@ -70,18 +103,32 @@
 
 <div class="recent-orders">
     <h3>Recent Orders</h3>
+
     <div class="table-responsive">
         <table>
-            <thead><tr><th>Order #</th><th>Customer</th><th>Store</th><th>Amount</th><th>Status</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Store</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
             <tbody>
                 @foreach (var order in Model.RecentOrders)
                 {
                     <tr>
-                        <td>@order.OrderNumber</td
-                        <td>@order.CustomerName</td
-                        <td>@order.StoreName</td
-                        <td>$@order.Amount</td
-                        <td><span class="badge @(order.Status == "Delivered" ? "badge-delivered" : "badge-pending")">@order.Status</span></td
+                        <td>@order.OrderNumber</td>
+                        <td>@order.CustomerName</td>
+                        <td>@order.StoreName</td>
+                        <td>$@order.Amount</td>
+                        <td>
+                            <span class="badge @(order.Status == "Delivered" ? "badge-delivered" : "badge-pending")">
+                                @order.Status
+                            </span>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -91,13 +138,20 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
     <script>
         const ctx = document.getElementById('revenueChart').getContext('2d');
+
         new Chart(ctx, {
             type: 'line',
             data: {
                 labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                datasets: [{ label: 'Revenue ($)', data: [8500, 10200, 14800, 13200], borderColor: '#FF6B35', tension: 0.3 }]
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data: [8500, 10200, 14800, 13200],
+                    borderColor: '#FF6B35',
+                    tension: 0.3
+                }]
             }
         });
     </script>
