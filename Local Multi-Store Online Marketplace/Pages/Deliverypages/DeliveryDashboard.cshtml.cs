@@ -131,6 +131,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
             return RedirectToPage();
         }
+
         public async Task<IActionResult> OnPostMarkDeliveredAsync(int assignmentId)
         {
             var assignment = await GetAssignmentForCurrentDeliveryPersonAsync(assignmentId);
@@ -145,9 +146,60 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
             assignment.DeliveryTime = DateTime.UtcNow;
             assignment.Order.Status = "Delivered";
 
+            var paymentMethod = assignment.Order.PaymentMethod?.Trim() ?? string.Empty;
+
+            if (paymentMethod.Equals("Cash On Delivery", StringComparison.OrdinalIgnoreCase))
+            {
+                assignment.Order.PaymentStatus = "Paid";
+
+                var latestPayment = await _context.Payments
+                    .Where(p => p.OrderID == assignment.Order.OrderID)
+                    .OrderByDescending(p => p.PaymentDate)
+                    .FirstOrDefaultAsync();
+
+                if (latestPayment != null)
+                {
+                    latestPayment.Status = "Paid";
+                    latestPayment.PaymentDate = DateTime.UtcNow;
+                    latestPayment.PaymentGateway = string.IsNullOrWhiteSpace(latestPayment.PaymentGateway)
+                        ? "Cash"
+                        : latestPayment.PaymentGateway;
+                }
+                else
+                {
+                    _context.Payments.Add(new Payment
+                    {
+                        OrderID = assignment.Order.OrderID,
+                        PaymentMethod = "Cash On Delivery",
+                        PaymentGateway = "Cash",
+                        GatewayTransactionID = null,
+                        Amount = assignment.Order.TotalAmount,
+                        PaymentDate = DateTime.UtcNow,
+                        Status = "Paid",
+                        RefundAmount = null,
+                        RefundDate = null
+                    });
+                }
+            }
+            else if (paymentMethod.Equals("Online Payment", StringComparison.OrdinalIgnoreCase))
+            {
+                assignment.Order.PaymentStatus = "Paid";
+
+                var latestPayment = await _context.Payments
+                    .Where(p => p.OrderID == assignment.Order.OrderID)
+                    .OrderByDescending(p => p.PaymentDate)
+                    .FirstOrDefaultAsync();
+
+                if (latestPayment != null && !latestPayment.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
+                {
+                    latestPayment.Status = "Paid";
+                    latestPayment.PaymentDate = DateTime.UtcNow;
+                }
+            }
+
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Order marked as delivered.";
+            TempData["Success"] = "Order marked as delivered. Payment confirmed successfully.";
 
             return RedirectToPage();
         }
