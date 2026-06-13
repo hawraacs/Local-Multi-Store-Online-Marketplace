@@ -49,7 +49,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             // =========================
             TotalCommission = completedOrders.Sum(order =>
                 order.OrderItems.Sum(item =>
-                    item.TotalPrice * (item.Store.CommissionRate / 100m)
+                    item.TotalPrice * 0.05m
                 )
             );
 
