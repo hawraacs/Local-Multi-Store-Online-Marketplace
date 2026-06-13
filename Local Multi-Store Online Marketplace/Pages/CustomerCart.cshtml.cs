@@ -55,6 +55,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         [BindProperty(SupportsGet = true)]
         public bool CheckoutAfterAddress { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public string? PaymentMethod { get; set; } = "Cash On Delivery";
+
         public async Task<IActionResult> OnGetAsync()
         {
             var customerId = await GetCurrentCustomerIdAsync();
@@ -67,7 +70,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (CheckoutAfterAddress)
             {
-                return await PlaceOrderFromCartAsync(customerId.Value, AppliedCouponCode);
+                return await PlaceOrderFromCartAsync(
+                    customerId.Value,
+                    AppliedCouponCode,
+                    PaymentMethod);
             }
 
             await LoadCartAsync(customerId.Value);
@@ -236,7 +242,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostCheckoutAsync(string? appliedCouponCode)
+        public async Task<IActionResult> OnPostCheckoutAsync(
+            string? appliedCouponCode,
+            string? paymentMethod)
         {
             var customerId = await GetCurrentCustomerIdAsync();
 
@@ -246,11 +254,39 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            return await PlaceOrderFromCartAsync(customerId.Value, appliedCouponCode);
+            return await PlaceOrderFromCartAsync(
+                customerId.Value,
+                appliedCouponCode,
+                paymentMethod);
         }
 
-        private async Task<IActionResult> PlaceOrderFromCartAsync(int customerId, string? appliedCouponCode)
+        private async Task<IActionResult> PlaceOrderFromCartAsync(
+    int customerId,
+    string? appliedCouponCode,
+    string? paymentMethod)
         {
+            var cleanPaymentMethod = string.IsNullOrWhiteSpace(paymentMethod)
+                ? "Cash On Delivery"
+                : paymentMethod.Trim();
+
+            if (cleanPaymentMethod != "Cash On Delivery" &&
+                cleanPaymentMethod != "Online Payment")
+            {
+                TempData["Error"] = "Invalid payment method.";
+                return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
+            }
+
+            // Important:
+            // COD stays Pending until delivery is marked delivered.
+            // Online Payment stays Pending until customer pays on OnlinePayment page.
+            var orderPaymentStatus = "Pending";
+
+            var paymentGateway = cleanPaymentMethod == "Online Payment"
+                ? "Simulated Gateway"
+                : "Cash";
+
+            var paymentRecordStatus = "Pending";
+
             var customer = await _context.Customers
                 .Include(c => c.Addresses)
                 .FirstOrDefaultAsync(c => c.CustomerID == customerId);
@@ -280,9 +316,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 TempData["Error"] = "Please add an active delivery address before checkout.";
 
+                var encodedCoupon = Uri.EscapeDataString(appliedCouponCode ?? string.Empty);
+                var encodedPayment = Uri.EscapeDataString(cleanPaymentMethod);
+
                 return RedirectToPage("/CustomerAddresses", new
                 {
-                    returnUrl = $"/CustomerCart?CheckoutAfterAddress=true&AppliedCouponCode={appliedCouponCode}"
+                    returnUrl = $"/CustomerCart?CheckoutAfterAddress=true&AppliedCouponCode={encodedCoupon}&PaymentMethod={encodedPayment}"
                 });
             }
 
@@ -335,8 +374,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 AddressID = address.AddressID,
                 OrderDate = DateTime.UtcNow,
                 Status = "Pending",
-                PaymentMethod = "Cash On Delivery",
-                PaymentStatus = "Unpaid",
+                PaymentMethod = cleanPaymentMethod,
+                PaymentStatus = orderPaymentStatus,
                 Subtotal = subtotal,
                 DeliveryFee = deliveryFee,
                 DiscountAmount = discountAmount,
@@ -345,6 +384,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             };
 
             _context.Orders.Add(order);
+
+            await _context.SaveChangesAsync();
+
+            var payment = new Payment
+            {
+                OrderID = order.OrderID,
+                PaymentMethod = cleanPaymentMethod,
+                PaymentGateway = paymentGateway,
+                GatewayTransactionID = null,
+                Amount = totalAmount,
+                PaymentDate = DateTime.UtcNow,
+                Status = paymentRecordStatus
+            };
+
+            _context.Payments.Add(payment);
 
             await _context.SaveChangesAsync();
 
@@ -406,23 +460,33 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 }
             }
 
-            var deliveryAssigned = await TryAutoAssignDeliveryAndNotifyAsync(order, address);
-
             _context.CartItems.RemoveRange(cart.CartItems);
 
             cart.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
+            if (cleanPaymentMethod == "Online Payment")
+            {
+                TempData["Success"] =
+                    $"Order created successfully. Please complete your online payment. Total: ${totalAmount:N2}.";
+
+                return RedirectToPage("/OnlinePayment", new { orderId = order.OrderID });
+            }
+
+            var deliveryAssigned = await TryAutoAssignDeliveryAndNotifyAsync(order, address);
+
+            await _context.SaveChangesAsync();
+
             if (deliveryAssigned)
             {
                 TempData["Success"] =
-                    $"Order placed successfully. Delivery fee: ${deliveryFee:N2}. Discount: ${discountAmount:N2}. Online delivery staff has been assigned.";
+                    $"Order placed successfully. Payment: Cash On Delivery (Pending). Delivery fee: ${deliveryFee:N2}. Discount: ${discountAmount:N2}. Online delivery staff has been assigned.";
             }
             else
             {
                 TempData["Success"] =
-                    $"Order placed successfully. Delivery fee: ${deliveryFee:N2}. Discount: ${discountAmount:N2}. Delivery assignment is pending because no online delivery staff is available.";
+                    $"Order placed successfully. Payment: Cash On Delivery (Pending). Delivery fee: ${deliveryFee:N2}. Discount: ${discountAmount:N2}. Delivery assignment is pending because no online delivery staff is available.";
             }
 
             return RedirectToPage("/CustomerOrders");
