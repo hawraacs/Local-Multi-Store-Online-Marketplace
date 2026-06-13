@@ -57,10 +57,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     PaymentStatus = o.PaymentStatus,
                     TotalAmount = o.TotalAmount,
 
-                    HasDeliveryAssignment = _context.DeliveryAssignments.Any(a =>
-                        a.OrderID == o.OrderID &&
-                        a.Status != "Cancelled" &&
-                        a.Status != "Failed")
+                    AssignmentStatus = _context.DeliveryAssignments
+                        .Where(a =>
+                            a.OrderID == o.OrderID &&
+                            a.Status != "Cancelled" &&
+                            a.Status != "Failed")
+                        .Select(a => a.Status)
+                        .FirstOrDefault()
                 })
                 .ToListAsync();
 
@@ -84,20 +87,39 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public decimal TotalAmount { get; set; }
 
-        public bool HasDeliveryAssignment { get; set; }
+        public string? AssignmentStatus { get; set; }
+
+        public bool HasDeliveryAssignment =>
+            !string.IsNullOrWhiteSpace(AssignmentStatus);
 
         public bool CanTrack
         {
             get
             {
+                var cleanOrderStatus = Status?.Trim();
+                var cleanAssignmentStatus = AssignmentStatus?.Trim();
+
+                return cleanOrderStatus == "Out for Delivery" &&
+                       cleanAssignmentStatus == "OutForDelivery";
+            }
+        }
+
+        public string TrackingMessage
+        {
+            get
+            {
                 var cleanStatus = Status?.Trim();
 
-                return HasDeliveryAssignment &&
-                       (
-                           cleanStatus == "Out for Delivery" ||
-                           cleanStatus == "OutForDelivery" ||
-                           cleanStatus == "Delivered"
-                       );
+                if (cleanStatus == "Assigned")
+                    return "Available when delivery starts";
+
+                if (cleanStatus == "Delivered")
+                    return "Delivered";
+
+                if (cleanStatus == "Out for Delivery")
+                    return "Track Delivery";
+
+                return "Available when out for delivery";
             }
         }
 

@@ -210,7 +210,7 @@
                         <p><strong>Assigned:</strong> @item.AssignedAt.ToString("dd MMM yyyy HH:mm")</p>
 
                         <div class="actions">
-                            @if (item.AssignmentStatus != "OutForDelivery")
+                            @if (item.AssignmentStatus == "Assigned")
                             {
                                 <form method="post" asp-page-handler="StartDelivery">
                                     <input type="hidden" name="assignmentId" value="@item.AssignmentID" />
@@ -219,15 +219,17 @@
                                     </button>
                                 </form>
                             }
-
-                            <form method="post" asp-page-handler="MarkDelivered">
-                                <input type="hidden" name="assignmentId" value="@item.AssignmentID" />
-                                <button type="submit"
-                                        class="done-btn"
-                                        onclick="return confirm('Mark this order as delivered?')">
-                                    Mark Delivered
-                                </button>
-                            </form>
+                            else if (item.AssignmentStatus == "OutForDelivery")
+                            {
+                                <form method="post" asp-page-handler="MarkDelivered">
+                                    <input type="hidden" name="assignmentId" value="@item.AssignmentID" />
+                                    <button type="submit"
+                                            class="done-btn"
+                                            onclick="return confirm('Mark this order as delivered?')">
+                                        Mark Delivered
+                                    </button>
+                                </form>
+                            }
                         </div>
                     </div>
                 }
