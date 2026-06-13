@@ -28,22 +28,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public async Task OnGetAsync()
         {
-            Deliveries = (await _deliveryManager.GetAllAsync())
-                .OrderByDescending(d => d.DeliveryPersonID)
-                .ToList();
+            await LoadDeliveriesAsync();
         }
 
         public async Task<IActionResult> OnPostApproveAsync(int id)
         {
             try
             {
-                await _deliveryManager.ApproveDeliveryPersonAsync(id);
-                TempData["Success"] = "Delivery request approved.";
+                var result = await _deliveryManager.ApproveDeliveryPersonAsync(id);
+
+                TempData["Success"] =
+                    $"Delivery request approved successfully. Email: {result.email} | Default Password: {result.password}";
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error approving delivery request with ID {Id}", id);
-                TempData["Error"] = "An error occurred while approving the delivery request.";
+                TempData["Error"] = ex.InnerException?.Message ?? ex.Message;
             }
 
             return RedirectToPage();
@@ -54,15 +54,58 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             try
             {
                 await _deliveryManager.RejectDeliveryPersonAsync(id, reason);
-                TempData["Success"] = "Delivery request rejected.";
+
+                TempData["Success"] =
+                    "Delivery request rejected successfully. No delivery account was created.";
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error rejecting delivery request with ID {Id}", id);
-                TempData["Error"] = "An error occurred while rejecting the delivery request.";
+                TempData["Error"] = ex.InnerException?.Message ?? ex.Message;
             }
 
             return RedirectToPage();
+        }
+        public async Task<IActionResult> OnPostActivateAsync(int id)
+        {
+            try
+            {
+                await _deliveryManager.ActivateDeliveryPersonAsync(id);
+                TempData["Success"] = "Delivery staff activated successfully.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error activating delivery staff with ID {Id}", id);
+                TempData["Error"] = ex.InnerException?.Message ?? ex.Message;
+            }
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeactivateAsync(int id)
+        {
+            try
+            {
+                await _deliveryManager.DeactivateDeliveryPersonAsync(id);
+                TempData["Success"] = "Delivery staff deactivated successfully.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deactivating delivery staff with ID {Id}", id);
+                TempData["Error"] = ex.InnerException?.Message ?? ex.Message;
+            }
+
+            return RedirectToPage();
+        }
+        private async Task LoadDeliveriesAsync()
+        {
+            Deliveries = (await _deliveryManager.GetAllAsync())
+                .OrderByDescending(d =>
+                    d.Status == "Pending" ? 3 :
+                    d.Status == "Approved" ? 2 :
+                    d.Status == "Rejected" ? 1 : 0)
+                .ThenByDescending(d => d.DeliveryPersonID)
+                .ToList();
         }
     }
 }
