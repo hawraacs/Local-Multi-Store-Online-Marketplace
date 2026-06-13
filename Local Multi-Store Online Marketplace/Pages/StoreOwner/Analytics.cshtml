@@ -1,0 +1,650 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.AnalyticsModel
+@{
+    ViewData["Title"] = "Store Analytics";
+}
+
+<style>
+    .analytics-page {
+        background: #f4f6f9;
+        min-height: calc(100vh - 120px);
+        padding: 35px 0 60px;
+    }
+
+    .analytics-wrapper {
+        max-width: 1180px;
+        margin: auto;
+    }
+
+    .analytics-hero {
+        background: linear-gradient(135deg, #203b24, #ff6b35);
+        border-radius: 24px;
+        color: white;
+        padding: 30px;
+        margin-bottom: 24px;
+        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.14);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .analytics-hero::after {
+            content: "";
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.12);
+            right: -70px;
+            top: -80px;
+        }
+
+        .analytics-hero h2 {
+            margin: 0 0 8px;
+            font-size: 32px;
+            font-weight: 900;
+            position: relative;
+            z-index: 1;
+        }
+
+        .analytics-hero p {
+            margin: 0;
+            opacity: 0.92;
+            font-size: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+    .period-text {
+        margin-top: 14px;
+        display: inline-block;
+        background: rgba(255,255,255,0.16);
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 12px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .accounting-note {
+        margin-top: 14px;
+        background: rgba(255,255,255,0.14);
+        padding: 10px 12px;
+        border-radius: 14px;
+        font-size: 12px;
+        font-weight: 700;
+        max-width: 760px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .filter-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+    }
+
+    .filter-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr auto;
+        gap: 14px;
+        align-items: end;
+    }
+
+    .filter-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 900;
+        color: #111827;
+        margin-bottom: 7px;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 13px;
+        padding: 11px 13px;
+        font-weight: 700;
+        color: #111827;
+        outline: none;
+    }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 4px rgba(255,107,53,0.12);
+        }
+
+    .filter-btn {
+        border: none;
+        border-radius: 13px;
+        background: #111827;
+        color: white;
+        padding: 12px 20px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 24px;
+    }
+
+    .metric-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 22px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .metric-card::after {
+            content: "";
+            position: absolute;
+            width: 72px;
+            height: 72px;
+            background: #fff1e8;
+            border-radius: 18px;
+            right: -20px;
+            top: -20px;
+        }
+
+    .metric-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: #fff1e8;
+        color: #ff6b35;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        margin-bottom: 14px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .metric-label {
+        color: #6b7280;
+        font-size: 13px;
+        font-weight: 900;
+        margin-bottom: 9px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .metric-value {
+        color: #111827;
+        font-size: 28px;
+        font-weight: 900;
+        position: relative;
+        z-index: 1;
+    }
+
+    .metric-note {
+        color: #6b7280;
+        font-size: 12px;
+        margin-top: 7px;
+        font-weight: 700;
+        position: relative;
+        z-index: 1;
+    }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 22px;
+        margin-bottom: 22px;
+    }
+
+    .data-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 22px;
+        padding: 24px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+    }
+
+        .data-card h3 {
+            margin: 0 0 18px;
+            color: #111827;
+            font-size: 20px;
+            font-weight: 900;
+        }
+
+    .bar-item {
+        margin-bottom: 14px;
+    }
+
+    .bar-info {
+        display: flex;
+        justify-content: space-between;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 900;
+        margin-bottom: 7px;
+    }
+
+    .bar-track {
+        height: 11px;
+        background: #f3f4f6;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .bar-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #ff6b35, #ff8c42);
+        border-radius: 999px;
+    }
+
+    .status-grid {
+        display: grid;
+        gap: 12px;
+    }
+
+    .status-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 13px;
+        font-weight: 900;
+        color: #111827;
+    }
+
+    .status-count {
+        background: #fff1e8;
+        color: #ff6b35;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+    }
+
+    .table-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 22px;
+        padding: 24px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+        margin-bottom: 22px;
+    }
+
+        .table-card h3 {
+            margin: 0 0 18px;
+            color: #111827;
+            font-size: 20px;
+            font-weight: 900;
+        }
+
+    .analytics-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .analytics-table th {
+            text-align: left;
+            color: #6b7280;
+            font-size: 12px;
+            padding: 11px 8px;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 900;
+        }
+
+        .analytics-table td {
+            color: #111827;
+            font-size: 13px;
+            padding: 13px 8px;
+            border-bottom: 1px solid #f3f4f6;
+            font-weight: 800;
+        }
+
+    .status-badge {
+        display: inline-block;
+        background: #fff7ed;
+        color: #c2410c;
+        border: 1px solid #fed7aa;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .payment-badge {
+        display: inline-block;
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .empty-box {
+        background: #f9fafb;
+        border: 1px dashed #d1d5db;
+        color: #6b7280;
+        border-radius: 16px;
+        padding: 28px;
+        text-align: center;
+        font-weight: 900;
+    }
+
+    @@media (max-width: 1000px) {
+        .metric-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .main-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-form {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .analytics-page {
+            padding: 20px 12px;
+        }
+
+        .metric-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-form {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="analytics-page">
+    <div class="analytics-wrapper">
+
+        <div class="analytics-hero">
+            <h2>Store Analytics</h2>
+            <p>Track revenue, orders, customers, and product performance for @Model.StoreName.</p>
+
+            <span class="period-text">
+                Period: @Model.ReportStartDate.ToString("MMM dd, yyyy") - @Model.ReportEndDate.ToString("MMM dd, yyyy")
+            </span>
+
+            <div class="accounting-note">
+                Accounting rule: revenue and net earnings are calculated from delivered orders only. Active orders are shown separately for operational tracking.
+            </div>
+        </div>
+
+        <div class="filter-card">
+            <form method="get" class="filter-form">
+                <div class="filter-group">
+                    <label>Report Range</label>
+                    <select asp-for="Range" id="rangeSelect">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+
+                <div class="filter-group custom-date-group">
+                    <label>From Date</label>
+                    <input asp-for="FromDate" type="date" />
+                </div>
+
+                <div class="filter-group custom-date-group">
+                    <label>To Date</label>
+                    <input asp-for="ToDate" type="date" />
+                </div>
+
+                <button type="submit" class="filter-btn">
+                    Apply
+                </button>
+            </form>
+        </div>
+
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-icon">💰</div>
+                <div class="metric-label">Recognized Revenue</div>
+                <div class="metric-value">$@Model.TotalRevenue.ToString("N2")</div>
+                <div class="metric-note">Delivered orders only</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">⏳</div>
+                <div class="metric-label">Pending Revenue</div>
+                <div class="metric-value">$@Model.PendingRevenue.ToString("N2")</div>
+                <div class="metric-note">Pending, preparing, and delivery orders</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">🧾</div>
+                <div class="metric-label">Total Orders</div>
+                <div class="metric-value">@Model.TotalOrders</div>
+                <div class="metric-note">All orders in selected period</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">✅</div>
+                <div class="metric-label">Delivered Orders</div>
+                <div class="metric-value">@Model.DeliveredOrdersCount</div>
+                <div class="metric-note">Orders counted as completed sales</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">📦</div>
+                <div class="metric-label">Items Sold</div>
+                <div class="metric-value">@Model.TotalItemsSold</div>
+                <div class="metric-note">Delivered items only</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">👥</div>
+                <div class="metric-label">Unique Customers</div>
+                <div class="metric-value">@Model.UniqueCustomers</div>
+                <div class="metric-note">Customers who ordered from you</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">📊</div>
+                <div class="metric-label">Average Order Value</div>
+                <div class="metric-value">$@Model.AverageOrderValue.ToString("N2")</div>
+                <div class="metric-note">Recognized revenue / delivered orders</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">🏦</div>
+                <div class="metric-label">Estimated Commission</div>
+                <div class="metric-value">$@Model.EstimatedCommission.ToString("N2")</div>
+                <div class="metric-note">Based on store commission rate</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">💵</div>
+                <div class="metric-label">Net Earnings</div>
+                <div class="metric-value">$@Model.EstimatedNetEarnings.ToString("N2")</div>
+                <div class="metric-note">Revenue after estimated commission</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="data-card">
+                <h3>Daily Recognized Revenue</h3>
+
+                @if (Model.DailyRevenue.Any())
+                {
+                    var maxRevenue = Model.DailyRevenue.Max(x => x.Revenue);
+
+                    foreach (var day in Model.DailyRevenue)
+                    {
+                        var width = maxRevenue > 0
+                        ? (int)((day.Revenue / maxRevenue) * 100)
+                        : 0;
+
+                        <div class="bar-item">
+                            <div class="bar-info">
+                                <span>@day.Date.ToString("MMM dd")</span>
+                                <span>$@day.Revenue.ToString("N2") · @day.Orders delivered orders · @day.ItemsSold items</span>
+                            </div>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="width:@width%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-box">
+                        No delivered sales data for this selected period.
+                    </div>
+                }
+            </div>
+
+            <div class="data-card">
+                <h3>Order Status Overview</h3>
+
+                <div class="status-grid">
+                    <div class="status-row">
+                        <span>Pending</span>
+                        <span class="status-count">@Model.PendingOrders</span>
+                    </div>
+
+                    <div class="status-row">
+                        <span>Preparing</span>
+                        <span class="status-count">@Model.PreparingOrders</span>
+                    </div>
+
+                    <div class="status-row">
+                        <span>Out for Delivery</span>
+                        <span class="status-count">@Model.OutForDeliveryOrders</span>
+                    </div>
+
+                    <div class="status-row">
+                        <span>Delivered</span>
+                        <span class="status-count">@Model.DeliveredOrders</span>
+                    </div>
+
+                    <div class="status-row">
+                        <span>Cancelled</span>
+                        <span class="status-count">@Model.CancelledOrders</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <h3>Best-Selling Products</h3>
+
+            @if (Model.BestSellingProducts.Any())
+            {
+                <table class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity Sold</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var product in Model.BestSellingProducts)
+                        {
+                            <tr>
+                                <td>@product.ProductName</td>
+                                <td>@product.QuantitySold</td>
+                                <td>$@product.Revenue.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty-box">
+                    No delivered product sales yet.
+                </div>
+            }
+        </div>
+
+        <div class="table-card">
+            <h3>Recent Orders</h3>
+
+            @if (Model.RecentOrders.Any())
+            {
+                <table class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Order Number</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Store Amount</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var order in Model.RecentOrders)
+                        {
+                            <tr>
+                                <td>@order.OrderNumber</td>
+                                <td>@order.OrderDate.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <span class="status-badge">
+                                        @order.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="payment-badge">
+                                        @order.PaymentStatus
+                                    </span>
+                                </td>
+                                <td>$@order.Amount.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty-box">
+                    No recent orders for this selected period.
+                </div>
+            }
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const rangeSelect = document.getElementById("rangeSelect");
+    const customDateGroups = document.querySelectorAll(".custom-date-group");
+
+    function toggleCustomDates() {
+        if (!rangeSelect) {
+            return;
+        }
+
+        const isCustom = rangeSelect.value === "custom";
+
+        customDateGroups.forEach(group => {
+            group.style.display = isCustom ? "block" : "none";
+        });
+    }
+
+    if (rangeSelect) {
+        rangeSelect.addEventListener("change", toggleCustomDates);
+        toggleCustomDates();
+    }
+</script>
