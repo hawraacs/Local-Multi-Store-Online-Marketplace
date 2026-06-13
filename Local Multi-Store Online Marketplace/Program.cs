@@ -122,6 +122,12 @@ builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
 
 // ===============================
+// SUBSCRIPTION SYSTEM (NEW)
+// ===============================
+builder.Services.AddScoped<SubscriptionService>();
+builder.Services.AddHostedService<SubscriptionExpiryService>();
+
+// ===============================
 // AutoMapper
 // ===============================
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
@@ -147,7 +153,6 @@ builder.Services.AddScoped<OrderHistoryManager>();
 builder.Services.AddScoped<RecentlyViewedManager>();
 builder.Services.AddScoped<CustomerManager>();
 builder.Services.AddScoped<IPromotionManager, PromotionManager>();
-
 
 var app = builder.Build();
 
@@ -209,22 +214,14 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
-
 app.UseRouting();
 
 app.UseAuthentication();
-
 app.UseAuthorization();
 
-// ===============================
-// Endpoints
-// ===============================
 app.MapRazorPages();
-
 app.MapControllers();
-
 app.MapDefaultControllerRoute();
 
 app.Run();

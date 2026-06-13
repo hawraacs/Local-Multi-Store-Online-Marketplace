@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Multi_Store.Core.Entities
@@ -61,6 +60,25 @@ namespace Multi_Store.Core.Entities
 
         public int? ApprovedBy { get; set; }
 
+        // ===========================
+        // Subscription Fields
+        // ===========================
+
+        public string SubscriptionStatus { get; set; } = "Active";
+        // Active, Expired, Suspended
+
+        public DateTime? SubscriptionExpiryDate { get; set; }
+        // null = never expires (admin override)
+
+        public DateTime? TrialStartDate { get; set; }
+        // start of free trial
+
+        public DateTime? LastPaymentDate { get; set; }
+
+        public decimal? LastPaymentAmount { get; set; }
+
+        // Navigation Properties
+
         public virtual User Owner { get; set; } = null!;
 
         public virtual User? Approver { get; set; }
@@ -76,7 +94,8 @@ namespace Multi_Store.Core.Entities
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
         public virtual ICollection<Complaint> Complaints { get; set; } = new List<Complaint>();
+
         public virtual ICollection<StoreFollow> Followers { get; set; }
-     = new List<StoreFollow>();
+            = new List<StoreFollow>();
     }
 }
