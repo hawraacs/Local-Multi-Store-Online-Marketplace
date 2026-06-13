@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
@@ -43,6 +44,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage();
             }
 
+            if (order.Status == "Delivered" || order.Status == "Cancelled")
+            {
+                TempData["Error"] = "Delivered or cancelled orders cannot be assigned.";
+                return RedirectToPage();
+            }
+
             var deliveryPerson = await _context.DeliveryPersons
                 .FirstOrDefaultAsync(d =>
                     d.DeliveryPersonID == deliveryPersonId &&
@@ -68,25 +75,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage();
             }
 
-            var assignment = new Multi_Store.Core.Entities.DeliveryAssignment
+            var assignment = new DeliveryAssignment
             {
                 OrderID = orderId,
                 DeliveryPersonID = deliveryPersonId,
                 AssignedAt = DateTime.UtcNow,
+                PickupTime = null,
+                DeliveryTime = null,
                 Status = "Assigned",
                 DeliveryProofImageURL = null
             };
 
             _context.DeliveryAssignments.Add(assignment);
 
-            // According to Delivery Assignment use case:
-            // after assigning delivery staff, the order becomes Out for Delivery.
-            order.Status = "Out for Delivery";
+            // Admin assigns only. Delivery starts later from Delivery Dashboard.
+            order.Status = "Assigned";
 
             await _context.SaveChangesAsync();
 
             TempData["Success"] =
-                $"Delivery person assigned successfully to order {order.OrderNumber}. Order is now Out for Delivery.";
+                $"Delivery person assigned successfully to order {order.OrderNumber}. Tracking will start when delivery person clicks Start Delivery.";
 
             return RedirectToPage();
         }

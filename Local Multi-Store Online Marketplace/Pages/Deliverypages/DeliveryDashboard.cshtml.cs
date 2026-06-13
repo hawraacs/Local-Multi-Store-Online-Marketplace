@@ -104,6 +104,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                 return RedirectToPage();
             }
 
+            if (assignment.Status == "Delivered")
+            {
+                TempData["Error"] = "This order is already delivered.";
+                return RedirectToPage();
+            }
+
+            if (assignment.Status != "Assigned")
+            {
+                TempData["Error"] = "Only assigned orders can be started.";
+                return RedirectToPage();
+            }
+
             if (!deliveryPerson.CurrentLatitude.HasValue ||
                 !deliveryPerson.CurrentLongitude.HasValue ||
                 !deliveryPerson.LastLocationUpdate.HasValue)
@@ -123,6 +135,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
             assignment.Status = "OutForDelivery";
             assignment.PickupTime = DateTime.UtcNow;
+
             assignment.Order.Status = "Out for Delivery";
 
             await _context.SaveChangesAsync();
@@ -142,13 +155,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                 return RedirectToPage();
             }
 
+            if (assignment.Status != "OutForDelivery")
+            {
+                TempData["Error"] = "You must start delivery before marking it delivered.";
+                return RedirectToPage();
+            }
+
             assignment.Status = "Delivered";
             assignment.DeliveryTime = DateTime.UtcNow;
+
             assignment.Order.Status = "Delivered";
 
             var paymentMethod = assignment.Order.PaymentMethod?.Trim() ?? string.Empty;
 
-            if (paymentMethod.Equals("Cash On Delivery", StringComparison.OrdinalIgnoreCase))
+            if (paymentMethod.Equals("Cash On Delivery", StringComparison.OrdinalIgnoreCase) ||
+                paymentMethod.Equals("COD", StringComparison.OrdinalIgnoreCase))
             {
                 assignment.Order.PaymentStatus = "Paid";
 
@@ -181,25 +202,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                     });
                 }
             }
-            else if (paymentMethod.Equals("Online Payment", StringComparison.OrdinalIgnoreCase))
-            {
-                assignment.Order.PaymentStatus = "Paid";
-
-                var latestPayment = await _context.Payments
-                    .Where(p => p.OrderID == assignment.Order.OrderID)
-                    .OrderByDescending(p => p.PaymentDate)
-                    .FirstOrDefaultAsync();
-
-                if (latestPayment != null && !latestPayment.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
-                {
-                    latestPayment.Status = "Paid";
-                    latestPayment.PaymentDate = DateTime.UtcNow;
-                }
-            }
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Order marked as delivered. Payment confirmed successfully.";
+            TempData["Success"] = "Order marked as delivered. Tracking stopped.";
 
             return RedirectToPage();
         }
