@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
 using Multi_Store.Infrastructure.Data;
+using System.Linq;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 {
@@ -40,9 +41,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             var user = await _userManager.GetUserAsync(User);
 
             if (user == null)
-            {
                 return RedirectToPage("/Account/Login");
-            }
 
             var store = await _currentStoreService.GetCurrentStoreAsync();
 
@@ -57,11 +56,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             if (store == null)
             {
                 TempData["ErrorMessage"] = "Store profile was not found. Please contact admin.";
-                Store = new Store
-                {
-                    StoreName = "No Store Found"
-                };
-
+                Store = new Store { StoreName = "No Store Found" };
                 return Page();
             }
 
@@ -170,6 +165,46 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 .CountAsync(p =>
                     p.StoreID == storeId &&
                     p.Quantity <= 0);
+
+            // =========================
+            // PROFIT ANALYTICS (NEW)
+            // =========================
+
+            var deliveredOrderItems = await _context.OrderItems
+                .Include(oi => oi.Product)
+                .Where(oi =>
+                    oi.StoreID == storeId &&
+                    oi.Order != null &&
+                    oi.Order.Status == "Delivered")
+                .ToListAsync();
+
+            Stats.TotalProfit = deliveredOrderItems
+                .Where(oi =>
+                    oi.Product != null &&
+                    oi.Product.OriginalPrice.HasValue)
+                .Sum(oi =>
+                    (oi.Product.Price - oi.Product.OriginalPrice.Value) * oi.Quantity);
+
+            var productsWithMargin = await _context.Products
+                .Where(p =>
+                    p.StoreID == storeId &&
+                    p.OriginalPrice.HasValue &&
+                    p.OriginalPrice > 0)
+                .ToListAsync();
+
+            if (productsWithMargin.Any())
+            {
+                Stats.AverageMarginPercent = productsWithMargin
+                    .Average(p =>
+                        ((p.Price - p.OriginalPrice.Value) / p.Price) * 100);
+            }
+
+            Stats.LowMarginProductsCount = await _context.Products
+                .CountAsync(p =>
+                    p.StoreID == storeId &&
+                    p.OriginalPrice.HasValue &&
+                    p.OriginalPrice > 0 &&
+                    ((p.Price - p.OriginalPrice.Value) / p.Price) * 100 < 10);
         }
 
         private async Task LoadRecentOrders(int storeId)
@@ -281,6 +316,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
     public class DashboardStats
     {
+
+
         public int TotalProducts { get; set; }
         public int TotalOrders { get; set; }
         public decimal TotalRevenue { get; set; }
@@ -293,6 +330,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public decimal RevenueGrowth { get; set; }
         public int LowStockCount { get; set; }
         public int OutOfStockCount { get; set; }
+
+        // NEW FIELDS (PROFIT ANALYTICS)
+        public decimal TotalProfit { get; set; }
+        public decimal AverageMarginPercent { get; set; }
+        public int LowMarginProductsCount { get; set; }
     }
 
     public class RecentOrder

@@ -7,6 +7,8 @@ namespace Multi_Store.Core.ViewModels.StoreOwner
 {
     public class ProductViewModel
     {
+
+
         public int ProductID { get; set; }
 
         [Required(ErrorMessage = "Product name is required")]
@@ -22,12 +24,17 @@ namespace Multi_Store.Core.ViewModels.StoreOwner
         [Required(ErrorMessage = "Price is required")]
         [Range(0.01, 999999.99, ErrorMessage = "Price must be between $0.01 and $999,999.99")]
         [DataType(DataType.Currency)]
-        [Display(Name = "Price")]
+        [Display(Name = "Selling Price")]
         public decimal Price { get; set; }
 
         [DataType(DataType.Currency)]
-        [Display(Name = "Compare at Price (Original Price)")]
+        [Display(Name = "Compare at Price (Original Display Price)")]
         public decimal? CompareAtPrice { get; set; }
+
+        [DataType(DataType.Currency)]
+        [Display(Name = "Cost Price")]
+        [Range(0, 999999.99, ErrorMessage = "Cost price must be valid")]
+        public decimal? OriginalPrice { get; set; }
 
         [Required(ErrorMessage = "Quantity is required")]
         [Range(0, 999999, ErrorMessage = "Quantity must be between 0 and 999,999")]
@@ -35,17 +42,17 @@ namespace Multi_Store.Core.ViewModels.StoreOwner
         public int Quantity { get; set; }
 
         [Display(Name = "Low Stock Threshold")]
-        [Range(0, 1000, ErrorMessage = "Low stock threshold must be between 0 and 1000")]
+        [Range(0, 1000)]
         public int LowStockThreshold { get; set; } = 5;
 
         [Display(Name = "Weight (kg)")]
-        [Range(0, 1000, ErrorMessage = "Weight must be between 0 and 1000 kg")]
+        [Range(0, 1000)]
         public decimal? Weight { get; set; }
 
         public int CategoryID { get; set; }
 
-        [Required(ErrorMessage = "Category name is required")]
-        [StringLength(100, MinimumLength = 2, ErrorMessage = "Category name must be between 2 and 100 characters")]
+        [Required]
+        [StringLength(100)]
         [Display(Name = "Category")]
         public string CategoryName { get; set; } = string.Empty;
 
@@ -61,19 +68,24 @@ namespace Multi_Store.Core.ViewModels.StoreOwner
 
         public bool IsOutOfStock => Quantity <= 0;
 
-        public decimal? DiscountPercentage => CompareAtPrice.HasValue && CompareAtPrice > Price
-            ? Math.Round(((CompareAtPrice.Value - Price) / CompareAtPrice.Value) * 100, 0)
-            : null;
+        public decimal? DiscountPercentage =>
+            CompareAtPrice.HasValue && CompareAtPrice > Price
+                ? Math.Round(((CompareAtPrice.Value - Price) / CompareAtPrice.Value) * 100, 0)
+                : null;
+
+        public decimal AdminFeePerUnit => Math.Round(Price * 0.05m, 2);
+
+        public decimal? NetProfitPerUnit =>
+            OriginalPrice.HasValue
+                ? Price - OriginalPrice.Value - AdminFeePerUnit
+                : null;
     }
 
     public class ProductImageViewModel
     {
         public int ImageID { get; set; }
-
         public string ImageUrl { get; set; } = string.Empty;
-
         public int DisplayOrder { get; set; }
-
         public bool IsPrimary { get; set; }
     }
 
@@ -88,6 +100,8 @@ namespace Multi_Store.Core.ViewModels.StoreOwner
         public decimal Price { get; set; }
 
         public decimal? CompareAtPrice { get; set; }
+
+        public decimal? OriginalPrice { get; set; }
 
         public int Quantity { get; set; }
 
@@ -105,16 +119,34 @@ namespace Multi_Store.Core.ViewModels.StoreOwner
 
         public DateTime CreatedAt { get; set; }
 
-        public decimal? DiscountPercentage => CompareAtPrice.HasValue && CompareAtPrice > Price
-            ? Math.Round(((CompareAtPrice.Value - Price) / CompareAtPrice.Value) * 100, 0)
-            : null;
+        public decimal? DiscountPercentage =>
+            CompareAtPrice.HasValue && CompareAtPrice > Price
+                ? Math.Round(((CompareAtPrice.Value - Price) / CompareAtPrice.Value) * 100, 0)
+                : null;
 
-        public string StockStatus => IsOutOfStock
-            ? "Out of Stock"
+        public decimal? ProfitPerUnit =>
+            OriginalPrice.HasValue
+                ? Price - OriginalPrice.Value
+                : null;
+
+        public decimal? MarginPercent =>
+            OriginalPrice.HasValue && Price > 0
+                ? Math.Round(((Price - OriginalPrice.Value) / Price) * 100, 2)
+                : null;
+
+        public decimal AdminFeePerUnit => Math.Round(Price * 0.05m, 2);
+
+        public decimal? NetProfitPerUnit =>
+            OriginalPrice.HasValue
+                ? Price - OriginalPrice.Value - AdminFeePerUnit
+                : null;
+
+        public string StockStatus =>
+            IsOutOfStock ? "Out of Stock"
             : (Quantity <= LowStockThreshold ? "Low Stock" : "In Stock");
 
-        public string StockStatusClass => IsOutOfStock
-            ? "out"
+        public string StockStatusClass =>
+            IsOutOfStock ? "out"
             : (Quantity <= LowStockThreshold ? "low" : "normal");
     }
 }
