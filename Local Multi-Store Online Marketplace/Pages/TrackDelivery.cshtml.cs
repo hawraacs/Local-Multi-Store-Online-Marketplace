@@ -48,6 +48,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
 
             var order = await _context.Orders
+                .Include(o => o.DeliveryAssignment)
                 .FirstOrDefaultAsync(o =>
                     o.OrderID == OrderId &&
                     o.CustomerID == customer.CustomerID);
@@ -58,13 +59,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage("/CustomerOrders");
             }
 
-            if (order.Status != "Out for Delivery" &&
-                order.Status != "OutForDelivery" &&
-                order.Status != "Delivered")
+            if (order.Status == "Delivered")
             {
-                TempData["Error"] =
-                    "Tracking is available only when the order is out for delivery.";
+                TempData["Error"] = "Tracking stopped because the order is already delivered.";
+                return RedirectToPage("/CustomerOrders");
+            }
 
+            if (order.Status != "Out for Delivery")
+            {
+                TempData["Error"] = "Tracking is available only after the delivery person starts delivery.";
+                return RedirectToPage("/CustomerOrders");
+            }
+
+            if (order.DeliveryAssignment == null ||
+                order.DeliveryAssignment.Status != "OutForDelivery")
+            {
+                TempData["Error"] = "Delivery has not started yet.";
                 return RedirectToPage("/CustomerOrders");
             }
 

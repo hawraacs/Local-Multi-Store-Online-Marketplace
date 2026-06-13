@@ -81,7 +81,7 @@ namespace Local_Multi_Store_Online_Marketplace.Controllers
                 return Ok(new
                 {
                     success = false,
-                    message = "Tracking is available only when the order is out for delivery."
+                    message = "Tracking is available only after the delivery person starts delivery."
                 });
             }
 
@@ -116,6 +116,15 @@ namespace Local_Multi_Store_Online_Marketplace.Controllers
                 });
             }
 
+            if (assignment.Status != "OutForDelivery" || !assignment.PickupTime.HasValue)
+            {
+                return Ok(new
+                {
+                    success = false,
+                    message = "Delivery has not started yet."
+                });
+            }
+
             var deliveryPerson = assignment.DeliveryPerson;
 
             if (!deliveryPerson.CurrentLatitude.HasValue ||
@@ -140,44 +149,29 @@ namespace Local_Multi_Store_Online_Marketplace.Controllers
             double shownDeliveryLng;
             string trackingMode;
 
-            if (IsDelivered(order.Status))
-            {
-                shownDeliveryLat = customerLat;
-                shownDeliveryLng = customerLng;
-                trackingMode = "Delivered";
-            }
-            else if (assignment.Status == "OutForDelivery" && assignment.PickupTime.HasValue)
-            {
-                var secondsSinceLastGps =
-                    Math.Max(0, (DateTime.UtcNow - lastGpsUpdateUtc).TotalSeconds);
+            var secondsSinceLastGps =
+                Math.Max(0, (DateTime.UtcNow - lastGpsUpdateUtc).TotalSeconds);
 
-                var gpsIsFresh = secondsSinceLastGps <= FreshGpsSeconds;
+            var gpsIsFresh = secondsSinceLastGps <= FreshGpsSeconds;
 
-                if (gpsIsFresh)
-                {
-                    shownDeliveryLat = realDeliveryLat;
-                    shownDeliveryLng = realDeliveryLng;
-                    trackingMode = "Live GPS";
-                }
-                else
-                {
-                    var simulated = await CalculateSimulatedLocationOnRoadAsync(
-                        realDeliveryLat,
-                        realDeliveryLng,
-                        customerLat,
-                        customerLng,
-                        lastGpsUpdateUtc);
-
-                    shownDeliveryLat = simulated.Latitude;
-                    shownDeliveryLng = simulated.Longitude;
-                    trackingMode = "Simulated After GPS Stopped";
-                }
-            }
-            else
+            if (gpsIsFresh)
             {
                 shownDeliveryLat = realDeliveryLat;
                 shownDeliveryLng = realDeliveryLng;
-                trackingMode = "Waiting For Start";
+                trackingMode = "Live GPS";
+            }
+            else
+            {
+                var simulated = await CalculateSimulatedLocationOnRoadAsync(
+                    realDeliveryLat,
+                    realDeliveryLng,
+                    customerLat,
+                    customerLng,
+                    lastGpsUpdateUtc);
+
+                shownDeliveryLat = simulated.Latitude;
+                shownDeliveryLng = simulated.Longitude;
+                trackingMode = "Simulated After GPS Stopped";
             }
 
             var remainingRoute = await TryGetDrivingRouteAsync(
@@ -193,9 +187,7 @@ namespace Local_Multi_Store_Online_Marketplace.Controllers
                     customerLat,
                     customerLng);
 
-            var etaText = IsDelivered(order.Status)
-                ? "Arrived"
-                : CalculateEtaText(remainingDistanceKm);
+            var etaText = CalculateEtaText(remainingDistanceKm);
 
             var routeCoordinates = remainingRoute?.Coordinates
                 ?? new List<double[]>
@@ -227,9 +219,7 @@ namespace Local_Multi_Store_Online_Marketplace.Controllers
                 etaText = etaText,
                 distanceKm = Math.Round(remainingDistanceKm, 2),
 
-                message = IsDelivered(order.Status)
-                    ? "Your order has arrived."
-                    : "Tracking updated successfully."
+                message = "Tracking updated successfully."
             });
         }
 
@@ -303,13 +293,7 @@ namespace Local_Multi_Store_Online_Marketplace.Controllers
         private static bool IsTrackableStatus(string? status)
         {
             return status == "Out for Delivery" ||
-                   status == "OutForDelivery" ||
-                   status == "Delivered";
-        }
-
-        private static bool IsDelivered(string? status)
-        {
-            return status == "Delivered";
+                   status == "OutForDelivery";
         }
 
         private static (double Latitude, double Longitude)? GetCustomerCoordinates(CustomerAddress address)

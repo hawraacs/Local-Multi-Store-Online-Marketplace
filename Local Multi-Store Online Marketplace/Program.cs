@@ -1,16 +1,16 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
+using Multi_Store.Core.Managers;
 using Multi_Store.Core.Reposinterface;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Infrastructure.Repositories;
 using Multi_Store.Services;
-using Multi_Store.Services.Managers;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Multi_Store.Services.Email;
-using Multi_Store.Core.Managers;
+using Multi_Store.Services.Managers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -122,12 +122,6 @@ builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
 
 // ===============================
-// SUBSCRIPTION SYSTEM (NEW)
-// ===============================
-builder.Services.AddScoped<SubscriptionService>();
-builder.Services.AddHostedService<SubscriptionExpiryService>();
-
-// ===============================
 // AutoMapper
 // ===============================
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
@@ -215,6 +209,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
 
 app.UseAuthentication();
