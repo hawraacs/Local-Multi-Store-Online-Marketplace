@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services;
 using System.Text.Json;
+using Multi_Store.Services;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
@@ -14,6 +16,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
+        private readonly SubscriptionService _subscriptionService;
 
         private const decimal FreeDeliveryThreshold = 50m;
         private const decimal BaseDeliveryFee = 2.00m;
@@ -26,11 +29,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         };
 
         public CustomerCartModel(
-            ApplicationDbContext context,
-            UserManager<User> userManager)
+    ApplicationDbContext context,
+    UserManager<User> userManager,
+    SubscriptionService subscriptionService)
         {
             _context = context;
             _userManager = userManager;
+            _subscriptionService = subscriptionService;
         }
 
         public List<CustomerCartItemViewModel> CartItems { get; set; } = new();
@@ -333,9 +338,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
                 }
 
+                if (!_subscriptionService.CanReceiveOrders(item.Product.StoreID))
+                {
+                    var store = await _context.Stores
+                        .FirstOrDefaultAsync(s => s.StoreID == item.Product.StoreID);
+
+                    TempData["Error"] =
+                        $"Store '{store?.StoreName}' subscription has expired and cannot receive orders.";
+
+                    return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
+                }
+
                 if (item.Product.Quantity < item.Quantity)
                 {
-                    TempData["Error"] = $"Not enough stock available for {item.Product.ProductName}.";
+                    TempData["Error"] =
+                        $"Not enough stock available for {item.Product.ProductName}.";
+
                     return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
                 }
             }

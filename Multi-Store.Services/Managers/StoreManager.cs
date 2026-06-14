@@ -124,6 +124,16 @@ namespace Multi_Store.Services.Managers
             store.ApprovedAt = DateTime.UtcNow;
             store.ApprovedBy = adminId;
 
+            // Subscription
+            store.TrialStartDate = DateTime.UtcNow;
+            store.SubscriptionExpiryDate = DateTime.UtcNow.AddDays(30);
+            store.SubscriptionStatus = "Active";
+
+            // First month free
+            store.TrialStartDate = DateTime.UtcNow;
+            store.SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(1);
+            store.SubscriptionStatus = "Active";
+
             await _storeRepository.UpdateAsync(store);
 
             return (owner.Email ?? string.Empty, "Use existing password");
@@ -147,6 +157,13 @@ namespace Multi_Store.Services.Managers
             store.Status = "Approved";
             store.ApprovedAt ??= DateTime.UtcNow;
             store.ApprovedBy ??= adminId;
+
+            if (store.SubscriptionExpiryDate == null)
+            {
+                store.TrialStartDate = DateTime.UtcNow;
+                store.SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(1);
+                store.SubscriptionStatus = "Active";
+            }
 
             await _storeRepository.UpdateAsync(store);
         }
@@ -202,7 +219,11 @@ namespace Multi_Store.Services.Managers
                 CODMaxLimit = s.CODMaxLimit,
                 CreatedAt = s.CreatedAt,
                 ApprovedAt = s.ApprovedAt,
-                ApprovedBy = s.ApprovedBy
+                ApprovedBy = s.ApprovedBy ,
+
+                SubscriptionStatus = s.SubscriptionStatus,
+                SubscriptionExpiryDate = s.SubscriptionExpiryDate,
+                OwnerEmail = s.Owner != null ? s.Owner.Email : null
             });
         }
 

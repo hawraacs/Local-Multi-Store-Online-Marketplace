@@ -64,7 +64,7 @@ namespace Multi_Store.Core.Entities
         // Subscription Fields
         // ===========================
 
-        public string SubscriptionStatus { get; set; } = "Active";
+        public string SubscriptionStatus { get; set; } = "Pending";
         // Active, Expired, Suspended
 
         public DateTime? SubscriptionExpiryDate { get; set; }
