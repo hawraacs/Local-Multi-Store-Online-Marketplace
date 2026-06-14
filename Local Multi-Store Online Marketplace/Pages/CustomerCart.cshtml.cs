@@ -7,7 +7,7 @@ using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services;
 using System.Text.Json;
-using Multi_Store.Services;
+using Multi_Store.Services.Managers;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
