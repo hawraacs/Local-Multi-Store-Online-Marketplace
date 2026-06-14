@@ -120,6 +120,7 @@ builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 // Services
 // ===============================
 builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
+builder.Services.AddScoped<SubscriptionService>();
 
 // ===============================
 // AutoMapper
