@@ -19,7 +19,7 @@ namespace Multi_Store.Services
         public void StartFreeTrial(Store store)
         {
             store.TrialStartDate = DateTime.UtcNow;
-            store.SubscriptionExpiryDate = DateTime.UtcNow.AddDays(30);
+            store.SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(1);
             store.SubscriptionStatus = "Active";
 
             _context.SaveChanges();
@@ -56,11 +56,11 @@ namespace Multi_Store.Services
             if (store.SubscriptionExpiryDate == null ||
                 store.SubscriptionExpiryDate < DateTime.UtcNow)
             {
-                newExpiry = DateTime.UtcNow.AddDays(30);
+                newExpiry = DateTime.UtcNow.AddMonths(1); ;
             }
             else
             {
-                newExpiry = store.SubscriptionExpiryDate.Value.AddDays(30);
+                newExpiry = store.SubscriptionExpiryDate.Value.AddMonths(1);
             }
 
             store.SubscriptionExpiryDate = newExpiry;
@@ -106,7 +106,17 @@ namespace Multi_Store.Services
                 .AsNoTracking()
                 .FirstOrDefault(s => s.StoreID == storeId);
 
-            return store != null && store.SubscriptionStatus == "Active";
+            if (store == null)
+                return false;
+
+            if (store.SubscriptionStatus != "Active")
+                return false;
+
+            if (store.SubscriptionExpiryDate.HasValue &&
+                store.SubscriptionExpiryDate.Value < DateTime.UtcNow)
+                return false;
+
+            return true;
         }
     }
 }
