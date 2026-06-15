@@ -63,19 +63,29 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                 })
                 .ToListAsync();
 
+            var assignedOrderIds = Assignments
+    .Where(a =>
+        a.AssignmentStatus == "Assigned" &&
+        a.OrderStatus == "Assigned")
+    .Select(a => a.OrderID)
+    .ToList();
+
             Notifications = await _context.Notifications
                 .Where(n =>
                     n.UserID == deliveryPerson.UserID &&
-                    n.Type == "DeliveryAssignment")
+                    n.Type == "DeliveryAssignment" &&
+                    n.ReferenceID.HasValue &&
+                    assignedOrderIds.Contains(n.ReferenceID.Value) &&
+                    !n.IsRead)
                 .OrderByDescending(n => n.SentAt)
-                .Take(5)
                 .Select(n => new DeliveryNotificationViewModel
                 {
                     NotificationID = n.NotificationID,
                     Title = n.Title,
                     Message = n.Message,
                     SentAt = n.SentAt,
-                    IsRead = n.IsRead
+                    IsRead = n.IsRead,
+                    ReferenceID = n.ReferenceID
                 })
                 .ToListAsync();
 
@@ -116,6 +126,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                 return RedirectToPage();
             }
 
+            var alreadyHasRunningDelivery = await _context.DeliveryAssignments
+                .Include(a => a.Order)
+                .AnyAsync(a =>
+                    a.DeliveryPersonID == deliveryPerson.DeliveryPersonID &&
+                    a.AssignmentID != assignment.AssignmentID &&
+                    a.Status == "OutForDelivery" &&
+                    a.Order != null &&
+                    a.Order.Status != "Delivered" &&
+                    a.Order.Status != "Cancelled");
+
+            if (alreadyHasRunningDelivery)
+            {
+                TempData["Error"] =
+                    "You already have an active delivery. Please mark the current order as delivered before starting another order.";
+                return RedirectToPage();
+            }
+
             if (!deliveryPerson.CurrentLatitude.HasValue ||
                 !deliveryPerson.CurrentLongitude.HasValue ||
                 !deliveryPerson.LastLocationUpdate.HasValue)
@@ -135,8 +162,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
             assignment.Status = "OutForDelivery";
             assignment.PickupTime = DateTime.UtcNow;
-
             assignment.Order.Status = "Out for Delivery";
+
+            var relatedNotifications = await _context.Notifications
+                .Where(n =>
+                    n.UserID == deliveryPerson.UserID &&
+                    n.Type == "DeliveryAssignment" &&
+                    n.ReferenceID == assignment.OrderID &&
+                    !n.IsRead)
+                .ToListAsync();
+
+            foreach (var notification in relatedNotifications)
+            {
+                notification.IsRead = true;
+            }
 
             await _context.SaveChangesAsync();
 
@@ -163,7 +202,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
             assignment.Status = "Delivered";
             assignment.DeliveryTime = DateTime.UtcNow;
-
             assignment.Order.Status = "Delivered";
 
             var paymentMethod = assignment.Order.PaymentMethod?.Trim() ?? string.Empty;
@@ -271,5 +309,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         public DateTime SentAt { get; set; }
 
         public bool IsRead { get; set; }
+
+        public int? ReferenceID { get; set; }
     }
 }

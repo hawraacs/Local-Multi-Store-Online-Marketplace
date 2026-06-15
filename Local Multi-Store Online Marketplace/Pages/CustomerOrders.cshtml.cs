@@ -62,6 +62,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                             a.OrderID == o.OrderID &&
                             a.Status != "Cancelled" &&
                             a.Status != "Failed")
+                        .OrderByDescending(a => a.AssignedAt)
                         .Select(a => a.Status)
                         .FirstOrDefault()
                 })
@@ -99,8 +100,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 var cleanOrderStatus = Status?.Trim();
                 var cleanAssignmentStatus = AssignmentStatus?.Trim();
 
-                return cleanOrderStatus == "Out for Delivery" &&
-                       cleanAssignmentStatus == "OutForDelivery";
+                if (!HasDeliveryAssignment)
+                {
+                    return false;
+                }
+
+                // Delivery is running
+                if (cleanOrderStatus == "Out for Delivery" &&
+                    cleanAssignmentStatus == "OutForDelivery")
+                {
+                    return true;
+                }
+
+                // Delivery finished, but customer can still open tracking map
+                if (cleanOrderStatus == "Delivered" &&
+                    cleanAssignmentStatus == "Delivered")
+                {
+                    return true;
+                }
+
+                return false;
             }
         }
 
@@ -108,16 +127,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         {
             get
             {
-                var cleanStatus = Status?.Trim();
+                var cleanOrderStatus = Status?.Trim();
+                var cleanAssignmentStatus = AssignmentStatus?.Trim();
 
-                if (cleanStatus == "Assigned")
+                if (!HasDeliveryAssignment)
+                {
+                    return "Available when out for delivery";
+                }
+
+                if (cleanOrderStatus == "Assigned" ||
+                    cleanAssignmentStatus == "Assigned")
+                {
                     return "Available when delivery starts";
-
-                if (cleanStatus == "Delivered")
-                    return "Delivered";
-
-                if (cleanStatus == "Out for Delivery")
-                    return "Track Delivery";
+                }
 
                 return "Available when out for delivery";
             }
@@ -128,9 +150,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             get
             {
                 var cleanPayment = PaymentStatus?.Trim();
+                var cleanOrderStatus = Status?.Trim();
 
                 return cleanPayment == "Paid" ||
-                       Status == "Delivered";
+                       cleanOrderStatus == "Delivered";
             }
         }
     }
