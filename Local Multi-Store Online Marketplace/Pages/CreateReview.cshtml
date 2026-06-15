@@ -9,7 +9,7 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Review Store</title>
+    <title>Store Reviews</title>
 
     <style>
         body {
@@ -19,76 +19,47 @@
         }
 
         .container {
-            max-width: 520px;
-            margin: 60px auto;
+            max-width: 600px;
+            margin: 40px auto;
             background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            border-radius: 12px;
         }
 
         h2 {
             text-align: center;
-            margin-bottom: 20px;
         }
 
-        .form-group {
-            margin-bottom: 15px;
+        .review-box {
+            border: 1px solid #eee;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
         }
 
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 6px;
+        .stars {
+            color: gold;
         }
 
-        input, textarea {
+        textarea, input {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        textarea {
-            height: 110px;
-            resize: none;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            background: #16a34a;
-            color: white;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-            .btn:hover {
-                background: #15803d;
-            }
-
-        .back {
-            display: block;
-            text-align: center;
-            margin-top: 15px;
-            color: #666;
-            text-decoration: none;
-        }
-
-            .back:hover {
-                color: black;
-            }
-
-        .title {
-            text-align: center;
-            font-size: 20px;
+            margin-top: 5px;
             margin-bottom: 10px;
-            color: #333;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: green;
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .section-title {
+            margin-top: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -97,33 +68,51 @@
 
     <div class="container">
 
-        <h2>⭐ Review Store</h2>
+        <h2>⭐ Store Reviews</h2>
 
-        <div class="title">
-            Share your experience with this store
-        </div>
-
+        <!-- ✅ ADD REVIEW FORM -->
         <form method="post">
 
             <input type="hidden" asp-for="StoreId" />
 
-            <div class="form-group">
-                <label>Rating (1 - 5)</label>
-                <input asp-for="Rating" type="number" min="1" max="5" />
-            </div>
+            <label>Rating (1-5)</label>
+            <input asp-for="Rating" type="number" min="1" max="5" />
 
-            <div class="form-group">
-                <label>Comment</label>
-                <textarea asp-for="Comment" placeholder="Write your experience..."></textarea>
-            </div>
+            <label>Comment</label>
+            <textarea asp-for="Comment" placeholder="Write your review..."></textarea>
 
-            <button type="submit" class="btn">
-                Submit Review
-            </button>
+            <button type="submit">Submit Review</button>
 
         </form>
 
-        <a href="javascript:history.back()" class="back">← Back</a>
+        <!-- ✅ EXISTING REVIEWS -->
+        <div class="section-title">Other Reviews</div>
+
+        @if (!Model.Reviews.Any())
+        {
+            <p>No reviews yet.</p>
+        }
+        else
+        {
+            @foreach (var r in Model.Reviews)
+            {
+                <div class="review-box">
+                    <strong>@(r.Customer?.CustomerID.ToString() ?? "Unknown Customer")</strong>
+
+                    <div class="stars">
+                        @for (int i = 0; i < r.Rating; i++)
+                        {
+                            <span>⭐</span>
+                        }
+                    </div>
+
+                    <p>@r.Comment</p>
+
+                    <small>@r.CreatedAt.ToString("yyyy-MM-dd")</small>
+
+                </div>
+            }
+        }
 
     </div>
 

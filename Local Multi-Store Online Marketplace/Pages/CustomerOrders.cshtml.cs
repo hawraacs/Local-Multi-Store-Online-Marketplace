@@ -40,6 +40,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (customer == null)
             {
                 TempData["Error"] = "Customer profile was not found.";
+                Orders = new List<CustomerOrderViewModel>();
                 return Page();
             }
 
@@ -48,11 +49,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .OrderByDescending(o => o.OrderDate)
                 .Select(o => new CustomerOrderViewModel
                 {
+                    OrderID = o.OrderID,
                     OrderNumber = o.OrderNumber,
                     OrderDate = o.OrderDate,
                     Status = o.Status,
                     PaymentMethod = o.PaymentMethod,
-                    TotalAmount = o.TotalAmount
+                    PaymentStatus = o.PaymentStatus,
+                    TotalAmount = o.TotalAmount,
+
+                    AssignmentStatus = _context.DeliveryAssignments
+                        .Where(a =>
+                            a.OrderID == o.OrderID &&
+                            a.Status != "Cancelled" &&
+                            a.Status != "Failed")
+                        .OrderByDescending(a => a.AssignedAt)
+                        .Select(a => a.Status)
+                        .FirstOrDefault()
                 })
                 .ToListAsync();
 
@@ -62,6 +74,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
     public class CustomerOrderViewModel
     {
+        public int OrderID { get; set; }
+
         public string OrderNumber { get; set; } = string.Empty;
 
         public DateTime OrderDate { get; set; }
@@ -70,6 +84,77 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public string PaymentMethod { get; set; } = string.Empty;
 
+        public string PaymentStatus { get; set; } = string.Empty;
+
         public decimal TotalAmount { get; set; }
+
+        public string? AssignmentStatus { get; set; }
+
+        public bool HasDeliveryAssignment =>
+            !string.IsNullOrWhiteSpace(AssignmentStatus);
+
+        public bool CanTrack
+        {
+            get
+            {
+                var cleanOrderStatus = Status?.Trim();
+                var cleanAssignmentStatus = AssignmentStatus?.Trim();
+
+                if (!HasDeliveryAssignment)
+                {
+                    return false;
+                }
+
+                // Delivery is running
+                if (cleanOrderStatus == "Out for Delivery" &&
+                    cleanAssignmentStatus == "OutForDelivery")
+                {
+                    return true;
+                }
+
+                // Delivery finished, but customer can still open tracking map
+                if (cleanOrderStatus == "Delivered" &&
+                    cleanAssignmentStatus == "Delivered")
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        public string TrackingMessage
+        {
+            get
+            {
+                var cleanOrderStatus = Status?.Trim();
+                var cleanAssignmentStatus = AssignmentStatus?.Trim();
+
+                if (!HasDeliveryAssignment)
+                {
+                    return "Available when out for delivery";
+                }
+
+                if (cleanOrderStatus == "Assigned" ||
+                    cleanAssignmentStatus == "Assigned")
+                {
+                    return "Available when delivery starts";
+                }
+
+                return "Available when out for delivery";
+            }
+        }
+
+        public bool CanViewInvoice
+        {
+            get
+            {
+                var cleanPayment = PaymentStatus?.Trim();
+                var cleanOrderStatus = Status?.Trim();
+
+                return cleanPayment == "Paid" ||
+                       cleanOrderStatus == "Delivered";
+            }
+        }
     }
 }

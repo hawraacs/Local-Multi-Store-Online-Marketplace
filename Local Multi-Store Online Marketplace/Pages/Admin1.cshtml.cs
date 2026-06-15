@@ -1,30 +1,108 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using Multi_Store.Infrastructure.Data;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
     [Authorize(Roles = "Admin")]
     public class Admin1Model : PageModel
     {
-        // Replace these with real data from your services
-        public decimal TotalRevenue { get; set; } = 124530m;
-        public int TotalOrders { get; set; } = 1234;
-        public int ActiveStores { get; set; } = 45;
-        public int TotalUsers { get; set; } = 2891;
+        private readonly ApplicationDbContext _context;
+
+        public Admin1Model(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        // =========================
+        // DASHBOARD STATS
+        // =========================
+
+        public decimal TotalCommission { get; set; }
+        public decimal TotalSubscriptionRevenue { get; set; }
+        public decimal TotalPlatformRevenue { get; set; }
+
+        public int TotalOrders { get; set; }
+        public int ActiveStores { get; set; }
+        public int TotalUsers { get; set; }
+
         public List<RecentOrderDto> RecentOrders { get; set; } = new();
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
-            // Example data – replace with database query
-            RecentOrders = new List<RecentOrderDto>
-            {
-                new() { OrderNumber = "ORD-001", CustomerName = "John Doe", StoreName = "Fresh Mart", Amount = 45.00m, Status = "Delivered" },
-                new() { OrderNumber = "ORD-002", CustomerName = "Jane Smith", StoreName = "Tech Zone", Amount = 89.00m, Status = "Pending" },
-                new() { OrderNumber = "ORD-003", CustomerName = "Mike Brown", StoreName = "Fashion Hub", Amount = 23.00m, Status = "Delivered" }
-            };
+            // =========================
+            // COMPLETED ORDERS
+            // =========================
+            var completedOrders = await _context.Orders
+                .Where(o => o.Status == "Delivered")
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Store)
+                .ToListAsync();
+
+            // =========================
+            // COMMISSION CALCULATION
+            // =========================
+            TotalCommission = completedOrders.Sum(order =>
+                order.OrderItems.Sum(item =>
+                    item.TotalPrice * 0.05m
+                )
+            );
+
+            // =========================
+            // SUBSCRIPTION REVENUE
+            // =========================
+            TotalSubscriptionRevenue = await _context.Stores
+                .Where(s => s.LastPaymentAmount.HasValue)
+                .SumAsync(s => s.LastPaymentAmount ?? 0);
+
+            // =========================
+            // TOTAL PLATFORM REVENUE
+            // =========================
+            TotalPlatformRevenue = TotalCommission + TotalSubscriptionRevenue;
+
+            // =========================
+            // BASIC COUNTS
+            // =========================
+            TotalOrders = await _context.Orders.CountAsync();
+
+            ActiveStores = await _context.Stores.CountAsync(s =>
+                s.Status == "Active" &&
+                s.SubscriptionStatus == "Active");
+
+            TotalUsers = await _context.Users.CountAsync();
+
+            // =========================
+            // RECENT ORDERS (SAFE VERSION)
+            // =========================
+            RecentOrders = await _context.Orders
+                .OrderByDescending(o => o.OrderDate)
+                .Take(5)
+                .Select(o => new RecentOrderDto
+                {
+                    OrderNumber = o.OrderNumber,
+                    CustomerName = o.Customer != null
+                        ? o.Customer.User.FullName
+                        : "Unknown",
+
+                    StoreName = o.OrderItems
+                        .Select(oi => oi.Store.StoreName)
+                        .FirstOrDefault() ?? "N/A",
+
+                    Amount = o.TotalAmount,
+                    Status = o.Status
+                })
+                .ToListAsync();
         }
     }
 
+    // =========================
+    // DTO
+    // =========================
     public class RecentOrderDto
     {
         public string OrderNumber { get; set; } = string.Empty;

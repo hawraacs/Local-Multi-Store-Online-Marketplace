@@ -1,28 +1,29 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
+using Multi_Store.Core.Managers;
 using Multi_Store.Core.Reposinterface;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Infrastructure.Repositories;
 using Multi_Store.Services;
-using Multi_Store.Services.Managers;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Multi_Store.Services.Email;
+using Multi_Store.Services.Managers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ===============================
-// Razor Pages
+// Razor Pages + Controllers
 // ===============================
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
 
 // ===============================
 // HttpContextAccessor
 // ===============================
 builder.Services.AddHttpContextAccessor();
-
 
 // ===============================
 // Database
@@ -30,10 +31,15 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// ===============================
+// Email Settings
+// ===============================
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 
 builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+
 // ===============================
 // Identity
 // ===============================
@@ -108,11 +114,13 @@ builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 builder.Services.AddScoped<IRecentlyViewedProductRepository, RecentlyViewedProductRepository>();
+builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 
 // ===============================
 // Services
 // ===============================
 builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
+builder.Services.AddScoped<SubscriptionService>();
 
 // ===============================
 // AutoMapper
@@ -139,6 +147,7 @@ builder.Services.AddScoped<CustomerAddressManager>();
 builder.Services.AddScoped<OrderHistoryManager>();
 builder.Services.AddScoped<RecentlyViewedManager>();
 builder.Services.AddScoped<CustomerManager>();
+builder.Services.AddScoped<IPromotionManager, PromotionManager>();
 
 var app = builder.Build();
 
@@ -200,17 +209,15 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapRazorPages();
-
+app.MapControllers();
 app.MapDefaultControllerRoute();
 
 app.Run();

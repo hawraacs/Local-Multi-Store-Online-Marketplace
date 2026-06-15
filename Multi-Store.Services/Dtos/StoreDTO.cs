@@ -64,6 +64,9 @@ namespace Multi_Store.Services.Dtos
 
         public int? ApprovedBy { get; set; }
 
+        // =========================
+        // NAVIGATION (existing)
+        // =========================
         public virtual User Owner { get; set; } = null!;
 
         public virtual User? Approver { get; set; }
@@ -79,5 +82,16 @@ namespace Multi_Store.Services.Dtos
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
         public virtual ICollection<Complaint> Complaints { get; set; } = new List<Complaint>();
+
+        // =========================
+        // NEW: SUBSCRIPTION SYSTEM (FIX)
+        // =========================
+
+        public string SubscriptionStatus { get; set; } = "Active";
+        // Active, Expired, Suspended
+
+        public DateTime? SubscriptionExpiryDate { get; set; }
+
+        public string? OwnerEmail { get; set; }
     }
 }

@@ -8,7 +8,7 @@ namespace Multi_Store.Core.Entities
         public int ProductID { get; set; }
         public int StoreID { get; set; }
         public int CategoryID { get; set; }
-
+        public decimal? OriginalPrice { get; set; }
         public string ProductName { get; set; } = string.Empty;
         public string ProductSlug { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;

@@ -69,5 +69,12 @@ namespace Multi_Store.Infrastructure.Repositories
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
         }
+        public async Task<List<ChatMessage>> GetMessagesByUserAsync(int userId)
+        {
+            return await _context.ChatMessages
+                .Where(m => m.SenderID == userId || m.ReceiverID == userId)
+                .OrderByDescending(m => m.SentAt)
+                .ToListAsync();
+        }
     }
 }

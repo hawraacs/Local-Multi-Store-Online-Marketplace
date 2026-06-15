@@ -1,0 +1,461 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.InvoiceModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Invoice</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: radial-gradient(circle at top right, rgba(255, 107, 53, 0.10), transparent 35%), linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+            font-family: Arial, sans-serif;
+            color: #111827;
+        }
+
+        .invoice-page {
+            padding: 45px 22px;
+            min-height: 100vh;
+        }
+
+        .invoice-box {
+            max-width: 950px;
+            margin: auto;
+            background: white;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 26px 70px rgba(15, 23, 42, 0.12);
+            border: 1px solid #e5e7eb;
+        }
+
+        .top-band {
+            background: #111827;
+            color: white;
+            padding: 28px 32px;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .brand-title {
+            font-size: 30px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .brand-subtitle {
+            margin-top: 6px;
+            color: #cbd5e1;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .invoice-label {
+            text-align: right;
+        }
+
+            .invoice-label h1 {
+                margin: 0;
+                font-size: 38px;
+                letter-spacing: 2px;
+            }
+
+            .invoice-label span {
+                color: #ffb088;
+                font-weight: 900;
+                font-size: 13px;
+            }
+
+        .content {
+            padding: 30px 32px;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 18px;
+        }
+
+            .info-card h3 {
+                margin: 0 0 12px 0;
+                font-size: 16px;
+                color: #111827;
+            }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 9px 0;
+            color: #334155;
+            font-size: 14px;
+        }
+
+            .info-row:last-child {
+                border-bottom: none;
+            }
+
+            .info-row strong {
+                color: #111827;
+            }
+
+        .paid,
+        .pending {
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+            display: inline-block;
+        }
+
+        .paid {
+            color: #166534;
+            background: #dcfce7;
+            border: 1px solid #86efac;
+        }
+
+        .pending {
+            color: #92400e;
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+        }
+
+        .items-section {
+            margin-top: 24px;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #111827;
+            text-align: left;
+            padding: 14px;
+            font-size: 13px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #eef2f7;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .product-name {
+            font-weight: 900;
+            color: #111827;
+        }
+
+        .totals-wrap {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .totals {
+            width: 360px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 18px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 9px 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 800;
+            color: #334155;
+        }
+
+            .total-row:last-child {
+                border-bottom: none;
+            }
+
+        .grand-total {
+            font-size: 21px;
+            font-weight: 900;
+            color: #111827;
+        }
+
+        .footer-note {
+            margin-top: 24px;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            color: #9a3412;
+            padding: 14px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            background: #111827;
+            color: white;
+            padding: 12px 17px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: 900;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(17, 24, 39, 0.15);
+        }
+
+        .btn-print {
+            background: #ff6b35;
+        }
+
+        .btn:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        .error-box {
+            max-width: 700px;
+            margin: 60px auto;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            padding: 20px;
+            border-radius: 18px;
+            text-align: center;
+            font-weight: 900;
+        }
+
+        @@media print {
+            body {
+                background: white;
+            }
+
+            .invoice-page {
+                padding: 0;
+            }
+
+            .invoice-box {
+                box-shadow: none;
+                border: none;
+                border-radius: 0;
+            }
+
+            .actions {
+                display: none;
+            }
+        }
+
+        @@media (max-width: 750px) {
+            .top-band {
+                flex-direction: column;
+            }
+
+            .invoice-label {
+                text-align: left;
+            }
+
+            .meta-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .items-section {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 700px;
+            }
+
+            .totals {
+                width: 100%;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="invoice-page">
+        @if (Model.Order == null)
+        {
+            <div class="error-box">
+                Invoice not found or you are not allowed to view it.
+                <br /><br />
+                <a href="/CustomerOrders" class="btn">Back to Orders</a>
+            </div>
+        }
+        else
+        {
+            var paymentClass = Model.Order.PaymentStatus == "Paid" ? "paid" : "pending";
+
+            <div class="invoice-box">
+                <div class="top-band">
+                    <div>
+                        <div class="brand-title">Local Multi Store</div>
+                        <div class="brand-subtitle">Online Marketplace Invoice</div>
+                    </div>
+
+                    <div class="invoice-label">
+                        <h1>INVOICE</h1>
+                        <span>INV-@Model.Order.OrderID</span>
+                    </div>
+                </div>
+
+                <div class="content">
+                    <div class="meta-grid">
+                        <div class="info-card">
+                            <h3>Customer Details</h3>
+
+                            <div class="info-row">
+                                <span>Name</span>
+                                <strong>@Model.CustomerName</strong>
+                            </div>
+
+                            <div class="info-row">
+                                <span>Delivery Address</span>
+                                <strong>@Model.AddressText</strong>
+                            </div>
+
+                            <div class="info-row">
+                                <span>Payment Method</span>
+                                <strong>@Model.Order.PaymentMethod</strong>
+                            </div>
+
+                            <div class="info-row">
+                                <span>Payment Status</span>
+                                <strong><span class="@paymentClass">@Model.Order.PaymentStatus</span></strong>
+                            </div>
+                        </div>
+
+                        <div class="info-card">
+                            <h3>Order Details</h3>
+
+                            <div class="info-row">
+                                <span>Order Number</span>
+                                <strong>@Model.Order.OrderNumber</strong>
+                            </div>
+
+                            <div class="info-row">
+                                <span>Order Date</span>
+                                <strong>@Model.Order.OrderDate.ToString("dd MMM yyyy HH:mm")</strong>
+                            </div>
+
+                            <div class="info-row">
+                                <span>Order Status</span>
+                                <strong>@Model.Order.Status</strong>
+                            </div>
+
+                            <div class="info-row">
+                                <span>Invoice Number</span>
+                                <strong>INV-@Model.Order.OrderID</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="items-section">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Unit Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var item in Model.Order.OrderItems)
+                                {
+                                    <tr>
+                                        <td class="product-name">@item.ProductName</td>
+                                        <td>$@item.ProductPrice.ToString("N2")</td>
+                                        <td>@item.Quantity</td>
+                                        <td>$@item.TotalPrice.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="totals-wrap">
+                        <div class="totals">
+                            <div class="total-row">
+                                <span>Subtotal</span>
+                                <span>$@Model.Order.Subtotal.ToString("N2")</span>
+                            </div>
+
+                            <div class="total-row">
+                                <span>Delivery Fee</span>
+                                <span>$@Model.Order.DeliveryFee.ToString("N2")</span>
+                            </div>
+
+                            <div class="total-row">
+                                <span>Discount</span>
+                                <span>-$@Model.Order.DiscountAmount.ToString("N2")</span>
+                            </div>
+
+                            <div class="total-row">
+                                <span>Tax</span>
+                                <span>$@Model.Order.TaxAmount.ToString("N2")</span>
+                            </div>
+
+                            <div class="total-row grand-total">
+                                <span>Total</span>
+                                <span>$@Model.Order.TotalAmount.ToString("N2")</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="footer-note">
+                        This invoice was generated automatically after successful payment or completed delivery.
+                    </div>
+
+                    <div class="actions">
+                        <a href="/CustomerOrders" class="btn">Back to Orders</a>
+                        <button type="button" class="btn btn-print" onclick="window.print()">Print Invoice</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</body>
+</html>
