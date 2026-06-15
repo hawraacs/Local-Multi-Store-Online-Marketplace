@@ -116,12 +116,62 @@ namespace Local_Multi_Store_Online_Marketplace.Controllers
                 });
             }
 
-            if (assignment.Status != "OutForDelivery" || !assignment.PickupTime.HasValue)
+            var cleanOrderStatus = order.Status?.Trim();
+            var cleanAssignmentStatus = assignment.Status?.Trim();
+
+            var isDelivered =
+                cleanOrderStatus == "Delivered" &&
+                cleanAssignmentStatus == "Delivered";
+
+            var isOutForDelivery =
+                (cleanOrderStatus == "Out for Delivery" || cleanOrderStatus == "OutForDelivery") &&
+                cleanAssignmentStatus == "OutForDelivery" &&
+                assignment.PickupTime.HasValue;
+
+            if (!isDelivered && !isOutForDelivery)
             {
                 return Ok(new
                 {
                     success = false,
                     message = "Delivery has not started yet."
+                });
+            }
+
+            if (isDelivered)
+            {
+                var deliveredLat = customerCoordinates.Value.Latitude;
+                var deliveredLng = customerCoordinates.Value.Longitude;
+
+                return Ok(new
+                {
+                    success = true,
+
+                    orderId = order.OrderID,
+                    orderNumber = order.OrderNumber,
+                    orderStatus = order.Status,
+                    assignmentStatus = assignment.Status,
+
+                    deliveryLatitude = Math.Round(deliveredLat, 7),
+                    deliveryLongitude = Math.Round(deliveredLng, 7),
+
+                    customerLatitude = Math.Round(deliveredLat, 7),
+                    customerLongitude = Math.Round(deliveredLng, 7),
+
+                    routeCoordinates = new List<double[]>
+        {
+            new[] { deliveredLat, deliveredLng },
+            new[] { deliveredLat, deliveredLng }
+        },
+
+                    lastLocationUpdateText = assignment.DeliveryTime.HasValue
+                        ? assignment.DeliveryTime.Value.ToLocalTime().ToString("HH:mm:ss")
+                        : DateTime.Now.ToString("HH:mm:ss"),
+
+                    trackingMode = "Delivered",
+                    etaText = "Arrived",
+                    distanceKm = 0,
+
+                    message = "Order delivered successfully."
                 });
             }
 
@@ -293,9 +343,9 @@ namespace Local_Multi_Store_Online_Marketplace.Controllers
         private static bool IsTrackableStatus(string? status)
         {
             return status == "Out for Delivery" ||
-                   status == "OutForDelivery";
+                   status == "OutForDelivery" ||
+                   status == "Delivered";
         }
-
         private static (double Latitude, double Longitude)? GetCustomerCoordinates(CustomerAddress address)
         {
             if (address.Latitude.HasValue && address.Longitude.HasValue)
