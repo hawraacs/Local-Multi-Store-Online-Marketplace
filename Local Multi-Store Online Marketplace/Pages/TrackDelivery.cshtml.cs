@@ -59,22 +59,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage("/CustomerOrders");
             }
 
-            if (order.Status == "Delivered")
+            if (order.DeliveryAssignment == null)
             {
-                TempData["Error"] = "Tracking stopped because the order is already delivered.";
+                TempData["Error"] = "Delivery has not been assigned yet.";
                 return RedirectToPage("/CustomerOrders");
             }
 
-            if (order.Status != "Out for Delivery")
+            var cleanOrderStatus = order.Status?.Trim();
+            var cleanAssignmentStatus = order.DeliveryAssignment.Status?.Trim();
+
+            var canTrackLive =
+                cleanOrderStatus == "Out for Delivery" &&
+                cleanAssignmentStatus == "OutForDelivery";
+
+            var canTrackDelivered =
+                cleanOrderStatus == "Delivered" &&
+                cleanAssignmentStatus == "Delivered";
+
+            if (!canTrackLive && !canTrackDelivered)
             {
                 TempData["Error"] = "Tracking is available only after the delivery person starts delivery.";
-                return RedirectToPage("/CustomerOrders");
-            }
-
-            if (order.DeliveryAssignment == null ||
-                order.DeliveryAssignment.Status != "OutForDelivery")
-            {
-                TempData["Error"] = "Delivery has not started yet.";
                 return RedirectToPage("/CustomerOrders");
             }
 
