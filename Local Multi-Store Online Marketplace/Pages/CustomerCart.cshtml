@@ -216,6 +216,58 @@
             font-weight: 900;
         }
 
+        .coupon-form {
+            margin: 15px 0;
+        }
+
+        .coupon-label {
+            font-weight: 900;
+            color: #111827;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .coupon-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .coupon-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-weight: 700;
+            min-width: 0;
+        }
+
+        .coupon-btn {
+            background: #111827;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .remove-coupon-btn {
+            background: #fee2e2;
+            color: #991b1b;
+            border: none;
+            border-radius: 10px;
+            padding: 9px 12px;
+            font-weight: 900;
+            cursor: pointer;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .discount-row {
+            color: #166534;
+        }
+
         .checkout-btn {
             width: 100%;
             padding: 13px;
@@ -286,6 +338,14 @@
                     width: 100%;
                     height: 180px;
                 }
+
+            .coupon-row {
+                flex-direction: column;
+            }
+
+            .coupon-btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -357,6 +417,10 @@
                                                name="cartItemId"
                                                value="@item.CartItemID" />
 
+                                        <input type="hidden"
+                                               name="AppliedCouponCode"
+                                               value="@Model.AppliedCouponCode" />
+
                                         <input type="number"
                                                name="quantity"
                                                value="@item.Quantity"
@@ -374,6 +438,10 @@
                                         <input type="hidden"
                                                name="cartItemId"
                                                value="@item.CartItemID" />
+
+                                        <input type="hidden"
+                                               name="AppliedCouponCode"
+                                               value="@Model.AppliedCouponCode" />
 
                                         <button type="submit"
                                                 class="remove-btn"
@@ -400,6 +468,52 @@
                         <span>Subtotal</span>
                         <span>$@Model.TotalAmount.ToString("N2")</span>
                     </div>
+
+                    <form method="post"
+                          asp-page-handler="ApplyCoupon"
+                          class="coupon-form">
+                        <label class="coupon-label">
+                            Coupon Code
+                        </label>
+
+                        <div class="coupon-row">
+                            <input type="text"
+                                   name="couponCode"
+                                   value="@Model.AppliedCouponCode"
+                                   placeholder="Enter coupon code"
+                                   class="coupon-input" />
+
+                            <button type="submit"
+                                    class="coupon-btn">
+                                Apply
+                            </button>
+                        </div>
+                    </form>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.AppliedCouponCode))
+                    {
+                        <form method="post" asp-page-handler="RemoveCoupon">
+                            <button type="submit"
+                                    class="remove-coupon-btn">
+                                Remove Coupon
+                            </button>
+                        </form>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.CouponMessage))
+                    {
+                        <div class="summary-free">
+                            @Model.CouponMessage
+                        </div>
+                    }
+
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <div class="summary-row discount-row">
+                            <span>Discount</span>
+                            <span>-$@Model.DiscountAmount.ToString("N2")</span>
+                        </div>
+                    }
 
                     @if (Model.HasActiveAddress)
                     {
@@ -428,24 +542,35 @@
 
                         <div class="summary-total">
                             <span>Total</span>
-                            <span>$@Model.TotalAmount.ToString("N2")</span>
+                            <span>$@Model.GrandTotal.ToString("N2")</span>
                         </div>
                     }
 
                     <form method="post" asp-page-handler="Checkout">
+                        <input type="hidden"
+                               name="appliedCouponCode"
+                               value="@Model.AppliedCouponCode" />
+
+                        <div style="margin-top: 15px;">
+                            <label style="font-weight:900; color:#111827; display:block; margin-bottom:8px;">
+                                Payment Method
+                            </label>
+
+                            <select name="paymentMethod"
+                                    style="width:100%; padding:12px; border-radius:10px; border:1px solid #d1d5db; font-weight:700;">
+                                <option value="Cash On Delivery">Cash On Delivery</option>
+                                <option value="Online Payment">Online Payment</option>
+                            </select>
+
+                            <div style="background:#f1f5f9; color:#334155; padding:10px; border-radius:10px; font-size:12px; font-weight:700; margin-top:10px; line-height:1.5;">
+                                Online payment is simulated for demo. Cash on Delivery will be marked as paid when the order is delivered.
+                            </div>
+                        </div>
+
                         <button type="submit"
                                 class="checkout-btn"
                                 onclick="return confirm('Place this order?')">
                             Checkout
-                        </button>
-                    </form>
-
-                    <form method="post"
-                          asp-page-handler="Clear">
-                        <button type="submit"
-                                class="clear-btn"
-                                onclick="return confirm('Clear all cart items?')">
-                            Clear Cart
                         </button>
                     </form>
                 </div>

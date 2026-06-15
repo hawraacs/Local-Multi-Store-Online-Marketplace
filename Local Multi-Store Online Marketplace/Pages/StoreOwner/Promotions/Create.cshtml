@@ -1,0 +1,501 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions.CreateModel
+@{
+    ViewData["Title"] = "Send Promotion";
+}
+
+<style>
+    .promotion-page {
+        background: #f4f6f9;
+        min-height: calc(100vh - 120px);
+        padding: 35px 0 60px;
+    }
+
+    .promotion-wrapper {
+        max-width: 1050px;
+        margin: auto;
+    }
+
+    .page-heading {
+        margin-bottom: 24px;
+    }
+
+        .page-heading h2 {
+            font-size: 30px;
+            font-weight: 900;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+
+        .page-heading p {
+            color: #6b7280;
+            margin: 0;
+            font-size: 14px;
+        }
+
+    .promotion-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 0.9fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .promo-card {
+        background: #ffffff;
+        border-radius: 22px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+    }
+
+    .promo-card-header {
+        padding: 24px 26px;
+        background: linear-gradient(135deg, #1f3b22, #2f4f2f);
+        color: white;
+    }
+
+        .promo-card-header h3 {
+            margin: 0 0 7px;
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .promo-card-header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 13px;
+        }
+
+    .promo-card-body {
+        padding: 26px;
+    }
+
+    .form-section {
+        margin-bottom: 28px;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        font-size: 16px;
+        font-weight: 900;
+        color: #111827;
+    }
+
+    .section-badge {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #fff1e8;
+        color: #ff6b35;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 13px;
+    }
+
+    .form-label {
+        color: #111827;
+        font-weight: 800;
+        font-size: 13px;
+        margin-bottom: 7px;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 12px;
+        border: 1px solid #d1d5db;
+        padding: 12px 14px;
+        font-size: 14px;
+        box-shadow: none;
+    }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.12);
+        }
+
+    textarea.form-control {
+        min-height: 135px;
+        resize: vertical;
+    }
+
+    .help-text {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 6px;
+    }
+
+    .coupon-box {
+        border: 1px solid #fed7aa;
+        background: #fff7ed;
+        border-radius: 18px;
+        padding: 18px;
+        margin-top: 8px;
+    }
+
+    .coupon-toggle {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+        .coupon-toggle input {
+            margin-top: 5px;
+            transform: scale(1.15);
+        }
+
+        .coupon-toggle label {
+            font-weight: 900;
+            color: #111827;
+            margin-bottom: 3px;
+        }
+
+        .coupon-toggle small {
+            display: block;
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+    .coupon-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .action-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 25px;
+    }
+
+    .send-btn {
+        background: linear-gradient(135deg, #ff6b35, #ff8c42);
+        color: white;
+        border: none;
+        padding: 13px 22px;
+        border-radius: 14px;
+        font-weight: 900;
+        box-shadow: 0 10px 22px rgba(255, 107, 53, 0.25);
+        transition: 0.2s;
+    }
+
+        .send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(255, 107, 53, 0.32);
+            color: white;
+        }
+
+    .back-btn {
+        background: #111827;
+        color: white;
+        padding: 13px 20px;
+        border-radius: 14px;
+        font-weight: 900;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .back-btn:hover {
+            color: white;
+            background: #0b1220;
+        }
+
+    .side-card {
+        background: white;
+        border-radius: 22px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+        padding: 24px;
+        position: sticky;
+        top: 25px;
+    }
+
+        .side-card h4 {
+            font-size: 18px;
+            font-weight: 900;
+            color: #111827;
+            margin-bottom: 12px;
+        }
+
+    .preview-box {
+        border: 1px dashed #d1d5db;
+        border-radius: 16px;
+        padding: 16px;
+        background: #f9fafb;
+        margin-bottom: 18px;
+    }
+
+    .preview-title {
+        font-weight: 900;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .preview-message {
+        color: #4b5563;
+        font-size: 13px;
+        line-height: 1.5;
+        margin-bottom: 12px;
+    }
+
+    .preview-coupon {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+        padding: 9px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 900;
+    }
+
+    .tips-list {
+        padding-left: 18px;
+        margin: 0;
+        color: #4b5563;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .alert {
+        border-radius: 14px;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 900px) {
+        .promotion-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .side-card {
+            position: static;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .promotion-page {
+            padding: 22px 12px;
+        }
+
+        .promo-card-body {
+            padding: 20px;
+        }
+
+        .coupon-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-row {
+            flex-direction: column;
+        }
+
+        .send-btn,
+        .back-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="promotion-page">
+    <div class="promotion-wrapper">
+
+        <div class="page-heading">
+            <h2>Send Promotion</h2>
+            <p>Create a professional promotional message and optionally generate a usable coupon for customers.</p>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                @Model.ErrorMessage
+            </div>
+        }
+
+        <div class="promotion-grid">
+
+            <div class="promo-card">
+                <div class="promo-card-header">
+                    <h3>Promotion Details</h3>
+                    <p>Write the message customers will receive in their promotions inbox.</p>
+                </div>
+
+                <div class="promo-card-body">
+                    <form method="post">
+
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span class="section-badge">1</span>
+                                Main Message
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Promotion.Title" class="form-label">Promotion Title</label>
+                                <input asp-for="Promotion.Title"
+                                       class="form-control"
+                                       placeholder="Example: Summer Offer, Weekend Deal, Flash Sale" />
+                                <span asp-validation-for="Promotion.Title" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Promotion.Message" class="form-label">Promotion Message</label>
+                                <textarea asp-for="Promotion.Message"
+                                          class="form-control"
+                                          placeholder="Example: Get 20% off this week. Use your coupon before checkout."></textarea>
+                                <span asp-validation-for="Promotion.Message" class="text-danger"></span>
+                                <div class="help-text">
+                                    Choose who should receive this promotion.
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Promotion.AudienceType" class="form-label">Audience</label>
+                                <select asp-for="Promotion.AudienceType" class="form-select">
+                                    <option value="AllCustomers">All Customers</option>
+                                    <option value="PreviousCustomers">Customers who ordered from my store</option>
+                                    <option value="WishlistCustomers">Customers who wishlisted my products</option>
+                                </select>
+                                <span asp-validation-for="Promotion.AudienceType" class="text-danger"></span>
+                                <div class="help-text">
+                                    This promotion will be sent to all current customers.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span class="section-badge">2</span>
+                                Coupon Settings
+                            </div>
+
+                            <div class="coupon-box">
+
+                                <div class="coupon-toggle">
+                                    <input asp-for="Promotion.CreateCoupon" class="form-check-input" />
+                                    <div>
+                                        <label asp-for="Promotion.CreateCoupon" class="form-check-label">
+                                            Create usable coupon for this promotion
+                                        </label>
+                                        <small>
+                                            Check this if customers should use this code in the cart for a real discount.
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Promotion.CouponCode" class="form-label">Coupon Code Optional</label>
+                                    <input asp-for="Promotion.CouponCode"
+                                           class="form-control"
+                                           placeholder="Example: SUMMER20, WELCOME10" />
+                                    <span asp-validation-for="Promotion.CouponCode" class="text-danger"></span>
+                                    <div class="help-text">
+                                        If coupon creation is checked, this code will be saved in the Coupons table.
+                                    </div>
+                                </div>
+
+                                <div class="coupon-grid">
+                                    <div>
+                                        <label asp-for="Promotion.DiscountType" class="form-label">Discount Type</label>
+                                        <select asp-for="Promotion.DiscountType" class="form-select">
+                                            <option value="Percentage">Percentage</option>
+                                            <option value="Fixed">Fixed Amount</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label asp-for="Promotion.DiscountValue" class="form-label">Discount Value</label>
+                                        <input asp-for="Promotion.DiscountValue"
+                                               class="form-control"
+                                               placeholder="Example: 20" />
+                                        <span asp-validation-for="Promotion.DiscountValue" class="text-danger"></span>
+                                    </div>
+
+                                    <div>
+                                        <label asp-for="Promotion.MinimumOrderAmount" class="form-label">Minimum Order Optional</label>
+                                        <input asp-for="Promotion.MinimumOrderAmount"
+                                               class="form-control"
+                                               placeholder="Example: 50" />
+                                        <span asp-validation-for="Promotion.MinimumOrderAmount" class="text-danger"></span>
+                                    </div>
+
+                                    <div>
+                                        <label asp-for="Promotion.MaximumDiscountAmount" class="form-label">Maximum Discount Optional</label>
+                                        <input asp-for="Promotion.MaximumDiscountAmount"
+                                               class="form-control"
+                                               placeholder="Example: 50" />
+                                        <span asp-validation-for="Promotion.MaximumDiscountAmount" class="text-danger"></span>
+                                    </div>
+
+                                    <div>
+                                        <label asp-for="Promotion.CouponEndDate" class="form-label">Coupon End Date</label>
+                                        <input asp-for="Promotion.CouponEndDate"
+                                               type="date"
+                                               class="form-control" />
+                                        <span asp-validation-for="Promotion.CouponEndDate" class="text-danger"></span>
+                                    </div>
+
+                                    <div>
+                                        <label asp-for="Promotion.UsageLimit" class="form-label">Usage Limit</label>
+                                        <input asp-for="Promotion.UsageLimit"
+                                               class="form-control"
+                                               placeholder="Example: 100" />
+                                        <span asp-validation-for="Promotion.UsageLimit" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-row">
+                            <button type="submit" class="send-btn">
+                                Send Promotion
+                            </button>
+
+                            <a asp-page="/StoreOwner/Promotions/Index" class="back-btn">
+                                Back to Promotions
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+            <div class="side-card">
+                <h4>Customer Preview</h4>
+
+                <div class="preview-box">
+                    <div class="preview-title">
+                        Example: Summer Offer
+                    </div>
+
+                    <div class="preview-message">
+                        Get 20% off this week. Use your coupon code before checkout.
+                    </div>
+
+                    <div class="preview-coupon">
+                        Coupon Code: SUMMER20
+                    </div>
+                </div>
+
+                <h4>Smart Tips</h4>
+                <ul class="tips-list">
+                    <li>Use short titles like “Weekend Offer”.</li>
+                    <li>Make the discount clear in the message.</li>
+                    <li>Use simple coupon codes like SUMMER20.</li>
+                    <li>Set an end date so the coupon does not stay active forever.</li>
+                    <li>Use maximum discount to protect your store profit.</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

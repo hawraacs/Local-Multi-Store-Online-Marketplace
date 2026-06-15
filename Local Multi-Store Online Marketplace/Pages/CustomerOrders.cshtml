@@ -7,6 +7,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8" />
     <title>My Orders</title>
 
     <style>
@@ -22,7 +23,7 @@
         }
 
         .orders-box {
-            max-width: 900px;
+            max-width: 1100px;
             margin: auto;
             background: white;
             padding: 25px;
@@ -47,12 +48,78 @@
             color: white;
             padding: 12px;
             text-align: left;
+            font-size: 14px;
         }
 
         td {
             padding: 12px;
             border-bottom: 1px solid #e5e7eb;
             color: #374151;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            background: #fef3c7;
+            color: #92400e;
+            white-space: nowrap;
+        }
+
+        .paid-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            background: #dcfce7;
+            color: #166534;
+            white-space: nowrap;
+        }
+
+        .pending-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            background: #fef3c7;
+            color: #92400e;
+            white-space: nowrap;
+        }
+
+        .track-btn,
+        .invoice-btn {
+            display: inline-block;
+            background: #111827;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 13px;
+            white-space: nowrap;
+            margin-bottom: 5px;
+        }
+
+        .invoice-btn {
+            background: #2563eb;
+        }
+
+            .track-btn:hover,
+            .invoice-btn:hover {
+                background: #ff6b35;
+                color: white;
+            }
+
+        .disabled-track {
+            color: #9ca3af;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
         }
 
         .empty-box {
@@ -72,6 +139,10 @@
             font-weight: 800;
         }
 
+            .shop-link:hover {
+                background: #ff6b35;
+            }
+
         .message {
             max-width: 700px;
             margin: 0 auto 25px auto;
@@ -81,10 +152,30 @@
             text-align: center;
         }
 
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
         .error-message {
             background: #fee2e2;
             color: #991b1b;
             border: 1px solid #fca5a5;
+        }
+
+        @@media (max-width: 850px) {
+            .orders-page {
+                padding: 20px;
+            }
+
+            .orders-box {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 1000px;
+            }
         }
     </style>
 </head>
@@ -93,6 +184,13 @@
     <div class="orders-page">
         <div class="orders-box">
             <h2>My Orders</h2>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="message success-message">
+                    @TempData["Success"]
+                </div>
+            }
 
             @if (TempData["Error"] != null)
             {
@@ -120,20 +218,71 @@
                             <th>Order Number</th>
                             <th>Date</th>
                             <th>Status</th>
-                            <th>Payment</th>
+                            <th>Payment Method</th>
+                            <th>Payment Status</th>
                             <th>Total</th>
+                            <th>Tracking</th>
+                            <th>Invoice</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         @foreach (var order in Model.Orders)
                         {
+                            var paymentClass = order.PaymentStatus == "Paid"
+                            ? "paid-badge"
+                            : "pending-badge";
+
                             <tr>
                                 <td>@order.OrderNumber</td>
+
                                 <td>@order.OrderDate.ToString("dd MMM yyyy")</td>
-                                <td>@order.Status</td>
+
+                                <td>
+                                    <span class="status-badge">
+                                        @order.Status
+                                    </span>
+                                </td>
+
                                 <td>@order.PaymentMethod</td>
+
+                                <td>
+                                    <span class="@paymentClass">
+                                        @order.PaymentStatus
+                                    </span>
+                                </td>
+
                                 <td>$@order.TotalAmount.ToString("N2")</td>
+
+                                <td>
+                                    @if (order.CanTrack)
+                                    {
+                                        <a class="track-btn" href="/TrackDelivery?OrderId=@order.OrderID">
+                                            Track Delivery
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="disabled-track">
+                                            @order.TrackingMessage
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (order.CanViewInvoice)
+                                    {
+                                        <a class="invoice-btn" href="/Invoice?orderId=@order.OrderID">
+                                            View Invoice
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="disabled-track">
+                                            Available after payment
+                                        </span>
+                                    }
+                                </td>
                             </tr>
                         }
                     </tbody>

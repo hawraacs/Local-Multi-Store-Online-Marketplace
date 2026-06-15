@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
 
@@ -30,17 +31,28 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         [BindProperty]
         public string Comment { get; set; }
 
-        public void OnGet(int storeId)
+        // ? ADD THIS: reviews list for UI
+        public List<Review> Reviews { get; set; } = new();
+
+        // ? LOAD REVIEWS
+        public async Task OnGetAsync(int storeId)
         {
             StoreId = storeId;
+
+            Reviews = await _context.Reviews
+                .Include(r => r.Customer)
+                .Where(r => r.StoreID == storeId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
         }
 
+        // ? SUBMIT REVIEW
         public async Task<IActionResult> OnPostAsync()
         {
             var user = await _userManager.GetUserAsync(User);
 
-            var customer = _context.Customers
-                .FirstOrDefault(c => c.UserID == user.Id);
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
 
             if (customer == null)
                 return RedirectToPage("/Customer1");
@@ -56,8 +68,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             await _context.SaveChangesAsync();
 
-            return RedirectToPage("/StoreCustomerProfile",
-                new { id = StoreId });
+            return RedirectToPage(new { storeId = StoreId });
         }
     }
 }

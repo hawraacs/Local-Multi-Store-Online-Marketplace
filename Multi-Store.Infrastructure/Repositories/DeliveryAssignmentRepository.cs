@@ -6,7 +6,6 @@ using Multi_Store.Infrastructure.Repositories.Base;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Multi_Store.Infrastructure.Repositories
@@ -23,6 +22,8 @@ namespace Multi_Store.Infrastructure.Repositories
         public async Task<IReadOnlyList<DeliveryAssignment>> GetByOrderAsync(int orderId)
         {
             return await _context.DeliveryAssignments
+                .Include(a => a.Order)
+                .Include(a => a.DeliveryPerson)
                 .Where(a => a.OrderID == orderId)
                 .ToListAsync();
         }
@@ -30,13 +31,18 @@ namespace Multi_Store.Infrastructure.Repositories
         public async Task<IReadOnlyList<DeliveryAssignment>> GetByDeliveryPersonAsync(int deliveryPersonId)
         {
             return await _context.DeliveryAssignments
+                .Include(a => a.Order)
+                    .ThenInclude(o => o.Address)
                 .Where(a => a.DeliveryPersonID == deliveryPersonId)
+                .OrderByDescending(a => a.AssignedAt)
                 .ToListAsync();
         }
 
         public async Task<IReadOnlyList<DeliveryAssignment>> GetByStatusAsync(string status)
         {
             return await _context.DeliveryAssignments
+                .Include(a => a.Order)
+                .Include(a => a.DeliveryPerson)
                 .Where(a => a.Status == status)
                 .ToListAsync();
         }
@@ -44,7 +50,12 @@ namespace Multi_Store.Infrastructure.Repositories
         public async Task<DeliveryAssignment?> GetActiveAssignmentByOrderAsync(int orderId)
         {
             return await _context.DeliveryAssignments
-                .FirstOrDefaultAsync(a => a.OrderID == orderId && a.Status == "Active");
+                .Include(a => a.Order)
+                .Include(a => a.DeliveryPerson)
+                .FirstOrDefaultAsync(a =>
+                    a.OrderID == orderId &&
+                    a.Status != "Delivered" &&
+                    a.Status != "Cancelled");
         }
 
         public async Task<IReadOnlyList<DeliveryAssignment>> GetTodayAssignmentsAsync(int deliveryPersonId)
@@ -52,9 +63,12 @@ namespace Multi_Store.Infrastructure.Repositories
             var today = DateTime.UtcNow.Date;
 
             return await _context.DeliveryAssignments
+                .Include(a => a.Order)
+                    .ThenInclude(o => o.Address)
                 .Where(a =>
                     a.DeliveryPersonID == deliveryPersonId &&
                     a.AssignedAt.Date == today)
+                .OrderByDescending(a => a.AssignedAt)
                 .ToListAsync();
         }
     }

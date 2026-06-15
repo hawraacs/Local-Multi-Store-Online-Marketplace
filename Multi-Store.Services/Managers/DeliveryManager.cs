@@ -30,6 +30,7 @@ namespace Multi_Store.Services.Managers
 
         // =========================
         // REGISTER DELIVERY REQUEST
+        // Customer creates request only. Status stays Pending.
         // =========================
         public async Task<int> RegisterDeliveryPersonAsync(DeliveryPersonDTO dto)
         {
@@ -102,7 +103,7 @@ namespace Multi_Store.Services.Managers
 
             var deliveryPerson = new DeliveryPerson
             {
-                UserID = dto.UserID,
+                UserID = dto.UserID, // initially customer user id
                 FullName = dto.FullName,
                 PhoneNumber = dto.PhoneNumber,
                 Area = dto.Area,
@@ -171,14 +172,79 @@ namespace Multi_Store.Services.Managers
 
         // =========================
         // APPROVE DELIVERY REQUEST
+        // Admin approves customer request.
+        // System creates a NEW delivery login:
+        // delivery1@gmail.com / Delivery@12345
+        // Original customer account stays unchanged.
         // =========================
-        public async Task ApproveDeliveryPersonAsync(int deliveryPersonId)
+        public async Task<(string email, string password)> ApproveDeliveryPersonAsync(int deliveryPersonId)
         {
             var deliveryPerson = await _deliveryPersonRepository.GetByIdAsync(deliveryPersonId);
 
             if (deliveryPerson == null)
                 throw new Exception("Delivery request not found.");
 
+            var defaultPassword = "Delivery@12345";
+
+            // If already approved, return the current delivery login and reset password again to default.
+            if (!string.IsNullOrWhiteSpace(deliveryPerson.Status) &&
+                deliveryPerson.Status.Trim().Equals("Approved", StringComparison.OrdinalIgnoreCase))
+            {
+                var approvedUser = await _userManager.FindByIdAsync(deliveryPerson.UserID.ToString());
+
+                if (approvedUser == null)
+                    throw new Exception("Approved delivery user not found.");
+
+                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(approvedUser);
+                var resetResult = await _userManager.ResetPasswordAsync(approvedUser, resetToken, defaultPassword);
+
+                if (!resetResult.Succeeded)
+                    throw new Exception(string.Join(" | ", resetResult.Errors.Select(e => e.Description)));
+
+                return (approvedUser.Email ?? string.Empty, defaultPassword);
+            }
+
+            // Create unique delivery email: delivery1@gmail.com, delivery2@gmail.com, ...
+            string deliveryEmail;
+            int counter = 1;
+
+            do
+            {
+                deliveryEmail = $"delivery{counter}@gmail.com";
+                counter++;
+            }
+            while (await _userManager.FindByEmailAsync(deliveryEmail) != null);
+
+            var deliveryUser = new User
+            {
+                UserName = deliveryEmail,
+                Email = deliveryEmail,
+                FullName = deliveryPerson.FullName,
+                PhoneNumber = deliveryPerson.PhoneNumber,
+                EmailConfirmed = true,
+                PhoneNumberConfirmed = true,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var createResult = await _userManager.CreateAsync(deliveryUser, defaultPassword);
+
+            if (!createResult.Succeeded)
+            {
+                throw new Exception(string.Join(" | ", createResult.Errors.Select(e => e.Description)));
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(deliveryUser, "Delivery");
+
+            if (!roleResult.Succeeded)
+            {
+                await _userManager.DeleteAsync(deliveryUser);
+                throw new Exception(string.Join(" | ", roleResult.Errors.Select(e => e.Description)));
+            }
+
+            // Link DeliveryPerson to the new delivery login.
+            // Customer account remains unchanged.
+            deliveryPerson.UserID = deliveryUser.Id;
             deliveryPerson.Status = "Approved";
             deliveryPerson.IsActive = true;
             deliveryPerson.ApprovedAt = DateTime.UtcNow;
@@ -186,18 +252,7 @@ namespace Multi_Store.Services.Managers
 
             await _deliveryPersonRepository.UpdateAsync(deliveryPerson);
 
-            var user = await _userManager.FindByIdAsync(deliveryPerson.UserID.ToString());
-
-            if (user != null && !await _userManager.IsInRoleAsync(user, "Delivery"))
-            {
-                var result = await _userManager.AddToRoleAsync(user, "Delivery");
-
-                if (!result.Succeeded)
-                {
-                    throw new Exception(
-                        string.Join(", ", result.Errors.Select(e => e.Description)));
-                }
-            }
+            return (deliveryEmail, defaultPassword);
         }
 
         // =========================
@@ -215,14 +270,74 @@ namespace Multi_Store.Services.Managers
             deliveryPerson.ApprovedAt = null;
             deliveryPerson.RejectionReason = string.IsNullOrWhiteSpace(reason)
                 ? "Rejected by admin."
-                : reason;
+                : reason.Trim();
 
             await _deliveryPersonRepository.UpdateAsync(deliveryPerson);
+        }
+        // =========================
+        // ACTIVATE APPROVED DELIVERY PERSON
+        // =========================
+        public async Task ActivateDeliveryPersonAsync(int deliveryPersonId)
+        {
+            var deliveryPerson = await _deliveryPersonRepository.GetByIdAsync(deliveryPersonId);
+
+            if (deliveryPerson == null)
+                throw new Exception("Delivery person not found.");
+
+            if (!deliveryPerson.Status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                throw new Exception("Only approved delivery staff can be activated.");
+
+            deliveryPerson.IsActive = true;
+            deliveryPerson.RejectionReason = null;
+
+            await _deliveryPersonRepository.UpdateAsync(deliveryPerson);
+
+            var user = await _userManager.FindByIdAsync(deliveryPerson.UserID.ToString());
+
+            if (user != null && !await _userManager.IsInRoleAsync(user, "Delivery"))
+            {
+                var roleResult = await _userManager.AddToRoleAsync(user, "Delivery");
+
+                if (!roleResult.Succeeded)
+                {
+                    throw new Exception(string.Join(" | ", roleResult.Errors.Select(e => e.Description)));
+                }
+            }
+        }
+
+        // =========================
+        // DEACTIVATE APPROVED DELIVERY PERSON
+        // =========================
+        public async Task DeactivateDeliveryPersonAsync(int deliveryPersonId)
+        {
+            var deliveryPerson = await _deliveryPersonRepository.GetByIdAsync(deliveryPersonId);
+
+            if (deliveryPerson == null)
+                throw new Exception("Delivery person not found.");
+
+            if (!deliveryPerson.Status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                throw new Exception("Only approved delivery staff can be deactivated.");
+
+            deliveryPerson.IsActive = false;
+
+            await _deliveryPersonRepository.UpdateAsync(deliveryPerson);
+
+            var user = await _userManager.FindByIdAsync(deliveryPerson.UserID.ToString());
+
+            if (user != null && await _userManager.IsInRoleAsync(user, "Delivery"))
+            {
+                var roleResult = await _userManager.RemoveFromRoleAsync(user, "Delivery");
+
+                if (!roleResult.Succeeded)
+                {
+                    throw new Exception(string.Join(" | ", roleResult.Errors.Select(e => e.Description)));
+                }
+            }
         }
 
         // =========================
         // CHECK DELIVERY APPROVAL
-        // Used by Login / ExternalLogin
+        // Used by login / dashboard guard
         // =========================
         public async Task<bool> IsDeliveryApprovedAsync(int userId)
         {

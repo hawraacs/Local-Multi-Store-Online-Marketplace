@@ -24,7 +24,7 @@
     <form method="get" id="filterForm">
         <div class="filter-group">
             <div class="filter-input">
-                <input type="text" name="SearchTerm" id="SearchTerm" 
+                <input type="text" name="SearchTerm" id="SearchTerm"
                        placeholder="Search products by name or description..."
                        value="@Model.SearchTerm" />
             </div>
@@ -79,14 +79,14 @@
                 <div class="product-image">
                     @if (!string.IsNullOrEmpty(product.PrimaryImageUrl))
                     {
-                        <img src="@product.PrimaryImageUrl" alt="@product.ProductName" 
+                        <img src="@product.PrimaryImageUrl" alt="@product.ProductName"
                              onerror="this.src='/images/no-image.png'">
                     }
                     else
                     {
                         <img src="/images/no-image.png" alt="No image">
                     }
-                    
+
                     @if (product.DiscountPercentage.HasValue)
                     {
                         <span class="product-badge badge-discount">-@product.DiscountPercentage%</span>
@@ -96,26 +96,50 @@
                         <span class="product-badge badge-outstock">Out of Stock</span>
                     }
                 </div>
-                
+
                 <div class="product-info">
                     <div class="product-category">@product.CategoryName</div>
                     <h3 class="product-title">@product.ProductName</h3>
-                    <p class="product-description">@(product.Description.Length > 100 ? product.Description.Substring(0, 100) + "..." : product.Description)</p>
-                    
+
+                    <p class="product-description">
+                        @(product.Description.Length > 100
+                            ? product.Description.Substring(0, 100) + "..."
+                            : product.Description)
+                    </p>
+
                     <div class="price-section">
                         <span class="current-price">$@product.Price.ToString("N2")</span>
+
                         @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
                         {
-                            <span class="original-price">$@product.CompareAtPrice.Value.ToString("N2")</span>
+                            <span class="original-price">
+                                $@product.CompareAtPrice.Value.ToString("N2")
+                            </span>
                         }
                     </div>
-                    
+
+                    <!-- ✅ PROFIT SECTION ADDED HERE -->
+                    @if (product.ProfitPerUnit.HasValue && product.ProfitPerUnit > 0)
+                    {
+                        <div style="font-size: 12px; color: #2C3E50; margin-top: 5px;">
+                            <i class="fas fa-chart-line"></i>
+                            Profit: $@product.ProfitPerUnit.Value.ToString("N2")/unit
+
+                            @if (product.MarginPercent.HasValue)
+                            {
+                                <span>
+                                    (@product.MarginPercent.Value.ToString("F0")% margin)
+                                </span>
+                            }
+                        </div>
+                    }
+
                     <div>
                         <span class="stock-status stock-@product.StockStatusClass">
                             @product.StockStatus (@product.Quantity left)
                         </span>
                     </div>
-                    
+
                     <div class="product-actions">
                         <a href="/StoreOwner/Products/Edit?id=@product.ProductID" class="btn-edit">
                             <i class="fas fa-edit"></i> Edit
@@ -123,7 +147,7 @@
                         <button onclick="deleteProduct(@product.ProductID)" class="btn-delete">
                             <i class="fas fa-trash"></i> Delete
                         </button>
-                        <button onclick="toggleStatus(@product.ProductID, @(!product.IsActive).ToString().ToLower())" 
+                        <button onclick="toggleStatus(@product.ProductID, @(!product.IsActive).ToString().ToLower())"
                                 class="btn-toggle @(product.IsActive ? "active" : "")">
                             <i class="fas @(product.IsActive ? "fa-eye" : "fa-eye-slash")"></i>
                             @(product.IsActive ? "Active" : "Inactive")
@@ -148,12 +172,11 @@ else
 
 @section Scripts {
     <script>
-        // Auto-submit form on filter change
-        document.getElementById('CategoryFilter')?.addEventListener('change', function() {
+        document.getElementById('CategoryFilter')?.addEventListener('change', function () {
             document.getElementById('filterForm').submit();
         });
-        
-        document.getElementById('StatusFilter')?.addEventListener('change', function() {
+
+        document.getElementById('StatusFilter')?.addEventListener('change', function () {
             document.getElementById('filterForm').submit();
         });
 
@@ -168,20 +191,17 @@ else
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.message);
-                }
+                if (data.success) location.reload();
+                else alert(data.message);
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                console.error(error);
+                alert('Error occurred');
             });
         }
 
         function deleteProduct(productId) {
-            if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+            if (confirm('Are you sure you want to delete this product?')) {
                 window.location.href = `/StoreOwner/Products/Delete?id=${productId}`;
             }
         }

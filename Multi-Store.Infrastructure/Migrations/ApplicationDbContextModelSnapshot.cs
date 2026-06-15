@@ -1034,6 +1034,9 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<int>("LowStockThreshold")
                         .HasColumnType("int");
 
+                    b.Property<decimal?>("OriginalPrice")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -1102,6 +1105,92 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("ProductID");
 
                     b.ToTable("ProductImages");
+                });
+
+            modelBuilder.Entity("Multi_Store.Core.Entities.Promotion", b =>
+                {
+                    b.Property<int>("PromotionID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PromotionID"));
+
+                    b.Property<string>("AudienceType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CouponCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedByUserID")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsSent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("RecipientCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("StoreID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("PromotionID");
+
+                    b.HasIndex("StoreID");
+
+                    b.ToTable("Promotions");
+                });
+
+            modelBuilder.Entity("Multi_Store.Core.Entities.PromotionRecipient", b =>
+                {
+                    b.Property<int>("PromotionRecipientID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PromotionRecipientID"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CustomerID")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PromotionID")
+                        .HasColumnType("int");
+
+                    b.HasKey("PromotionRecipientID");
+
+                    b.HasIndex("CustomerID");
+
+                    b.HasIndex("PromotionID");
+
+                    b.ToTable("PromotionRecipients");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.RecentlyViewedProduct", b =>
@@ -1354,6 +1443,12 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<bool>("HasFixedDeliveryFee")
                         .HasColumnType("bit");
 
+                    b.Property<decimal?>("LastPaymentAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("LastPaymentDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal>("Latitude")
                         .HasPrecision(18, 6)
                         .HasColumnType("decimal(18,6)");
@@ -1388,8 +1483,18 @@ namespace Multi_Store.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("SubscriptionExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SubscriptionStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("TotalRatings")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("TrialStartDate")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("StoreID");
 
@@ -1944,6 +2049,36 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Multi_Store.Core.Entities.Promotion", b =>
+                {
+                    b.HasOne("Multi_Store.Core.Entities.Store", "Store")
+                        .WithMany()
+                        .HasForeignKey("StoreID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("Multi_Store.Core.Entities.PromotionRecipient", b =>
+                {
+                    b.HasOne("Multi_Store.Core.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Multi_Store.Core.Entities.Promotion", "Promotion")
+                        .WithMany("PromotionRecipients")
+                        .HasForeignKey("PromotionID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Promotion");
+                });
+
             modelBuilder.Entity("Multi_Store.Core.Entities.RecentlyViewedProduct", b =>
                 {
                     b.HasOne("Multi_Store.Core.Entities.Customer", null)
@@ -2150,6 +2285,11 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Navigation("RecentlyViewedProducts");
 
                     b.Navigation("Wishlists");
+                });
+
+            modelBuilder.Entity("Multi_Store.Core.Entities.Promotion", b =>
+                {
+                    b.Navigation("PromotionRecipients");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Store", b =>
