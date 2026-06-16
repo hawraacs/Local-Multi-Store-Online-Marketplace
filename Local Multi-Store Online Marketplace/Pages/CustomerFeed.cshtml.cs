@@ -135,5 +135,42 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             return RedirectToPage();
         }
+        public async Task<IActionResult> OnPostAddReviewAsync(
+    int productId,
+    int rating,
+    string comment)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage();
+
+            var customer =
+                await _customerManager.GetCustomerByUserIdAsync(user.Id);
+
+            if (customer == null)
+                return RedirectToPage();
+
+            var product = await _context.Products
+                .FirstOrDefaultAsync(x => x.ProductID == productId);
+
+            if (product == null)
+                return RedirectToPage();
+
+            _context.Reviews.Add(new Review
+            {
+                CustomerID = customer.CustomerID,
+                ProductID = productId,
+                StoreID = product.StoreID,
+                Rating = rating,
+                Comment = comment,
+                Status = "Approved",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage();
+        }
     }
 }

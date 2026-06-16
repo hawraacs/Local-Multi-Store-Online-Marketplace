@@ -70,13 +70,21 @@ public class StoreRepository : Repository<Store>, IStoreRepository
     // =====================
 
     public async Task<List<Product>> GetFeedProductsAsync(int customerId)
-        => await _context.Products
-            .Include(p => p.Store)
-            .Include(p => p.Images)
-            .Where(p => _context.StoreFollows
-                .Any(f => f.CustomerID == customerId && f.StoreID == p.StoreID))
-            .OrderByDescending(p => p.ProductID)
-            .ToListAsync();
+    => await _context.Products
+        .Include(p => p.Store)
+        .Include(p => p.Images)
+
+        .Include(p => p.Reviews)
+            .ThenInclude(r => r.Customer)
+                .ThenInclude(c => c.User)
+
+        .Where(p => _context.StoreFollows
+            .Any(f =>
+                f.CustomerID == customerId &&
+                f.StoreID == p.StoreID))
+
+        .OrderByDescending(p => p.ProductID)
+        .ToListAsync();
 
     public async Task<List<Product>> GetStoreProductsAsync(int storeId)
         => await _context.Products

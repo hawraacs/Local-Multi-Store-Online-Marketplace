@@ -104,6 +104,25 @@
             background: #fee2e2;
             color: #991b1b;
         }
+
+        .comments-section {
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .comment {
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+            .comment strong {
+                margin-right: 8px;
+            }
+
+            .comment span {
+                color: #f59e0b;
+            }
     </style>
 </head>
 
@@ -157,11 +176,30 @@
 
                     <div class="actions">
 
-                        <a class="btn btn-review"
-                           asp-page="/CreateProductReview"
-                           asp-route-productId="@product.ProductID">
-                            ⭐ Review
-                        </a>
+                        <form method="post"
+                              asp-page-handler="AddReview">
+
+                            <input type="hidden"
+                                   name="productId"
+                                   value="@product.ProductID" />
+
+                            <input type="number"
+                                   name="rating"
+                                   min="1"
+                                   max="5"
+                                   placeholder="Rating"
+                                   required />
+
+                            <input type="text"
+                                   name="comment"
+                                   placeholder="Write a comment..."
+                                   required />
+
+                            <button class="btn btn-review">
+                                Post Comment
+                            </button>
+
+                        </form>
 
                         <form method="post"
                               asp-page="/Customer1"
@@ -181,6 +219,35 @@
                             </button>
 
                         </form>
+
+                    </div>
+                    <div class="comments-section">
+
+                        @if (product.Reviews.Any())
+                        {
+                            @foreach (var review in product.Reviews
+                           .Where(r => r.Status == "Approved")
+                           .OrderByDescending(r => r.CreatedAt))
+                            {
+                                <div class="comment">
+
+                                    <strong>
+                                        
+                                            @review.Customer.User.FullName
+                                       
+                                    </strong>
+
+                                    <span>
+                                        ⭐ @review.Rating
+                                    </span>
+
+                                    <div>
+                                        @review.Comment
+                                    </div>
+
+                                </div>
+                            }
+                        }
 
                     </div>
 
