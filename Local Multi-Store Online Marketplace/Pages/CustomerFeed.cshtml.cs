@@ -16,19 +16,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly UserManager<User> _userManager;
         private readonly CustomerManager _customerManager;
         private readonly MessagingManager _messagingManager;
+        private readonly WishlistManager _wishlistManager;
         private readonly ApplicationDbContext _context;
 
         public CustomerFeedModel(
-            StoreManager storeManager,
-            UserManager<User> userManager,
-            CustomerManager customerManager,
-            MessagingManager messagingManager,
-            ApplicationDbContext context)
+    StoreManager storeManager,
+    UserManager<User> userManager,
+    CustomerManager customerManager,
+    MessagingManager messagingManager,
+    WishlistManager wishlistManager,
+    ApplicationDbContext context)
         {
             _storeManager = storeManager;
             _userManager = userManager;
             _customerManager = customerManager;
             _messagingManager = messagingManager;
+            _wishlistManager = wishlistManager;
             _context = context;
         }
 
@@ -169,6 +172,43 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             });
 
             await _context.SaveChangesAsync();
+
+            return RedirectToPage();
+        }
+        public async Task<IActionResult> OnPostAddWishlistAsync(int productId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
+            if (customer == null)
+                return RedirectToPage();
+
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p => p.ProductID == productId && p.IsActive);
+
+            if (product == null)
+            {
+                TempData["Error"] = "Product is not available.";
+                return RedirectToPage();
+            }
+
+            var exists = await _wishlistManager.IsInWishlistAsync(
+                customer.CustomerID,
+                productId);
+
+            if (exists)
+            {
+                TempData["Error"] = "This product is already in your wishlist.";
+                return RedirectToPage();
+            }
+
+            await _wishlistManager.AddToWishlistAsync(
+                customer.CustomerID,
+                productId);
+
+            TempData["Success"] = $"{product.ProductName} added to wishlist.";
 
             return RedirectToPage();
         }
