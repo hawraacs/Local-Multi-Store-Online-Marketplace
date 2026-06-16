@@ -147,6 +147,7 @@ builder.Services.AddScoped<CustomerAddressManager>();
 builder.Services.AddScoped<OrderHistoryManager>();
 builder.Services.AddScoped<RecentlyViewedManager>();
 builder.Services.AddScoped<CustomerManager>();
+builder.Services.AddScoped<SessionManager>();
 builder.Services.AddScoped<IPromotionManager, PromotionManager>();
 
 var app = builder.Build();

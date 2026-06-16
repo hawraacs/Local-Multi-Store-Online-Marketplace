@@ -23,6 +23,9 @@ namespace Multi_Store.Infrastructure.Repositories
         public async Task<IReadOnlyList<ChatMessage>> GetConversationAsync(int userId1, int userId2)
         {
             return await _context.ChatMessages
+                .Include(m => m.Sender)
+                .Include(m => m.Receiver)
+                .Include(m => m.Product)
                 .Where(m =>
                     (m.SenderID == userId1 && m.ReceiverID == userId2) ||
                     (m.SenderID == userId2 && m.ReceiverID == userId1))
@@ -75,6 +78,11 @@ namespace Multi_Store.Infrastructure.Repositories
                 .Where(m => m.SenderID == userId || m.ReceiverID == userId)
                 .OrderByDescending(m => m.SentAt)
                 .ToListAsync();
+        }
+        public async Task DeleteRangeAsync(IEnumerable<ChatMessage> messages)
+        {
+            _context.ChatMessages.RemoveRange(messages);
+            await _context.SaveChangesAsync();
         }
     }
 }

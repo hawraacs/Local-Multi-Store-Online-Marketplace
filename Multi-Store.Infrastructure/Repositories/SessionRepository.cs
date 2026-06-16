@@ -3,11 +3,6 @@ using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Infrastructure.Repositories.Base;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Multi_Store.Infrastructure.Repositories
 {
@@ -39,10 +34,9 @@ namespace Multi_Store.Infrastructure.Repositories
             var now = DateTime.UtcNow;
 
             return await _context.Sessions
-                .Where(s =>
-                    s.UserID == userId &&
-                    s.IsActive &&
-                    s.ExpiresAt > now)
+                .Where(s => s.UserID == userId &&
+                            s.IsActive &&
+                            s.ExpiresAt > now)
                 .OrderByDescending(s => s.LastActivityAt)
                 .ToListAsync();
         }
@@ -51,13 +45,39 @@ namespace Multi_Store.Infrastructure.Repositories
         {
             var now = DateTime.UtcNow;
 
-            var expiredSessions = await _context.Sessions
+            var expired = await _context.Sessions
                 .Where(s => s.ExpiresAt <= now || !s.IsActive)
                 .ToListAsync();
 
-            if (expiredSessions.Any())
+            if (expired.Any())
             {
-                _context.Sessions.RemoveRange(expiredSessions);
+                _context.Sessions.RemoveRange(expired);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<Session?> GetActiveByUserIdAsync(int userId)
+        {
+            var now = DateTime.UtcNow;
+
+            return await _context.Sessions
+                .Where(s => s.UserID == userId &&
+                            s.IsActive &&
+                            s.ExpiresAt > now)
+                .OrderByDescending(s => s.LastActivityAt)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task UpdateLastActivityAsync(int userId)
+        {
+            var session = await _context.Sessions
+                .Where(s => s.UserID == userId && s.IsActive)
+                .OrderByDescending(s => s.LastActivityAt)
+                .FirstOrDefaultAsync();
+
+            if (session != null)
+            {
+                session.LastActivityAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
             }
         }
