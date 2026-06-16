@@ -59,6 +59,7 @@ namespace Multi_Store.Services.Dtos
         public decimal? FixedDeliveryFee { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsFollowing { get; set; } = false;
 
         public DateTime? ApprovedAt { get; set; }
 
@@ -71,7 +72,8 @@ namespace Multi_Store.Services.Dtos
 
         public virtual User? Approver { get; set; }
 
-        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public List<ProductDTO> Products { get; set; } = new();
+
 
         public virtual ICollection<DeliveryArea> DeliveryAreas { get; set; } = new List<DeliveryArea>();
 
@@ -79,7 +81,7 @@ namespace Multi_Store.Services.Dtos
 
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
-        public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
+        public List<ReviewDTO> Reviews { get; set; } = new();
 
         public virtual ICollection<Complaint> Complaints { get; set; } = new List<Complaint>();
 

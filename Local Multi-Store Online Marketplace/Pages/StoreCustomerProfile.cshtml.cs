@@ -24,7 +24,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public Store Store { get; set; }
         public List<Product> Products { get; set; } = new();
-        public List<Review> Reviews { get; set; } = new();
 
         public int FollowersCount { get; set; }
         public bool IsFollowing { get; set; }
@@ -40,14 +39,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             Products = await _storeManager.GetStoreProductsAsync(id);
             FollowersCount = await _storeManager.GetFollowersCountAsync(id);
 
-            IsFollowing = false;
-
             var user = await _userManager.GetUserAsync(User);
 
             if (user != null)
             {
-                var customer =
-                    await _customerManager.GetCustomerByUserIdAsync(user.Id);
+                var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
 
                 if (customer != null)
                 {
@@ -55,7 +51,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         await _storeManager.IsFollowingAsync(customer.CustomerID, id);
                 }
             }
-            Reviews = await _storeManager.GetStoreReviewsAsync(id);
 
             return Page();
         }

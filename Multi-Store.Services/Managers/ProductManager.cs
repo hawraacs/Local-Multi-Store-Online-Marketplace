@@ -168,5 +168,14 @@ namespace Multi_Store.Services.Managers
             var products = await _productRepository.GetTopRatedProductsAsync(count);
             return _mapper.Map<IReadOnlyList<ProductDTO>>(products);
         }
+        public async Task<ProductDTO> GetByIdAsync(int productId)
+        {
+            var product = await _productRepository.GetByIdAsync(productId);
+
+            if (product == null)
+                throw new Exception("Product not found");
+
+            return _mapper.Map<ProductDTO>(product);
+        }
     }
 }
