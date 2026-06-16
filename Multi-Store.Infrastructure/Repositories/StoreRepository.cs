@@ -87,11 +87,17 @@ public class StoreRepository : Repository<Store>, IStoreRepository
         .ToListAsync();
 
     public async Task<List<Product>> GetStoreProductsAsync(int storeId)
-        => await _context.Products
-            .Where(p => p.StoreID == storeId && p.IsActive)
-            .Include(p => p.Images)
-            .OrderByDescending(p => p.CreatedAt)
-            .ToListAsync();
+     => await _context.Products
+         .Where(p => p.StoreID == storeId && p.IsActive)
+
+         .Include(p => p.Images)
+
+         .Include(p => p.Reviews)
+             .ThenInclude(r => r.Customer)
+                 .ThenInclude(c => c.User)
+
+         .OrderByDescending(p => p.CreatedAt)
+         .ToListAsync();
 
     // =====================
     // FOLLOW SYSTEM
@@ -144,4 +150,28 @@ public class StoreRepository : Repository<Store>, IStoreRepository
             .Where(r => r.StoreID == storeId)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
+    public async Task DeleteProductReviewAsync(
+     int reviewId,
+     int storeOwnerId)
+    {
+        var review = await _context.Reviews
+
+            .Include(r => r.Product)
+                .ThenInclude(p => p.Store)
+
+            .FirstOrDefaultAsync(r => r.ReviewID == reviewId);
+
+        if (review == null)
+            return;
+
+        if (review.Product == null)
+            return;
+
+        if (review.Product.Store.OwnerUserID != storeOwnerId)
+            return;
+
+        _context.Reviews.Remove(review);
+
+        await _context.SaveChangesAsync();
+    }
 }
