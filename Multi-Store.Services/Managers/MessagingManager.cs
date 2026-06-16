@@ -25,9 +25,6 @@ namespace Multi_Store.Services.Managers
             _mapper = mapper;
         }
 
-        // =========================
-        // GET ALL MESSAGES FOR USER
-        // =========================
         public async Task<List<ChatMessageDTO>> GetMessagesForUserAsync(int userId)
         {
             if (userId <= 0)
@@ -40,9 +37,6 @@ namespace Multi_Store.Services.Managers
             return _mapper.Map<List<ChatMessageDTO>>(messages);
         }
 
-        // =========================
-        // GET CONVERSATION
-        // =========================
         public async Task<List<ChatMessageDTO>> GetConversationAsync(int user1Id, int user2Id)
         {
             if (user1Id <= 0 || user2Id <= 0)
@@ -55,9 +49,16 @@ namespace Multi_Store.Services.Managers
             return _mapper.Map<List<ChatMessageDTO>>(messages);
         }
 
-        // =========================
-        // SEND NORMAL MESSAGE
-        // =========================
+        public async Task MarkConversationAsReadAsync(int senderId, int receiverId)
+        {
+            if (senderId <= 0 || receiverId <= 0)
+            {
+                return;
+            }
+
+            await _chatRepo.MarkAsReadAsync(senderId, receiverId);
+        }
+
         public async Task<int> SendMessageAsync(
             ChatMessageDTO dto,
             string ip,
@@ -86,6 +87,7 @@ namespace Multi_Store.Services.Managers
                     ? string.Empty
                     : dto.MessageText.Trim(),
                 ProductID = dto.ProductID,
+                ImageUrl = dto.ImageUrl,
                 IsRead = false,
                 SentAt = DateTime.UtcNow
             };
@@ -105,11 +107,6 @@ namespace Multi_Store.Services.Managers
             return message.MessageID;
         }
 
-        // =========================
-        // SEND PRODUCT MESSAGE
-        // Used by Customer1.cshtml.cs:
-        // _messagingManager.SendProductAsync(senderId, receiverId, productId)
-        // =========================
         public async Task<int> SendProductAsync(
             int senderId,
             int receiverId,
@@ -141,9 +138,6 @@ namespace Multi_Store.Services.Managers
             return await SendMessageAsync(dto, string.Empty, string.Empty);
         }
 
-        // =========================
-        // DELETE SINGLE MESSAGE
-        // =========================
         public async Task DeleteMessageAsync(
             int messageId,
             string ip,
@@ -174,12 +168,6 @@ namespace Multi_Store.Services.Managers
             });
         }
 
-        // =========================
-        // DELETE FULL CONVERSATION
-        // Important:
-        // We use DeleteAsync one by one because your repository
-        // does not contain DeleteRangeAsync.
-        // =========================
         public async Task DeleteConversationAsync(
             int user1Id,
             int user2Id,
