@@ -20,7 +20,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public Customer1Model(
             ApplicationDbContext context,
             UserManager<User> userManager,
-            WishlistManager wishlistManager, MessagingManager messagingManager)
+            WishlistManager wishlistManager,
+            MessagingManager messagingManager)
         {
             _context = context;
             _userManager = userManager;
@@ -29,6 +30,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         public List<int> FollowingStoreIds { get; set; } = new();
+
         public List<Product> Products { get; set; } = new();
 
         public async Task OnGetAsync()
@@ -44,13 +46,25 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var customerId = await GetCurrentCustomerIdAsync();
 
             if (customerId == null)
+            {
+                TempData["Error"] = "Please login as a customer first.";
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
 
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductID == productId && p.IsActive);
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p =>
+                    p.ProductID == productId &&
+                    p.IsActive);
 
             if (product == null)
             {
-                TempData["Error"] = "Product not available.";
+                TempData["Error"] = "Product is not available.";
+                return RedirectToPage();
+            }
+
+            if (product.Quantity <= 0)
+            {
+                TempData["Error"] = "This product is out of stock.";
                 return RedirectToPage();
             }
 
@@ -72,23 +86,33 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 await _context.SaveChangesAsync();
             }
 
-            var exists = await _context.CartItems
-                .AnyAsync(ci => ci.CartID == cart.CartID && ci.ProductID == productId);
+            var existingItem = await _context.CartItems
+                .FirstOrDefaultAsync(ci =>
+                    ci.CartID == cart.CartID &&
+                    ci.ProductID == productId);
 
-            if (!exists)
+            if (existingItem != null)
             {
-                _context.CartItems.Add(new CartItem
-                {
-                    CartID = cart.CartID,
-                    ProductID = productId,
-                    Quantity = 1,
-                    PriceAtAddTime = product.Price,
-                    AddedAt = DateTime.UtcNow
-                });
-
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Added to cart!";
+                TempData["Error"] = "This product is already in your cart. You can update the quantity from the cart page.";
+                return RedirectToPage();
             }
+
+            var cartItem = new CartItem
+            {
+                CartID = cart.CartID,
+                ProductID = productId,
+                Quantity = 1,
+                PriceAtAddTime = product.Price,
+                AddedAt = DateTime.UtcNow
+            };
+
+            _context.CartItems.Add(cartItem);
+
+            cart.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"{product.ProductName} added to your cart.";
 
             return RedirectToPage();
         }
@@ -101,23 +125,37 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var customerId = await GetCurrentCustomerIdAsync();
 
             if (customerId == null)
+            {
+                TempData["Error"] = "Please login as a customer first.";
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
 
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductID == productId && p.IsActive);
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p =>
+                    p.ProductID == productId &&
+                    p.IsActive);
 
             if (product == null)
             {
-                TempData["Error"] = "Product not available.";
+                TempData["Error"] = "Product is not available.";
                 return RedirectToPage();
             }
 
-            var exists = await _wishlistManager.IsInWishlistAsync(customerId.Value, productId);
+            var exists = await _wishlistManager.IsInWishlistAsync(
+                customerId.Value,
+                productId);
 
-            if (!exists)
+            if (exists)
             {
-                await _wishlistManager.AddToWishlistAsync(customerId.Value, productId);
-                TempData["Success"] = "Added to wishlist!";
+                TempData["Error"] = "This product is already in your wishlist.";
+                return RedirectToPage();
             }
+
+            await _wishlistManager.AddToWishlistAsync(
+                customerId.Value,
+                productId);
+
+            TempData["Success"] = $"{product.ProductName} added to your wishlist.";
 
             return RedirectToPage();
         }
@@ -128,10 +166,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public async Task<IActionResult> OnPostFollowStoreAsync(int storeId)
         {
             var customerId = await GetCurrentCustomerIdAsync();
-            if (customerId == null) return RedirectToPage();
 
-            bool exists = await _context.StoreFollows
-                .AnyAsync(x => x.CustomerID == customerId && x.StoreID == storeId);
+            if (customerId == null)
+            {
+                TempData["Error"] = "Please login as a customer first.";
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            var storeExists = await _context.Stores
+                .AnyAsync(s => s.StoreID == storeId);
+
+            if (!storeExists)
+            {
+                TempData["Error"] = "Store not found.";
+                return RedirectToPage();
+            }
+
+            var exists = await _context.StoreFollows
+                .AnyAsync(x =>
+                    x.CustomerID == customerId.Value &&
+                    x.StoreID == storeId);
 
             if (!exists)
             {
@@ -143,50 +197,91 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 });
 
                 await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Store followed successfully.";
             }
 
             return RedirectToPage();
         }
 
+        // =========================
+        // UNFOLLOW STORE
+        // =========================
         public async Task<IActionResult> OnPostUnfollowStoreAsync(int storeId)
         {
             var customerId = await GetCurrentCustomerIdAsync();
-            if (customerId == null) return RedirectToPage();
+
+            if (customerId == null)
+            {
+                TempData["Error"] = "Please login as a customer first.";
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
 
             var follow = await _context.StoreFollows
-                .FirstOrDefaultAsync(f => f.CustomerID == customerId && f.StoreID == storeId);
+                .FirstOrDefaultAsync(f =>
+                    f.CustomerID == customerId.Value &&
+                    f.StoreID == storeId);
 
             if (follow != null)
             {
                 _context.StoreFollows.Remove(follow);
+
                 await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Store unfollowed successfully.";
             }
 
             return RedirectToPage();
         }
 
         // =========================
-        // SHARE BUTTON (NEW)
+        // SHARE PRODUCT TO STORE OWNER
         // =========================
         public async Task<IActionResult> OnGetShareToStoreAsync(
-     int productId,
-     int storeOwnerId)
+            int productId,
+            int storeOwnerId)
         {
             var user = await _userManager.GetUserAsync(User);
 
             if (user == null)
+            {
+                TempData["Error"] = "Please login first.";
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            var product = await _context.Products
+                .Include(p => p.Store)
+                .FirstOrDefaultAsync(p =>
+                    p.ProductID == productId &&
+                    p.IsActive);
+
+            if (product == null)
+            {
+                TempData["Error"] = "Product is not available.";
                 return RedirectToPage();
+            }
+
+            var receiverExists = await _context.Users
+                .AnyAsync(u => u.Id == storeOwnerId);
+
+            if (!receiverExists)
+            {
+                TempData["Error"] = "Store owner was not found.";
+                return RedirectToPage();
+            }
 
             await _messagingManager.SendProductAsync(
                 user.Id,
                 storeOwnerId,
                 productId);
+
             TempData["Success"] = "Product shared successfully.";
+
             return RedirectToPage();
         }
 
         // =========================
-        // LOAD FEED
+        // LOAD EXPLORE PRODUCTS
         // =========================
         private async Task LoadProductsAsync()
         {
@@ -194,8 +289,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (customerId == null)
             {
-                Products = new();
-                FollowingStoreIds = new();
+                Products = new List<Product>();
+                FollowingStoreIds = new List<int>();
                 return;
             }
 
@@ -207,7 +302,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             Products = await _context.Products
                 .Include(p => p.Images)
                 .Include(p => p.Store)
-                .Where(p => p.IsActive)
+                .Where(p =>
+                    p.IsActive &&
+                    p.Store != null)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }

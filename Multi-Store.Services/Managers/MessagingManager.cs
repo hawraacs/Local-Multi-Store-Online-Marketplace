@@ -25,73 +25,193 @@ namespace Multi_Store.Services.Managers
             _mapper = mapper;
         }
 
+        // =========================
+        // GET ALL MESSAGES FOR USER
+        // =========================
         public async Task<List<ChatMessageDTO>> GetMessagesForUserAsync(int userId)
         {
-            var msgs = await _chatRepo.GetMessagesByUserAsync(userId);
-            return _mapper.Map<List<ChatMessageDTO>>(msgs);
+            if (userId <= 0)
+            {
+                return new List<ChatMessageDTO>();
+            }
+
+            var messages = await _chatRepo.GetMessagesByUserAsync(userId);
+
+            return _mapper.Map<List<ChatMessageDTO>>(messages);
         }
 
-        public async Task<List<ChatMessageDTO>> GetConversationAsync(int u1, int u2)
+        // =========================
+        // GET CONVERSATION
+        // =========================
+        public async Task<List<ChatMessageDTO>> GetConversationAsync(int user1Id, int user2Id)
         {
-            var msgs = await _chatRepo.GetConversationAsync(u1, u2);
-            return _mapper.Map<List<ChatMessageDTO>>(msgs);
+            if (user1Id <= 0 || user2Id <= 0)
+            {
+                return new List<ChatMessageDTO>();
+            }
+
+            var messages = await _chatRepo.GetConversationAsync(user1Id, user2Id);
+
+            return _mapper.Map<List<ChatMessageDTO>>(messages);
         }
 
-        public async Task<int> SendMessageAsync(ChatMessageDTO dto, string ip, string agent)
+        // =========================
+        // SEND NORMAL MESSAGE
+        // =========================
+        public async Task<int> SendMessageAsync(
+            ChatMessageDTO dto,
+            string ip,
+            string agent)
         {
-            var msg = new ChatMessage
+            if (dto == null)
+            {
+                throw new ArgumentNullException(nameof(dto));
+            }
+
+            if (dto.SenderID <= 0)
+            {
+                throw new ArgumentException("SenderID is required.", nameof(dto.SenderID));
+            }
+
+            if (dto.ReceiverID <= 0)
+            {
+                throw new ArgumentException("ReceiverID is required.", nameof(dto.ReceiverID));
+            }
+
+            var message = new ChatMessage
             {
                 SenderID = dto.SenderID,
                 ReceiverID = dto.ReceiverID,
-                MessageText = dto.MessageText,
+                MessageText = string.IsNullOrWhiteSpace(dto.MessageText)
+                    ? string.Empty
+                    : dto.MessageText.Trim(),
                 ProductID = dto.ProductID,
                 IsRead = false,
                 SentAt = DateTime.UtcNow
             };
 
-            await _chatRepo.AddAsync(msg);
+            await _chatRepo.AddAsync(message);
 
             await _audit.AddAsync(new AuditLog
             {
-                UserID = msg.SenderID,
+                UserID = message.SenderID,
                 Action = "SendMessage",
                 EntityName = "ChatMessage",
-                EntityID = msg.MessageID.ToString(),
+                EntityID = message.MessageID.ToString(),
                 NewValue = "Message sent",
                 ActionDate = DateTime.UtcNow
             });
 
-            return msg.MessageID;
+            return message.MessageID;
         }
 
-        public async Task DeleteMessageAsync(int messageId, string ip, string agent)
+        // =========================
+        // SEND PRODUCT MESSAGE
+        // Used by Customer1.cshtml.cs:
+        // _messagingManager.SendProductAsync(senderId, receiverId, productId)
+        // =========================
+        public async Task<int> SendProductAsync(
+            int senderId,
+            int receiverId,
+            int productId)
         {
-            var msg = await _chatRepo.GetByIdAsync(messageId);
-            if (msg == null) return;
+            if (senderId <= 0)
+            {
+                throw new ArgumentException("Sender ID is required.", nameof(senderId));
+            }
 
-            await _chatRepo.DeleteAsync(msg);
-        }
+            if (receiverId <= 0)
+            {
+                throw new ArgumentException("Receiver ID is required.", nameof(receiverId));
+            }
 
-        public async Task DeleteConversationAsync(int u1, int u2, string ip, string agent)
-        {
-            var msgs = await _chatRepo.GetConversationAsync(u1, u2);
+            if (productId <= 0)
+            {
+                throw new ArgumentException("Product ID is required.", nameof(productId));
+            }
 
-            await _chatRepo.DeleteRangeAsync(msgs);
-        }
-
-        public async Task<int> SendProductAsync(int senderId, int receiverId, int productId)
-        {
-            var msg = new ChatMessage
+            var dto = new ChatMessageDTO
             {
                 SenderID = senderId,
                 ReceiverID = receiverId,
                 ProductID = productId,
-                IsRead = false,
-                SentAt = DateTime.UtcNow
+                MessageText = $"Product shared with you. Product ID: {productId}"
             };
 
-            await _chatRepo.AddAsync(msg);
-            return msg.MessageID;
+            return await SendMessageAsync(dto, string.Empty, string.Empty);
+        }
+
+        // =========================
+        // DELETE SINGLE MESSAGE
+        // =========================
+        public async Task DeleteMessageAsync(
+            int messageId,
+            string ip,
+            string agent)
+        {
+            if (messageId <= 0)
+            {
+                return;
+            }
+
+            var message = await _chatRepo.GetByIdAsync(messageId);
+
+            if (message == null)
+            {
+                return;
+            }
+
+            await _chatRepo.DeleteAsync(message);
+
+            await _audit.AddAsync(new AuditLog
+            {
+                UserID = message.SenderID,
+                Action = "DeleteMessage",
+                EntityName = "ChatMessage",
+                EntityID = message.MessageID.ToString(),
+                OldValue = "Message deleted",
+                ActionDate = DateTime.UtcNow
+            });
+        }
+
+        // =========================
+        // DELETE FULL CONVERSATION
+        // Important:
+        // We use DeleteAsync one by one because your repository
+        // does not contain DeleteRangeAsync.
+        // =========================
+        public async Task DeleteConversationAsync(
+            int user1Id,
+            int user2Id,
+            string ip,
+            string agent)
+        {
+            if (user1Id <= 0 || user2Id <= 0)
+            {
+                return;
+            }
+
+            var messages = await _chatRepo.GetConversationAsync(user1Id, user2Id);
+
+            if (messages == null || !messages.Any())
+            {
+                return;
+            }
+
+            foreach (var message in messages)
+            {
+                await _chatRepo.DeleteAsync(message);
+            }
+
+            await _audit.AddAsync(new AuditLog
+            {
+                UserID = user1Id,
+                Action = "DeleteConversation",
+                EntityName = "ChatMessage",
+                EntityID = $"{user1Id}-{user2Id}",
+                OldValue = "Conversation deleted",
+                ActionDate = DateTime.UtcNow
+            });
         }
     }
 }
