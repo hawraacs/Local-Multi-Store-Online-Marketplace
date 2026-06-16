@@ -1,58 +1,261 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.ChatModel
+@{
+    Layout = null;
+}
 
-<h3 style="text-align:center;">Chat</h3>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Messages</title>
 
-<!-- 🔍 SEARCH -->
-<form method="get" action="/Chat" style="text-align:center;margin-bottom:15px;">
-    <input type="text"
-           name="searchText"
-           value="@Model.SearchText"
-           placeholder="Search users, stores, email..."
-           style="width:260px;padding:7px;border:1px solid #ccc;border-radius:6px;" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-    <button type="submit">Search</button>
-</form>
+    <style>
 
-<!-- 🔍 SEARCH MODE -->
-@if (!string.IsNullOrWhiteSpace(Model.SearchText))
-{
-    <h4 style="text-align:center;">Search Results</h4>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Inter;
+        }
 
-    <div style="width:420px;margin:auto;border:1px solid #ddd;border-radius:10px;">
-        @if (Model.SearchUsers.Any())
+        body {
+            background: #f8fafc;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: auto;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background: white;
+            position: sticky;
+            top: 0;
+        }
+
+            .header h2 {
+                font-size: 24px;
+                margin-bottom: 15px;
+            }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+            .search-box input {
+                flex: 1;
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 10px;
+            }
+
+            .search-box button {
+                border: none;
+                background: #2563eb;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 10px;
+                cursor: pointer;
+            }
+
+        .section-title {
+            padding: 15px 20px;
+            font-weight: 600;
+            color: #6b7280;
+            background: #fafafa;
+        }
+
+        .chat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-decoration: none;
+            color: black;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+            .chat-item:hover {
+                background: #f8fafc;
+            }
+
+        .left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #111827;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .name {
+            font-weight: 600;
+        }
+
+        .last-message {
+            color: #6b7280;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .online {
+            color: green;
+            font-size: 13px;
+        }
+
+        .offline {
+            color: gray;
+            font-size: 13px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: gray;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="header">
+
+            <h2>Messages</h2>
+
+            <form method="get" class="search-box">
+
+                <input type="text"
+                       name="SearchText"
+                       value="@Model.SearchText"
+                       placeholder="Search by username or email..." />
+
+                <button type="submit">
+                    Search
+                </button>
+
+            </form>
+
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.SearchText))
         {
-            @foreach (var u in Model.SearchUsers)
-            {
-                <a href="/ChatConversation?userId=@u.Id"
-                   style="display:block;padding:10px;border-bottom:1px solid #eee;text-decoration:none;color:black">
+            <div class="section-title">
+                Search Results
+            </div>
 
-                    <b>@(u.FullName ?? u.UserName)</b><br />
-                    <small style="color:gray;">@u.Email</small>
-                </a>
+            @if (Model.SearchUsers.Any())
+            {
+                @foreach (var user in Model.SearchUsers)
+                {
+                    var online = await Model.IsOnline(user.Id);
+
+                    <a class="chat-item"
+                       asp-page="/ChatConversation"
+                       asp-route-userId="@user.Id">
+
+                        <div class="left">
+
+                            <div class="avatar">
+                                @(user.UserName?.Substring(0, 1).ToUpper())
+                            </div>
+
+                            <div>
+                                <div class="name">
+                                    @user.UserName
+                                </div>
+
+                                <div class="last-message">
+                                    @user.Email
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="@(online ? "online" : "offline")">
+                            @(online ? "● Online" : "Offline")
+                        </div>
+
+                    </a>
+                }
+            }
+            else
+            {
+                <div class="empty">
+                    No users found.
+                </div>
             }
         }
         else
         {
-            <div style="padding:10px;text-align:center;color:gray;">
-                No users found
+            <div class="section-title">
+                Recent Chats
             </div>
-        }
-    </div>
-}
-else
-{
-    <h4 style="text-align:center;">Recent Chats</h4>
 
-    <div style="width:420px;margin:auto;border:1px solid #ddd;border-radius:10px;">
-        @foreach (var c in Model.Inbox)
-        {
-            <a href="/ChatConversation?userId=@c.UserId"
-               style="display:block;padding:10px;border-bottom:1px solid #eee;text-decoration:none;color:black">
+            @if (Model.Inbox.Any())
+            {
+                @foreach (var chat in Model.Inbox)
+                {
+                    var online = await Model.IsOnline(chat.UserId);
 
-                <b>@c.UserName</b><br />
-                <small style="color:gray;">@c.LastMessage</small>
-            </a>
+                    <a class="chat-item"
+                       asp-page="/ChatConversation"
+                       asp-route-userId="@chat.UserId">
+
+                        <div class="left">
+
+                            <div class="avatar">
+                                @(chat.UserName?.Substring(0, 1).ToUpper())
+                            </div>
+
+                            <div>
+
+                                <div class="name">
+                                    @chat.UserName
+                                </div>
+
+                                <div class="last-message">
+                                    @chat.LastMessage
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="@(online ? "online" : "offline")">
+                            @(online ? "● Online" : "Offline")
+                        </div>
+
+                    </a>
+                }
+            }
+            else
+            {
+                <div class="empty">
+                    No conversations yet.
+                </div>
+            }
         }
+
     </div>
-}
+
+</body>
+</html>

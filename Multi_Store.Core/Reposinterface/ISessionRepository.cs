@@ -1,10 +1,5 @@
 ﻿using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface.Base;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Multi_Store.Core.Reposinterface
 {
@@ -15,6 +10,10 @@ namespace Multi_Store.Core.Reposinterface
         Task<IReadOnlyList<Session>> GetByUserAsync(int userId);
 
         Task<IReadOnlyList<Session>> GetActiveSessionsAsync(int userId);
+
+        Task<Session?> GetActiveByUserIdAsync(int userId);
+
+        Task UpdateLastActivityAsync(int userId);
 
         Task RemoveExpiredSessionsAsync();
     }
