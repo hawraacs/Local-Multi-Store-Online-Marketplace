@@ -2,6 +2,14 @@
 @model Local_Multi_Store_Online_Marketplace.Pages.ChatConversationModel
 @{
     Layout = null;
+
+    var displayName = Model.OtherUser?.FullName
+        ?? Model.OtherUser?.UserName
+        ?? "User";
+
+    var avatarLetter = !string.IsNullOrWhiteSpace(displayName)
+        ? displayName.Substring(0, 1).ToUpper()
+        : "U";
 }
 
 <!DOCTYPE html>
@@ -10,85 +18,123 @@
     <meta charset="utf-8" />
     <title>Chat</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Inter;
+            font-family: Inter, Arial, sans-serif;
         }
 
         body {
-            background: #eef2f7;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #e8eef8 0%, #f7fafc 45%, #e8f1ff 100%);
+        }
+
+        .page-shell {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
         }
 
         .wrapper {
-            max-width: 800px;
-            margin: auto;
-            height: 100vh;
+            width: 100%;
+            max-width: 900px;
+            height: calc(100vh - 36px);
             display: flex;
             flex-direction: column;
-            background: white;
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(148,163,184,.35);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 24px 70px rgba(15,23,42,.16);
+            backdrop-filter: blur(18px);
         }
 
         .topbar {
-            padding: 15px;
+            padding: 14px 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #eee;
-            position: sticky;
-            top: 0;
-            background: white;
+            border-bottom: 1px solid rgba(226,232,240,.95);
+            background: rgba(255,255,255,.88);
+            z-index: 10;
         }
 
         .user {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
+            min-width: 0;
         }
 
         .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #111827;
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #111827, #2563eb);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 800;
+            box-shadow: 0 8px 18px rgba(37,99,235,.22);
+        }
+
+        .user-meta {
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 800;
+            color: #0f172a;
+            max-width: 320px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .online {
-            color: green;
+            color: #16a34a;
             font-size: 12px;
+            font-weight: 700;
         }
 
         .offline {
-            color: gray;
+            color: #64748b;
             font-size: 12px;
+            font-weight: 700;
         }
 
         .delete {
-            background: #ef4444;
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: #e11d48;
+            padding: 9px 13px;
+            border-radius: 14px;
             cursor: pointer;
+            font-weight: 800;
+            transition: .2s;
         }
+
+            .delete:hover {
+                background: #e11d48;
+                color: white;
+            }
 
         .messages {
             flex: 1;
-            padding: 15px;
+            padding: 18px;
             overflow: auto;
+            background: radial-gradient(circle at top left, rgba(37,99,235,.08), transparent 35%), radial-gradient(circle at bottom right, rgba(14,165,233,.08), transparent 35%), #f8fafc;
         }
 
         .msg {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             display: flex;
         }
 
@@ -101,191 +147,1443 @@
         }
 
         .bubble {
-            max-width: 70%;
-            padding: 10px 14px;
-            border-radius: 16px;
+            max-width: 74%;
+            padding: 10px 13px;
+            border-radius: 20px;
             font-size: 14px;
+            line-height: 1.45;
+            word-break: break-word;
+            box-shadow: 0 10px 22px rgba(15,23,42,.08);
         }
 
         .me .bubble {
-            background: #2563eb;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
             color: white;
+            border-bottom-right-radius: 7px;
         }
 
         .other .bubble {
-            background: #e5e7eb;
+            background: white;
+            color: #111827;
+            border: 1px solid rgba(226,232,240,.95);
+            border-bottom-left-radius: 7px;
         }
 
         .time {
             font-size: 10px;
-            opacity: .6;
-            margin-top: 5px;
+            opacity: .82;
+            margin-top: 6px;
+            font-weight: 700;
         }
 
-        .composer {
+        .seen-status {
+            margin-left: 6px;
+            font-weight: 900;
+            font-size: 10px;
+        }
+
+        .me .seen-status.sent {
+            color: #dbeafe;
+        }
+
+        .me .seen-status.seen {
+            color: #bfdbfe;
+        }
+
+        .delete-message-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 10px;
+            margin-top: 5px;
+            cursor: pointer;
+            font-weight: 800;
+        }
+
+        .composer-area {
+            border-top: 1px solid rgba(226,232,240,.95);
+            background: rgba(255,255,255,.96);
+        }
+
+        .attach-preview {
+            display: none;
+            padding: 9px 14px;
+            border-bottom: 1px solid rgba(226,232,240,.95);
+            background: #f8fafc;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .preview-row {
             display: flex;
-            padding: 10px;
-            border-top: 1px solid #eee;
+            align-items: center;
             gap: 10px;
         }
 
-        input {
+        .preview-text {
             flex: 1;
-            padding: 10px;
-            border-radius: 20px;
-            border: 1px solid #ddd;
-            outline: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        button.send {
+        .preview-remove {
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: 900;
+        }
+
+        .voice-panel {
+            display: none;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(226,232,240,.95);
+            background: #fff7f7;
+        }
+
+        .voice-recording-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #991b1b;
+            font-weight: 900;
+            font-size: 13px;
+        }
+
+        .record-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: pulse 1s infinite;
+        }
+
+        @@keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .35;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .voice-ready-row {
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .voice-ready-row audio {
+                flex: 1;
+                width: 100%;
+            }
+
+        .ios-keyboard {
+            display: none;
+            padding: 8px 10px 12px;
+            background: linear-gradient(180deg, #d8dde5, #cbd3dc);
+            border-bottom: 1px solid rgba(148,163,184,.65);
+        }
+
+            .ios-keyboard.show {
+                display: block;
+            }
+
+        .suggestions {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding: 0 8px;
+        }
+
+        .suggestion-chip {
+            min-width: 100px;
+            max-width: 190px;
+            height: 30px;
+            padding: 0 14px;
+            border: 1px solid rgba(148, 163, 184, .45);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .72);
+            color: #0f172a;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, .08);
+            transition: .15s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+            .suggestion-chip:hover {
+                background: white;
+                transform: translateY(-1px);
+            }
+
+            .suggestion-chip:active {
+                transform: translateY(0);
+                background: #e0ecff;
+            }
+
+        .key-row {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 7px;
+        }
+
+        .middle-row {
+            padding: 0 18px;
+        }
+
+        .key-btn {
+            min-width: 32px;
+            height: 39px;
+            border: none;
+            border-radius: 9px;
+            background: rgba(255,255,255,.95);
+            color: #111827;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 2px 0 rgba(15,23,42,.20);
+            transition: .12s;
+        }
+
+            .key-btn:active {
+                background: #e5e7eb;
+                transform: translateY(1px);
+                box-shadow: none;
+            }
+
+        .special-key {
+            min-width: 52px;
+            background: #aeb7c4;
+            font-size: 12px;
+        }
+
+        .space-key {
+            flex: 1;
+            max-width: 285px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .emoji-key {
+            min-width: 40px;
+            background: #c3cbd6;
+        }
+
+        .bottom-row {
+            padding: 0 4px;
+        }
+
+        .keyboard-toggle-active {
+            background: #0f172a !important;
+        }
+
+        .emoji-panel {
+            display: none;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            padding: 10px 6px 4px;
+            max-height: 190px;
+            overflow-y: auto;
+            border-top: 1px solid rgba(15,23,42,.12);
+            margin-top: 6px;
+        }
+
+            .emoji-panel.show {
+                display: grid;
+            }
+
+        .emoji-btn {
+            height: 36px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255,255,255,.72);
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 1px 0 rgba(15,23,42,.12);
+        }
+
+            .emoji-btn:active {
+                background: #e5e7eb;
+                transform: translateY(1px);
+            }
+
+        .composer {
+            display: flex;
+            padding: 12px;
+            gap: 8px;
+            align-items: flex-end;
+            background: white;
+        }
+
+        .message-input {
+            flex: 1;
+            min-height: 40px;
+            max-height: 98px;
+            padding: 11px 14px;
+            border-radius: 20px;
+            border: 1px solid #dbe3ef;
+            outline: none;
+            resize: none;
+            font-size: 14px;
+            background: #f8fafc;
+            transition: .2s;
+        }
+
+            .message-input:focus {
+                background: white;
+                border-color: #93c5fd;
+                box-shadow: 0 0 0 4px rgba(147,197,253,.25);
+            }
+
+        .send,
+        .icon-btn {
             background: #2563eb;
             border: none;
             color: white;
-            padding: 0 20px;
+            height: 40px;
             border-radius: 20px;
+            cursor: pointer;
+            font-weight: 800;
+            transition: .18s;
+        }
+
+        .send {
+            padding: 0 18px;
+        }
+
+            .send:hover,
+            .icon-btn:hover {
+                background: #1d4ed8;
+            }
+
+        .icon-btn {
+            width: 42px;
+            padding: 0;
+            font-size: 18px;
+        }
+
+        .recording-btn {
+            background: #ef4444 !important;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            width: 270px;
+            border: 1px solid #e2e8f0;
+            color: #111827;
+        }
+
+            .product-card img {
+                width: 100%;
+                height: 175px;
+                object-fit: cover;
+            }
+
+        .product-body {
+            padding: 11px;
+        }
+
+        .product-title {
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            color: #ff6600;
+            font-weight: 900;
+        }
+
+        .product-desc {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        .product-link {
+            display: inline-block;
+            margin-top: 8px;
+            color: #2563eb;
+            font-weight: 900;
+        }
+
+        .chat-image {
+            max-width: 270px;
+            border-radius: 14px;
+            display: block;
+        }
+
+        .file-link {
+            display: inline-block;
+            background: white;
+            color: #2563eb;
+            padding: 11px;
+            border-radius: 12px;
+            border: 1px solid #dbe3ef;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+        audio {
+            max-width: 270px;
+            width: 100%;
+        }
+
+        @@media (max-width: 680px) {
+            .page-shell {
+                padding: 0;
+            }
+
+            .wrapper {
+                height: 100vh;
+                border-radius: 0;
+                max-width: none;
+            }
+
+            .bubble {
+                max-width: 88%;
+            }
+
+            .send {
+                padding: 0 12px;
+            }
+
+            .icon-btn {
+                width: 38px;
+            }
+
+            .key-btn {
+                min-width: 27px;
+                height: 36px;
+                font-size: 14px;
+            }
+
+            .special-key {
+                min-width: 44px;
+            }
+
+            .emoji-panel {
+                grid-template-columns: repeat(7, 1fr);
+            }
         }
     </style>
 </head>
 
 <body>
+    <div class="page-shell">
+        <div class="wrapper">
 
-    <div class="wrapper">
-
-        <!-- TOP BAR -->
-        <div class="topbar">
-
-            <div class="user">
-                <div class="avatar">
-                    @(Model.OtherUser?.FullName?.Substring(0, 1).ToUpper())
-                </div>
-
-                <div>
-                    <div style="font-weight:600;">
-                        @Model.OtherUser?.FullName
+            <div class="topbar">
+                <div class="user">
+                    <div class="avatar">
+                        @avatarLetter
                     </div>
 
-                    <div class="@(Model.IsOnlineUser ? "online" : "offline")">
-                        @(Model.IsOnlineUser ? "● Online" : "Offline")
+                    <div class="user-meta">
+                        <div class="user-name">
+                            @displayName
+                        </div>
+
+                        <div class="@(Model.IsOnlineUser ? "online" : "offline")">
+                            @(Model.IsOnlineUser ? "● Online" : "Offline")
+                        </div>
                     </div>
                 </div>
+
+                <form method="post" asp-page-handler="DeleteChat">
+                    <input type="hidden" name="userId" value="@Model.ReceiverId" />
+                    <button class="delete" onclick="return confirm('Delete this conversation?')">
+                        Delete
+                    </button>
+                </form>
             </div>
 
-            <form method="post" asp-page-handler="DeleteChat">
-                <input type="hidden" name="userId" value="@Model.ReceiverId" />
-                <button class="delete">Delete</button>
-            </form>
+            <div class="messages" id="messagesBox">
+                @foreach (var msg in Model.Messages)
+                {
+                    <div class="msg @(msg.SenderID == Model.CurrentUserId ? "me" : "other")">
+                        <div class="bubble">
+                            @if (msg.Product != null)
+                            {
+                                var image = msg.Product.Images?.FirstOrDefault()?.ImageUrl
+                                ?? "/images/no-image.png";
 
-        </div>
+                                <div class="product-card">
+                                    <img src="@image"
+                                         onerror="this.onerror=null;this.src='/images/no-image.png';" />
 
-        <!-- MESSAGES -->
-        <div class="messages">
+                                    <div class="product-body">
+                                        <div class="product-title">
+                                            @msg.Product.ProductName
+                                        </div>
 
-            @foreach (var msg in Model.Messages)
-            {
-                <div class="msg @(msg.SenderID == Model.CurrentUserId ? "me" : "other")">
+                                        <div class="product-price">
+                                            $@msg.Product.Price.ToString("N2")
+                                        </div>
 
-                    <div class="bubble">
-                        @if (msg.Product != null)
-                        {
-                            var image =
-                            msg.Product.Images?.FirstOrDefault()?.ImageUrl
-                            ?? "/images/no-image.png";
+                                        <div class="product-desc">
+                                            @msg.Product.Description
+                                        </div>
 
-                            <div style="
-        background:white;
-        border-radius:12px;
-        overflow:hidden;
-        width:260px;
-        border:1px solid #ddd;">
-
-                                <img src="@image"
-                                     style="
-                width:100%;
-                height:170px;
-                object-fit:cover;" />
-
-                                <div style="padding:10px;">
-
-                                    <div style="
-                font-weight:bold;
-                margin-bottom:5px;">
-                                        @msg.Product.ProductName
+                                        @if (User.IsInRole("StoreOwner"))
+                                        {
+                                            <a href="/Home?productId=@msg.ProductID" class="product-link">
+                                                View Product
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a href="/CustomerProductDetails?id=@msg.ProductID" class="product-link">
+                                                View Product
+                                            </a>
+                                        }
                                     </div>
+                                </div>
+                            }
+                            else
+                            {
+                                @if (!string.IsNullOrWhiteSpace(msg.ImageUrl))
+                                {
+                                    var lowerUrl = msg.ImageUrl.ToLower();
 
-                                    <div style="
-                color:#ff6600;
-                font-weight:bold;">
-                                        $@msg.Product.Price
-                                    </div>
-
-                                    <div style="
-                font-size:13px;
-                color:#666;
-                margin-top:5px;">
-                                        @msg.Product.Description
-                                    </div>
-                                    @if (User.IsInRole("StoreOwner"))
+                                    if (msg.MessageText == "[VOICE]")
                                     {
-                                        <a href="/Home?productId=@msg.ProductID"
-                                           style="display:inline-block;margin-top:8px;color:#2563eb;font-weight:bold;">
-                                            View Product
-                                        </a>
+                                        <audio controls src="@msg.ImageUrl"></audio>
+                                    }
+                                    else if (msg.MessageText == "[IMAGE]" ||
+                                    lowerUrl.EndsWith(".jpg") ||
+                                    lowerUrl.EndsWith(".jpeg") ||
+                                    lowerUrl.EndsWith(".png") ||
+                                    lowerUrl.EndsWith(".gif") ||
+                                    lowerUrl.EndsWith(".webp"))
+                                    {
+                                        <img class="chat-image"
+                                             src="@msg.ImageUrl"
+                                             onerror="this.onerror=null;this.src='/images/no-image.png';" />
+
+                                        @if (!string.IsNullOrWhiteSpace(msg.MessageText) &&
+                                       msg.MessageText != "[IMAGE]")
+                                        {
+                                            <div style="margin-top:6px;">
+                                                @msg.MessageText
+                                            </div>
+                                        }
                                     }
                                     else
                                     {
-                                        <a href="/Customer1?productId=@msg.ProductID"
-                                           style="display:inline-block;margin-top:8px;color:#2563eb;font-weight:bold;">
-                                            View Product
+                                        var fileName = msg.MessageText
+                                        .Replace("[FILE]", "")
+                                        .Trim();
+
+                                        if (string.IsNullOrWhiteSpace(fileName))
+                                        {
+                                            fileName = "Download file";
+                                        }
+
+                                        <a href="@msg.ImageUrl" download class="file-link">
+                                            📎 @fileName
                                         </a>
                                     }
-}
-                                </div>
+                                }
+                                else
+                                {
+                                    @msg.MessageText
+                                }
+                            }
+
+                            <div class="time">
+                                <span class="message-time"
+                                      data-utc='@DateTime.SpecifyKind(msg.SentAt, DateTimeKind.Utc).ToString("yyyy-MM-ddTHH:mm:ss.fffZ")'>
+                                    ...
+                                </span>
+
+                                @if (msg.SenderID == Model.CurrentUserId)
+                                {
+                                    if (msg.IsRead)
+                                    {
+                                        <span class="seen-status seen">
+                                            ✓✓ Seen
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="seen-status sent">
+                                            ✓ Sent
+                                        </span>
+                                    }
+                                }
                             </div>
-                        }
-                        else
-                        {
-                            @msg.MessageText
-                        }
 
-                        <div class="time">
-                            @msg.SentAt.ToString("HH:mm")
+                            @if (msg.SenderID == Model.CurrentUserId)
+                            {
+                                <form method="post" asp-page-handler="DeleteMessage">
+                                    <input type="hidden" name="messageId" value="@msg.MessageID" />
+                                    <input type="hidden" name="userId" value="@Model.ReceiverId" />
+                                    <button class="delete-message-btn">
+                                        delete
+                                    </button>
+                                </form>
+                            }
                         </div>
+                    </div>
+                }
+            </div>
 
-                        @if (msg.SenderID == Model.CurrentUserId)
-                        {
-                            <form method="post"
-                                  asp-page-handler="DeleteMessage">
-                                <input type="hidden" name="messageId" value="@msg.MessageID" />
-                                <input type="hidden" name="userId" value="@Model.ReceiverId" />
-                                <button style="background:none;border:none;color:red;font-size:10px;">
-                                    delete
-                                </button>
-                            </form>
-                        }
+            <div class="composer-area">
 
+                <div class="attach-preview" id="attachPreview">
+                    <div class="preview-row">
+                        <div class="preview-text" id="previewText"></div>
+                        <button type="button" class="preview-remove" id="clearAttachmentBtn">×</button>
+                    </div>
+                </div>
+
+                <div class="voice-panel" id="voicePanel">
+                    <div class="voice-recording-row" id="voiceRecordingRow">
+                        <div class="record-dot"></div>
+                        <div>Recording voice...</div>
+                        <div id="recordTimer">00:00</div>
+                        <button type="button" class="preview-remove" id="cancelVoiceBtn">×</button>
                     </div>
 
+                    <div class="voice-ready-row" id="voiceReadyRow">
+                        <audio controls id="voiceAudio"></audio>
+                        <button type="button" class="preview-remove" id="removeVoiceBtn">×</button>
+                    </div>
                 </div>
-            }
 
+                <div class="ios-keyboard" id="iosKeyboard">
+                    <div class="suggestions">
+                        <button type="button" class="suggestion-chip" data-suggestion="">Type...</button>
+                        <button type="button" class="suggestion-chip" data-suggestion="">Suggestions</button>
+                        <button type="button" class="suggestion-chip" data-suggestion="">Here</button>
+                    </div>
+
+                    <div class="key-row">
+                        <button type="button" class="key-btn letter-key" data-key="q">q</button>
+                        <button type="button" class="key-btn letter-key" data-key="w">w</button>
+                        <button type="button" class="key-btn letter-key" data-key="e">e</button>
+                        <button type="button" class="key-btn letter-key" data-key="r">r</button>
+                        <button type="button" class="key-btn letter-key" data-key="t">t</button>
+                        <button type="button" class="key-btn letter-key" data-key="y">y</button>
+                        <button type="button" class="key-btn letter-key" data-key="u">u</button>
+                        <button type="button" class="key-btn letter-key" data-key="i">i</button>
+                        <button type="button" class="key-btn letter-key" data-key="o">o</button>
+                        <button type="button" class="key-btn letter-key" data-key="p">p</button>
+                    </div>
+
+                    <div class="key-row middle-row">
+                        <button type="button" class="key-btn letter-key" data-key="a">a</button>
+                        <button type="button" class="key-btn letter-key" data-key="s">s</button>
+                        <button type="button" class="key-btn letter-key" data-key="d">d</button>
+                        <button type="button" class="key-btn letter-key" data-key="f">f</button>
+                        <button type="button" class="key-btn letter-key" data-key="g">g</button>
+                        <button type="button" class="key-btn letter-key" data-key="h">h</button>
+                        <button type="button" class="key-btn letter-key" data-key="j">j</button>
+                        <button type="button" class="key-btn letter-key" data-key="k">k</button>
+                        <button type="button" class="key-btn letter-key" data-key="l">l</button>
+                    </div>
+
+                    <div class="key-row">
+                        <button type="button" class="key-btn special-key" id="shiftKey">ABC</button>
+                        <button type="button" class="key-btn letter-key" data-key="z">z</button>
+                        <button type="button" class="key-btn letter-key" data-key="x">x</button>
+                        <button type="button" class="key-btn letter-key" data-key="c">c</button>
+                        <button type="button" class="key-btn letter-key" data-key="v">v</button>
+                        <button type="button" class="key-btn letter-key" data-key="b">b</button>
+                        <button type="button" class="key-btn letter-key" data-key="n">n</button>
+                        <button type="button" class="key-btn letter-key" data-key="m">m</button>
+                        <button type="button" class="key-btn special-key" id="backspaceKey">⌫</button>
+                    </div>
+
+                    <div class="key-row bottom-row">
+                        <button type="button" class="key-btn special-key" id="numbersKey">123</button>
+                        <button type="button" class="key-btn emoji-key" id="emojiKey">☺</button>
+                        <button type="button" class="key-btn space-key" id="spaceKey">space</button>
+                        <button type="button" class="key-btn special-key" id="returnKey">return</button>
+                    </div>
+
+                    <div class="emoji-panel" id="emojiPanel">
+                        <button type="button" class="emoji-btn" data-emoji="😀">😀</button>
+                        <button type="button" class="emoji-btn" data-emoji="😁">😁</button>
+                        <button type="button" class="emoji-btn" data-emoji="😂">😂</button>
+                        <button type="button" class="emoji-btn" data-emoji="🤣">🤣</button>
+                        <button type="button" class="emoji-btn" data-emoji="😊">😊</button>
+                        <button type="button" class="emoji-btn" data-emoji="😍">😍</button>
+                        <button type="button" class="emoji-btn" data-emoji="🥰">🥰</button>
+                        <button type="button" class="emoji-btn" data-emoji="😘">😘</button>
+                        <button type="button" class="emoji-btn" data-emoji="😎">😎</button>
+                        <button type="button" class="emoji-btn" data-emoji="🤔">🤔</button>
+                        <button type="button" class="emoji-btn" data-emoji="😅">😅</button>
+                        <button type="button" class="emoji-btn" data-emoji="😭">😭</button>
+                        <button type="button" class="emoji-btn" data-emoji="😢">😢</button>
+                        <button type="button" class="emoji-btn" data-emoji="😡">😡</button>
+                        <button type="button" class="emoji-btn" data-emoji="😱">😱</button>
+                        <button type="button" class="emoji-btn" data-emoji="😴">😴</button>
+                        <button type="button" class="emoji-btn" data-emoji="👍">👍</button>
+                        <button type="button" class="emoji-btn" data-emoji="👎">👎</button>
+                        <button type="button" class="emoji-btn" data-emoji="👏">👏</button>
+                        <button type="button" class="emoji-btn" data-emoji="🙏">🙏</button>
+                        <button type="button" class="emoji-btn" data-emoji="💪">💪</button>
+                        <button type="button" class="emoji-btn" data-emoji="🔥">🔥</button>
+                        <button type="button" class="emoji-btn" data-emoji="❤️">❤️</button>
+                        <button type="button" class="emoji-btn" data-emoji="💙">💙</button>
+                        <button type="button" class="emoji-btn" data-emoji="💚">💚</button>
+                        <button type="button" class="emoji-btn" data-emoji="💔">💔</button>
+                        <button type="button" class="emoji-btn" data-emoji="✅">✅</button>
+                        <button type="button" class="emoji-btn" data-emoji="❌">❌</button>
+                        <button type="button" class="emoji-btn" data-emoji="⭐">⭐</button>
+                        <button type="button" class="emoji-btn" data-emoji="🎉">🎉</button>
+                        <button type="button" class="emoji-btn" data-emoji="🛒">🛒</button>
+                        <button type="button" class="emoji-btn" data-emoji="📦">📦</button>
+                        <button type="button" class="emoji-btn" data-emoji="🚚">🚚</button>
+                        <button type="button" class="emoji-btn" data-emoji="💵">💵</button>
+                        <button type="button" class="emoji-btn" data-emoji="🏠">🏠</button>
+                        <button type="button" class="emoji-btn" data-emoji="📍">📍</button>
+                    </div>
+                </div>
+
+                <form method="post"
+                      asp-page-handler="Send"
+                      class="composer"
+                      enctype="multipart/form-data"
+                      id="chatForm">
+
+                    <input type="hidden" name="receiverId" value="@Model.ReceiverId" />
+
+                    <input type="file"
+                           name="AttachmentFile"
+                           id="attachmentFile"
+                           style="display:none;"
+                           accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,audio/*,.webm,.ogg,.m4a" />
+
+                    <button type="button"
+                            class="icon-btn"
+                            id="keyboardToggleBtn"
+                            title="Keyboard">
+                        ⌨️
+                    </button>
+
+                    <button type="button"
+                            class="icon-btn"
+                            onclick="document.getElementById('attachmentFile').click();"
+                            title="Attach file">
+                        📎
+                    </button>
+
+                    <button type="button"
+                            class="icon-btn"
+                            id="recordBtn"
+                            title="Record voice">
+                        🎤
+                    </button>
+
+                    <textarea name="MessageText"
+                              class="message-input"
+                              id="messageInput"
+                              rows="1"
+                              placeholder="Message..."></textarea>
+
+                    <button class="send" type="submit">
+                        Send
+                    </button>
+                </form>
+            </div>
         </div>
-
-        <!-- INPUT -->
-        <form method="post"
-              asp-page-handler="Send"
-              class="composer">
-
-            <input type="hidden" name="receiverId" value="@Model.ReceiverId" />
-
-            <input type="text"
-                   name="MessageText"
-                   placeholder="Message..." />
-
-            <button class="send">Send</button>
-
-        </form>
-
     </div>
 
+    <script>
+        const messagesBox = document.getElementById("messagesBox");
+        const chatForm = document.getElementById("chatForm");
+        const messageInput = document.getElementById("messageInput");
+        const attachmentFile = document.getElementById("attachmentFile");
+
+        const attachPreview = document.getElementById("attachPreview");
+        const previewText = document.getElementById("previewText");
+        const clearAttachmentBtn = document.getElementById("clearAttachmentBtn");
+
+        const recordBtn = document.getElementById("recordBtn");
+        const voicePanel = document.getElementById("voicePanel");
+        const voiceRecordingRow = document.getElementById("voiceRecordingRow");
+        const voiceReadyRow = document.getElementById("voiceReadyRow");
+        const recordTimer = document.getElementById("recordTimer");
+        const cancelVoiceBtn = document.getElementById("cancelVoiceBtn");
+        const removeVoiceBtn = document.getElementById("removeVoiceBtn");
+        const voiceAudio = document.getElementById("voiceAudio");
+
+        const iosKeyboard = document.getElementById("iosKeyboard");
+        const keyboardToggleBtn = document.getElementById("keyboardToggleBtn");
+        const keyButtons = document.querySelectorAll(".key-btn[data-key]");
+        const letterKeys = document.querySelectorAll(".letter-key");
+        const backspaceKey = document.getElementById("backspaceKey");
+        const spaceKey = document.getElementById("spaceKey");
+        const returnKey = document.getElementById("returnKey");
+        const shiftKey = document.getElementById("shiftKey");
+        const numbersKey = document.getElementById("numbersKey");
+        const emojiKey = document.getElementById("emojiKey");
+        const emojiPanel = document.getElementById("emojiPanel");
+        const emojiButtons = document.querySelectorAll(".emoji-btn");
+        const suggestionChips = document.querySelectorAll(".suggestion-chip");
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let timerInterval;
+        let seconds = 0;
+        let currentStream = null;
+        let cancelVoice = false;
+
+        let uppercaseMode = false;
+        let numbersMode = false;
+
+        const letterValues = [
+            "q", "w", "e", "r", "t", "y", "u", "i", "o", "p",
+            "a", "s", "d", "f", "g", "h", "j", "k", "l",
+            "z", "x", "c", "v", "b", "n", "m"
+        ];
+
+        const numberValues = [
+            "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
+            ".", "?", "!", "@@", "#", "$", "%", "&", "-",
+            "+", "(", ")", "/", "'", ":", ";"
+        ];
+
+        const smartSuggestions = [
+            "hello",
+            "hi",
+            "how are you",
+            "how much",
+            "how much is delivery",
+            "is this available",
+            "available",
+            "price",
+            "discount",
+            "delivery",
+            "delivery fee",
+            "delivery time",
+            "when will it arrive",
+            "order",
+            "order status",
+            "order number",
+            "my order",
+            "track order",
+            "payment",
+            "cash on delivery",
+            "online payment",
+            "address",
+            "change address",
+            "thank you",
+            "thanks",
+            "okay",
+            "yes",
+            "no",
+            "please",
+            "can you help me",
+            "I want this product",
+            "send me details"
+        ];
+
+        if (messagesBox) {
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+        }
+
+        if (messageInput) {
+            messageInput.focus();
+
+            messageInput.addEventListener("input", function () {
+                resizeMessageInput();
+                updateSmartSuggestions();
+            });
+
+            messageInput.addEventListener("keydown", function (e) {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+
+                    if (chatForm) {
+                        chatForm.requestSubmit();
+                    }
+                }
+            });
+        }
+
+        function formatMessageTime(date) {
+            const now = new Date();
+
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const messageDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+            const diffDays = Math.floor((today - messageDay) / 86400000);
+
+            const timeText = date.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+            if (diffDays === 0) {
+                return "Today " + timeText;
+            }
+
+            if (diffDays === 1) {
+                return "Yesterday " + timeText;
+            }
+
+            return date.toLocaleDateString([], {
+                day: "2-digit",
+                month: "short"
+            }) + " " + timeText;
+        }
+
+        function updateMessageTimes() {
+            const timeElements = document.querySelectorAll(".message-time");
+
+            timeElements.forEach(function (element) {
+                const utcValue = element.getAttribute("data-utc");
+
+                if (!utcValue) {
+                    return;
+                }
+
+                const date = new Date(utcValue);
+
+                if (isNaN(date.getTime())) {
+                    return;
+                }
+
+                element.innerText = formatMessageTime(date);
+            });
+        }
+
+        function resizeMessageInput() {
+            if (!messageInput) {
+                return;
+            }
+
+            messageInput.style.height = "40px";
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 98) + "px";
+        }
+
+        function updateSmartSuggestions() {
+            if (!messageInput || suggestionChips.length === 0) {
+                return;
+            }
+
+            const text = messageInput.value.trim().toLowerCase();
+            const words = text.split(/\s+/);
+            const lastWord = words[words.length - 1] || "";
+
+            let results = [];
+
+            if (lastWord.length === 0) {
+                results = ["hello", "is this available", "how much"];
+            }
+            else {
+                results = smartSuggestions
+                    .filter(item => item.toLowerCase().startsWith(lastWord))
+                    .slice(0, 3);
+            }
+
+            if (results.length === 0 && text.length > 0) {
+                results = smartSuggestions
+                    .filter(item => item.toLowerCase().includes(lastWord))
+                    .slice(0, 3);
+            }
+
+            if (results.length === 0) {
+                results = ["okay", "thanks", "please"];
+            }
+
+            suggestionChips.forEach(function (chip, index) {
+                const value = results[index] || "";
+
+                if (value) {
+                    chip.innerText = value;
+                    chip.setAttribute("data-suggestion", value);
+                    chip.style.visibility = "visible";
+                }
+                else {
+                    chip.innerText = "";
+                    chip.setAttribute("data-suggestion", "");
+                    chip.style.visibility = "hidden";
+                }
+            });
+        }
+
+        function insertIntoMessage(text) {
+            if (!messageInput || !text) {
+                return;
+            }
+
+            const start = messageInput.selectionStart;
+            const end = messageInput.selectionEnd;
+            const value = messageInput.value;
+
+            messageInput.value =
+                value.substring(0, start) +
+                text +
+                value.substring(end);
+
+            const newPosition = start + text.length;
+
+            messageInput.focus();
+            messageInput.setSelectionRange(newPosition, newPosition);
+
+            resizeMessageInput();
+            updateSmartSuggestions();
+        }
+
+        suggestionChips.forEach(function (chip) {
+            chip.addEventListener("click", function () {
+                const suggestion = chip.getAttribute("data-suggestion");
+
+                if (!suggestion || !messageInput) {
+                    return;
+                }
+
+                const currentText = messageInput.value;
+                const endsWithSpace = currentText.endsWith(" ");
+
+                if (currentText.trim().length === 0) {
+                    messageInput.value = suggestion + " ";
+                }
+                else {
+                    const lastSpaceIndex = currentText.lastIndexOf(" ");
+
+                    if (lastSpaceIndex === -1) {
+                        messageInput.value = suggestion + " ";
+                    }
+                    else if (endsWithSpace) {
+                        messageInput.value = currentText + suggestion + " ";
+                    }
+                    else {
+                        messageInput.value =
+                            currentText.substring(0, lastSpaceIndex + 1) +
+                            suggestion +
+                            " ";
+                    }
+                }
+
+                messageInput.focus();
+                resizeMessageInput();
+                updateSmartSuggestions();
+            });
+        });
+
+        function backspaceMessage() {
+            if (!messageInput) {
+                return;
+            }
+
+            const start = messageInput.selectionStart;
+            const end = messageInput.selectionEnd;
+            const value = messageInput.value;
+
+            if (start !== end) {
+                messageInput.value =
+                    value.substring(0, start) +
+                    value.substring(end);
+
+                messageInput.setSelectionRange(start, start);
+            }
+            else if (start > 0) {
+                messageInput.value =
+                    value.substring(0, start - 1) +
+                    value.substring(start);
+
+                messageInput.setSelectionRange(start - 1, start - 1);
+            }
+
+            messageInput.focus();
+            resizeMessageInput();
+            updateSmartSuggestions();
+        }
+
+        function setLetterKeyboard() {
+            numbersMode = false;
+
+            letterKeys.forEach(function (btn, index) {
+                const value = letterValues[index];
+
+                if (value) {
+                    const finalValue = uppercaseMode ? value.toUpperCase() : value;
+                    btn.setAttribute("data-key", finalValue);
+                    btn.innerText = finalValue;
+                    btn.style.visibility = "visible";
+                }
+            });
+
+            if (numbersKey) {
+                numbersKey.innerText = "123";
+            }
+        }
+
+        function setNumberKeyboard() {
+            numbersMode = true;
+
+            letterKeys.forEach(function (btn, index) {
+                const value = numberValues[index];
+
+                if (value) {
+                    btn.setAttribute("data-key", value);
+                    btn.innerText = value;
+                    btn.style.visibility = "visible";
+                }
+                else {
+                    btn.style.visibility = "hidden";
+                }
+            });
+
+            if (numbersKey) {
+                numbersKey.innerText = "ABC";
+            }
+        }
+
+        if (keyboardToggleBtn && iosKeyboard) {
+            keyboardToggleBtn.addEventListener("click", function () {
+                iosKeyboard.classList.toggle("show");
+                keyboardToggleBtn.classList.toggle("keyboard-toggle-active");
+
+                if (messageInput) {
+                    messageInput.focus();
+                }
+            });
+        }
+
+        keyButtons.forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const key = btn.getAttribute("data-key");
+                insertIntoMessage(key);
+            });
+        });
+
+        if (backspaceKey) {
+            backspaceKey.addEventListener("click", backspaceMessage);
+        }
+
+        if (spaceKey) {
+            spaceKey.addEventListener("click", function () {
+                insertIntoMessage(" ");
+            });
+        }
+
+        if (returnKey) {
+            returnKey.addEventListener("click", function () {
+                insertIntoMessage("\n");
+            });
+        }
+
+        if (shiftKey) {
+            shiftKey.addEventListener("click", function () {
+                uppercaseMode = !uppercaseMode;
+                shiftKey.classList.toggle("keyboard-toggle-active");
+
+                if (!numbersMode) {
+                    setLetterKeyboard();
+                }
+            });
+        }
+
+        if (numbersKey) {
+            numbersKey.addEventListener("click", function () {
+                if (numbersMode) {
+                    setLetterKeyboard();
+                }
+                else {
+                    setNumberKeyboard();
+                }
+
+                if (emojiPanel) {
+                    emojiPanel.classList.remove("show");
+                }
+            });
+        }
+
+        if (emojiKey && emojiPanel) {
+            emojiKey.addEventListener("click", function () {
+                emojiPanel.classList.toggle("show");
+
+                if (messageInput) {
+                    messageInput.focus();
+                }
+            });
+        }
+
+        emojiButtons.forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const emoji = btn.getAttribute("data-emoji");
+
+                if (emoji) {
+                    insertIntoMessage(emoji);
+                }
+            });
+        });
+
+        function showAttachPreview(text) {
+            if (attachPreview && previewText) {
+                attachPreview.style.display = "block";
+                previewText.innerText = text;
+            }
+        }
+
+        function hideAttachPreview() {
+            if (attachPreview && previewText) {
+                attachPreview.style.display = "none";
+                previewText.innerText = "";
+            }
+        }
+
+        function clearAttachment() {
+            if (attachmentFile) {
+                attachmentFile.value = "";
+            }
+
+            hideAttachPreview();
+
+            if (voicePanel) {
+                voicePanel.style.display = "none";
+            }
+
+            if (voiceRecordingRow) {
+                voiceRecordingRow.style.display = "none";
+            }
+
+            if (voiceReadyRow) {
+                voiceReadyRow.style.display = "none";
+            }
+
+            if (voiceAudio) {
+                voiceAudio.removeAttribute("src");
+                voiceAudio.load();
+            }
+        }
+
+        if (attachmentFile) {
+            attachmentFile.addEventListener("change", function () {
+                if (this.files && this.files.length > 0) {
+                    if (voicePanel) {
+                        voicePanel.style.display = "none";
+                    }
+
+                    showAttachPreview("Attached: " + this.files[0].name);
+                }
+            });
+        }
+
+        if (clearAttachmentBtn) {
+            clearAttachmentBtn.addEventListener("click", clearAttachment);
+        }
+
+        if (removeVoiceBtn) {
+            removeVoiceBtn.addEventListener("click", clearAttachment);
+        }
+
+        function formatTime(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+            const sec = (totalSeconds % 60).toString().padStart(2, "0");
+            return minutes + ":" + sec;
+        }
+
+        function startTimer() {
+            seconds = 0;
+
+            if (recordTimer) {
+                recordTimer.innerText = "00:00";
+            }
+
+            timerInterval = setInterval(function () {
+                seconds++;
+
+                if (recordTimer) {
+                    recordTimer.innerText = formatTime(seconds);
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function stopMicrophone() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+        }
+
+        function setRecordButtonNormal() {
+            if (recordBtn) {
+                recordBtn.innerText = "🎤";
+                recordBtn.classList.remove("recording-btn");
+                recordBtn.style.background = "#2563eb";
+            }
+        }
+
+        function setRecordButtonRecording() {
+            if (recordBtn) {
+                recordBtn.innerText = "⏹";
+                recordBtn.classList.add("recording-btn");
+                recordBtn.style.background = "#ef4444";
+            }
+        }
+
+        if (recordBtn) {
+            recordBtn.addEventListener("click", async function () {
+                if (!isRecording) {
+                    try {
+                        clearAttachment();
+                        cancelVoice = false;
+
+                        currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                        mediaRecorder = new MediaRecorder(currentStream);
+                        audioChunks = [];
+
+                        mediaRecorder.ondataavailable = function (event) {
+                            if (event.data && event.data.size > 0) {
+                                audioChunks.push(event.data);
+                            }
+                        };
+
+                        mediaRecorder.onstop = function () {
+                            stopTimer();
+                            stopMicrophone();
+                            setRecordButtonNormal();
+                            isRecording = false;
+
+                            if (cancelVoice) {
+                                clearAttachment();
+                                return;
+                            }
+
+                            if (!audioChunks || audioChunks.length === 0) {
+                                clearAttachment();
+                                return;
+                            }
+
+                            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+                            const audioFile = new File([audioBlob], "voice-message.webm", { type: "audio/webm" });
+
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(audioFile);
+
+                            if (attachmentFile) {
+                                attachmentFile.files = dataTransfer.files;
+                            }
+
+                            const audioUrl = URL.createObjectURL(audioBlob);
+
+                            if (voiceAudio) {
+                                voiceAudio.src = audioUrl;
+                                voiceAudio.load();
+                            }
+
+                            if (voicePanel) {
+                                voicePanel.style.display = "block";
+                            }
+
+                            if (voiceRecordingRow) {
+                                voiceRecordingRow.style.display = "none";
+                            }
+
+                            if (voiceReadyRow) {
+                                voiceReadyRow.style.display = "flex";
+                            }
+
+                            showAttachPreview("Voice ready: " + formatTime(seconds) + " — press Send.");
+                        };
+
+                        mediaRecorder.start();
+                        isRecording = true;
+
+                        if (voicePanel) {
+                            voicePanel.style.display = "block";
+                        }
+
+                        if (voiceRecordingRow) {
+                            voiceRecordingRow.style.display = "flex";
+                        }
+
+                        if (voiceReadyRow) {
+                            voiceReadyRow.style.display = "none";
+                        }
+
+                        setRecordButtonRecording();
+                        startTimer();
+                    }
+                    catch {
+                        alert("Microphone permission is required.");
+                    }
+                }
+                else {
+                    cancelVoice = false;
+
+                    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                        mediaRecorder.stop();
+                    }
+                }
+            });
+        }
+
+        if (cancelVoiceBtn) {
+            cancelVoiceBtn.addEventListener("click", function () {
+                cancelVoice = true;
+
+                if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                    mediaRecorder.stop();
+                }
+                else {
+                    clearAttachment();
+                    stopTimer();
+                    stopMicrophone();
+                    setRecordButtonNormal();
+                    isRecording = false;
+                }
+            });
+        }
+
+        if (chatForm) {
+            chatForm.addEventListener("submit", function (e) {
+                if (isRecording) {
+                    e.preventDefault();
+                    alert("Stop recording first, then press Send.");
+                    return;
+                }
+
+                const hasText =
+                    messageInput &&
+                    messageInput.value &&
+                    messageInput.value.trim().length > 0;
+
+                const hasFile =
+                    attachmentFile &&
+                    attachmentFile.files &&
+                    attachmentFile.files.length > 0;
+
+                if (!hasText && !hasFile) {
+                    e.preventDefault();
+                    return;
+                }
+            });
+        }
+
+        updateMessageTimes();
+        updateSmartSuggestions();
+    </script>
 </body>
 </html>
