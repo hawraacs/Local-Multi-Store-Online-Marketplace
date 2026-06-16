@@ -22,6 +22,6 @@ namespace Multi_Store.Services.Dtos
         public virtual User Sender { get; set; } = null!;
         public virtual User Receiver { get; set; } = null!;
         public virtual Order? Order { get; set; }
-        public virtual Product? Product { get; set; }
+        public ProductDTO? Product { get; set; }
     }
 }

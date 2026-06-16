@@ -1,6 +1,5 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.CustomerFeedModel
-
 @{
     Layout = null;
 }
@@ -31,35 +30,16 @@
         }
 
         .post-header {
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px;
-        }
-
-        .store-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .store-logo {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
         }
 
         .store-name {
             font-weight: bold;
-            font-size: 18px;
             text-decoration: none;
             color: black;
-        }
-
-        .follow-status {
-            color: green;
-            font-weight: bold;
         }
 
         .post-image {
@@ -73,31 +53,31 @@
         }
 
         .product-name {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .product-price {
-            color: #ff6600;
             font-size: 20px;
             font-weight: bold;
         }
 
+        .product-price {
+            color: #ff6600;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
         .actions {
+            margin-top: 15px;
             display: flex;
             gap: 10px;
-            margin-top: 15px;
             flex-wrap: wrap;
         }
 
         .btn {
-            border: none;
-            padding: 10px 20px;
+            padding: 10px 14px;
             border-radius: 10px;
+            border: none;
             cursor: pointer;
             text-decoration: none;
             display: inline-block;
+            font-size: 14px;
         }
 
         .btn-review {
@@ -110,11 +90,19 @@
             color: white;
         }
 
-        .empty {
-            text-align: center;
-            background: white;
-            padding: 50px;
-            border-radius: 15px;
+        .btn-share {
+            background: #111827;
+            color: white;
+        }
+
+        .btn-follow {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .btn-unfollow {
+            background: #fee2e2;
+            color: #991b1b;
         }
     </style>
 </head>
@@ -123,93 +111,81 @@
 
     <div class="feed-container">
 
-        @if (!Model.Products.Any())
+        @foreach (var product in Model.Products)
         {
-            <div class="empty">
-                <h2>Your feed is empty</h2>
-                <p>Follow some stores first.</p>
-            </div>
-        }
-        else
-        {
-            @foreach (var product in Model.Products)
-            {
-                var imageUrl = "/images/no-image.png";
+            var img = product.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+            var isFollowing = Model.FollowingStoreIds.Contains(product.StoreID);
 
-                if (product.Images != null && product.Images.Any())
-                {
-                    imageUrl = product.Images.First().ImageUrl;
-                }
+            <div class="post">
 
-                <div class="post">
+                <div class="post-header">
 
-                    <!-- STORE HEADER -->
-                    <div class="post-header">
+                    <!-- STORE NAME → PROFILE -->
+                    <a class="store-name"
+                       asp-page="/StoreCustomerProfile"
+                       asp-route-id="@product.StoreID">
+                        @product.Store?.StoreName
+                    </a>
 
-                        <div class="store-info">
+                    <!-- FOLLOW / UNFOLLOW -->
+                    @if (isFollowing)
+                    {
+                        <form method="post"
+                              asp-page-handler="UnfollowStore"
+                              asp-route-storeId="@product.StoreID">
+                            <button class="btn btn-unfollow">Unfollow</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form method="post"
+                              asp-page-handler="FollowStore"
+                              asp-route-storeId="@product.StoreID">
+                            <button class="btn btn-follow">Follow</button>
+                        </form>
+                    }
 
-                            <img class="store-logo"
-                                 src="@(product.Store?.LogoURL ?? "/images/store.png")" />
+                </div>
 
-                            <!-- ✅ STORE NAME NOW CLICKABLE (PROFILE ROUTE) -->
-                            <a class="store-name"
-                               asp-page="/StoreCustomerProfile"
-                               asp-route-id="@product.StoreID">
-                                @product.Store?.StoreName
-                            </a>
+                <img class="post-image" src="@img" />
 
-                        </div>
+                <div class="post-body">
 
-                    </div>
+                    <div class="product-name">@product.ProductName</div>
+                    <div class="product-price">$@product.Price</div>
+                    <p>@product.Description</p>
 
-                    <!-- PRODUCT IMAGE -->
-                    <img class="post-image" src="@imageUrl" />
+                    <div class="actions">
 
-                    <!-- BODY -->
-                    <div class="post-body">
+                        <a class="btn btn-review"
+                           asp-page="/CreateProductReview"
+                           asp-route-productId="@product.ProductID">
+                            ⭐ Review
+                        </a>
 
-                        <div class="product-name">
-                            @product.ProductName
-                        </div>
+                        <form method="post"
+                              asp-page="/Customer1"
+                              asp-page-handler="AddToCart"
+                              asp-route-productId="@product.ProductID">
+                            <button class="btn btn-cart">🛒 Add</button>
+                        </form>
 
-                        <div class="product-price">
-                            $@product.Price
-                        </div>
+                        <!-- ✅ FIXED SHARE BUTTON (WILL WORK WITH YOUR HANDLER) -->
+                        <form method="post"
+                              asp-page-handler="ShareToStore"
+                              asp-route-productId="@product.ProductID"
+                              asp-route-storeOwnerId="@product.Store.OwnerUserID">
 
-                        <p>
-                            @product.Description
-                        </p>
+                            <button type="submit" class="btn btn-share">
+                                🔗 Share
+                            </button>
 
-                        <!-- ACTIONS (SAME STYLE AS Customer1) -->
-                        <div class="actions">
-
-                            <!-- LIKE / REVIEW PRODUCT -->
-                            <form method="get"
-                                  asp-page="/CreateProductReview"
-                                  asp-route-productId="@product.ProductID">
-                                <button class="btn btn-review">
-                                    ⭐ Review
-                                </button>
-                            </form>
-
-                            <!-- ADD TO CART -->
-                            <form method="post"
-                                  asp-page="/Customer1"
-                                  asp-page-handler="AddToCart"
-                                  asp-route-productId="@product.ProductID">
-
-                                <button class="btn btn-cart">
-                                    🛒 Add To Cart
-                                </button>
-
-                            </form>
-
-                        </div>
+                        </form>
 
                     </div>
 
                 </div>
-            }
+            </div>
         }
 
     </div>
