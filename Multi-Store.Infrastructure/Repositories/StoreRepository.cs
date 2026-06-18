@@ -73,7 +73,7 @@ public class StoreRepository : Repository<Store>, IStoreRepository
     => await _context.Products
         .Include(p => p.Store)
         .Include(p => p.Images)
-
+        .Include(p => p.Category)
         .Include(p => p.Reviews)
             .ThenInclude(r => r.Customer)
                 .ThenInclude(c => c.User)

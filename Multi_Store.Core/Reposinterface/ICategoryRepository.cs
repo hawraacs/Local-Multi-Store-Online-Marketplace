@@ -15,5 +15,6 @@ namespace Multi_Store.Core.Reposinterface
         Task<IReadOnlyList<Category>> GetSubCategoriesAsync(int parentCategoryId);
 
         Task<Category?> GetCategoryWithProductsAsync(int categoryId);
+        Task<IReadOnlyList<Category>> GetActiveCategoriesAsync();
     }
 }

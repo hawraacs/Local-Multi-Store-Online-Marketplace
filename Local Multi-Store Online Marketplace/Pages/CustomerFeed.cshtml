@@ -123,10 +123,61 @@
             .comment span {
                 color: #f59e0b;
             }
+
+            .category-navbar {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 12px 0;
+    margin-bottom: 20px;
+}
+
+.category-navbar a {
+    text-decoration: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    background: #f1f1f1;
+    color: #333;
+    white-space: nowrap;
+    transition: .2s;
+}
+
+.category-navbar a:hover {
+    background: #2563eb;
+    color: white;
+}
+
+.active-category {
+    background: #2563eb !important;
+    color: white !important;
+}
     </style>
 </head>
 
 <body>
+
+    <div class="category-navbar">
+
+        <a asp-page="/CustomerFeed"
+           class="@(string.IsNullOrEmpty(Model.SelectedCategory) ? "active-category" : "")">
+            All
+        </a>
+
+        @foreach (var category in Model.NavbarCategories)
+        {
+            var isActive =
+            (category == "All" && string.IsNullOrEmpty(Model.SelectedCategory))
+            || Model.SelectedCategory == category;
+
+            <a asp-page="/CustomerFeed"
+               asp-route-category="@(category == "All" ? null : category)"
+               class="@(isActive ? "active-category" : "")">
+
+                @category
+            </a>
+        }
+
+    </div>
 
     <div class="feed-container">
 
