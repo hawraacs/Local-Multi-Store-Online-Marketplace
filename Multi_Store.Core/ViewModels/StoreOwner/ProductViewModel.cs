@@ -49,12 +49,9 @@ namespace Multi_Store.Core.ViewModels.StoreOwner
         [Range(0, 1000)]
         public decimal? Weight { get; set; }
 
+        [Required(ErrorMessage = "Category is required")]
         public int CategoryID { get; set; }
 
-        [Required]
-        [StringLength(100)]
-        [Display(Name = "Category")]
-        public string CategoryName { get; set; } = string.Empty;
 
         [Display(Name = "Active")]
         public bool IsActive { get; set; } = true;
