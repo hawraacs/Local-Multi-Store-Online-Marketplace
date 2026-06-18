@@ -27,13 +27,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         {
             var categories = await _categoryManager.GetAllCategoriesAsync();
 
-            Categories = categories.Select(c => new CategoryViewModel
-            {
-                CategoryId = c.CategoryID,
-                Name = c.CategoryName,
-                Slug = c.CategorySlug,
-                ParentName = c.ParentCategory?.CategoryName ?? "None"
-            }).ToList();
+            Categories = categories
+                .Where(c => c.IsActive)
+                .Select(c => new CategoryViewModel
+                {
+                    CategoryId = c.CategoryID,
+                    Name = c.CategoryName,
+                    Slug = c.CategorySlug,
+                    ParentName = c.ParentCategory?.CategoryName ?? "None"
+                })
+                .ToList();
         }
 
         public async Task<IActionResult> OnPostCreateOrUpdateAsync(
