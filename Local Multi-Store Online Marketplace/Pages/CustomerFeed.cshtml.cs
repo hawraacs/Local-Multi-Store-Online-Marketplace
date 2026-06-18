@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Services.Managers;
 using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Dtos;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
@@ -18,7 +19,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly MessagingManager _messagingManager;
         private readonly WishlistManager _wishlistManager;
         private readonly ApplicationDbContext _context;
-
+        
         public CustomerFeedModel(
     StoreManager storeManager,
     UserManager<User> userManager,
@@ -32,15 +33,32 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _customerManager = customerManager;
             _messagingManager = messagingManager;
             _wishlistManager = wishlistManager;
+            
             _context = context;
         }
+        public List<string> NavbarCategories { get; set; } = new()
+{
+    "All",
+    "Electronics",
+    "Fashion",
+    "Home",
+    "Beauty",
+    "Food",
+    "jewelery",
+    "Sports",
+    "Books",
+    "Pets",
+    "Automotive"
+};
+      
 
+        public string? SelectedCategory { get; set; }
         public List<Product> Products { get; set; } = new();
 
         // ? NEW: used for follow/unfollow UI
         public List<int> FollowingStoreIds { get; set; } = new();
 
-        public async Task OnGetAsync()
+        public async Task OnGetAsync(string? category)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -52,13 +70,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (customer == null)
                 return;
 
-            // ? load following stores
-            FollowingStoreIds = await _context.StoreFollows
-                .Where(f => f.CustomerID == customer.CustomerID)
-                .Select(f => f.StoreID)
-                .ToListAsync();
+            SelectedCategory = category;
 
             Products = await _storeManager.GetFeedProductsAsync(customer.CustomerID);
+            FollowingStoreIds = await _context.StoreFollows
+    .Where(f => f.CustomerID == customer.CustomerID)
+    .Select(f => f.StoreID)
+    .ToListAsync();
+
+            if (!string.IsNullOrWhiteSpace(category) && category != "All")
+            {
+                Products = Products
+                    .Where(p => p.Category != null &&
+                                p.Category.CategoryName.Equals(
+                                    category,
+                                    StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
         }
 
         // =========================

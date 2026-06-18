@@ -125,5 +125,13 @@ namespace Multi_Store.Services.Managers
 
             return _mapper.Map<CategoryDTO>(category);
         }
+
+
+        public async Task<IReadOnlyList<CategoryDTO>> GetActiveCategoriesAsync()
+        {
+            var categories = await _categoryRepository.GetActiveCategoriesAsync();
+
+            return _mapper.Map<IReadOnlyList<CategoryDTO>>(categories);
+        }
     }
 }
