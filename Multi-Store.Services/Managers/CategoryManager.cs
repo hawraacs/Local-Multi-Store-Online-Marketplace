@@ -17,7 +17,20 @@ namespace Multi_Store.Services.Managers
             _categoryRepository = categoryRepository;
             _mapper = mapper;
         }
+        private string GenerateSlug(string name)
+        {
+            string slug = name.ToLower().Trim();
 
+            slug = slug.Replace(" ", "-");
+
+            slug = System.Text.RegularExpressions.Regex
+                .Replace(slug, @"[^a-z0-9\-]", "");
+
+            slug = System.Text.RegularExpressions.Regex
+                .Replace(slug, @"-+", "-");
+
+            return slug.Trim('-');
+        }
         // =========================
         // ADD CATEGORY
         // =========================
@@ -26,6 +39,9 @@ namespace Multi_Store.Services.Managers
             var category = _mapper.Map<Category>(dto);
 
             category.IsActive = true;
+
+            // Generate slug
+            category.CategorySlug = GenerateSlug(category.CategoryName);
 
             await _categoryRepository.AddAsync(category);
 
@@ -77,7 +93,9 @@ namespace Multi_Store.Services.Managers
             if (category == null)
                 throw new Exception("Category not found");
 
-            await _categoryRepository.DeleteAsync(category);
+            category.IsActive = false;
+
+            await _categoryRepository.UpdateAsync(category);
         }
 
         // =========================
