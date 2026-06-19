@@ -3,17 +3,25 @@
 
 @{
     Layout = null;
+
+    var deliveryLoginError =
+        TempData.Peek("DeliveryLoginError")?.ToString();
 }
 
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
     <title>My Profile | Realnest</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
         * {
@@ -25,11 +33,9 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #f5f7fc 0%, #eef2f6 100%);
-            margin: 0;
             min-height: 100vh;
         }
 
-        /* Modern Topbar (matches feed design) */
         .topbar {
             background: rgba(10, 15, 25, 0.92);
             backdrop-filter: blur(12px);
@@ -55,7 +61,7 @@
                 color: transparent;
             }
 
-            .topbar div:last-child {
+            .topbar > div:last-child {
                 display: flex;
                 gap: 12px;
                 flex-wrap: wrap;
@@ -76,7 +82,6 @@
                     transform: translateY(-1px);
                 }
 
-        /* Main container */
         .container {
             max-width: 1100px;
             width: 90%;
@@ -84,10 +89,8 @@
             padding: 0 16px;
         }
 
-        /* Profile Card (elevated) */
         .profile-card {
             background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(0px);
             padding: 32px 36px;
             border-radius: 32px;
             display: flex;
@@ -114,7 +117,6 @@
             font-size: 56px;
             color: #2c3e50;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s;
         }
 
         .profile-card h2 {
@@ -163,7 +165,6 @@
                 color: #334155;
             }
 
-        /* Card styling for sections */
         .card {
             background: white;
             padding: 28px 32px;
@@ -195,7 +196,6 @@
                 margin-bottom: 20px;
             }
 
-        /* Buttons */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -228,6 +228,13 @@
                 transform: translateY(1px);
             }
 
+            .btn.disabled,
+            .btn:disabled {
+                opacity: .7;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+
         .message {
             padding: 14px 18px;
             border-radius: 14px;
@@ -245,9 +252,113 @@
             background: #fee2e2;
             color: #991b1b;
             border: 1px solid #fca5a5;
+            padding: 13px 15px;
+            border-radius: 14px;
+            font-weight: 700;
+            margin-bottom: 16px;
         }
 
-        /* Responsive */
+        .info-message {
+            background: #eff6ff;
+            color: #1e3a8a;
+            border: 1px solid #bfdbfe;
+            padding: 13px 15px;
+            border-radius: 14px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .warning-message {
+            background: #fff7ed;
+            color: #9a3412;
+            border: 1px solid #fed7aa;
+            padding: 13px 15px;
+            border-radius: 14px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .delivery-login-card {
+            display: none;
+            margin-top: 18px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 22px;
+            padding: 18px;
+        }
+
+            .delivery-login-card.open {
+                display: block;
+            }
+
+            .delivery-login-card h4 {
+                margin-bottom: 8px;
+                color: #0f172a;
+                font-size: 18px;
+            }
+
+            .delivery-login-card p {
+                margin-bottom: 15px;
+                color: #64748b;
+                font-size: 14px;
+            }
+
+        .delivery-login-form {
+            display: grid;
+            gap: 12px;
+        }
+
+            .delivery-login-form .form-group {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .delivery-login-form label {
+                font-size: 13px;
+                font-weight: 700;
+                color: #334155;
+            }
+
+            .delivery-login-form input {
+                width: 100%;
+                padding: 12px 14px;
+                border: 1px solid #d1d5db;
+                border-radius: 14px;
+                outline: none;
+                font-size: 14px;
+                background: white;
+            }
+
+                .delivery-login-form input:focus {
+                    border-color: #1e3a5f;
+                    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+                }
+
+        .delivery-login-btn {
+            border: none;
+            background: #1e3a5f;
+            color: white;
+            padding: 13px 18px;
+            border-radius: 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+            .delivery-login-btn:hover {
+                background: #FF6B35;
+            }
+
+        .delivery-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            padding: 12px 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
         @@media (max-width: 720px) {
             .topbar {
                 padding: 12px 24px;
@@ -276,7 +387,6 @@
             }
         }
 
-        /* subtle fade-in */
         @@keyframes fadeUp {
             from {
                 opacity: 0;
@@ -289,7 +399,8 @@
             }
         }
 
-        .profile-card, .card {
+        .profile-card,
+        .card {
             animation: fadeUp 0.5s ease forwards;
         }
 
@@ -302,20 +413,33 @@
             margin-top: 20px;
         }
     </style>
-
 </head>
 
 <body>
 
     <div class="topbar">
         <div>realnest</div>
-        <div>
-            <a href="/Customer1"><i class="fas fa-home"></i> Dashboard</a>
-            <a href="/CustomerProducts"><i class="fas fa-store"></i> Shop</a>
-            <a href="/CustomerCart"><i class="fas fa-shopping-cart"></i> Cart</a>
-            <a href="/CustomerOrders"><i class="fas fa-truck"></i> Orders</a>
-            <a href="/CustomerProfile"><i class="fas fa-user-circle"></i> Profile</a>
 
+        <div>
+            <a href="/Customer1">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+
+            <a href="/CustomerProducts">
+                <i class="fas fa-store"></i> Shop
+            </a>
+
+            <a href="/CustomerCart">
+                <i class="fas fa-shopping-cart"></i> Cart
+            </a>
+
+            <a href="/CustomerOrders">
+                <i class="fas fa-truck"></i> Orders
+            </a>
+
+            <a href="/CustomerProfile">
+                <i class="fas fa-user-circle"></i> Profile
+            </a>
         </div>
     </div>
 
@@ -339,16 +463,21 @@
             <div class="profile-image">
                 <i class="fas fa-user-astronaut"></i>
             </div>
+
             <div>
                 <h2>@Model.CustomerFullName</h2>
 
                 <p>
-                    <i class="fas fa-envelope" style="color:#FF6B35;"></i>
+                    <i class="fas fa-envelope"
+                       style="color:#FF6B35;"></i>
+
                     @Model.CustomerEmail
                 </p>
 
                 <p>
-                    <i class="fas fa-phone" style="color:#FF6B35;"></i>
+                    <i class="fas fa-phone"
+                       style="color:#FF6B35;"></i>
+
                     @Model.CustomerPhone
                 </p>
 
@@ -357,10 +486,12 @@
                         <strong>@Model.OrdersCount</strong>
                         <span>Orders</span>
                     </div>
+
                     <div>
                         <strong>@Model.WishlistCount</strong>
                         <span>Wishlist</span>
                     </div>
+
                     <div>
                         <strong>@Model.AddressesCount</strong>
                         <span>Addresses</span>
@@ -370,58 +501,238 @@
         </div>
 
         <div class="card">
-            <h3><i class="fas fa-sliders-h" style="color:#FF6B35;"></i> Account Settings</h3>
+            <h3>
+                <i class="fas fa-sliders-h"
+                   style="color:#FF6B35;"></i>
 
-            <a class="btn" href="/Identity/Account/Manage/Index">
-                <i class="fas fa-user-edit"></i> Edit Profile
+                Account Settings
+            </h3>
+
+            <a class="btn"
+               href="/Identity/Account/Manage/Index">
+                <i class="fas fa-user-edit"></i>
+                Edit Profile
             </a>
 
-            <a class="btn" href="/Identity/Account/Manage/ChangePassword">
-                <i class="fas fa-key"></i> Change Password
+            <a class="btn"
+               href="/Identity/Account/Manage/ChangePassword">
+                <i class="fas fa-key"></i>
+                Change Password
             </a>
 
-            <a class="btn" href="/CustomerAddresses">
-                <i class="fas fa-location-dot"></i> My Addresses
+            <a class="btn"
+               href="/CustomerAddresses">
+                <i class="fas fa-location-dot"></i>
+                My Addresses
             </a>
         </div>
 
         <div class="card">
-            <h3><i class="fas fa-store" style="color:#FF6B35;"></i> Become a Store Owner</h3>
-            <p>Submit a request and wait for admin approval. Start selling your products on Realnest.</p>
+            <h3>
+                <i class="fas fa-store"
+                   style="color:#FF6B35;"></i>
 
-            <a href="/StoreRequest" class="btn">
-                <i class="fas fa-chalkboard-user"></i> Request Store Owner Account
+                Become a Store Owner
+            </h3>
+
+            <p>
+                Submit a request and wait for admin approval.
+                Start selling your products on Realnest.
+            </p>
+
+            <a href="/StoreRequest"
+               class="btn">
+
+                <i class="fas fa-chalkboard-user"></i>
+                Request Store Owner Account
             </a>
         </div>
 
-        @if (User.IsInRole("Delivery"))
-        {
-            <div class="card">
-                <h3><i class="fas fa-motorcycle" style="color:#FF6B35;"></i> Delivery Staff Dashboard</h3>
-                <p>Your delivery account is approved. Open your dashboard and keep location tracking active.</p>
+        <div class="card">
+            <h3>
+                <i class="fas fa-motorcycle"
+                   style="color:#FF6B35;"></i>
 
-                <a href="/DeliveryDashboard" class="btn">
-                    <i class="fas fa-motorcycle"></i> Open Delivery Dashboard
-                </a>
-            </div>
-        }
-        else
-        {
-            <div class="card">
-                <h3><i class="fas fa-motorcycle" style="color:#FF6B35;"></i> Become Delivery Staff</h3>
-                <p>Submit your vehicle and license information to join our delivery fleet.</p>
+                Delivery Staff Access
+            </h3>
 
-                <a href="/DeliveryRequest" class="btn">
-                    <i class="fas fa-id-card"></i> Request Delivery Account
+            @if (!string.IsNullOrWhiteSpace(Model.DeliveryAccessMessage))
+            {
+                if (Model.HasPendingDeliveryRequest)
+                {
+                    <div class="warning-message">
+                        @Model.DeliveryAccessMessage
+                    </div>
+                }
+                else if (Model.HasApprovedDeliveryAccount)
+                {
+                    <div class="info-message">
+                        @Model.DeliveryAccessMessage
+                    </div>
+                }
+                else if (Model.HasRejectedDeliveryRequest)
+                {
+                    <div class="error-message">
+                        @Model.DeliveryAccessMessage
+                    </div>
+                }
+                else
+                {
+                    <p>@Model.DeliveryAccessMessage</p>
+                }
+            }
+
+            @if (Model.HasApprovedDeliveryAccount)
+            {
+                <button type="button"
+                        id="showDeliveryLoginButton"
+                        class="btn"
+                        onclick="toggleDeliveryLogin()">
+
+                    <i class="fas fa-motorcycle"></i>
+                    Login as Delivery
+                </button>
+
+                <div id="deliveryLoginBox"
+                     class="delivery-login-card @(string.IsNullOrWhiteSpace(deliveryLoginError) ? "" : "open")">
+
+                    <h4>Login as Delivery 🚚</h4>
+
+                    <p>
+                        Enter the delivery email and password given by the admin.
+                        This will switch you from your customer account to your delivery account.
+                    </p>
+
+                    @if (!string.IsNullOrWhiteSpace(deliveryLoginError))
+                    {
+                        <div class="delivery-error">
+                            @deliveryLoginError
+                        </div>
+                    }
+
+                    <form method="post"
+                          asp-page-handler="DeliveryLogin"
+                          class="delivery-login-form"
+                          autocomplete="off">
+
+                        <div class="form-group">
+                            <label for="DeliveryEmail">
+                                Delivery Email
+                            </label>
+
+                            <input id="DeliveryEmail"
+                                   name="DeliveryEmail"
+                                   type="email"
+                                   value=""
+                                   placeholder="Enter delivery email"
+                                   autocomplete="off"
+                                   data-lpignore="true"
+                                   data-form-type="other"
+                                   required />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="DeliveryPassword">
+                                Delivery Password
+                            </label>
+
+                            <input id="DeliveryPassword"
+                                   name="DeliveryPassword"
+                                   type="password"
+                                   value=""
+                                   placeholder="Enter delivery password"
+                                   autocomplete="new-password"
+                                   data-lpignore="true"
+                                   data-form-type="other"
+                                   required />
+                        </div>
+
+                        <button type="submit"
+                                class="delivery-login-btn">
+
+                            Open Delivery Dashboard
+                        </button>
+                    </form>
+                </div>
+            }
+            else if (Model.HasPendingDeliveryRequest)
+            {
+                <button type="button"
+                        class="btn disabled"
+                        disabled>
+
+                    <i class="fas fa-clock"></i>
+                    Waiting for Admin Approval
+                </button>
+            }
+            else
+            {
+                <a href="/DeliveryRequest"
+                   class="btn">
+
+                    <i class="fas fa-id-card"></i>
+                    Request Delivery Account
                 </a>
-            </div>
-        }
+            }
+        </div>
 
     </div>
 
     <footer>
-        <span>✨ Realnest — your local marketplace companion ✨</span>
+        <span>
+            ✨ Realnest — your local marketplace companion ✨
+        </span>
     </footer>
+
+    <script>
+        function toggleDeliveryLogin() {
+            const loginBox =
+                document.getElementById("deliveryLoginBox");
+
+            if (!loginBox) {
+                return;
+            }
+
+            loginBox.classList.toggle("open");
+
+            if (loginBox.classList.contains("open")) {
+                clearDeliveryFields();
+
+                setTimeout(function () {
+                    const emailInput =
+                        document.getElementById("DeliveryEmail");
+
+                    if (emailInput) {
+                        emailInput.focus();
+                    }
+                }, 50);
+            }
+        }
+
+        function clearDeliveryFields() {
+            const emailInput =
+                document.getElementById("DeliveryEmail");
+
+            const passwordInput =
+                document.getElementById("DeliveryPassword");
+
+            if (emailInput) {
+                emailInput.value = "";
+            }
+
+            if (passwordInput) {
+                passwordInput.value = "";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            clearDeliveryFields();
+        });
+
+        window.addEventListener("pageshow", function () {
+            clearDeliveryFields();
+        });
+    </script>
 
 </body>
 </html>
