@@ -36,12 +36,38 @@ namespace Multi_Store.Services.Managers
         // =========================
         public async Task<CategoryDTO> AddCategoryAsync(CategoryDTO dto)
         {
+            var categories = await _categoryRepository.GetAllAsync();
+
+            // Check if category already exists
+            var existing = categories.FirstOrDefault(c =>
+                c.CategoryName.ToLower() == dto.CategoryName.ToLower());
+
+            if (existing != null)
+            {
+                // Reactivate deleted category
+                existing.IsActive = true;
+                existing.ParentCategoryID = dto.ParentCategoryID;
+
+                await _categoryRepository.UpdateAsync(existing);
+
+                return _mapper.Map<CategoryDTO>(existing);
+            }
+
             var category = _mapper.Map<Category>(dto);
 
             category.IsActive = true;
 
-            // Generate slug
-            category.CategorySlug = GenerateSlug(category.CategoryName);
+            string slug = GenerateSlug(dto.CategoryName);
+
+            string originalSlug = slug;
+            int counter = 1;
+
+            while (categories.Any(c => c.CategorySlug == slug))
+            {
+                slug = $"{originalSlug}-{counter++}";
+            }
+
+            category.CategorySlug = slug;
 
             await _categoryRepository.AddAsync(category);
 
