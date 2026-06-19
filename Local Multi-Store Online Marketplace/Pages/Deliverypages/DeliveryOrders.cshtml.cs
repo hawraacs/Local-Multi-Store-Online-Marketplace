@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 {
@@ -14,21 +18,28 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
 
-        public DeliveryOrdersModel(
-            ApplicationDbContext context,
-            UserManager<User> userManager)
+    public DeliveryOrdersModel(
+        ApplicationDbContext context,
+        UserManager<User> userManager)
         {
             _context = context;
             _userManager = userManager;
         }
 
-        public List<DeliveryOrderItemViewModel> Orders { get; set; } = new();
+        // ==========================================
+        // PAGE DATA
+        // ==========================================
+        public List<DeliveryOrderItemViewModel> Orders { get; set; }
+            = new();
 
         public string? ErrorMessage { get; set; }
 
         [BindProperty(SupportsGet = true)]
         public string StatusFilter { get; set; } = "All";
 
+        // ==========================================
+        // COUNTS
+        // ==========================================
         public int TotalCount { get; set; }
 
         public int AssignedCount { get; set; }
@@ -39,6 +50,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
         public int CancelledCount { get; set; }
 
+        // ==========================================
+        // GET DELIVERY ORDERS
+        // ==========================================
         public async Task<IActionResult> OnGetAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -50,111 +64,239 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                     new { area = "Identity" });
             }
 
-            var deliveryPerson = await _context.DeliveryPersons
-                .FirstOrDefaultAsync(d =>
-                    d.UserID == user.Id &&
-                    d.Status == "Approved");
+            // This must use UserID, not RequestedByUserID.
+            // UserID now belongs to the generated Delivery account.
+            var deliveryPerson =
+                await _context.DeliveryPersons
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(d =>
+                        d.UserID == user.Id &&
+                        d.IsActive &&
+                        d.Status == "Approved");
 
             if (deliveryPerson == null)
             {
-                ErrorMessage = "Approved delivery profile was not found.";
+                ErrorMessage =
+                    "Approved and active delivery profile was not found.";
+
                 Orders = new List<DeliveryOrderItemViewModel>();
+
+                ResetCounts();
+
                 return Page();
             }
 
-            var assignments = await _context.DeliveryAssignments
-                .Include(a => a.Order)
-                    .ThenInclude(o => o.Address)
-                .Where(a =>
-                    a.DeliveryPersonID == deliveryPerson.DeliveryPersonID)
-                .OrderByDescending(a => a.AssignedAt)
-                .ToListAsync();
+            var assignments =
+                await _context.DeliveryAssignments
+                    .AsNoTracking()
+                    .Include(a => a.Order)
+                        .ThenInclude(o => o.Address)
+                    .Where(a =>
+                        a.DeliveryPersonID ==
+                        deliveryPerson.DeliveryPersonID)
+                    .OrderByDescending(a =>
+                        a.AssignedAt)
+                    .ToListAsync();
 
+            // ==========================================
+            // COUNTS
+            // ==========================================
             TotalCount = assignments.Count;
 
-            AssignedCount = assignments.Count(a =>
-                a.Status == "Assigned");
+            AssignedCount =
+                assignments.Count(a =>
+                    StatusEquals(a.Status, "Assigned"));
 
-            OutForDeliveryCount = assignments.Count(a =>
-                a.Status == "OutForDelivery");
+            OutForDeliveryCount =
+                assignments.Count(a =>
+                    StatusEquals(
+                        a.Status,
+                        "OutForDelivery") ||
+                    StatusEquals(
+                        a.Status,
+                        "Out for Delivery"));
 
-            DeliveredCount = assignments.Count(a =>
-                a.Status == "Delivered");
+            DeliveredCount =
+                assignments.Count(a =>
+                    StatusEquals(a.Status, "Delivered"));
 
-            CancelledCount = assignments.Count(a =>
-                a.Status == "Cancelled" ||
-                a.Status == "Failed");
+            CancelledCount =
+                assignments.Count(a =>
+                    StatusEquals(a.Status, "Cancelled") ||
+                    StatusEquals(a.Status, "Failed"));
 
-            var filteredAssignments = assignments.AsEnumerable();
+            // ==========================================
+            // FILTER
+            // ==========================================
+            IEnumerable<DeliveryAssignment> filteredAssignments =
+                assignments;
 
             if (!string.IsNullOrWhiteSpace(StatusFilter) &&
-                !StatusFilter.Equals(
-                    "All",
-                    StringComparison.OrdinalIgnoreCase))
+                !StatusEquals(StatusFilter, "All"))
             {
-                if (StatusFilter.Equals(
-                    "Cancelled",
-                    StringComparison.OrdinalIgnoreCase))
+                if (StatusEquals(
+                        StatusFilter,
+                        "Cancelled"))
                 {
-                    filteredAssignments = filteredAssignments.Where(a =>
-                        a.Status == "Cancelled" ||
-                        a.Status == "Failed");
+                    filteredAssignments =
+                        filteredAssignments.Where(a =>
+                            StatusEquals(
+                                a.Status,
+                                "Cancelled") ||
+                            StatusEquals(
+                                a.Status,
+                                "Failed"));
+                }
+                else if (
+                    StatusEquals(
+                        StatusFilter,
+                        "OutForDelivery") ||
+                    StatusEquals(
+                        StatusFilter,
+                        "Out for Delivery"))
+                {
+                    filteredAssignments =
+                        filteredAssignments.Where(a =>
+                            StatusEquals(
+                                a.Status,
+                                "OutForDelivery") ||
+                            StatusEquals(
+                                a.Status,
+                                "Out for Delivery"));
                 }
                 else
                 {
-                    filteredAssignments = filteredAssignments.Where(a =>
-                        string.Equals(
-                            a.Status,
-                            StatusFilter,
-                            StringComparison.OrdinalIgnoreCase));
+                    filteredAssignments =
+                        filteredAssignments.Where(a =>
+                            StatusEquals(
+                                a.Status,
+                                StatusFilter));
                 }
             }
 
+            // ==========================================
+            // BUILD VIEW MODEL
+            // ==========================================
             Orders = filteredAssignments
-                .Select(a => new DeliveryOrderItemViewModel
-                {
-                    AssignmentID = a.AssignmentID,
-                    OrderID = a.OrderID,
+                .Select(a =>
+                    new DeliveryOrderItemViewModel
+                    {
+                        AssignmentID =
+                            a.AssignmentID,
 
-                    OrderNumber = a.Order != null
-                        ? a.Order.OrderNumber
-                        : "N/A",
+                        OrderID =
+                            a.OrderID,
 
-                    OrderStatus = a.Order != null
-                        ? a.Order.Status
-                        : "N/A",
+                        OrderNumber =
+                            a.Order != null &&
+                            !string.IsNullOrWhiteSpace(
+                                a.Order.OrderNumber)
+                                ? a.Order.OrderNumber
+                                : "N/A",
 
-                    AssignmentStatus = a.Status,
+                        OrderStatus =
+                            a.Order != null &&
+                            !string.IsNullOrWhiteSpace(
+                                a.Order.Status)
+                                ? a.Order.Status
+                                : "N/A",
 
-                    CustomerAddress =
-                        a.Order != null &&
-                        a.Order.Address != null
-                            ? $"{a.Order.Address.AddressLine1}, " +
-                              $"{a.Order.Address.Area}, " +
-                              $"{a.Order.Address.City}"
-                            : "No address available",
+                        AssignmentStatus =
+                            !string.IsNullOrWhiteSpace(a.Status)
+                                ? a.Status
+                                : "N/A",
 
-                    PaymentMethod = a.Order != null
-                        ? a.Order.PaymentMethod
-                        : "N/A",
+                        CustomerAddress =
+                            BuildCustomerAddress(
+                                a.Order?.Address),
 
-                    PaymentStatus = a.Order != null
-                        ? a.Order.PaymentStatus
-                        : "N/A",
+                        PaymentMethod =
+                            a.Order != null &&
+                            !string.IsNullOrWhiteSpace(
+                                a.Order.PaymentMethod)
+                                ? a.Order.PaymentMethod
+                                : "N/A",
 
-                    TotalAmount = a.Order != null
-                        ? a.Order.TotalAmount
-                        : 0,
+                        PaymentStatus =
+                            a.Order != null &&
+                            !string.IsNullOrWhiteSpace(
+                                a.Order.PaymentStatus)
+                                ? a.Order.PaymentStatus
+                                : "N/A",
 
-                    AssignedAt = a.AssignedAt,
-                    PickupTime = a.PickupTime,
-                    DeliveryTime = a.DeliveryTime
-                })
+                        TotalAmount =
+                            a.Order?.TotalAmount ?? 0,
+
+                        AssignedAt =
+                            a.AssignedAt,
+
+                        PickupTime =
+                            a.PickupTime,
+
+                        DeliveryTime =
+                            a.DeliveryTime
+                    })
                 .ToList();
 
             return Page();
         }
 
+        // ==========================================
+        // BUILD CUSTOMER ADDRESS
+        // ==========================================
+        private static string BuildCustomerAddress(
+            CustomerAddress? address)
+        {
+            if (address == null)
+            {
+                return "No address available";
+            }
+
+            var addressParts = new[]
+            {
+            address.AddressLine1,
+            address.Area,
+            address.City
+        }
+            .Where(part =>
+                !string.IsNullOrWhiteSpace(part))
+            .Select(part =>
+                part!.Trim())
+            .ToList();
+
+            return addressParts.Count > 0
+                ? string.Join(", ", addressParts)
+                : "No address available";
+        }
+
+        // ==========================================
+        // RESET COUNTS
+        // ==========================================
+        private void ResetCounts()
+        {
+            TotalCount = 0;
+            AssignedCount = 0;
+            OutForDeliveryCount = 0;
+            DeliveredCount = 0;
+            CancelledCount = 0;
+        }
+
+        // ==========================================
+        // CASE-INSENSITIVE STATUS CHECK
+        // ==========================================
+        private static bool StatusEquals(
+            string? currentStatus,
+            string? expectedStatus)
+        {
+            return string.Equals(
+                currentStatus?.Trim(),
+                expectedStatus?.Trim(),
+                StringComparison.OrdinalIgnoreCase);
+        }
+
+        // ==========================================
+        // FORMAT DATE FOR DISPLAY
+        // ==========================================
         public string FormatLocalTime(DateTime? value)
         {
             if (!value.HasValue)
@@ -162,9 +304,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                 return "Not available";
             }
 
-            var utcValue = DateTime.SpecifyKind(
-                value.Value,
-                DateTimeKind.Utc);
+            var dateValue = value.Value;
+
+            var utcValue =
+                dateValue.Kind == DateTimeKind.Utc
+                    ? dateValue
+                    : DateTime.SpecifyKind(
+                        dateValue,
+                        DateTimeKind.Utc);
 
             return utcValue
                 .ToLocalTime()
@@ -172,23 +319,32 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         }
     }
 
+    // ==========================================
+    // DELIVERY ORDER VIEW MODEL
+    // ==========================================
     public class DeliveryOrderItemViewModel
     {
         public int AssignmentID { get; set; }
 
         public int OrderID { get; set; }
 
-        public string OrderNumber { get; set; } = string.Empty;
+        public string OrderNumber { get; set; }
+            = string.Empty;
 
-        public string OrderStatus { get; set; } = string.Empty;
+        public string OrderStatus { get; set; }
+            = string.Empty;
 
-        public string AssignmentStatus { get; set; } = string.Empty;
+        public string AssignmentStatus { get; set; }
+            = string.Empty;
 
-        public string CustomerAddress { get; set; } = string.Empty;
+        public string CustomerAddress { get; set; }
+            = string.Empty;
 
-        public string PaymentMethod { get; set; } = string.Empty;
+        public string PaymentMethod { get; set; }
+            = string.Empty;
 
-        public string PaymentStatus { get; set; } = string.Empty;
+        public string PaymentStatus { get; set; }
+            = string.Empty;
 
         public decimal TotalAmount { get; set; }
 

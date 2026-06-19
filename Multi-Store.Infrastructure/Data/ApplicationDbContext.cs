@@ -87,6 +87,7 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<Coupon>().HasIndex(c => c.CouponCode).IsUnique();
             modelBuilder.Entity<Order>().HasIndex(o => o.OrderNumber).IsUnique();
             modelBuilder.Entity<SystemConfig>().HasIndex(sc => sc.ConfigKey).IsUnique();
+            modelBuilder.Entity<DeliveryPerson>().HasIndex(d => d.RequestedByUserID);
 
             // ================= RELATIONSHIPS =================
             modelBuilder.Entity<Customer>()
@@ -106,7 +107,11 @@ namespace Multi_Store.Infrastructure.Data
                 .WithOne(u => u.DeliveryPerson)
                 .HasForeignKey<DeliveryPerson>(d => d.UserID)
                 .OnDelete(DeleteBehavior.Restrict);
-
+            modelBuilder.Entity<DeliveryPerson>()
+                .HasOne<User>()
+                .WithMany()
+                .HasForeignKey(d => d.RequestedByUserID)
+                .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Customer>()
                 .HasOne(c => c.DefaultAddress)
                 .WithMany()

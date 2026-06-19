@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Multi_Store.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Multi_Store.Infrastructure.Data;
 namespace Multi_Store.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260619151410_AddDeliveryRequestedByUser")]
+    partial class AddDeliveryRequestedByUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2137,7 +2140,7 @@ namespace Multi_Store.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Multi_Store.Core.Entities.Product", "Product")
-                        .WithMany("Reviews")
+                        .WithMany()
                         .HasForeignKey("ProductID");
 
                     b.HasOne("Multi_Store.Core.Entities.Store", "Store")
@@ -2293,8 +2296,6 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Navigation("OrderItems");
 
                     b.Navigation("RecentlyViewedProducts");
-
-                    b.Navigation("Reviews");
 
                     b.Navigation("Wishlists");
                 });
