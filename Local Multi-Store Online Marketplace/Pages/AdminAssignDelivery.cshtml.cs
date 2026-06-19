@@ -16,65 +16,85 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     {
         private readonly ApplicationDbContext _context;
 
-        public AdminAssignDeliveryModel(ApplicationDbContext context)
+        public AdminAssignDeliveryModel(
+            ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // Every order contains its own eligible delivery people.
-        public List<AdminAssignOrderViewModel> Orders { get; set; } = new();
+        // Every order has its own eligible delivery list.
+        public List<AdminAssignOrderViewModel> Orders { get; set; }
+            = new();
 
-        // =========================
+        // ==========================================
         // GET
-        // =========================
+        // ==========================================
         public async Task OnGetAsync()
         {
             await LoadDataAsync();
         }
 
-        // =========================
-        // ASSIGN DELIVERY
-        // =========================
+        // ==========================================
+        // ASSIGN DELIVERY PERSON TO ORDER
+        // ==========================================
         public async Task<IActionResult> OnPostAssignAsync(
             int orderId,
             int deliveryPersonId)
         {
-            if (orderId <= 0 || deliveryPersonId <= 0)
+            if (orderId <= 0)
             {
                 TempData["Error"] =
-                    "Please select a valid order and delivery person.";
+                    "Please select a valid order.";
 
                 return RedirectToPage();
             }
 
-            var order = await _context.Orders
-                .Include(o => o.Customer)
-                    .ThenInclude(c => c.User)
-                .Include(o => o.DeliveryAssignment)
-                .FirstOrDefaultAsync(o => o.OrderID == orderId);
+            if (deliveryPersonId <= 0)
+            {
+                TempData["Error"] =
+                    "Please select a valid delivery person.";
+
+                return RedirectToPage();
+            }
+
+            var order =
+                await _context.Orders
+                    .Include(o => o.Customer)
+                        .ThenInclude(c => c.User)
+                    .Include(o => o.DeliveryAssignment)
+                    .FirstOrDefaultAsync(o =>
+                        o.OrderID == orderId);
 
             if (order == null)
             {
-                TempData["Error"] = "Order not found.";
+                TempData["Error"] =
+                    "Order not found.";
+
                 return RedirectToPage();
             }
 
-            if (order.Customer == null || order.Customer.User == null)
+            if (order.Customer == null)
             {
                 TempData["Error"] =
-                    "The customer account linked to this order was not found.";
+                    "Customer linked to this order was not found.";
 
                 return RedirectToPage();
             }
 
-            if (string.Equals(
+            if (order.Customer.User == null)
+            {
+                TempData["Error"] =
+                    "Customer user account linked to this order was not found.";
+
+                return RedirectToPage();
+            }
+
+            if (StatusEquals(
                     order.Status,
-                    "Delivered",
-                    StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(
+                    "Delivered") ||
+                StatusEquals(
                     order.Status,
-                    "Cancelled",
-                    StringComparison.OrdinalIgnoreCase))
+                    "Cancelled"))
             {
                 TempData["Error"] =
                     "Delivered or cancelled orders cannot be assigned.";
@@ -82,11 +102,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage();
             }
 
-            var deliveryPerson = await _context.DeliveryPersons
-                .FirstOrDefaultAsync(d =>
-                    d.DeliveryPersonID == deliveryPersonId &&
-                    d.IsActive &&
-                    d.Status == "Approved");
+            var deliveryPerson =
+                await _context.DeliveryPersons
+                    .FirstOrDefaultAsync(d =>
+                        d.DeliveryPersonID == deliveryPersonId &&
+                        d.IsActive &&
+                        d.Status == "Approved");
 
             if (deliveryPerson == null)
             {
@@ -96,41 +117,49 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage();
             }
 
-            // =========================================
+            // ==========================================
             // PREVENT SELF-DELIVERY
-            // =========================================
-            var sameOriginalCustomer =
-                deliveryPerson.RequestedByUserID.HasValue &&
+            //
+            // Block only when RequestedByUserID exists
+            // and belongs to the same customer.
+            //
+            // Old records with RequestedByUserID = NULL
+            // remain available for assignment.
+            // ==========================================
+            if (deliveryPerson.RequestedByUserID.HasValue &&
                 deliveryPerson.RequestedByUserID.Value ==
-                order.Customer.UserID;
-
-            // Legacy records created before RequestedByUserID
-            // are compared safely using the phone number.
-            var sameLegacyCustomerByPhone =
-                !deliveryPerson.RequestedByUserID.HasValue &&
-                SamePhoneNumber(
-                    deliveryPerson.PhoneNumber,
-                    order.Customer.User.PhoneNumber);
-
-            if (sameOriginalCustomer || sameLegacyCustomerByPhone)
+                order.Customer.UserID)
             {
                 TempData["Error"] =
-                    "This delivery person cannot be assigned to their own customer order.";
+                    "This delivery person cannot be assigned " +
+                    "to their own customer order.";
 
                 return RedirectToPage();
             }
 
-            var alreadyAssigned = await _context.DeliveryAssignments
-                .AnyAsync(a =>
-                    a.OrderID == orderId &&
-                    a.Status != "Delivered" &&
-                    a.Status != "Cancelled" &&
-                    a.Status != "Failed");
-
-            if (alreadyAssigned)
+            // Check the navigation property first.
+            if (order.DeliveryAssignment != null)
             {
                 TempData["Error"] =
-                    "This order already has an active delivery assignment.";
+                    "This order already has a delivery assignment.";
+
+                return RedirectToPage();
+            }
+
+            // Check the database table as additional protection.
+            var activeAssignmentAlreadyExists =
+                await _context.DeliveryAssignments
+                    .AnyAsync(a =>
+                        a.OrderID == orderId &&
+                        a.Status != "Delivered" &&
+                        a.Status != "Cancelled" &&
+                        a.Status != "Failed");
+
+            if (activeAssignmentAlreadyExists)
+            {
+                TempData["Error"] =
+                    "This order already has an active " +
+                    "delivery assignment.";
 
                 return RedirectToPage();
             }
@@ -139,8 +168,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var assignment = new DeliveryAssignment
             {
-                OrderID = orderId,
-                DeliveryPersonID = deliveryPersonId,
+                OrderID = order.OrderID,
+
+                DeliveryPersonID =
+                    deliveryPerson.DeliveryPersonID,
+
                 AssignedAt = now,
                 PickupTime = null,
                 DeliveryTime = null,
@@ -150,187 +182,214 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             _context.DeliveryAssignments.Add(assignment);
 
-            // The admin only assigns the order.
-            // Delivery starts later from Delivery Dashboard.
+            // Admin assigns the order only.
+            // Delivery starts later from DeliveryDashboard.
             order.Status = "Assigned";
 
+            // ==========================================
+            // DELIVERY NOTIFICATION
+            //
+            // deliveryPerson.UserID belongs to the
+            // generated Delivery login account.
+            // ==========================================
             var notificationAlreadyExists =
-                await _context.Notifications.AnyAsync(n =>
-                    n.UserID == deliveryPerson.UserID &&
-                    n.Type == "DeliveryAssignment" &&
-                    n.ReferenceID == order.OrderID);
+                await _context.Notifications
+                    .AnyAsync(n =>
+                        n.UserID == deliveryPerson.UserID &&
+                        n.Type == "DeliveryAssignment" &&
+                        n.ReferenceID == order.OrderID);
 
             if (!notificationAlreadyExists)
             {
-                _context.Notifications.Add(new Notification
+                var notification = new Notification
                 {
-                    UserID = deliveryPerson.UserID,
-                    Title = "New Order Assigned",
+                    UserID =
+                        deliveryPerson.UserID,
+
+                    Title =
+                        "New Order Assigned",
+
                     Message =
-                        $"You have a new delivery order assigned: {order.OrderNumber}.",
-                    Type = "DeliveryAssignment",
-                    ReferenceID = order.OrderID,
-                    IsRead = false,
-                    SentAt = now,
-                    SentVia = "System"
-                });
+                        $"You have a new delivery order " +
+                        $"assigned: {order.OrderNumber}.",
+
+                    Type =
+                        "DeliveryAssignment",
+
+                    ReferenceID =
+                        order.OrderID,
+
+                    IsRead =
+                        false,
+
+                    SentAt =
+                        now,
+
+                    SentVia =
+                        "System"
+                };
+
+                _context.Notifications.Add(notification);
             }
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                TempData["Error"] =
+                    "The order could not be assigned. " +
+                    "It may already have been assigned by another admin.";
+
+                return RedirectToPage();
+            }
 
             TempData["Success"] =
-                $"Delivery person {deliveryPerson.FullName} was assigned successfully to order {order.OrderNumber}.";
+                $"Delivery person {deliveryPerson.FullName} " +
+                $"was assigned successfully to order " +
+                $"{order.OrderNumber}.";
 
             return RedirectToPage();
         }
 
-        // =========================
-        // LOAD DATA
-        // =========================
+        // ==========================================
+        // LOAD ORDERS AND DELIVERY PEOPLE
+        // ==========================================
         private async Task LoadDataAsync()
         {
-            var deliveryPeople = await _context.DeliveryPersons
-                .Where(d =>
-                    d.IsActive &&
-                    d.Status == "Approved")
-                .OrderBy(d => d.FullName)
-                .ToListAsync();
+            // Load every approved and active delivery person.
+            // RequestedByUserID is NOT required here because
+            // old records may still contain NULL.
+            var deliveryPeople =
+                await _context.DeliveryPersons
+                    .AsNoTracking()
+                    .Where(d =>
+                        d.IsActive &&
+                        d.Status == "Approved")
+                    .OrderBy(d =>
+                        d.FullName)
+                    .ToListAsync();
 
-            var orderEntities = await _context.Orders
-                .Include(o => o.Customer)
-                    .ThenInclude(c => c.User)
-                .Include(o => o.DeliveryAssignment)
-                .Where(o =>
-                    o.DeliveryAssignment == null &&
-                    (
-                        o.Status == "Pending" ||
-                        o.Status == "Pending Confirmation" ||
-                        o.Status == "Confirmed" ||
-                        o.Status == "Preparing" ||
-                        o.Status == "Ready for Pickup"
-                    ))
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
+            var orderEntities =
+                await _context.Orders
+                    .AsNoTracking()
+                    .Include(o => o.Customer)
+                        .ThenInclude(c => c.User)
+                    .Include(o => o.DeliveryAssignment)
+                    .Where(o =>
+                        o.DeliveryAssignment == null &&
+                        (
+                            o.Status == "Pending" ||
+                            o.Status == "Pending Confirmation" ||
+                            o.Status == "Confirmed" ||
+                            o.Status == "Preparing" ||
+                            o.Status == "Ready for Pickup"
+                        ))
+                    .OrderByDescending(o =>
+                        o.OrderDate)
+                    .ToListAsync();
 
             Orders = orderEntities
                 .Where(order =>
                     order.Customer != null &&
                     order.Customer.User != null)
-                .Select(order => new AdminAssignOrderViewModel
-                {
-                    OrderID = order.OrderID,
-                    OrderNumber = order.OrderNumber,
-                    OrderDate = order.OrderDate,
-                    Status = order.Status,
-                    TotalAmount = order.TotalAmount,
-                    CustomerID = order.CustomerID,
-                    CustomerUserID = order.Customer.UserID,
+                .Select(order =>
+                    new AdminAssignOrderViewModel
+                    {
+                        OrderID =
+                            order.OrderID,
 
-                    // Create a separate delivery list for every order.
-                    // The delivery person linked to this customer is removed.
-                    AvailableDeliveryPeople = deliveryPeople
-                        .Where(delivery =>
-                        {
-                            var sameOriginalCustomer =
-                                delivery.RequestedByUserID.HasValue &&
-                                delivery.RequestedByUserID.Value ==
-                                order.Customer.UserID;
+                        OrderNumber =
+                            order.OrderNumber,
 
-                            var sameLegacyCustomerByPhone =
-                                !delivery.RequestedByUserID.HasValue &&
-                                SamePhoneNumber(
-                                    delivery.PhoneNumber,
-                                    order.Customer.User.PhoneNumber);
+                        OrderDate =
+                            order.OrderDate,
 
-                            return !sameOriginalCustomer &&
-                                   !sameLegacyCustomerByPhone;
-                        })
-                        .Select(delivery =>
-                            new AdminAssignDeliveryPersonViewModel
-                            {
-                                DeliveryPersonID =
-                                    delivery.DeliveryPersonID,
+                        Status =
+                            order.Status,
 
-                                RequestedByUserID =
-                                    delivery.RequestedByUserID,
+                        TotalAmount =
+                            order.TotalAmount,
 
-                                FullName =
-                                    delivery.FullName,
+                        CustomerID =
+                            order.CustomerID,
 
-                                PhoneNumber =
-                                    delivery.PhoneNumber,
+                        CustomerUserID =
+                            order.Customer.UserID,
 
-                                Area =
-                                    delivery.Area,
+                        // ==================================
+                        // DELIVERY LIST FOR THIS ORDER
+                        //
+                        // NULL RequestedByUserID:
+                        // show the delivery person.
+                        //
+                        // Different customer:
+                        // show the delivery person.
+                        //
+                        // Same original customer:
+                        // hide the delivery person.
+                        // ==================================
+                        AvailableDeliveryPeople =
+                            deliveryPeople
+                                .Where(delivery =>
+                                    !delivery.RequestedByUserID.HasValue ||
+                                    delivery.RequestedByUserID.Value !=
+                                    order.Customer.UserID)
+                                .Select(delivery =>
+                                    new AdminAssignDeliveryPersonViewModel
+                                    {
+                                        DeliveryPersonID =
+                                            delivery.DeliveryPersonID,
 
-                                VehicleType =
-                                    delivery.VehicleType
-                            })
-                        .ToList()
-                })
+                                        RequestedByUserID =
+                                            delivery.RequestedByUserID,
+
+                                        FullName =
+                                            delivery.FullName,
+
+                                        PhoneNumber =
+                                            delivery.PhoneNumber,
+
+                                        Area =
+                                            delivery.Area,
+
+                                        VehicleType =
+                                            delivery.VehicleType
+                                    })
+                                .ToList()
+                    })
                 .ToList();
         }
 
-        // =========================
-        // LEGACY PHONE COMPARISON
-        // =========================
-        private static bool SamePhoneNumber(
-            string? firstPhone,
-            string? secondPhone)
+        // ==========================================
+        // STATUS HELPER
+        // ==========================================
+        private static bool StatusEquals(
+            string? currentStatus,
+            string expectedStatus)
         {
-            var first = NormalizePhone(firstPhone);
-            var second = NormalizePhone(secondPhone);
-
-            return !string.IsNullOrWhiteSpace(first) &&
-                   !string.IsNullOrWhiteSpace(second) &&
-                   first == second;
-        }
-
-        private static string NormalizePhone(string? phone)
-        {
-            if (string.IsNullOrWhiteSpace(phone))
-            {
-                return string.Empty;
-            }
-
-            var digits = new string(
-                phone.Where(char.IsDigit).ToArray());
-
-            if (string.IsNullOrWhiteSpace(digits))
-            {
-                return string.Empty;
-            }
-
-            if (digits.StartsWith("00961"))
-            {
-                digits = digits.Substring(5);
-            }
-            else if (digits.StartsWith("961"))
-            {
-                digits = digits.Substring(3);
-            }
-
-            if (!digits.StartsWith("0"))
-            {
-                digits = "0" + digits;
-            }
-
-            return digits;
+            return string.Equals(
+                currentStatus?.Trim(),
+                expectedStatus,
+                StringComparison.OrdinalIgnoreCase);
         }
     }
 
-    // =========================
+    // ==========================================
     // ORDER VIEW MODEL
-    // =========================
+    // ==========================================
     public class AdminAssignOrderViewModel
     {
         public int OrderID { get; set; }
 
-        public string OrderNumber { get; set; } = string.Empty;
+        public string OrderNumber { get; set; }
+            = string.Empty;
 
         public DateTime OrderDate { get; set; }
 
-        public string Status { get; set; } = string.Empty;
+        public string Status { get; set; }
+            = string.Empty;
 
         public decimal TotalAmount { get; set; }
 
@@ -340,24 +399,29 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public List<AdminAssignDeliveryPersonViewModel>
             AvailableDeliveryPeople
-        { get; set; } = new();
+        { get; set; }
+            = new();
     }
 
-    // =========================
-    // DELIVERY VIEW MODEL
-    // =========================
+    // ==========================================
+    // DELIVERY PERSON VIEW MODEL
+    // ==========================================
     public class AdminAssignDeliveryPersonViewModel
     {
         public int DeliveryPersonID { get; set; }
 
         public int? RequestedByUserID { get; set; }
 
-        public string FullName { get; set; } = string.Empty;
+        public string FullName { get; set; }
+            = string.Empty;
 
-        public string PhoneNumber { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; }
+            = string.Empty;
 
-        public string Area { get; set; } = string.Empty;
+        public string Area { get; set; }
+            = string.Empty;
 
-        public string VehicleType { get; set; } = string.Empty;
+        public string VehicleType { get; set; }
+            = string.Empty;
     }
 }
