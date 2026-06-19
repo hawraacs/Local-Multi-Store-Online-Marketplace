@@ -122,6 +122,7 @@
             border-radius: 8px;
             margin-bottom: 12px;
             font-weight: 600;
+            line-height: 1.6;
         }
 
         .error-box {
@@ -142,6 +143,47 @@
             font-size: 13px;
             line-height: 1.5;
         }
+
+        .login-box {
+            min-width: 230px;
+        }
+
+        .show-login-btn {
+            border: none;
+            background: #0f172a;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+            .show-login-btn:hover {
+                background: #ff6b35;
+            }
+
+        .login-details {
+            display: none;
+            margin-top: 8px;
+            padding: 9px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.7;
+            color: #334155;
+            word-break: break-word;
+        }
+
+            .login-details strong {
+                color: #0f172a;
+            }
+
+        .copy-text {
+            font-weight: 700;
+            color: #2563eb;
+        }
     </style>
 }
 
@@ -149,9 +191,9 @@
     <h3>Delivery Staff Requests</h3>
 
     <div class="info-box">
-        When you approve a customer delivery request, the system creates a new delivery login
-        like <strong>delivery1@gmail.com</strong> with default password
-        <strong>Delivery@12345</strong>. The original customer account stays unchanged.
+        When you approve a customer delivery request, the system creates a new delivery login.
+        The original customer account stays unchanged.
+        You can view each approved delivery login from the <strong>Delivery Login</strong> column.
     </div>
 
     @if (TempData["Success"] != null)
@@ -179,6 +221,7 @@
                     <th>ID Proof</th>
                     <th>Status</th>
                     <th>Active</th>
+                    <th>Delivery Login</th>
                     <th>Rejection Reason</th>
                     <th>Actions</th>
                 </tr>
@@ -188,7 +231,7 @@
                 @if (Model.Deliveries == null || !Model.Deliveries.Any())
                 {
                     <tr>
-                        <td colspan="9">No delivery requests found.</td>
+                        <td colspan="10">No delivery requests found.</td>
                     </tr>
                 }
                 else
@@ -234,6 +277,36 @@
                                 else if (status == "approved" && !d.IsActive)
                                 {
                                     <span class="status-badge status-inactive">Inactive</span>
+                                }
+                                else
+                                {
+                                    <span>-</span>
+                                }
+                            </td>
+
+                            <td class="login-box">
+                                @if (status == "approved")
+                                {
+                                    var loginBoxId = $"login_{d.DeliveryPersonID}";
+                                    var deliveryEmail = d.User?.Email ?? d.User?.UserName ?? "Email not loaded";
+
+                                    <button type="button"
+                                            class="show-login-btn"
+                                            onclick="toggleLogin('@loginBoxId')">
+                                        Show Login
+                                    </button>
+
+                                    <div id="@loginBoxId" class="login-details">
+                                        <div>
+                                            <strong>Email:</strong>
+                                            <span class="copy-text">@deliveryEmail</span>
+                                        </div>
+
+                                        <div>
+                                            <strong>Password:</strong>
+                                            <span class="copy-text">Delivery@12345</span>
+                                        </div>
+                                    </div>
                                 }
                                 else
                                 {
@@ -297,3 +370,17 @@
         </table>
     </div>
 </div>
+
+<script>
+    function toggleLogin(id) {
+        const box = document.getElementById(id);
+
+        if (!box) {
+            return;
+        }
+
+        box.style.display = box.style.display === "block"
+            ? "none"
+            : "block";
+    }
+</script>

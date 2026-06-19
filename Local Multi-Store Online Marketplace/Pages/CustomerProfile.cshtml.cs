@@ -13,19 +13,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     public class CustomerProfileModel : PageModel
     {
         private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly ApplicationDbContext _context;
 
         public CustomerProfileModel(
             UserManager<User> userManager,
+            SignInManager<User> signInManager,
             ApplicationDbContext context)
         {
             _userManager = userManager;
+            _signInManager = signInManager;
             _context = context;
         }
 
-        // =========================
-        // CUSTOMER PROFILE
-        // =========================
         [BindProperty]
         public string CustomerFullName { get; set; } = string.Empty;
 
@@ -41,21 +41,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public int AddressesCount { get; set; }
 
-        // =========================
-        // STORE REQUEST
-        // =========================
         [BindProperty]
         public StoreDTO Store { get; set; } = new StoreDTO();
 
-        // =========================
-        // DELIVERY REQUEST
-        // =========================
         [BindProperty]
         public DeliveryPersonDTO Delivery { get; set; } = new DeliveryPersonDTO();
 
-        // =========================
-        // GET
-        // =========================
+        public bool HasPendingDeliveryRequest { get; set; }
+
+        public bool HasApprovedDeliveryAccount { get; set; }
+
+        public bool HasRejectedDeliveryRequest { get; set; }
+
+        public string DeliveryAccessMessage { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string DeliveryEmail { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string DeliveryPassword { get; set; } = string.Empty;
+
         public async Task<IActionResult> OnGetAsync()
         {
             var loaded = await LoadCustomerProfileAsync();
@@ -68,9 +73,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return Page();
         }
 
-        // =========================
-        // UPDATE PROFILE
-        // =========================
         public async Task<IActionResult> OnPostAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -80,8 +82,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            user.FullName = CustomerFullName;
-            user.PhoneNumber = CustomerPhone;
+            user.FullName = CustomerFullName?.Trim() ?? string.Empty;
+            user.PhoneNumber = CustomerPhone?.Trim() ?? string.Empty;
 
             var result = await _userManager.UpdateAsync(user);
 
@@ -102,9 +104,71 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
-        // =========================
-        // STORE REQUEST
-        // =========================
+        public async Task<IActionResult> OnPostDeliveryLoginAsync()
+        {
+            var loaded = await LoadCustomerProfileAsync();
+
+            if (!loaded)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            if (string.IsNullOrWhiteSpace(DeliveryEmail) ||
+                string.IsNullOrWhiteSpace(DeliveryPassword))
+            {
+                TempData["DeliveryLoginError"] = "Please enter delivery email and password.";
+                return RedirectToPage();
+            }
+
+            var deliveryEmail = DeliveryEmail.Trim();
+
+            var deliveryUser = await _userManager.FindByEmailAsync(deliveryEmail);
+
+            if (deliveryUser == null)
+            {
+                TempData["DeliveryLoginError"] = "Delivery account not found.";
+                return RedirectToPage();
+            }
+
+            var isDelivery = await _userManager.IsInRoleAsync(deliveryUser, "Delivery");
+
+            if (!isDelivery)
+            {
+                TempData["DeliveryLoginError"] = "This account is not a delivery account.";
+                return RedirectToPage();
+            }
+
+            var passwordValid = await _userManager.CheckPasswordAsync(
+                deliveryUser,
+                DeliveryPassword);
+
+            if (!passwordValid)
+            {
+                TempData["DeliveryLoginError"] = "Invalid delivery password.";
+                return RedirectToPage();
+            }
+
+            var deliveryProfile = await _context.DeliveryPersons
+                .FirstOrDefaultAsync(d =>
+                    d.UserID == deliveryUser.Id &&
+                    d.IsActive &&
+                    d.Status == "Approved");
+
+            if (deliveryProfile == null)
+            {
+                TempData["DeliveryLoginError"] = "Approved delivery profile was not found.";
+                return RedirectToPage();
+            }
+
+            await _signInManager.SignOutAsync();
+
+            await _signInManager.SignInAsync(
+                deliveryUser,
+                isPersistent: false);
+
+            return LocalRedirect("/DeliveryDashboard");
+        }
+
         public async Task<IActionResult> OnPostStoreRequestAsync()
         {
             var loaded = await LoadCustomerProfileAsync();
@@ -121,9 +185,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
-        // =========================
-        // DELIVERY REQUEST
-        // =========================
         public async Task<IActionResult> OnPostDeliveryRequestAsync()
         {
             var loaded = await LoadCustomerProfileAsync();
@@ -140,9 +201,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
-        // =========================
-        // LOAD CURRENT CUSTOMER DATA
-        // =========================
         private async Task<bool> LoadCustomerProfileAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -158,6 +216,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             CustomerEmail = user.Email ?? string.Empty;
             CustomerPhone = user.PhoneNumber ?? "No phone number";
+
+            await LoadDeliveryAccessStatusAsync(user);
 
             var customer = await _context.Customers
                 .FirstOrDefaultAsync(c => c.UserID == user.Id);
@@ -180,6 +240,106 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .CountAsync(a => a.CustomerID == customer.CustomerID);
 
             return true;
+        }
+
+        private async Task LoadDeliveryAccessStatusAsync(User user)
+        {
+            HasPendingDeliveryRequest = false;
+            HasApprovedDeliveryAccount = false;
+            HasRejectedDeliveryRequest = false;
+            DeliveryAccessMessage = string.Empty;
+
+            var deliveryRequest = await _context.DeliveryPersons
+                .OrderByDescending(d => d.DeliveryPersonID)
+                .FirstOrDefaultAsync(d => d.UserID == user.Id);
+
+            if (deliveryRequest == null)
+            {
+                var customerPhone = NormalizePhone(user.PhoneNumber);
+
+                if (!string.IsNullOrWhiteSpace(customerPhone))
+                {
+                    var allDeliveryRequests = await _context.DeliveryPersons
+                        .OrderByDescending(d => d.DeliveryPersonID)
+                        .ToListAsync();
+
+                    deliveryRequest = allDeliveryRequests
+                        .FirstOrDefault(d =>
+                            NormalizePhone(d.PhoneNumber) == customerPhone);
+                }
+            }
+
+            if (deliveryRequest == null)
+            {
+                DeliveryAccessMessage = "Submit your vehicle and license information to join our delivery fleet.";
+                return;
+            }
+
+            var status = deliveryRequest.Status?.Trim();
+
+            if (status == "Pending")
+            {
+                HasPendingDeliveryRequest = true;
+                DeliveryAccessMessage = "Your delivery request is pending admin approval.";
+                return;
+            }
+
+            if (status == "Approved" && deliveryRequest.IsActive)
+            {
+                HasApprovedDeliveryAccount = true;
+                DeliveryAccessMessage = "Your delivery account is approved. Use the delivery email and password provided by the admin.";
+                return;
+            }
+
+            if (status == "Approved" && !deliveryRequest.IsActive)
+            {
+                DeliveryAccessMessage = "Your delivery account is approved but currently inactive. Please contact the admin.";
+                return;
+            }
+
+            if (status == "Rejected")
+            {
+                HasRejectedDeliveryRequest = true;
+
+                DeliveryAccessMessage = !string.IsNullOrWhiteSpace(deliveryRequest.RejectionReason)
+                    ? $"Your delivery request was rejected: {deliveryRequest.RejectionReason}. You can submit a new request."
+                    : "Your delivery request was rejected. You can submit a new request.";
+
+                return;
+            }
+
+            DeliveryAccessMessage = "Submit your vehicle and license information to join our delivery fleet.";
+        }
+
+        private static string NormalizePhone(string? phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+            {
+                return string.Empty;
+            }
+
+            var digits = new string(phone.Where(char.IsDigit).ToArray());
+
+            if (string.IsNullOrWhiteSpace(digits))
+            {
+                return string.Empty;
+            }
+
+            if (digits.StartsWith("00961"))
+            {
+                digits = digits.Substring(5);
+            }
+            else if (digits.StartsWith("961"))
+            {
+                digits = digits.Substring(3);
+            }
+
+            if (!digits.StartsWith("0"))
+            {
+                digits = "0" + digits;
+            }
+
+            return digits;
         }
     }
 }
