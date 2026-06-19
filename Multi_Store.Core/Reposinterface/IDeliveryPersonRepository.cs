@@ -8,6 +8,7 @@ namespace Multi_Store.Core.Reposinterface
     public interface IDeliveryPersonRepository : IRepository<DeliveryPerson>
     {
         Task<DeliveryPerson?> GetByUserIdAsync(int userId);
+        Task<DeliveryPerson?> GetByRequestedByUserIdAsync(int userId);
 
         Task<DeliveryPerson?> GetByPhoneNumberAsync(string phoneNumber);
 
