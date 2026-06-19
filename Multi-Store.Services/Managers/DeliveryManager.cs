@@ -61,13 +61,18 @@ namespace Multi_Store.Services.Managers
             if (string.IsNullOrWhiteSpace(dto.IDProofURL))
                 throw new InvalidOperationException("ID proof is required.");
 
-            var existing = await _deliveryPersonRepository.GetByUserIdAsync(dto.UserID);
+            var existing =
+    await _deliveryPersonRepository.GetByRequestedByUserIdAsync(dto.UserID)
+    ?? await _deliveryPersonRepository.GetByUserIdAsync(dto.UserID);
 
             var phoneExists = await _deliveryPersonRepository.GetByPhoneNumberAsync(dto.PhoneNumber);
 
-            if (phoneExists != null && phoneExists.UserID != dto.UserID)
+            if (phoneExists != null &&
+    phoneExists.UserID != dto.UserID &&
+    phoneExists.RequestedByUserID != dto.UserID)
             {
-                throw new InvalidOperationException("This phone number is already registered for another delivery request.");
+                throw new InvalidOperationException(
+                    "This phone number is already registered for another delivery request.");
             }
 
             if (existing != null)
@@ -81,6 +86,9 @@ namespace Multi_Store.Services.Managers
                 if (existing.Status == "Rejected")
                 {
                     existing.FullName = dto.FullName;
+                    existing.RequestedByUserID = existing.RequestedByUserID
+    ?? dto.RequestedByUserID
+    ?? dto.UserID;
                     existing.PhoneNumber = dto.PhoneNumber;
                     existing.Area = dto.Area;
                     existing.VehicleType = dto.VehicleType;
@@ -103,7 +111,8 @@ namespace Multi_Store.Services.Managers
 
             var deliveryPerson = new DeliveryPerson
             {
-                UserID = dto.UserID, // initially customer user id
+                UserID = dto.UserID,
+                RequestedByUserID = dto.RequestedByUserID ?? dto.UserID,
                 FullName = dto.FullName,
                 PhoneNumber = dto.PhoneNumber,
                 Area = dto.Area,
@@ -137,6 +146,7 @@ namespace Multi_Store.Services.Managers
             {
                 DeliveryPersonID = d.DeliveryPersonID,
                 UserID = d.UserID,
+                RequestedByUserID = d.RequestedByUserID,
                 FullName = d.FullName,
                 PhoneNumber = d.PhoneNumber,
                 Area = d.Area,
@@ -244,6 +254,10 @@ namespace Multi_Store.Services.Managers
 
             // Link DeliveryPerson to the new delivery login.
             // Customer account remains unchanged.
+            // Preserve the original customer account before changing UserID.
+            deliveryPerson.RequestedByUserID ??= deliveryPerson.UserID;
+
+            // Link DeliveryPerson to the generated delivery login.
             deliveryPerson.UserID = deliveryUser.Id;
             deliveryPerson.Status = "Approved";
             deliveryPerson.IsActive = true;

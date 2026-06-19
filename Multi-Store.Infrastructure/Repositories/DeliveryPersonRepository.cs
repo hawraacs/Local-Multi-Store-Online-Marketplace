@@ -23,7 +23,11 @@ namespace Multi_Store.Infrastructure.Repositories
             return await _context.DeliveryPersons
                 .FirstOrDefaultAsync(d => d.UserID == userId);
         }
-
+        public async Task<DeliveryPerson?> GetByRequestedByUserIdAsync(int userId)
+        {
+            return await _context.DeliveryPersons
+                .FirstOrDefaultAsync(d => d.RequestedByUserID == userId);
+        }
         public async Task<DeliveryPerson?> GetByPhoneNumberAsync(string phoneNumber)
         {
             return await _context.DeliveryPersons

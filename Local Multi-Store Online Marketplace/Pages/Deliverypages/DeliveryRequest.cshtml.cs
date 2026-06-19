@@ -99,7 +99,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
             }
 
             Delivery.IDProofURL = $"/uploads/delivery-id-proofs/{fileName}";
+
+            // At request time, UserID is temporarily the customer account.
+            // RequestedByUserID permanently keeps the original customer account.
             Delivery.UserID = user.Id;
+            Delivery.RequestedByUserID = user.Id;
 
             try
             {

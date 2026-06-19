@@ -1,195 +1,552 @@
 using Microsoft.AspNetCore.Authorization;
+
+using Microsoft.AspNetCore.Identity;
+
 using Microsoft.AspNetCore.Mvc;
+
 using Microsoft.AspNetCore.Mvc.RazorPages;
+
 using Microsoft.EntityFrameworkCore;
+
 using Multi_Store.Core.Entities;
+
 using Multi_Store.Infrastructure.Data;
 
+
+
 namespace Local_Multi_Store_Online_Marketplace.Pages
+
 {
+
     [Authorize(Roles = "Admin")]
-    public class AdminAssignDeliveryModel : PageModel
+
+    public class AdminDeliveryModel : PageModel
+
     {
+
         private readonly ApplicationDbContext _context;
 
-        public AdminAssignDeliveryModel(ApplicationDbContext context)
+        private readonly UserManager<User> _userManager;
+
+
+
+        private const string DefaultDeliveryPassword = "Delivery@12345";
+
+
+
+        public AdminDeliveryModel(
+
+            ApplicationDbContext context,
+
+            UserManager<User> userManager)
+
         {
+
             _context = context;
+
+            _userManager = userManager;
+
         }
 
-        public List<AdminAssignOrderViewModel> Orders { get; set; } = new();
 
-        public List<AdminAssignDeliveryPersonViewModel> DeliveryPeople { get; set; } = new();
+
+        public List<AdminDeliveryViewModel> Deliveries { get; set; } = new();
+
+
 
         public async Task OnGetAsync()
+
         {
-            await LoadDataAsync();
+
+            await LoadDeliveriesAsync();
+
         }
 
-        public async Task<IActionResult> OnPostAssignAsync(int orderId, int deliveryPersonId)
+
+
+        public async Task<IActionResult> OnPostApproveAsync(int id)
+
         {
-            if (orderId <= 0 || deliveryPersonId <= 0)
-            {
-                TempData["Error"] = "Please select a valid order and delivery person.";
-                return RedirectToPage();
-            }
-
-            var order = await _context.Orders
-                .Include(o => o.DeliveryAssignment)
-                .FirstOrDefaultAsync(o => o.OrderID == orderId);
-
-            if (order == null)
-            {
-                TempData["Error"] = "Order not found.";
-                return RedirectToPage();
-            }
-
-            if (order.Status == "Delivered" || order.Status == "Cancelled")
-            {
-                TempData["Error"] = "Delivered or cancelled orders cannot be assigned.";
-                return RedirectToPage();
-            }
 
             var deliveryPerson = await _context.DeliveryPersons
-                .FirstOrDefaultAsync(d =>
-                    d.DeliveryPersonID == deliveryPersonId &&
-                    d.IsActive &&
-                    d.Status == "Approved");
+
+                .FirstOrDefaultAsync(d => d.DeliveryPersonID == id);
+
+
 
             if (deliveryPerson == null)
+
             {
-                TempData["Error"] = "Delivery person is not approved or active.";
+
+                TempData["Error"] = "Delivery request not found.";
+
                 return RedirectToPage();
+
             }
 
-            var alreadyAssigned = await _context.DeliveryAssignments
-                .AnyAsync(a =>
-                    a.OrderID == orderId &&
-                    a.Status != "Delivered" &&
-                    a.Status != "Cancelled" &&
-                    a.Status != "Failed");
 
-            if (alreadyAssigned)
+
+            try
+
             {
-                TempData["Error"] = "This order already has an active delivery assignment.";
-                return RedirectToPage();
-            }
 
-            var now = DateTime.UtcNow;
+                string deliveryEmail;
 
-            var assignment = new DeliveryAssignment
-            {
-                OrderID = orderId,
-                DeliveryPersonID = deliveryPersonId,
-                AssignedAt = now,
-                PickupTime = null,
-                DeliveryTime = null,
-                Status = "Assigned",
-                DeliveryProofImageURL = null
-            };
+                int counter = 1;
 
-            _context.DeliveryAssignments.Add(assignment);
 
-            // Admin assigns only. Delivery starts later from Delivery Dashboard.
-            order.Status = "Assigned";
 
-            var notificationAlreadyExists = await _context.Notifications
-                .AnyAsync(n =>
-                    n.UserID == deliveryPerson.UserID &&
-                    n.Type == "DeliveryAssignment" &&
-                    n.ReferenceID == order.OrderID);
+                do
 
-            if (!notificationAlreadyExists)
-            {
-                _context.Notifications.Add(new Notification
                 {
-                    UserID = deliveryPerson.UserID,
-                    Title = "New Order Assigned",
-                    Message = $"You have a new delivery order assigned: {order.OrderNumber}.",
-                    Type = "DeliveryAssignment",
-                    ReferenceID = order.OrderID,
-                    IsRead = false,
-                    SentAt = now,
-                    SentVia = "System"
-                });
+
+                    deliveryEmail = $"delivery{counter}@gmail.com";
+
+                    counter++;
+
+                }
+
+                while (await _userManager.FindByEmailAsync(deliveryEmail) != null);
+
+
+
+                var deliveryUser = new User
+
+                {
+
+                    UserName = deliveryEmail,
+
+                    Email = deliveryEmail,
+
+                    FullName = deliveryPerson.FullName,
+
+                    PhoneNumber = deliveryPerson.PhoneNumber,
+
+                    EmailConfirmed = true,
+
+                    PhoneNumberConfirmed = true,
+
+                    IsActive = true,
+
+                    CreatedAt = DateTime.UtcNow
+
+                };
+
+
+
+                var createResult = await _userManager.CreateAsync(
+
+                    deliveryUser,
+
+                    DefaultDeliveryPassword);
+
+
+
+                if (!createResult.Succeeded)
+
+                {
+
+                    TempData["Error"] = string.Join(" | ", createResult.Errors.Select(e => e.Description));
+
+                    return RedirectToPage();
+
+                }
+
+
+
+                var roleResult = await _userManager.AddToRoleAsync(deliveryUser, "Delivery");
+
+
+
+                if (!roleResult.Succeeded)
+
+                {
+
+                    await _userManager.DeleteAsync(deliveryUser);
+
+
+
+                    TempData["Error"] = string.Join(" | ", roleResult.Errors.Select(e => e.Description));
+
+                    return RedirectToPage();
+
+                }
+
+
+
+                // Preserve the original customer account.
+                deliveryPerson.RequestedByUserID ??= deliveryPerson.UserID;
+
+                // Connect the profile to the new delivery login.
+                deliveryPerson.UserID = deliveryUser.Id;
+                deliveryPerson.Status = "Approved";
+
+                deliveryPerson.IsActive = true;
+
+                deliveryPerson.ApprovedAt = DateTime.UtcNow;
+
+                deliveryPerson.RejectionReason = null;
+
+
+
+                await _context.SaveChangesAsync();
+
+
+
+                TempData["Success"] =
+
+                    $"Delivery request approved successfully. Email: {deliveryEmail} | Password: {DefaultDeliveryPassword}";
+
             }
+
+            catch (Exception ex)
+
+            {
+
+                TempData["Error"] = ex.Message;
+
+            }
+
+
+
+            return RedirectToPage();
+
+        }
+
+
+
+        public async Task<IActionResult> OnPostRejectAsync(int id, string? reason)
+
+        {
+
+            var deliveryPerson = await _context.DeliveryPersons
+
+                .FirstOrDefaultAsync(d => d.DeliveryPersonID == id);
+
+
+
+            if (deliveryPerson == null)
+
+            {
+
+                TempData["Error"] = "Delivery request not found.";
+
+                return RedirectToPage();
+
+            }
+
+
+
+            deliveryPerson.Status = "Rejected";
+
+            deliveryPerson.IsActive = false;
+
+            deliveryPerson.ApprovedAt = null;
+
+            deliveryPerson.RejectionReason = string.IsNullOrWhiteSpace(reason)
+
+                ? "Rejected by admin."
+
+                : reason.Trim();
+
+
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] =
-                $"Delivery person assigned successfully to order {order.OrderNumber}. Notification sent to {deliveryPerson.FullName}.";
+
+
+            TempData["Success"] = "Delivery request rejected successfully.";
+
+
 
             return RedirectToPage();
+
         }
 
-        private async Task LoadDataAsync()
+
+
+        public async Task<IActionResult> OnPostActivateAsync(int id)
+
         {
-            Orders = await _context.Orders
-                .Include(o => o.Customer)
-                .Include(o => o.DeliveryAssignment)
-                .Where(o =>
-                    o.DeliveryAssignment == null &&
-                    (
-                        o.Status == "Pending" ||
-                        o.Status == "Pending Confirmation" ||
-                        o.Status == "Confirmed" ||
-                        o.Status == "Preparing" ||
-                        o.Status == "Ready for Pickup"
-                    ))
-                .OrderByDescending(o => o.OrderDate)
-                .Select(o => new AdminAssignOrderViewModel
-                {
-                    OrderID = o.OrderID,
-                    OrderNumber = o.OrderNumber,
-                    OrderDate = o.OrderDate,
-                    Status = o.Status,
-                    TotalAmount = o.TotalAmount,
-                    CustomerID = o.CustomerID
-                })
-                .ToListAsync();
 
-            DeliveryPeople = await _context.DeliveryPersons
-                .Where(d =>
-                    d.IsActive &&
-                    d.Status == "Approved")
-                .OrderBy(d => d.FullName)
-                .Select(d => new AdminAssignDeliveryPersonViewModel
+            var deliveryPerson = await _context.DeliveryPersons
+
+                .FirstOrDefaultAsync(d => d.DeliveryPersonID == id);
+
+
+
+            if (deliveryPerson == null)
+
+            {
+
+                TempData["Error"] = "Delivery person not found.";
+
+                return RedirectToPage();
+
+            }
+
+
+
+            if (deliveryPerson.Status != "Approved")
+
+            {
+
+                TempData["Error"] = "Only approved delivery staff can be activated.";
+
+                return RedirectToPage();
+
+            }
+
+
+
+            deliveryPerson.IsActive = true;
+
+            deliveryPerson.RejectionReason = null;
+
+
+
+            var user = await _userManager.FindByIdAsync(deliveryPerson.UserID.ToString());
+
+
+
+            if (user != null && !await _userManager.IsInRoleAsync(user, "Delivery"))
+
+            {
+
+                var roleResult = await _userManager.AddToRoleAsync(user, "Delivery");
+
+
+
+                if (!roleResult.Succeeded)
+
                 {
-                    DeliveryPersonID = d.DeliveryPersonID,
-                    FullName = d.FullName,
-                    PhoneNumber = d.PhoneNumber,
-                    Area = d.Area,
-                    VehicleType = d.VehicleType
-                })
-                .ToListAsync();
+
+                    TempData["Error"] = string.Join(" | ", roleResult.Errors.Select(e => e.Description));
+
+                    return RedirectToPage();
+
+                }
+
+            }
+
+
+
+            await _context.SaveChangesAsync();
+
+
+
+            TempData["Success"] = "Delivery staff activated successfully.";
+
+
+
+            return RedirectToPage();
+
         }
+
+
+
+        public async Task<IActionResult> OnPostDeactivateAsync(int id)
+
+        {
+
+            var deliveryPerson = await _context.DeliveryPersons
+
+                .FirstOrDefaultAsync(d => d.DeliveryPersonID == id);
+
+
+
+            if (deliveryPerson == null)
+
+            {
+
+                TempData["Error"] = "Delivery person not found.";
+
+                return RedirectToPage();
+
+            }
+
+
+
+            if (deliveryPerson.Status != "Approved")
+
+            {
+
+                TempData["Error"] = "Only approved delivery staff can be deactivated.";
+
+                return RedirectToPage();
+
+            }
+
+
+
+            deliveryPerson.IsActive = false;
+
+
+
+            var user = await _userManager.FindByIdAsync(deliveryPerson.UserID.ToString());
+
+
+
+            if (user != null && await _userManager.IsInRoleAsync(user, "Delivery"))
+
+            {
+
+                var roleResult = await _userManager.RemoveFromRoleAsync(user, "Delivery");
+
+
+
+                if (!roleResult.Succeeded)
+
+                {
+
+                    TempData["Error"] = string.Join(" | ", roleResult.Errors.Select(e => e.Description));
+
+                    return RedirectToPage();
+
+                }
+
+            }
+
+
+
+            await _context.SaveChangesAsync();
+
+
+
+            TempData["Success"] = "Delivery staff deactivated successfully.";
+
+
+
+            return RedirectToPage();
+
+        }
+
+
+
+        private async Task LoadDeliveriesAsync()
+
+        {
+
+            var deliveryPeople = await _context.DeliveryPersons
+
+                .OrderByDescending(d => d.DeliveryPersonID)
+
+                .ToListAsync();
+
+
+
+            Deliveries = new List<AdminDeliveryViewModel>();
+
+
+
+            foreach (var d in deliveryPeople)
+
+            {
+
+                var user = await _userManager.FindByIdAsync(d.UserID.ToString());
+
+
+
+                Deliveries.Add(new AdminDeliveryViewModel
+
+                {
+
+                    DeliveryPersonID = d.DeliveryPersonID,
+
+                    UserID = d.UserID,
+
+                    FullName = d.FullName,
+
+                    PhoneNumber = d.PhoneNumber,
+
+                    Area = d.Area,
+
+                    VehicleType = d.VehicleType,
+
+                    VehicleNumber = d.VehicleNumber,
+
+                    DrivingLicenseNumber = d.DrivingLicenseNumber,
+
+                    IDProofURL = d.IDProofURL,
+
+                    RejectionReason = d.RejectionReason,
+
+                    Status = d.Status,
+
+                    IsActive = d.IsActive,
+
+                    ApprovedAt = d.ApprovedAt,
+
+                    User = user
+
+                });
+
+            }
+
+        }
+
     }
 
-    public class AdminAssignOrderViewModel
+
+
+    public class AdminDeliveryViewModel
+
     {
-        public int OrderID { get; set; }
 
-        public string OrderNumber { get; set; } = string.Empty;
-
-        public DateTime OrderDate { get; set; }
-
-        public string Status { get; set; } = string.Empty;
-
-        public decimal TotalAmount { get; set; }
-
-        public int CustomerID { get; set; }
-    }
-
-    public class AdminAssignDeliveryPersonViewModel
-    {
         public int DeliveryPersonID { get; set; }
+
+
+
+        public int UserID { get; set; }
+
+
 
         public string FullName { get; set; } = string.Empty;
 
+
+
         public string PhoneNumber { get; set; } = string.Empty;
+
+
 
         public string Area { get; set; } = string.Empty;
 
+
+
         public string VehicleType { get; set; } = string.Empty;
+
+
+
+        public string VehicleNumber { get; set; } = string.Empty;
+
+
+
+        public string DrivingLicenseNumber { get; set; } = string.Empty;
+
+
+
+        public string? IDProofURL { get; set; }
+
+
+
+        public string? RejectionReason { get; set; }
+
+
+
+        public string Status { get; set; } = string.Empty;
+
+
+
+        public bool IsActive { get; set; }
+
+
+
+        public DateTime? ApprovedAt { get; set; }
+
+
+
+        public User? User { get; set; }
+
     }
+
 }

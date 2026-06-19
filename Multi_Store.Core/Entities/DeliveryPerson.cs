@@ -8,6 +8,8 @@ namespace Multi_Store.Core.Entities
         public int DeliveryPersonID { get; set; }
 
         public int UserID { get; set; }
+        // Original customer account that submitted the delivery request.
+        public int? RequestedByUserID { get; set; }
 
         public string FullName { get; set; } = string.Empty;
 
