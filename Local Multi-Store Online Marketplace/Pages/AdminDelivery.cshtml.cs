@@ -1,552 +1,276 @@
 using Microsoft.AspNetCore.Authorization;
-
 using Microsoft.AspNetCore.Identity;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Microsoft.AspNetCore.Mvc.RazorPages;
-
 using Microsoft.EntityFrameworkCore;
-
 using Multi_Store.Core.Entities;
-
 using Multi_Store.Infrastructure.Data;
-
-
+using Multi_Store.Services.Managers;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
-
 {
-
     [Authorize(Roles = "Admin")]
-
     public class AdminDeliveryModel : PageModel
-
     {
-
         private readonly ApplicationDbContext _context;
-
         private readonly UserManager<User> _userManager;
-
-
-
-        private const string DefaultDeliveryPassword = "Delivery@12345";
-
-
+        private readonly DeliveryManager _deliveryManager;
 
         public AdminDeliveryModel(
-
             ApplicationDbContext context,
-
-            UserManager<User> userManager)
-
+            UserManager<User> userManager,
+            DeliveryManager deliveryManager)
         {
-
             _context = context;
-
             _userManager = userManager;
-
+            _deliveryManager = deliveryManager;
         }
 
-
-
-        public List<AdminDeliveryViewModel> Deliveries { get; set; } = new();
-
-
+        public List<AdminDeliveryViewModel> Deliveries { get; set; }
+            = new();
 
         public async Task OnGetAsync()
-
         {
-
             await LoadDeliveriesAsync();
-
         }
-
-
 
         public async Task<IActionResult> OnPostApproveAsync(int id)
-
         {
-
-            var deliveryPerson = await _context.DeliveryPersons
-
-                .FirstOrDefaultAsync(d => d.DeliveryPersonID == id);
-
-
-
-            if (deliveryPerson == null)
-
+            if (id <= 0)
             {
-
-                TempData["Error"] = "Delivery request not found.";
+                TempData["Error"] =
+                    "Invalid delivery request.";
 
                 return RedirectToPage();
-
             }
-
-
 
             try
-
             {
-
-                string deliveryEmail;
-
-                int counter = 1;
-
-
-
-                do
-
-                {
-
-                    deliveryEmail = $"delivery{counter}@gmail.com";
-
-                    counter++;
-
-                }
-
-                while (await _userManager.FindByEmailAsync(deliveryEmail) != null);
-
-
-
-                var deliveryUser = new User
-
-                {
-
-                    UserName = deliveryEmail,
-
-                    Email = deliveryEmail,
-
-                    FullName = deliveryPerson.FullName,
-
-                    PhoneNumber = deliveryPerson.PhoneNumber,
-
-                    EmailConfirmed = true,
-
-                    PhoneNumberConfirmed = true,
-
-                    IsActive = true,
-
-                    CreatedAt = DateTime.UtcNow
-
-                };
-
-
-
-                var createResult = await _userManager.CreateAsync(
-
-                    deliveryUser,
-
-                    DefaultDeliveryPassword);
-
-
-
-                if (!createResult.Succeeded)
-
-                {
-
-                    TempData["Error"] = string.Join(" | ", createResult.Errors.Select(e => e.Description));
-
-                    return RedirectToPage();
-
-                }
-
-
-
-                var roleResult = await _userManager.AddToRoleAsync(deliveryUser, "Delivery");
-
-
-
-                if (!roleResult.Succeeded)
-
-                {
-
-                    await _userManager.DeleteAsync(deliveryUser);
-
-
-
-                    TempData["Error"] = string.Join(" | ", roleResult.Errors.Select(e => e.Description));
-
-                    return RedirectToPage();
-
-                }
-
-
-
-                // Preserve the original customer account.
-                deliveryPerson.RequestedByUserID ??= deliveryPerson.UserID;
-
-                // Connect the profile to the new delivery login.
-                deliveryPerson.UserID = deliveryUser.Id;
-                deliveryPerson.Status = "Approved";
-
-                deliveryPerson.IsActive = true;
-
-                deliveryPerson.ApprovedAt = DateTime.UtcNow;
-
-                deliveryPerson.RejectionReason = null;
-
-
-
-                await _context.SaveChangesAsync();
-
-
+                var result =
+                    await _deliveryManager
+                        .ApproveDeliveryPersonAsync(id);
 
                 TempData["Success"] =
-
-                    $"Delivery request approved successfully. Email: {deliveryEmail} | Password: {DefaultDeliveryPassword}";
-
+                    $"Delivery request approved successfully. " +
+                    $"Email: {result.email} | " +
+                    $"Password: {result.password}";
             }
-
             catch (Exception ex)
-
             {
-
                 TempData["Error"] = ex.Message;
-
             }
-
-
 
             return RedirectToPage();
-
         }
 
-
-
-        public async Task<IActionResult> OnPostRejectAsync(int id, string? reason)
-
+        public async Task<IActionResult> OnPostRejectAsync(
+            int id,
+            string? reason)
         {
-
-            var deliveryPerson = await _context.DeliveryPersons
-
-                .FirstOrDefaultAsync(d => d.DeliveryPersonID == id);
-
-
-
-            if (deliveryPerson == null)
-
+            if (id <= 0)
             {
-
-                TempData["Error"] = "Delivery request not found.";
+                TempData["Error"] =
+                    "Invalid delivery request.";
 
                 return RedirectToPage();
-
             }
 
+            try
+            {
+                await _deliveryManager
+                    .RejectDeliveryPersonAsync(id, reason);
 
-
-            deliveryPerson.Status = "Rejected";
-
-            deliveryPerson.IsActive = false;
-
-            deliveryPerson.ApprovedAt = null;
-
-            deliveryPerson.RejectionReason = string.IsNullOrWhiteSpace(reason)
-
-                ? "Rejected by admin."
-
-                : reason.Trim();
-
-
-
-            await _context.SaveChangesAsync();
-
-
-
-            TempData["Success"] = "Delivery request rejected successfully.";
-
-
+                TempData["Success"] =
+                    "Delivery request rejected successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
 
             return RedirectToPage();
-
         }
-
-
 
         public async Task<IActionResult> OnPostActivateAsync(int id)
-
         {
-
-            var deliveryPerson = await _context.DeliveryPersons
-
-                .FirstOrDefaultAsync(d => d.DeliveryPersonID == id);
-
-
-
-            if (deliveryPerson == null)
-
+            if (id <= 0)
             {
-
-                TempData["Error"] = "Delivery person not found.";
+                TempData["Error"] =
+                    "Invalid delivery person.";
 
                 return RedirectToPage();
-
             }
 
-
-
-            if (deliveryPerson.Status != "Approved")
-
+            try
             {
+                await _deliveryManager
+                    .ActivateDeliveryPersonAsync(id);
 
-                TempData["Error"] = "Only approved delivery staff can be activated.";
-
-                return RedirectToPage();
-
+                TempData["Success"] =
+                    "Delivery staff activated successfully.";
             }
-
-
-
-            deliveryPerson.IsActive = true;
-
-            deliveryPerson.RejectionReason = null;
-
-
-
-            var user = await _userManager.FindByIdAsync(deliveryPerson.UserID.ToString());
-
-
-
-            if (user != null && !await _userManager.IsInRoleAsync(user, "Delivery"))
-
+            catch (Exception ex)
             {
-
-                var roleResult = await _userManager.AddToRoleAsync(user, "Delivery");
-
-
-
-                if (!roleResult.Succeeded)
-
-                {
-
-                    TempData["Error"] = string.Join(" | ", roleResult.Errors.Select(e => e.Description));
-
-                    return RedirectToPage();
-
-                }
-
+                TempData["Error"] = ex.Message;
             }
-
-
-
-            await _context.SaveChangesAsync();
-
-
-
-            TempData["Success"] = "Delivery staff activated successfully.";
-
-
 
             return RedirectToPage();
-
         }
-
-
 
         public async Task<IActionResult> OnPostDeactivateAsync(int id)
-
         {
-
-            var deliveryPerson = await _context.DeliveryPersons
-
-                .FirstOrDefaultAsync(d => d.DeliveryPersonID == id);
-
-
-
-            if (deliveryPerson == null)
-
+            if (id <= 0)
             {
-
-                TempData["Error"] = "Delivery person not found.";
+                TempData["Error"] =
+                    "Invalid delivery person.";
 
                 return RedirectToPage();
-
             }
 
-
-
-            if (deliveryPerson.Status != "Approved")
-
+            try
             {
+                await _deliveryManager
+                    .DeactivateDeliveryPersonAsync(id);
 
-                TempData["Error"] = "Only approved delivery staff can be deactivated.";
-
-                return RedirectToPage();
-
+                TempData["Success"] =
+                    "Delivery staff deactivated successfully.";
             }
-
-
-
-            deliveryPerson.IsActive = false;
-
-
-
-            var user = await _userManager.FindByIdAsync(deliveryPerson.UserID.ToString());
-
-
-
-            if (user != null && await _userManager.IsInRoleAsync(user, "Delivery"))
-
+            catch (Exception ex)
             {
-
-                var roleResult = await _userManager.RemoveFromRoleAsync(user, "Delivery");
-
-
-
-                if (!roleResult.Succeeded)
-
-                {
-
-                    TempData["Error"] = string.Join(" | ", roleResult.Errors.Select(e => e.Description));
-
-                    return RedirectToPage();
-
-                }
-
+                TempData["Error"] = ex.Message;
             }
-
-
-
-            await _context.SaveChangesAsync();
-
-
-
-            TempData["Success"] = "Delivery staff deactivated successfully.";
-
-
 
             return RedirectToPage();
-
         }
-
-
 
         private async Task LoadDeliveriesAsync()
-
         {
+            var deliveryPeople =
+                await _context.DeliveryPersons
+                    .AsNoTracking()
+                    .OrderByDescending(d =>
+                        d.DeliveryPersonID)
+                    .ToListAsync();
 
-            var deliveryPeople = await _context.DeliveryPersons
+            Deliveries =
+                new List<AdminDeliveryViewModel>();
 
-                .OrderByDescending(d => d.DeliveryPersonID)
-
-                .ToListAsync();
-
-
-
-            Deliveries = new List<AdminDeliveryViewModel>();
-
-
-
-            foreach (var d in deliveryPeople)
-
+            foreach (var delivery in deliveryPeople)
             {
+                var deliveryUser =
+                    await _userManager.FindByIdAsync(
+                        delivery.UserID.ToString());
 
-                var user = await _userManager.FindByIdAsync(d.UserID.ToString());
+                User? requestedByUser = null;
 
-
-
-                Deliveries.Add(new AdminDeliveryViewModel
-
+                if (delivery.RequestedByUserID.HasValue)
                 {
+                    requestedByUser =
+                        await _userManager.FindByIdAsync(
+                            delivery.RequestedByUserID
+                                .Value
+                                .ToString());
+                }
 
-                    DeliveryPersonID = d.DeliveryPersonID,
+                Deliveries.Add(
+                    new AdminDeliveryViewModel
+                    {
+                        DeliveryPersonID =
+                            delivery.DeliveryPersonID,
 
-                    UserID = d.UserID,
+                        UserID =
+                            delivery.UserID,
 
-                    FullName = d.FullName,
+                        RequestedByUserID =
+                            delivery.RequestedByUserID,
 
-                    PhoneNumber = d.PhoneNumber,
+                        FullName =
+                            delivery.FullName,
 
-                    Area = d.Area,
+                        PhoneNumber =
+                            delivery.PhoneNumber,
 
-                    VehicleType = d.VehicleType,
+                        Area =
+                            delivery.Area,
 
-                    VehicleNumber = d.VehicleNumber,
+                        VehicleType =
+                            delivery.VehicleType,
 
-                    DrivingLicenseNumber = d.DrivingLicenseNumber,
+                        VehicleNumber =
+                            delivery.VehicleNumber,
 
-                    IDProofURL = d.IDProofURL,
+                        DrivingLicenseNumber =
+                            delivery.DrivingLicenseNumber,
 
-                    RejectionReason = d.RejectionReason,
+                        IDProofURL =
+                            delivery.IDProofURL,
 
-                    Status = d.Status,
+                        RejectionReason =
+                            delivery.RejectionReason,
 
-                    IsActive = d.IsActive,
+                        Status =
+                            delivery.Status,
 
-                    ApprovedAt = d.ApprovedAt,
+                        IsActive =
+                            delivery.IsActive,
 
-                    User = user
+                        ApprovedAt =
+                            delivery.ApprovedAt,
 
-                });
+                        User =
+                            deliveryUser,
 
+                        RequestedByUser =
+                            requestedByUser
+                    });
             }
-
         }
-
     }
 
-
-
     public class AdminDeliveryViewModel
-
     {
-
         public int DeliveryPersonID { get; set; }
-
-
 
         public int UserID { get; set; }
 
+        public int? RequestedByUserID { get; set; }
 
+        public string FullName { get; set; }
+            = string.Empty;
 
-        public string FullName { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; }
+            = string.Empty;
 
+        public string Area { get; set; }
+            = string.Empty;
 
+        public string VehicleType { get; set; }
+            = string.Empty;
 
-        public string PhoneNumber { get; set; } = string.Empty;
+        public string VehicleNumber { get; set; }
+            = string.Empty;
 
-
-
-        public string Area { get; set; } = string.Empty;
-
-
-
-        public string VehicleType { get; set; } = string.Empty;
-
-
-
-        public string VehicleNumber { get; set; } = string.Empty;
-
-
-
-        public string DrivingLicenseNumber { get; set; } = string.Empty;
-
-
+        public string DrivingLicenseNumber { get; set; }
+            = string.Empty;
 
         public string? IDProofURL { get; set; }
 
-
-
         public string? RejectionReason { get; set; }
 
-
-
-        public string Status { get; set; } = string.Empty;
-
-
+        public string Status { get; set; }
+            = string.Empty;
 
         public bool IsActive { get; set; }
 
-
-
         public DateTime? ApprovedAt { get; set; }
-
-
 
         public User? User { get; set; }
 
+        public User? RequestedByUser { get; set; }
     }
-
 }
+
