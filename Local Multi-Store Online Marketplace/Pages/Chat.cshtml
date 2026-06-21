@@ -5,144 +5,470 @@
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Messages</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Messages | realnest</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        :root {
+            --bg-color: #fdfbf7; /* Cozy warm white canvas */
+            --card-bg: #ffffff;
+            --border-color: #f3ece3; /* Soft warm borders */
+            --text-primary: #1c1917; /* Slate dark brown/black */
+            --text-secondary: #78716c; /* Elegant muted stone gray */
+            /* White & Orange Sunset Palette */
+            --accent-color: #ff6b35; /* Radiant bright orange */
+            --accent-hover: #f05a22; /* Rich dark orange */
+            --accent-light: #fff1eb; /* Pastel orange tint */
+            --accent-gradient: linear-gradient(135deg, #ff9f43 0%, #ff6b35 50%, #f05a22 100%); /* Orange-to-coral punch */
+
+            --online-color: #10b981; /* Fresh active green */
+            --offline-color: #a8a29e; /* Soft dust grey */
+            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --shadow-sm: 0 4px 12px rgba(255, 107, 53, 0.04);
+            --shadow-md: 0 10px 30px rgba(255, 107, 53, 0.08);
+            --shadow-lg: 0 20px 40px rgba(255, 107, 53, 0.12);
+        }
 
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: Inter;
         }
 
         body {
-            background: #f8fafc;
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .container {
-            max-width: 720px;
-            margin: auto;
-            background: white;
-            min-height: 100vh;
-        }
-
-        .header {
-            padding: 20px;
-            border-bottom: 1px solid #eee;
-            background: white;
+        /* TOP BAR */
+        .topbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             position: sticky;
             top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(28, 25, 23, 0.02);
+        }
+
+        .brand-logo {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+            background: linear-gradient(135deg, #ff9f43 0%, #ff6b35 50%, #f05a22 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .brand-logo i {
+                font-size: 20px;
+                background: linear-gradient(135deg, #ff9f43 0%, #ff6b35 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+        .menu {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+            .menu a {
+                color: var(--text-primary);
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                padding: 8px 14px;
+                border-radius: 50px;
+            }
+
+                .menu a i {
+                    font-size: 16px;
+                    color: var(--text-secondary);
+                    transition: color 0.2s ease;
+                }
+
+                .menu a:hover {
+                    color: var(--accent-color);
+                    background-color: var(--accent-light);
+                }
+
+                    .menu a:hover i {
+                        color: var(--accent-color);
+                    }
+
+                .menu a.active {
+                    color: #ffffff;
+                    background: var(--accent-gradient);
+                    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+                }
+
+                    .menu a.active i {
+                        color: #ffffff;
+                    }
+
+        /* BOTTOM NAV FOR MOBILE */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 68px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid var(--border-color);
+            z-index: 1000;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+            .bottom-nav a {
+                color: var(--text-secondary);
+                text-decoration: none;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                font-size: 10px;
+                font-weight: 600;
+                flex: 1;
+                transition: color 0.2s ease;
+            }
+
+                .bottom-nav a i {
+                    font-size: 20px;
+                    transition: transform 0.2s ease;
+                }
+
+                .bottom-nav a:active i {
+                    transform: scale(0.85);
+                }
+
+                .bottom-nav a.active {
+                    color: var(--accent-color);
+                }
+
+        /* MAIN CONTENT CONTAINER */
+        .container {
+            max-width: 650px;
+            margin: 32px auto 60px auto;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER SECTION */
+        .header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
             .header h2 {
                 font-size: 24px;
-                margin-bottom: 15px;
+                font-weight: 800;
+                color: var(--text-primary);
+                letter-spacing: -0.5px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
             }
 
+                .header h2 i {
+                    background: var(--accent-gradient);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
+
+        /* SEARCH BOX */
         .search-box {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            width: 100%;
         }
 
             .search-box input {
                 flex: 1;
-                padding: 12px;
-                border: 1px solid #ddd;
-                border-radius: 10px;
+                padding: 12px 20px;
+                border: 1px solid var(--border-color);
+                border-radius: 50px;
+                font-family: var(--font-family);
+                font-size: 14px;
+                color: var(--text-primary);
+                background-color: var(--bg-color);
+                outline: none;
+                transition: all 0.25s ease;
             }
+
+                .search-box input:focus {
+                    border-color: var(--accent-color);
+                    background-color: #ffffff;
+                    box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+                }
 
             .search-box button {
                 border: none;
-                background: #2563eb;
+                background: var(--accent-gradient);
                 color: white;
-                padding: 12px 20px;
-                border-radius: 10px;
+                padding: 12px 24px;
+                border-radius: 50px;
+                font-weight: 700;
+                font-size: 14px;
                 cursor: pointer;
+                transition: all 0.25s ease;
+                box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
             }
 
+                .search-box button:hover {
+                    opacity: 0.95;
+                    transform: translateY(-1px);
+                    box-shadow: 0 6px 15px rgba(255, 107, 53, 0.3);
+                }
+
+        /* SECTION TITLE */
         .section-title {
-            padding: 15px 20px;
-            font-weight: 600;
-            color: #6b7280;
-            background: #fafafa;
+            padding: 14px 24px;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-secondary);
+            background: #faf8f5;
+            border-bottom: 1px solid var(--border-color);
         }
 
+        /* CHAT INBOX LIST ITEMS */
         .chat-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             text-decoration: none;
-            color: black;
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
+            color: var(--text-primary);
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.25s ease;
         }
 
+            .chat-item:last-of-type {
+                border-bottom: none;
+            }
+
             .chat-item:hover {
-                background: #f8fafc;
+                background: var(--accent-light);
             }
 
         .left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
+        }
+
+        /* AVATAR SYSTEM */
+        .avatar-container {
+            position: relative;
         }
 
         .avatar {
-            width: 50px;
-            height: 50px;
+            width: 54px;
+            height: 54px;
             border-radius: 50%;
-            background: #111827;
+            background: var(--accent-gradient);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 800;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+            border: 2px solid white;
         }
 
+        /* Badge status indicators */
+        .status-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            border: 2.5px solid white;
+        }
+
+            .status-dot.dot-online {
+                background-color: var(--online-color);
+                box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+            }
+
+            .status-dot.dot-offline {
+                background-color: var(--offline-color);
+            }
+
         .name {
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--text-primary);
         }
 
         .last-message {
-            color: #6b7280;
+            color: var(--text-secondary);
             font-size: 13px;
             margin-top: 3px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 320px;
+        }
+
+        /* RIGHT SIDE INDICATORS */
+        .right-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
         }
 
         .online {
-            color: green;
-            font-size: 13px;
+            color: var(--online-color);
+            background: #ecfdf5;
+            padding: 4px 10px;
+            border-radius: 30px;
         }
 
         .offline {
-            color: gray;
-            font-size: 13px;
+            color: var(--text-secondary);
+            background: #f5f5f4;
+            padding: 4px 10px;
+            border-radius: 30px;
         }
 
+        /* EMPTY MESSAGES AND LOADING */
         .empty {
             text-align: center;
-            padding: 40px;
-            color: gray;
+            padding: 60px 24px;
+            color: var(--text-secondary);
         }
 
+        .empty-icon {
+            font-size: 48px;
+            color: var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .empty h3 {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .empty p {
+            font-size: 14px;
+        }
+
+        /* RESPONSIVE DESIGN */
+        @@media (max-width: 768px) {
+            .topbar .menu {
+                display: none;
+            }
+
+            .bottom-nav {
+                display: flex;
+            }
+
+            body {
+                padding-bottom: 80px;
+            }
+
+            .container {
+                margin: 16px;
+                border-radius: 16px;
+            }
+
+            .chat-item {
+                padding: 16px;
+            }
+
+            .last-message {
+                max-width: 200px;
+            }
+        }
     </style>
 </head>
 <body>
 
+    <!-- DESKTOP TOP BAR -->
+    <div class="topbar">
+        <div>
+            <a href="/Customer1" class="brand-logo">
+                <i class="fa-solid fa-shop"></i> realnest
+            </a>
+        </div>
+
+        <div class="menu">
+            <a href="/Customer1"><i class="fa-solid fa-compass"></i> Explore</a>
+            <a href="/CustomerFeed"><i class="fa-solid fa-house"></i> Feed</a>
+            <a href="/CustomerProducts"><i class="fa-solid fa-bag-shopping"></i> Shop</a>
+            <a href="/CustomerCart"><i class="fa-solid fa-cart-shopping"></i> Cart</a>
+            <a href="/CustomerOrders"><i class="fa-solid fa-receipt"></i> Orders</a>
+            <a href="/Chat" class="active"><i class="fa-solid fa-paper-plane"></i> Chat</a>
+            <a href="/CustomerProfile"><i class="fa-solid fa-user"></i> Profile</a>
+        </div>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <div class="bottom-nav">
+        <a href="/Customer1"><i class="fa-solid fa-compass"></i><span>Explore</span></a>
+        <a href="/CustomerFeed"><i class="fa-solid fa-house"></i><span>Feed</span></a>
+        <a href="/CustomerProducts"><i class="fa-solid fa-bag-shopping"></i><span>Shop</span></a>
+        <a href="/CustomerCart"><i class="fa-solid fa-cart-shopping"></i><span>Cart</span></a>
+        <a href="/Chat" class="active"><i class="fa-solid fa-paper-plane"></i><span>Chat</span></a>
+        <a href="/CustomerProfile"><i class="fa-solid fa-user"></i><span>Profile</span></a>
+    </div>
+
+    <!-- INBOX CONTAINER -->
     <div class="container">
 
         <div class="header">
-
-            <h2>Messages</h2>
+            <h2><i class="fa-solid fa-comments"></i> Messages</h2>
 
             <form method="get" class="search-box">
-
                 <input type="text"
                        name="SearchText"
                        value="@Model.SearchText"
@@ -151,9 +477,7 @@
                 <button type="submit">
                     Search
                 </button>
-
             </form>
-
         </div>
 
         @if (!string.IsNullOrWhiteSpace(Model.SearchText))
@@ -173,9 +497,11 @@
                        asp-route-userId="@user.Id">
 
                         <div class="left">
-
-                            <div class="avatar">
-                                @(user.UserName?.Substring(0, 1).ToUpper())
+                            <div class="avatar-container">
+                                <div class="avatar">
+                                    @(user.UserName?.Substring(0, 1).ToUpper())
+                                </div>
+                                <div class="status-dot @(online ? "dot-online" : "dot-offline")"></div>
                             </div>
 
                             <div>
@@ -187,11 +513,11 @@
                                     @user.Email
                                 </div>
                             </div>
-
                         </div>
 
-                        <div class="@(online ? "online" : "offline")">
-                            @(online ? "● Online" : "Offline")
+                        <div class="right-status @(online ? "online" : "offline")">
+                            <i class="fa-solid fa-circle" style="font-size: 8px;"></i>
+                            @(online ? "Online" : "Offline")
                         </div>
 
                     </a>
@@ -200,7 +526,11 @@
             else
             {
                 <div class="empty">
-                    No users found.
+                    <div class="empty-icon">
+                        <i class="fa-regular fa-face-frown"></i>
+                    </div>
+                    <h3>No Users Found</h3>
+                    <p>Try searching for a different username or email address.</p>
                 </div>
             }
         }
@@ -221,13 +551,14 @@
                        asp-route-userId="@chat.UserId">
 
                         <div class="left">
-
-                            <div class="avatar">
-                                @(chat.UserName?.Substring(0, 1).ToUpper())
+                            <div class="avatar-container">
+                                <div class="avatar">
+                                    @(chat.UserName?.Substring(0, 1).ToUpper())
+                                </div>
+                                <div class="status-dot @(online ? "dot-online" : "dot-offline")"></div>
                             </div>
 
                             <div>
-
                                 <div class="name">
                                     @chat.UserName
                                 </div>
@@ -235,13 +566,12 @@
                                 <div class="last-message">
                                     @chat.LastMessage
                                 </div>
-
                             </div>
-
                         </div>
 
-                        <div class="@(online ? "online" : "offline")">
-                            @(online ? "● Online" : "Offline")
+                        <div class="right-status @(online ? "online" : "offline")">
+                            <i class="fa-solid fa-circle" style="font-size: 8px;"></i>
+                            @(online ? "Online" : "Offline")
                         </div>
 
                     </a>
@@ -250,7 +580,11 @@
             else
             {
                 <div class="empty">
-                    No conversations yet.
+                    <div class="empty-icon">
+                        <i class="fa-regular fa-paper-plane"></i>
+                    </div>
+                    <h3>No conversations yet</h3>
+                    <p>Search for stores or users above to start a conversation.</p>
                 </div>
             }
         }

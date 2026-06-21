@@ -5,159 +5,794 @@
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Feed</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>My Feed | realnest</title>
+
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body {
-            background: #f5f5f5;
-            font-family: Arial;
+        :root {
+            --bg-color: #fdfbf7; /* Cozy warm white canvas */
+            --card-bg: #ffffff;
+            --border-color: #f3ece3; /* Soft warm borders */
+            --text-primary: #1c1917; /* Slate dark brown/black */
+            --text-secondary: #78716c; /* Elegant muted stone gray */
+            /* White & Orange Sunset Palette */
+            --accent-color: #ff6b35; /* Radiant bright orange */
+            --accent-hover: #f05a22; /* Rich dark orange */
+            --accent-light: #fff1eb; /* Pastel orange tint */
+            --accent-gradient: linear-gradient(135deg, #ff9f43 0%, #ff5252 100%); /* Orange-to-coral punch */
+
+            --like-color: #ef4444;
+            --success-color: #f59e0b; /* Golden amber orange */
+            --error-color: #ea580c; /* Fiery orange-red */
+            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --shadow-sm: 0 4px 12px rgba(255, 107, 53, 0.04);
+            --shadow-md: 0 10px 30px rgba(255, 107, 53, 0.08);
+            --shadow-lg: 0 20px 40px rgba(255, 107, 53, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
+            padding: 0;
         }
 
-        .feed-container {
-            width: 700px;
-            margin: 30px auto;
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .post {
-            background: white;
-            border-radius: 15px;
-            margin-bottom: 25px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,.08);
-        }
-
-        .post-header {
-            padding: 15px;
+        /* TOP BAR */
+        .topbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(28, 25, 23, 0.02);
         }
 
-        .store-name {
-            font-weight: bold;
+        .brand-logo {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
             text-decoration: none;
-            color: black;
+            background: linear-gradient(135deg, #ff9f43 0%, #ff6b35 50%, #f05a22 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .brand-logo i {
+                font-size: 20px;
+                background: linear-gradient(135deg, #ff9f43 0%, #ff6b35 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+        .menu {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+            .menu a {
+                color: var(--text-primary);
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                padding: 8px 14px;
+                border-radius: 50px;
+            }
+
+                .menu a i {
+                    font-size: 16px;
+                    color: var(--text-secondary);
+                    transition: color 0.2s ease;
+                }
+
+                .menu a:hover {
+                    color: var(--accent-color);
+                    background-color: var(--accent-light);
+                }
+
+                    .menu a:hover i {
+                        color: var(--accent-color);
+                    }
+
+                .menu a.active {
+                    color: #ffffff;
+                    background: var(--accent-gradient);
+                    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+                }
+
+                    .menu a.active i {
+                        color: #ffffff;
+                    }
+
+        /* BOTTOM NAV FOR MOBILE */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 68px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid var(--border-color);
+            z-index: 1000;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+            .bottom-nav a {
+                color: var(--text-secondary);
+                text-decoration: none;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                font-size: 10px;
+                font-weight: 600;
+                flex: 1;
+                transition: color 0.2s ease;
+            }
+
+                .bottom-nav a i {
+                    font-size: 20px;
+                    transition: transform 0.2s ease;
+                }
+
+                .bottom-nav a:active i {
+                    transform: scale(0.85);
+                }
+
+                .bottom-nav a.active {
+                    color: var(--accent-color);
+                }
+
+        /* CATEGORIES NAVBAR (Instagram Stories visual style) */
+        .category-navbar {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 20px 24px;
+            margin: 15px auto;
+            max-width: 650px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+            .category-navbar::-webkit-scrollbar {
+                display: none;
+            }
+
+            .category-navbar a {
+                text-decoration: none;
+                padding: 10px 20px;
+                border-radius: 50px;
+                background: var(--card-bg);
+                color: var(--text-primary);
+                border: 1px solid var(--border-color);
+                font-size: 13px;
+                font-weight: 700;
+                white-space: nowrap;
+                transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                box-shadow: var(--shadow-sm);
+            }
+
+                .category-navbar a:hover {
+                    border-color: var(--accent-color);
+                    color: var(--accent-color);
+                    transform: translateY(-2px);
+                }
+
+        .active-category {
+            background: var(--accent-gradient) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.35) !important;
+        }
+
+        /* FEED CONTAINER */
+        .feed-container {
+            max-width: 650px;
+            margin: 0 auto 60px auto;
+            padding: 0 16px;
+        }
+
+        /* FEED POST CARD (Explorative visual updates) */
+        .post {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 32px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+            .post:hover {
+                transform: translateY(-3px);
+                box-shadow: var(--shadow-lg);
+            }
+
+        .post-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* POST HEADER */
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--card-bg);
+        }
+
+        .store-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .store-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            padding: 2.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 10px rgba(255, 107, 53, 0.2);
+        }
+
+            .store-avatar span {
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                background: var(--card-bg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                font-weight: 800;
+                color: var(--accent-color);
+            }
+
+        .store-name {
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+
+            .store-name:hover {
+                color: var(--accent-color);
+            }
+
+        .btn-follow-action {
+            font-size: 13px;
+            font-weight: 700;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: all 0.25s ease;
+        }
+
+        .btn-follow {
+            color: #ffffff;
+            background: var(--accent-gradient);
+            box-shadow: 0 4px 10px rgba(255, 107, 53, 0.2);
+        }
+
+            .btn-follow:hover {
+                opacity: 0.9;
+                transform: scale(1.03);
+            }
+
+        .btn-unfollow {
+            color: var(--text-secondary);
+            background-color: #f5f2eb;
+            border: 1px solid var(--border-color);
+        }
+
+            .btn-unfollow:hover {
+                background-color: #ebe6db;
+                color: var(--text-primary);
+            }
+
+        /* IMAGE WRAPPER (Instagram Explore Aspect Grid style) */
+        .post-image-container {
+            width: 100%;
+            aspect-ratio: 1.1 / 1; /* Vibrant squared-landscape crop */
+            overflow: hidden;
+            background-color: #f7f5f0;
+            position: relative;
         }
 
         .post-image {
             width: 100%;
-            height: 350px;
+            height: 100%;
             object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .post-body {
-            padding: 15px;
+        .post:hover .post-image {
+            transform: scale(1.04);
+        }
+
+        /* PRODUCT INFORMATION */
+        .product-meta {
+            margin-top: 4px;
+        }
+
+        .product-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 10px;
         }
 
         .product-name {
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.3;
         }
 
         .product-price {
-            color: #ff6600;
-            font-weight: bold;
-            margin: 5px 0;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--accent-color);
+            background: var(--accent-light);
+            padding: 4px 12px;
+            border-radius: 30px;
+            white-space: nowrap;
         }
 
+        .product-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        /* ACTIONS BAR */
         .actions {
-            margin-top: 15px;
             display: flex;
-            gap: 10px;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            margin-bottom: 16px;
             flex-wrap: wrap;
         }
 
-        .btn {
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: none;
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 50px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
             cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            transition: all 0.25s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+            .btn-action i {
+                font-size: 14px;
+            }
+
+            .btn-action:hover {
+                background: #fffdfa;
+                border-color: var(--accent-color);
+                color: var(--accent-color);
+                transform: translateY(-1px);
+            }
+
+        .btn-feed-wishlist {
+            color: var(--like-color);
+            border-color: #ffd1cc;
+            background: #fff5f5;
+        }
+
+            .btn-feed-wishlist:hover {
+                background: #ffe3e1;
+                border-color: var(--like-color);
+                color: var(--like-color);
+            }
+
+        .btn-feed-cart {
+            background: var(--accent-gradient);
+            color: #ffffff;
+            border: none;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
+        }
+
+            .btn-feed-cart:hover {
+                color: #ffffff;
+                opacity: 0.95;
+                box-shadow: 0 6px 15px rgba(255, 107, 53, 0.35);
+            }
+
+        .btn-feed-share {
+            color: var(--text-secondary);
+        }
+
+            .btn-feed-share:hover {
+                color: var(--accent-color);
+                border-color: var(--accent-color);
+                background: var(--accent-light);
+            }
+
+        /* COMMENT INPUT METAPHOR (AddReview Form) */
+        .comment-form {
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+            margin-top: 12px;
+        }
+
+        .comment-inputs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rating-input {
+            width: 84px;
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            padding: 10px 12px;
+            font-size: 13px;
+            text-align: center;
+            outline: none;
+            background: var(--bg-color);
+            font-family: var(--font-family);
+            font-weight: 700;
+            color: var(--accent-color);
+            transition: all 0.2s ease;
+        }
+
+            .rating-input:focus {
+                border-color: var(--accent-color);
+                background: #ffffff;
+            }
+
+        .comment-text-input {
+            flex-grow: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-size: 13px;
+            outline: none;
+            font-family: var(--font-family);
+            transition: all 0.2s ease;
+            background: var(--bg-color);
+        }
+
+            .comment-text-input:focus {
+                border-color: var(--accent-color);
+                background: #ffffff;
+            }
+
+        .btn-post-comment {
+            background: transparent;
+            border: none;
+            color: var(--accent-color);
+            font-weight: 700;
             font-size: 14px;
+            cursor: pointer;
+            padding: 0 12px;
+            transition: all 0.2s ease;
         }
 
-        .btn-review {
-            background: #2563eb;
-            color: white;
-        }
+            .btn-post-comment:hover {
+                color: var(--accent-hover);
+                transform: scale(1.05);
+            }
 
-        .btn-cart {
-            background: #16a34a;
-            color: white;
-        }
-
-        .btn-share {
-            background: #111827;
-            color: white;
-        }
-
-        .btn-follow {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .btn-unfollow {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
+        /* COMMENTS DISPLAY SECTION */
         .comments-section {
-            margin-top: 15px;
-            border-top: 1px solid #eee;
-            padding-top: 15px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border-color);
         }
+
+        .comments-header-label {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .comments-header-label::after {
+                content: '';
+                flex-grow: 1;
+                height: 1px;
+                background: var(--border-color);
+            }
 
         .comment {
             padding: 10px 0;
-            border-bottom: 1px solid #f1f1f1;
+            border-bottom: 1px solid #faf8f5;
+            font-size: 13px;
         }
 
-            .comment strong {
-                margin-right: 8px;
+            .comment:last-child {
+                border-bottom: none;
             }
 
-            .comment span {
-                color: #f59e0b;
+        .comment-author-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .comment-author {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .comment-stars {
+            color: #f59e0b;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .comment-text {
+            color: #44403c;
+            line-height: 1.5;
+        }
+
+        /* EMPTY STATE */
+        .empty-message {
+            text-align: center;
+            padding: 80px 30px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 2px dashed #e5dec9;
+            color: var(--text-secondary);
+            margin-top: 30px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .empty-icon {
+            font-size: 54px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .empty-message h3 {
+            margin-bottom: 10px;
+            color: var(--text-primary);
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .empty-message p {
+            font-size: 14px;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        /* TOAST NOTIFICATIONS */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 380px;
+            width: calc(100% - 48px);
+        }
+
+        .toast {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 16px 20px;
+            box-shadow: 0 15px 35px rgba(28, 25, 23, 0.12);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
+            border-left: 5px solid var(--border-color);
+        }
+
+            .toast.toast-success {
+                border-left-color: var(--success-color);
             }
 
-            .category-navbar {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding: 12px 0;
-    margin-bottom: 20px;
-}
+                .toast.toast-success i {
+                    color: var(--success-color);
+                    font-size: 18px;
+                }
 
-.category-navbar a {
-    text-decoration: none;
-    padding: 8px 18px;
-    border-radius: 20px;
-    background: #f1f1f1;
-    color: #333;
-    white-space: nowrap;
-    transition: .2s;
-}
+            .toast.toast-error {
+                border-left-color: var(--error-color);
+            }
 
-.category-navbar a:hover {
-    background: #2563eb;
-    color: white;
-}
+                .toast.toast-error i {
+                    color: var(--error-color);
+                    font-size: 18px;
+                }
 
-.active-category {
-    background: #2563eb !important;
-    color: white !important;
-}
+        .toast-message {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex-grow: 1;
+        }
+
+        .toast-close {
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            line-height: 1;
+            transition: color 0.15s ease;
+        }
+
+            .toast-close:hover {
+                color: var(--text-primary);
+            }
+
+        @@keyframes slideIn {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* RESPONSIVE DESIGN */
+        @@media (max-width: 768px) {
+            .topbar {
+                padding: 12px 16px;
+            }
+
+            .brand-logo {
+                font-size: 22px;
+            }
+
+            .topbar .menu {
+                display: none;
+            }
+
+            .bottom-nav {
+                display: flex;
+            }
+
+            body {
+                padding-bottom: 80px;
+            }
+
+            .feed-container {
+                padding: 0 12px;
+            }
+
+            .post {
+                border-radius: 16px;
+                margin-bottom: 20px;
+            }
+
+            .post-body {
+                padding: 16px;
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <div class="category-navbar">
+    <!-- TOAST NOTIFICATIONS (Success/Error Message Area) -->
+    <div class="toast-container">
+        @if (TempData["Success"] != null)
+        {
+            <div class="toast toast-success">
+                <i class="fa-solid fa-circle-check"></i>
+                <div class="toast-message">@TempData["Success"]</div>
+                <button type="button" class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+        }
 
+        @if (TempData["Error"] != null)
+        {
+            <div class="toast toast-error">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <div class="toast-message">@TempData["Error"]</div>
+                <button type="button" class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+        }
+    </div>
+
+    <!-- DESKTOP TOP BAR -->
+    <div class="topbar">
+        <div>
+            <a href="/Customer1" class="brand-logo">
+                <i class="fa-solid fa-shop"></i> realnest
+            </a>
+        </div>
+
+        <div class="menu">
+            <a href="/Customer1"><i class="fa-solid fa-compass"></i> Explore</a>
+            <a href="/CustomerFeed" class="active"><i class="fa-solid fa-house"></i> Feed</a>
+            <a href="/CustomerProducts"><i class="fa-solid fa-bag-shopping"></i> Shop</a>
+            <a href="/CustomerCart"><i class="fa-solid fa-cart-shopping"></i> Cart</a>
+            <a href="/CustomerOrders"><i class="fa-solid fa-receipt"></i> Orders</a>
+            <a href="/Chat"><i class="fa-solid fa-paper-plane"></i> Chat</a>
+            <a href="/CustomerProfile"><i class="fa-solid fa-user"></i> Profile</a>
+        </div>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <div class="bottom-nav">
+        <a href="/Customer1"><i class="fa-solid fa-compass"></i><span>Explore</span></a>
+        <a href="/CustomerFeed" class="active"><i class="fa-solid fa-house"></i><span>Feed</span></a>
+        <a href="/CustomerProducts"><i class="fa-solid fa-bag-shopping"></i><span>Shop</span></a>
+        <a href="/CustomerCart"><i class="fa-solid fa-cart-shopping"></i><span>Cart</span></a>
+        <a href="/Chat"><i class="fa-solid fa-paper-plane"></i><span>Chat</span></a>
+        <a href="/CustomerProfile"><i class="fa-solid fa-user"></i><span>Profile</span></a>
+    </div>
+
+    <!-- STORIES / CATEGORY NAVIGATION -->
+    <div class="category-navbar">
         <a asp-page="/CustomerFeed"
            class="@(string.IsNullOrEmpty(Model.SelectedCategory) ? "active-category" : "")">
             All
@@ -172,150 +807,200 @@
             <a asp-page="/CustomerFeed"
                asp-route-category="@(category == "All" ? null : category)"
                class="@(isActive ? "active-category" : "")">
-
                 @category
             </a>
         }
-
     </div>
 
+    <!-- FEED CONTAINER -->
     <div class="feed-container">
 
-        @foreach (var product in Model.Products)
+        @if (Model.Products != null && Model.Products.Any())
         {
-            var img = product.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
-            var isFollowing = Model.FollowingStoreIds.Contains(product.StoreID);
+            foreach (var product in Model.Products)
+            {
+                var img = product.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+                var isFollowing = Model.FollowingStoreIds.Contains(product.StoreID);
 
-            <div class="post">
+                <div class="post">
 
-                <div class="post-header">
+                    <!-- POST HEADER -->
+                    <div class="post-header">
+                        <div class="store-profile">
+                            <div class="store-avatar">
+                                <span>
+                                    @if (!string.IsNullOrEmpty(product.Store?.StoreName))
+                                    {
+                                        @product.Store.StoreName.Substring(0, 1).ToUpper()
+                                    }
+                                    else
+                                    {
+                                        @:S
+                                    }
+                                </span>
+                            </div>
+                            <a class="store-name"
+                               asp-page="/StoreCustomerProfile"
+                               asp-route-id="@product.StoreID">
+                                @product.Store?.StoreName
+                            </a>
+                        </div>
 
-                    <!-- STORE NAME → PROFILE -->
-                    <a class="store-name"
-                       asp-page="/StoreCustomerProfile"
-                       asp-route-id="@product.StoreID">
-                        @product.Store?.StoreName
-                    </a>
-
-                    <!-- FOLLOW / UNFOLLOW -->
-                    @if (isFollowing)
-                    {
-                        <form method="post"
-                              asp-page-handler="UnfollowStore"
-                              asp-route-storeId="@product.StoreID">
-                            <button class="btn btn-unfollow">Unfollow</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <form method="post"
-                              asp-page-handler="FollowStore"
-                              asp-route-storeId="@product.StoreID">
-                            <button class="btn btn-follow">Follow</button>
-                        </form>
-                    }
-
-                </div>
-
-                <img class="post-image" src="@img" />
-
-                <div class="post-body">
-
-                    <div class="product-name">@product.ProductName</div>
-                    <div class="product-price">$@product.Price</div>
-                    <p>@product.Description</p>
-
-                    <div class="actions">
-
-                        <form method="post"
-                              asp-page-handler="AddReview">
-
-                            <input type="hidden"
-                                   name="productId"
-                                   value="@product.ProductID" />
-
-                            <input type="number"
-                                   name="rating"
-                                   min="1"
-                                   max="5"
-                                   placeholder="Rating"
-                                   required />
-
-                            <input type="text"
-                                   name="comment"
-                                   placeholder="Write a comment..."
-                                   required />
-
-                            <button class="btn btn-review">
-                                Post Comment
-                            </button>
-
-                        </form>
-
-                        <form method="post"
-                              asp-page="/Customer1"
-                              asp-page-handler="AddToCart"
-                              asp-route-productId="@product.ProductID">
-                            <button class="btn btn-cart">🛒 Add</button>
-                        </form>
-                        <form method="post"
-                              asp-page-handler="AddWishlist"
-                              asp-route-productId="@product.ProductID">
-
-                            <button class="btn btn-review" style="background:#e11d48;color:white;">
-                                ❤️ Wishlist
-                            </button>
-
-                        </form>
-
-                        <!-- ✅ FIXED SHARE BUTTON (WILL WORK WITH YOUR HANDLER) -->
-                        <form method="post"
-                              asp-page-handler="ShareToStore"
-                              asp-route-productId="@product.ProductID"
-                              asp-route-storeOwnerId="@product.Store.OwnerUserID">
-
-                            <button type="submit" class="btn btn-share">
-                                🔗 Share
-                            </button>
-
-                        </form>
-
-                    </div>
-                    <div class="comments-section">
-
-                        @if (product.Reviews.Any())
+                        <!-- FOLLOW / UNFOLLOW -->
+                        @if (isFollowing)
                         {
-                            @foreach (var review in product.Reviews
-                           .Where(r => r.Status == "Approved")
-                           .OrderByDescending(r => r.CreatedAt))
-                            {
-                                <div class="comment">
-
-                                    <strong>
-                                        
-                                            @review.Customer.User.FullName
-                                       
-                                    </strong>
-
-                                    <span>
-                                        ⭐ @review.Rating
-                                    </span>
-
-                                    <div>
-                                        @review.Comment
-                                    </div>
-
-                                </div>
-                            }
+                            <form method="post"
+                                  asp-page-handler="UnfollowStore"
+                                  asp-route-storeId="@product.StoreID"
+                                  style="margin: 0;">
+                                <button class="btn-follow-action btn-unfollow">Following</button>
+                            </form>
                         }
-
+                        else
+                        {
+                            <form method="post"
+                                  asp-page-handler="FollowStore"
+                                  asp-route-storeId="@product.StoreID"
+                                  style="margin: 0;">
+                                <button class="btn-follow-action btn-follow">Follow</button>
+                            </form>
+                        }
                     </div>
 
+                    <!-- POST IMAGE -->
+                    <div class="post-image-container">
+                        <img class="post-image" src="@img" alt="@product.ProductName" loading="lazy" />
+                    </div>
+
+                    <!-- POST BODY -->
+                    <div class="post-body">
+
+                        <!-- PRODUCT DETAILS -->
+                        <div class="product-meta">
+                            <div class="product-title-row">
+                                <span class="product-name">@product.ProductName</span>
+                                <span class="product-price">$@product.Price</span>
+                            </div>
+                            <p class="product-description">@product.Description</p>
+                        </div>
+
+                        <!-- ACTIONS FOOTER -->
+                        <div class="actions">
+
+                            <!-- ADD TO CART -->
+                            <form method="post"
+                                  asp-page="/Customer1"
+                                  asp-page-handler="AddToCart"
+                                  asp-route-productId="@product.ProductID"
+                                  style="margin: 0;">
+                                <button class="btn-action btn-feed-cart">
+                                    <i class="fa-solid fa-bag-shopping"></i> Add to Cart
+                                </button>
+                            </form>
+
+                            <!-- WISHLIST (LIKE) -->
+                            <form method="post"
+                                  asp-page-handler="AddWishlist"
+                                  asp-route-productId="@product.ProductID"
+                                  style="margin: 0;">
+                                <button class="btn-action btn-feed-wishlist">
+                                    <i class="fa-regular fa-heart"></i> Wishlist
+                                </button>
+                            </form>
+
+                            <!-- SHARE HANDLER -->
+                            <form method="post"
+                                  asp-page-handler="ShareToStore"
+                                  asp-route-productId="@product.ProductID"
+                                  asp-route-storeOwnerId="@product.Store.OwnerUserID"
+                                  style="margin: 0;">
+                                <button type="submit" class="btn-action btn-feed-share">
+                                    <i class="fa-regular fa-paper-plane"></i> Share
+                                </button>
+                            </form>
+
+                        </div>
+
+                        <!-- INSTAGRAM-STYLE COMMENT COMPOSER -->
+                        <form method="post" asp-page-handler="AddReview" class="comment-form">
+                            <input type="hidden" name="productId" value="@product.ProductID" />
+                            <div class="comment-inputs">
+                                <input type="number"
+                                       name="rating"
+                                       min="1"
+                                       max="5"
+                                       class="rating-input"
+                                       placeholder="⭐ Rating"
+                                       required />
+
+                                <input type="text"
+                                       name="comment"
+                                       class="comment-text-input"
+                                       placeholder="Add a comment..."
+                                       required />
+
+                                <button class="btn-post-comment" type="submit">Post</button>
+                            </div>
+                        </form>
+
+                        <!-- COMMENTS LIST -->
+                        <div class="comments-section">
+                            @if (product.Reviews != null && product.Reviews.Any())
+                            {
+                                <div class="comments-header-label">Comments</div>
+                                @foreach (var review in product.Reviews
+                               .Where(r => r.Status == "Approved")
+                               .OrderByDescending(r => r.CreatedAt))
+                                {
+                                    <div class="comment">
+                                        <div class="comment-author-row">
+                                            <span class="comment-author">@review.Customer?.User?.FullName</span>
+                                            <span class="comment-stars">
+                                                @for (var i = 0; i < review.Rating; i++)
+                                                {
+                                                    @:⭐
+                                                }
+                                            </span>
+                                        </div>
+                                        <div class="comment-text">
+                                            @review.Comment
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+
+                    </div>
                 </div>
+            }
+        }
+        else
+        {
+            <div class="empty-message">
+                <div class="empty-icon">
+                    <i class="fa-regular fa-folder-open"></i>
+                </div>
+                <h3>Your Feed is Empty</h3>
+                <p>Follow local store owners to see their exclusive products and updates listed here.</p>
             </div>
         }
 
     </div>
+
+    <!-- Toast Alert Auto-Dismiss Logic -->
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const toasts = document.querySelectorAll('.toast');
+                toasts.forEach(toast => {
+                    toast.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-10px)';
+                    setTimeout(() => toast.remove(), 500);
+                });
+            }, 4000);
+        });
+    </script>
 
 </body>
 </html>
