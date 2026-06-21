@@ -1,5 +1,6 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.AdminAssignDeliveryModel
+
 @{
     ViewData["Title"] = "Assign Delivery";
 }
@@ -16,7 +17,7 @@
         background: white;
         padding: 25px;
         border-radius: 18px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
         border: 1px solid #e5e7eb;
     }
 
@@ -46,54 +47,6 @@
         border: 1px solid #fca5a5;
     }
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    th {
-        background: #111827;
-        color: white;
-        padding: 12px;
-        text-align: left;
-        font-size: 14px;
-    }
-
-    td {
-        padding: 12px;
-        border-bottom: 1px solid #e5e7eb;
-        color: #374151;
-        vertical-align: middle;
-    }
-
-    select {
-        padding: 8px;
-        border-radius: 10px;
-        border: 1px solid #d1d5db;
-        width: 220px;
-    }
-
-    button {
-        background: #111827;
-        color: white;
-        border: none;
-        padding: 9px 14px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: 800;
-    }
-
-        button:hover {
-            background: #ff6b35;
-        }
-
-    .empty {
-        text-align: center;
-        color: #6b7280;
-        padding: 35px;
-        font-weight: 700;
-    }
-
     .top-links {
         display: flex;
         justify-content: space-between;
@@ -113,12 +66,107 @@
 
         .link-btn:hover {
             background: #ff6b35;
+            color: white;
         }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: #111827;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 12px;
+        border-bottom: 1px solid #e5e7eb;
+        color: #374151;
+        vertical-align: middle;
+    }
+
+    tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    select {
+        padding: 9px 10px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        width: 240px;
+        max-width: 100%;
+        background: white;
+        outline: none;
+    }
+
+        select:focus {
+            border-color: #111827;
+            box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.10);
+        }
+
+    button {
+        background: #111827;
+        color: white;
+        border: none;
+        padding: 9px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 800;
+    }
+
+        button:hover:not(:disabled) {
+            background: #ff6b35;
+        }
+
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.75;
+        }
+
+    .empty {
+        text-align: center;
+        color: #6b7280;
+        padding: 35px;
+        font-weight: 700;
+    }
+
+    .no-delivery {
+        display: inline-block;
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .customer-info {
+        display: block;
+        color: #6b7280;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .order-number {
+        font-weight: 800;
+        color: #111827;
+    }
 
     @@media (max-width: 850px) {
         .assign-page {
-            overflow-x: auto;
             margin: 20px;
+            padding: 18px;
         }
 
         table {
@@ -128,30 +176,34 @@
 </style>
 
 <div class="assign-page">
+
     <h2>Assign Delivery Person to Order</h2>
 
     <div class="top-links">
-        <a href="/AdminDelivery" class="link-btn">Delivery Requests</a>
-        <a href="/CustomerOrders" class="link-btn">View Orders</a>
+        <a href="/AdminDelivery" class="link-btn">
+            Delivery Requests
+        </a>
+
+        <a href="/AdminOrders" class="link-btn">
+            View Orders
+        </a>
     </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="message success">@TempData["Success"]</div>
+        <div class="message success">
+            @TempData["Success"]
+        </div>
     }
 
     @if (TempData["Error"] != null)
     {
-        <div class="message error">@TempData["Error"]</div>
-    }
-
-    @if (Model.DeliveryPeople == null || !Model.DeliveryPeople.Any())
-    {
-        <div class="empty">
-            No approved delivery persons found. Approve a delivery request first.
+        <div class="message error">
+            @TempData["Error"]
         </div>
     }
-    else if (Model.Orders == null || !Model.Orders.Any())
+
+    @if (Model.Orders == null || !Model.Orders.Any())
     {
         <div class="empty">
             No unassigned orders available for delivery assignment.
@@ -159,52 +211,102 @@
     }
     else
     {
-        <table>
-            <thead>
-                <tr>
-                    <th>Order Number</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Total</th>
-                    <th>Assign Delivery Person</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var order in Model.Orders)
-                {
+        <div class="table-responsive">
+            <table>
+                <thead>
                     <tr>
-                        <td>@order.OrderNumber</td>
-                        <td>@order.OrderDate.ToString("dd MMM yyyy HH:mm")</td>
-                        <td>@order.Status</td>
-                        <td>$@order.TotalAmount.ToString("N2")</td>
-
-                        <td>
-                            <form method="post" asp-page-handler="Assign" id="assignForm_@order.OrderID">
-                                <input type="hidden" name="orderId" value="@order.OrderID" />
-
-                                <select name="deliveryPersonId" required>
-                                    <option value="">Select delivery</option>
-
-                                    @foreach (var d in Model.DeliveryPeople)
-                                    {
-                                        <option value="@d.DeliveryPersonID">
-                                            @d.FullName - @d.Area - @d.VehicleType
-                                        </option>
-                                    }
-                                </select>
-                            </form>
-                        </td>
-
-                        <td>
-                            <button type="submit" form="assignForm_@order.OrderID">
-                                Assign
-                            </button>
-                        </td>
+                        <th>Order Number</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Assign Delivery Person</th>
+                        <th>Action</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                    @foreach (var order in Model.Orders)
+                    {
+                        var formId = $"assignForm_{order.OrderID}";
+
+                        <tr>
+                            <td>
+                                <span class="order-number">
+                                    @order.OrderNumber
+                                </span>
+
+                                <span class="customer-info">
+                                    Customer ID: @order.CustomerID
+                                </span>
+                            </td>
+
+                            <td>
+                                @order.OrderDate.ToString("dd MMM yyyy HH:mm")
+                            </td>
+
+                            <td>
+                                @order.Status
+                            </td>
+
+                            <td>
+                                $@order.TotalAmount.ToString("N2")
+                            </td>
+
+                            <td>
+                                @if (order.AvailableDeliveryPeople != null &&
+                               order.AvailableDeliveryPeople.Any())
+                                {
+                                    <form method="post"
+                                          asp-page-handler="Assign"
+                                          id="@formId">
+
+                                        <input type="hidden"
+                                               name="orderId"
+                                               value="@order.OrderID" />
+
+                                        <select name="deliveryPersonId" required>
+                                            <option value="">
+                                                Select delivery
+                                            </option>
+
+                                            @foreach (var delivery in order.AvailableDeliveryPeople)
+                                            {
+                                                <option value="@delivery.DeliveryPersonID">
+                                                    @delivery.FullName - @delivery.Area - @delivery.VehicleType
+                                                </option>
+                                            }
+                                        </select>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="no-delivery">
+                                        No eligible delivery person
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (order.AvailableDeliveryPeople != null &&
+                               order.AvailableDeliveryPeople.Any())
+                                {
+                                    <button type="submit"
+                                            form="@formId">
+                                        Assign
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button" disabled>
+                                        Unavailable
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
+
 </div>

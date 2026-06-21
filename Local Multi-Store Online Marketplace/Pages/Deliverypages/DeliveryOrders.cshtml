@@ -1,0 +1,522 @@
+﻿@page "/DeliveryOrders"
+@model Local_Multi_Store_Online_Marketplace.Pages.Deliverypages.DeliveryOrdersModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Delivery Orders</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f6f9;
+            font-family: Arial, sans-serif;
+            color: #111827;
+        }
+
+        .page {
+            min-height: 100vh;
+            padding: 35px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .page-header {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+            .page-header h1 {
+                margin: 0 0 8px;
+                font-size: 28px;
+            }
+
+            .page-header p {
+                margin: 0;
+                color: #6b7280;
+            }
+
+        .dashboard-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #111827;
+            color: white;
+            padding: 11px 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 800;
+        }
+
+            .dashboard-link:hover {
+                background: #ff6b35;
+            }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
+        }
+
+            .stat-card span {
+                display: block;
+                color: #6b7280;
+                font-size: 13px;
+                font-weight: 700;
+                margin-bottom: 8px;
+            }
+
+            .stat-card strong {
+                font-size: 26px;
+                color: #111827;
+            }
+
+        .filters {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-link {
+            text-decoration: none;
+            padding: 9px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 800;
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+            .filter-link:hover {
+                background: #e5e7eb;
+            }
+
+            .filter-link.active {
+                background: #1e3a5f;
+                color: white;
+            }
+
+        .message {
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            font-weight: 800;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .orders-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .order-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.05);
+        }
+
+        .order-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .order-number {
+            margin: 0;
+            font-size: 20px;
+            color: #111827;
+        }
+
+        .order-id {
+            color: #6b7280;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .badge-assigned {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-out {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-delivered {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-default {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+
+        .detail-item {
+            background: #f9fafb;
+            border: 1px solid #eef2f7;
+            padding: 13px;
+            border-radius: 12px;
+        }
+
+            .detail-item span {
+                display: block;
+                color: #6b7280;
+                font-size: 12px;
+                font-weight: 700;
+                margin-bottom: 5px;
+            }
+
+            .detail-item strong {
+                color: #111827;
+                font-size: 14px;
+                word-break: break-word;
+            }
+
+        .order-actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 11px;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .manage-link {
+            background: #111827;
+            color: white;
+        }
+
+            .manage-link:hover {
+                background: #ff6b35;
+            }
+
+        .empty-box {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 50px 20px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+            .empty-box h3 {
+                margin: 0 0 8px;
+                color: #111827;
+            }
+
+        @@media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @@media (max-width: 650px) {
+            .page {
+                padding: 20px 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header {
+                padding: 18px;
+            }
+
+            .order-card {
+                padding: 17px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <partial name="_DeliveryNav" />
+
+    <div class="page">
+        <div class="container">
+
+            <div class="page-header">
+                <div>
+                    <h1>My Delivery Orders</h1>
+                    <p>
+                        View assigned, active, completed, and cancelled deliveries.
+                    </p>
+                </div>
+
+                <a href="/DeliveryDashboard" class="dashboard-link">
+                    🚚 Open Dashboard
+                </a>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <div class="message error">
+                    @Model.ErrorMessage
+                </div>
+            }
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span>Total Orders</span>
+                    <strong>@Model.TotalCount</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Assigned</span>
+                    <strong>@Model.AssignedCount</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Out for Delivery</span>
+                    <strong>@Model.OutForDeliveryCount</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Delivered</span>
+                    <strong>@Model.DeliveredCount</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Cancelled / Failed</span>
+                    <strong>@Model.CancelledCount</strong>
+                </div>
+            </div>
+
+            <div class="filters">
+                <a href="/DeliveryOrders?StatusFilter=All"
+                   class="filter-link @(Model.StatusFilter == "All" ? "active" : "")">
+                    All
+                </a>
+
+                <a href="/DeliveryOrders?StatusFilter=Assigned"
+                   class="filter-link @(Model.StatusFilter == "Assigned" ? "active" : "")">
+                    Assigned
+                </a>
+
+                <a href="/DeliveryOrders?StatusFilter=OutForDelivery"
+                   class="filter-link @(Model.StatusFilter == "OutForDelivery" ? "active" : "")">
+                    Out for Delivery
+                </a>
+
+                <a href="/DeliveryOrders?StatusFilter=Delivered"
+                   class="filter-link @(Model.StatusFilter == "Delivered" ? "active" : "")">
+                    Delivered
+                </a>
+
+                <a href="/DeliveryOrders?StatusFilter=Cancelled"
+                   class="filter-link @(Model.StatusFilter == "Cancelled" ? "active" : "")">
+                    Cancelled / Failed
+                </a>
+            </div>
+
+            @if (Model.Orders == null || !Model.Orders.Any())
+            {
+                <div class="empty-box">
+                    <h3>No delivery orders found</h3>
+                    <p>
+                        Orders assigned by the admin will appear here.
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="orders-list">
+
+                    @foreach (var order in Model.Orders)
+                    {
+                        var cleanStatus = order.AssignmentStatus?.Trim();
+
+                        var badgeClass =
+                        cleanStatus == "Assigned"
+                        ? "badge-assigned"
+                        : cleanStatus == "OutForDelivery"
+                        ? "badge-out"
+                        : cleanStatus == "Delivered"
+                        ? "badge-delivered"
+                        : cleanStatus == "Cancelled" ||
+                        cleanStatus == "Failed"
+                        ? "badge-cancelled"
+                        : "badge-default";
+
+                        var displayStatus =
+                        cleanStatus == "OutForDelivery"
+                        ? "Out for Delivery"
+                        : cleanStatus;
+
+                        <div class="order-card">
+
+                            <div class="order-card-header">
+                                <div>
+                                    <h2 class="order-number">
+                                        Order @order.OrderNumber
+                                    </h2>
+
+                                    <div class="order-id">
+                                        Order ID: @order.OrderID
+                                    </div>
+                                </div>
+
+                                <div class="badges">
+                                    <span class="badge @badgeClass">
+                                        @displayStatus
+                                    </span>
+
+                                    <span class="badge badge-default">
+                                        @order.OrderStatus
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="details-grid">
+
+                                <div class="detail-item">
+                                    <span>Customer Address</span>
+                                    <strong>@order.CustomerAddress</strong>
+                                </div>
+
+                                <div class="detail-item">
+                                    <span>Total Amount</span>
+                                    <strong>$@order.TotalAmount.ToString("0.00")</strong>
+                                </div>
+
+                                <div class="detail-item">
+                                    <span>Payment Method</span>
+                                    <strong>@order.PaymentMethod</strong>
+                                </div>
+
+                                <div class="detail-item">
+                                    <span>Payment Status</span>
+                                    <strong>@order.PaymentStatus</strong>
+                                </div>
+
+                                <div class="detail-item">
+                                    <span>Assigned At</span>
+                                    <strong>@Model.FormatLocalTime(order.AssignedAt)</strong>
+                                </div>
+
+                                <div class="detail-item">
+                                    <span>Pickup Time</span>
+                                    <strong>@Model.FormatLocalTime(order.PickupTime)</strong>
+                                </div>
+
+                                <div class="detail-item">
+                                    <span>Delivery Time</span>
+                                    <strong>@Model.FormatLocalTime(order.DeliveryTime)</strong>
+                                </div>
+
+                                <div class="detail-item">
+                                    <span>Assignment Number</span>
+                                    <strong>#@order.AssignmentID</strong>
+                                </div>
+
+                            </div>
+
+                            @if (cleanStatus == "Assigned" ||
+                           cleanStatus == "OutForDelivery")
+                            {
+                                <div class="order-actions">
+                                    <a href="/DeliveryDashboard"
+                                       class="action-link manage-link">
+                                        Manage Delivery
+                                    </a>
+                                </div>
+                            }
+
+                        </div>
+                    }
+
+                </div>
+            }
+
+        </div>
+    </div>
+
+</body>
+</html>

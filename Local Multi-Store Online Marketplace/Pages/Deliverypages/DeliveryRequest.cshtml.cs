@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Multi_Store.Core.Entities;
 using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
+using Microsoft.AspNetCore.Authorization;
 using System;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 {
+    [Authorize(Roles = "Customer")]
     public class DeliveryRequestModel : PageModel
     {
         private readonly DeliveryManager _deliveryManager;
@@ -97,7 +99,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
             }
 
             Delivery.IDProofURL = $"/uploads/delivery-id-proofs/{fileName}";
+
+            // At request time, UserID is temporarily the customer account.
+            // RequestedByUserID permanently keeps the original customer account.
             Delivery.UserID = user.Id;
+            Delivery.RequestedByUserID = user.Id;
 
             try
             {

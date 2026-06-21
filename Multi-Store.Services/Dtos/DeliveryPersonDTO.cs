@@ -9,6 +9,7 @@ namespace Multi_Store.Services.Dtos
         public int DeliveryPersonID { get; set; }
 
         public int UserID { get; set; }
+        public int? RequestedByUserID { get; set; }
 
         [Required(ErrorMessage = "Full name is required.")]
         public string FullName { get; set; } = string.Empty;

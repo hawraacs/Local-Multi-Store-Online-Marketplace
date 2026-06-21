@@ -6,6 +6,7 @@ using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
 using Multi_Store.Core.ViewModels.StoreOwner;
 using Multi_Store.Infrastructure.Data;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 {
@@ -25,6 +26,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 
         [BindProperty]
         public ProductViewModel ProductVM { get; set; } = new();
+        public List<SelectListItem> CategoriesSelectList { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -40,6 +42,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 
             ViewData["StoreName"] = store.StoreName;
             ViewData["StoreId"] = store.StoreID;
+
+            await LoadCategories();
+
             return Page();
         }
 
@@ -55,16 +60,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
                 return RedirectToPage("/StoreOwner/Dashboard");
             }
 
-            // Trim inputs
             ProductVM.ProductName = ProductVM.ProductName?.Trim() ?? "";
             ProductVM.Description = ProductVM.Description?.Trim() ?? "";
-            ProductVM.CategoryName = ProductVM.CategoryName?.Trim() ?? "";
 
             // Validation
             if (string.IsNullOrWhiteSpace(ProductVM.ProductName))
                 ModelState.AddModelError("ProductVM.ProductName", "Product name is required.");
-            if (string.IsNullOrWhiteSpace(ProductVM.CategoryName))
-                ModelState.AddModelError("ProductVM.CategoryName", "Category name is required.");
+            if (ProductVM.CategoryID <= 0)
+                ModelState.AddModelError("ProductVM.CategoryID", "Please select a category.");
             if (ProductVM.Price <= 0)
                 ModelState.AddModelError("ProductVM.Price", "Price must be greater than 0.");
             if (ProductVM.Quantity < 0)
@@ -76,12 +79,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 
             if (!ModelState.IsValid)
             {
+                await LoadCategories();
+
                 ViewData["StoreName"] = store.StoreName;
+
                 return Page();
             }
 
-            // Get or create category
-            var category = await GetOrCreateCategoryAsync(ProductVM.CategoryName);
+            var category = await _context.Categories
+    .FirstOrDefaultAsync(c =>
+        c.CategoryID == ProductVM.CategoryID &&
+        c.IsActive);
+
+            if (category == null)
+            {
+                ModelState.AddModelError("", "Selected category is invalid.");
+
+                await LoadCategories();
+
+                return Page();
+            }
 
             // Generate unique slug
             string slug = GenerateSlug(ProductVM.ProductName);
@@ -119,35 +136,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
             return RedirectToPage("/StoreOwner/Products/Index");
         }
 
-        private async Task<Category> GetOrCreateCategoryAsync(string categoryName)
+        
+        private async Task LoadCategories()
         {
-            var existing = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == categoryName.ToLower());
-            if (existing != null)
-            {
-                if (!existing.IsActive) existing.IsActive = true;
-                await _context.SaveChangesAsync();
-                return existing;
-            }
-
-            string slug = GenerateSlug(categoryName);
-            string original = slug;
-            int count = 1;
-            while (await _context.Categories.AnyAsync(c => c.CategorySlug == slug))
-                slug = $"{original}-{count++}";
-
-            int maxOrder = await _context.Categories.AnyAsync() ? await _context.Categories.MaxAsync(c => c.DisplayOrder) + 1 : 1;
-            var newCategory = new Category
-            {
-                CategoryName = categoryName,
-                CategorySlug = slug,
-                IsActive = true,
-                DisplayOrder = maxOrder
-            };
-            _context.Categories.Add(newCategory);
-            await _context.SaveChangesAsync();
-            return newCategory;
+            CategoriesSelectList = await _context.Categories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.ParentCategoryID)
+                .ThenBy(c => c.CategoryName)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.CategoryID.ToString(),
+                    Text = c.ParentCategoryID == null
+                        ? c.CategoryName
+                        : " └ " + c.CategoryName
+                })
+                .ToListAsync();
         }
-
         private async Task SaveProductImages(int productId, List<IFormFile> images)
         {
             string folder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "products", productId.ToString());
