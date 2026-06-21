@@ -33,11 +33,41 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public List<Product> Products { get; set; } = new();
 
-        public async Task OnGetAsync()
-        {
-            await LoadProductsAsync();
-        }
+        public List<string> NavbarCategories { get; set; } = new()
+{
+    "All",
+    "Electronics",
+    "Fashion",
+    "Home",
+    "Beauty",
+    "Food",
+    "jewelery",
+    "Sports",
+    "Books",
+    "Pets",
+    "Automotive"
+};
 
+
+
+        public string? SelectedCategory { get; set; }
+
+        public async Task OnGetAsync(string? category)
+        {
+            SelectedCategory = category;
+
+            await LoadProductsAsync();
+
+            if (!string.IsNullOrWhiteSpace(category) && category != "All")
+            {
+                Products = Products
+                    .Where(p => p.Category != null &&
+                                p.Category.CategoryName.Equals(
+                                    category,
+                                    StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+        }
         // =========================
         // ADD TO CART
         // =========================
@@ -302,6 +332,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             Products = await _context.Products
                 .Include(p => p.Images)
                 .Include(p => p.Store)
+                .Include(p => p.Category)
                 .Where(p =>
                     p.IsActive &&
                     p.Store != null)
