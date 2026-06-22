@@ -52,5 +52,8 @@ namespace Multi_Store.Core.Reposinterface
         // =====================
 
         Task<List<Review>> GetStoreReviewsAsync(int storeId);
+        Task DeleteProductReviewAsync(
+     int reviewId,
+     int storeOwnerId);
     }
 }

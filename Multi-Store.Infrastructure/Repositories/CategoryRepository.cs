@@ -40,5 +40,12 @@ namespace Multi_Store.Infrastructure.Repositories
                 .Include(c => c.Products)
                 .FirstOrDefaultAsync(c => c.CategoryID == categoryId);
         }
+        public async Task<IReadOnlyList<Category>> GetActiveCategoriesAsync()
+        {
+            return await _context.Categories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.DisplayOrder)
+                .ToListAsync();
+        }
     }
 }

@@ -79,7 +79,10 @@
     <div class="stat-card">
         <div class="stat-title">Total Orders</div>
         <div class="stat-value">@Model.TotalOrders</div>
-        <div class="stat-change positive">+8%</div>
+        <div class="stat-change positive">
+            @Model.RevenueGrowthPercentage.ToString("N1")%
+            vs previous month
+        </div>
     </div>
 
     <div class="stat-card">
@@ -97,8 +100,36 @@
 </div>
 
 <div class="chart-container">
-    <h3>Revenue Trend (Last 30 Days)</h3>
-    <canvas id="revenueChart" height="100"></canvas>
+    <h3>Platform Revenue (Last 12 Months)</h3>
+    <canvas id="revenueChart"></canvas>
+</div>
+
+<div class="chart-container">
+    <h3>Orders Per Month</h3>
+    <canvas id="ordersChart"></canvas>
+</div>
+
+<div class="recent-orders">
+    <h3>Top Performing Stores</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Store</th>
+                <th>Total Revenue</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var store in Model.TopStores)
+            {
+                <tr>
+                    <td>@store.StoreName</td>
+                    <td>$@store.Revenue.ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
 
 <div class="recent-orders">
@@ -137,22 +168,54 @@
 </div>
 
 @section Scripts {
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <script>
-        const ctx = document.getElementById('revenueChart').getContext('2d');
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                datasets: [{
-                    label: 'Revenue ($)',
-                    data: [8500, 10200, 14800, 13200],
-                    borderColor: '#FF6B35',
-                    tension: 0.3
-                }]
-            }
+        const revenueLabels =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyRevenueLabels));
+
+        const revenueData =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyRevenueData));
+
+        new Chart(document.getElementById('revenueChart'), {
+
+        type: 'line',
+
+        data: {
+        labels: revenueLabels,
+        datasets: [{
+        label: 'Revenue',
+        data: revenueData,
+        borderColor: '#FF6B35',
+        backgroundColor: 'rgba(255,107,53,0.15)',
+        fill: true,
+        tension: 0.3
+        }]
+        }
         });
+
+        const orderLabels =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyOrderLabels));
+
+        const orderData =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyOrderData));
+
+        new Chart(document.getElementById('ordersChart'), {
+
+        type: 'bar',
+
+        data: {
+        labels: orderLabels,
+        datasets: [{
+        label: 'Orders',
+        data: orderData,
+        backgroundColor: '#FF6B35'
+        }]
+        }
+        });
+
     </script>
+
 }

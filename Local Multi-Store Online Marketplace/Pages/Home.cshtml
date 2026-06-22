@@ -51,6 +51,50 @@
         color: #ff6600;
         font-weight: bold;
     }
+
+
+    .reviews-section {
+        margin-top: 20px;
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+    }
+
+    .review-item {
+        background: #fafafa;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .delete-btn {
+        background: #dc2626;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+        .delete-btn:hover {
+            background: #b91c1c;
+        }
+
+    .profile-btn {
+        display: inline-block;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        padding: 8px 14px;
+        background: #2563eb;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+        .profile-btn:hover {
+            background: #1d4ed8;
+            color: white;
+        }
 </style>
 
 <div class="profile-container">
@@ -63,6 +107,11 @@
 
         <div>
             <h2>@Model.Store.StoreName</h2>
+
+            <a asp-page="/StoreOwner/StoreProfile"
+               class="profile-btn">
+                Edit Profile
+            </a>
 
             <div class="stats">
                 Followers: @Model.FollowersCount
@@ -91,6 +140,49 @@
                 </div>
 
                 <p>@p.Description</p>
+
+                <div class="reviews-section">
+
+                    <h4>Reviews</h4>
+
+                    @if (p.Reviews != null && p.Reviews.Any())
+                    {
+                        @foreach (var review in p.Reviews.OrderByDescending(r => r.CreatedAt))
+                        {
+                            <div class="review-item">
+
+                                <strong>
+                                    @review.Customer?.User?.FullName
+                                </strong>
+
+                                <span>
+                                    ⭐ @review.Rating
+                                </span>
+
+                                <p>@review.Comment</p>
+
+                                <form method="post"
+                                      asp-page-handler="DeleteReview"
+                                      asp-route-reviewId="@review.ReviewID">
+
+                                    <button type="submit"
+                                            class="delete-btn">
+                                        Delete Review
+                                    </button>
+
+                                </form>
+
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p>No reviews yet.</p>
+                    }
+
+                </div>
+
+           
 
             </div>
         }

@@ -17,15 +17,57 @@ namespace Multi_Store.Services.Managers
             _categoryRepository = categoryRepository;
             _mapper = mapper;
         }
+        private string GenerateSlug(string name)
+        {
+            string slug = name.ToLower().Trim();
 
+            slug = slug.Replace(" ", "-");
+
+            slug = System.Text.RegularExpressions.Regex
+                .Replace(slug, @"[^a-z0-9\-]", "");
+
+            slug = System.Text.RegularExpressions.Regex
+                .Replace(slug, @"-+", "-");
+
+            return slug.Trim('-');
+        }
         // =========================
         // ADD CATEGORY
         // =========================
         public async Task<CategoryDTO> AddCategoryAsync(CategoryDTO dto)
         {
+            var categories = await _categoryRepository.GetAllAsync();
+
+            // Check if category already exists
+            var existing = categories.FirstOrDefault(c =>
+                c.CategoryName.ToLower() == dto.CategoryName.ToLower());
+
+            if (existing != null)
+            {
+                // Reactivate deleted category
+                existing.IsActive = true;
+                existing.ParentCategoryID = dto.ParentCategoryID;
+
+                await _categoryRepository.UpdateAsync(existing);
+
+                return _mapper.Map<CategoryDTO>(existing);
+            }
+
             var category = _mapper.Map<Category>(dto);
 
             category.IsActive = true;
+
+            string slug = GenerateSlug(dto.CategoryName);
+
+            string originalSlug = slug;
+            int counter = 1;
+
+            while (categories.Any(c => c.CategorySlug == slug))
+            {
+                slug = $"{originalSlug}-{counter++}";
+            }
+
+            category.CategorySlug = slug;
 
             await _categoryRepository.AddAsync(category);
 
@@ -77,7 +119,9 @@ namespace Multi_Store.Services.Managers
             if (category == null)
                 throw new Exception("Category not found");
 
-            await _categoryRepository.DeleteAsync(category);
+            category.IsActive = false;
+
+            await _categoryRepository.UpdateAsync(category);
         }
 
         // =========================
@@ -124,6 +168,14 @@ namespace Multi_Store.Services.Managers
                 throw new Exception("Category not found");
 
             return _mapper.Map<CategoryDTO>(category);
+        }
+
+
+        public async Task<IReadOnlyList<CategoryDTO>> GetActiveCategoriesAsync()
+        {
+            var categories = await _categoryRepository.GetActiveCategoriesAsync();
+
+            return _mapper.Map<IReadOnlyList<CategoryDTO>>(categories);
         }
     }
 }
