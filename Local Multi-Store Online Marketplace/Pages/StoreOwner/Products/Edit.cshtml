@@ -1,5 +1,6 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.EditModel
+
 @{
     ViewData["Title"] = "Edit Product";
     Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
@@ -18,30 +19,34 @@
             margin-bottom: 25px;
         }
 
-            .form-group label {
-                display: block;
-                margin-bottom: 8px;
-                font-weight: 600;
-                color: #2C3E50;
-            }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2C3E50;
+        }
 
-                .form-group label .required {
-                    color: #FF4444;
-                }
+        .form-group label .required {
+            color: #FF4444;
+        }
 
-            .form-group input, .form-group textarea, .form-group select {
-                width: 100%;
-                padding: 10px 12px;
-                border: 1px solid #e0e0e0;
-                border-radius: 8px;
-                font-size: 14px;
-            }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
 
-                .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-                    outline: none;
-                    border-color: #FF6B35;
-                    box-shadow: 0 0 0 2px rgba(255,107,53,0.1);
-                }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #FF6B35;
+            box-shadow: 0 0 0 2px rgba(255,107,53,0.1);
+        }
 
         .form-row {
             display: grid;
@@ -66,15 +71,15 @@
             border: 2px solid transparent;
         }
 
-            .existing-image-item.primary {
-                border-color: #FF6B35;
-            }
+        .existing-image-item.primary {
+            border-color: #FF6B35;
+        }
 
-            .existing-image-item img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
+        .existing-image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
         .image-actions {
             position: absolute;
@@ -133,16 +138,16 @@
             margin-top: 15px;
         }
 
-            .image-upload-area:hover {
-                border-color: #FF6B35;
-                background: rgba(255,107,53,0.05);
-            }
+        .image-upload-area:hover {
+            border-color: #FF6B35;
+            background: rgba(255,107,53,0.05);
+        }
 
-            .image-upload-area i {
-                font-size: 48px;
-                color: #999;
-                margin-bottom: 10px;
-            }
+        .image-upload-area i {
+            font-size: 48px;
+            color: #999;
+            margin-bottom: 10px;
+        }
 
         .image-preview {
             display: flex;
@@ -160,11 +165,11 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-            .preview-item img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
         .remove-preview {
             position: absolute;
@@ -249,176 +254,806 @@
         .btn-secondary:hover {
             background: #5a6268;
         }
+
+        /* =====================================================
+           PRODUCT EDIT TOAST
+           ===================================================== */
+
+        .product-toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .product-toast {
+            width: min(390px, calc(100vw - 40px));
+            padding: 15px 16px;
+            border-radius: 14px;
+            color: white;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: linear-gradient(135deg, #b91c1c, #dc2626);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.28);
+            opacity: 0;
+            transform: translateX(45px);
+            transition:
+                opacity 0.28s ease,
+                transform 0.28s ease;
+            pointer-events: auto;
+        }
+
+        .product-toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .product-toast-icon {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 17px;
+        }
+
+        .product-toast-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .product-toast-title {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .product-toast-message {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .product-toast-close {
+            border: none;
+            background: transparent;
+            color: white;
+            padding: 0;
+            font-size: 23px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        @@media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+                text-align: center;
+            }
+
+            .product-toast-container {
+                top: 12px;
+                right: 12px;
+                left: 12px;
+            }
+
+            .product-toast {
+                width: 100%;
+            }
+        }
     </style>
 }
 
+<div id="productToastContainer"
+     class="product-toast-container"
+     aria-live="polite"
+     aria-atomic="true">
+</div>
+
 <div class="form-container">
-    <h2 style="margin: 0 0 5px 0;">Edit Product</h2>
-    <p style="color: #6c757d; margin-bottom: 25px;">Update your product information</p>
 
-    <form method="post" enctype="multipart/form-data" id="editForm">
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-        <input type="hidden" asp-for="ProductVM.ProductID" />
+    <h2 style="margin: 0 0 5px 0;">
+        Edit Product
+    </h2>
+
+    <p style="color: #6c757d; margin-bottom: 25px;">
+        Update your product information
+    </p>
+
+    <form method="post"
+          enctype="multipart/form-data"
+          id="editForm">
+
+        <div asp-validation-summary="ModelOnly"
+             class="text-danger">
+        </div>
+
+        <input type="hidden"
+               asp-for="ProductVM.ProductID" />
 
         <div class="form-row">
+
             <div class="form-group">
-                <label asp-for="ProductVM.ProductName">Product Name <span class="required">*</span></label>
+
+                <label asp-for="ProductVM.ProductName">
+                    Product Name
+                    <span class="required">*</span>
+                </label>
+
                 <input asp-for="ProductVM.ProductName" />
-                <span asp-validation-for="ProductVM.ProductName" class="text-danger"></span>
+
+                <span asp-validation-for="ProductVM.ProductName"
+                      class="text-danger">
+                </span>
+
             </div>
+
             <div class="form-group">
-                <label asp-for="ProductVM.CategoryID">Category <span class="required">*</span></label>
-                <select asp-for="ProductVM.CategoryID" asp-items="Model.CategoriesSelectList" class="form-control"></select>
-                <span asp-validation-for="ProductVM.CategoryID" class="text-danger"></span>
+
+                <label asp-for="ProductVM.CategoryID">
+                    Category
+                    <span class="required">*</span>
+                </label>
+
+                <select asp-for="ProductVM.CategoryID"
+                        asp-items="Model.CategoriesSelectList"
+                        class="form-control">
+                </select>
+
+                <span asp-validation-for="ProductVM.CategoryID"
+                      class="text-danger">
+                </span>
+
             </div>
+
         </div>
 
         <div class="form-group">
-            <label asp-for="ProductVM.Description">Description <span class="required">*</span></label>
-            <textarea asp-for="ProductVM.Description" rows="5"></textarea>
-            <span asp-validation-for="ProductVM.Description" class="text-danger"></span>
+
+            <label asp-for="ProductVM.Description">
+                Description
+                <span class="required">*</span>
+            </label>
+
+            <textarea asp-for="ProductVM.Description"
+                      rows="5">
+            </textarea>
+
+            <span asp-validation-for="ProductVM.Description"
+                  class="text-danger">
+            </span>
+
         </div>
 
         <div class="form-row">
+
             <div class="form-group">
-                <label asp-for="ProductVM.Price">Selling Price ($) <span class="required">*</span></label>
-                <input asp-for="ProductVM.Price" type="number" step="0.01" />
-                <span asp-validation-for="ProductVM.Price" class="text-danger"></span>
+
+                <label asp-for="ProductVM.Price">
+                    Selling Price ($)
+                    <span class="required">*</span>
+                </label>
+
+                <input asp-for="ProductVM.Price"
+                       type="number"
+                       step="0.01" />
+
+                <span asp-validation-for="ProductVM.Price"
+                      class="text-danger">
+                </span>
+
             </div>
+
             <div class="form-group">
-                <label asp-for="ProductVM.CompareAtPrice">Compare at Price ($)</label>
-                <input asp-for="ProductVM.CompareAtPrice" type="number" step="0.01" />
+
+                <label asp-for="ProductVM.CompareAtPrice">
+                    Compare at Price ($)
+                </label>
+
+                <input asp-for="ProductVM.CompareAtPrice"
+                       type="number"
+                       step="0.01" />
+
             </div>
+
         </div>
 
         <div class="form-row">
+
             <div class="form-group">
-                <label asp-for="ProductVM.OriginalPrice">Your Cost Price ($) <span class="required">*</span></label>
-                <input asp-for="ProductVM.OriginalPrice" type="number" step="0.01" />
-                <span asp-validation-for="ProductVM.OriginalPrice" class="text-danger"></span>
-                <span class="help-text">What you paid per unit – used for profit reports</span>
+
+                <label asp-for="ProductVM.OriginalPrice">
+                    Your Cost Price ($)
+                    <span class="required">*</span>
+                </label>
+
+                <input asp-for="ProductVM.OriginalPrice"
+                       type="number"
+                       step="0.01" />
+
+                <span asp-validation-for="ProductVM.OriginalPrice"
+                      class="text-danger">
+                </span>
+
+                <span class="help-text">
+                    What you paid per unit – used for profit reports
+                </span>
+
             </div>
+
             <div class="form-group">
-                <label asp-for="ProductVM.Quantity">Stock Quantity <span class="required">*</span></label>
-                <input asp-for="ProductVM.Quantity" type="number" min="0" />
-                <span asp-validation-for="ProductVM.Quantity" class="text-danger"></span>
+
+                <label asp-for="ProductVM.Quantity">
+                    Stock Quantity
+                    <span class="required">*</span>
+                </label>
+
+                <input asp-for="ProductVM.Quantity"
+                       type="number"
+                       min="0" />
+
+                <span asp-validation-for="ProductVM.Quantity"
+                      class="text-danger">
+                </span>
+
             </div>
+
         </div>
 
         <div class="form-row">
+
             <div class="form-group">
-                <label asp-for="ProductVM.LowStockThreshold">Low Stock Threshold</label>
-                <input asp-for="ProductVM.LowStockThreshold" type="number" min="0" />
+
+                <label asp-for="ProductVM.LowStockThreshold">
+                    Low Stock Threshold
+                </label>
+
+                <input asp-for="ProductVM.LowStockThreshold"
+                       type="number"
+                       min="0" />
+
             </div>
+
             <div class="form-group">
-                <label asp-for="ProductVM.Weight">Weight (kg)</label>
-                <input asp-for="ProductVM.Weight" type="number" step="0.01" />
+
+                <label asp-for="ProductVM.Weight">
+                    Weight (kg)
+                </label>
+
+                <input asp-for="ProductVM.Weight"
+                       type="number"
+                       step="0.01" />
+
             </div>
+
         </div>
 
         <div class="form-group">
-            <label><input asp-for="ProductVM.IsActive" type="checkbox" /> Active</label>
-            <span class="help-text">Inactive products won't be visible to customers</span>
+
+            <label>
+                <input asp-for="ProductVM.IsActive"
+                       type="checkbox" />
+                Active
+            </label>
+
+            <span class="help-text">
+                Inactive products won't be visible to customers
+            </span>
+
         </div>
 
-        <!-- Existing Images -->
-        <div class="section-title">Product Images</div>
-        @if (Model.ProductVM.ExistingImages != null && Model.ProductVM.ExistingImages.Any())
+        <div class="section-title">
+            Product Images
+        </div>
+
+        @if (Model.ProductVM.ExistingImages != null &&
+             Model.ProductVM.ExistingImages.Any())
         {
-            <div class="alert-info"><i class="fas fa-info-circle"></i> Click "Set Primary" to choose main image. Click "Delete" to remove image.</div>
+            <div class="alert-info">
+
+                <i class="fas fa-info-circle"></i>
+
+                Click "Set Primary" to choose main image.
+                Click "Delete" to remove image.
+
+            </div>
+
             <div class="existing-images">
-                @foreach (var img in Model.ProductVM.ExistingImages.OrderBy(i => i.DisplayOrder))
+
+                @foreach (var img in Model.ProductVM.ExistingImages
+                    .OrderBy(i => i.DisplayOrder))
                 {
-                    <div class="existing-image-item @(img.IsPrimary ? "primary" : "")" data-id="@img.ImageID">
+                    <div class="existing-image-item @(img.IsPrimary ? "primary" : "")"
+                         data-id="@img.ImageID">
+
                         @if (img.IsPrimary)
                         {
-                            <div class="primary-badge">Primary</div>
+                            <div class="primary-badge">
+                                Primary
+                            </div>
                         }
-                        <img src="@img.ImageUrl" onerror="this.src='/images/no-image.png'" />
+
+                        <img src="@img.ImageUrl"
+                             alt="Product image"
+                             onerror="this.onerror=null;this.src='/images/no-image.png';" />
+
                         <div class="image-actions">
+
                             @if (!img.IsPrimary)
                             {
-                                <button type="button" class="btn-primary-img" onclick="setPrimaryImage(@img.ImageID, @Model.ProductVM.ProductID)"><i class="fas fa-star"></i> Set Primary</button>
+                                <button type="button"
+                                        class="btn-primary-img"
+                                        onclick="setPrimaryImage(@img.ImageID, @Model.ProductVM.ProductID)">
+
+                                    <i class="fas fa-star"></i>
+                                    Set Primary
+
+                                </button>
                             }
-                            <button type="button" class="btn-delete-img" onclick="markImageForDelete(@img.ImageID, this)"><i class="fas fa-trash"></i> Delete</button>
+
+                            <button type="button"
+                                    class="btn-delete-img"
+                                    onclick="markImageForDelete(@img.ImageID, this)">
+
+                                <i class="fas fa-trash"></i>
+                                Delete
+
+                            </button>
+
                         </div>
-                        <input type="hidden" name="ImagesToDelete" value="@img.ImageID" class="delete-checkbox" disabled />
+
+                        <input type="hidden"
+                               name="ImagesToDelete"
+                               value="@img.ImageID"
+                               class="delete-checkbox"
+                               disabled />
+
                     </div>
                 }
+
             </div>
         }
         else
         {
-            <p style="color: #6c757d;">No images uploaded yet.</p>
+            <p style="color: #6c757d;">
+                No images uploaded yet.
+            </p>
         }
 
-        <!-- Add New Images -->
-        <div class="image-upload-area" id="imageUploadArea">
+        <div class="image-upload-area"
+             id="imageUploadArea">
+
             <i class="fas fa-cloud-upload-alt"></i>
-            <p>Click or drag images here to add more</p>
-            <input type="file" id="imageInput" name="UploadedImages" multiple accept="image/*" style="display: none;" />
+
+            <p>
+                Click or drag images here to add more
+            </p>
+
+            <input type="file"
+                   id="imageInput"
+                   name="UploadedImages"
+                   multiple
+                   accept="image/*"
+                   style="display: none;" />
+
         </div>
-        <div class="image-preview" id="imagePreview"></div>
-        <span class="help-text">Upload up to 5 new images (optional).</span>
+
+        <div class="image-preview"
+             id="imagePreview">
+        </div>
+
+        <span class="help-text">
+            Upload up to 5 new images (optional).
+        </span>
 
         <div class="form-actions">
-            <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Save Changes</button>
-            <a href="/StoreOwner/Products/Index" class="btn-secondary"><i class="fas fa-times"></i> Cancel</a>
+
+            <button type="submit"
+                    class="btn-primary">
+
+                <i class="fas fa-save"></i>
+                Save Changes
+
+            </button>
+
+            <a href="/StoreOwner/Products/Index"
+               class="btn-secondary">
+
+                <i class="fas fa-times"></i>
+                Cancel
+
+            </a>
+
         </div>
+
     </form>
+
 </div>
 
 @section Scripts {
+
     <script>
+        function showProductToast(
+            message,
+            title = "Unable to continue") {
+
+            const container =
+                document.getElementById(
+                    "productToastContainer");
+
+            if (!container || !message) {
+                return;
+            }
+
+            const existingToast =
+                container.querySelector(
+                    ".product-toast");
+
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const toast =
+                document.createElement("div");
+
+            toast.className =
+                "product-toast";
+
+            toast.setAttribute(
+                "role",
+                "alert");
+
+            const icon =
+                document.createElement("span");
+
+            icon.className =
+                "product-toast-icon";
+
+            icon.textContent =
+                "!";
+
+            const content =
+                document.createElement("div");
+
+            content.className =
+                "product-toast-content";
+
+            const titleElement =
+                document.createElement("span");
+
+            titleElement.className =
+                "product-toast-title";
+
+            titleElement.textContent =
+                title;
+
+            const messageElement =
+                document.createElement("span");
+
+            messageElement.className =
+                "product-toast-message";
+
+            messageElement.textContent =
+                message;
+
+            const closeButton =
+                document.createElement("button");
+
+            closeButton.type =
+                "button";
+
+            closeButton.className =
+                "product-toast-close";
+
+            closeButton.setAttribute(
+                "aria-label",
+                "Close notification");
+
+            closeButton.innerHTML =
+                "&times;";
+
+            content.appendChild(
+                titleElement);
+
+            content.appendChild(
+                messageElement);
+
+            toast.appendChild(icon);
+            toast.appendChild(content);
+            toast.appendChild(closeButton);
+
+            container.appendChild(toast);
+
+            window.requestAnimationFrame(
+                function () {
+                    toast.classList.add(
+                        "show");
+                });
+
+            const closeTimer =
+                window.setTimeout(
+                    removeToast,
+                    5000);
+
+            function removeToast() {
+                if (!toast.isConnected) {
+                    return;
+                }
+
+                window.clearTimeout(
+                    closeTimer);
+
+                toast.classList.remove(
+                    "show");
+
+                window.setTimeout(
+                    function () {
+                        toast.remove();
+                    },
+                    280);
+            }
+
+            closeButton.addEventListener(
+                "click",
+                removeToast);
+        }
+
         let imagesToDelete = [];
-        function markImageForDelete(imageId, btn) {
-            if (confirm('Delete this image?')) {
-                const container = btn.closest('.existing-image-item');
-                container.style.opacity = '0.5';
-                container.style.pointerEvents = 'none';
-                const hiddenInput = container.querySelector('.delete-checkbox');
-                if (hiddenInput) hiddenInput.disabled = false;
-                imagesToDelete.push(imageId);
+
+        function markImageForDelete(
+            imageId,
+            button) {
+
+            if (confirm("Delete this image?")) {
+
+                const container =
+                    button.closest(
+                        ".existing-image-item");
+
+                if (!container) {
+                    return;
+                }
+
+                container.style.opacity =
+                    "0.5";
+
+                container.style.pointerEvents =
+                    "none";
+
+                const hiddenInput =
+                    container.querySelector(
+                        ".delete-checkbox");
+
+                if (hiddenInput) {
+                    hiddenInput.disabled =
+                        false;
+                }
+
+                imagesToDelete.push(
+                    imageId);
             }
         }
-        async function setPrimaryImage(imageId, productId) {
-            const response = await fetch('/StoreOwner/Products/Edit?handler=SetPrimaryImage', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' },
-                body: JSON.stringify({ imageId, productId })
-            });
-            const data = await response.json();
-            if (data.success) location.reload();
-            else alert(data.message);
-        }
-        // Image upload preview
-        const uploadArea = document.getElementById('imageUploadArea');
-        const imageInput = document.getElementById('imageInput');
-        const preview = document.getElementById('imagePreview');
-        uploadArea.addEventListener('click', () => imageInput.click());
-        uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#FF6B35'; });
-        uploadArea.addEventListener('dragleave', e => { e.preventDefault(); uploadArea.style.borderColor = '#e0e0e0'; });
-        uploadArea.addEventListener('drop', e => {
-            e.preventDefault();
-            uploadArea.style.borderColor = '#e0e0e0';
-            const files = e.dataTransfer.files;
-            imageInput.files = files;
-            handleFiles(files);
-        });
-        imageInput.addEventListener('change', e => handleFiles(e.target.files));
-        function handleFiles(files) {
-            preview.innerHTML = '';
-            for (let file of files) {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = ev => {
-                        const div = document.createElement('div');
-                        div.className = 'preview-item';
-                        div.innerHTML = `<img src="${ev.target.result}" /><button type="button" class="remove-preview" onclick="this.parentElement.remove()">×</button>`;
-                        preview.appendChild(div);
-                    };
-                    reader.readAsDataURL(file);
+
+        async function setPrimaryImage(
+            imageId,
+            productId) {
+
+            try {
+                const token =
+                    document.querySelector(
+                        'input[name="__RequestVerificationToken"]'
+                    )?.value || "";
+
+                const response =
+                    await fetch(
+                        "/StoreOwner/Products/Edit?handler=SetPrimaryImage",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                "RequestVerificationToken":
+                                    token
+                            },
+
+                            body:
+                                JSON.stringify({
+                                    imageId,
+                                    productId
+                                })
+                        });
+
+                if (!response.ok) {
+                    showProductToast(
+                        "The server could not update the primary image.",
+                        "Primary image update failed");
+
+                    return;
                 }
+
+                const data =
+                    await response.json();
+
+                if (data.success) {
+                    window.location.reload();
+                }
+                else {
+                    showProductToast(
+                        data.message ||
+                        "The primary image could not be updated.",
+                        "Primary image update failed");
+                }
+            }
+            catch (error) {
+                console.error(
+                    "Set primary image failed:",
+                    error);
+
+                showProductToast(
+                    "An unexpected error occurred while updating the primary image.",
+                    "Primary image update failed");
+            }
+        }
+
+        const uploadArea =
+            document.getElementById(
+                "imageUploadArea");
+
+        const imageInput =
+            document.getElementById(
+                "imageInput");
+
+        const preview =
+            document.getElementById(
+                "imagePreview");
+
+        if (uploadArea &&
+            imageInput) {
+
+            uploadArea.addEventListener(
+                "click",
+                function () {
+                    imageInput.click();
+                });
+
+            uploadArea.addEventListener(
+                "dragover",
+                function (event) {
+                    event.preventDefault();
+
+                    uploadArea.style.borderColor =
+                        "#FF6B35";
+                });
+
+            uploadArea.addEventListener(
+                "dragleave",
+                function (event) {
+                    event.preventDefault();
+
+                    uploadArea.style.borderColor =
+                        "#e0e0e0";
+                });
+
+            uploadArea.addEventListener(
+                "drop",
+                function (event) {
+                    event.preventDefault();
+
+                    uploadArea.style.borderColor =
+                        "#e0e0e0";
+
+                    const files =
+                        event.dataTransfer.files;
+
+                    imageInput.files =
+                        files;
+
+                    handleFiles(
+                        files);
+                });
+
+            imageInput.addEventListener(
+                "change",
+                function (event) {
+                    handleFiles(
+                        event.target.files);
+                });
+        }
+
+        function handleFiles(files) {
+            if (!preview) {
+                return;
+            }
+
+            preview.innerHTML =
+                "";
+
+            for (const file of files) {
+
+                if (!file.type.startsWith(
+                        "image/")) {
+                    continue;
+                }
+
+                const reader =
+                    new FileReader();
+
+                reader.onload =
+                    function (event) {
+
+                        const div =
+                            document.createElement(
+                                "div");
+
+                        div.className =
+                            "preview-item";
+
+                        const image =
+                            document.createElement(
+                                "img");
+
+                        image.src =
+                            event.target.result;
+
+                        image.alt =
+                            "New product image preview";
+
+                        const removeButton =
+                            document.createElement(
+                                "button");
+
+                        removeButton.type =
+                            "button";
+
+                        removeButton.className =
+                            "remove-preview";
+
+                        removeButton.textContent =
+                            "×";
+
+                        removeButton.addEventListener(
+                            "click",
+                            function () {
+                                div.remove();
+                            });
+
+                        div.appendChild(
+                            image);
+
+                        div.appendChild(
+                            removeButton);
+
+                        preview.appendChild(
+                            div);
+                    };
+
+                reader.readAsDataURL(
+                    file);
             }
         }
     </script>

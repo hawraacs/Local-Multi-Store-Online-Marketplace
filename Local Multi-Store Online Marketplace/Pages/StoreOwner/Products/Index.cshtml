@@ -1,105 +1,308 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.IndexModel
+
 @{
     ViewData["Title"] = "Products";
     Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/store-owner-products.css" />
+    <link rel="stylesheet"
+          href="~/css/store-owner-products.css"
+          asp-append-version="true" />
+
+    <style>
+        /* =====================================================
+           PRODUCT INDEX TOAST
+           ===================================================== */
+
+        .products-toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .products-toast {
+            width: min(390px, calc(100vw - 40px));
+            padding: 15px 16px;
+            border-radius: 14px;
+            color: #ffffff;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.28);
+            opacity: 0;
+            transform: translateX(45px);
+            transition:
+                opacity 0.28s ease,
+                transform 0.28s ease;
+            pointer-events: auto;
+        }
+
+        .products-toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .products-toast-error {
+            background: linear-gradient(135deg, #b91c1c, #dc2626);
+        }
+
+        .products-toast-warning {
+            background: linear-gradient(135deg, #b45309, #d97706);
+        }
+
+        .products-toast-success {
+            background: linear-gradient(135deg, #047857, #10b981);
+        }
+
+        .products-toast-icon {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            font-weight: 900;
+        }
+
+        .products-toast-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .products-toast-title {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .products-toast-message {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .products-toast-close {
+            border: none;
+            background: transparent;
+            color: #ffffff;
+            padding: 0;
+            font-size: 23px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .btn-toggle:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        @@media (max-width: 600px) {
+            .products-toast-container {
+                top: 12px;
+                right: 12px;
+                left: 12px;
+            }
+
+            .products-toast {
+                width: 100%;
+            }
+        }
+    </style>
 }
 
+<div id="productsToastContainer"
+     class="products-toast-container"
+     aria-live="polite"
+     aria-atomic="true">
+</div>
+
 <div class="products-header">
+
     <div>
-        <h1 style="margin: 0; font-size: 24px;">Products</h1>
-        <p style="margin: 5px 0 0; color: #6c757d;">Manage your store's product inventory</p>
+        <h1 style="margin: 0; font-size: 24px;">
+            Products
+        </h1>
+
+        <p style="margin: 5px 0 0; color: #6c757d;">
+            Manage your store's product inventory
+        </p>
     </div>
-    <a href="/StoreOwner/Products/Create" class="btn-primary">
-        <i class="fas fa-plus"></i> Add New Product
+
+    <a href="/StoreOwner/Products/Create"
+       class="btn-primary">
+
+        <i class="fas fa-plus"></i>
+        Add New Product
     </a>
+
 </div>
 
 <!-- Search and Filter Bar -->
 <div class="search-filter-bar">
-    <form method="get" id="filterForm">
+
+    <form method="get"
+          id="filterForm">
+
         <div class="filter-group">
+
             <div class="filter-input">
-                <input type="text" name="SearchTerm" id="SearchTerm"
+
+                <input type="text"
+                       name="SearchTerm"
+                       id="SearchTerm"
                        placeholder="Search products by name or description..."
                        value="@Model.SearchTerm" />
+
             </div>
+
             <div class="filter-input">
-                <select name="CategoryFilter" id="CategoryFilter">
-                    <option value="">All Categories</option>
+
+                <select name="CategoryFilter"
+                        id="CategoryFilter">
+
+                    <option value="">
+                        All Categories
+                    </option>
+
                     @foreach (var category in Model.Categories)
                     {
-                        <option value="@category.CategoryID" selected="@(Model.CategoryFilter == category.CategoryID)">
+                        <option value="@category.CategoryID"
+                                selected="@(Model.CategoryFilter == category.CategoryID)">
                             @category.CategoryName
                         </option>
                     }
+
                 </select>
+
             </div>
+
             <div class="filter-input">
-                <select name="StatusFilter" id="StatusFilter">
-                    <option value="">All Status</option>
-                    <option value="active" selected="@(Model.StatusFilter == "active")">Active</option>
-                    <option value="inactive" selected="@(Model.StatusFilter == "inactive")">Inactive</option>
-                    <option value="outofstock" selected="@(Model.StatusFilter == "outofstock")">Out of Stock</option>
+
+                <select name="StatusFilter"
+                        id="StatusFilter">
+
+                    <option value="">
+                        All Status
+                    </option>
+
+                    <option value="active"
+                            selected="@(Model.StatusFilter == "active")">
+                        Active
+                    </option>
+
+                    <option value="inactive"
+                            selected="@(Model.StatusFilter == "inactive")">
+                        Inactive
+                    </option>
+
+                    <option value="outofstock"
+                            selected="@(Model.StatusFilter == "outofstock")">
+                        Out of Stock
+                    </option>
+
                 </select>
+
             </div>
-            <div class="filter-input" style="flex: 0 0 auto;">
-                <button type="submit" class="btn-primary">
-                    <i class="fas fa-search"></i> Search
+
+            <div class="filter-input"
+                 style="flex: 0 0 auto;">
+
+                <button type="submit"
+                        class="btn-primary">
+
+                    <i class="fas fa-search"></i>
+                    Search
                 </button>
+
             </div>
+
         </div>
+
     </form>
+
 </div>
 
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success">
-        <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+
+        <i class="fas fa-check-circle"></i>
+
+        @TempData["SuccessMessage"]
     </div>
 }
 
 @if (TempData["ErrorMessage"] != null)
 {
     <div class="alert alert-danger">
-        <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+
+        <i class="fas fa-exclamation-circle"></i>
+
+        @TempData["ErrorMessage"]
     </div>
 }
 
 @if (Model.Products.Any())
 {
     <div class="products-grid">
+
         @foreach (var product in Model.Products)
         {
             <div class="product-card">
+
                 <div class="product-image">
-                    @if (!string.IsNullOrEmpty(product.PrimaryImageUrl))
+
+                    @if (!string.IsNullOrEmpty(
+                        product.PrimaryImageUrl))
                     {
-                        <img src="@product.PrimaryImageUrl" alt="@product.ProductName"
-                             onerror="this.src='/images/no-image.png'">
+                        <img src="@product.PrimaryImageUrl"
+                             alt="@product.ProductName"
+                             onerror="this.onerror=null;this.src='/images/no-image.png';" />
                     }
                     else
                     {
-                        <img src="/images/no-image.png" alt="No image">
+                        <img src="/images/no-image.png"
+                             alt="No image" />
                     }
 
                     @if (product.DiscountPercentage.HasValue)
                     {
-                        <span class="product-badge badge-discount">-@product.DiscountPercentage%</span>
+                        <span class="product-badge badge-discount">
+                            -@product.DiscountPercentage%
+                        </span>
                     }
+
                     @if (product.IsOutOfStock)
                     {
-                        <span class="product-badge badge-outstock">Out of Stock</span>
+                        <span class="product-badge badge-outstock">
+                            Out of Stock
+                        </span>
                     }
+
                 </div>
 
                 <div class="product-info">
-                    <div class="product-category">@product.CategoryName</div>
-                    <h3 class="product-title">@product.ProductName</h3>
+
+                    <div class="product-category">
+                        @product.CategoryName
+                    </div>
+
+                    <h3 class="product-title">
+                        @product.ProductName
+                    </h3>
 
                     <p class="product-description">
                         @(product.Description.Length > 100
@@ -108,22 +311,30 @@
                     </p>
 
                     <div class="price-section">
-                        <span class="current-price">$@product.Price.ToString("N2")</span>
 
-                        @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
+                        <span class="current-price">
+                            $@product.Price.ToString("N2")
+                        </span>
+
+                        @if (product.CompareAtPrice.HasValue &&
+                             product.CompareAtPrice > product.Price)
                         {
                             <span class="original-price">
                                 $@product.CompareAtPrice.Value.ToString("N2")
                             </span>
                         }
+
                     </div>
 
-                    <!-- ✅ PROFIT SECTION ADDED HERE -->
-                    @if (product.ProfitPerUnit.HasValue && product.ProfitPerUnit > 0)
+                    @if (product.ProfitPerUnit.HasValue &&
+                         product.ProfitPerUnit > 0)
                     {
                         <div style="font-size: 12px; color: #2C3E50; margin-top: 5px;">
+
                             <i class="fas fa-chart-line"></i>
-                            Profit: $@product.ProfitPerUnit.Value.ToString("N2")/unit
+
+                            Profit:
+                            $@product.ProfitPerUnit.Value.ToString("N2")/unit
 
                             @if (product.MarginPercent.HasValue)
                             {
@@ -131,79 +342,359 @@
                                     (@product.MarginPercent.Value.ToString("F0")% margin)
                                 </span>
                             }
+
                         </div>
                     }
 
                     <div>
+
                         <span class="stock-status stock-@product.StockStatusClass">
-                            @product.StockStatus (@product.Quantity left)
+                            @product.StockStatus
+                            (@product.Quantity left)
                         </span>
+
                     </div>
 
                     <div class="product-actions">
-                        <a href="/StoreOwner/Products/Edit?id=@product.ProductID" class="btn-edit">
-                            <i class="fas fa-edit"></i> Edit
+
+                        <a href="/StoreOwner/Products/Edit?id=@product.ProductID"
+                           class="btn-edit">
+
+                            <i class="fas fa-edit"></i>
+                            Edit
                         </a>
-                        <button onclick="deleteProduct(@product.ProductID)" class="btn-delete">
-                            <i class="fas fa-trash"></i> Delete
+
+                        <button type="button"
+                                onclick="deleteProduct(@product.ProductID)"
+                                class="btn-delete">
+
+                            <i class="fas fa-trash"></i>
+                            Delete
                         </button>
-                        <button onclick="toggleStatus(@product.ProductID, @(!product.IsActive).ToString().ToLower())"
+
+                        <button type="button"
+                                onclick="toggleStatus(@product.ProductID, this)"
                                 class="btn-toggle @(product.IsActive ? "active" : "")">
+
                             <i class="fas @(product.IsActive ? "fa-eye" : "fa-eye-slash")"></i>
+
                             @(product.IsActive ? "Active" : "Inactive")
                         </button>
+
                     </div>
+
                 </div>
+
             </div>
         }
+
     </div>
 }
 else
 {
     <div class="empty-state">
+
         <i class="fas fa-box-open"></i>
-        <h3>No Products Found</h3>
-        <p>You haven't added any products yet.</p>
-        <a href="/StoreOwner/Products/Create" class="btn-primary" style="display: inline-block; margin-top: 15px;">
-            <i class="fas fa-plus"></i> Add Your First Product
+
+        <h3>
+            No Products Found
+        </h3>
+
+        <p>
+            You haven't added any products yet.
+        </p>
+
+        <a href="/StoreOwner/Products/Create"
+           class="btn-primary"
+           style="display: inline-block; margin-top: 15px;">
+
+            <i class="fas fa-plus"></i>
+            Add Your First Product
         </a>
+
     </div>
 }
 
 @section Scripts {
     <script>
-        document.getElementById('CategoryFilter')?.addEventListener('change', function () {
-            document.getElementById('filterForm').submit();
-        });
+        function showProductsToast(
+            message,
+            type = "error",
+            title = "Unable to continue") {
 
-        document.getElementById('StatusFilter')?.addEventListener('change', function () {
-            document.getElementById('filterForm').submit();
-        });
+            const container =
+                document.getElementById(
+                    "productsToastContainer");
 
-        function toggleStatus(productId) {
-            fetch('/StoreOwner/Products/Index?handler=ToggleStatus', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-                },
-                body: JSON.stringify({ productId: productId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) location.reload();
-                else alert(data.message);
-            })
-            .catch(error => {
-                console.error(error);
-                alert('Error occurred');
-            });
+            if (!container ||
+                !message) {
+
+                return;
+            }
+
+            const existingToast =
+                container.querySelector(
+                    ".products-toast");
+
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const validTypes = [
+                "error",
+                "warning",
+                "success"
+            ];
+
+            const safeType =
+                validTypes.includes(type)
+                    ? type
+                    : "error";
+
+            const toast =
+                document.createElement(
+                    "div");
+
+            toast.className =
+                `products-toast products-toast-${safeType}`;
+
+            toast.setAttribute(
+                "role",
+                safeType === "error"
+                    ? "alert"
+                    : "status");
+
+            const icon =
+                document.createElement(
+                    "span");
+
+            icon.className =
+                "products-toast-icon";
+
+            icon.textContent =
+                safeType === "success"
+                    ? "✓"
+                    : safeType === "warning"
+                        ? "!"
+                        : "×";
+
+            const content =
+                document.createElement(
+                    "div");
+
+            content.className =
+                "products-toast-content";
+
+            const titleElement =
+                document.createElement(
+                    "span");
+
+            titleElement.className =
+                "products-toast-title";
+
+            titleElement.textContent =
+                title;
+
+            const messageElement =
+                document.createElement(
+                    "span");
+
+            messageElement.className =
+                "products-toast-message";
+
+            messageElement.textContent =
+                message;
+
+            const closeButton =
+                document.createElement(
+                    "button");
+
+            closeButton.type =
+                "button";
+
+            closeButton.className =
+                "products-toast-close";
+
+            closeButton.setAttribute(
+                "aria-label",
+                "Close notification");
+
+            closeButton.innerHTML =
+                "&times;";
+
+            content.appendChild(
+                titleElement);
+
+            content.appendChild(
+                messageElement);
+
+            toast.appendChild(
+                icon);
+
+            toast.appendChild(
+                content);
+
+            toast.appendChild(
+                closeButton);
+
+            container.appendChild(
+                toast);
+
+            window.requestAnimationFrame(
+                function () {
+                    toast.classList.add(
+                        "show");
+                });
+
+            const closeTimer =
+                window.setTimeout(
+                    removeToast,
+                    5000);
+
+            function removeToast() {
+                if (!toast.isConnected) {
+                    return;
+                }
+
+                window.clearTimeout(
+                    closeTimer);
+
+                toast.classList.remove(
+                    "show");
+
+                window.setTimeout(
+                    function () {
+                        toast.remove();
+                    },
+                    280);
+            }
+
+            closeButton.addEventListener(
+                "click",
+                removeToast);
         }
 
-        function deleteProduct(productId) {
-            if (confirm('Are you sure you want to delete this product?')) {
-                window.location.href = `/StoreOwner/Products/Delete?id=${productId}`;
+        document
+            .getElementById("CategoryFilter")
+            ?.addEventListener(
+                "change",
+                function () {
+                    document
+                        .getElementById("filterForm")
+                        ?.submit();
+                });
+
+        document
+            .getElementById("StatusFilter")
+            ?.addEventListener(
+                "change",
+                function () {
+                    document
+                        .getElementById("filterForm")
+                        ?.submit();
+                });
+
+        async function toggleStatus(
+            productId,
+            button) {
+
+            if (!productId) {
+                showProductsToast(
+                    "The product ID is invalid.",
+                    "error",
+                    "Status update failed");
+
+                return;
+            }
+
+            if (button) {
+                button.disabled = true;
+            }
+
+            try {
+                const verificationToken =
+                    document.querySelector(
+                        'input[name="__RequestVerificationToken"]'
+                    )?.value || "";
+
+                const response =
+                    await fetch(
+                        "/StoreOwner/Products/Index?handler=ToggleStatus",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                "RequestVerificationToken":
+                                    verificationToken
+                            },
+
+                            body:
+                                JSON.stringify({
+                                    productId: productId
+                                })
+                        });
+
+                let data = null;
+
+                try {
+                    data =
+                        await response.json();
+                }
+                catch {
+                    data = null;
+                }
+
+                if (!response.ok) {
+                    showProductsToast(
+                        data?.message ||
+                        "The server could not update the product status.",
+                        "error",
+                        "Status update failed");
+
+                    return;
+                }
+
+                if (data?.success) {
+                    window.location.reload();
+                    return;
+                }
+
+                showProductsToast(
+                    data?.message ||
+                    "The product status could not be updated.",
+                    "error",
+                    "Status update failed");
+            }
+            catch (error) {
+                console.error(
+                    "Toggle product status failed:",
+                    error);
+
+                showProductsToast(
+                    "An unexpected error occurred while updating the product status.",
+                    "error",
+                    "Status update failed");
+            }
+            finally {
+                if (button) {
+                    button.disabled = false;
+                }
+            }
+        }
+
+        function deleteProduct(
+            productId) {
+
+            if (confirm(
+                "Are you sure you want to delete this product?")) {
+
+                window.location.href =
+                    `/StoreOwner/Products/Delete?id=${productId}`;
             }
         }
     </script>
 }
+
