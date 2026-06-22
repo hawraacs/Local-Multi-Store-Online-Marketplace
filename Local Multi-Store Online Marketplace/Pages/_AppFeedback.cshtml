@@ -1,0 +1,114 @@
+﻿@using System.Text.Json
+
+<div id="appToastContainer"
+     class="app-toast-container"
+     aria-live="polite"
+     aria-atomic="true">
+</div>
+
+<div id="appConfirmModal"
+     class="app-confirm-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="appConfirmTitle"
+     aria-describedby="appConfirmMessage"
+     aria-hidden="true">
+
+    <div class="app-confirm-card">
+
+        <div id="appConfirmIcon"
+             class="app-confirm-icon">
+            ?
+        </div>
+
+        <h3 id="appConfirmTitle"
+            class="app-confirm-title">
+            Confirm Action
+        </h3>
+
+        <p id="appConfirmMessage"
+           class="app-confirm-message">
+            Are you sure you want to continue?
+        </p>
+
+        <div class="app-confirm-actions">
+
+            <button id="appConfirmCancel"
+                    type="button"
+                    class="app-confirm-cancel">
+                Cancel
+            </button>
+
+            <button id="appConfirmSubmit"
+                    type="button"
+                    class="app-confirm-submit">
+                Confirm
+            </button>
+
+        </div>
+    </div>
+</div>
+
+@if (TempData["Success"] is string successMessage &&
+    !string.IsNullOrWhiteSpace(successMessage))
+{
+    <script>
+        window.addEventListener("DOMContentLoaded", function () {
+            if (typeof window.showAppToast === "function") {
+                window.showAppToast(
+        @Html.Raw(JsonSerializer.Serialize(successMessage)),
+                    "success",
+                    "Success"
+                );
+            }
+        });
+    </script>
+}
+
+@if (TempData["Error"] is string errorMessage &&
+    !string.IsNullOrWhiteSpace(errorMessage))
+{
+    <script>
+        window.addEventListener("DOMContentLoaded", function () {
+            if (typeof window.showAppToast === "function") {
+                window.showAppToast(
+        @Html.Raw(JsonSerializer.Serialize(errorMessage)),
+                    "error",
+                    "Unable to continue"
+                );
+            }
+        });
+    </script>
+}
+
+@if (TempData["Warning"] is string warningMessage &&
+    !string.IsNullOrWhiteSpace(warningMessage))
+{
+    <script>
+        window.addEventListener("DOMContentLoaded", function () {
+            if (typeof window.showAppToast === "function") {
+                window.showAppToast(
+        @Html.Raw(JsonSerializer.Serialize(warningMessage)),
+                    "warning",
+                    "Warning"
+                );
+            }
+        });
+    </script>
+}
+
+@if (TempData["Info"] is string infoMessage &&
+    !string.IsNullOrWhiteSpace(infoMessage))
+{
+    <script>
+        window.addEventListener("DOMContentLoaded", function () {
+            if (typeof window.showAppToast === "function") {
+                window.showAppToast(
+        @Html.Raw(JsonSerializer.Serialize(infoMessage)),
+                    "info",
+                    "Information"
+                );
+            }
+        });
+    </script>
+}

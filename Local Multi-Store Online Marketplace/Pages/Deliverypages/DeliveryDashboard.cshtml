@@ -1,5 +1,6 @@
 ﻿@page "/DeliveryDashboard"
 @model Local_Multi_Store_Online_Marketplace.Pages.Deliverypages.DeliveryDashboardModel
+
 @{
     Layout = null;
 
@@ -98,9 +99,9 @@
             position: relative;
         }
 
-            .notification-bell:hover {
-                background: #f9fafb;
-            }
+        .notification-bell:hover {
+            background: #f9fafb;
+        }
 
         .notification-count {
             position: absolute;
@@ -134,9 +135,9 @@
             z-index: 100;
         }
 
-            .notification-dropdown.show {
-                display: block;
-            }
+        .notification-dropdown.show {
+            display: block;
+        }
 
         .notification-head {
             padding: 14px 15px;
@@ -150,11 +151,11 @@
             z-index: 2;
         }
 
-            .notification-head h4 {
-                margin: 0;
-                font-size: 15px;
-                color: #111827;
-            }
+        .notification-head h4 {
+            margin: 0;
+            font-size: 15px;
+            color: #111827;
+        }
 
         .notification-pill {
             background: #fee2e2;
@@ -268,20 +269,20 @@
             transition: 0.2s ease;
         }
 
-            .assignment.highlight {
-                border-color: #2563eb;
-                box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
-                background: #eff6ff;
-            }
+        .assignment.highlight {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+            background: #eff6ff;
+        }
 
-            .assignment strong {
-                color: #111827;
-            }
+        .assignment strong {
+            color: #111827;
+        }
 
-            .assignment p {
-                margin: 7px 0;
-                color: #374151;
-            }
+        .assignment p {
+            margin: 7px 0;
+            color: #374151;
+        }
 
         .badge {
             display: inline-block;
@@ -313,13 +314,17 @@
             color: white;
         }
 
-            .start-btn:hover {
-                background: #ff6b35;
-            }
+        .start-btn:hover {
+            background: #ff6b35;
+        }
 
         .done-btn {
             background: #dcfce7;
             color: #166534;
+        }
+
+        .done-btn:hover {
+            background: #bbf7d0;
         }
 
         .empty {
@@ -336,6 +341,131 @@
             color: #991b1b;
         }
 
+        /* =====================================================
+           CUSTOM DELIVERED CONFIRMATION MODAL
+           ===================================================== */
+
+        .delivery-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.68);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+        }
+
+        .delivery-modal-overlay.show {
+            display: flex;
+        }
+
+        .delivery-modal-card {
+            width: min(440px, 100%);
+            background: #ffffff;
+            border-radius: 22px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.30);
+            overflow: hidden;
+            animation: deliveryModalOpen 0.22s ease;
+        }
+
+        @@keyframes deliveryModalOpen {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .delivery-modal-header {
+            padding: 24px 24px 14px;
+            text-align: center;
+        }
+
+        .delivery-modal-icon {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 14px;
+            border-radius: 50%;
+            background: #dcfce7;
+            color: #166534;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 900;
+        }
+
+        .delivery-modal-title {
+            margin: 0;
+            color: #111827;
+            font-size: 21px;
+            font-weight: 900;
+        }
+
+        .delivery-modal-body {
+            padding: 0 24px 24px;
+            text-align: center;
+        }
+
+        .delivery-modal-message {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .delivery-modal-order {
+            display: block;
+            margin-top: 10px;
+            color: #111827;
+            font-weight: 900;
+        }
+
+        .delivery-modal-actions {
+            display: flex;
+            gap: 10px;
+            padding: 18px 24px 24px;
+        }
+
+        .delivery-modal-button {
+            flex: 1;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-weight: 900;
+            font-size: 14px;
+        }
+
+        .delivery-modal-cancel {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .delivery-modal-cancel:hover {
+            background: #d1d5db;
+        }
+
+        .delivery-modal-confirm {
+            background: #16a34a;
+            color: #ffffff;
+        }
+
+        .delivery-modal-confirm:hover {
+            background: #15803d;
+        }
+
+        .delivery-modal-confirm:disabled {
+            cursor: wait;
+            opacity: 0.7;
+        }
+
         @@media (max-width: 650px) {
             .page {
                 padding: 18px;
@@ -349,25 +479,46 @@
                 width: 310px;
                 right: -5px;
             }
+
+            .delivery-modal-actions {
+                flex-direction: column-reverse;
+            }
+
+            .delivery-modal-button {
+                width: 100%;
+            }
         }
     </style>
 </head>
 
 <body>
+
     <partial name="_DeliveryNav" />
+
     <div class="page">
         <div class="box">
+
             <div class="dashboard-header">
-                <div class="delivery-icon">🚚</div>
+
+                <div class="delivery-icon">
+                    🚚
+                </div>
 
                 <div class="title-area">
-                    <h2>Delivery Dashboard</h2>
+
+                    <h2>
+                        Delivery Dashboard
+                    </h2>
+
                     <p class="subtitle">
-                        Keep this page open while delivering. Your location updates every second for demo tracking.
+                        Keep this page open while delivering.
+                        Your location updates every second for demo tracking.
                     </p>
+
                 </div>
 
                 <div class="notification-wrapper">
+
                     <button type="button"
                             class="notification-bell"
                             onclick="toggleNotifications()">
@@ -375,17 +526,29 @@
 
                         @if (notificationCount > 0)
                         {
-                            <span class="notification-count">@notificationCount</span>
+                            <span class="notification-count">
+                                @notificationCount
+                            </span>
                         }
                     </button>
 
-                    <div id="notificationDropdown" class="notification-dropdown">
+                    <div id="notificationDropdown"
+                         class="notification-dropdown">
+
                         <div class="notification-head">
-                            <h4>Notifications</h4>
-                            <span class="notification-pill">@notificationCount new</span>
+
+                            <h4>
+                                Notifications
+                            </h4>
+
+                            <span class="notification-pill">
+                                @notificationCount new
+                            </span>
+
                         </div>
 
-                        @if (Model.Notifications == null || !Model.Notifications.Any())
+                        @if (Model.Notifications == null ||
+                             !Model.Notifications.Any())
                         {
                             <div class="notification-empty">
                                 No new assigned orders.
@@ -393,191 +556,526 @@
                         }
                         else
                         {
-                            @foreach (var n in Model.Notifications)
+                            @foreach (var notification in Model.Notifications)
                             {
                                 <div class="notification-item">
+
                                     <div class="notification-title">
-                                        <span class="notification-dot"></span>
-                                        @n.Title
+
+                                        <span class="notification-dot">
+                                        </span>
+
+                                        @notification.Title
+
                                     </div>
 
-                                    <p class="notification-message">@n.Message</p>
+                                    <p class="notification-message">
+                                        @notification.Message
+                                    </p>
 
                                     <span class="notification-time">
-                                        @n.SentAt.ToString("dd MMM yyyy HH:mm")
+                                        @notification.SentAt.ToString(
+                                            "dd MMM yyyy HH:mm")
                                     </span>
 
-                                    @if (n.ReferenceID.HasValue)
+                                    @if (notification.ReferenceID.HasValue)
                                     {
-                                        <a href="#order_@n.ReferenceID.Value"
+                                        <a href="#order_@notification.ReferenceID.Value"
                                            class="notification-link"
-                                           onclick="highlightOrder(@n.ReferenceID.Value)">
+                                           onclick="highlightOrder(@notification.ReferenceID.Value)">
                                             View Assigned Order
                                         </a>
                                     }
+
                                 </div>
                             }
                         }
+
                     </div>
+
                 </div>
+
             </div>
 
             @if (TempData["Success"] != null)
             {
-                <div class="message success">@TempData["Success"]</div>
+                <div class="message success">
+                    @TempData["Success"]
+                </div>
             }
 
             @if (TempData["Error"] != null)
             {
-                <div class="message error">@TempData["Error"]</div>
+                <div class="message error">
+                    @TempData["Error"]
+                </div>
             }
 
             @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
             {
-                <div class="message error">@Model.ErrorMessage</div>
+                <div class="message error">
+                    @Model.ErrorMessage
+                </div>
             }
 
             <div class="location-box">
-                <div class="location-status" id="locationStatus">
+
+                <div class="location-status"
+                     id="locationStatus">
                     Location tracking will update automatically every second.
                 </div>
+
             </div>
 
-            @if (Model.Assignments == null || !Model.Assignments.Any())
+            @if (Model.Assignments == null ||
+                 !Model.Assignments.Any())
             {
                 <div class="empty">
-                    <h3>No active assignments</h3>
-                    <p>Your assigned deliveries will appear here.</p>
+
+                    <h3>
+                        No active assignments
+                    </h3>
+
+                    <p>
+                        Your assigned deliveries will appear here.
+                    </p>
+
                 </div>
             }
             else
             {
                 @foreach (var item in Model.Assignments)
                 {
-                    <div class="assignment" id="order_@item.OrderID">
-                        <p><strong>Order:</strong> @item.OrderNumber</p>
-                        <p><strong>Order Status:</strong> <span class="badge">@item.OrderStatus</span></p>
-                        <p><strong>Assignment Status:</strong> <span class="badge">@item.AssignmentStatus</span></p>
-                        <p><strong>Address:</strong> @item.CustomerAddress</p>
-                        <p><strong>Assigned:</strong> @item.AssignedAt.ToString("dd MMM yyyy HH:mm")</p>
+                    <div class="assignment"
+                         id="order_@item.OrderID">
+
+                        <p>
+                            <strong>Order:</strong>
+                            @item.OrderNumber
+                        </p>
+
+                        <p>
+                            <strong>Order Status:</strong>
+
+                            <span class="badge">
+                                @item.OrderStatus
+                            </span>
+                        </p>
+
+                        <p>
+                            <strong>Assignment Status:</strong>
+
+                            <span class="badge">
+                                @item.AssignmentStatus
+                            </span>
+                        </p>
+
+                        <p>
+                            <strong>Address:</strong>
+                            @item.CustomerAddress
+                        </p>
+
+                        <p>
+                            <strong>Assigned:</strong>
+                            @item.AssignedAt.ToString(
+                                "dd MMM yyyy HH:mm")
+                        </p>
 
                         <div class="actions">
+
                             @if (item.AssignmentStatus == "Assigned")
                             {
-                                <form method="post" asp-page-handler="StartDelivery">
-                                    <input type="hidden" name="assignmentId" value="@item.AssignmentID" />
-                                    <button type="submit" class="start-btn">
+                                <form method="post"
+                                      asp-page-handler="StartDelivery">
+
+                                    <input type="hidden"
+                                           name="assignmentId"
+                                           value="@item.AssignmentID" />
+
+                                    <button type="submit"
+                                            class="start-btn">
                                         Start Delivery
                                     </button>
+
                                 </form>
                             }
                             else if (item.AssignmentStatus == "OutForDelivery")
                             {
-                                <form method="post" asp-page-handler="MarkDelivered">
-                                    <input type="hidden" name="assignmentId" value="@item.AssignmentID" />
-                                    <button type="submit"
+                                <form method="post"
+                                      asp-page-handler="MarkDelivered"
+                                      id="markDeliveredForm_@item.AssignmentID">
+
+                                    <input type="hidden"
+                                           name="assignmentId"
+                                           value="@item.AssignmentID" />
+
+                                    <button type="button"
                                             class="done-btn"
-                                            onclick="return confirm('Mark this order as delivered?')">
+                                            onclick="openDeliveredModal(
+                                                'markDeliveredForm_@item.AssignmentID',
+                                                '@item.OrderNumber')">
                                         Mark Delivered
                                     </button>
+
                                 </form>
                             }
+
                         </div>
+
                     </div>
                 }
             }
+
+        </div>
+    </div>
+
+    <!-- =====================================================
+         CUSTOM MARK DELIVERED MODAL
+         ===================================================== -->
+
+    <div id="deliveredModal"
+         class="delivery-modal-overlay"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="deliveredModalTitle">
+
+        <div class="delivery-modal-card">
+
+            <div class="delivery-modal-header">
+
+                <div class="delivery-modal-icon">
+                    ✓
+                </div>
+
+                <h3 id="deliveredModalTitle"
+                    class="delivery-modal-title">
+                    Mark Order as Delivered?
+                </h3>
+
+            </div>
+
+            <div class="delivery-modal-body">
+
+                <p class="delivery-modal-message">
+                    Confirm that the customer received this order.
+
+                    For Cash On Delivery orders, the payment will
+                    also be marked as paid.
+
+                    <span id="deliveredModalOrder"
+                          class="delivery-modal-order">
+                    </span>
+                </p>
+
+            </div>
+
+            <div class="delivery-modal-actions">
+
+                <button type="button"
+                        class="delivery-modal-button delivery-modal-cancel"
+                        onclick="closeDeliveredModal()">
+                    Cancel
+                </button>
+
+                <button type="button"
+                        id="confirmDeliveredButton"
+                        class="delivery-modal-button delivery-modal-confirm"
+                        onclick="submitDeliveredForm()">
+                    Confirm Delivered
+                </button>
+
+            </div>
+
         </div>
     </div>
 
     <script>
-        function toggleNotifications() {
-            const dropdown = document.getElementById("notificationDropdown");
-            dropdown.classList.toggle("show");
-        }
+        let pendingDeliveredFormId = null;
 
-        function highlightOrder(orderId) {
-            const dropdown = document.getElementById("notificationDropdown");
-            dropdown.classList.remove("show");
+        function openDeliveredModal(
+            formId,
+            orderNumber) {
 
-            setTimeout(function () {
-                const orderCard = document.getElementById("order_" + orderId);
+            const modal =
+                document.getElementById(
+                    "deliveredModal");
 
-                if (orderCard) {
-                    document.querySelectorAll(".assignment").forEach(function (card) {
-                        card.classList.remove("highlight");
-                    });
+            const orderText =
+                document.getElementById(
+                    "deliveredModalOrder");
 
-                    orderCard.classList.add("highlight");
+            const confirmButton =
+                document.getElementById(
+                    "confirmDeliveredButton");
 
-                    setTimeout(function () {
-                        orderCard.classList.remove("highlight");
-                    }, 3500);
-                }
-            }, 150);
-        }
+            const form =
+                document.getElementById(
+                    formId);
 
-        document.addEventListener("click", function (event) {
-            const wrapper = document.querySelector(".notification-wrapper");
-            const dropdown = document.getElementById("notificationDropdown");
+            if (!modal ||
+                !form) {
 
-            if (wrapper && dropdown && !wrapper.contains(event.target)) {
-                dropdown.classList.remove("show");
-            }
-        });
-
-        document.addEventListener("DOMContentLoaded", function () {
-            updateMyLocation();
-            setInterval(updateMyLocation, 1000);
-        });
-
-        function updateMyLocation() {
-            const status = document.getElementById("locationStatus");
-
-            if (!navigator.geolocation) {
-                status.className = "location-status gps-bad";
-                status.innerText = "GPS is not supported on this device.";
                 return;
             }
 
-            status.className = "location-status";
-            status.innerText = "Getting GPS location...";
+            pendingDeliveredFormId =
+                formId;
+
+            if (orderText) {
+                orderText.textContent =
+                    "Order: " +
+                    orderNumber;
+            }
+
+            if (confirmButton) {
+                confirmButton.disabled =
+                    false;
+
+                confirmButton.textContent =
+                    "Confirm Delivered";
+            }
+
+            modal.classList.add(
+                "show");
+
+            document.body.style.overflow =
+                "hidden";
+        }
+
+        function closeDeliveredModal() {
+            const modal =
+                document.getElementById(
+                    "deliveredModal");
+
+            if (modal) {
+                modal.classList.remove(
+                    "show");
+            }
+
+            pendingDeliveredFormId =
+                null;
+
+            document.body.style.overflow =
+                "";
+        }
+
+        function submitDeliveredForm() {
+            if (!pendingDeliveredFormId) {
+                return;
+            }
+
+            const form =
+                document.getElementById(
+                    pendingDeliveredFormId);
+
+            const confirmButton =
+                document.getElementById(
+                    "confirmDeliveredButton");
+
+            if (!form) {
+                closeDeliveredModal();
+                return;
+            }
+
+            if (confirmButton) {
+                confirmButton.disabled =
+                    true;
+
+                confirmButton.textContent =
+                    "Updating...";
+            }
+
+            form.submit();
+        }
+
+        const deliveredModal =
+            document.getElementById(
+                "deliveredModal");
+
+        if (deliveredModal) {
+            deliveredModal.addEventListener(
+                "click",
+                function (event) {
+                    if (event.target === deliveredModal) {
+                        closeDeliveredModal();
+                    }
+                });
+        }
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+                if (event.key === "Escape") {
+                    closeDeliveredModal();
+                }
+            });
+
+        function toggleNotifications() {
+            const dropdown =
+                document.getElementById(
+                    "notificationDropdown");
+
+            if (dropdown) {
+                dropdown.classList.toggle(
+                    "show");
+            }
+        }
+
+        function highlightOrder(orderId) {
+            const dropdown =
+                document.getElementById(
+                    "notificationDropdown");
+
+            if (dropdown) {
+                dropdown.classList.remove(
+                    "show");
+            }
+
+            setTimeout(
+                function () {
+                    const orderCard =
+                        document.getElementById(
+                            "order_" + orderId);
+
+                    if (orderCard) {
+                        document
+                            .querySelectorAll(
+                                ".assignment")
+                            .forEach(
+                                function (card) {
+                                    card.classList.remove(
+                                        "highlight");
+                                });
+
+                        orderCard.classList.add(
+                            "highlight");
+
+                        setTimeout(
+                            function () {
+                                orderCard.classList.remove(
+                                    "highlight");
+                            },
+                            3500);
+                    }
+                },
+                150);
+        }
+
+        document.addEventListener(
+            "click",
+            function (event) {
+                const wrapper =
+                    document.querySelector(
+                        ".notification-wrapper");
+
+                const dropdown =
+                    document.getElementById(
+                        "notificationDropdown");
+
+                if (wrapper &&
+                    dropdown &&
+                    !wrapper.contains(event.target)) {
+
+                    dropdown.classList.remove(
+                        "show");
+                }
+            });
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+                updateMyLocation();
+
+                window.setInterval(
+                    updateMyLocation,
+                    1000);
+            });
+
+        function updateMyLocation() {
+            const status =
+                document.getElementById(
+                    "locationStatus");
+
+            if (!status) {
+                return;
+            }
+
+            if (!navigator.geolocation) {
+                status.className =
+                    "location-status gps-bad";
+
+                status.innerText =
+                    "GPS is not supported on this device.";
+
+                return;
+            }
+
+            status.className =
+                "location-status";
+
+            status.innerText =
+                "Getting GPS location...";
 
             navigator.geolocation.getCurrentPosition(
                 async function (position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
+                    const lat =
+                        position.coords.latitude;
+
+                    const lng =
+                        position.coords.longitude;
+
+                    const accuracy =
+                        position.coords.accuracy;
 
                     try {
-                        const response = await fetch("/api/delivery-tracking/update-location", {
-                            method: "POST",
-                            credentials: "same-origin",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                latitude: lat,
-                                longitude: lng
-                            })
-                        });
+                        const response =
+                            await fetch(
+                                "/api/delivery-tracking/update-location",
+                                {
+                                    method: "POST",
+
+                                    credentials:
+                                        "same-origin",
+
+                                    headers: {
+                                        "Content-Type":
+                                            "application/json"
+                                    },
+
+                                    body:
+                                        JSON.stringify({
+                                            latitude: lat,
+                                            longitude: lng
+                                        })
+                                });
 
                         let data = null;
 
                         try {
-                            data = await response.json();
-                        } catch {
+                            data =
+                                await response.json();
+                        }
+                        catch {
                             data = null;
                         }
 
                         if (!response.ok) {
-                            status.className = "location-status gps-bad";
+                            status.className =
+                                "location-status gps-bad";
+
                             status.innerText =
-                                data?.message || "Could not update location. Please login as approved delivery staff.";
+                                data?.message ||
+                                "Could not update location. Please login as approved delivery staff.";
+
                             return;
                         }
 
-                        if (data && data.success) {
-                            status.className = "location-status gps-good";
+                        if (data &&
+                            data.success) {
+
+                            status.className =
+                                "location-status gps-good";
+
                             status.innerText =
                                 "Location updated: " +
                                 lat.toFixed(6) +
@@ -587,36 +1085,61 @@
                                 Math.round(accuracy) +
                                 "m | Time: " +
                                 (data.updatedAt || "now");
-                        } else {
-                            status.className = "location-status gps-bad";
-                            status.innerText =
-                                data?.message || "Could not update location.";
                         }
-                    } catch {
-                        status.className = "location-status gps-bad";
-                        status.innerText = "Could not update location. Check your connection.";
-                    }
-                },
-                function (error) {
-                    status.className = "location-status gps-bad";
+                        else {
+                            status.className =
+                                "location-status gps-bad";
 
-                    if (error.code === error.PERMISSION_DENIED) {
-                        status.innerText = "GPS permission denied. Click the lock icon near the URL and allow Location.";
-                    } else if (error.code === error.POSITION_UNAVAILABLE) {
-                        status.innerText = "GPS position unavailable. Enable device location and try again.";
-                    } else if (error.code === error.TIMEOUT) {
-                        status.innerText = "GPS timeout. Trying again in 1 second.";
-                    } else {
-                        status.innerText = "GPS is off. Location update temporarily unavailable.";
+                            status.innerText =
+                                data?.message ||
+                                "Could not update location.";
+                        }
+                    }
+                    catch {
+                        status.className =
+                            "location-status gps-bad";
+
+                        status.innerText =
+                            "Could not update location. Check your connection.";
                     }
                 },
+
+                function (error) {
+                    status.className =
+                        "location-status gps-bad";
+
+                    if (error.code ===
+                        error.PERMISSION_DENIED) {
+
+                        status.innerText =
+                            "GPS permission denied. Click the lock icon near the URL and allow Location.";
+                    }
+                    else if (error.code ===
+                             error.POSITION_UNAVAILABLE) {
+
+                        status.innerText =
+                            "GPS position unavailable. Enable device location and try again.";
+                    }
+                    else if (error.code ===
+                             error.TIMEOUT) {
+
+                        status.innerText =
+                            "GPS timeout. Trying again in 1 second.";
+                    }
+                    else {
+                        status.innerText =
+                            "GPS is off. Location update temporarily unavailable.";
+                    }
+                },
+
                 {
                     enableHighAccuracy: true,
                     timeout: 15000,
                     maximumAge: 500
-                }
-            );
+                });
         }
     </script>
+
 </body>
 </html>
+
