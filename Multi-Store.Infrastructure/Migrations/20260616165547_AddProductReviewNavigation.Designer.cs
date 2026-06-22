@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Multi_Store.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Multi_Store.Infrastructure.Data;
 namespace Multi_Store.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260616165547_AddProductReviewNavigation")]
+    partial class AddProductReviewNavigation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -691,9 +694,6 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<string>("RejectionReason")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("RequestedByUserID")
-                        .HasColumnType("int");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -710,8 +710,6 @@ namespace Multi_Store.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("DeliveryPersonID");
-
-                    b.HasIndex("RequestedByUserID");
 
                     b.HasIndex("UserID")
                         .IsUnique();
@@ -1925,11 +1923,6 @@ namespace Multi_Store.Infrastructure.Migrations
 
             modelBuilder.Entity("Multi_Store.Core.Entities.DeliveryPerson", b =>
                 {
-                    b.HasOne("Multi_Store.Core.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("RequestedByUserID")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Multi_Store.Core.Entities.User", "User")
                         .WithOne("DeliveryPerson")
                         .HasForeignKey("Multi_Store.Core.Entities.DeliveryPerson", "UserID")

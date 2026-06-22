@@ -43,5 +43,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             return Page();
         }
+        public async Task<IActionResult> OnPostDeleteReviewAsync(
+    int reviewId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Login");
+
+            await _storeManager.DeleteProductReviewAsync(
+                reviewId,
+                user.Id);
+
+            return RedirectToPage();
+        }
     }
 }

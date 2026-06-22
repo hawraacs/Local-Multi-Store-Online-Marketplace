@@ -254,5 +254,13 @@ namespace Multi_Store.Services.Managers
 
         public Task<List<Review>> GetStoreReviewsAsync(int storeId)
             => _storeRepository.GetStoreReviewsAsync(storeId);
+        public Task DeleteProductReviewAsync(
+     int reviewId,
+     int storeOwnerId)
+        {
+            return _storeRepository.DeleteProductReviewAsync(
+                reviewId,
+                storeOwnerId);
+        }
     }
 }

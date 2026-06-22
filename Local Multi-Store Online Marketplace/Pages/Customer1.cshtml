@@ -5,179 +5,828 @@
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Customer Feed</title>
+    <title>Explore | realnest</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #f5f7fb;
+        :root {
+            --bg-color: #fdfbf7; /* Cozy warm white canvas */
+            --card-bg: #ffffff;
+            --border-color: #f3ece3; /* Soft warm borders */
+            --text-primary: #1c1917; /* Slate dark brown/black */
+            --text-secondary: #78716c; /* Elegant muted stone gray */
+            /* White & Orange Sunset Palette */
+            --accent-color: #ff6b35; /* Radiant bright orange */
+            --accent-hover: #f05a22; /* Rich dark orange */
+            --accent-light: #fff1eb; /* Pastel orange tint */
+            --accent-gradient: linear-gradient(135deg, #ff9f43 0%, #ff6b35 50%, #f05a22 100%); /* Orange-to-coral punch */
+
+            --like-color: #ef4444;
+            --success-color: #f59e0b; /* Golden amber orange */
+            --error-color: #ea580c; /* Fiery orange-red */
+            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --shadow-sm: 0 4px 12px rgba(255, 107, 53, 0.04);
+            --shadow-md: 0 10px 30px rgba(255, 107, 53, 0.08);
+            --shadow-lg: 0 20px 40px rgba(255, 107, 53, 0.12);
         }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* TOP BAR */
         .topbar {
-            background: #111827;
-            color: white;
-            padding: 14px 30px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(28, 25, 23, 0.02);
         }
 
-        .menu a {
-            color: white;
-            margin: 0 10px;
+        .brand-logo {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
             text-decoration: none;
-            font-size: 14px;
+            background: linear-gradient(135deg, #ff9f43 0%, #ff6b35 50%, #f05a22 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
+            .brand-logo i {
+                font-size: 20px;
+                background: linear-gradient(135deg, #ff9f43 0%, #ff6b35 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+        .menu {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+            .menu a {
+                color: var(--text-primary);
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                padding: 8px 14px;
+                border-radius: 50px;
+            }
+
+                .menu a i {
+                    font-size: 16px;
+                    color: var(--text-secondary);
+                    transition: color 0.2s ease;
+                }
+
+                .menu a:hover {
+                    color: var(--accent-color);
+                    background-color: var(--accent-light);
+                }
+
+                    .menu a:hover i {
+                        color: var(--accent-color);
+                    }
+
+                .menu a.active {
+                    color: #ffffff;
+                    background: var(--accent-gradient);
+                    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+                }
+
+                    .menu a.active i {
+                        color: #ffffff;
+                    }
+
+        /* BOTTOM NAV FOR MOBILE */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 68px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid var(--border-color);
+            z-index: 1000;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+            .bottom-nav a {
+                color: var(--text-secondary);
+                text-decoration: none;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                font-size: 10px;
+                font-weight: 600;
+                flex: 1;
+                transition: color 0.2s ease;
+            }
+
+                .bottom-nav a i {
+                    font-size: 20px;
+                    transition: transform 0.2s ease;
+                }
+
+                .bottom-nav a:active i {
+                    transform: scale(0.85);
+                }
+
+                .bottom-nav a.active {
+                    color: var(--accent-color);
+                }
+
+        /* CATEGORIES NAVBAR (Instagram Stories visual style) */
+        .category-navbar {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 20px 24px;
+            margin: 15px auto;
+            max-width: 935px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+            .category-navbar::-webkit-scrollbar {
+                display: none;
+            }
+
+            .category-navbar a {
+                text-decoration: none;
+                padding: 10px 20px;
+                border-radius: 50px;
+                background: var(--card-bg);
+                color: var(--text-primary);
+                border: 1px solid var(--border-color);
+                font-size: 13px;
+                font-weight: 700;
+                white-space: nowrap;
+                transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                box-shadow: var(--shadow-sm);
+            }
+
+                .category-navbar a:hover {
+                    border-color: var(--accent-color);
+                    color: var(--accent-color);
+                    transform: translateY(-2px);
+                }
+
+        .active-category {
+            background: var(--accent-gradient) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.35) !important;
+        }
+
+        /* EXPLORE FEED GRID */
         .feed {
-            max-width: 720px;
-            margin: 30px auto;
+            max-width: 935px;
+            margin: 0 auto 60px auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+            padding: 0 20px;
         }
 
+        /* FEED POST CARD */
         .post {
-            background: white;
-            border-radius: 18px;
-            margin-bottom: 25px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
         }
+
+            .post:hover {
+                transform: translateY(-4px);
+                box-shadow: var(--shadow-lg);
+            }
 
         .post-body {
-            padding: 18px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
 
+        /* POST HEADER */
         .post-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
+
+        .store-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .store-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            padding: 2.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 10px rgba(255, 107, 53, 0.15);
+        }
+
+            .store-avatar span {
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                background: var(--card-bg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 13px;
+                font-weight: 800;
+                color: var(--accent-color);
+            }
 
         .store a {
             font-weight: 700;
-            color: #ff6b35;
+            color: var(--text-primary);
             text-decoration: none;
+            font-size: 14px;
+            transition: color 0.15s ease;
+        }
+
+            .store a:hover {
+                color: var(--accent-color);
+            }
+
+        .btn-follow {
+            font-size: 12px;
+            font-weight: 700;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 6px 14px;
+            border-radius: 50px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-follow-state {
+            color: #ffffff;
+            background: var(--accent-gradient);
+            box-shadow: 0 4px 10px rgba(255, 107, 53, 0.2);
+        }
+
+            .btn-follow-state:hover {
+                opacity: 0.95;
+                transform: scale(1.03);
+            }
+
+        .btn-unfollow-state {
+            color: var(--text-secondary);
+            background-color: #f5f2eb;
+            border: 1px solid var(--border-color);
+        }
+
+            .btn-unfollow-state:hover {
+                background-color: #ebe6db;
+                color: var(--text-primary);
+            }
+
+        /* IMAGE WRAPPER (Instagram Grid Standard 1:1 Aspect) */
+        .post-image-container {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border-radius: 12px;
+            background-color: #f7f5f0;
+            position: relative;
+        }
+
+            .post-image-container img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+
+        .post:hover .post-image-container img {
+            transform: scale(1.05);
+        }
+
+        /* PRODUCT INFORMATION */
+        .product-meta {
+            margin-top: 14px;
+            flex-grow: 1;
+        }
+
+        .product-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
         }
 
         .product-name {
-            font-size: 20px;
-            font-weight: 700;
-            margin-top: 10px;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.3;
         }
 
         .product-price {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 800;
-            color: #e67e22;
-            margin-top: 5px;
+            color: var(--accent-color);
+            background: var(--accent-light);
+            padding: 3px 10px;
+            border-radius: 30px;
+            white-space: nowrap;
         }
 
-        .post img {
-            width: 100%;
-            height: 240px;
-            object-fit: cover;
+        .product-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
+        /* ACTIONS */
         .actions {
             display: flex;
+            align-items: center;
             gap: 10px;
-            margin-top: 12px;
-            flex-wrap: wrap;
+            margin-top: 14px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 14px;
         }
 
-        .btn-like, .btn-cart {
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
             padding: 8px 14px;
-            border-radius: 20px;
-            border: 1px solid #ddd;
-            background: white;
+            border-radius: 50px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+            transition: all 0.25s ease;
+            box-shadow: var(--shadow-sm);
         }
 
-        .btn-cart {
-            background: #111827;
-            color: white;
+            .btn-action i {
+                font-size: 13px;
+            }
+
+            .btn-action:hover {
+                background: #fffdfa;
+                border-color: var(--accent-color);
+                color: var(--accent-color);
+                transform: translateY(-1px);
+            }
+
+        .btn-action-like {
+            color: var(--like-color);
+            border-color: #ffd1cc;
+            background: #fff5f5;
         }
 
+            .btn-action-like:hover {
+                background: #ffe3e1;
+                border-color: var(--like-color);
+                color: var(--like-color);
+            }
+
+        .btn-action-cart {
+            background: var(--accent-gradient);
+            color: #ffffff;
+            border: none;
+            margin-left: auto;
+            box-shadow: 0 4px 10px rgba(255, 107, 53, 0.2);
+        }
+
+            .btn-action-cart:hover {
+                color: #ffffff;
+                opacity: 0.95;
+                box-shadow: 0 6px 15px rgba(255, 107, 53, 0.3);
+            }
+
+        /* TOAST NOTIFICATIONS */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 380px;
+            width: calc(100% - 48px);
+        }
+
+        .toast {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 16px 20px;
+            box-shadow: 0 15px 35px rgba(28, 25, 23, 0.12);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
+            border-left: 5px solid var(--border-color);
+        }
+
+            .toast.toast-success {
+                border-left-color: var(--success-color);
+            }
+
+                .toast.toast-success i {
+                    color: var(--success-color);
+                    font-size: 18px;
+                }
+
+            .toast.toast-error {
+                border-left-color: var(--error-color);
+            }
+
+                .toast.toast-error i {
+                    color: var(--error-color);
+                    font-size: 18px;
+                }
+
+        .toast-message {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex-grow: 1;
+        }
+
+        .toast-close {
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            line-height: 1;
+            transition: color 0.15s ease;
+        }
+
+            .toast-close:hover {
+                color: var(--text-primary);
+            }
+
+        /* EMPTY MESSAGE */
         .empty-message {
+            grid-column: 1 / -1;
             text-align: center;
-            margin-top: 80px;
-            color: gray;
+            padding: 80px 30px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 2px dashed #e5dec9;
+            color: var(--text-secondary);
+            box-shadow: var(--shadow-sm);
         }
 
+        .empty-icon {
+            font-size: 54px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .empty-message h3 {
+            margin-bottom: 10px;
+            color: var(--text-primary);
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .empty-message p {
+            font-size: 14px;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        /* MODERN SHARE MODAL */
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,.4);
-            z-index: 99999;
+            background: rgba(28, 25, 23, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            align-items: center;
+            justify-content: center;
         }
 
+            .modal.show {
+                opacity: 1;
+                display: flex;
+            }
+
         .modal-content {
-            width: 300px;
-            background: white;
-            margin: 120px auto;
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 22px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+
+            .modal-header h3 {
+                font-size: 18px;
+                font-weight: 800;
+                color: var(--text-primary);
+            }
+
+        .modal-body {
             padding: 20px;
-            border-radius: 12px;
         }
 
         .modal-btn {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 14px;
             text-decoration: none;
-            color: black;
-            background: #f5f5f5;
-            padding: 12px;
-            margin-top: 10px;
-            border-radius: 8px;
+            color: var(--text-primary);
+            background: #fffdfa;
+            padding: 16px 20px;
+            margin-top: 12px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.25s ease;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
         }
 
+            .modal-btn:first-child {
+                margin-top: 0;
+            }
+
+            .modal-btn:hover {
+                background: var(--accent-light);
+                border-color: var(--accent-color);
+                color: var(--accent-color);
+                transform: translateY(-2px);
+            }
+
+            .modal-btn i {
+                font-size: 20px;
+            }
+
+            .modal-btn#chatLink i {
+                color: var(--accent-color);
+            }
+
+            .modal-btn#whatsappLink i {
+                color: #25d366;
+            }
+
         .close-btn {
-            margin-top: 15px;
+            margin-top: 18px;
             width: 100%;
-            padding: 10px;
+            padding: 16px;
+            background: #f5f2eb;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+            .close-btn:hover {
+                background: #ebe6db;
+                color: var(--text-primary);
+            }
+
+        /* HIGHLIGHT PULSE EFFECT FOR TARGETED PRODUCTS */
+        .highlight-post {
+            animation: pulseHighlight 1.5s infinite ease-in-out;
+        }
+
+        @@keyframes pulseHighlight {
+            0%, 100% {
+                box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.4);
+                border-color: var(--accent-color);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(255, 107, 53, 0.1);
+                border-color: transparent;
+            }
+        }
+
+        @@keyframes slideIn {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* RESPONSIVE LAYOUTS */
+        @@media (max-width: 935px) {
+            .feed {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+                padding: 0 16px 20px 16px;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .topbar .menu {
+                display: none;
+            }
+
+            .bottom-nav {
+                display: flex;
+            }
+
+            body {
+                padding-bottom: 80px;
+            }
+        }
+
+        @@media (max-width: 520px) {
+            .feed {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 0 12px 20px 12px;
+            }
+
+            .category-navbar {
+                padding: 12px;
+            }
+
+            .modal {
+                align-items: flex-end;
+            }
+
+            .modal-content {
+                max-width: 100%;
+                border-radius: 24px 24px 0 0;
+                transform: translateY(100%);
+                transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            }
+
+            .modal.show .modal-content {
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- TOP BAR -->
-    <div class="topbar">
-        <div><b>realnest</b></div>
-
-        <div class="menu">
-            <a href="/Customer1">Explore</a>
-            <a href="/CustomerFeed">Feed</a>
-            <a href="/CustomerProducts">Shop</a>
-            <a href="/CustomerCart">Cart</a>
-            <a href="/CustomerOrders">Orders</a>
-            <a href="/Chat">Chat</a>
-            <a href="/CustomerProfile">Profile</a>
-        </div>
-    </div>
-
-    <!-- FEED -->
-    <div class="feed">
-
+    <!-- TOAST NOTIFICATIONS (Success/Error Message Area) -->
+    <div class="toast-container">
         @if (TempData["Success"] != null)
         {
-            <div style="color:green">@TempData["Success"]</div>
+            <div class="toast toast-success">
+                <i class="fa-solid fa-circle-check"></i>
+                <div class="toast-message">@TempData["Success"]</div>
+                <button type="button" class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
         }
 
         @if (TempData["Error"] != null)
         {
-            <div style="color:red">@TempData["Error"]</div>
+            <div class="toast toast-error">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <div class="toast-message">@TempData["Error"]</div>
+                <button type="button" class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
         }
+    </div>
 
+    <!-- DESKTOP TOP BAR -->
+    <div class="topbar">
+        <div>
+            <a href="/Customer1" class="brand-logo">
+                <i class="fa-solid fa-shop"></i> realnest
+            </a>
+        </div>
+
+        <div class="menu">
+            <a href="/Customer1" class="active"><i class="fa-solid fa-compass"></i> Explore</a>
+            <a href="/CustomerFeed"><i class="fa-solid fa-house"></i> Feed</a>
+            <a href="/CustomerProducts"><i class="fa-solid fa-bag-shopping"></i> Shop</a>
+            <a href="/CustomerCart"><i class="fa-solid fa-cart-shopping"></i> Cart</a>
+            <a href="/CustomerOrders"><i class="fa-solid fa-receipt"></i> Orders</a>
+            <a href="/Chat"><i class="fa-solid fa-paper-plane"></i> Chat</a>
+            <a href="/CustomerProfile"><i class="fa-solid fa-user"></i> Profile</a>
+        </div>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <div class="bottom-nav">
+        <a href="/Customer1" class="active"><i class="fa-solid fa-compass"></i><span>Explore</span></a>
+        <a href="/CustomerFeed"><i class="fa-solid fa-house"></i><span>Feed</span></a>
+        <a href="/CustomerProducts"><i class="fa-solid fa-bag-shopping"></i><span>Shop</span></a>
+        <a href="/CustomerCart"><i class="fa-solid fa-cart-shopping"></i><span>Cart</span></a>
+        <a href="/Chat"><i class="fa-solid fa-paper-plane"></i><span>Chat</span></a>
+        <a href="/CustomerProfile"><i class="fa-solid fa-user"></i><span>Profile</span></a>
+    </div>
+
+    <!-- STORIES / CATEGORY NAVIGATION -->
+    <div class="category-navbar">
+        <a asp-page="/Customer1"
+           class="@(string.IsNullOrEmpty(Model.SelectedCategory) ? "active-category" : "")">
+            All
+        </a>
+
+        @foreach (var category in Model.NavbarCategories)
+        {
+            var isActive =
+            (category == "All" && string.IsNullOrEmpty(Model.SelectedCategory))
+            || Model.SelectedCategory == category;
+
+            <a asp-page="/Customer1"
+               asp-route-category="@(category == "All" ? null : category)"
+               class="@(isActive ? "active-category" : "")">
+                @category
+            </a>
+        }
+    </div>
+
+    <!-- EXPLORE FEED GRID -->
+    <div class="feed">
         @if (Model.Products.Any())
         {
             foreach (var product in Model.Products)
@@ -192,75 +841,92 @@
                 }
 
                 <div class="post" id="product-@product.ProductID">
-
                     <div class="post-body">
 
-                        <!-- HEADER -->
+                        <!-- CARD HEADER -->
                         <div class="post-header">
-
-                            <!-- CLICKABLE STORE NAME -->
-                            <div class="store">
-                                <a href="/StoreCustomerProfile?id=@product.StoreID">
-                                    🏪 @product.Store?.StoreName
-                                </a>
+                            <div class="store-profile">
+                                <div class="store-avatar">
+                                    <span>
+                                        @if (!string.IsNullOrEmpty(product.Store?.StoreName))
+                                        {
+                                            @product.Store.StoreName.Substring(0, 1).ToUpper()
+                                        }
+                                        else
+                                        {
+                                            @:S
+                                        }
+                                    </span>
+                                </div>
+                                <div class="store">
+                                    <a href="/StoreCustomerProfile?id=@product.StoreID">
+                                        @product.Store?.StoreName
+                                    </a>
+                                </div>
                             </div>
 
                             @if (isFollowing)
                             {
-                                <form method="post" asp-page-handler="UnfollowStore" asp-route-storeId="@product.StoreID">
-                                    <button class="btn-like" style="background:#fee2e2;color:#991b1b;">
-                                        Unfollow
+                                <form method="post" asp-page-handler="UnfollowStore" asp-route-storeId="@product.StoreID" style="margin: 0;">
+                                    <button class="btn-follow btn-unfollow-state">
+                                        Following
                                     </button>
                                 </form>
                             }
                             else
                             {
-                                <form method="post" asp-page-handler="FollowStore" asp-route-storeId="@product.StoreID">
-                                    <button class="btn-like" style="background:#dcfce7;color:#166534;">
+                                <form method="post" asp-page-handler="FollowStore" asp-route-storeId="@product.StoreID" style="margin: 0;">
+                                    <button class="btn-follow btn-follow-state">
                                         Follow
                                     </button>
                                 </form>
                             }
-
                         </div>
 
-                        <!-- IMAGE -->
-                        <img src="@imageUrl" />
-
-                        <!-- PRODUCT INFO -->
-                        <div class="product-name">@product.ProductName</div>
-
-                        <div class="product-price">
-                            $@product.Price.ToString("N2")
+                        <!-- PRODUCT IMAGE -->
+                        <div class="post-image-container">
+                            <img src="@imageUrl" alt="@product.ProductName" loading="lazy" />
                         </div>
 
-                        <div>@product.Description</div>
+                        <!-- PRODUCT METADATA -->
+                        <div class="product-meta">
+                            <div class="product-title-row">
+                                <span class="product-name">@product.ProductName</span>
+                                <span class="product-price">$@product.Price.ToString("N2")</span>
+                            </div>
+                            <div class="product-description">
+                                @product.Description
+                            </div>
+                        </div>
 
-                        <!-- ACTIONS -->
+                        <!-- ACTION FOOTER -->
                         <div class="actions">
-
                             <form method="post"
                                   asp-page-handler="AddWishlist"
-                                  asp-route-productId="@product.ProductID">
-                                <button class="btn-like">❤️ Like</button>
+                                  asp-route-productId="@product.ProductID"
+                                  style="margin: 0;">
+                                <button class="btn-action btn-action-like">
+                                    <i class="fa-regular fa-heart"></i> Like
+                                </button>
                             </form>
+
+                            <button type="button"
+                                    class="btn-action"
+                                    onclick="openShare('@product.Store?.OwnerUserID',
+                                                   '@product.ProductID',
+                                                   '@product.ProductName',
+                                                   '@product.Price')">
+                                <i class="fa-regular fa-paper-plane"></i> Share
+                            </button>
 
                             <form method="post"
                                   asp-page-handler="AddToCart"
-                                  asp-route-productId="@product.ProductID">
-                                <button class="btn-cart">🛒 Add</button>
+                                  asp-route-productId="@product.ProductID"
+                                  style="margin: 0; margin-left: auto;">
+                                <button class="btn-action btn-action-cart">
+                                    <i class="fa-solid fa-bag-shopping"></i> Add
+                                </button>
                             </form>
-
-                            <!-- SHARE BUTTON -->
-                            <button type="button"
-                                    class="btn-like"
-                                    onclick="openShare('@product.Store.OwnerUserID',
-                           '@product.ProductID',
-                           '@product.ProductName',
-                           '@product.Price')">
-                                🔄 Share
-                            </button>
-
                         </div>
 
                     </div>
@@ -270,42 +936,46 @@
         else
         {
             <div class="empty-message">
-                No products yet — follow stores to see content.
+                <div class="empty-icon">
+                    <i class="fa-regular fa-folder-open"></i>
+                </div>
+                <h3>No Products Found</h3>
+                <p>Follow dynamic local stores or browse other tags to see active items here.</p>
             </div>
         }
-
     </div>
 
+    <!-- MODERN ACTION SHEET MODAL -->
     <div id="shareModal" class="modal">
-
         <div class="modal-content">
+            <div class="modal-header">
+                <h3>Share Product</h3>
+            </div>
+            <div class="modal-body">
+                <a id="chatLink" class="modal-btn">
+                    <i class="fa-solid fa-comments"></i> Open Store Chat
+                </a>
 
-            <h3>Share Product</h3>
+                <a id="whatsappLink"
+                   class="modal-btn"
+                   target="_blank"
+                   rel="noopener">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                </a>
 
-            <a id="chatLink" class="modal-btn">
-                💬 Open Store Chat
-            </a>
-
-            <a id="whatsappLink"
-               class="modal-btn"
-               target="_blank">
-                📱 WhatsApp
-            </a>
-
-            <button type="button"
-                    class="close-btn"
-                    onclick="closeShare()">
-                Close
-            </button>
-
+                <button type="button"
+                        class="close-btn"
+                        onclick="closeShare()">
+                    Cancel
+                </button>
+            </div>
         </div>
-
     </div>
 
+    <!-- CORE INTERACTION SCRIPT -->
     <script>
         function openShare(ownerId, productId, name, price) {
-
-            document.getElementById("shareModal").style.display = "block";
+            const modal = document.getElementById("shareModal");
 
             document.getElementById("chatLink").href =
                 "/Customer1?handler=ShareToStore" +
@@ -315,33 +985,62 @@
             document.getElementById("whatsappLink").href =
                 "https://wa.me/?text=" +
                 encodeURIComponent(name + " - $" + price);
+
+            modal.style.display = "flex";
+            setTimeout(() => {
+                modal.classList.add("show");
+            }, 10);
         }
 
         function closeShare() {
-            document.getElementById("shareModal").style.display = "none";
+            const modal = document.getElementById("shareModal");
+            modal.classList.remove("show");
+            setTimeout(() => {
+                modal.style.display = "none";
+            }, 300);
         }
+
+        // Close on backdrop tap
+        window.addEventListener('click', function (e) {
+            const modal = document.getElementById("shareModal");
+            if (e.target === modal) {
+                closeShare();
+            }
+        });
+
+        // Toast Alert Auto-Dismiss
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const toasts = document.querySelectorAll('.toast');
+                toasts.forEach(toast => {
+                    toast.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-10px)';
+                    setTimeout(() => toast.remove(), 500);
+                });
+            }, 4000);
+        });
     </script>
+
+    <!-- HIGHLIGHT FOCUS SCRIPT -->
     <script>
         window.onload = function () {
-
             const params = new URLSearchParams(window.location.search);
             const productId = params.get('productId');
 
             if (productId) {
-
                 const post = document.getElementById('product-' + productId);
 
                 if (post) {
-
                     post.scrollIntoView({
                         behavior: 'smooth',
                         block: 'center'
                     });
 
-                    post.style.border = '4px solid orange';
+                    post.classList.add('highlight-post');
 
                     setTimeout(() => {
-                        post.style.border = '';
+                        post.classList.remove('highlight-post');
                     }, 4000);
                 }
             }

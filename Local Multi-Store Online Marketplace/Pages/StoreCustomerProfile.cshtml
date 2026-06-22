@@ -5,45 +5,73 @@
     Layout = null;
 }
 
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
 <style>
     body {
-        font-family: Arial;
-        background: #f5f5f5;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: #f3f4f6;
         margin: 0;
+        color: #1f2937;
     }
 
     .profile-container {
-        max-width: 850px;
-        margin: 30px auto;
+        max-width: 1100px;
+        margin: 40px auto;
         background: white;
-        border-radius: 15px;
-        padding: 20px;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
 
+    /* HEADER */
     .header {
         display: flex;
-        gap: 20px;
+        gap: 25px;
         align-items: center;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 20px;
+        padding-bottom: 25px;
+        border-bottom: 1px solid #ececec;
     }
 
     .logo {
-        width: 90px;
-        height: 90px;
+        width: 120px;
+        height: 120px;
         border-radius: 50%;
         object-fit: cover;
+        border: 4px solid #fff;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
     }
 
+    .header h2 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .stats {
+        color: #6b7280;
+        margin: 10px 0 15px;
+    }
+
+    /* BUTTONS */
     .btn {
-        padding: 8px 14px;
+        padding: 10px 18px;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         cursor: pointer;
-        font-weight: bold;
+        font-weight: 600;
         text-decoration: none;
         display: inline-block;
+        transition: 0.25s;
     }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
 
     .follow-btn {
         background: #2563eb;
@@ -56,37 +84,96 @@
         margin-left: 10px;
     }
 
-    .stats {
-        color: gray;
-        margin-top: 6px;
-    }
-
+    /* PRODUCTS GRID */
     .products {
-        margin-top: 20px;
+        margin-top: 30px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 25px;
     }
 
     .product {
-        background: #fff;
-        margin-bottom: 15px;
-        border-radius: 12px;
+        background: white;
+        border-radius: 18px;
         overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        transition: 0.3s;
     }
+
+        .product:hover {
+            transform: translateY(-5px);
+        }
 
         .product img {
             width: 100%;
-            height: 300px;
+            height: 240px;
             object-fit: cover;
         }
 
     .product-body {
-        padding: 12px;
+        padding: 18px;
     }
 
+        .product-body h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
     .price {
-        color: #ff6600;
+        font-size: 22px;
         font-weight: bold;
+        color: #f97316;
+        margin: 10px 0;
     }
+
+    /* ACTIONS */
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+        .actions form {
+            margin: 0;
+        }
+
+    .btn-cart {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-review {
+        background: #10b981;
+        color: white;
+    }
+
+    .btn-share {
+        background: #7c3aed;
+        color: white;
+    }
+
+    /* COMMENTS */
+    .comments-section {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+    }
+
+    .comment {
+        background: #f9fafb;
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+        .comment strong {
+            margin-right: 8px;
+        }
+
+        .comment span {
+            color: #f59e0b;
+        }
 </style>
 
 <div class="profile-container">
@@ -104,13 +191,14 @@
                 Followers: @Model.FollowersCount
             </div>
 
-            <form method="post" asp-page-handler="Follow" style="display:inline;">
+            <form method="post"
+                  asp-page-handler="Follow"
+                  asp-route-storeId="@Model.Store.StoreID">
                 <button class="btn follow-btn">
                     Follow
                 </button>
             </form>
 
-            <!-- ✅ CHAT BUTTON ADDED -->
             <a class="btn chat-btn"
                asp-page="/ChatConversation"
                asp-route-userId="@Model.Store.OwnerUserID">
@@ -125,9 +213,7 @@
                     Review Store
                 </button>
             </form>
-
         </div>
-
     </div>
 
     <!-- PRODUCTS -->
@@ -151,10 +237,70 @@
 
                     <p>@p.Description</p>
 
-                    <a asp-page="/CreateProductReview"
-                       asp-route-productId="@p.ProductID">
-                        Review Product
-                    </a>
+                    <div class="actions">
+
+                        <form method="post" asp-page-handler="AddReview">
+                            <input type="hidden" name="productId" value="@p.ProductID" />
+
+                            <input type="number" name="rating" min="1" max="5" placeholder="Rating" required />
+
+                            <input type="text" name="comment" placeholder="Write a comment..." required />
+
+                            <button class="btn btn-review">Post Comment</button>
+                        </form>
+
+                        <form method="post"
+                              asp-page-handler="AddToCart"
+                              asp-route-productId="@p.ProductID">
+                            <button class="btn btn-cart">🛒 Add</button>
+                        </form>
+
+                        <form method="post"
+                              asp-page-handler="AddWishlist"
+                              asp-route-productId="@p.ProductID">
+                            <button class="btn btn-review" style="background:#e11d48;">
+                                ❤️ Wishlist
+                            </button>
+                        </form>
+
+                        <form method="post"
+                              asp-page-handler="ShareToStore"
+                              asp-route-productId="@p.ProductID"
+                              asp-route-storeOwnerId="@Model.Store.OwnerUserID">
+                            <button class="btn btn-share">
+                                🔗 Share
+                            </button>
+                        </form>
+
+                    </div>
+
+                    <div class="comments-section">
+
+                        @if (p.Reviews != null && p.Reviews.Any())
+                        {
+                            @foreach (var review in p.Reviews
+                           .Where(r => r.Status == "Approved")
+                           .OrderByDescending(r => r.CreatedAt))
+                            {
+                                <div class="comment">
+
+                                    <strong>
+                                        @review.Customer?.User?.FullName
+                                    </strong>
+
+                                    <span>⭐ @review.Rating</span>
+
+                                    <div>@review.Comment</div>
+
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p>No reviews yet.</p>
+                        }
+
+                    </div>
 
                 </div>
 
@@ -164,3 +310,30 @@
     </div>
 
 </div>
+
+<!-- TOAST -->
+@if (TempData["Success"] != null)
+{
+    <script>
+        Toastify({
+            text: "@TempData["Success"]",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "#10b981"
+        }).showToast();
+    </script>
+}
+
+@if (TempData["Error"] != null)
+{
+    <script>
+        Toastify({
+            text: "@TempData["Error"]",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "#ef4444"
+        }).showToast();
+    </script>
+}

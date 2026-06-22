@@ -32,9 +32,24 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public int TotalUsers { get; set; }
 
         public List<RecentOrderDto> RecentOrders { get; set; } = new();
+        public List<string> MonthlyRevenueLabels { get; set; } = new();
+        public List<decimal> MonthlyRevenueData { get; set; } = new();
 
+        public List<string> MonthlyOrderLabels { get; set; } = new();
+        public List<int> MonthlyOrderData { get; set; } = new();
+
+        public decimal RevenueGrowthPercentage { get; set; }
+
+        public List<TopStoreDto> TopStores { get; set; } = new();
+        public class TopStoreDto
+        {
+            public string StoreName { get; set; } = "";
+            public decimal Revenue { get; set; }
+        }
         public async Task OnGetAsync()
         {
+
+
             // =========================
             // COMPLETED ORDERS
             // =========================
@@ -97,6 +112,104 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     Status = o.Status
                 })
                 .ToListAsync();
+
+            // ====================================
+            // MONTHLY REVENUE - LAST 12 MONTHS
+            // ====================================
+
+            for (int i = 11; i >= 0; i--)
+            {
+                var monthStart = new DateTime(
+                    DateTime.Today.AddMonths(-i).Year,
+                    DateTime.Today.AddMonths(-i).Month,
+                    1);
+
+                var monthEnd = monthStart.AddMonths(1);
+
+                MonthlyRevenueLabels.Add(monthStart.ToString("MMM yyyy"));
+
+                var monthlyCommission = completedOrders
+                    .Where(o =>
+                        o.OrderDate >= monthStart &&
+                        o.OrderDate < monthEnd)
+                    .Sum(o =>
+                        o.OrderItems.Sum(oi =>
+                            oi.TotalPrice * 0.05m));
+
+                var monthlySubscriptions = await _context.Stores
+                    .Where(s =>
+                        s.LastPaymentDate.HasValue &&
+                        s.LastPaymentDate >= monthStart &&
+                        s.LastPaymentDate < monthEnd)
+                    .SumAsync(s => s.LastPaymentAmount ?? 0);
+
+                MonthlyRevenueData.Add(
+                    monthlyCommission + monthlySubscriptions);
+            }
+
+            // ====================================
+            // ORDERS PER MONTH
+            // ====================================
+
+            for (int i = 11; i >= 0; i--)
+            {
+                var monthStart = new DateTime(
+                    DateTime.Today.AddMonths(-i).Year,
+                    DateTime.Today.AddMonths(-i).Month,
+                    1);
+
+                var monthEnd = monthStart.AddMonths(1);
+
+                MonthlyOrderLabels.Add(monthStart.ToString("MMM"));
+
+                var count = await _context.Orders
+                    .CountAsync(o =>
+                        o.OrderDate >= monthStart &&
+                        o.OrderDate < monthEnd);
+
+                MonthlyOrderData.Add(count);
+            }
+            // ====================================
+            // REVENUE GROWTH
+            // ====================================
+
+            var currentMonth = DateTime.Today;
+            var currentStart =
+                new DateTime(currentMonth.Year, currentMonth.Month, 1);
+
+            var previousStart =
+                currentStart.AddMonths(-1);
+
+            var currentRevenue = MonthlyRevenueData.LastOrDefault();
+
+            var previousRevenue = MonthlyRevenueData.Count > 1
+                ? MonthlyRevenueData[MonthlyRevenueData.Count - 2]
+                : 0;
+
+            if (previousRevenue > 0)
+            {
+                RevenueGrowthPercentage =
+                    ((currentRevenue - previousRevenue)
+                    / previousRevenue) * 100;
+            }
+            // ====================================
+            // TOP 5 STORES
+            // ====================================
+
+            TopStores = await _context.OrderItems
+                .Where(oi => oi.Order.Status == "Delivered")
+                .GroupBy(oi => oi.Store.StoreName)
+                .Select(g => new TopStoreDto
+                {
+                    StoreName = g.Key,
+                    Revenue = g.Sum(x => x.TotalPrice)
+                })
+                .OrderByDescending(x => x.Revenue)
+                .Take(5)
+                .ToListAsync();
+
+
+
         }
     }
 

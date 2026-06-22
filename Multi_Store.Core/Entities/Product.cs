@@ -58,5 +58,8 @@ namespace Multi_Store.Core.Entities
         // Recently Viewed Products
         public virtual ICollection<RecentlyViewedProduct> RecentlyViewedProducts { get; set; }
             = new List<RecentlyViewedProduct>();
+        // Reviews
+        public virtual ICollection<Review> Reviews { get; set; }
+            = new List<Review>();
     }
 }
