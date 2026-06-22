@@ -5,15 +5,29 @@
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
     <title>Your Cart</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             background: #f4f6f9;
             font-family: Arial, sans-serif;
+            color: #111827;
+        }
+
+        body.modal-open {
+            overflow: hidden;
         }
 
         .cart-page {
@@ -26,36 +40,16 @@
             margin-bottom: 30px;
         }
 
-            .cart-header h2 {
-                font-size: 34px;
-                margin-bottom: 8px;
-                color: #111827;
-            }
-
-            .cart-header p {
-                color: #6b7280;
-                font-size: 15px;
-            }
-
-        .message {
-            max-width: 850px;
-            margin: 0 auto 20px auto;
-            padding: 14px 18px;
-            border-radius: 12px;
-            font-weight: 700;
-            text-align: center;
+        .cart-header h2 {
+            font-size: 34px;
+            margin: 0 0 8px;
+            color: #111827;
         }
 
-        .success-message {
-            background: #dcfce7;
-            color: #166534;
-            border: 1px solid #86efac;
-        }
-
-        .error-message {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fca5a5;
+        .cart-header p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 15px;
         }
 
         .cart-container {
@@ -71,7 +65,7 @@
             background: white;
             border-radius: 18px;
             padding: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
             border: 1px solid #e5e7eb;
         }
 
@@ -83,18 +77,18 @@
             border-bottom: 1px solid #e5e7eb;
         }
 
-            .cart-item:last-child {
-                border-bottom: none;
-            }
+        .cart-item:last-child {
+            border-bottom: none;
+        }
 
-            .cart-item img {
-                width: 95px;
-                height: 95px;
-                border-radius: 14px;
-                object-fit: contain;
-                background: #f3f4f6;
-                display: block;
-            }
+        .cart-item img {
+            width: 95px;
+            height: 95px;
+            border-radius: 14px;
+            object-fit: contain;
+            background: #f3f4f6;
+            display: block;
+        }
 
         .item-name {
             font-size: 18px;
@@ -110,7 +104,7 @@
         }
 
         .item-price {
-            color: #FF6B35;
+            color: #ff6b35;
             font-weight: 900;
             font-size: 17px;
             margin-bottom: 10px;
@@ -147,6 +141,10 @@
             cursor: pointer;
         }
 
+        .update-btn:hover {
+            background: #1f2937;
+        }
+
         .remove-btn {
             background: #fee2e2;
             color: #991b1b;
@@ -157,25 +155,30 @@
             cursor: pointer;
         }
 
+        .remove-btn:hover {
+            background: #fecaca;
+        }
+
         .summary-box {
             background: white;
             border-radius: 18px;
             padding: 22px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
             border: 1px solid #e5e7eb;
             position: sticky;
             top: 20px;
         }
 
-            .summary-box h3 {
-                margin: 0 0 18px 0;
-                color: #111827;
-                font-size: 22px;
-            }
+        .summary-box h3 {
+            margin: 0 0 18px;
+            color: #111827;
+            font-size: 22px;
+        }
 
         .summary-row {
             display: flex;
             justify-content: space-between;
+            gap: 15px;
             margin-bottom: 12px;
             color: #374151;
             font-weight: 700;
@@ -208,6 +211,7 @@
         .summary-total {
             display: flex;
             justify-content: space-between;
+            gap: 15px;
             border-top: 1px solid #e5e7eb;
             padding-top: 15px;
             margin-top: 15px;
@@ -220,12 +224,13 @@
             margin: 15px 0;
         }
 
-        .coupon-label {
-            font-weight: 900;
-            color: #111827;
+        .coupon-label,
+        .payment-label {
             display: block;
             margin-bottom: 8px;
             font-size: 13px;
+            font-weight: 900;
+            color: #111827;
         }
 
         .coupon-row {
@@ -235,11 +240,11 @@
 
         .coupon-input {
             flex: 1;
+            min-width: 0;
             padding: 10px;
             border: 1px solid #d1d5db;
             border-radius: 10px;
             font-weight: 700;
-            min-width: 0;
         }
 
         .coupon-btn {
@@ -253,43 +258,61 @@
         }
 
         .remove-coupon-btn {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 9px 12px;
             background: #fee2e2;
             color: #991b1b;
             border: none;
             border-radius: 10px;
-            padding: 9px 12px;
             font-weight: 900;
             cursor: pointer;
-            margin-bottom: 10px;
-            width: 100%;
         }
 
         .discount-row {
             color: #166534;
         }
 
+        .payment-section {
+            margin-top: 15px;
+        }
+
+        .payment-select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            font-weight: 700;
+            background: white;
+        }
+
+        .payment-note {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f1f5f9;
+            color: #334155;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
         .checkout-btn {
             width: 100%;
+            margin-top: 20px;
             padding: 13px;
             background: #222260;
             color: white;
             border: none;
             border-radius: 12px;
-            margin-top: 20px;
             font-weight: 900;
             cursor: pointer;
+            transition: 0.2s ease;
         }
 
-        .clear-btn {
-            width: 100%;
-            padding: 12px;
-            background: #fee2e2;
-            color: #991b1b;
-            border: none;
-            border-radius: 12px;
-            margin-top: 10px;
-            font-weight: 900;
-            cursor: pointer;
+        .checkout-btn:hover {
+            background: #18184b;
+            transform: translateY(-1px);
         }
 
         .empty-cart {
@@ -301,7 +324,7 @@
             padding: 45px;
             border-radius: 18px;
             border: 1px solid #e5e7eb;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
         }
 
         .shop-link {
@@ -313,6 +336,234 @@
             border-radius: 12px;
             text-decoration: none;
             font-weight: 800;
+        }
+
+        /* =====================================================
+           TOAST NOTIFICATIONS
+           ===================================================== */
+
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 30000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .app-toast {
+            width: min(390px, calc(100vw - 40px));
+            padding: 15px 16px;
+            border-radius: 14px;
+            color: white;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.22);
+            opacity: 0;
+            transform: translateX(45px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .app-toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .app-toast.success {
+            background: #15803d;
+        }
+
+        .app-toast.error {
+            background: #b91c1c;
+        }
+
+        .toast-icon {
+            width: 28px;
+            height: 28px;
+            flex: 0 0 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.20);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: 900;
+        }
+
+        .toast-message {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+        .toast-close {
+            border: none;
+            background: transparent;
+            color: white;
+            padding: 0;
+            font-size: 22px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        /* =====================================================
+           CUSTOM MODALS
+           ===================================================== */
+
+        .app-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 20000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.68);
+            backdrop-filter: blur(5px);
+        }
+
+        .app-modal.open {
+            display: flex;
+        }
+
+        .modal-card {
+            width: min(440px, 100%);
+            background: white;
+            border-radius: 20px;
+            padding: 26px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.30);
+            transform: translateY(15px) scale(0.98);
+            opacity: 0;
+            transition: 0.2s ease;
+        }
+
+        .app-modal.open .modal-card {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .modal-icon {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 15px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 27px;
+            background: #eef2ff;
+            color: #222260;
+        }
+
+        .modal-icon.danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .modal-title {
+            margin: 0 0 8px;
+            text-align: center;
+            color: #111827;
+            font-size: 23px;
+        }
+
+        .modal-description {
+            margin: 0 0 20px;
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .modal-summary {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+        }
+
+        .modal-summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 10px;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .modal-summary-row:last-child {
+            margin-bottom: 0;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            color: #111827;
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .modal-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .modal-cancel,
+        .modal-confirm,
+        .modal-danger {
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .modal-cancel {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .modal-confirm {
+            background: #222260;
+            color: white;
+        }
+
+        .modal-danger {
+            background: #b91c1c;
+            color: white;
+        }
+
+        .modal-cancel:hover {
+            background: #d1d5db;
+        }
+
+        .modal-confirm:hover {
+            background: #18184b;
+        }
+
+        .modal-danger:hover {
+            background: #991b1b;
+        }
+
+        .modal-confirm:disabled,
+        .modal-danger:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
         }
 
         @@media (max-width: 850px) {
@@ -334,10 +585,10 @@
                 grid-template-columns: 1fr;
             }
 
-                .cart-item img {
-                    width: 100%;
-                    height: 180px;
-                }
+            .cart-item img {
+                width: 100%;
+                height: 180px;
+            }
 
             .coupon-row {
                 flex-direction: column;
@@ -346,39 +597,105 @@
             .coupon-btn {
                 width: 100%;
             }
+
+            .modal-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .toast-container {
+                top: 15px;
+                right: 15px;
+                left: 15px;
+            }
+
+            .app-toast {
+                width: 100%;
+            }
         }
     </style>
 </head>
 
 <body>
+
+    <!-- =====================================================
+         SUCCESS AND ERROR TOASTERS
+         ===================================================== -->
+    <div id="toastContainer"
+         class="toast-container"
+         aria-live="polite"
+         aria-atomic="true">
+
+        @if (TempData["Success"] is string successMessage &&
+             !string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="app-toast success" data-toast>
+                <span class="toast-icon">✓</span>
+
+                <div class="toast-content">
+                    <span class="toast-title">
+                        Success
+                    </span>
+
+                    <span class="toast-message">
+                        @successMessage
+                    </span>
+                </div>
+
+                <button type="button"
+                        class="toast-close"
+                        aria-label="Close notification">
+                    &times;
+                </button>
+            </div>
+        }
+
+        @if (TempData["Error"] is string errorMessage &&
+             !string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="app-toast error" data-toast>
+                <span class="toast-icon">!</span>
+
+                <div class="toast-content">
+                    <span class="toast-title">
+                        Unable to continue
+                    </span>
+
+                    <span class="toast-message">
+                        @errorMessage
+                    </span>
+                </div>
+
+                <button type="button"
+                        class="toast-close"
+                        aria-label="Close notification">
+                    &times;
+                </button>
+            </div>
+        }
+    </div>
+
     <div class="cart-page">
 
         <div class="cart-header">
             <h2>🛒 Your Cart</h2>
-            <p>Review your selected products before checkout.</p>
+
+            <p>
+                Review your selected products before checkout.
+            </p>
         </div>
 
-        @if (TempData["Success"] != null)
-        {
-            <div class="message success-message">
-                @TempData["Success"]
-            </div>
-        }
-
-        @if (TempData["Error"] != null)
-        {
-            <div class="message error-message">
-                @TempData["Error"]
-            </div>
-        }
-
-        @if (Model.CartItems == null || !Model.CartItems.Any())
+        @if (Model.CartItems == null ||
+             !Model.CartItems.Any())
         {
             <div class="empty-cart">
                 <h3>Your cart is empty</h3>
-                <p>Add products to your cart before checkout.</p>
 
-                <a href="/CustomerProducts" class="shop-link">
+                <p>
+                    Add products to your cart before checkout.
+                </p>
+
+                <a href="/CustomerProducts"
+                   class="shop-link">
                     Continue Shopping
                 </a>
             </div>
@@ -387,10 +704,18 @@
         {
             <div class="cart-container">
 
+                <!-- =================================================
+                     CART ITEMS
+                     ================================================= -->
                 <div class="cart-list">
+
                     @foreach (var item in Model.CartItems)
                     {
+                        var removeFormId =
+                            $"removeForm-{item.CartItemID}";
+
                         <div class="cart-item">
+
                             <img src="@item.ImageUrl"
                                  alt="@item.ProductName"
                                  onerror="this.onerror=null;this.src='/images/no-image.png';" />
@@ -410,9 +735,11 @@
 
                                 <div class="item-actions">
 
+                                    <!-- UPDATE QUANTITY -->
                                     <form method="post"
                                           asp-page-handler="UpdateQuantity"
                                           class="qty-form">
+
                                         <input type="hidden"
                                                name="cartItemId"
                                                value="@item.CartItemID" />
@@ -428,13 +755,17 @@
                                                max="@item.AvailableStock"
                                                class="qty-input" />
 
-                                        <button type="submit" class="update-btn">
+                                        <button type="submit"
+                                                class="update-btn">
                                             Update
                                         </button>
                                     </form>
 
-                                    <form method="post"
+                                    <!-- REMOVE ITEM -->
+                                    <form id="@removeFormId"
+                                          method="post"
                                           asp-page-handler="Remove">
+
                                         <input type="hidden"
                                                name="cartItemId"
                                                value="@item.CartItemID" />
@@ -443,9 +774,10 @@
                                                name="AppliedCouponCode"
                                                value="@Model.AppliedCouponCode" />
 
-                                        <button type="submit"
-                                                class="remove-btn"
-                                                onclick="return confirm('Remove this item from cart?')">
+                                        <button type="button"
+                                                class="remove-btn remove-trigger"
+                                                data-form-id="@removeFormId"
+                                                data-product-name="@item.ProductName">
                                             Remove
                                         </button>
                                     </form>
@@ -456,27 +788,40 @@
                     }
                 </div>
 
+                <!-- =================================================
+                     ORDER SUMMARY
+                     ================================================= -->
                 <div class="summary-box">
+
                     <h3>Order Summary</h3>
 
                     <div class="summary-row">
                         <span>Items</span>
-                        <span>@Model.CartItems.Sum(x => x.Quantity)</span>
+
+                        <span>
+                            @Model.CartItems.Sum(item => item.Quantity)
+                        </span>
                     </div>
 
                     <div class="summary-row">
                         <span>Subtotal</span>
-                        <span>$@Model.TotalAmount.ToString("N2")</span>
+
+                        <span>
+                            $@Model.TotalAmount.ToString("N2")
+                        </span>
                     </div>
 
+                    <!-- APPLY COUPON -->
                     <form method="post"
                           asp-page-handler="ApplyCoupon"
                           class="coupon-form">
+
                         <label class="coupon-label">
                             Coupon Code
                         </label>
 
                         <div class="coupon-row">
+
                             <input type="text"
                                    name="couponCode"
                                    value="@Model.AppliedCouponCode"
@@ -490,9 +835,13 @@
                         </div>
                     </form>
 
-                    @if (!string.IsNullOrWhiteSpace(Model.AppliedCouponCode))
+                    <!-- REMOVE COUPON -->
+                    @if (!string.IsNullOrWhiteSpace(
+                            Model.AppliedCouponCode))
                     {
-                        <form method="post" asp-page-handler="RemoveCoupon">
+                        <form method="post"
+                              asp-page-handler="RemoveCoupon">
+
                             <button type="submit"
                                     class="remove-coupon-btn">
                                 Remove Coupon
@@ -500,83 +849,507 @@
                         </form>
                     }
 
-                    @if (!string.IsNullOrWhiteSpace(Model.CouponMessage))
+                    <!-- COUPON MESSAGE -->
+                    @if (!string.IsNullOrWhiteSpace(
+                            Model.CouponMessage))
                     {
                         <div class="summary-free">
                             @Model.CouponMessage
                         </div>
                     }
 
+                    <!-- DISCOUNT -->
                     @if (Model.DiscountAmount > 0)
                     {
                         <div class="summary-row discount-row">
                             <span>Discount</span>
-                            <span>-$@Model.DiscountAmount.ToString("N2")</span>
+
+                            <span>
+                                -$@Model.DiscountAmount.ToString("N2")
+                            </span>
                         </div>
                     }
 
+                    <!-- DELIVERY FEE -->
                     @if (Model.HasActiveAddress)
                     {
                         <div class="summary-row">
                             <span>Delivery Fee</span>
-                            <span>$@Model.EstimatedDeliveryFee.ToString("N2")</span>
+
+                            <span>
+                                $@Model.EstimatedDeliveryFee.ToString("N2")
+                            </span>
                         </div>
 
                         @if (Model.TotalAmount > 50)
                         {
                             <div class="summary-free">
-                                Free delivery applied because your subtotal is above $50.
+                                Free delivery applied because your
+                                subtotal is above $50.
                             </div>
                         }
-
-                        <div class="summary-total">
-                            <span>Total</span>
-                            <span>$@Model.GrandTotal.ToString("N2")</span>
-                        </div>
                     }
                     else
                     {
                         <div class="summary-note">
-                            Add a delivery address to calculate the delivery fee.
-                        </div>
-
-                        <div class="summary-total">
-                            <span>Total</span>
-                            <span>$@Model.GrandTotal.ToString("N2")</span>
+                            Add a delivery address to calculate
+                            the delivery fee.
                         </div>
                     }
 
-                    <form method="post" asp-page-handler="Checkout">
+                    <!-- GRAND TOTAL -->
+                    <div class="summary-total">
+                        <span>Total</span>
+
+                        <span>
+                            $@Model.GrandTotal.ToString("N2")
+                        </span>
+                    </div>
+
+                    <!-- CHECKOUT FORM -->
+                    <form id="checkoutForm"
+                          method="post"
+                          asp-page-handler="Checkout">
+
                         <input type="hidden"
                                name="appliedCouponCode"
                                value="@Model.AppliedCouponCode" />
 
-                        <div style="margin-top: 15px;">
-                            <label style="font-weight:900; color:#111827; display:block; margin-bottom:8px;">
+                        <div class="payment-section">
+
+                            <label for="paymentMethodSelect"
+                                   class="payment-label">
                                 Payment Method
                             </label>
 
-                            <select name="paymentMethod"
-                                    style="width:100%; padding:12px; border-radius:10px; border:1px solid #d1d5db; font-weight:700;">
-                                <option value="Cash On Delivery">Cash On Delivery</option>
-                                <option value="Online Payment">Online Payment</option>
+                            <select id="paymentMethodSelect"
+                                    name="paymentMethod"
+                                    class="payment-select">
+
+                                <option value="Cash On Delivery">
+                                    Cash On Delivery
+                                </option>
+
+                                <option value="Online Payment">
+                                    Online Payment
+                                </option>
                             </select>
 
-                            <div style="background:#f1f5f9; color:#334155; padding:10px; border-radius:10px; font-size:12px; font-weight:700; margin-top:10px; line-height:1.5;">
-                                Online payment is simulated for demo. Cash on Delivery will be marked as paid when the order is delivered.
+                            <div class="payment-note">
+                                Online payment is simulated for demo.
+                                Cash on Delivery will be marked as paid
+                                when the order is delivered.
                             </div>
                         </div>
 
-                        <button type="submit"
-                                class="checkout-btn"
-                                onclick="return confirm('Place this order?')">
+                        <!-- IMPORTANT:
+                             This is type="button", not type="submit".
+                             It opens the custom confirmation modal. -->
+                        <button id="openCheckoutModalButton"
+                                type="button"
+                                class="checkout-btn">
                             Checkout
                         </button>
                     </form>
-                </div>
 
+                </div>
             </div>
         }
     </div>
+
+    <!-- =====================================================
+         CHECKOUT CONFIRMATION MODAL
+         ===================================================== -->
+    <div id="checkoutModal"
+         class="app-modal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="checkoutModalTitle"
+         aria-hidden="true">
+
+        <div class="modal-card">
+
+            <div class="modal-icon">
+                🛒
+            </div>
+
+            <h3 id="checkoutModalTitle"
+                class="modal-title">
+                Confirm Your Order
+            </h3>
+
+            <p class="modal-description">
+                Please review your order details before
+                placing the order.
+            </p>
+
+            <div class="modal-summary">
+
+                <div class="modal-summary-row">
+                    <span>Items</span>
+
+                    <strong>
+                        @Model.CartItems.Sum(item => item.Quantity)
+                    </strong>
+                </div>
+
+                <div class="modal-summary-row">
+                    <span>Payment</span>
+
+                    <strong id="checkoutModalPayment">
+                        Cash On Delivery
+                    </strong>
+                </div>
+
+                <div class="modal-summary-row">
+                    <span>Total</span>
+
+                    <strong>
+                        $@Model.GrandTotal.ToString("N2")
+                    </strong>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+
+                <button id="cancelCheckoutButton"
+                        type="button"
+                        class="modal-cancel">
+                    Cancel
+                </button>
+
+                <button id="confirmCheckoutButton"
+                        type="button"
+                        class="modal-confirm">
+                    Place Order
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         REMOVE ITEM CONFIRMATION MODAL
+         ===================================================== -->
+    <div id="removeModal"
+         class="app-modal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="removeModalTitle"
+         aria-hidden="true">
+
+        <div class="modal-card">
+
+            <div class="modal-icon danger">
+                🗑
+            </div>
+
+            <h3 id="removeModalTitle"
+                class="modal-title">
+                Remove Item?
+            </h3>
+
+            <p id="removeModalDescription"
+               class="modal-description">
+                Are you sure you want to remove this item
+                from your cart?
+            </p>
+
+            <div class="modal-actions">
+
+                <button id="cancelRemoveButton"
+                        type="button"
+                        class="modal-cancel">
+                    Cancel
+                </button>
+
+                <button id="confirmRemoveButton"
+                        type="button"
+                        class="modal-danger">
+                    Remove Item
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+                initializeToasts();
+                initializeCheckoutModal();
+                initializeRemoveModal();
+            });
+
+        // =====================================================
+        // TOASTS
+        // =====================================================
+        function initializeToasts() {
+            const toasts =
+                document.querySelectorAll("[data-toast]");
+
+            toasts.forEach(function (toast, index) {
+                window.setTimeout(function () {
+                    toast.classList.add("show");
+                }, 100 + (index * 100));
+
+                const closeButton =
+                    toast.querySelector(".toast-close");
+
+                if (closeButton) {
+                    closeButton.addEventListener(
+                        "click",
+                        function () {
+                            removeToast(toast);
+                        });
+                }
+
+                window.setTimeout(function () {
+                    removeToast(toast);
+                }, 5000 + (index * 300));
+            });
+        }
+
+        function removeToast(toast) {
+            if (!toast || !toast.isConnected) {
+                return;
+            }
+
+            toast.classList.remove("show");
+
+            window.setTimeout(function () {
+                toast.remove();
+            }, 300);
+        }
+
+        // =====================================================
+        // SHARED MODAL FUNCTIONS
+        // =====================================================
+        function openModal(modal) {
+            if (!modal) {
+                return;
+            }
+
+            modal.classList.add("open");
+            modal.setAttribute("aria-hidden", "false");
+
+            document.body.classList.add("modal-open");
+        }
+
+        function closeModal(modal) {
+            if (!modal) {
+                return;
+            }
+
+            modal.classList.remove("open");
+            modal.setAttribute("aria-hidden", "true");
+
+            if (!document.querySelector(".app-modal.open")) {
+                document.body.classList.remove("modal-open");
+            }
+        }
+
+        // =====================================================
+        // CHECKOUT MODAL
+        // =====================================================
+        function initializeCheckoutModal() {
+            const modal =
+                document.getElementById("checkoutModal");
+
+            const checkoutForm =
+                document.getElementById("checkoutForm");
+
+            const openButton =
+                document.getElementById(
+                    "openCheckoutModalButton");
+
+            const cancelButton =
+                document.getElementById(
+                    "cancelCheckoutButton");
+
+            const confirmButton =
+                document.getElementById(
+                    "confirmCheckoutButton");
+
+            const paymentSelect =
+                document.getElementById(
+                    "paymentMethodSelect");
+
+            const paymentDisplay =
+                document.getElementById(
+                    "checkoutModalPayment");
+
+            if (!modal ||
+                !checkoutForm ||
+                !openButton ||
+                !cancelButton ||
+                !confirmButton ||
+                !paymentSelect ||
+                !paymentDisplay) {
+                return;
+            }
+
+            openButton.addEventListener(
+                "click",
+                function () {
+                    const selectedOption =
+                        paymentSelect.options[
+                            paymentSelect.selectedIndex
+                        ];
+
+                    paymentDisplay.textContent =
+                        selectedOption
+                            ? selectedOption.textContent.trim()
+                            : "Not selected";
+
+                    openModal(modal);
+
+                    cancelButton.focus();
+                });
+
+            cancelButton.addEventListener(
+                "click",
+                function () {
+                    closeModal(modal);
+
+                    openButton.focus();
+                });
+
+            confirmButton.addEventListener(
+                "click",
+                function () {
+                    confirmButton.disabled = true;
+
+                    confirmButton.textContent =
+                        "Placing Order...";
+
+                    checkoutForm.requestSubmit();
+                });
+
+            modal.addEventListener(
+                "click",
+                function (event) {
+                    if (event.target === modal) {
+                        closeModal(modal);
+                    }
+                });
+        }
+
+        // =====================================================
+        // REMOVE ITEM MODAL
+        // =====================================================
+        function initializeRemoveModal() {
+            const modal =
+                document.getElementById("removeModal");
+
+            const description =
+                document.getElementById(
+                    "removeModalDescription");
+
+            const cancelButton =
+                document.getElementById(
+                    "cancelRemoveButton");
+
+            const confirmButton =
+                document.getElementById(
+                    "confirmRemoveButton");
+
+            const removeButtons =
+                document.querySelectorAll(
+                    ".remove-trigger");
+
+            if (!modal ||
+                !description ||
+                !cancelButton ||
+                !confirmButton) {
+                return;
+            }
+
+            let pendingRemoveForm = null;
+            let lastRemoveButton = null;
+
+            removeButtons.forEach(function (button) {
+                button.addEventListener(
+                    "click",
+                    function () {
+                        const formId =
+                            button.dataset.formId;
+
+                        const productName =
+                            button.dataset.productName ||
+                            "this item";
+
+                        pendingRemoveForm =
+                            document.getElementById(formId);
+
+                        lastRemoveButton =
+                            button;
+
+                        description.textContent =
+                            `Are you sure you want to remove ` +
+                            `"${productName}" from your cart?`;
+
+                        openModal(modal);
+
+                        cancelButton.focus();
+                    });
+            });
+
+            cancelButton.addEventListener(
+                "click",
+                function () {
+                    pendingRemoveForm = null;
+
+                    closeModal(modal);
+
+                    if (lastRemoveButton) {
+                        lastRemoveButton.focus();
+                    }
+                });
+
+            confirmButton.addEventListener(
+                "click",
+                function () {
+                    if (!pendingRemoveForm) {
+                        closeModal(modal);
+                        return;
+                    }
+
+                    confirmButton.disabled = true;
+
+                    confirmButton.textContent =
+                        "Removing...";
+
+                    pendingRemoveForm.requestSubmit();
+                });
+
+            modal.addEventListener(
+                "click",
+                function (event) {
+                    if (event.target === modal) {
+                        pendingRemoveForm = null;
+
+                        closeModal(modal);
+                    }
+                });
+        }
+
+        // =====================================================
+        // CLOSE MODAL WITH ESCAPE
+        // =====================================================
+        document.addEventListener(
+            "keydown",
+            function (event) {
+                if (event.key !== "Escape") {
+                    return;
+                }
+
+                document
+                    .querySelectorAll(".app-modal.open")
+                    .forEach(function (modal) {
+                        closeModal(modal);
+                    });
+            });
+    </script>
+
 </body>
 </html>

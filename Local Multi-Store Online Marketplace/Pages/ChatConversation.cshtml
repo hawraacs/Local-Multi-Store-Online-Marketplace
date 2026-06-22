@@ -1,5 +1,6 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.ChatConversationModel
+
 @{
     Layout = null;
 
@@ -13,12 +14,18 @@
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
     <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
     <title>Chat</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap"
+          rel="stylesheet" />
 
     <style>
         * {
@@ -30,7 +37,11 @@
 
         body {
             min-height: 100vh;
-            background: linear-gradient(135deg, #e8eef8 0%, #f7fafc 45%, #e8f1ff 100%);
+            background: linear-gradient(
+                135deg,
+                #e8eef8 0%,
+                #f7fafc 45%,
+                #e8f1ff 100%);
         }
 
         .page-shell {
@@ -121,16 +132,25 @@
             transition: .2s;
         }
 
-            .delete:hover {
-                background: #e11d48;
-                color: white;
-            }
+        .delete:hover {
+            background: #e11d48;
+            color: white;
+        }
 
         .messages {
             flex: 1;
             padding: 18px;
             overflow: auto;
-            background: radial-gradient(circle at top left, rgba(37,99,235,.08), transparent 35%), radial-gradient(circle at bottom right, rgba(14,165,233,.08), transparent 35%), #f8fafc;
+            background:
+                radial-gradient(
+                    circle at top left,
+                    rgba(37,99,235,.08),
+                    transparent 35%),
+                radial-gradient(
+                    circle at bottom right,
+                    rgba(14,165,233,.08),
+                    transparent 35%),
+                #f8fafc;
         }
 
         .msg {
@@ -283,10 +303,10 @@
             gap: 10px;
         }
 
-            .voice-ready-row audio {
-                flex: 1;
-                width: 100%;
-            }
+        .voice-ready-row audio {
+            flex: 1;
+            width: 100%;
+        }
 
         .ios-keyboard {
             display: none;
@@ -295,9 +315,9 @@
             border-bottom: 1px solid rgba(148,163,184,.65);
         }
 
-            .ios-keyboard.show {
-                display: block;
-            }
+        .ios-keyboard.show {
+            display: block;
+        }
 
         .suggestions {
             display: flex;
@@ -326,15 +346,15 @@
             text-overflow: ellipsis;
         }
 
-            .suggestion-chip:hover {
-                background: white;
-                transform: translateY(-1px);
-            }
+        .suggestion-chip:hover {
+            background: white;
+            transform: translateY(-1px);
+        }
 
-            .suggestion-chip:active {
-                transform: translateY(0);
-                background: #e0ecff;
-            }
+        .suggestion-chip:active {
+            transform: translateY(0);
+            background: #e0ecff;
+        }
 
         .key-row {
             display: flex;
@@ -361,11 +381,11 @@
             transition: .12s;
         }
 
-            .key-btn:active {
-                background: #e5e7eb;
-                transform: translateY(1px);
-                box-shadow: none;
-            }
+        .key-btn:active {
+            background: #e5e7eb;
+            transform: translateY(1px);
+            box-shadow: none;
+        }
 
         .special-key {
             min-width: 52px;
@@ -404,9 +424,9 @@
             margin-top: 6px;
         }
 
-            .emoji-panel.show {
-                display: grid;
-            }
+        .emoji-panel.show {
+            display: grid;
+        }
 
         .emoji-btn {
             height: 36px;
@@ -418,10 +438,10 @@
             box-shadow: 0 1px 0 rgba(15,23,42,.12);
         }
 
-            .emoji-btn:active {
-                background: #e5e7eb;
-                transform: translateY(1px);
-            }
+        .emoji-btn:active {
+            background: #e5e7eb;
+            transform: translateY(1px);
+        }
 
         .composer {
             display: flex;
@@ -445,11 +465,11 @@
             transition: .2s;
         }
 
-            .message-input:focus {
-                background: white;
-                border-color: #93c5fd;
-                box-shadow: 0 0 0 4px rgba(147,197,253,.25);
-            }
+        .message-input:focus {
+            background: white;
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 4px rgba(147,197,253,.25);
+        }
 
         .send,
         .icon-btn {
@@ -467,10 +487,10 @@
             padding: 0 18px;
         }
 
-            .send:hover,
-            .icon-btn:hover {
-                background: #1d4ed8;
-            }
+        .send:hover,
+        .icon-btn:hover {
+            background: #1d4ed8;
+        }
 
         .icon-btn {
             width: 42px;
@@ -491,11 +511,11 @@
             color: #111827;
         }
 
-            .product-card img {
-                width: 100%;
-                height: 175px;
-                object-fit: cover;
-            }
+        .product-card img {
+            width: 100%;
+            height: 175px;
+            object-fit: cover;
+        }
 
         .product-body {
             padding: 11px;
@@ -546,6 +566,97 @@
             width: 100%;
         }
 
+        /* =====================================================
+           CHAT TOAST NOTIFICATIONS
+           ===================================================== */
+
+        .chat-toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .chat-toast {
+            width: min(390px, calc(100vw - 40px));
+            padding: 15px 16px;
+            border-radius: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            color: #ffffff;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.28);
+            opacity: 0;
+            transform: translateX(45px);
+            transition:
+                opacity 0.28s ease,
+                transform 0.28s ease;
+            pointer-events: auto;
+        }
+
+        .chat-toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .chat-toast-error {
+            background: linear-gradient(135deg, #b91c1c, #dc2626);
+        }
+
+        .chat-toast-warning {
+            background: linear-gradient(135deg, #b45309, #d97706);
+        }
+
+        .chat-toast-info {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        }
+
+        .chat-toast-icon {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            font-weight: 900;
+        }
+
+        .chat-toast-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chat-toast-title {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .chat-toast-message {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .chat-toast-close {
+            border: none;
+            background: transparent;
+            color: #ffffff;
+            padding: 0;
+            font-size: 23px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
         @@media (max-width: 680px) {
             .page-shell {
                 padding: 0;
@@ -582,21 +693,42 @@
             .emoji-panel {
                 grid-template-columns: repeat(7, 1fr);
             }
+
+            .chat-toast-container {
+                top: 12px;
+                right: 12px;
+                left: 12px;
+            }
+
+            .chat-toast {
+                width: 100%;
+            }
         }
     </style>
 </head>
 
 <body>
+
+    <div id="chatToastContainer"
+         class="chat-toast-container"
+         aria-live="polite"
+         aria-atomic="true">
+    </div>
+
     <div class="page-shell">
+
         <div class="wrapper">
 
             <div class="topbar">
+
                 <div class="user">
+
                     <div class="avatar">
                         @avatarLetter
                     </div>
 
                     <div class="user-meta">
+
                         <div class="user-name">
                             @displayName
                         </div>
@@ -604,32 +736,53 @@
                         <div class="@(Model.IsOnlineUser ? "online" : "offline")">
                             @(Model.IsOnlineUser ? "● Online" : "Offline")
                         </div>
+
                     </div>
+
                 </div>
 
-                <form method="post" asp-page-handler="DeleteChat">
-                    <input type="hidden" name="userId" value="@Model.ReceiverId" />
-                    <button class="delete" onclick="return confirm('Delete this conversation?')">
+                <form method="post"
+                      asp-page-handler="DeleteChat">
+
+                    <input type="hidden"
+                           name="userId"
+                           value="@Model.ReceiverId" />
+
+                    <button type="submit"
+                            class="delete"
+                            onclick="return confirm('Delete this conversation?')">
                         Delete
                     </button>
+
                 </form>
+
             </div>
 
-            <div class="messages" id="messagesBox">
+            <div class="messages"
+                 id="messagesBox">
+
                 @foreach (var msg in Model.Messages)
                 {
                     <div class="msg @(msg.SenderID == Model.CurrentUserId ? "me" : "other")">
+
                         <div class="bubble">
+
                             @if (msg.Product != null)
                             {
-                                var image = msg.Product.Images?.FirstOrDefault()?.ImageUrl
-                                ?? "/images/no-image.png";
+                                var image =
+                                    msg.Product.Images?
+                                        .FirstOrDefault()?
+                                        .ImageUrl
+                                    ?? "/images/no-image.png";
 
                                 <div class="product-card">
+
                                     <img src="@image"
+                                         alt="@msg.Product.ProductName"
                                          onerror="this.onerror=null;this.src='/images/no-image.png';" />
 
                                     <div class="product-body">
+
                                         <div class="product-title">
                                             @msg.Product.ProductName
                                         </div>
@@ -644,42 +797,51 @@
 
                                         @if (User.IsInRole("StoreOwner"))
                                         {
-                                            <a href="/Home?productId=@msg.ProductID" class="product-link">
+                                            <a href="/Home?productId=@msg.ProductID"
+                                               class="product-link">
                                                 View Product
                                             </a>
                                         }
                                         else
                                         {
-                                            <a href="/CustomerProductDetails?id=@msg.ProductID" class="product-link">
+                                            <a href="/CustomerProductDetails?id=@msg.ProductID"
+                                               class="product-link">
                                                 View Product
                                             </a>
                                         }
+
                                     </div>
+
                                 </div>
                             }
                             else
                             {
                                 @if (!string.IsNullOrWhiteSpace(msg.ImageUrl))
                                 {
-                                    var lowerUrl = msg.ImageUrl.ToLower();
+                                    var lowerUrl =
+                                        msg.ImageUrl.ToLower();
 
                                     if (msg.MessageText == "[VOICE]")
                                     {
-                                        <audio controls src="@msg.ImageUrl"></audio>
+                                        <audio controls
+                                               src="@msg.ImageUrl">
+                                        </audio>
                                     }
-                                    else if (msg.MessageText == "[IMAGE]" ||
-                                    lowerUrl.EndsWith(".jpg") ||
-                                    lowerUrl.EndsWith(".jpeg") ||
-                                    lowerUrl.EndsWith(".png") ||
-                                    lowerUrl.EndsWith(".gif") ||
-                                    lowerUrl.EndsWith(".webp"))
+                                    else if (
+                                        msg.MessageText == "[IMAGE]" ||
+                                        lowerUrl.EndsWith(".jpg") ||
+                                        lowerUrl.EndsWith(".jpeg") ||
+                                        lowerUrl.EndsWith(".png") ||
+                                        lowerUrl.EndsWith(".gif") ||
+                                        lowerUrl.EndsWith(".webp"))
                                     {
                                         <img class="chat-image"
                                              src="@msg.ImageUrl"
+                                             alt="Chat attachment"
                                              onerror="this.onerror=null;this.src='/images/no-image.png';" />
 
                                         @if (!string.IsNullOrWhiteSpace(msg.MessageText) &&
-                                       msg.MessageText != "[IMAGE]")
+                                             msg.MessageText != "[IMAGE]")
                                         {
                                             <div style="margin-top:6px;">
                                                 @msg.MessageText
@@ -688,16 +850,19 @@
                                     }
                                     else
                                     {
-                                        var fileName = msg.MessageText
-                                        .Replace("[FILE]", "")
-                                        .Trim();
+                                        var fileName =
+                                            msg.MessageText
+                                                .Replace("[FILE]", "")
+                                                .Trim();
 
                                         if (string.IsNullOrWhiteSpace(fileName))
                                         {
                                             fileName = "Download file";
                                         }
 
-                                        <a href="@msg.ImageUrl" download class="file-link">
+                                        <a href="@msg.ImageUrl"
+                                           download
+                                           class="file-link">
                                             📎 @fileName
                                         </a>
                                     }
@@ -709,6 +874,7 @@
                             }
 
                             <div class="time">
+
                                 <span class="message-time"
                                       data-utc='@DateTime.SpecifyKind(msg.SentAt, DateTimeKind.Utc).ToString("yyyy-MM-ddTHH:mm:ss.fffZ")'>
                                     ...
@@ -729,54 +895,126 @@
                                         </span>
                                     }
                                 }
+
                             </div>
 
                             @if (msg.SenderID == Model.CurrentUserId)
                             {
-                                <form method="post" asp-page-handler="DeleteMessage">
-                                    <input type="hidden" name="messageId" value="@msg.MessageID" />
-                                    <input type="hidden" name="userId" value="@Model.ReceiverId" />
-                                    <button class="delete-message-btn">
+                                <form method="post"
+                                      asp-page-handler="DeleteMessage">
+
+                                    <input type="hidden"
+                                           name="messageId"
+                                           value="@msg.MessageID" />
+
+                                    <input type="hidden"
+                                           name="userId"
+                                           value="@Model.ReceiverId" />
+
+                                    <button type="submit"
+                                            class="delete-message-btn">
                                         delete
                                     </button>
+
                                 </form>
                             }
+
                         </div>
+
                     </div>
                 }
+
             </div>
 
             <div class="composer-area">
 
-                <div class="attach-preview" id="attachPreview">
+                <div class="attach-preview"
+                     id="attachPreview">
+
                     <div class="preview-row">
-                        <div class="preview-text" id="previewText"></div>
-                        <button type="button" class="preview-remove" id="clearAttachmentBtn">×</button>
+
+                        <div class="preview-text"
+                             id="previewText">
+                        </div>
+
+                        <button type="button"
+                                class="preview-remove"
+                                id="clearAttachmentBtn">
+                            ×
+                        </button>
+
                     </div>
+
                 </div>
 
-                <div class="voice-panel" id="voicePanel">
-                    <div class="voice-recording-row" id="voiceRecordingRow">
+                <div class="voice-panel"
+                     id="voicePanel">
+
+                    <div class="voice-recording-row"
+                         id="voiceRecordingRow">
+
                         <div class="record-dot"></div>
-                        <div>Recording voice...</div>
-                        <div id="recordTimer">00:00</div>
-                        <button type="button" class="preview-remove" id="cancelVoiceBtn">×</button>
+
+                        <div>
+                            Recording voice...
+                        </div>
+
+                        <div id="recordTimer">
+                            00:00
+                        </div>
+
+                        <button type="button"
+                                class="preview-remove"
+                                id="cancelVoiceBtn">
+                            ×
+                        </button>
+
                     </div>
 
-                    <div class="voice-ready-row" id="voiceReadyRow">
-                        <audio controls id="voiceAudio"></audio>
-                        <button type="button" class="preview-remove" id="removeVoiceBtn">×</button>
+                    <div class="voice-ready-row"
+                         id="voiceReadyRow">
+
+                        <audio controls
+                               id="voiceAudio">
+                        </audio>
+
+                        <button type="button"
+                                class="preview-remove"
+                                id="removeVoiceBtn">
+                            ×
+                        </button>
+
                     </div>
+
                 </div>
 
-                <div class="ios-keyboard" id="iosKeyboard">
+                <div class="ios-keyboard"
+                     id="iosKeyboard">
+
                     <div class="suggestions">
-                        <button type="button" class="suggestion-chip" data-suggestion="">Type...</button>
-                        <button type="button" class="suggestion-chip" data-suggestion="">Suggestions</button>
-                        <button type="button" class="suggestion-chip" data-suggestion="">Here</button>
+
+                        <button type="button"
+                                class="suggestion-chip"
+                                data-suggestion="">
+                            Type...
+                        </button>
+
+                        <button type="button"
+                                class="suggestion-chip"
+                                data-suggestion="">
+                            Suggestions
+                        </button>
+
+                        <button type="button"
+                                class="suggestion-chip"
+                                data-suggestion="">
+                            Here
+                        </button>
+
                     </div>
 
                     <div class="key-row">
+
                         <button type="button" class="key-btn letter-key" data-key="q">q</button>
                         <button type="button" class="key-btn letter-key" data-key="w">w</button>
                         <button type="button" class="key-btn letter-key" data-key="e">e</button>
@@ -787,9 +1025,11 @@
                         <button type="button" class="key-btn letter-key" data-key="i">i</button>
                         <button type="button" class="key-btn letter-key" data-key="o">o</button>
                         <button type="button" class="key-btn letter-key" data-key="p">p</button>
+
                     </div>
 
                     <div class="key-row middle-row">
+
                         <button type="button" class="key-btn letter-key" data-key="a">a</button>
                         <button type="button" class="key-btn letter-key" data-key="s">s</button>
                         <button type="button" class="key-btn letter-key" data-key="d">d</button>
@@ -799,10 +1039,17 @@
                         <button type="button" class="key-btn letter-key" data-key="j">j</button>
                         <button type="button" class="key-btn letter-key" data-key="k">k</button>
                         <button type="button" class="key-btn letter-key" data-key="l">l</button>
+
                     </div>
 
                     <div class="key-row">
-                        <button type="button" class="key-btn special-key" id="shiftKey">ABC</button>
+
+                        <button type="button"
+                                class="key-btn special-key"
+                                id="shiftKey">
+                            ABC
+                        </button>
+
                         <button type="button" class="key-btn letter-key" data-key="z">z</button>
                         <button type="button" class="key-btn letter-key" data-key="x">x</button>
                         <button type="button" class="key-btn letter-key" data-key="c">c</button>
@@ -810,17 +1057,46 @@
                         <button type="button" class="key-btn letter-key" data-key="b">b</button>
                         <button type="button" class="key-btn letter-key" data-key="n">n</button>
                         <button type="button" class="key-btn letter-key" data-key="m">m</button>
-                        <button type="button" class="key-btn special-key" id="backspaceKey">⌫</button>
+
+                        <button type="button"
+                                class="key-btn special-key"
+                                id="backspaceKey">
+                            ⌫
+                        </button>
+
                     </div>
 
                     <div class="key-row bottom-row">
-                        <button type="button" class="key-btn special-key" id="numbersKey">123</button>
-                        <button type="button" class="key-btn emoji-key" id="emojiKey">☺</button>
-                        <button type="button" class="key-btn space-key" id="spaceKey">space</button>
-                        <button type="button" class="key-btn special-key" id="returnKey">return</button>
+
+                        <button type="button"
+                                class="key-btn special-key"
+                                id="numbersKey">
+                            123
+                        </button>
+
+                        <button type="button"
+                                class="key-btn emoji-key"
+                                id="emojiKey">
+                            ☺
+                        </button>
+
+                        <button type="button"
+                                class="key-btn space-key"
+                                id="spaceKey">
+                            space
+                        </button>
+
+                        <button type="button"
+                                class="key-btn special-key"
+                                id="returnKey">
+                            return
+                        </button>
+
                     </div>
 
-                    <div class="emoji-panel" id="emojiPanel">
+                    <div class="emoji-panel"
+                         id="emojiPanel">
+
                         <button type="button" class="emoji-btn" data-emoji="😀">😀</button>
                         <button type="button" class="emoji-btn" data-emoji="😁">😁</button>
                         <button type="button" class="emoji-btn" data-emoji="😂">😂</button>
@@ -857,7 +1133,9 @@
                         <button type="button" class="emoji-btn" data-emoji="💵">💵</button>
                         <button type="button" class="emoji-btn" data-emoji="🏠">🏠</button>
                         <button type="button" class="emoji-btn" data-emoji="📍">📍</button>
+
                     </div>
+
                 </div>
 
                 <form method="post"
@@ -866,7 +1144,9 @@
                       enctype="multipart/form-data"
                       id="chatForm">
 
-                    <input type="hidden" name="receiverId" value="@Model.ReceiverId" />
+                    <input type="hidden"
+                           name="receiverId"
+                           value="@Model.ReceiverId" />
 
                     <input type="file"
                            name="AttachmentFile"
@@ -901,46 +1181,269 @@
                               rows="1"
                               placeholder="Message..."></textarea>
 
-                    <button class="send" type="submit">
+                    <button class="send"
+                            type="submit">
                         Send
                     </button>
+
                 </form>
+
             </div>
+
         </div>
+
     </div>
 
     <script>
-        const messagesBox = document.getElementById("messagesBox");
-        const chatForm = document.getElementById("chatForm");
-        const messageInput = document.getElementById("messageInput");
-        const attachmentFile = document.getElementById("attachmentFile");
+        function showChatToast(
+            message,
+            type = "error",
+            title = "Unable to continue") {
 
-        const attachPreview = document.getElementById("attachPreview");
-        const previewText = document.getElementById("previewText");
-        const clearAttachmentBtn = document.getElementById("clearAttachmentBtn");
+            const container =
+                document.getElementById(
+                    "chatToastContainer");
 
-        const recordBtn = document.getElementById("recordBtn");
-        const voicePanel = document.getElementById("voicePanel");
-        const voiceRecordingRow = document.getElementById("voiceRecordingRow");
-        const voiceReadyRow = document.getElementById("voiceReadyRow");
-        const recordTimer = document.getElementById("recordTimer");
-        const cancelVoiceBtn = document.getElementById("cancelVoiceBtn");
-        const removeVoiceBtn = document.getElementById("removeVoiceBtn");
-        const voiceAudio = document.getElementById("voiceAudio");
+            if (!container || !message) {
+                return;
+            }
 
-        const iosKeyboard = document.getElementById("iosKeyboard");
-        const keyboardToggleBtn = document.getElementById("keyboardToggleBtn");
-        const keyButtons = document.querySelectorAll(".key-btn[data-key]");
-        const letterKeys = document.querySelectorAll(".letter-key");
-        const backspaceKey = document.getElementById("backspaceKey");
-        const spaceKey = document.getElementById("spaceKey");
-        const returnKey = document.getElementById("returnKey");
-        const shiftKey = document.getElementById("shiftKey");
-        const numbersKey = document.getElementById("numbersKey");
-        const emojiKey = document.getElementById("emojiKey");
-        const emojiPanel = document.getElementById("emojiPanel");
-        const emojiButtons = document.querySelectorAll(".emoji-btn");
-        const suggestionChips = document.querySelectorAll(".suggestion-chip");
+            const existingToast =
+                container.querySelector(
+                    ".chat-toast");
+
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const toast =
+                document.createElement("div");
+
+            const safeType =
+                type === "warning" ||
+                type === "info"
+                    ? type
+                    : "error";
+
+            toast.className =
+                `chat-toast chat-toast-${safeType}`;
+
+            toast.setAttribute(
+                "role",
+                safeType === "error"
+                    ? "alert"
+                    : "status");
+
+            const icon =
+                document.createElement("span");
+
+            icon.className =
+                "chat-toast-icon";
+
+            icon.textContent =
+                safeType === "warning"
+                    ? "!"
+                    : safeType === "info"
+                        ? "i"
+                        : "×";
+
+            const content =
+                document.createElement("div");
+
+            content.className =
+                "chat-toast-content";
+
+            const titleElement =
+                document.createElement("span");
+
+            titleElement.className =
+                "chat-toast-title";
+
+            titleElement.textContent =
+                title;
+
+            const messageElement =
+                document.createElement("span");
+
+            messageElement.className =
+                "chat-toast-message";
+
+            messageElement.textContent =
+                message;
+
+            const closeButton =
+                document.createElement("button");
+
+            closeButton.type =
+                "button";
+
+            closeButton.className =
+                "chat-toast-close";
+
+            closeButton.setAttribute(
+                "aria-label",
+                "Close notification");
+
+            closeButton.innerHTML =
+                "&times;";
+
+            content.appendChild(
+                titleElement);
+
+            content.appendChild(
+                messageElement);
+
+            toast.appendChild(icon);
+            toast.appendChild(content);
+            toast.appendChild(closeButton);
+
+            container.appendChild(toast);
+
+            window.requestAnimationFrame(
+                function () {
+                    toast.classList.add(
+                        "show");
+                });
+
+            const closeTimer =
+                window.setTimeout(
+                    removeToast,
+                    5000);
+
+            function removeToast() {
+                if (!toast.isConnected) {
+                    return;
+                }
+
+                window.clearTimeout(
+                    closeTimer);
+
+                toast.classList.remove(
+                    "show");
+
+                window.setTimeout(
+                    function () {
+                        toast.remove();
+                    },
+                    280);
+            }
+
+            closeButton.addEventListener(
+                "click",
+                removeToast);
+        }
+
+        const messagesBox =
+            document.getElementById(
+                "messagesBox");
+
+        const chatForm =
+            document.getElementById(
+                "chatForm");
+
+        const messageInput =
+            document.getElementById(
+                "messageInput");
+
+        const attachmentFile =
+            document.getElementById(
+                "attachmentFile");
+
+        const attachPreview =
+            document.getElementById(
+                "attachPreview");
+
+        const previewText =
+            document.getElementById(
+                "previewText");
+
+        const clearAttachmentBtn =
+            document.getElementById(
+                "clearAttachmentBtn");
+
+        const recordBtn =
+            document.getElementById(
+                "recordBtn");
+
+        const voicePanel =
+            document.getElementById(
+                "voicePanel");
+
+        const voiceRecordingRow =
+            document.getElementById(
+                "voiceRecordingRow");
+
+        const voiceReadyRow =
+            document.getElementById(
+                "voiceReadyRow");
+
+        const recordTimer =
+            document.getElementById(
+                "recordTimer");
+
+        const cancelVoiceBtn =
+            document.getElementById(
+                "cancelVoiceBtn");
+
+        const removeVoiceBtn =
+            document.getElementById(
+                "removeVoiceBtn");
+
+        const voiceAudio =
+            document.getElementById(
+                "voiceAudio");
+
+        const iosKeyboard =
+            document.getElementById(
+                "iosKeyboard");
+
+        const keyboardToggleBtn =
+            document.getElementById(
+                "keyboardToggleBtn");
+
+        const keyButtons =
+            document.querySelectorAll(
+                ".key-btn[data-key]");
+
+        const letterKeys =
+            document.querySelectorAll(
+                ".letter-key");
+
+        const backspaceKey =
+            document.getElementById(
+                "backspaceKey");
+
+        const spaceKey =
+            document.getElementById(
+                "spaceKey");
+
+        const returnKey =
+            document.getElementById(
+                "returnKey");
+
+        const shiftKey =
+            document.getElementById(
+                "shiftKey");
+
+        const numbersKey =
+            document.getElementById(
+                "numbersKey");
+
+        const emojiKey =
+            document.getElementById(
+                "emojiKey");
+
+        const emojiPanel =
+            document.getElementById(
+                "emojiPanel");
+
+        const emojiButtons =
+            document.querySelectorAll(
+                ".emoji-btn");
+
+        const suggestionChips =
+            document.querySelectorAll(
+                ".suggestion-chip");
 
         let mediaRecorder;
         let audioChunks = [];
@@ -954,14 +1457,18 @@
         let numbersMode = false;
 
         const letterValues = [
-            "q", "w", "e", "r", "t", "y", "u", "i", "o", "p",
-            "a", "s", "d", "f", "g", "h", "j", "k", "l",
+            "q", "w", "e", "r", "t", "y",
+            "u", "i", "o", "p",
+            "a", "s", "d", "f", "g", "h",
+            "j", "k", "l",
             "z", "x", "c", "v", "b", "n", "m"
         ];
 
         const numberValues = [
-            "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
-            ".", "?", "!", "@@", "#", "$", "%", "&", "-",
+            "1", "2", "3", "4", "5", "6",
+            "7", "8", "9", "0",
+            ".", "?", "!", "@@", "#", "$",
+            "%", "&", "-",
             "+", "(", ")", "/", "'", ":", ";"
         ];
 
@@ -1001,40 +1508,63 @@
         ];
 
         if (messagesBox) {
-            messagesBox.scrollTop = messagesBox.scrollHeight;
+            messagesBox.scrollTop =
+                messagesBox.scrollHeight;
         }
 
         if (messageInput) {
             messageInput.focus();
 
-            messageInput.addEventListener("input", function () {
-                resizeMessageInput();
-                updateSmartSuggestions();
-            });
+            messageInput.addEventListener(
+                "input",
+                function () {
+                    resizeMessageInput();
+                    updateSmartSuggestions();
+                });
 
-            messageInput.addEventListener("keydown", function (e) {
-                if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
+            messageInput.addEventListener(
+                "keydown",
+                function (event) {
+                    if (event.key === "Enter" &&
+                        !event.shiftKey) {
 
-                    if (chatForm) {
-                        chatForm.requestSubmit();
+                        event.preventDefault();
+
+                        if (chatForm) {
+                            chatForm.requestSubmit();
+                        }
                     }
-                }
-            });
+                });
         }
 
         function formatMessageTime(date) {
-            const now = new Date();
+            const now =
+                new Date();
 
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const messageDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const today =
+                new Date(
+                    now.getFullYear(),
+                    now.getMonth(),
+                    now.getDate());
 
-            const diffDays = Math.floor((today - messageDay) / 86400000);
+            const messageDay =
+                new Date(
+                    date.getFullYear(),
+                    date.getMonth(),
+                    date.getDate());
 
-            const timeText = date.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit"
-            });
+            const diffDays =
+                Math.floor(
+                    (today - messageDay) /
+                    86400000);
+
+            const timeText =
+                date.toLocaleTimeString(
+                    [],
+                    {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    });
 
             if (diffDays === 0) {
                 return "Today " + timeText;
@@ -1044,30 +1574,41 @@
                 return "Yesterday " + timeText;
             }
 
-            return date.toLocaleDateString([], {
-                day: "2-digit",
-                month: "short"
-            }) + " " + timeText;
+            return date.toLocaleDateString(
+                [],
+                {
+                    day: "2-digit",
+                    month: "short"
+                }) +
+                " " +
+                timeText;
         }
 
         function updateMessageTimes() {
-            const timeElements = document.querySelectorAll(".message-time");
+            const timeElements =
+                document.querySelectorAll(
+                    ".message-time");
 
-            timeElements.forEach(function (element) {
-                const utcValue = element.getAttribute("data-utc");
+            timeElements.forEach(
+                function (element) {
+                    const utcValue =
+                        element.getAttribute(
+                            "data-utc");
 
-                if (!utcValue) {
-                    return;
-                }
+                    if (!utcValue) {
+                        return;
+                    }
 
-                const date = new Date(utcValue);
+                    const date =
+                        new Date(utcValue);
 
-                if (isNaN(date.getTime())) {
-                    return;
-                }
+                    if (isNaN(date.getTime())) {
+                        return;
+                    }
 
-                element.innerText = formatMessageTime(date);
-            });
+                    element.innerText =
+                        formatMessageTime(date);
+                });
         }
 
         function resizeMessageInput() {
@@ -1075,54 +1616,99 @@
                 return;
             }
 
-            messageInput.style.height = "40px";
-            messageInput.style.height = Math.min(messageInput.scrollHeight, 98) + "px";
+            messageInput.style.height =
+                "40px";
+
+            messageInput.style.height =
+                Math.min(
+                    messageInput.scrollHeight,
+                    98) +
+                "px";
         }
 
         function updateSmartSuggestions() {
-            if (!messageInput || suggestionChips.length === 0) {
+            if (!messageInput ||
+                suggestionChips.length === 0) {
                 return;
             }
 
-            const text = messageInput.value.trim().toLowerCase();
-            const words = text.split(/\s+/);
-            const lastWord = words[words.length - 1] || "";
+            const text =
+                messageInput.value
+                    .trim()
+                    .toLowerCase();
+
+            const words =
+                text.split(/\s+/);
+
+            const lastWord =
+                words[words.length - 1] || "";
 
             let results = [];
 
             if (lastWord.length === 0) {
-                results = ["hello", "is this available", "how much"];
+                results = [
+                    "hello",
+                    "is this available",
+                    "how much"
+                ];
             }
             else {
-                results = smartSuggestions
-                    .filter(item => item.toLowerCase().startsWith(lastWord))
-                    .slice(0, 3);
+                results =
+                    smartSuggestions
+                        .filter(item =>
+                            item
+                                .toLowerCase()
+                                .startsWith(lastWord))
+                        .slice(0, 3);
             }
 
-            if (results.length === 0 && text.length > 0) {
-                results = smartSuggestions
-                    .filter(item => item.toLowerCase().includes(lastWord))
-                    .slice(0, 3);
+            if (results.length === 0 &&
+                text.length > 0) {
+
+                results =
+                    smartSuggestions
+                        .filter(item =>
+                            item
+                                .toLowerCase()
+                                .includes(lastWord))
+                        .slice(0, 3);
             }
 
             if (results.length === 0) {
-                results = ["okay", "thanks", "please"];
+                results = [
+                    "okay",
+                    "thanks",
+                    "please"
+                ];
             }
 
-            suggestionChips.forEach(function (chip, index) {
-                const value = results[index] || "";
+            suggestionChips.forEach(
+                function (chip, index) {
+                    const value =
+                        results[index] || "";
 
-                if (value) {
-                    chip.innerText = value;
-                    chip.setAttribute("data-suggestion", value);
-                    chip.style.visibility = "visible";
-                }
-                else {
-                    chip.innerText = "";
-                    chip.setAttribute("data-suggestion", "");
-                    chip.style.visibility = "hidden";
-                }
-            });
+                    if (value) {
+                        chip.innerText =
+                            value;
+
+                        chip.setAttribute(
+                            "data-suggestion",
+                            value);
+
+                        chip.style.visibility =
+                            "visible";
+                    }
+                    else {
+                        chip.innerText = "";
+
+                        chip.setAttribute(
+                            "data-suggestion",
+                            "");
+
+                        chip.style.visibility =
+                            "hidden";
+                    }
+                });
         }
 
         function insertIntoMessage(text) {
@@ -1130,83 +1716,118 @@
                 return;
             }
 
-            const start = messageInput.selectionStart;
-            const end = messageInput.selectionEnd;
-            const value = messageInput.value;
+            const start =
+                messageInput.selectionStart;
+
+            const end =
+                messageInput.selectionEnd;
+
+            const value =
+                messageInput.value;
 
             messageInput.value =
                 value.substring(0, start) +
                 text +
                 value.substring(end);
 
-            const newPosition = start + text.length;
+            const newPosition =
+                start + text.length;
 
             messageInput.focus();
-            messageInput.setSelectionRange(newPosition, newPosition);
+
+            messageInput.setSelectionRange(
+                newPosition,
+                newPosition);
 
             resizeMessageInput();
             updateSmartSuggestions();
         }
 
-        suggestionChips.forEach(function (chip) {
-            chip.addEventListener("click", function () {
-                const suggestion = chip.getAttribute("data-suggestion");
+        suggestionChips.forEach(
+            function (chip) {
+                chip.addEventListener(
+                    "click",
+                    function () {
+                        const suggestion =
+                            chip.getAttribute(
+                                "data-suggestion");
 
-                if (!suggestion || !messageInput) {
-                    return;
-                }
+                        if (!suggestion ||
+                            !messageInput) {
+                            return;
+                        }
 
-                const currentText = messageInput.value;
-                const endsWithSpace = currentText.endsWith(" ");
+                        const currentText =
+                            messageInput.value;
 
-                if (currentText.trim().length === 0) {
-                    messageInput.value = suggestion + " ";
-                }
-                else {
-                    const lastSpaceIndex = currentText.lastIndexOf(" ");
+                        const endsWithSpace =
+                            currentText.endsWith(" ");
 
-                    if (lastSpaceIndex === -1) {
-                        messageInput.value = suggestion + " ";
-                    }
-                    else if (endsWithSpace) {
-                        messageInput.value = currentText + suggestion + " ";
-                    }
-                    else {
-                        messageInput.value =
-                            currentText.substring(0, lastSpaceIndex + 1) +
-                            suggestion +
-                            " ";
-                    }
-                }
+                        if (currentText.trim().length === 0) {
+                            messageInput.value =
+                                suggestion + " ";
+                        }
+                        else {
+                            const lastSpaceIndex =
+                                currentText.lastIndexOf(" ");
 
-                messageInput.focus();
-                resizeMessageInput();
-                updateSmartSuggestions();
+                            if (lastSpaceIndex === -1) {
+                                messageInput.value =
+                                    suggestion + " ";
+                            }
+                            else if (endsWithSpace) {
+                                messageInput.value =
+                                    currentText +
+                                    suggestion +
+                                    " ";
+                            }
+                            else {
+                                messageInput.value =
+                                    currentText.substring(
+                                        0,
+                                        lastSpaceIndex + 1) +
+                                    suggestion +
+                                    " ";
+                            }
+                        }
+
+                        messageInput.focus();
+                        resizeMessageInput();
+                        updateSmartSuggestions();
+                    });
             });
-        });
 
         function backspaceMessage() {
             if (!messageInput) {
                 return;
             }
 
-            const start = messageInput.selectionStart;
-            const end = messageInput.selectionEnd;
-            const value = messageInput.value;
+            const start =
+                messageInput.selectionStart;
+
+            const end =
+                messageInput.selectionEnd;
+
+            const value =
+                messageInput.value;
 
             if (start !== end) {
                 messageInput.value =
                     value.substring(0, start) +
                     value.substring(end);
 
-                messageInput.setSelectionRange(start, start);
+                messageInput.setSelectionRange(
+                    start,
+                    start);
             }
             else if (start > 0) {
                 messageInput.value =
                     value.substring(0, start - 1) +
                     value.substring(start);
 
-                messageInput.setSelectionRange(start - 1, start - 1);
+                messageInput.setSelectionRange(
+                    start - 1,
+                    start - 1);
             }
 
             messageInput.focus();
@@ -1217,373 +1838,581 @@
         function setLetterKeyboard() {
             numbersMode = false;
 
-            letterKeys.forEach(function (btn, index) {
-                const value = letterValues[index];
+            letterKeys.forEach(
+                function (button, index) {
+                    const value =
+                        letterValues[index];
 
-                if (value) {
-                    const finalValue = uppercaseMode ? value.toUpperCase() : value;
-                    btn.setAttribute("data-key", finalValue);
-                    btn.innerText = finalValue;
-                    btn.style.visibility = "visible";
-                }
-            });
+                    if (value) {
+                        const finalValue =
+                            uppercaseMode
+                                ? value.toUpperCase()
+                                : value;
+
+                        button.setAttribute(
+                            "data-key",
+                            finalValue);
+
+                        button.innerText =
+                            finalValue;
+
+                        button.style.visibility =
+                            "visible";
+                    }
+                });
 
             if (numbersKey) {
-                numbersKey.innerText = "123";
+                numbersKey.innerText =
+                    "123";
             }
         }
 
         function setNumberKeyboard() {
             numbersMode = true;
 
-            letterKeys.forEach(function (btn, index) {
-                const value = numberValues[index];
+            letterKeys.forEach(
+                function (button, index) {
+                    const value =
+                        numberValues[index];
 
-                if (value) {
-                    btn.setAttribute("data-key", value);
-                    btn.innerText = value;
-                    btn.style.visibility = "visible";
-                }
-                else {
-                    btn.style.visibility = "hidden";
-                }
-            });
+                    if (value) {
+                        button.setAttribute(
+                            "data-key",
+                            value);
+
+                        button.innerText =
+                            value;
+
+                        button.style.visibility =
+                            "visible";
+                    }
+                    else {
+                        button.style.visibility =
+                            "hidden";
+                    }
+                });
 
             if (numbersKey) {
-                numbersKey.innerText = "ABC";
+                numbersKey.innerText =
+                    "ABC";
             }
         }
 
-        if (keyboardToggleBtn && iosKeyboard) {
-            keyboardToggleBtn.addEventListener("click", function () {
-                iosKeyboard.classList.toggle("show");
-                keyboardToggleBtn.classList.toggle("keyboard-toggle-active");
+        if (keyboardToggleBtn &&
+            iosKeyboard) {
 
-                if (messageInput) {
-                    messageInput.focus();
-                }
-            });
+            keyboardToggleBtn.addEventListener(
+                "click",
+                function () {
+                    iosKeyboard.classList.toggle(
+                        "show");
+
+                    keyboardToggleBtn.classList.toggle(
+                        "keyboard-toggle-active");
+
+                    if (messageInput) {
+                        messageInput.focus();
+                    }
+                });
         }
 
-        keyButtons.forEach(function (btn) {
-            btn.addEventListener("click", function () {
-                const key = btn.getAttribute("data-key");
-                insertIntoMessage(key);
+        keyButtons.forEach(
+            function (button) {
+                button.addEventListener(
+                    "click",
+                    function () {
+                        const key =
+                            button.getAttribute(
+                                "data-key");
+
+                        insertIntoMessage(key);
+                    });
             });
-        });
 
         if (backspaceKey) {
-            backspaceKey.addEventListener("click", backspaceMessage);
+            backspaceKey.addEventListener(
+                "click",
+                backspaceMessage);
         }
 
         if (spaceKey) {
-            spaceKey.addEventListener("click", function () {
-                insertIntoMessage(" ");
-            });
+            spaceKey.addEventListener(
+                "click",
+                function () {
+                    insertIntoMessage(" ");
+                });
         }
 
         if (returnKey) {
-            returnKey.addEventListener("click", function () {
-                insertIntoMessage("\n");
-            });
+            returnKey.addEventListener(
+                "click",
+                function () {
+                    insertIntoMessage("\n");
+                });
         }
 
         if (shiftKey) {
-            shiftKey.addEventListener("click", function () {
-                uppercaseMode = !uppercaseMode;
-                shiftKey.classList.toggle("keyboard-toggle-active");
+            shiftKey.addEventListener(
+                "click",
+                function () {
+                    uppercaseMode =
+                        !uppercaseMode;
 
-                if (!numbersMode) {
-                    setLetterKeyboard();
-                }
-            });
+                    shiftKey.classList.toggle(
+                        "keyboard-toggle-active");
+
+                    if (!numbersMode) {
+                        setLetterKeyboard();
+                    }
+                });
         }
 
         if (numbersKey) {
-            numbersKey.addEventListener("click", function () {
-                if (numbersMode) {
-                    setLetterKeyboard();
-                }
-                else {
-                    setNumberKeyboard();
-                }
+            numbersKey.addEventListener(
+                "click",
+                function () {
+                    if (numbersMode) {
+                        setLetterKeyboard();
+                    }
+                    else {
+                        setNumberKeyboard();
+                    }
 
-                if (emojiPanel) {
-                    emojiPanel.classList.remove("show");
-                }
-            });
+                    if (emojiPanel) {
+                        emojiPanel.classList.remove(
+                            "show");
+                    }
+                });
         }
 
-        if (emojiKey && emojiPanel) {
-            emojiKey.addEventListener("click", function () {
-                emojiPanel.classList.toggle("show");
+        if (emojiKey &&
+            emojiPanel) {
 
-                if (messageInput) {
-                    messageInput.focus();
-                }
-            });
+            emojiKey.addEventListener(
+                "click",
+                function () {
+                    emojiPanel.classList.toggle(
+                        "show");
+
+                    if (messageInput) {
+                        messageInput.focus();
+                    }
+                });
         }
 
-        emojiButtons.forEach(function (btn) {
-            btn.addEventListener("click", function () {
-                const emoji = btn.getAttribute("data-emoji");
+        emojiButtons.forEach(
+            function (button) {
+                button.addEventListener(
+                    "click",
+                    function () {
+                        const emoji =
+                            button.getAttribute(
+                                "data-emoji");
 
-                if (emoji) {
-                    insertIntoMessage(emoji);
-                }
+                        if (emoji) {
+                            insertIntoMessage(
+                                emoji);
+                        }
+                    });
             });
-        });
 
         function showAttachPreview(text) {
-            if (attachPreview && previewText) {
-                attachPreview.style.display = "block";
-                previewText.innerText = text;
+            if (attachPreview &&
+                previewText) {
+
+                attachPreview.style.display =
+                    "block";
+
+                previewText.innerText =
+                    text;
             }
         }
 
         function hideAttachPreview() {
-            if (attachPreview && previewText) {
-                attachPreview.style.display = "none";
-                previewText.innerText = "";
+            if (attachPreview &&
+                previewText) {
+
+                attachPreview.style.display =
+                    "none";
+
+                previewText.innerText =
+                    "";
             }
         }
 
         function clearAttachment() {
             if (attachmentFile) {
-                attachmentFile.value = "";
+                attachmentFile.value =
+                    "";
             }
 
             hideAttachPreview();
 
             if (voicePanel) {
-                voicePanel.style.display = "none";
+                voicePanel.style.display =
+                    "none";
             }
 
             if (voiceRecordingRow) {
-                voiceRecordingRow.style.display = "none";
+                voiceRecordingRow.style.display =
+                    "none";
             }
 
             if (voiceReadyRow) {
-                voiceReadyRow.style.display = "none";
+                voiceReadyRow.style.display =
+                    "none";
             }
 
             if (voiceAudio) {
-                voiceAudio.removeAttribute("src");
+                voiceAudio.removeAttribute(
+                    "src");
+
                 voiceAudio.load();
             }
         }
 
         if (attachmentFile) {
-            attachmentFile.addEventListener("change", function () {
-                if (this.files && this.files.length > 0) {
-                    if (voicePanel) {
-                        voicePanel.style.display = "none";
-                    }
+            attachmentFile.addEventListener(
+                "change",
+                function () {
+                    if (this.files &&
+                        this.files.length > 0) {
 
-                    showAttachPreview("Attached: " + this.files[0].name);
-                }
-            });
+                        if (voicePanel) {
+                            voicePanel.style.display =
+                                "none";
+                        }
+
+                        showAttachPreview(
+                            "Attached: " +
+                            this.files[0].name);
+                    }
+                });
         }
 
         if (clearAttachmentBtn) {
-            clearAttachmentBtn.addEventListener("click", clearAttachment);
+            clearAttachmentBtn.addEventListener(
+                "click",
+                clearAttachment);
         }
 
         if (removeVoiceBtn) {
-            removeVoiceBtn.addEventListener("click", clearAttachment);
+            removeVoiceBtn.addEventListener(
+                "click",
+                clearAttachment);
         }
 
         function formatTime(totalSeconds) {
-            const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
-            const sec = (totalSeconds % 60).toString().padStart(2, "0");
-            return minutes + ":" + sec;
+            const minutes =
+                Math.floor(
+                    totalSeconds / 60)
+                    .toString()
+                    .padStart(2, "0");
+
+            const sec =
+                (totalSeconds % 60)
+                    .toString()
+                    .padStart(2, "0");
+
+            return minutes +
+                ":" +
+                sec;
         }
 
         function startTimer() {
             seconds = 0;
 
             if (recordTimer) {
-                recordTimer.innerText = "00:00";
+                recordTimer.innerText =
+                    "00:00";
             }
 
-            timerInterval = setInterval(function () {
-                seconds++;
+            timerInterval =
+                setInterval(
+                    function () {
+                        seconds++;
 
-                if (recordTimer) {
-                    recordTimer.innerText = formatTime(seconds);
-                }
-            }, 1000);
+                        if (recordTimer) {
+                            recordTimer.innerText =
+                                formatTime(seconds);
+                        }
+                    },
+                    1000);
         }
 
         function stopTimer() {
-            clearInterval(timerInterval);
+            clearInterval(
+                timerInterval);
         }
 
         function stopMicrophone() {
             if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-                currentStream = null;
+                currentStream
+                    .getTracks()
+                    .forEach(
+                        track =>
+                            track.stop());
+
+                currentStream =
+                    null;
             }
         }
 
         function setRecordButtonNormal() {
             if (recordBtn) {
-                recordBtn.innerText = "🎤";
-                recordBtn.classList.remove("recording-btn");
-                recordBtn.style.background = "#2563eb";
+                recordBtn.innerText =
+                    "🎤";
+
+                recordBtn.classList.remove(
+                    "recording-btn");
+
+                recordBtn.style.background =
+                    "#2563eb";
             }
         }
 
         function setRecordButtonRecording() {
             if (recordBtn) {
-                recordBtn.innerText = "⏹";
-                recordBtn.classList.add("recording-btn");
-                recordBtn.style.background = "#ef4444";
+                recordBtn.innerText =
+                    "⏹";
+
+                recordBtn.classList.add(
+                    "recording-btn");
+
+                recordBtn.style.background =
+                    "#ef4444";
             }
         }
 
         if (recordBtn) {
-            recordBtn.addEventListener("click", async function () {
-                if (!isRecording) {
-                    try {
-                        clearAttachment();
-                        cancelVoice = false;
+            recordBtn.addEventListener(
+                "click",
+                async function () {
+                    if (!isRecording) {
+                        try {
+                            clearAttachment();
 
-                        currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            cancelVoice =
+                                false;
 
-                        mediaRecorder = new MediaRecorder(currentStream);
-                        audioChunks = [];
+                            currentStream =
+                                await navigator
+                                    .mediaDevices
+                                    .getUserMedia({
+                                        audio: true
+                                    });
 
-                        mediaRecorder.ondataavailable = function (event) {
-                            if (event.data && event.data.size > 0) {
-                                audioChunks.push(event.data);
-                            }
-                        };
+                            mediaRecorder =
+                                new MediaRecorder(
+                                    currentStream);
 
-                        mediaRecorder.onstop = function () {
-                            stopTimer();
-                            stopMicrophone();
-                            setRecordButtonNormal();
-                            isRecording = false;
+                            audioChunks = [];
 
-                            if (cancelVoice) {
-                                clearAttachment();
-                                return;
-                            }
+                            mediaRecorder.ondataavailable =
+                                function (event) {
+                                    if (event.data &&
+                                        event.data.size > 0) {
 
-                            if (!audioChunks || audioChunks.length === 0) {
-                                clearAttachment();
-                                return;
-                            }
+                                        audioChunks.push(
+                                            event.data);
+                                    }
+                                };
 
-                            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-                            const audioFile = new File([audioBlob], "voice-message.webm", { type: "audio/webm" });
+                            mediaRecorder.onstop =
+                                function () {
+                                    stopTimer();
+                                    stopMicrophone();
+                                    setRecordButtonNormal();
 
-                            const dataTransfer = new DataTransfer();
-                            dataTransfer.items.add(audioFile);
+                                    isRecording =
+                                        false;
 
-                            if (attachmentFile) {
-                                attachmentFile.files = dataTransfer.files;
-                            }
+                                    if (cancelVoice) {
+                                        clearAttachment();
+                                        return;
+                                    }
 
-                            const audioUrl = URL.createObjectURL(audioBlob);
+                                    if (!audioChunks ||
+                                        audioChunks.length === 0) {
 
-                            if (voiceAudio) {
-                                voiceAudio.src = audioUrl;
-                                voiceAudio.load();
-                            }
+                                        clearAttachment();
+                                        return;
+                                    }
+
+                                    const audioBlob =
+                                        new Blob(
+                                            audioChunks,
+                                            {
+                                                type:
+                                                    "audio/webm"
+                                            });
+
+                                    const audioFile =
+                                        new File(
+                                            [audioBlob],
+                                            "voice-message.webm",
+                                            {
+                                                type:
+                                                    "audio/webm"
+                                            });
+
+                                    const dataTransfer =
+                                        new DataTransfer();
+
+                                    dataTransfer.items.add(
+                                        audioFile);
+
+                                    if (attachmentFile) {
+                                        attachmentFile.files =
+                                            dataTransfer.files;
+                                    }
+
+                                    const audioUrl =
+                                        URL.createObjectURL(
+                                            audioBlob);
+
+                                    if (voiceAudio) {
+                                        voiceAudio.src =
+                                            audioUrl;
+
+                                        voiceAudio.load();
+                                    }
+
+                                    if (voicePanel) {
+                                        voicePanel.style.display =
+                                            "block";
+                                    }
+
+                                    if (voiceRecordingRow) {
+                                        voiceRecordingRow.style.display =
+                                            "none";
+                                    }
+
+                                    if (voiceReadyRow) {
+                                        voiceReadyRow.style.display =
+                                            "flex";
+                                    }
+
+                                    showAttachPreview(
+                                        "Voice ready: " +
+                                        formatTime(seconds) +
+                                        " — press Send.");
+                                };
+
+                            mediaRecorder.start();
+
+                            isRecording =
+                                true;
 
                             if (voicePanel) {
-                                voicePanel.style.display = "block";
+                                voicePanel.style.display =
+                                    "block";
                             }
 
                             if (voiceRecordingRow) {
-                                voiceRecordingRow.style.display = "none";
+                                voiceRecordingRow.style.display =
+                                    "flex";
                             }
 
                             if (voiceReadyRow) {
-                                voiceReadyRow.style.display = "flex";
+                                voiceReadyRow.style.display =
+                                    "none";
                             }
 
-                            showAttachPreview("Voice ready: " + formatTime(seconds) + " — press Send.");
-                        };
-
-                        mediaRecorder.start();
-                        isRecording = true;
-
-                        if (voicePanel) {
-                            voicePanel.style.display = "block";
+                            setRecordButtonRecording();
+                            startTimer();
                         }
+                        catch (error) {
+                            console.error(
+                                "Microphone access failed:",
+                                error);
 
-                        if (voiceRecordingRow) {
-                            voiceRecordingRow.style.display = "flex";
+                            showChatToast(
+                                "Please allow microphone access in your browser settings, then try again.",
+                                "error",
+                                "Microphone permission required");
                         }
+                    }
+                    else {
+                        cancelVoice =
+                            false;
 
-                        if (voiceReadyRow) {
-                            voiceReadyRow.style.display = "none";
+                        if (mediaRecorder &&
+                            mediaRecorder.state !==
+                                "inactive") {
+
+                            mediaRecorder.stop();
                         }
-
-                        setRecordButtonRecording();
-                        startTimer();
                     }
-                    catch {
-                        alert("Microphone permission is required.");
-                    }
-                }
-                else {
-                    cancelVoice = false;
-
-                    if (mediaRecorder && mediaRecorder.state !== "inactive") {
-                        mediaRecorder.stop();
-                    }
-                }
-            });
+                });
         }
 
         if (cancelVoiceBtn) {
-            cancelVoiceBtn.addEventListener("click", function () {
-                cancelVoice = true;
+            cancelVoiceBtn.addEventListener(
+                "click",
+                function () {
+                    cancelVoice =
+                        true;
 
-                if (mediaRecorder && mediaRecorder.state !== "inactive") {
-                    mediaRecorder.stop();
-                }
-                else {
-                    clearAttachment();
-                    stopTimer();
-                    stopMicrophone();
-                    setRecordButtonNormal();
-                    isRecording = false;
-                }
-            });
+                    if (mediaRecorder &&
+                        mediaRecorder.state !==
+                            "inactive") {
+
+                        mediaRecorder.stop();
+                    }
+                    else {
+                        clearAttachment();
+                        stopTimer();
+                        stopMicrophone();
+                        setRecordButtonNormal();
+
+                        isRecording =
+                            false;
+                    }
+                });
         }
 
         if (chatForm) {
-            chatForm.addEventListener("submit", function (e) {
-                if (isRecording) {
-                    e.preventDefault();
-                    alert("Stop recording first, then press Send.");
-                    return;
-                }
+            chatForm.addEventListener(
+                "submit",
+                function (event) {
+                    if (isRecording) {
+                        event.preventDefault();
 
-                const hasText =
-                    messageInput &&
-                    messageInput.value &&
-                    messageInput.value.trim().length > 0;
+                        showChatToast(
+                            "Stop the voice recording first, then press Send.",
+                            "warning",
+                            "Recording is still active");
 
-                const hasFile =
-                    attachmentFile &&
-                    attachmentFile.files &&
-                    attachmentFile.files.length > 0;
+                        return;
+                    }
 
-                if (!hasText && !hasFile) {
-                    e.preventDefault();
-                    return;
-                }
-            });
+                    const hasText =
+                        messageInput &&
+                        messageInput.value &&
+                        messageInput.value
+                            .trim()
+                            .length > 0;
+
+                    const hasFile =
+                        attachmentFile &&
+                        attachmentFile.files &&
+                        attachmentFile.files.length > 0;
+
+                    if (!hasText &&
+                        !hasFile) {
+
+                        event.preventDefault();
+                        return;
+                    }
+                });
         }
 
         updateMessageTimes();
         updateSmartSuggestions();
     </script>
+
 </body>
+
 </html>
+
