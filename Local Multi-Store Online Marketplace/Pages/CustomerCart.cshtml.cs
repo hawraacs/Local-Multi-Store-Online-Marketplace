@@ -6,8 +6,12 @@ using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
 using System.Text.Json;
-using Multi_Store.Services;
+using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
@@ -29,16 +33,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         };
 
         public CustomerCartModel(
-    ApplicationDbContext context,
-    UserManager<User> userManager,
-    SubscriptionService subscriptionService)
+            ApplicationDbContext context,
+            UserManager<User> userManager,
+            SubscriptionService subscriptionService)
         {
             _context = context;
             _userManager = userManager;
             _subscriptionService = subscriptionService;
         }
 
-        public List<CustomerCartItemViewModel> CartItems { get; set; } = new();
+        // =====================================================
+        // PAGE DATA
+        // =====================================================
+        public List<CustomerCartItemViewModel> CartItems { get; set; }
+            = new();
 
         public decimal TotalAmount { get; set; }
 
@@ -61,18 +69,28 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public bool CheckoutAfterAddress { get; set; }
 
         [BindProperty(SupportsGet = true)]
-        public string? PaymentMethod { get; set; } = "Cash On Delivery";
+        public string? PaymentMethod { get; set; }
+            = "Cash On Delivery";
 
+        // =====================================================
+        // GET CART
+        // =====================================================
         public async Task<IActionResult> OnGetAsync()
         {
             var customerId = await GetCurrentCustomerIdAsync();
 
             if (customerId == null)
             {
-                TempData["Error"] = "Please login as a customer first.";
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                TempData["Error"] =
+                    "Please login as a customer first.";
+
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
+            // Continue checkout automatically after the customer
+            // adds an address and returns to the cart page.
             if (CheckoutAfterAddress)
             {
                 return await PlaceOrderFromCartAsync(
@@ -86,20 +104,32 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return Page();
         }
 
-        public async Task<IActionResult> OnPostUpdateQuantityAsync(int cartItemId, int quantity)
+        // =====================================================
+        // UPDATE QUANTITY
+        // =====================================================
+        public async Task<IActionResult> OnPostUpdateQuantityAsync(
+            int cartItemId,
+            int quantity)
         {
             var customerId = await GetCurrentCustomerIdAsync();
 
             if (customerId == null)
             {
-                TempData["Error"] = "Please login as a customer first.";
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                TempData["Error"] =
+                    "Please login as a customer first.";
+
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
             if (quantity <= 0)
             {
-                TempData["Error"] = "Quantity must be greater than 0.";
-                return RedirectToPage(new { AppliedCouponCode });
+                TempData["Error"] =
+                    "Quantity must be greater than 0.";
+
+                return RedirectToPage(
+                    new { AppliedCouponCode });
             }
 
             var cartItem = await _context.CartItems
@@ -111,14 +141,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (cartItem == null)
             {
-                TempData["Error"] = "Cart item not found.";
-                return RedirectToPage(new { AppliedCouponCode });
+                TempData["Error"] =
+                    "Cart item not found.";
+
+                return RedirectToPage(
+                    new { AppliedCouponCode });
             }
 
-            if (cartItem.Product == null || cartItem.Product.Quantity < quantity)
+            if (cartItem.Product == null ||
+                cartItem.Product.Quantity < quantity)
             {
-                TempData["Error"] = "Not enough stock available.";
-                return RedirectToPage(new { AppliedCouponCode });
+                TempData["Error"] =
+                    "Not enough stock available.";
+
+                return RedirectToPage(
+                    new { AppliedCouponCode });
             }
 
             cartItem.Quantity = quantity;
@@ -126,19 +163,29 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Cart updated successfully.";
+            TempData["Success"] =
+                "Cart updated successfully.";
 
-            return RedirectToPage(new { AppliedCouponCode });
+            return RedirectToPage(
+                new { AppliedCouponCode });
         }
 
-        public async Task<IActionResult> OnPostRemoveAsync(int cartItemId)
+        // =====================================================
+        // REMOVE ITEM
+        // =====================================================
+        public async Task<IActionResult> OnPostRemoveAsync(
+            int cartItemId)
         {
             var customerId = await GetCurrentCustomerIdAsync();
 
             if (customerId == null)
             {
-                TempData["Error"] = "Please login as a customer first.";
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                TempData["Error"] =
+                    "Please login as a customer first.";
+
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
             var cartItem = await _context.CartItems
@@ -149,8 +196,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (cartItem == null)
             {
-                TempData["Error"] = "Cart item not found.";
-                return RedirectToPage(new { AppliedCouponCode });
+                TempData["Error"] =
+                    "Cart item not found.";
+
+                return RedirectToPage(
+                    new { AppliedCouponCode });
             }
 
             cartItem.Cart.UpdatedAt = DateTime.UtcNow;
@@ -159,94 +209,142 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Item removed from cart.";
+            TempData["Success"] =
+                "Item removed from cart.";
 
-            return RedirectToPage(new { AppliedCouponCode });
+            return RedirectToPage(
+                new { AppliedCouponCode });
         }
 
+        // =====================================================
+        // CLEAR CART
+        // =====================================================
         public async Task<IActionResult> OnPostClearAsync()
         {
             var customerId = await GetCurrentCustomerIdAsync();
 
             if (customerId == null)
             {
-                TempData["Error"] = "Please login as a customer first.";
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                TempData["Error"] =
+                    "Please login as a customer first.";
+
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
-                .FirstOrDefaultAsync(c => c.CustomerID == customerId.Value);
+                .FirstOrDefaultAsync(c =>
+                    c.CustomerID == customerId.Value);
 
             if (cart == null)
             {
                 return RedirectToPage();
             }
 
-            _context.CartItems.RemoveRange(cart.CartItems);
+            _context.CartItems.RemoveRange(
+                cart.CartItems);
 
             cart.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Cart cleared successfully.";
+            TempData["Success"] =
+                "Cart cleared successfully.";
 
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostApplyCouponAsync(string couponCode)
+        // =====================================================
+        // APPLY COUPON
+        // =====================================================
+        public async Task<IActionResult> OnPostApplyCouponAsync(
+            string couponCode)
         {
             var customerId = await GetCurrentCustomerIdAsync();
 
             if (customerId == null)
             {
-                TempData["Error"] = "Please login as a customer first.";
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                TempData["Error"] =
+                    "Please login as a customer first.";
+
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
             if (string.IsNullOrWhiteSpace(couponCode))
             {
-                TempData["Error"] = "Please enter a coupon code.";
+                TempData["Error"] =
+                    "Please enter a coupon code.";
+
                 return RedirectToPage();
             }
 
-            var cleanCode = couponCode.Trim().ToUpper();
+            var cleanCode =
+                couponCode.Trim().ToUpperInvariant();
 
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                     .ThenInclude(ci => ci.Product)
-                .FirstOrDefaultAsync(c => c.CustomerID == customerId.Value);
+                .FirstOrDefaultAsync(c =>
+                    c.CustomerID == customerId.Value);
 
-            if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
+            if (cart == null ||
+                cart.CartItems == null ||
+                !cart.CartItems.Any())
             {
-                TempData["Error"] = "Your cart is empty.";
+                TempData["Error"] =
+                    "Your cart is empty.";
+
                 return RedirectToPage();
             }
 
-            var subtotal = cart.CartItems.Sum(i => i.PriceAtAddTime * i.Quantity);
+            var subtotal = cart.CartItems.Sum(
+                item =>
+                    item.PriceAtAddTime *
+                    item.Quantity);
 
-            var result = await CalculateCouponDiscountAsync(
-                cleanCode,
-                cart.CartItems.ToList(),
-                subtotal);
+            var result =
+                await CalculateCouponDiscountAsync(
+                    cleanCode,
+                    cart.CartItems.ToList(),
+                    subtotal);
 
             if (!result.IsValid)
             {
-                TempData["Error"] = result.Message;
+                TempData["Error"] =
+                    result.Message;
+
                 return RedirectToPage();
             }
 
-            TempData["Success"] = $"Coupon {cleanCode} applied successfully. Discount: ${result.DiscountAmount:N2}.";
+            TempData["Success"] =
+                $"Coupon {cleanCode} applied successfully. " +
+                $"Discount: ${result.DiscountAmount:N2}.";
 
-            return RedirectToPage(new { AppliedCouponCode = cleanCode });
+            return RedirectToPage(
+                new
+                {
+                    AppliedCouponCode = cleanCode
+                });
         }
 
+        // =====================================================
+        // REMOVE COUPON
+        // =====================================================
         public IActionResult OnPostRemoveCoupon()
         {
-            TempData["Success"] = "Coupon removed.";
+            TempData["Success"] =
+                "Coupon removed.";
+
             return RedirectToPage();
         }
 
+        // =====================================================
+        // CHECKOUT
+        // =====================================================
         public async Task<IActionResult> OnPostCheckoutAsync(
             string? appliedCouponCode,
             string? paymentMethod)
@@ -255,8 +353,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (customerId == null)
             {
-                TempData["Error"] = "Please login as a customer first.";
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                TempData["Error"] =
+                    "Please login as a customer first.";
+
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
             return await PlaceOrderFromCartAsync(
@@ -265,184 +367,361 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 paymentMethod);
         }
 
+        // =====================================================
+        // PLACE ORDER
+        // =====================================================
         private async Task<IActionResult> PlaceOrderFromCartAsync(
-    int customerId,
-    string? appliedCouponCode,
-    string? paymentMethod)
+            int customerId,
+            string? appliedCouponCode,
+            string? paymentMethod)
         {
-            var cleanPaymentMethod = string.IsNullOrWhiteSpace(paymentMethod)
-                ? "Cash On Delivery"
-                : paymentMethod.Trim();
+            var cleanPaymentMethod =
+                string.IsNullOrWhiteSpace(paymentMethod)
+                    ? "Cash On Delivery"
+                    : paymentMethod.Trim();
 
-            if (cleanPaymentMethod != "Cash On Delivery" &&
-                cleanPaymentMethod != "Online Payment")
+            if (!string.Equals(
+                    cleanPaymentMethod,
+                    "Cash On Delivery",
+                    StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(
+                    cleanPaymentMethod,
+                    "Online Payment",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                TempData["Error"] = "Invalid payment method.";
-                return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
+                TempData["Error"] =
+                    "Invalid payment method.";
+
+                return RedirectToPage(
+                    new
+                    {
+                        AppliedCouponCode =
+                            appliedCouponCode
+                    });
             }
 
-            // Important:
-            // COD stays Pending until delivery is marked delivered.
-            // Online Payment stays Pending until customer pays on OnlinePayment page.
+            if (string.Equals(
+                    cleanPaymentMethod,
+                    "Cash On Delivery",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                cleanPaymentMethod =
+                    "Cash On Delivery";
+            }
+            else
+            {
+                cleanPaymentMethod =
+                    "Online Payment";
+            }
+
+            // COD remains pending until the delivery is completed.
+            // Online Payment remains pending until the customer pays.
             var orderPaymentStatus = "Pending";
 
-            var paymentGateway = cleanPaymentMethod == "Online Payment"
-                ? "Simulated Gateway"
-                : "Cash";
+            var paymentGateway =
+                cleanPaymentMethod == "Online Payment"
+                    ? "Simulated Gateway"
+                    : "Cash";
 
             var paymentRecordStatus = "Pending";
 
             var customer = await _context.Customers
                 .Include(c => c.Addresses)
-                .FirstOrDefaultAsync(c => c.CustomerID == customerId);
+                .FirstOrDefaultAsync(c =>
+                    c.CustomerID == customerId);
 
             if (customer == null)
             {
-                TempData["Error"] = "Customer profile was not found.";
+                TempData["Error"] =
+                    "Customer profile was not found.";
+
                 return RedirectToPage();
             }
 
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                     .ThenInclude(ci => ci.Product)
-                .FirstOrDefaultAsync(c => c.CustomerID == customerId);
+                .FirstOrDefaultAsync(c =>
+                    c.CustomerID == customerId);
 
-            if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
+            if (cart == null ||
+                cart.CartItems == null ||
+                !cart.CartItems.Any())
             {
-                TempData["Error"] = "Your cart is empty.";
+                TempData["Error"] =
+                    "Your cart is empty.";
+
                 return RedirectToPage();
             }
 
             var address = customer.Addresses
-                .FirstOrDefault(a => a.IsDefault && a.IsActive)
-                ?? customer.Addresses.FirstOrDefault(a => a.IsActive);
+                .FirstOrDefault(addressItem =>
+                    addressItem.IsDefault &&
+                    addressItem.IsActive)
+                ?? customer.Addresses
+                    .FirstOrDefault(addressItem =>
+                        addressItem.IsActive);
 
             if (address == null)
             {
-                TempData["Error"] = "Please add an active delivery address before checkout.";
+                TempData["Error"] =
+                    "Please add an active delivery address " +
+                    "before checkout.";
 
-                var encodedCoupon = Uri.EscapeDataString(appliedCouponCode ?? string.Empty);
-                var encodedPayment = Uri.EscapeDataString(cleanPaymentMethod);
+                var encodedCoupon =
+                    Uri.EscapeDataString(
+                        appliedCouponCode ??
+                        string.Empty);
 
-                return RedirectToPage("/CustomerAddresses", new
-                {
-                    returnUrl = $"/CustomerCart?CheckoutAfterAddress=true&AppliedCouponCode={encodedCoupon}&PaymentMethod={encodedPayment}"
-                });
+                var encodedPayment =
+                    Uri.EscapeDataString(
+                        cleanPaymentMethod);
+
+                return RedirectToPage(
+                    "/CustomerAddresses",
+                    new
+                    {
+                        returnUrl =
+                            $"/CustomerCart" +
+                            $"?CheckoutAfterAddress=true" +
+                            $"&AppliedCouponCode={encodedCoupon}" +
+                            $"&PaymentMethod={encodedPayment}"
+                    });
             }
 
+            // =================================================
+            // VALIDATE PRODUCTS, SUBSCRIPTIONS, AND STOCK
+            // =================================================
             foreach (var item in cart.CartItems)
             {
-                if (item.Product == null || !item.Product.IsActive)
+                if (item.Product == null ||
+                    !item.Product.IsActive)
                 {
-                    TempData["Error"] = "One of the products is no longer available.";
-                    return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
+                    TempData["Error"] =
+                        "One of the products is no longer available.";
+
+                    return RedirectToPage(
+                        new
+                        {
+                            AppliedCouponCode =
+                                appliedCouponCode
+                        });
                 }
 
-                if (!_subscriptionService.CanReceiveOrders(item.Product.StoreID))
+                if (!_subscriptionService.CanReceiveOrders(
+                        item.Product.StoreID))
                 {
                     var store = await _context.Stores
-                        .FirstOrDefaultAsync(s => s.StoreID == item.Product.StoreID);
+                        .FirstOrDefaultAsync(storeItem =>
+                            storeItem.StoreID ==
+                            item.Product.StoreID);
 
                     TempData["Error"] =
-                        $"Store '{store?.StoreName}' subscription has expired and cannot receive orders.";
+                        $"Store '{store?.StoreName}' subscription " +
+                        $"has expired and cannot receive orders.";
 
-                    return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
+                    return RedirectToPage(
+                        new
+                        {
+                            AppliedCouponCode =
+                                appliedCouponCode
+                        });
                 }
 
-                if (item.Product.Quantity < item.Quantity)
+                if (item.Product.Quantity <
+                    item.Quantity)
                 {
                     TempData["Error"] =
-                        $"Not enough stock available for {item.Product.ProductName}.";
+                        $"Not enough stock available for " +
+                        $"{item.Product.ProductName}.";
 
-                    return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
+                    return RedirectToPage(
+                        new
+                        {
+                            AppliedCouponCode =
+                                appliedCouponCode
+                        });
                 }
             }
 
-            var subtotal = cart.CartItems.Sum(i => i.PriceAtAddTime * i.Quantity);
+            var subtotal = cart.CartItems.Sum(
+                item =>
+                    item.PriceAtAddTime *
+                    item.Quantity);
 
-            var deliveryFee = await CalculateDeliveryFeeAsync(
-                cart.CartItems.ToList(),
-                address,
-                subtotal);
+            var deliveryFee =
+                await CalculateDeliveryFeeAsync(
+                    cart.CartItems.ToList(),
+                    address,
+                    subtotal);
 
-            var couponResult = await CalculateCouponDiscountAsync(
-                appliedCouponCode,
-                cart.CartItems.ToList(),
-                subtotal);
+            var couponResult =
+                await CalculateCouponDiscountAsync(
+                    appliedCouponCode,
+                    cart.CartItems.ToList(),
+                    subtotal);
 
-            if (!couponResult.IsValid && !string.IsNullOrWhiteSpace(appliedCouponCode))
+            if (!couponResult.IsValid &&
+                !string.IsNullOrWhiteSpace(
+                    appliedCouponCode))
             {
-                TempData["Error"] = couponResult.Message;
-                return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
+                TempData["Error"] =
+                    couponResult.Message;
+
+                return RedirectToPage(
+                    new
+                    {
+                        AppliedCouponCode =
+                            appliedCouponCode
+                    });
             }
 
-            var discountAmount = couponResult.DiscountAmount;
+            var discountAmount =
+                couponResult.DiscountAmount;
+
             var taxAmount = 0m;
-            var totalAmount = subtotal + deliveryFee + taxAmount - discountAmount;
+
+            var totalAmount =
+                subtotal +
+                deliveryFee +
+                taxAmount -
+                discountAmount;
 
             if (totalAmount < 0)
             {
                 totalAmount = 0;
             }
 
+            // =================================================
+            // CREATE ORDER
+            // =================================================
             var order = new Order
             {
-                OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString()[..4].ToUpper()}",
-                CustomerID = customerId,
-                AddressID = address.AddressID,
-                OrderDate = DateTime.UtcNow,
-                Status = "Pending",
-                PaymentMethod = cleanPaymentMethod,
-                PaymentStatus = orderPaymentStatus,
-                Subtotal = subtotal,
-                DeliveryFee = deliveryFee,
-                DiscountAmount = discountAmount,
-                TaxAmount = taxAmount,
-                TotalAmount = totalAmount
+                OrderNumber =
+                    $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}-" +
+                    $"{Guid.NewGuid().ToString()[..4].ToUpperInvariant()}",
+
+                CustomerID =
+                    customerId,
+
+                AddressID =
+                    address.AddressID,
+
+                OrderDate =
+                    DateTime.UtcNow,
+
+                Status =
+                    "Pending",
+
+                PaymentMethod =
+                    cleanPaymentMethod,
+
+                PaymentStatus =
+                    orderPaymentStatus,
+
+                Subtotal =
+                    subtotal,
+
+                DeliveryFee =
+                    deliveryFee,
+
+                DiscountAmount =
+                    discountAmount,
+
+                TaxAmount =
+                    taxAmount,
+
+                TotalAmount =
+                    totalAmount
             };
 
             _context.Orders.Add(order);
 
             await _context.SaveChangesAsync();
 
+            // =================================================
+            // CREATE PAYMENT RECORD
+            // =================================================
             var payment = new Payment
             {
-                OrderID = order.OrderID,
-                PaymentMethod = cleanPaymentMethod,
-                PaymentGateway = paymentGateway,
-                GatewayTransactionID = null,
-                Amount = totalAmount,
-                PaymentDate = DateTime.UtcNow,
-                Status = paymentRecordStatus
+                OrderID =
+                    order.OrderID,
+
+                PaymentMethod =
+                    cleanPaymentMethod,
+
+                PaymentGateway =
+                    paymentGateway,
+
+                GatewayTransactionID =
+                    null,
+
+                Amount =
+                    totalAmount,
+
+                PaymentDate =
+                    DateTime.UtcNow,
+
+                Status =
+                    paymentRecordStatus
             };
 
             _context.Payments.Add(payment);
 
             await _context.SaveChangesAsync();
 
-            if (couponResult.Coupon != null && discountAmount > 0)
+            // =================================================
+            // UPDATE COUPON USAGE
+            // =================================================
+            if (couponResult.Coupon != null &&
+                discountAmount > 0)
             {
                 couponResult.Coupon.UsedCount += 1;
+
                 await _context.SaveChangesAsync();
             }
 
+            // =================================================
+            // CREATE ORDER ITEMS AND UPDATE STOCK
+            // =================================================
             foreach (var item in cart.CartItems.ToList())
             {
                 if (item.Product == null)
                 {
-                    TempData["Error"] = "One of the products is no longer available.";
-                    return RedirectToPage(new { AppliedCouponCode = appliedCouponCode });
+                    TempData["Error"] =
+                        "One of the products is no longer available.";
+
+                    return RedirectToPage(
+                        new
+                        {
+                            AppliedCouponCode =
+                                appliedCouponCode
+                        });
                 }
 
                 var orderItem = new OrderItem
                 {
-                    OrderID = order.OrderID,
-                    ProductID = item.ProductID,
-                    StoreID = item.Product.StoreID,
-                    ProductName = item.Product.ProductName,
-                    ProductPrice = item.PriceAtAddTime,
-                    Quantity = item.Quantity,
-                    TotalPrice = item.PriceAtAddTime * item.Quantity
+                    OrderID =
+                        order.OrderID,
+
+                    ProductID =
+                        item.ProductID,
+
+                    StoreID =
+                        item.Product.StoreID,
+
+                    ProductName =
+                        item.Product.ProductName,
+
+                    ProductPrice =
+                        item.PriceAtAddTime,
+
+                    Quantity =
+                        item.Quantity,
+
+                    TotalPrice =
+                        item.PriceAtAddTime *
+                        item.Quantity
                 };
 
                 _context.OrderItems.Add(orderItem);
@@ -451,109 +730,213 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 if (item.Product.Quantity < 0)
                 {
-                    throw new Exception($"Stock error for '{item.Product.ProductName}'.");
+                    throw new InvalidOperationException(
+                        $"Stock error for " +
+                        $"'{item.Product.ProductName}'.");
                 }
 
-                item.Product.UpdatedAt = DateTime.UtcNow;
+                item.Product.UpdatedAt =
+                    DateTime.UtcNow;
 
-                if (item.Product.Quantity <= item.Product.LowStockThreshold)
+                // =============================================
+                // LOW-STOCK NOTIFICATION
+                // =============================================
+                if (item.Product.Quantity <=
+                    item.Product.LowStockThreshold)
                 {
                     var store = await _context.Stores
-                        .FirstOrDefaultAsync(s => s.StoreID == item.Product.StoreID);
+                        .FirstOrDefaultAsync(storeItem =>
+                            storeItem.StoreID ==
+                            item.Product.StoreID);
 
                     if (store != null)
                     {
-                        _context.Notifications.Add(new Notification
-                        {
-                            UserID = store.OwnerUserID,
-                            Title = "Low Stock Alert",
-                            Message = $"Product '{item.Product.ProductName}' is low in stock. Current quantity: {item.Product.Quantity}.",
-                            Type = "LowStock",
-                            ReferenceID = item.Product.ProductID,
-                            IsRead = false,
-                            SentAt = DateTime.UtcNow,
-                            SentVia = "System"
-                        });
+                        _context.Notifications.Add(
+                            new Notification
+                            {
+                                UserID =
+                                    store.OwnerUserID,
+
+                                Title =
+                                    "Low Stock Alert",
+
+                                Message =
+                                    $"Product " +
+                                    $"'{item.Product.ProductName}' " +
+                                    $"is low in stock. " +
+                                    $"Current quantity: " +
+                                    $"{item.Product.Quantity}.",
+
+                                Type =
+                                    "LowStock",
+
+                                ReferenceID =
+                                    item.Product.ProductID,
+
+                                IsRead =
+                                    false,
+
+                                SentAt =
+                                    DateTime.UtcNow,
+
+                                SentVia =
+                                    "System"
+                            });
                     }
                 }
             }
 
-            _context.CartItems.RemoveRange(cart.CartItems);
+            // =================================================
+            // CLEAR CART AFTER ORDER CREATION
+            // =================================================
+            _context.CartItems.RemoveRange(
+                cart.CartItems);
 
             cart.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            if (cleanPaymentMethod == "Online Payment")
+            // =================================================
+            // ONLINE PAYMENT FLOW
+            // =================================================
+            if (cleanPaymentMethod ==
+                "Online Payment")
             {
                 TempData["Success"] =
-                    $"Order created successfully. Please complete your online payment. Total: ${totalAmount:N2}.";
+                    $"Order created successfully. " +
+                    $"Please complete your online payment. " +
+                    $"Total: ${totalAmount:N2}.";
 
-                return RedirectToPage("/OnlinePayment", new { orderId = order.OrderID });
+                return RedirectToPage(
+                    "/OnlinePayment",
+                    new
+                    {
+                        orderId =
+                            order.OrderID
+                    });
             }
 
-            var deliveryAssigned = await TryAutoAssignDeliveryAndNotifyAsync(order, address);
+            // =================================================
+            // CASH ON DELIVERY AUTO-ASSIGNMENT
+            //
+            // customer.UserID is the original customer user ID.
+            // It is used to prevent self-delivery.
+            // =================================================
+            var deliveryAssigned =
+                await TryAutoAssignDeliveryAndNotifyAsync(
+                    order,
+                    address,
+                    customer.UserID);
 
             await _context.SaveChangesAsync();
 
             if (deliveryAssigned)
             {
                 TempData["Success"] =
-                    $"Order placed successfully. Payment: Cash On Delivery (Pending). Delivery fee: ${deliveryFee:N2}. Discount: ${discountAmount:N2}. Online delivery staff has been assigned.";
+                    $"Order placed successfully. " +
+                    $"Payment: Cash On Delivery (Pending). " +
+                    $"Delivery fee: ${deliveryFee:N2}. " +
+                    $"Discount: ${discountAmount:N2}. " +
+                    $"Online delivery staff has been assigned.";
             }
             else
             {
                 TempData["Success"] =
-                    $"Order placed successfully. Payment: Cash On Delivery (Pending). Delivery fee: ${deliveryFee:N2}. Discount: ${discountAmount:N2}. Delivery assignment is pending because no online delivery staff is available.";
+                    $"Order placed successfully. " +
+                    $"Payment: Cash On Delivery (Pending). " +
+                    $"Delivery fee: ${deliveryFee:N2}. " +
+                    $"Discount: ${discountAmount:N2}. " +
+                    $"Delivery assignment is pending because " +
+                    $"no online delivery staff is available.";
             }
 
-            return RedirectToPage("/CustomerOrders");
+            return RedirectToPage(
+                "/CustomerOrders");
         }
 
-        private async Task<bool> TryAutoAssignDeliveryAndNotifyAsync(
-            Order order,
-            CustomerAddress customerAddress)
+        // =====================================================
+        // AUTO-ASSIGN DELIVERY AND SEND NOTIFICATIONS
+        // =====================================================
+        private async Task<bool>
+            TryAutoAssignDeliveryAndNotifyAsync(
+                Order order,
+                CustomerAddress customerAddress,
+                int customerUserId)
         {
-            var alreadyAssigned = await _context.DeliveryAssignments
-                .AnyAsync(a =>
-                    a.OrderID == order.OrderID &&
-                    a.Status != "Delivered" &&
-                    a.Status != "Cancelled" &&
-                    a.Status != "Failed");
+            var alreadyAssigned =
+                await _context.DeliveryAssignments
+                    .AnyAsync(assignment =>
+                        assignment.OrderID ==
+                            order.OrderID &&
+                        assignment.Status !=
+                            "Delivered" &&
+                        assignment.Status !=
+                            "Cancelled" &&
+                        assignment.Status !=
+                            "Failed");
 
             if (alreadyAssigned)
             {
                 return true;
             }
 
-            var customerArea = customerAddress.Area?.Trim().ToLower();
+            var customerArea =
+                customerAddress.Area?
+                    .Trim()
+                    .ToLowerInvariant();
 
-            if (string.IsNullOrWhiteSpace(customerArea))
+            if (string.IsNullOrWhiteSpace(
+                    customerArea))
             {
                 order.Status = "Pending";
 
                 await NotifyAdminsAsync(
                     "Delivery Assignment Needed",
-                    $"Order {order.OrderNumber} was placed, but the customer area is missing.",
+                    $"Order {order.OrderNumber} was placed, " +
+                    $"but the customer area is missing.",
                     "DeliveryAssignmentPending",
                     order.OrderID);
 
                 return false;
             }
 
-            var onlineLimit = DateTime.UtcNow.AddMinutes(-5);
+            // Delivery person is considered online when the
+            // location was updated within the last five minutes.
+            var onlineLimit =
+                DateTime.UtcNow.AddMinutes(-5);
 
-            var onlineSameAreaDeliveryPeople = await _context.DeliveryPersons
-                .Where(d =>
-                    d.IsActive &&
-                    d.Status == "Approved" &&
-                    d.LastLocationUpdate.HasValue &&
-                    d.LastLocationUpdate.Value >= onlineLimit &&
-                    d.CurrentLatitude.HasValue &&
-                    d.CurrentLongitude.HasValue &&
-                    !string.IsNullOrWhiteSpace(d.Area) &&
-                    d.Area.Trim().ToLower() == customerArea)
-                .ToListAsync();
+            var onlineSameAreaDeliveryPeople =
+                await _context.DeliveryPersons
+                    .Where(delivery =>
+                        delivery.IsActive &&
+                        delivery.Status == "Approved" &&
+
+                        // Prevent a known original customer from
+                        // delivering their own order.
+                        //
+                        // Old records with NULL RequestedByUserID
+                        // remain eligible, matching Admin Assign.
+                        (
+                            !delivery.RequestedByUserID.HasValue ||
+                            delivery.RequestedByUserID.Value !=
+                                customerUserId
+                        ) &&
+
+                        delivery.LastLocationUpdate.HasValue &&
+                        delivery.LastLocationUpdate.Value >=
+                            onlineLimit &&
+
+                        delivery.CurrentLatitude.HasValue &&
+                        delivery.CurrentLongitude.HasValue &&
+
+                        !string.IsNullOrWhiteSpace(
+                            delivery.Area) &&
+
+                        delivery.Area
+                            .Trim()
+                            .ToLower() ==
+                            customerArea)
+                    .ToListAsync();
 
             if (!onlineSameAreaDeliveryPeople.Any())
             {
@@ -561,7 +944,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 await NotifyAdminsAsync(
                     "Delivery Assignment Needed",
-                    $"Order {order.OrderNumber} was placed for area {customerAddress.Area}, but no online delivery staff is available in that area.",
+                    $"Order {order.OrderNumber} was placed " +
+                    $"for area {customerAddress.Area}, but " +
+                    $"no online delivery staff is available " +
+                    $"in that area.",
                     "DeliveryAssignmentPending",
                     order.OrderID);
 
@@ -573,58 +959,129 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (customerAddress.Latitude.HasValue &&
                 customerAddress.Longitude.HasValue)
             {
-                selectedDeliveryPerson = onlineSameAreaDeliveryPeople
-                    .OrderBy(d => CalculateDistanceKm(
-                        Convert.ToDouble(d.CurrentLatitude!.Value),
-                        Convert.ToDouble(d.CurrentLongitude!.Value),
-                        customerAddress.Latitude.Value,
-                        customerAddress.Longitude.Value))
-                    .ThenByDescending(d => d.Rating)
-                    .ThenBy(d => d.DeliveryPersonID)
-                    .First();
+                selectedDeliveryPerson =
+                    onlineSameAreaDeliveryPeople
+                        .OrderBy(delivery =>
+                            CalculateDistanceKm(
+                                Convert.ToDouble(
+                                    delivery
+                                        .CurrentLatitude!
+                                        .Value),
+
+                                Convert.ToDouble(
+                                    delivery
+                                        .CurrentLongitude!
+                                        .Value),
+
+                                customerAddress
+                                    .Latitude
+                                    .Value,
+
+                                customerAddress
+                                    .Longitude
+                                    .Value))
+                        .ThenByDescending(delivery =>
+                            delivery.Rating)
+                        .ThenBy(delivery =>
+                            delivery.DeliveryPersonID)
+                        .First();
             }
             else
             {
-                selectedDeliveryPerson = onlineSameAreaDeliveryPeople
-                    .OrderByDescending(d => d.Rating)
-                    .ThenBy(d => d.DeliveryPersonID)
-                    .First();
+                selectedDeliveryPerson =
+                    onlineSameAreaDeliveryPeople
+                        .OrderByDescending(delivery =>
+                            delivery.Rating)
+                        .ThenBy(delivery =>
+                            delivery.DeliveryPersonID)
+                        .First();
             }
 
-            var assignment = new DeliveryAssignment
-            {
-                OrderID = order.OrderID,
-                DeliveryPersonID = selectedDeliveryPerson.DeliveryPersonID,
-                AssignedAt = DateTime.UtcNow,
-                Status = "Assigned",
-                DeliveryProofImageURL = null
-            };
+            var assignment =
+                new DeliveryAssignment
+                {
+                    OrderID =
+                        order.OrderID,
 
-            _context.DeliveryAssignments.Add(assignment);
+                    DeliveryPersonID =
+                        selectedDeliveryPerson
+                            .DeliveryPersonID,
 
-            order.Status = "Out for Delivery";
+                    AssignedAt =
+                        DateTime.UtcNow,
 
-            _context.Notifications.Add(new Notification
-            {
-                UserID = selectedDeliveryPerson.UserID,
-                Title = "New Delivery Assigned",
-                Message = $"You have been assigned to deliver order {order.OrderNumber}. Customer area: {customerAddress.Area}.",
-                Type = "DeliveryAssignment",
-                ReferenceID = order.OrderID,
-                IsRead = false,
-                SentAt = DateTime.UtcNow,
-                SentVia = "System"
-            });
+                    PickupTime =
+                        null,
 
+                    DeliveryTime =
+                        null,
+
+                    Status =
+                        "Assigned",
+
+                    DeliveryProofImageURL =
+                        null
+                };
+
+            _context.DeliveryAssignments.Add(
+                assignment);
+
+            // Important:
+            // Assignment does not mean delivery has started.
+            // The driver must click Start Delivery first.
+            order.Status = "Assigned";
+
+            // =================================================
+            // DELIVERY NOTIFICATION
+            // =================================================
+            _context.Notifications.Add(
+                new Notification
+                {
+                    UserID =
+                        selectedDeliveryPerson.UserID,
+
+                    Title =
+                        "New Delivery Assigned",
+
+                    Message =
+                        $"You have been assigned to deliver " +
+                        $"order {order.OrderNumber}. " +
+                        $"Customer area: " +
+                        $"{customerAddress.Area}.",
+
+                    Type =
+                        "DeliveryAssignment",
+
+                    ReferenceID =
+                        order.OrderID,
+
+                    IsRead =
+                        false,
+
+                    SentAt =
+                        DateTime.UtcNow,
+
+                    SentVia =
+                        "System"
+                });
+
+            // =================================================
+            // ADMIN NOTIFICATION
+            // =================================================
             await NotifyAdminsAsync(
                 "Delivery Assigned Automatically",
-                $"Order {order.OrderNumber} was assigned to {selectedDeliveryPerson.FullName} for area {customerAddress.Area}.",
+                $"Order {order.OrderNumber} was assigned " +
+                $"to {selectedDeliveryPerson.FullName} " +
+                $"for area {customerAddress.Area}.",
                 "DeliveryAssigned",
                 order.OrderID);
 
             return true;
         }
 
+        // =====================================================
+        // STRAIGHT-LINE DISTANCE
+        // =====================================================
         private static double CalculateDistanceKm(
             double lat1,
             double lon1,
@@ -633,63 +1090,107 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         {
             const double earthRadiusKm = 6371;
 
-            var dLat = DegreesToRadians(lat2 - lat1);
-            var dLon = DegreesToRadians(lon2 - lon1);
+            var dLat =
+                DegreesToRadians(lat2 - lat1);
 
-            var a =
-                Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                Math.Cos(DegreesToRadians(lat1)) *
-                Math.Cos(DegreesToRadians(lat2)) *
+            var dLon =
+                DegreesToRadians(lon2 - lon1);
+
+            var value =
+                Math.Sin(dLat / 2) *
+                Math.Sin(dLat / 2) +
+
+                Math.Cos(
+                    DegreesToRadians(lat1)) *
+
+                Math.Cos(
+                    DegreesToRadians(lat2)) *
+
                 Math.Sin(dLon / 2) *
                 Math.Sin(dLon / 2);
 
-            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            var centralAngle =
+                2 * Math.Atan2(
+                    Math.Sqrt(value),
+                    Math.Sqrt(1 - value));
 
-            return earthRadiusKm * c;
+            return earthRadiusKm *
+                   centralAngle;
         }
 
-        private static double DegreesToRadians(double degrees)
+        private static double DegreesToRadians(
+            double degrees)
         {
-            return degrees * Math.PI / 180;
+            return degrees *
+                   Math.PI /
+                   180;
         }
 
+        // =====================================================
+        // NOTIFY ADMINS
+        // =====================================================
         private async Task NotifyAdminsAsync(
             string title,
             string message,
             string type,
             int referenceId)
         {
-            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+            var admins =
+                await _userManager
+                    .GetUsersInRoleAsync("Admin");
 
             foreach (var admin in admins)
             {
-                _context.Notifications.Add(new Notification
-                {
-                    UserID = admin.Id,
-                    Title = title,
-                    Message = message,
-                    Type = type,
-                    ReferenceID = referenceId,
-                    IsRead = false,
-                    SentAt = DateTime.UtcNow,
-                    SentVia = "System"
-                });
+                _context.Notifications.Add(
+                    new Notification
+                    {
+                        UserID =
+                            admin.Id,
+
+                        Title =
+                            title,
+
+                        Message =
+                            message,
+
+                        Type =
+                            type,
+
+                        ReferenceID =
+                            referenceId,
+
+                        IsRead =
+                            false,
+
+                        SentAt =
+                            DateTime.UtcNow,
+
+                        SentVia =
+                            "System"
+                    });
             }
         }
 
-        private async Task<decimal> CalculateDeliveryFeeAsync(
-            List<CartItem> cartItems,
-            CustomerAddress customerAddress,
-            decimal subtotal)
+        // =====================================================
+        // CALCULATE DELIVERY FEE
+        // =====================================================
+        private async Task<decimal>
+            CalculateDeliveryFeeAsync(
+                List<CartItem> cartItems,
+                CustomerAddress customerAddress,
+                decimal subtotal)
         {
-            if (subtotal > FreeDeliveryThreshold)
+            if (subtotal >
+                FreeDeliveryThreshold)
             {
                 return 0m;
             }
 
             var storeIds = cartItems
-                .Where(i => i.Product != null)
-                .Select(i => i.Product.StoreID)
+                .Where(item =>
+                    item.Product != null)
+                .Select(item =>
+                    item.Product.StoreID)
                 .Distinct()
                 .ToList();
 
@@ -698,17 +1199,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return DefaultDeliveryFeePerStore;
             }
 
-            var stores = await _context.Stores
-                .Where(s => storeIds.Contains(s.StoreID))
-                .ToListAsync();
+            var stores =
+                await _context.Stores
+                    .Where(store =>
+                        storeIds.Contains(
+                            store.StoreID))
+                    .ToListAsync();
 
             var totalDeliveryFee = 0m;
 
             foreach (var store in stores)
             {
-                if (store.HasFixedDeliveryFee && store.FixedDeliveryFee.HasValue)
+                if (store.HasFixedDeliveryFee &&
+                    store.FixedDeliveryFee.HasValue)
                 {
-                    totalDeliveryFee += store.FixedDeliveryFee.Value;
+                    totalDeliveryFee +=
+                        store.FixedDeliveryFee.Value;
+
                     continue;
                 }
 
@@ -717,26 +1224,46 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     !customerAddress.Latitude.HasValue ||
                     !customerAddress.Longitude.HasValue)
                 {
-                    totalDeliveryFee += DefaultDeliveryFeePerStore;
+                    totalDeliveryFee +=
+                        DefaultDeliveryFeePerStore;
+
                     continue;
                 }
 
-                var distanceKm = await TryGetDrivingDistanceKmAsync(
-                    Convert.ToDouble(store.Latitude),
-                    Convert.ToDouble(store.Longitude),
-                    customerAddress.Latitude.Value,
-                    customerAddress.Longitude.Value);
+                var distanceKm =
+                    await TryGetDrivingDistanceKmAsync(
+                        Convert.ToDouble(
+                            store.Latitude),
 
-                if (distanceKm == null || distanceKm <= 0)
+                        Convert.ToDouble(
+                            store.Longitude),
+
+                        customerAddress
+                            .Latitude
+                            .Value,
+
+                        customerAddress
+                            .Longitude
+                            .Value);
+
+                if (distanceKm == null ||
+                    distanceKm <= 0)
                 {
-                    totalDeliveryFee += DefaultDeliveryFeePerStore;
+                    totalDeliveryFee +=
+                        DefaultDeliveryFeePerStore;
+
                     continue;
                 }
 
                 var storeDeliveryFee =
-                    BaseDeliveryFee + (RatePerKm * (decimal)distanceKm.Value);
+                    BaseDeliveryFee +
+                    RatePerKm *
+                    (decimal)distanceKm.Value;
 
-                totalDeliveryFee += Math.Round(storeDeliveryFee, 2);
+                totalDeliveryFee +=
+                    Math.Round(
+                        storeDeliveryFee,
+                        2);
             }
 
             if (totalDeliveryFee < 0)
@@ -744,32 +1271,51 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return DefaultDeliveryFeePerStore;
             }
 
-            return Math.Round(totalDeliveryFee, 2);
+            return Math.Round(
+                totalDeliveryFee,
+                2);
         }
 
-        private async Task<double?> TryGetDrivingDistanceKmAsync(
-            double storeLat,
-            double storeLng,
-            double customerLat,
-            double customerLng)
+        // =====================================================
+        // GET DRIVING DISTANCE FROM OSRM
+        // =====================================================
+        private async Task<double?>
+            TryGetDrivingDistanceKmAsync(
+                double storeLat,
+                double storeLng,
+                double customerLat,
+                double customerLng)
         {
             try
             {
                 var url =
-                    $"https://router.project-osrm.org/route/v1/driving/{storeLng},{storeLat};{customerLng},{customerLat}?overview=false";
+                    $"https://router.project-osrm.org/" +
+                    $"route/v1/driving/" +
+                    $"{storeLng},{storeLat};" +
+                    $"{customerLng},{customerLat}" +
+                    $"?overview=false";
 
-                using var response = await DistanceHttpClient.GetAsync(url);
+                using var response =
+                    await DistanceHttpClient
+                        .GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
                     return null;
                 }
 
-                await using var stream = await response.Content.ReadAsStreamAsync();
+                await using var stream =
+                    await response.Content
+                        .ReadAsStreamAsync();
 
-                using var json = await JsonDocument.ParseAsync(stream);
+                using var json =
+                    await JsonDocument
+                        .ParseAsync(stream);
 
-                if (!json.RootElement.TryGetProperty("routes", out var routes))
+                if (!json.RootElement
+                    .TryGetProperty(
+                        "routes",
+                        out var routes))
                 {
                     return null;
                 }
@@ -779,9 +1325,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     return null;
                 }
 
-                var distanceMeters = routes[0].GetProperty("distance").GetDouble();
+                var distanceMeters =
+                    routes[0]
+                        .GetProperty("distance")
+                        .GetDouble();
 
-                return distanceMeters / 1000.0;
+                return distanceMeters /
+                       1000.0;
             }
             catch
             {
@@ -789,12 +1339,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
         }
 
-        private async Task<CouponCalculationResult> CalculateCouponDiscountAsync(
-            string? couponCode,
-            List<CartItem> cartItems,
-            decimal subtotal)
+        // =====================================================
+        // CALCULATE COUPON DISCOUNT
+        // =====================================================
+        private async Task<CouponCalculationResult>
+            CalculateCouponDiscountAsync(
+                string? couponCode,
+                List<CartItem> cartItems,
+                decimal subtotal)
         {
-            if (string.IsNullOrWhiteSpace(couponCode))
+            if (string.IsNullOrWhiteSpace(
+                    couponCode))
             {
                 return new CouponCalculationResult
                 {
@@ -804,10 +1359,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 };
             }
 
-            var cleanCode = couponCode.Trim().ToUpper();
+            var cleanCode =
+                couponCode
+                    .Trim()
+                    .ToUpperInvariant();
 
-            var coupon = await _context.Coupons
-                .FirstOrDefaultAsync(c => c.CouponCode.ToUpper() == cleanCode);
+            var coupon =
+                await _context.Coupons
+                    .FirstOrDefaultAsync(couponItem =>
+                        couponItem.CouponCode
+                            .ToUpper() ==
+                        cleanCode);
 
             if (coupon == null)
             {
@@ -815,7 +1377,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 {
                     IsValid = false,
                     DiscountAmount = 0,
-                    Message = "Invalid coupon code."
+                    Message =
+                        "Invalid coupon code."
                 };
             }
 
@@ -825,49 +1388,41 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 {
                     IsValid = false,
                     DiscountAmount = 0,
-                    Message = "This coupon is not active."
+                    Message =
+                        "This coupon is not active."
                 };
             }
 
-            var now = DateTime.UtcNow;
+            var currentDate = DateTime.UtcNow.Date; var couponStartDate = coupon.StartDate.Date; var couponEndDate = coupon.EndDate.Date; if (couponStartDate > currentDate) { return new CouponCalculationResult { IsValid = false, DiscountAmount = 0, Message = "This coupon is not active yet." }; }
+            if (couponEndDate < currentDate) { return new CouponCalculationResult { IsValid = false, DiscountAmount = 0, Message = "This coupon has expired." }; }
 
-            if (coupon.StartDate > now)
+            if (coupon.UsageLimit.HasValue &&
+                coupon.UsedCount >=
+                    coupon.UsageLimit.Value)
             {
                 return new CouponCalculationResult
                 {
                     IsValid = false,
                     DiscountAmount = 0,
-                    Message = "This coupon is not active yet."
+                    Message =
+                        "Coupon usage limit reached."
                 };
             }
 
-            if (coupon.EndDate < now)
-            {
-                return new CouponCalculationResult
-                {
-                    IsValid = false,
-                    DiscountAmount = 0,
-                    Message = "This coupon has expired."
-                };
-            }
-
-            if (coupon.UsageLimit.HasValue && coupon.UsedCount >= coupon.UsageLimit.Value)
-            {
-                return new CouponCalculationResult
-                {
-                    IsValid = false,
-                    DiscountAmount = 0,
-                    Message = "Coupon usage limit reached."
-                };
-            }
-
-            decimal eligibleSubtotal = subtotal;
+            decimal eligibleSubtotal =
+                subtotal;
 
             if (coupon.StoreID.HasValue)
             {
-                eligibleSubtotal = cartItems
-                    .Where(i => i.Product != null && i.Product.StoreID == coupon.StoreID.Value)
-                    .Sum(i => i.PriceAtAddTime * i.Quantity);
+                eligibleSubtotal =
+                    cartItems
+                        .Where(item =>
+                            item.Product != null &&
+                            item.Product.StoreID ==
+                                coupon.StoreID.Value)
+                        .Sum(item =>
+                            item.PriceAtAddTime *
+                            item.Quantity);
 
                 if (eligibleSubtotal <= 0)
                 {
@@ -875,32 +1430,47 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     {
                         IsValid = false,
                         DiscountAmount = 0,
-                        Message = "This coupon is not valid for the products in your cart."
+                        Message =
+                            "This coupon is not valid for " +
+                            "the products in your cart."
                     };
                 }
             }
 
-            var minimumOrderAmount = coupon.MinimumOrderAmount ?? 0;
+            var minimumOrderAmount =
+                coupon.MinimumOrderAmount ?? 0;
 
-            if (eligibleSubtotal < minimumOrderAmount)
+            if (eligibleSubtotal <
+                minimumOrderAmount)
             {
                 return new CouponCalculationResult
                 {
                     IsValid = false,
                     DiscountAmount = 0,
-                    Message = $"Minimum order amount for this coupon is ${minimumOrderAmount:N2}."
+                    Message =
+                        $"Minimum order amount for this " +
+                        $"coupon is " +
+                        $"${minimumOrderAmount:N2}."
                 };
             }
 
             decimal discountAmount;
 
-            if (coupon.DiscountType.Equals("Percentage", StringComparison.OrdinalIgnoreCase))
+            if (coupon.DiscountType.Equals(
+                    "Percentage",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                discountAmount = eligibleSubtotal * (coupon.DiscountValue / 100m);
+                discountAmount =
+                    eligibleSubtotal *
+                    coupon.DiscountValue /
+                    100m;
             }
-            else if (coupon.DiscountType.Equals("Fixed", StringComparison.OrdinalIgnoreCase))
+            else if (coupon.DiscountType.Equals(
+                         "Fixed",
+                         StringComparison.OrdinalIgnoreCase))
             {
-                discountAmount = coupon.DiscountValue;
+                discountAmount =
+                    coupon.DiscountValue;
             }
             else
             {
@@ -908,34 +1478,51 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 {
                     IsValid = false,
                     DiscountAmount = 0,
-                    Message = "Invalid coupon discount type."
+                    Message =
+                        "Invalid coupon discount type."
                 };
             }
 
             if (coupon.MaximumDiscountAmount.HasValue &&
                 coupon.MaximumDiscountAmount.Value > 0 &&
-                discountAmount > coupon.MaximumDiscountAmount.Value)
+                discountAmount >
+                    coupon.MaximumDiscountAmount.Value)
             {
-                discountAmount = coupon.MaximumDiscountAmount.Value;
+                discountAmount =
+                    coupon.MaximumDiscountAmount.Value;
             }
 
-            if (discountAmount > eligibleSubtotal)
+            if (discountAmount >
+                eligibleSubtotal)
             {
-                discountAmount = eligibleSubtotal;
+                discountAmount =
+                    eligibleSubtotal;
             }
 
-            discountAmount = Math.Round(discountAmount, 2);
+            discountAmount =
+                Math.Round(
+                    discountAmount,
+                    2);
 
             return new CouponCalculationResult
             {
                 IsValid = true,
-                DiscountAmount = discountAmount,
-                Message = "Coupon applied successfully.",
-                Coupon = coupon
+                DiscountAmount =
+                    discountAmount,
+
+                Message =
+                    "Coupon applied successfully.",
+
+                Coupon =
+                    coupon
             };
         }
 
-        private async Task LoadCartAsync(int customerId)
+        // =====================================================
+        // LOAD CART FOR DISPLAY
+        // =====================================================
+        private async Task LoadCartAsync(
+            int customerId)
         {
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
@@ -944,11 +1531,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .Include(c => c.CartItems)
                     .ThenInclude(ci => ci.Product)
                         .ThenInclude(p => p.Store)
-                .FirstOrDefaultAsync(c => c.CustomerID == customerId);
+                .FirstOrDefaultAsync(c =>
+                    c.CustomerID == customerId);
 
-            if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
+            if (cart == null ||
+                cart.CartItems == null ||
+                !cart.CartItems.Any())
             {
-                CartItems = new List<CustomerCartItemViewModel>();
+                CartItems =
+                    new List<CustomerCartItemViewModel>();
+
                 TotalAmount = 0;
                 EstimatedDeliveryFee = 0;
                 DiscountAmount = 0;
@@ -956,73 +1548,122 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 FinalTotal = 0;
                 HasActiveAddress = false;
                 CouponMessage = null;
+
                 return;
             }
 
             CartItems = cart.CartItems
-                .OrderByDescending(ci => ci.AddedAt)
-                .Select(ci => new CustomerCartItemViewModel
-                {
-                    CartItemID = ci.CartItemID,
-                    ProductID = ci.ProductID,
-                    ProductName = ci.Product != null ? ci.Product.ProductName : "Unknown Product",
-                    StoreName = ci.Product != null && ci.Product.Store != null
-                        ? ci.Product.Store.StoreName
-                        : "Unknown Store",
-                    Quantity = ci.Quantity,
-                    UnitPrice = ci.PriceAtAddTime,
-                    TotalPrice = ci.PriceAtAddTime * ci.Quantity,
-                    AvailableStock = ci.Product != null ? ci.Product.Quantity : 0,
-                    ImageUrl = ci.Product != null
-                        ? ci.Product.Images
-                            .OrderByDescending(i => i.IsPrimary)
-                            .ThenBy(i => i.DisplayOrder)
-                            .Select(i => i.ImageUrl)
-                            .FirstOrDefault() ?? "/images/no-image.png"
-                        : "/images/no-image.png"
-                })
+                .OrderByDescending(item =>
+                    item.AddedAt)
+                .Select(item =>
+                    new CustomerCartItemViewModel
+                    {
+                        CartItemID =
+                            item.CartItemID,
+
+                        ProductID =
+                            item.ProductID,
+
+                        ProductName =
+                            item.Product != null
+                                ? item.Product.ProductName
+                                : "Unknown Product",
+
+                        StoreName =
+                            item.Product != null &&
+                            item.Product.Store != null
+                                ? item.Product.Store.StoreName
+                                : "Unknown Store",
+
+                        Quantity =
+                            item.Quantity,
+
+                        UnitPrice =
+                            item.PriceAtAddTime,
+
+                        TotalPrice =
+                            item.PriceAtAddTime *
+                            item.Quantity,
+
+                        AvailableStock =
+                            item.Product != null
+                                ? item.Product.Quantity
+                                : 0,
+
+                        ImageUrl =
+                            item.Product != null
+                                ? item.Product.Images
+                                    .OrderByDescending(image =>
+                                        image.IsPrimary)
+                                    .ThenBy(image =>
+                                        image.DisplayOrder)
+                                    .Select(image =>
+                                        image.ImageUrl)
+                                    .FirstOrDefault()
+                                    ?? "/images/no-image.png"
+                                : "/images/no-image.png"
+                    })
                 .ToList();
 
-            TotalAmount = CartItems.Sum(x => x.TotalPrice);
+            TotalAmount =
+                CartItems.Sum(item =>
+                    item.TotalPrice);
 
-            var customer = await _context.Customers
-                .Include(c => c.Addresses)
-                .FirstOrDefaultAsync(c => c.CustomerID == customerId);
+            var customer =
+                await _context.Customers
+                    .Include(customerItem =>
+                        customerItem.Addresses)
+                    .FirstOrDefaultAsync(customerItem =>
+                        customerItem.CustomerID ==
+                        customerId);
 
             var address = customer?.Addresses
-                .FirstOrDefault(a => a.IsDefault && a.IsActive)
-                ?? customer?.Addresses.FirstOrDefault(a => a.IsActive);
+                .FirstOrDefault(addressItem =>
+                    addressItem.IsDefault &&
+                    addressItem.IsActive)
+                ?? customer?.Addresses
+                    .FirstOrDefault(addressItem =>
+                        addressItem.IsActive);
 
-            HasActiveAddress = address != null;
+            HasActiveAddress =
+                address != null;
 
             if (address != null)
             {
-                EstimatedDeliveryFee = await CalculateDeliveryFeeAsync(
-                    cart.CartItems.ToList(),
-                    address,
-                    TotalAmount);
+                EstimatedDeliveryFee =
+                    await CalculateDeliveryFeeAsync(
+                        cart.CartItems.ToList(),
+                        address,
+                        TotalAmount);
             }
             else
             {
                 EstimatedDeliveryFee = 0m;
             }
 
-            var couponResult = await CalculateCouponDiscountAsync(
-                AppliedCouponCode,
-                cart.CartItems.ToList(),
-                TotalAmount);
+            var couponResult =
+                await CalculateCouponDiscountAsync(
+                    AppliedCouponCode,
+                    cart.CartItems.ToList(),
+                    TotalAmount);
 
-            if (!string.IsNullOrWhiteSpace(AppliedCouponCode))
+            if (!string.IsNullOrWhiteSpace(
+                    AppliedCouponCode))
             {
                 if (couponResult.IsValid)
                 {
-                    DiscountAmount = couponResult.DiscountAmount;
-                    CouponMessage = couponResult.Message;
+                    DiscountAmount =
+                        couponResult.DiscountAmount;
+
+                    CouponMessage =
+                        couponResult.Message;
                 }
                 else
                 {
                     DiscountAmount = 0;
-                    CouponMessage = couponResult.Message;
+
+                    CouponMessage =
+                        couponResult.Message;
                 }
             }
             else
@@ -1031,41 +1672,58 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 CouponMessage = null;
             }
 
-            GrandTotal = TotalAmount + EstimatedDeliveryFee - DiscountAmount;
+            GrandTotal =
+                TotalAmount +
+                EstimatedDeliveryFee -
+                DiscountAmount;
 
             if (GrandTotal < 0)
             {
                 GrandTotal = 0;
             }
 
-            FinalTotal = GrandTotal;
+            FinalTotal =
+                GrandTotal;
         }
 
-        private async Task<int?> GetCurrentCustomerIdAsync()
+        // =====================================================
+        // GET CURRENT CUSTOMER ID
+        // =====================================================
+        private async Task<int?>
+            GetCurrentCustomerIdAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user =
+                await _userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return null;
             }
 
-            var customer = await _context.Customers
-                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+            var customer =
+                await _context.Customers
+                    .FirstOrDefaultAsync(customerItem =>
+                        customerItem.UserID ==
+                        user.Id);
 
             return customer?.CustomerID;
         }
     }
 
+    // =========================================================
+    // CART ITEM VIEW MODEL
+    // =========================================================
     public class CustomerCartItemViewModel
     {
         public int CartItemID { get; set; }
 
         public int ProductID { get; set; }
 
-        public string ProductName { get; set; } = string.Empty;
+        public string ProductName { get; set; }
+            = string.Empty;
 
-        public string StoreName { get; set; } = string.Empty;
+        public string StoreName { get; set; }
+            = string.Empty;
 
         public int Quantity { get; set; }
 
@@ -1075,16 +1733,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public int AvailableStock { get; set; }
 
-        public string ImageUrl { get; set; } = "/images/no-image.png";
+        public string ImageUrl { get; set; }
+            = "/images/no-image.png";
     }
 
+    // =========================================================
+    // COUPON CALCULATION RESULT
+    // =========================================================
     public class CouponCalculationResult
     {
         public bool IsValid { get; set; }
 
         public decimal DiscountAmount { get; set; }
 
-        public string Message { get; set; } = string.Empty;
+        public string Message { get; set; }
+            = string.Empty;
 
         public Coupon? Coupon { get; set; }
     }
