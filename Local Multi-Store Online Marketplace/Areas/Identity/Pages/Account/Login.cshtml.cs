@@ -92,14 +92,7 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            if (!user.IsActive)
-            {
-                ModelState.AddModelError(
-                    string.Empty,
-                    "Your account is waiting for admin approval.");
-
-                return Page();
-            }
+           
 
             var result = await _signInManager.PasswordSignInAsync(
                 email,
