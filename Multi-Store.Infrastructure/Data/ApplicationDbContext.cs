@@ -341,6 +341,7 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<Store>().Property(s => s.CODMaxLimit).HasPrecision(18, 2);
             modelBuilder.Entity<Store>().Property(s => s.Latitude).HasPrecision(18, 6);
             modelBuilder.Entity<Store>().Property(s => s.Longitude).HasPrecision(18, 6);
+            modelBuilder.Entity<Store>().Property(s => s.OutstandingBalance).HasPrecision(18, 2);
 
             modelBuilder.Entity<Product>().Property(p => p.Price).HasPrecision(18, 2);
             modelBuilder.Entity<Product>().Property(p => p.CompareAtPrice).HasPrecision(18, 2);
