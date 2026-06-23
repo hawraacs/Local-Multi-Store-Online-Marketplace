@@ -21,7 +21,8 @@ namespace Multi_Store.Services
                     var subscriptionService =
   scope.ServiceProvider.GetRequiredService<Multi_Store.Services.SubscriptionService>();
                     subscriptionService.UpdateExpiredStores();
-                    }
+                    subscriptionService.ChargeMonthlySubscription();
+                }
                     // Run once every 24 hours
                     await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
                 }

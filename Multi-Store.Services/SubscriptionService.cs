@@ -28,16 +28,30 @@ namespace Multi_Store.Services
         // DAILY JOB (called by BackgroundService)
         public void UpdateExpiredStores()
         {
-            var expiredStores = _context.Stores
-                .Where(s =>
-                    s.SubscriptionStatus == "Active" &&
-                    s.SubscriptionExpiryDate != null &&
-                    s.SubscriptionExpiryDate < DateTime.UtcNow)
-                .ToList();
+            var stores = _context.Stores.ToList();
 
-            foreach (var store in expiredStores)
+            foreach (var store in stores)
             {
-                store.SubscriptionStatus = "Expired";
+                // Subscription expired
+                if (store.SubscriptionStatus == "Active" &&
+                    store.SubscriptionExpiryDate.HasValue &&
+                    store.SubscriptionExpiryDate.Value < DateTime.UtcNow)
+                {
+                    store.SubscriptionStatus = "PaymentDue";
+
+                    if (!store.GracePeriodEndDate.HasValue)
+                    {
+                        store.GracePeriodEndDate = DateTime.UtcNow.AddDays(7);
+                    }
+                }
+
+                // Grace period finished
+                if (store.GracePeriodEndDate.HasValue &&
+                    store.GracePeriodEndDate.Value < DateTime.UtcNow)
+                {
+                    store.IsSuspended = true;
+                    store.SubscriptionStatus = "Suspended";
+                }
             }
 
             _context.SaveChanges();
@@ -118,5 +132,27 @@ namespace Multi_Store.Services
 
             return true;
         }
+
+        public void ChargeMonthlySubscription()
+        {
+            var stores = _context.Stores
+                .Where(s => s.Status == "Approved")
+                .ToList();
+
+            foreach (var store in stores)
+            {
+                store.OutstandingBalance += 20;
+
+                if (store.SubscriptionExpiryDate.HasValue &&
+                    store.SubscriptionExpiryDate.Value <= DateTime.UtcNow)
+                {
+                    store.SubscriptionStatus = "PaymentDue";
+                    store.GracePeriodEndDate = DateTime.UtcNow.AddDays(7);
+                }
+            }
+
+            _context.SaveChanges();
+        }
+
     }
 }
