@@ -11,540 +11,693 @@
 
 <head>
     <meta charset="utf-8" />
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Realnest Login</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome 6 (Free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
-            --success-color: #10b981;
-            --error-color: #ea580c; /* Deep readable orange-red for error messages */
-            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --shadow-sm: 0 4px 12px rgba(255, 107, 53, 0.04);
-            --shadow-md: 0 10px 30px rgba(255, 107, 53, 0.08);
-            --shadow-lg: 0 20px 40px rgba(255, 107, 53, 0.12);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            min-height: 100vh;
-            font-family: var(--font-family);
-            background: var(--bg-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            margin-bottom: 0;
-        }
-
-        .login-container {
-            width: 1280px;
-            max-width: 100%;
-            height: 780px;
-            background: var(--card-bg);
-            border-radius: 28px;
-            overflow: hidden;
-            display: flex;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-        }
-
-        /* LEFT BRAND PANEL (Smooth Soft Sunset-Apricot Gradient Overlay) */
-        .left-side {
-            width: 50%;
-            position: relative;
-            background:
-                linear-gradient(
-                    rgba(0, 0, 0, 0.15),
-                    rgba(0, 0, 0, 0.3)
-                ),
-                url('/images/marketplace-login.jpg');
-            background-size: cover;
-            background-position: center;
-            color: var(--text-primary); /* Soft readable dark text for a warmer, calmer feel */
-            padding: 48px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-        }
-
-        .brand-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: var(--accent-gradient);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 18px;
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
-        }
-
-        .brand span {
-            font-family: 'Playfair Display', Georgia, serif;
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--text-primary);
-        }
-
-        .left-content {
-            position: absolute;
-            bottom: 70px;
-            left: 55px;
-            right: 40px;
-        }
-
-        .left-content h1 {
-            font-size: 54px;
-            line-height: 1.1;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-
-        .left-content p {
-            font-size: 18px;
-            opacity: 0.95;
-            line-height: 1.6;
-        }
-
-        .dots {
-            margin-top: 28px;
-            display: flex;
-            gap: 8px;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        .dot.active {
-            width: 30px;
-            border-radius: 30px;
-            background: white;
-        }
-
-        /* FORM SIDE PANEL */
-        .right-side {
-            width: 50%;
-            padding: 64px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            background: #ffffff;
-            overflow-y: auto;
-        }
-
-        .signin-btn-top {
-            position: absolute;
-            top: 40px;
-            right: 40px;
-        }
-
-        .signin-btn-top button {
-            border: none;
-            background: #111;
-            color: white;
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .signin-btn-top button:hover {
-            background: #333;
-        }
-
-        .form-wrapper {
-            max-width: 500px;
-            margin: 90px auto 0;
-        }
-
-        .form-wrapper h2 {
-            font-size: 42px;
-            color: #222260;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin-bottom: 36px;
-            line-height: 1.5;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: #444;
-            font-weight: 500;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 14px 18px;
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            font-size: 14px;
-            background-color: var(--bg-color);
-            font-family: var(--font-family);
-            color: var(--text-primary);
-            outline: none;
-            transition: all 0.25s ease;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #222260;
-            box-shadow: 0 0 0 3px rgba(34, 34, 96, 0.08);
-        }
-
-        .remember-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            font-size: 13px;
-            width: 100%;
-        }
-
-        .remember-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            color: var(--text-primary);
-            font-weight: 600;
-        }
-
-            .remember-label input[type="checkbox"] {
-                accent-color: var(--accent-color);
-                width: 16px;
-                height: 16px;
-                cursor: pointer;
+            /* ============================================================
+                           ROOT VARIABLES — fully defined, no missing references
+                           ============================================================ */
+            :root {
+                /* -------- Brand colors (Apricot / Terracotta) -------- */
+                --accent-color: #ea580c;
+                --accent-hover: #c2410c;
+                --accent-light: #fff4ed;
+                --accent-gradient: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+                /* -------- Neutral palette -------- */
+                --bg-color: #faf8f6;
+                --card-bg: #ffffff;
+                --text-primary: #1a1a2e;
+                --text-secondary: #5a5a7a;
+                --text-muted: #8a8aa8;
+                --border-color: #e8e6ed;
+                --input-bg: #f8f7fa;
+                /* -------- Semantic -------- */
+                --success-color: #10b981;
+                --error-color: #dc2626;
+                /* -------- Shadows -------- */
+                --shadow-sm: 0 4px 12px rgba(234, 88, 12, 0.06);
+                --shadow-md: 0 10px 30px rgba(234, 88, 12, 0.10);
+                --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.18);
+                /* -------- Typography -------- */
+                --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             }
 
-        #forgotPasswordLink {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-weight: 700;
-            cursor: pointer;
-            transition: color 0.2s ease;
-        }
-
-        #forgotPasswordLink:hover {
-            color: #222260;
-            text-decoration: underline;
-        }
-
-        /* Beautiful Terracotta-Orange Submit Button */
-        .login-btn {
-            width: 100%;
-            border: none;
-            background: var(--accent-gradient);
-            color: white;
-            padding: 16px;
-            border-radius: 50px;
-            font-size: 15px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.2);
-        }
-
-        .login-btn:hover {
-            background: #2c2c2c;
-        }
-
-        .divider {
-            margin: 28px 0;
-            position: relative;
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            width: 38%;
-            height: 1px;
-            background: #ddd;
-        }
-
-        .divider::before {
-            left: 0;
-        }
-
-        .divider::after {
-            right: 0;
-        }
-
-        /* SOCIAL MEDIA BUTTONS */
-        .social-buttons {
-            display: flex;
-            gap: 12px;
-        }
-
-        .social-btn {
-            flex: 1;
-            border: 1px solid var(--border-color);
-            background: #ffffff;
-            padding: 12px 16px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            font-size: 13px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            color: var(--text-primary);
-            box-shadow: var(--shadow-sm);
-        }
-
-            .social-btn:hover:not(:disabled) {
-                background: var(--accent-light);
-                border-color: var(--accent-color);
-                color: var(--accent-color);
+            /* -------- Reset & Base -------- */
+            *,
+            *::before,
+            *::after {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
             }
 
-        .social-btn:hover:not(:disabled) {
-            background: #f7f7f7;
-        }
+            body {
+                min-height: 100vh;
+                font-family: var(--font-family);
+                background: var(--bg-color);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 20px;
+                margin: 0;
+            }
 
-        .social-btn:disabled {
-            cursor: not-allowed;
-            opacity: 0.65;
-        }
+            /* -------- Main Container -------- */
+            .login-container {
+                width: 1280px;
+                max-width: 100%;
+                height: 780px;
+                background: var(--card-bg);
+                border-radius: 32px;
+                overflow: hidden;
+                display: flex;
+                box-shadow: var(--shadow-lg);
+                transition: height 0.3s ease;
+            }
 
-        .google-btn i {
-            color: #db4437;
-        }
-
-        .facebook-btn i {
-            color: #1877f2;
-        }
-
-        .register-link {
-            text-align: center;
-            margin-top: 36px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        .register-link a {
-            color: #222260;
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        .text-danger {
-            color: #dc2626;
-            font-size: 13px;
-        }
-
-        .validation-summary-valid {
-            display: none;
-        }
-
-        .validation-summary-errors {
-            margin-bottom: 18px;
-            padding: 12px 14px;
-            background: #fee2e2;
-            border: 1px solid #fecaca;
-            border-radius: 10px;
-            color: #991b1b;
-        }
-
-        .validation-summary-errors ul {
-            margin: 0;
-            padding-left: 20px;
-        }
-
-        /* =====================================================
-           LOGIN TOAST
-           ===================================================== */
-
-        .login-toast-container {
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            z-index: 999999;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            pointer-events: none;
-        }
-
-        .login-toast {
-            width: min(390px, calc(100vw - 40px));
-            padding: 16px;
-            border-radius: 14px;
-            color: #ffffff;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            background: linear-gradient(135deg, #b45309, #d97706);
-            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.30);
-            opacity: 0;
-            transform: translateX(45px);
-            transition:
-                opacity 0.3s ease,
-                transform 0.3s ease;
-            pointer-events: auto;
-        }
-
-        .login-toast.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .login-toast-icon {
-            width: 32px;
-            height: 32px;
-            flex: 0 0 32px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.20);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            font-weight: 900;
-        }
-
-        .login-toast-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .login-toast-title {
-            display: block;
-            margin-bottom: 4px;
-            font-size: 14px;
-            font-weight: 800;
-        }
-
-        .login-toast-message {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            line-height: 1.5;
-        }
-
-        .login-toast-close {
-            border: none;
-            background: transparent;
-            color: #ffffff;
-            padding: 0;
-            font-size: 23px;
-            line-height: 1;
-            cursor: pointer;
-        }
-
-        @@media (max-width: 1100px) {
+            /* ============================================================
+                           LEFT PANEL — Brand / Hero
+                           ============================================================ */
             .left-side {
+                width: 50%;
+                position: relative;
+                background: linear-gradient(135deg, rgba(234, 88, 12, 0.25) 0%, rgba(249, 115, 22, 0.15) 100%), url('/images/marketplace-login.jpg');
+                background-size: cover;
+                background-position: center;
+                padding: 48px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                color: #ffffff;
+                overflow: hidden;
+            }
+
+                /* Subtle overlay vignette */
+                .left-side::after {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(180deg, rgba(0, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.40) 100%);
+                    pointer-events: none;
+                    z-index: 1;
+                }
+
+                .left-side > * {
+                    position: relative;
+                    z-index: 2;
+                }
+
+            /* -------- Brand -------- */
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                text-decoration: none;
+            }
+
+            .brand-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                background: var(--accent-gradient);
+                color: #fff;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 18px;
+                box-shadow: 0 4px 16px rgba(234, 88, 12, 0.35);
+                flex-shrink: 0;
+            }
+
+            .brand span {
+                font-family: 'Playfair Display', Georgia, serif;
+                font-size: 26px;
+                font-weight: 800;
+                letter-spacing: -0.5px;
+                color: #ffffff;
+                text-shadow: 0 2px 8px rgba(0, 0, 0, 0.20);
+            }
+
+            /* -------- Left content -------- */
+            .left-content {
+                margin-bottom: 30px;
+            }
+
+                .left-content h1 {
+                    font-size: 52px;
+                    line-height: 1.08;
+                    margin-bottom: 18px;
+                    font-weight: 800;
+                    letter-spacing: -1px;
+                    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+                }
+
+                .left-content p {
+                    font-size: 17px;
+                    opacity: 0.92;
+                    line-height: 1.7;
+                    max-width: 380px;
+                    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.10);
+                }
+
+            /* -------- Dots -------- */
+            .dots {
+                margin-top: 28px;
+                display: flex;
+                gap: 8px;
+            }
+
+            .dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.35);
+                transition: all 0.3s ease;
+            }
+
+                .dot.active {
+                    width: 30px;
+                    border-radius: 20px;
+                    background: #ffffff;
+                }
+
+            /* ============================================================
+                           RIGHT PANEL — Form
+                           ============================================================ */
+            .right-side {
+                width: 50%;
+                padding: 48px 56px;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                background: #ffffff;
+                overflow-y: auto;
+            }
+
+            /* -------- "Sign in" badge (top-right) -------- */
+            .signin-btn-top {
+                position: absolute;
+                top: 32px;
+                right: 40px;
+            }
+
+                .signin-btn-top button {
+                    border: none;
+                    background: #f1f0f4;
+                    color: var(--text-primary);
+                    padding: 10px 28px;
+                    border-radius: 40px;
+                    font-weight: 600;
+                    font-size: 13px;
+                    cursor: pointer;
+                    transition: all 0.25s ease;
+                    font-family: var(--font-family);
+                }
+
+                    .signin-btn-top button:hover {
+                        background: var(--accent-color);
+                        color: #fff;
+                        transform: scale(1.02);
+                    }
+
+            /* -------- Form wrapper -------- */
+            .form-wrapper {
+                max-width: 440px;
+                width: 100%;
+                margin: 0 auto;
+            }
+
+                .form-wrapper h2 {
+                    font-size: 38px;
+                    font-weight: 800;
+                    color: var(--text-primary);
+                    margin-bottom: 6px;
+                    letter-spacing: -0.5px;
+                }
+
+            .subtitle {
+                color: var(--text-secondary);
+                font-size: 15px;
+                margin-bottom: 32px;
+                line-height: 1.6;
+                font-weight: 400;
+            }
+
+            /* -------- Form groups -------- */
+            .form-group {
+                margin-bottom: 18px;
+            }
+
+                .form-group label {
+                    display: block;
+                    margin-bottom: 6px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    letter-spacing: 0.3px;
+                }
+
+            .form-control {
+                width: 100%;
+                padding: 14px 18px;
+                border: 1.5px solid var(--border-color);
+                border-radius: 14px;
+                font-size: 14px;
+                background: var(--input-bg);
+                font-family: var(--font-family);
+                color: var(--text-primary);
+                outline: none;
+                transition: all 0.2s ease;
+            }
+
+                .form-control:focus {
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.08);
+                    background: #ffffff;
+                }
+
+                .form-control::placeholder {
+                    color: var(--text-muted);
+                    font-weight: 400;
+                }
+
+            .text-danger {
+                color: var(--error-color);
+                font-size: 12px;
+                display: block;
+                margin-top: 4px;
+                font-weight: 500;
+            }
+
+            /* -------- Validation summary -------- */
+            .validation-summary-valid {
                 display: none;
             }
 
-            .right-side {
-                width: 100%;
-                padding: 40px;
+            .validation-summary-errors {
+                margin-bottom: 16px;
+                padding: 12px 16px;
+                background: #fef2f2;
+                border: 1px solid #fecaca;
+                border-radius: 12px;
+                color: #991b1b;
+                font-size: 13px;
             }
 
-            .login-container {
-                height: auto;
-                min-height: 720px;
-            }
+                .validation-summary-errors ul {
+                    margin: 0;
+                    padding-left: 20px;
+                }
 
-            .social-buttons {
-                flex-direction: column;
-            }
-        }
-
-        @@media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-
-            .right-side {
-                padding: 30px 22px;
-            }
-
-            .form-wrapper {
-                margin-top: 70px;
-            }
-
-            .form-wrapper h2 {
-                font-size: 32px;
-            }
-
-            .signin-btn-top {
-                top: 22px;
-                right: 22px;
-            }
-
+            /* -------- Remember & Forgot -------- */
             .remember-row {
-                align-items: flex-start;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 20px 0 24px;
+                font-size: 13px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .remember-label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                color: var(--text-primary);
+                font-weight: 500;
+                font-size: 13px;
+            }
+
+                .remember-label input[type="checkbox"] {
+                    accent-color: var(--accent-color);
+                    width: 16px;
+                    height: 16px;
+                    cursor: pointer;
+                    margin: 0;
+                    flex-shrink: 0;
+                }
+
+            #forgotPasswordLink {
+                color: var(--text-secondary);
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 13px;
+                cursor: pointer;
+                transition: color 0.2s ease;
+            }
+
+                #forgotPasswordLink:hover {
+                    color: var(--accent-color);
+                    text-decoration: underline;
+                }
+
+            /* -------- Login button -------- */
+            .login-btn {
+                width: 100%;
+                border: none;
+                background: var(--accent-gradient);
+                color: #fff;
+                padding: 16px 20px;
+                border-radius: 50px;
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.25s ease;
+                box-shadow: 0 4px 20px rgba(234, 88, 12, 0.25);
+                font-family: var(--font-family);
+                letter-spacing: 0.3px;
+            }
+
+                .login-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 30px rgba(234, 88, 12, 0.35);
+                    background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
+                }
+
+                .login-btn:active {
+                    transform: translateY(0);
+                }
+
+            /* -------- Divider -------- */
+            .divider {
+                margin: 28px 0 22px;
+                position: relative;
+                text-align: center;
+                color: var(--text-muted);
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+                .divider::before,
+                .divider::after {
+                    content: "";
+                    position: absolute;
+                    top: 50%;
+                    width: 36%;
+                    height: 1px;
+                    background: var(--border-color);
+                }
+
+                .divider::before {
+                    left: 0;
+                }
+
+                .divider::after {
+                    right: 0;
+                }
+
+            /* -------- Social buttons -------- */
+            .social-buttons {
+                display: flex;
                 gap: 12px;
             }
 
+            .social-btn {
+                flex: 1;
+                border: 1.5px solid var(--border-color);
+                background: #ffffff;
+                padding: 12px 14px;
+                border-radius: 14px;
+                cursor: pointer;
+                transition: all 0.25s ease;
+                font-size: 13px;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                color: var(--text-primary);
+                font-family: var(--font-family);
+            }
+
+                .social-btn:hover:not(:disabled) {
+                    border-color: var(--accent-color);
+                    background: var(--accent-light);
+                    transform: translateY(-1px);
+                    box-shadow: var(--shadow-sm);
+                }
+
+                .social-btn:disabled {
+                    cursor: not-allowed;
+                    opacity: 0.55;
+                    filter: grayscale(0.4);
+                }
+
+            .google-btn i {
+                color: #db4437;
+                font-size: 16px;
+            }
+
+            .facebook-btn i {
+                color: #1877f2;
+                font-size: 16px;
+            }
+
+            /* -------- Register link -------- */
+            .register-link {
+                text-align: center;
+                margin-top: 28px;
+                font-size: 14px;
+                color: var(--text-secondary);
+                font-weight: 500;
+            }
+
+                .register-link a {
+                    color: var(--accent-color);
+                    font-weight: 700;
+                    text-decoration: none;
+                    transition: color 0.2s ease;
+                }
+
+                    .register-link a:hover {
+                        color: var(--accent-hover);
+                        text-decoration: underline;
+                    }
+
+            /* ============================================================
+                           TOAST NOTIFICATIONS
+                           ============================================================ */
             .login-toast-container {
-                top: 15px;
-                right: 15px;
-                left: 15px;
+                position: fixed;
+                top: 24px;
+                right: 24px;
+                z-index: 999999;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                pointer-events: none;
+                max-width: 420px;
+                width: calc(100% - 48px);
             }
 
             .login-toast {
-                width: 100%;
+                padding: 16px 18px;
+                border-radius: 16px;
+                color: #ffffff;
+                display: flex;
+                align-items: flex-start;
+                gap: 14px;
+                background: linear-gradient(135deg, #1a1a2e 0%, #2d2d4a 100%);
+                box-shadow: 0 16px 48px rgba(0, 0, 0, 0.30);
+                opacity: 0;
+                transform: translateX(40px) scale(0.96);
+                transition: opacity 0.35s ease, transform 0.35s ease;
+                pointer-events: auto;
+                border: 1px solid rgba(255, 255, 255, 0.06);
             }
-        }
+
+                .login-toast.show {
+                    opacity: 1;
+                    transform: translateX(0) scale(1);
+                }
+
+            .login-toast-icon {
+                width: 34px;
+                height: 34px;
+                flex: 0 0 34px;
+                border-radius: 50%;
+                background: rgba(234, 88, 12, 0.25);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                font-weight: 800;
+                color: #f97316;
+            }
+
+            .login-toast-content {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .login-toast-title {
+                display: block;
+                margin-bottom: 2px;
+                font-size: 14px;
+                font-weight: 700;
+                letter-spacing: 0.2px;
+            }
+
+            .login-toast-message {
+                display: block;
+                font-size: 13px;
+                font-weight: 400;
+                line-height: 1.5;
+                opacity: 0.85;
+            }
+
+            .login-toast-close {
+                border: none;
+                background: transparent;
+                color: rgba(255, 255, 255, 0.50);
+                padding: 0 0 0 6px;
+                font-size: 24px;
+                line-height: 1;
+                cursor: pointer;
+                transition: color 0.2s ease;
+                flex-shrink: 0;
+                margin-top: -2px;
+            }
+
+                .login-toast-close:hover {
+                    color: #ffffff;
+                }
+
+            /* ============================================================
+                           RESPONSIVE
+                           ============================================================ */
+            @@media (max-width: 1100px) {
+                .left-side {
+                    display: none;
+                }
+
+                .right-side {
+                    width: 100%;
+                    padding: 40px 32px;
+                }
+
+                .login-container {
+                    height: auto;
+                    min-height: 680px;
+                    border-radius: 24px;
+                }
+
+                .form-wrapper {
+                    max-width: 460px;
+                }
+
+                .signin-btn-top {
+                    top: 24px;
+                    right: 28px;
+                }
+            }
+
+            @@media (max-width: 640px) {
+                body {
+                    padding: 12px;
+                }
+
+                .right-side {
+                    padding: 28px 20px;
+                }
+
+                .login-container {
+                    border-radius: 20px;
+                    min-height: 600px;
+                }
+
+                .form-wrapper h2 {
+                    font-size: 30px;
+                }
+
+                .form-wrapper {
+                    margin-top: 8px;
+                }
+
+                .signin-btn-top {
+                    top: 18px;
+                    right: 20px;
+                }
+
+                    .signin-btn-top button {
+                        padding: 8px 20px;
+                        font-size: 12px;
+                    }
+
+                .remember-row {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 6px;
+                }
+
+                .social-buttons {
+                    flex-direction: column;
+                }
+
+                .login-toast-container {
+                    top: 16px;
+                    right: 16px;
+                    width: calc(100% - 32px);
+                }
+
+                .login-toast {
+                    padding: 14px 16px;
+                    border-radius: 14px;
+                }
+
+                .left-content h1 {
+                    font-size: 36px;
+                }
+            }
+
+            @@media (max-width: 400px) {
+                .right-side {
+                    padding: 20px 14px;
+                }
+
+                .form-wrapper h2 {
+                    font-size: 26px;
+                }
+
+                .form-control {
+                    padding: 12px 14px;
+                    font-size: 13px;
+                }
+
+                .login-btn {
+                    padding: 14px;
+                    font-size: 14px;
+                }
+            }
     </style>
 </head>
 
 <body>
 
-    <!-- Login-specific toast container -->
-    <div id="loginToastContainer"
-         class="login-toast-container"
-         aria-live="polite"
-         aria-atomic="true">
+    <!-- ============================================================
+    TOAST CONTAINER
+    ============================================================ -->
+    <div id="loginToastContainer" class="login-toast-container" aria-live="polite" aria-atomic="true">
     </div>
 
+    <!-- ============================================================
+    MAIN CONTAINER
+    ============================================================ -->
     <div class="login-container">
 
-        <!-- BRANDING PANEL -->
+        <!-- ===== LEFT: BRAND PANEL ===== -->
         <div class="left-side">
 
             <div class="brand">
@@ -556,15 +709,13 @@
 
             <div class="left-content">
                 <h1>
-                    Shop Smart <br />
+                    Shop Smart<br />
                     Across Your City
                 </h1>
-
                 <p>
                     Discover trusted local stores, fast delivery,
                     and thousands of products in one marketplace.
                 </p>
-
                 <div class="dots">
                     <div class="dot active"></div>
                     <div class="dot"></div>
@@ -574,92 +725,72 @@
 
         </div>
 
-        <!-- FORM PANEL -->
+        <!-- ===== RIGHT: FORM PANEL ===== -->
         <div class="right-side">
 
             <div class="signin-btn-top">
                 <button type="button">
-                    Sign in
+                    <i class="fas fa-user-circle" style="margin-right: 6px;"></i> Sign in
                 </button>
             </div>
 
             <div class="form-wrapper">
 
                 <h2>Welcome Back!</h2>
-
                 <p class="subtitle">
                     Sign in to continue shopping from your favorite local stores.
                 </p>
 
-                <form method="post"
-                      asp-route-returnUrl="@Model.ReturnUrl">
+                <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
 
-                    <div asp-validation-summary="All"
-                         class="text-danger">
-                    </div>
+                    <div asp-validation-summary="All" class="text-danger validation-summary-errors"></div>
 
+                    <!-- Email -->
                     <div class="form-group">
-
-                        <label asp-for="Input.Email">
-                            Email Address
-                        </label>
-
+                        <label asp-for="Input.Email">Email Address</label>
                         <input asp-for="Input.Email"
                                id="loginEmail"
                                class="form-control"
                                placeholder="Enter your email"
                                autocomplete="email" />
-
-                        <span asp-validation-for="Input.Email"
-                              class="text-danger">
-                        </span>
-
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
                     </div>
 
+                    <!-- Password -->
                     <div class="form-group">
-
-                        <label asp-for="Input.Password">
-                            Password
-                        </label>
-
+                        <label asp-for="Input.Password">Password</label>
                         <input asp-for="Input.Password"
                                id="loginPassword"
                                class="form-control"
                                type="password"
                                placeholder="Enter password"
                                autocomplete="current-password" />
-
-                        <span asp-validation-for="Input.Password"
-                              class="text-danger">
-                        </span>
-
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
                     </div>
 
+                    <!-- Remember & Forgot -->
                     <div class="remember-row">
                         <label class="remember-label">
                             <input asp-for="Input.RememberMe" />
                             Remember Me
                         </label>
-
-                        <a asp-page="./ForgotPassword"
-                           id="forgotPasswordLink">
+                        <a asp-page="./ForgotPassword" id="forgotPasswordLink">
                             Forgot Password?
                         </a>
                     </div>
 
-                    <button type="submit"
-                            class="login-btn">
-                        Login
+                    <!-- Submit -->
+                    <button type="submit" class="login-btn">
+                        <i class="fas fa-arrow-right" style="margin-right: 10px;"></i> Login
                     </button>
 
                 </form>
 
-                <div class="divider">
-                    Instant Login
-                </div>
+                <!-- Divider -->
+                <div class="divider">Instant Login</div>
 
-                @if (Model.ExternalLogins != null &&
-                     Model.ExternalLogins.Count > 0)
+                <!-- Social Logins -->
+                @if (Model.ExternalLogins != null && Model.ExternalLogins.Count > 0)
                 {
                     <form asp-page="./Login"
                           asp-page-handler="ExternalLogin"
@@ -667,65 +798,41 @@
                           method="post">
 
                         <div class="social-buttons">
-
                             @foreach (var provider in Model.ExternalLogins)
                             {
-                                if (provider.Name == "Google")
-                                {
-                                    <button type="submit"
-                                            class="social-btn google-btn"
-                                            name="provider"
-                                            value="@provider.Name">
+                                var iconClass = provider.Name == "Google" ? "fa-google" :
+                                provider.Name == "Facebook" ? "fa-facebook" : "fa-arrow-right";
 
-                                        <i class="fab fa-google"></i>
-                                        Continue with Google
-                                    </button>
-                                }
+                                var btnClass = provider.Name == "Google" ? "google-btn" :
+                                provider.Name == "Facebook" ? "facebook-btn" : "";
 
-                                if (provider.Name == "Facebook")
-                                {
-                                    <button type="submit"
-                                            class="social-btn facebook-btn"
-                                            name="provider"
-                                            value="@provider.Name">
-
-                                        <i class="fab fa-facebook"></i>
-                                        Continue with Facebook
-                                    </button>
-                                }
+                                <button type="submit"
+                                        class="social-btn @btnClass"
+                                        name="provider"
+                                        value="@provider.Name">
+                                    <i class="fab @iconClass"></i>
+                                    @provider.Name
+                                </button>
                             }
-
                         </div>
                     </form>
                 }
                 else
                 {
                     <div class="social-buttons">
-
-                        <button type="button"
-                                class="social-btn google-btn"
-                                disabled>
-
-                            <i class="fab fa-google"></i>
-                            Google Unavailable
+                        <button type="button" class="social-btn google-btn" disabled>
+                            <i class="fab fa-google"></i> Google
                         </button>
-
-                        <button type="button"
-                                class="social-btn facebook-btn"
-                                disabled>
-
-                            <i class="fab fa-facebook"></i>
-                            Facebook Unavailable
+                        <button type="button" class="social-btn facebook-btn" disabled>
+                            <i class="fab fa-facebook"></i> Facebook
                         </button>
-
                     </div>
                 }
 
+                <!-- Register link -->
                 <div class="register-link">
                     Don't have an account?
-                    <a asp-page="./Register">
-                        Register
-                    </a>
+                    <a asp-page="./Register">Register</a>
                 </div>
 
             </div>
@@ -734,179 +841,129 @@
 
     </div>
 
-    <!-- CORE SCRIPTS -->
+    <!-- ============================================================
+SCRIPTS
+============================================================ -->
     <script>
-        function showLoginToast(message) {
-            const container =
-                document.getElementById("loginToastContainer");
+           
+            function showLoginToast(message, title) {
+                var container = document.getElementById("loginToastContainer");
+                if (!container || !message) return;
 
-            if (!container || !message) {
-                return;
-            }
+                // Remove any existing toast
+                var existing = container.querySelector(".login-toast");
+                if (existing) existing.remove();
 
-            const existingToast =
-                container.querySelector(".login-toast");
+                var toast = document.createElement("div");
+                toast.className = "login-toast";
+                toast.setAttribute("role", "status");
 
-            if (existingToast) {
-                existingToast.remove();
-            }
+                // Icon
+                var icon = document.createElement("span");
+                icon.className = "login-toast-icon";
+                icon.textContent = "!";
 
-            const toast =
-                document.createElement("div");
+                // Content
+                var content = document.createElement("div");
+                content.className = "login-toast-content";
 
-            toast.className =
-                "login-toast";
+                var titleEl = document.createElement("span");
+                titleEl.className = "login-toast-title";
+                titleEl.textContent = title || "Heads up!";
 
-            toast.setAttribute("role", "status");
+                var msgEl = document.createElement("span");
+                msgEl.className = "login-toast-message";
+                msgEl.textContent = message;
 
-            const icon =
-                document.createElement("span");
+                content.appendChild(titleEl);
+                content.appendChild(msgEl);
 
-            icon.className =
-                "login-toast-icon";
+                // Close button
+                var closeBtn = document.createElement("button");
+                closeBtn.type = "button";
+                closeBtn.className = "login-toast-close";
+                closeBtn.setAttribute("aria-label", "Close notification");
+                closeBtn.innerHTML = "&times;";
 
-            icon.textContent =
-                "!";
+                toast.appendChild(icon);
+                toast.appendChild(content);
+                toast.appendChild(closeBtn);
+                container.appendChild(toast);
 
-            const content =
-                document.createElement("div");
-
-            content.className =
-                "login-toast-content";
-
-            const title =
-                document.createElement("span");
-
-            title.className =
-                "login-toast-title";
-
-            title.textContent =
-                "Password field not empty";
-
-            const messageElement =
-                document.createElement("span");
-
-            messageElement.className =
-                "login-toast-message";
-
-            messageElement.textContent =
-                message;
-
-            const closeButton =
-                document.createElement("button");
-
-            closeButton.type =
-                "button";
-
-            closeButton.className =
-                "login-toast-close";
-
-            closeButton.setAttribute(
-                "aria-label",
-                "Close notification");
-
-            closeButton.innerHTML =
-                "&times;";
-
-            content.appendChild(title);
-            content.appendChild(messageElement);
-
-            toast.appendChild(icon);
-            toast.appendChild(content);
-            toast.appendChild(closeButton);
-
-            container.appendChild(toast);
-
-            window.requestAnimationFrame(
-                function () {
+                // Animate in
+                requestAnimationFrame(function() {
                     toast.classList.add("show");
                 });
 
-            let closeTimer =
-                window.setTimeout(
-                    removeToast,
-                    5000);
+                var timer = setTimeout(removeToast, 6000);
 
-            function removeToast() {
-                if (!toast.isConnected) {
-                    return;
+                function removeToast() {
+                    if (!toast.isConnected) return;
+                    clearTimeout(timer);
+                    toast.classList.remove("show");
+                    setTimeout(function() {
+                        toast.remove();
+                    }, 350);
                 }
 
-                window.clearTimeout(closeTimer);
-
-                toast.classList.remove("show");
-
-                window.setTimeout(
-                    function () {
-                        toast.remove();
-                    },
-                    300);
+                closeBtn.addEventListener("click", removeToast);
             }
 
-            closeButton.addEventListener(
-                "click",
-                removeToast);
-        }
+            // ------------------------------------------------------------
+            // Forgot Password: clear password field before redirect
+            // ------------------------------------------------------------
+            document.addEventListener("DOMContentLoaded", function() {
 
-        document.addEventListener(
-            "DOMContentLoaded",
-            function () {
+                var emailInput = document.getElementById("loginEmail");
+                var passwordInput = document.getElementById("loginPassword");
+                var forgotLink = document.getElementById("forgotPasswordLink");
 
-                const loginEmailInput =
-                    document.getElementById("loginEmail");
+                if (!forgotLink) return;
 
-                const loginPasswordInput =
-                    document.getElementById("loginPassword");
+                forgotLink.addEventListener("click", function(e) {
 
-                const forgotPasswordLink =
-                    document.getElementById("forgotPasswordLink");
+                    var email = emailInput ? emailInput.value.trim() : "";
+                    var password = passwordInput ? passwordInput.value : "";
 
-                if (!forgotPasswordLink) {
-                    return;
-                }
-
-                forgotPasswordLink.addEventListener(
-                    "click",
-                    function (event) {
-
-                        const email =
-                            loginEmailInput
-                                ? loginEmailInput.value.trim()
-                                : "";
-
-                        const password =
-                            loginPasswordInput
-                                ? loginPasswordInput.value
-                                : "";
-
-                        if (password.length > 0) {
-                            event.preventDefault();
-
-                            showLoginToast(
-                                "Please clear the password field before using Forgot Password."
-                            );
-
-                            if (loginPasswordInput) {
-                                loginPasswordInput.focus();
-                            }
-
-                            return;
+                    // If password is not empty, warn the user
+                    if (password.length > 0) {
+                        e.preventDefault();
+                        showLoginToast(
+                            "Please clear the password field before using 'Forgot Password'.",
+                            "Clear password"
+                        );
+                        if (passwordInput) {
+                            passwordInput.focus();
+                            passwordInput.select();
                         }
+                        return;
+                    }
 
-                        if (email.length > 0) {
-                            event.preventDefault();
+                    // If email is present, pass it along
+                    if (email.length > 0) {
+                        e.preventDefault();
+                        window.location.href =
+                            "/Identity/Account/ForgotPassword?email=" +
+                            encodeURIComponent(email);
+                    }
+                    // Otherwise let the default navigation happen
+                });
 
-                            window.location.href =
-                                "/Identity/Account/ForgotPassword?email=" +
-                                encodeURIComponent(email);
+                // Also handle "Enter" key on password field to submit
+                if (passwordInput) {
+                    passwordInput.addEventListener("keydown", function(e) {
+                        if (e.key === "Enter") {
+                            var form = passwordInput.closest("form");
+                            if (form) form.submit();
                         }
                     });
+                }
             });
     </script>
 
+    <!-- Validation scripts (ASP.NET Core) -->
     <partial name="_ValidationScriptsPartial" />
 
 </body>
 
 </html>
-
