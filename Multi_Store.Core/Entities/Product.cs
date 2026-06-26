@@ -61,5 +61,8 @@ namespace Multi_Store.Core.Entities
         // Reviews
         public virtual ICollection<Review> Reviews { get; set; }
             = new List<Review>();
+        // Explore posts linked to this product
+        public virtual ICollection<ExplorePost> ExplorePosts { get; set; }
+            = new List<ExplorePost>();
     }
 }

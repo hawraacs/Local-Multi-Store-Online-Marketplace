@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Multi_Store.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Multi_Store.Infrastructure.Data;
 namespace Multi_Store.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260622235112_AddExploreModule")]
+    partial class AddExploreModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1597,13 +1600,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<decimal?>("FixedDeliveryFee")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("GracePeriodEndDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<bool>("HasFixedDeliveryFee")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsSuspended")
                         .HasColumnType("bit");
 
                     b.Property<decimal?>("LastPaymentAmount")
@@ -1622,10 +1619,6 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<decimal>("Longitude")
                         .HasPrecision(18, 6)
                         .HasColumnType("decimal(18,6)");
-
-                    b.Property<decimal>("OutstandingBalance")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("OwnerUserID")
                         .HasColumnType("int");
@@ -1700,36 +1693,6 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("StoreID");
 
                     b.ToTable("StoreFollows");
-                });
-
-            modelBuilder.Entity("Multi_Store.Core.Entities.SubscriptionPayment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PaymentMethod")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Reference")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("StoreId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StoreId");
-
-                    b.ToTable("SubscriptionPayments");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.SystemConfig", b =>
@@ -2457,17 +2420,6 @@ namespace Multi_Store.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
-
-                    b.Navigation("Store");
-                });
-
-            modelBuilder.Entity("Multi_Store.Core.Entities.SubscriptionPayment", b =>
-                {
-                    b.HasOne("Multi_Store.Core.Entities.Store", "Store")
-                        .WithMany()
-                        .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("Store");
                 });

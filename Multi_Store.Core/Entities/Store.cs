@@ -102,5 +102,7 @@ namespace Multi_Store.Core.Entities
 
         public virtual ICollection<StoreFollow> Followers { get; set; }
             = new List<StoreFollow>();
+        public virtual ICollection<ExplorePost> ExplorePosts { get; set; }
+    = new List<ExplorePost>();
     }
 }
