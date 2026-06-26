@@ -58,12 +58,13 @@ namespace Multi_Store.Services
         }
 
         // Admin extends subscription
-        public void ExtendSubscription(int storeId, decimal amountPaid, string paymentMethod = "Admin")
+        public void ExtendSubscription(int storeId, string paymentMethod = "Admin")
         {
             var store = _context.Stores.Find(storeId);
 
             if (store == null)
                 throw new Exception("Store not found");
+            const decimal amountPaid = 20m;
 
             DateTime newExpiry;
 
@@ -81,6 +82,16 @@ namespace Multi_Store.Services
             store.SubscriptionStatus = "Active";
             store.LastPaymentDate = DateTime.UtcNow;
             store.LastPaymentAmount = amountPaid;
+            _context.SubscriptionPayments.Add(new SubscriptionPayment
+            {
+                StoreId = storeId,
+                Amount = amountPaid,
+                PaymentDate = DateTime.UtcNow,
+                Reference = paymentMethod == "Admin"
+    ? "Extended by Admin"
+    : "Store Owner Renewal",
+                PaymentMethod = paymentMethod
+            });
 
             _context.SaveChanges();
         }

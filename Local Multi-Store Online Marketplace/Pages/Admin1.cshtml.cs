@@ -1,3 +1,4 @@
+using com.sun.org.apache.xerces.@internal.xs.datatypes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -55,7 +56,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             // =========================
             // COMPLETED ORDERS
             // =========================
-            var thisMonthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            var thisMonthStart = new DateTime(DateTime.UtcNow.Date.Year, DateTime.UtcNow.Date.Month, 1);
 
             NewStoresThisMonth = await _context.Stores
                 .CountAsync(s => s.CreatedAt >= thisMonthStart);
@@ -87,9 +88,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             // =========================
             // SUBSCRIPTION REVENUE
             // =========================
-            TotalSubscriptionRevenue = await _context.Stores
-                .Where(s => s.LastPaymentAmount.HasValue)
-                .SumAsync(s => s.LastPaymentAmount ?? 0);
+            TotalSubscriptionRevenue = await _context.SubscriptionPayments
+    .SumAsync(p => p.Amount);
 
             // =========================
             // TOTAL PLATFORM REVENUE
@@ -136,8 +136,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             for (int i = 11; i >= 0; i--)
             {
                 var monthStart = new DateTime(
-                    DateTime.Today.AddMonths(-i).Year,
-                    DateTime.Today.AddMonths(-i).Month,
+                    DateTime.UtcNow.Date.AddMonths(-i).Year,
+                    DateTime.UtcNow.Date.AddMonths(-i).Month,
                     1);
 
                 var monthEnd = monthStart.AddMonths(1);
@@ -152,12 +152,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         o.OrderItems.Sum(oi =>
                             oi.TotalPrice * 0.05m));
 
-                var monthlySubscriptions = await _context.Stores
-                    .Where(s =>
-                        s.LastPaymentDate.HasValue &&
-                        s.LastPaymentDate >= monthStart &&
-                        s.LastPaymentDate < monthEnd)
-                    .SumAsync(s => s.LastPaymentAmount ?? 0);
+                var monthlySubscriptions = await _context.SubscriptionPayments
+    .Where(p =>
+        p.PaymentDate >= monthStart &&
+        p.PaymentDate < monthEnd)
+    .SumAsync(p => p.Amount);
 
                 MonthlyRevenueData.Add(
                     monthlyCommission + monthlySubscriptions);
@@ -170,8 +169,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             for (int i = 11; i >= 0; i--)
             {
                 var monthStart = new DateTime(
-                    DateTime.Today.AddMonths(-i).Year,
-                    DateTime.Today.AddMonths(-i).Month,
+                    DateTime.UtcNow.Date.AddMonths(-i).Year,
+                    DateTime.UtcNow.Date.AddMonths(-i).Month,
                     1);
 
                 var monthEnd = monthStart.AddMonths(1);
@@ -189,7 +188,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             // REVENUE GROWTH
             // ====================================
 
-            var currentMonth = DateTime.Today;
+            var currentMonth = DateTime.UtcNow.Date;
             var currentStart =
                 new DateTime(currentMonth.Year, currentMonth.Month, 1);
 

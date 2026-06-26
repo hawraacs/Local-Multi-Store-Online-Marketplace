@@ -87,7 +87,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public IActionResult OnPostExtend(int id)
         {
-            _subscriptionService.ExtendSubscription(id, 30);
+            _subscriptionService.ExtendSubscription(id);
 
             TempData["Success"] = "Subscription extended by 30 days.";
             return RedirectToPage();
