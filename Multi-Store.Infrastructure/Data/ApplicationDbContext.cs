@@ -47,6 +47,7 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
         public DbSet<Promotion> Promotions { get; set; }
         public DbSet<PromotionRecipient> PromotionRecipients { get; set; }
+        public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
