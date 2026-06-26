@@ -47,7 +47,12 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
         public DbSet<Promotion> Promotions { get; set; }
         public DbSet<PromotionRecipient> PromotionRecipients { get; set; }
+        public DbSet<ExplorePost> ExplorePosts { get; set; }
+        public DbSet<ExploreMedia> ExploreMedia { get; set; }
+        public DbSet<ExploreLike> ExploreLikes { get; set; }
+        public DbSet<ExploreComment> ExploreComments { get; set; }
         public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -79,6 +84,10 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<Store>().HasKey(e => e.StoreID);
             modelBuilder.Entity<SystemConfig>().HasKey(e => e.ConfigID);
             modelBuilder.Entity<Wishlist>().HasKey(e => e.WishlistID);
+            modelBuilder.Entity<ExplorePost>().HasKey(e => e.ExplorePostID);
+            modelBuilder.Entity<ExploreMedia>().HasKey(e => e.ExploreMediaID);
+            modelBuilder.Entity<ExploreLike>().HasKey(e => e.ExploreLikeID);
+            modelBuilder.Entity<ExploreComment>().HasKey(e => e.ExploreCommentID);
 
             // ================= INDEXES =================
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
@@ -89,6 +98,11 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<Order>().HasIndex(o => o.OrderNumber).IsUnique();
             modelBuilder.Entity<SystemConfig>().HasIndex(sc => sc.ConfigKey).IsUnique();
             modelBuilder.Entity<DeliveryPerson>().HasIndex(d => d.RequestedByUserID);
+            modelBuilder.Entity<ExplorePost>().HasIndex(e => new { e.IsActive, e.CreatedAt });
+            modelBuilder.Entity<ExplorePost>().HasIndex(e => new { e.StoreID, e.CreatedAt });
+            modelBuilder.Entity<ExploreMedia>().HasIndex(e => new { e.ExplorePostID, e.DisplayOrder });
+            modelBuilder.Entity<ExploreLike>() .HasIndex(e => new { e.ExplorePostID, e.CustomerID }).IsUnique();
+            modelBuilder.Entity<ExploreComment>().HasIndex(e => new { e.ExplorePostID, e.CreatedAt });
 
             // ================= RELATIONSHIPS =================
             modelBuilder.Entity<Customer>()
@@ -365,6 +379,80 @@ namespace Multi_Store.Infrastructure.Data
 
             modelBuilder.Entity<RefundRequest>().Property(r => r.RequestedAmount).HasPrecision(18, 2);
             modelBuilder.Entity<RefundRequest>().Property(r => r.ApprovedAmount).HasPrecision(18, 2);
+            // ================= EXPLORE CONFIGURATION =================
+
+            modelBuilder.Entity<ExplorePost>(entity =>
+            {
+                entity.Property(e => e.PostType)
+                    .IsRequired()
+                    .HasMaxLength(20);
+
+                entity.Property(e => e.Caption)
+                    .HasMaxLength(2200);
+            });
+
+            modelBuilder.Entity<ExploreMedia>(entity =>
+            {
+                entity.Property(e => e.MediaType)
+                    .IsRequired()
+                    .HasMaxLength(20);
+
+                entity.Property(e => e.MediaUrl)
+                    .IsRequired()
+                    .HasMaxLength(2048);
+
+                entity.Property(e => e.ThumbnailUrl)
+                    .HasMaxLength(2048);
+            });
+
+            modelBuilder.Entity<ExploreComment>(entity =>
+            {
+                entity.Property(e => e.CommentText)
+                    .IsRequired()
+                    .HasMaxLength(1000);
+            });
+
+            modelBuilder.Entity<ExplorePost>()
+                .HasOne(e => e.Store)
+                .WithMany(s => s.ExplorePosts)
+                .HasForeignKey(e => e.StoreID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ExplorePost>()
+                .HasOne(e => e.Product)
+                .WithMany(p => p.ExplorePosts)
+                .HasForeignKey(e => e.ProductID)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<ExploreMedia>()
+                .HasOne(e => e.ExplorePost)
+                .WithMany(p => p.Media)
+                .HasForeignKey(e => e.ExplorePostID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ExploreLike>()
+                .HasOne(e => e.ExplorePost)
+                .WithMany(p => p.Likes)
+                .HasForeignKey(e => e.ExplorePostID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ExploreLike>()
+                .HasOne(e => e.Customer)
+                .WithMany(c => c.ExploreLikes)
+                .HasForeignKey(e => e.CustomerID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ExploreComment>()
+                .HasOne(e => e.ExplorePost)
+                .WithMany(p => p.Comments)
+                .HasForeignKey(e => e.ExplorePostID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ExploreComment>()
+                .HasOne(e => e.Customer)
+                .WithMany(c => c.ExploreComments)
+                .HasForeignKey(e => e.CustomerID)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

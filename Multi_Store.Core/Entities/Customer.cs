@@ -47,5 +47,10 @@ namespace Multi_Store.Core.Entities
 
         public virtual ICollection<StoreFollow> FollowedStores { get; set; }
     = new List<StoreFollow>();
+        public virtual ICollection<ExploreLike> ExploreLikes { get; set; }
+    = new List<ExploreLike>();
+
+        public virtual ICollection<ExploreComment> ExploreComments { get; set; }
+            = new List<ExploreComment>();
     }
 }

@@ -1,0 +1,932 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore.CreateModel
+
+@{
+    ViewData["Title"] = "Create Explore Post";
+    Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .explore-create-page {
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        .explore-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .explore-title h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+            color: #111827;
+        }
+
+        .explore-title p {
+            margin: 0;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 16px;
+            border-radius: 12px;
+            background: #f3f4f6;
+            color: #374151;
+            font-weight: 800;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+            .back-link:hover {
+                background: #e5e7eb;
+                color: #111827;
+            }
+
+        .create-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .form-card,
+        .preview-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 22px;
+            box-shadow: 0 12px 35px rgba(15, 23, 42, 0.07);
+        }
+
+        .form-card {
+            padding: 28px;
+        }
+
+        .preview-card {
+            padding: 20px;
+            position: sticky;
+            top: 90px;
+        }
+
+        .section-title {
+            margin: 0 0 18px;
+            font-size: 18px;
+            color: #111827;
+        }
+
+        .field-group {
+            margin-bottom: 24px;
+        }
+
+        .field-label {
+            display: block;
+            margin-bottom: 9px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .field-help {
+            display: block;
+            margin-top: 7px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #6b7280;
+        }
+
+        .form-control,
+        .form-select {
+            width: 100%;
+            min-height: 46px;
+            padding: 11px 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            background: #ffffff;
+            color: #111827;
+            font: inherit;
+            transition: 0.2s ease;
+        }
+
+        textarea.form-control {
+            min-height: 130px;
+            resize: vertical;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.12);
+        }
+
+        .type-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .type-option {
+            position: relative;
+        }
+
+            .type-option input {
+                position: absolute;
+                opacity: 0;
+                pointer-events: none;
+            }
+
+        .type-card {
+            height: 100%;
+            min-height: 110px;
+            padding: 16px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            background: #ffffff;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s ease;
+        }
+
+            .type-card i {
+                display: block;
+                margin-bottom: 10px;
+                font-size: 25px;
+                color: #6b7280;
+            }
+
+            .type-card strong {
+                display: block;
+                color: #111827;
+                font-size: 14px;
+            }
+
+            .type-card small {
+                display: block;
+                margin-top: 4px;
+                color: #9ca3af;
+                font-size: 11px;
+            }
+
+        .type-option input:checked + .type-card {
+            border-color: #ff6b35;
+            background: #fff7ed;
+            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.12);
+        }
+
+            .type-option input:checked + .type-card i {
+                color: #ff6b35;
+            }
+
+        .upload-box {
+            position: relative;
+            border: 2px dashed #d1d5db;
+            border-radius: 18px;
+            padding: 30px 20px;
+            background: #f9fafb;
+            text-align: center;
+            transition: 0.2s ease;
+        }
+
+            .upload-box:hover {
+                border-color: #ff6b35;
+                background: #fff7ed;
+            }
+
+            .upload-box i {
+                display: block;
+                margin-bottom: 12px;
+                font-size: 38px;
+                color: #ff6b35;
+            }
+
+            .upload-box strong {
+                display: block;
+                margin-bottom: 5px;
+                color: #111827;
+            }
+
+            .upload-box span {
+                color: #6b7280;
+                font-size: 12px;
+            }
+
+            .upload-box input[type="file"] {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+            }
+
+        .thumbnail-section {
+            display: none;
+        }
+
+            .thumbnail-section.visible {
+                display: block;
+            }
+
+        .active-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            background: #f9fafb;
+        }
+
+            .active-box strong {
+                display: block;
+                margin-bottom: 4px;
+                color: #111827;
+            }
+
+            .active-box small {
+                color: #6b7280;
+            }
+
+        .switch {
+            position: relative;
+            width: 52px;
+            height: 29px;
+            flex: 0 0 auto;
+        }
+
+            .switch input {
+                width: 0;
+                height: 0;
+                opacity: 0;
+            }
+
+        .switch-slider {
+            position: absolute;
+            inset: 0;
+            border-radius: 999px;
+            background: #d1d5db;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+            .switch-slider::before {
+                content: "";
+                position: absolute;
+                width: 23px;
+                height: 23px;
+                left: 3px;
+                top: 3px;
+                border-radius: 50%;
+                background: #ffffff;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                transition: 0.2s ease;
+            }
+
+        .switch input:checked + .switch-slider {
+            background: #ff6b35;
+        }
+
+            .switch input:checked + .switch-slider::before {
+                transform: translateX(23px);
+            }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+            padding-top: 22px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .publish-btn,
+        .cancel-btn {
+            min-height: 46px;
+            padding: 0 22px;
+            border-radius: 12px;
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+        }
+
+        .publish-btn {
+            border: none;
+            background: linear-gradient(135deg, #ff7a45, #ff5a1f);
+            color: #ffffff;
+            box-shadow: 0 10px 22px rgba(255, 107, 53, 0.25);
+        }
+
+            .publish-btn:hover {
+                transform: translateY(-1px);
+            }
+
+        .cancel-btn {
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            color: #374151;
+        }
+
+        .validation-summary-errors,
+        .text-danger {
+            color: #b91c1c;
+            font-size: 13px;
+        }
+
+        .validation-summary-errors {
+            margin-bottom: 20px;
+            padding: 14px 16px;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            background: #fef2f2;
+        }
+
+            .validation-summary-errors ul {
+                margin: 0;
+                padding-left: 20px;
+            }
+
+        .preview-title {
+            margin: 0 0 15px;
+            font-size: 16px;
+            color: #111827;
+        }
+
+        .preview-phone {
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            background: #ffffff;
+        }
+
+        .preview-store {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 13px;
+        }
+
+        .preview-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff8a50, #ff5a1f);
+            color: #ffffff;
+            font-weight: 900;
+        }
+
+        .preview-store-name {
+            font-size: 13px;
+            font-weight: 900;
+            color: #111827;
+        }
+
+        .media-preview {
+            min-height: 290px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            overflow: hidden;
+        }
+
+            .media-preview img,
+            .media-preview video {
+                width: 100%;
+                height: 290px;
+                object-fit: cover;
+            }
+
+        .preview-placeholder {
+            padding: 30px;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+            .preview-placeholder i {
+                display: block;
+                margin-bottom: 10px;
+                font-size: 42px;
+            }
+
+        .preview-details {
+            padding: 14px;
+        }
+
+        .preview-caption {
+            margin: 0;
+            color: #374151;
+            font-size: 13px;
+            line-height: 1.55;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+            .preview-caption.empty {
+                color: #9ca3af;
+            }
+
+        .preview-file-count {
+            margin-top: 12px;
+            color: #6b7280;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        @@media (max-width: 950px) {
+            .create-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-card {
+                position: static;
+            }
+        }
+
+        @@media (max-width: 650px) {
+            .explore-header {
+                flex-direction: column;
+            }
+
+            .form-card {
+                padding: 20px;
+            }
+
+            .type-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .type-card {
+                min-height: auto;
+                text-align: left;
+            }
+
+                .type-card i {
+                    display: inline-block;
+                    margin: 0 10px 0 0;
+                }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .publish-btn,
+            .cancel-btn {
+                width: 100%;
+            }
+        }
+    </style>
+}
+
+<div class="explore-create-page">
+
+    <div class="explore-header">
+        <div class="explore-title">
+            <h1>Create Explore Post</h1>
+            <p>
+                Publish a product photo, image carousel, or short reel
+                for customers to discover.
+            </p>
+        </div>
+
+        <a asp-page="/StoreOwner/Explore/Index"
+           class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Back to Explore
+        </a>
+    </div>
+
+    <div class="create-layout">
+
+        <div class="form-card">
+
+            <form method="post"
+                  enctype="multipart/form-data"
+                  id="exploreCreateForm">
+
+                <div asp-validation-summary="All"></div>
+
+                <div class="field-group">
+                    <label class="field-label">
+                        Post Type
+                    </label>
+
+                    <div class="type-grid">
+
+                        <label class="type-option">
+                            <input asp-for="Input.PostType"
+                                   type="radio"
+                                   value="Image"
+                                   id="postTypeImage" />
+
+                            <span class="type-card">
+                                <i class="fas fa-image"></i>
+                                <strong>Image</strong>
+                                <small>One product image</small>
+                            </span>
+                        </label>
+
+                        <label class="type-option">
+                            <input asp-for="Input.PostType"
+                                   type="radio"
+                                   value="Carousel"
+                                   id="postTypeCarousel" />
+
+                            <span class="type-card">
+                                <i class="fas fa-images"></i>
+                                <strong>Carousel</strong>
+                                <small>2 to 10 images</small>
+                            </span>
+                        </label>
+
+                        <label class="type-option">
+                            <input asp-for="Input.PostType"
+                                   type="radio"
+                                   value="Reel"
+                                   id="postTypeReel" />
+
+                            <span class="type-card">
+                                <i class="fas fa-video"></i>
+                                <strong>Reel</strong>
+                                <small>One short video</small>
+                            </span>
+                        </label>
+
+                    </div>
+
+                    <span asp-validation-for="Input.PostType"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="field-group">
+                    <label asp-for="Input.ProductID"
+                           class="field-label">
+                        Link a Product
+                    </label>
+
+                    <select asp-for="Input.ProductID"
+                            asp-items="Model.ProductOptions"
+                            class="form-select">
+                        <option value="">
+                            No linked product
+                        </option>
+                    </select>
+
+                    <span class="field-help">
+                        Linking a product lets customers open the product
+                        or add it to their cart from the Explore post.
+                    </span>
+
+                    <span asp-validation-for="Input.ProductID"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="field-group">
+                    <label asp-for="Input.Caption"
+                           class="field-label">
+                        Caption
+                    </label>
+
+                    <textarea asp-for="Input.Caption"
+                              id="captionInput"
+                              class="form-control"
+                              maxlength="2200"
+                              placeholder="Tell customers about this post, product, offer, or new arrival..."></textarea>
+
+                    <span class="field-help">
+                        Maximum 2200 characters.
+                    </span>
+
+                    <span asp-validation-for="Input.Caption"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">
+                        Upload Media
+                    </label>
+
+                    <div class="upload-box">
+                        <i class="fas fa-cloud-arrow-up"></i>
+
+                        <strong id="uploadTitle">
+                            Choose one image
+                        </strong>
+
+                        <span id="uploadHelp">
+                            JPG, PNG or WEBP. Maximum 8 MB.
+                        </span>
+
+                        <input asp-for="Input.UploadedMedia"
+                               id="mediaInput"
+                               type="file"
+                               accept=".jpg,.jpeg,.png,.webp" />
+                    </div>
+
+                    <span asp-validation-for="Input.UploadedMedia"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="field-group thumbnail-section"
+                     id="thumbnailSection">
+
+                    <label asp-for="Input.ReelThumbnail"
+                           class="field-label">
+                        Reel Thumbnail
+                    </label>
+
+                    <div class="upload-box">
+                        <i class="fas fa-photo-film"></i>
+
+                        <strong>
+                            Choose a cover image
+                        </strong>
+
+                        <span>
+                            Optional. JPG, PNG or WEBP.
+                        </span>
+
+                        <input asp-for="Input.ReelThumbnail"
+                               id="thumbnailInput"
+                               type="file"
+                               accept=".jpg,.jpeg,.png,.webp" />
+                    </div>
+
+                    <span asp-validation-for="Input.ReelThumbnail"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="active-box">
+                    <div>
+                        <strong>Publish immediately</strong>
+                        <small>
+                            Turn this off to save the post as inactive.
+                        </small>
+                    </div>
+
+                    <label class="switch">
+                        <input asp-for="Input.IsActive" />
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit"
+                            class="publish-btn">
+                        <i class="fas fa-paper-plane"></i>
+                        Publish Post
+                    </button>
+
+                    <a asp-page="/StoreOwner/Explore/Index"
+                       class="cancel-btn">
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
+        </div>
+
+        <aside class="preview-card">
+            <h3 class="preview-title">
+                Live Preview
+            </h3>
+
+            <div class="preview-phone">
+
+                <div class="preview-store">
+                    <div class="preview-avatar">
+                        @{
+                            var storeName =
+                            ViewData["StoreName"]?.ToString() ?? "S";
+
+                            var firstLetter =
+                            string.IsNullOrWhiteSpace(storeName)
+                            ? "S"
+                            : storeName.Substring(0, 1).ToUpper();
+                        }
+
+                        @firstLetter
+                    </div>
+
+                    <div class="preview-store-name">
+                        @ViewData["StoreName"]
+                    </div>
+                </div>
+
+                <div class="media-preview"
+                     id="mediaPreview">
+
+                    <div class="preview-placeholder">
+                        <i class="fas fa-photo-film"></i>
+                        Select media to preview
+                    </div>
+                </div>
+
+                <div class="preview-details">
+                    <p class="preview-caption empty"
+                       id="captionPreview">
+                        Your caption will appear here.
+                    </p>
+
+                    <div class="preview-file-count"
+                         id="fileCount">
+                        No media selected
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const typeInputs =
+            document.querySelectorAll('input[name="Input.PostType"]');
+
+        const mediaInput =
+            document.getElementById("mediaInput");
+
+        const thumbnailSection =
+            document.getElementById("thumbnailSection");
+
+        const uploadTitle =
+            document.getElementById("uploadTitle");
+
+        const uploadHelp =
+            document.getElementById("uploadHelp");
+
+        const mediaPreview =
+            document.getElementById("mediaPreview");
+
+        const captionInput =
+            document.getElementById("captionInput");
+
+        const captionPreview =
+            document.getElementById("captionPreview");
+
+        const fileCount =
+            document.getElementById("fileCount");
+
+        function getSelectedType() {
+            const selected =
+                document.querySelector(
+                    'input[name="Input.PostType"]:checked'
+                );
+
+            return selected ? selected.value : "Image";
+        }
+
+        function configureUpload() {
+            const type = getSelectedType();
+
+            mediaInput.value = "";
+            resetPreview();
+
+            if (type === "Image") {
+                mediaInput.accept =
+                    ".jpg,.jpeg,.png,.webp";
+
+                mediaInput.multiple = false;
+
+                uploadTitle.textContent =
+                    "Choose one image";
+
+                uploadHelp.textContent =
+                    "JPG, PNG or WEBP. Maximum 8 MB.";
+
+                thumbnailSection.classList.remove("visible");
+            }
+
+            if (type === "Carousel") {
+                mediaInput.accept =
+                    ".jpg,.jpeg,.png,.webp";
+
+                mediaInput.multiple = true;
+
+                uploadTitle.textContent =
+                    "Choose 2 to 10 images";
+
+                uploadHelp.textContent =
+                    "JPG, PNG or WEBP. Maximum 8 MB per image.";
+
+                thumbnailSection.classList.remove("visible");
+            }
+
+            if (type === "Reel") {
+                mediaInput.accept =
+                    ".mp4,.webm";
+
+                mediaInput.multiple = false;
+
+                uploadTitle.textContent =
+                    "Choose one reel video";
+
+                uploadHelp.textContent =
+                    "MP4 or WEBM. Maximum 25 MB.";
+
+                thumbnailSection.classList.add("visible");
+            }
+        }
+
+        function resetPreview() {
+            mediaPreview.innerHTML = `
+                <div class="preview-placeholder">
+                    <i class="fas fa-photo-film"></i>
+                    Select media to preview
+                </div>
+            `;
+
+            fileCount.textContent = "No media selected";
+        }
+
+        function showPreview() {
+            const files = Array.from(mediaInput.files || []);
+
+            if (!files.length) {
+                resetPreview();
+                return;
+            }
+
+            const type = getSelectedType();
+            const firstFile = files[0];
+            const objectUrl = URL.createObjectURL(firstFile);
+
+            mediaPreview.innerHTML = "";
+
+            if (type === "Reel") {
+                const video = document.createElement("video");
+
+                video.src = objectUrl;
+                video.controls = true;
+                video.muted = true;
+                video.playsInline = true;
+
+                mediaPreview.appendChild(video);
+            } else {
+                const image = document.createElement("img");
+
+                image.src = objectUrl;
+                image.alt = "Explore post preview";
+
+                mediaPreview.appendChild(image);
+            }
+
+            fileCount.textContent =
+                files.length === 1
+                    ? `1 file selected: ${firstFile.name}`
+                    : `${files.length} files selected`;
+        }
+
+        function updateCaptionPreview() {
+            const caption = captionInput.value.trim();
+
+            if (!caption) {
+                captionPreview.textContent =
+                    "Your caption will appear here.";
+
+                captionPreview.classList.add("empty");
+                return;
+            }
+
+            captionPreview.textContent = caption;
+            captionPreview.classList.remove("empty");
+        }
+
+        typeInputs.forEach(function (input) {
+            input.addEventListener(
+                "change",
+                configureUpload
+            );
+        });
+
+        mediaInput.addEventListener(
+            "change",
+            showPreview
+        );
+
+        captionInput.addEventListener(
+            "input",
+            updateCaptionPreview
+        );
+
+        configureUpload();
+        updateCaptionPreview();
+    });
+</script>
