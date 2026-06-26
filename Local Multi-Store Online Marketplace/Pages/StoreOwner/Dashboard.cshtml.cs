@@ -18,6 +18,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         private readonly ApplicationDbContext _context;
         private readonly ICurrentStoreService _currentStoreService;
         private readonly UserManager<User> _userManager;
+        
 
         public DashboardModel(
             ApplicationDbContext context,
@@ -35,7 +36,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public List<TopProduct> TopProducts { get; set; } = new();
         public List<LowStockProduct> LowStockProducts { get; set; } = new();
         public List<SalesDataPoint> WeeklySales { get; set; } = new();
-
+        
         public async Task<IActionResult> OnGetAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -78,6 +79,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         {
             var today = DateTime.UtcNow.Date;
             var weekAgo = today.AddDays(-7);
+            var store = await _context.Stores
+    .FirstAsync(s => s.StoreID == storeId);
+
+            Stats.OutstandingBalance = store.OutstandingBalance;
+            Stats.SubscriptionStatus = store.SubscriptionStatus;
 
             var orderItemsQuery = _context.OrderItems
                 .Include(oi => oi.Order)
@@ -335,6 +341,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public decimal TotalProfit { get; set; }
         public decimal AverageMarginPercent { get; set; }
         public int LowMarginProductsCount { get; set; }
+        public decimal OutstandingBalance { get; set; }
+
+        public string SubscriptionStatus { get; set; } = "";
     }
 
     public class RecentOrder

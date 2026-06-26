@@ -1,0 +1,210 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.AccountStatementModel
+@{
+    ViewData["Title"] = "Account Statement";
+    Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .summary-card .label {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .summary-card .value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .statement-table {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .positive { color: #28a745; }
+        .negative { color: #dc3545; }
+        .badge-order { background: #e9ecef; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+        .badge-subscription { background: #cce5ff; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+    </style>
+}
+
+<h2>Account Statement</h2>
+<p>@Model.Store?.StoreName</p>
+<div class="statement-table" style="margin-bottom:25px;">
+
+    <h4>Subscription</h4>
+
+    <div class="row">
+
+        <div class="col-md-4">
+
+            <strong>Status</strong><br />
+
+            @if (Model.Store.SubscriptionStatus == "Active")
+            {
+                <span style="color:green;font-weight:bold;">
+                    Active
+                </span>
+            }
+            else
+            {
+                <span style="color:red;font-weight:bold;">
+                    @Model.Store.SubscriptionStatus
+                </span>
+            }
+
+        </div>
+
+        <div class="col-md-4">
+
+            <strong>Expires On</strong><br />
+
+            @(Model.Store.SubscriptionExpiryDate?.ToString("dd MMM yyyy"))
+
+        </div>
+
+        <div class="col-md-4">
+
+            <strong>Renew</strong><br />
+
+            <form method="post" asp-page-handler="Renew">
+
+                <button class="btn btn-success">
+
+                    Renew Subscription ($20)
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+<div class="summary-grid">
+    <div class="summary-card">
+        <div class="label">Gross Revenue</div>
+        <div class="value">$@Model.Summary.TotalGrossRevenue.ToString("N2")</div>
+    </div>
+    <div class="summary-card">
+        <div class="label">Commission (5%)</div>
+        <div class="value negative">-$@Model.Summary.TotalCommission.ToString("N2")</div>
+    </div>
+    <div class="summary-card">
+        <div class="label">Subscription Fees</div>
+        <div class="value negative">-$@Model.Summary.TotalSubscriptionFees.ToString("N2")</div>
+    </div>
+    <div class="summary-card">
+        <div class="label">Net Revenue</div>
+        <div class="value @(Model.Summary.NetRevenue >= 0 ? "positive" : "negative")">
+            $@Model.Summary.NetRevenue.ToString("N2")
+        </div>
+    </div>
+    <div class="summary-card">
+        <div class="label">Outstanding Balance</div>
+        <div class="value @(Model.Summary.OutstandingBalance >= 0 ? "positive" : "negative")">
+            $@Model.Summary.OutstandingBalance.ToString("N2")
+        </div>
+    </div>
+</div>
+<div class="statement-table" style="margin-bottom:25px;">
+    <h4>Subscription</h4>
+
+    <p>
+        <strong>Status:</strong>
+
+        @if (Model.Store.SubscriptionExpiryDate >= DateTime.Now)
+        {
+            <span style="color:green;">Active</span>
+        }
+        else
+        {
+            <span style="color:red;">Expired</span>
+        }
+    </p>
+
+    <p>
+        <strong>Expires:</strong>
+        @(Model.Store.SubscriptionExpiryDate?.ToString("dd MMM yyyy") ?? "Not Available")
+    </p>
+
+    <form method="post" asp-page-handler="Renew">
+        <button class="btn btn-success">
+            Renew Subscription ($20)
+        </button>
+    </form>
+</div>
+<div class="statement-table">
+    <h4>Transaction History</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th style="text-align:right;">Gross</th>
+                <th style="text-align:right;">Commission</th>
+                <th style="text-align:right;">Subscription</th>
+                <th style="text-align:right;">Net Effect</th>
+                <th>Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Lines.Any())
+            {
+                <tr><td colspan="7" style="text-align:center; padding:30px;">No transactions yet.</td></tr>
+            }
+            else
+            {
+                foreach (var line in Model.Lines)
+                {
+                    <tr>
+                        <td>@line.Date.ToString("dd MMM yyyy")</td>
+                        <td>@line.Description</td>
+                        <td style="text-align:right;">$@line.GrossRevenue.ToString("N2")</td>
+                        <td style="text-align:right; color:#dc3545;">$@line.Commission.ToString("N2")</td>
+                        <td style="text-align:right; color:#dc3545;">$@line.SubscriptionFee.ToString("N2")</td>
+                        <td style="text-align:right; @(line.NetEffect >= 0 ? "color:#28a745;" : "color:#dc3545;")">
+                            $@line.NetEffect.ToString("N2")
+                        </td>
+                        <td>
+                            @if (line.Type == LineType.Order)
+                            {
+                                <span class="badge-order">Order</span>
+                            }
+                            else
+                            {
+                                <span class="badge-subscription">Subscription</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

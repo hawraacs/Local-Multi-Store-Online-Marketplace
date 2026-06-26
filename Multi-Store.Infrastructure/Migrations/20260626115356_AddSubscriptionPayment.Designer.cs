@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Multi_Store.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Multi_Store.Infrastructure.Data;
 namespace Multi_Store.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260626115356_AddSubscriptionPayment")]
+    partial class AddSubscriptionPayment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -717,158 +720,6 @@ namespace Multi_Store.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("DeliveryPersons");
-                });
-
-            modelBuilder.Entity("Multi_Store.Core.Entities.ExploreComment", b =>
-                {
-                    b.Property<int>("ExploreCommentID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ExploreCommentID"));
-
-                    b.Property<string>("CommentText")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CustomerID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ExplorePostID")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ExploreCommentID");
-
-                    b.HasIndex("CustomerID");
-
-                    b.HasIndex("ExplorePostID", "CreatedAt");
-
-                    b.ToTable("ExploreComments");
-                });
-
-            modelBuilder.Entity("Multi_Store.Core.Entities.ExploreLike", b =>
-                {
-                    b.Property<int>("ExploreLikeID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ExploreLikeID"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CustomerID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ExplorePostID")
-                        .HasColumnType("int");
-
-                    b.HasKey("ExploreLikeID");
-
-                    b.HasIndex("CustomerID");
-
-                    b.HasIndex("ExplorePostID", "CustomerID")
-                        .IsUnique();
-
-                    b.ToTable("ExploreLikes");
-                });
-
-            modelBuilder.Entity("Multi_Store.Core.Entities.ExploreMedia", b =>
-                {
-                    b.Property<int>("ExploreMediaID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ExploreMediaID"));
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DurationSeconds")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ExplorePostID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("MediaType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("MediaUrl")
-                        .IsRequired()
-                        .HasMaxLength(2048)
-                        .HasColumnType("nvarchar(2048)");
-
-                    b.Property<string>("ThumbnailUrl")
-                        .HasMaxLength(2048)
-                        .HasColumnType("nvarchar(2048)");
-
-                    b.HasKey("ExploreMediaID");
-
-                    b.HasIndex("ExplorePostID", "DisplayOrder");
-
-                    b.ToTable("ExploreMedia");
-                });
-
-            modelBuilder.Entity("Multi_Store.Core.Entities.ExplorePost", b =>
-                {
-                    b.Property<int>("ExplorePostID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ExplorePostID"));
-
-                    b.Property<string>("Caption")
-                        .IsRequired()
-                        .HasMaxLength(2200)
-                        .HasColumnType("nvarchar(2200)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsFeatured")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("PostType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int?>("ProductID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StoreID")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("ViewCount")
-                        .HasColumnType("int");
-
-                    b.HasKey("ExplorePostID");
-
-                    b.HasIndex("ProductID");
-
-                    b.HasIndex("IsActive", "CreatedAt");
-
-                    b.HasIndex("StoreID", "CreatedAt");
-
-                    b.ToTable("ExplorePosts");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Notification", b =>
@@ -2131,73 +1982,6 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Multi_Store.Core.Entities.ExploreComment", b =>
-                {
-                    b.HasOne("Multi_Store.Core.Entities.Customer", "Customer")
-                        .WithMany("ExploreComments")
-                        .HasForeignKey("CustomerID")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Multi_Store.Core.Entities.ExplorePost", "ExplorePost")
-                        .WithMany("Comments")
-                        .HasForeignKey("ExplorePostID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("ExplorePost");
-                });
-
-            modelBuilder.Entity("Multi_Store.Core.Entities.ExploreLike", b =>
-                {
-                    b.HasOne("Multi_Store.Core.Entities.Customer", "Customer")
-                        .WithMany("ExploreLikes")
-                        .HasForeignKey("CustomerID")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Multi_Store.Core.Entities.ExplorePost", "ExplorePost")
-                        .WithMany("Likes")
-                        .HasForeignKey("ExplorePostID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("ExplorePost");
-                });
-
-            modelBuilder.Entity("Multi_Store.Core.Entities.ExploreMedia", b =>
-                {
-                    b.HasOne("Multi_Store.Core.Entities.ExplorePost", "ExplorePost")
-                        .WithMany("Media")
-                        .HasForeignKey("ExplorePostID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ExplorePost");
-                });
-
-            modelBuilder.Entity("Multi_Store.Core.Entities.ExplorePost", b =>
-                {
-                    b.HasOne("Multi_Store.Core.Entities.Product", "Product")
-                        .WithMany("ExplorePosts")
-                        .HasForeignKey("ProductID")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Multi_Store.Core.Entities.Store", "Store")
-                        .WithMany("ExplorePosts")
-                        .HasForeignKey("StoreID")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Store");
-                });
-
             modelBuilder.Entity("Multi_Store.Core.Entities.Notification", b =>
                 {
                     b.HasOne("Multi_Store.Core.Entities.User", "User")
@@ -2520,10 +2304,6 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.Navigation("Complaints");
 
-                    b.Navigation("ExploreComments");
-
-                    b.Navigation("ExploreLikes");
-
                     b.Navigation("FollowedStores");
 
                     b.Navigation("Orders");
@@ -2538,15 +2318,6 @@ namespace Multi_Store.Infrastructure.Migrations
             modelBuilder.Entity("Multi_Store.Core.Entities.DeliveryPerson", b =>
                 {
                     b.Navigation("Assignments");
-                });
-
-            modelBuilder.Entity("Multi_Store.Core.Entities.ExplorePost", b =>
-                {
-                    b.Navigation("Comments");
-
-                    b.Navigation("Likes");
-
-                    b.Navigation("Media");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Order", b =>
@@ -2571,8 +2342,6 @@ namespace Multi_Store.Infrastructure.Migrations
                 {
                     b.Navigation("CartItems");
 
-                    b.Navigation("ExplorePosts");
-
                     b.Navigation("Images");
 
                     b.Navigation("OrderItems");
@@ -2596,8 +2365,6 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Navigation("Coupons");
 
                     b.Navigation("DeliveryAreas");
-
-                    b.Navigation("ExplorePosts");
 
                     b.Navigation("Followers");
 
