@@ -76,6 +76,11 @@ namespace Multi_Store.Core.Entities
         public DateTime? LastPaymentDate { get; set; }
 
         public decimal? LastPaymentAmount { get; set; }
+        public decimal OutstandingBalance { get; set; } = 0;
+
+        public DateTime? GracePeriodEndDate { get; set; }
+
+        public bool IsSuspended { get; set; } = false;
 
         // Navigation Properties
 

@@ -5,82 +5,540 @@
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        .analytics-card {
-            background: white;
-            border-radius: 24px;
-            padding: 24px;
-            margin-top: 20px;
-            margin-bottom: 24px;
+        :root {
+            --brand:        #0EA5E9;
+            --brand-dark:   #0284C7;
+            --brand-soft:   rgba(14, 165, 233, 0.10);
+            --navy:         #0B1437;
+            --bg:           #F1F5FB;
+            --surface:      #FFFFFF;
+            --surface-2:    #F8FAFD;
+            --border:       #E4EAF4;
+            --text:         #0F172A;
+            --muted:        #64748B;
+            --positive:     #10B981;
+            --positive-bg:  #D1FAE5;
+            --positive-txt: #065F46;
+            --warn-bg:      #FEF3C7;
+            --warn-txt:     #92400E;
+            --radius-sm:    10px;
+            --radius:       16px;
+            --radius-lg:    22px;
+            --shadow:       0 1px 3px rgba(15,23,42,0.06), 0 6px 20px -8px rgba(15,23,42,0.10);
+            --shadow-lg:    0 12px 32px -8px rgba(15,23,42,0.16);
+            --font:         'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
         }
 
-        .chart-container {
-            height: 300px;
-            margin-top: 20px;
+        *, *::before, *::after { box-sizing: border-box; }
+
+        .analytics {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 4px 48px;
+            color: var(--text);
+            font-family: var(--font);
         }
 
-        .btn-export {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 40px;
+        /* ── Header ── */
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+            padding: 28px 4px 24px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-left h1 {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin: 0 0 4px;
+        }
+
+        .header-left p {
+            font-size: 13.5px;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .header-badge {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--navy);
+            color: #fff;
+            border-radius: 999px;
+            padding: 8px 16px 8px 12px;
+            font-size: 12.5px;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(11,20,55,0.18);
+        }
+
+        .header-badge::before {
+            content: "";
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--brand);
+            flex-shrink: 0;
+        }
+
+        /* ── Stat Cards ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin: 28px 0;
+        }
+
+        .stat-card {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px 22px 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: transform 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width: 40px; height: 40px;
+            border-radius: var(--radius-sm);
+            background: var(--brand-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon svg {
+            width: 20px; height: 20px;
+            stroke: var(--brand);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .stat-title {
+            color: var(--muted);
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+
+        .stat-change {
+            font-size: 12.5px;
+            color: var(--muted);
+            font-weight: 500;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+        }
+
+        .stat-change .positive { color: var(--positive); font-weight: 700; }
+
+        /* ── Panel ── */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 26px 26px 22px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .panel-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 0;
+        }
+
+        .panel-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .panel-tag {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--brand);
+            background: var(--brand-soft);
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+
+        select#dateRange {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12.5px;
+            font-family: var(--font);
+            color: var(--text);
+            background: var(--surface-2);
             cursor: pointer;
+            outline: none;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            border-radius: 999px;
+            padding: 7px 16px;
+            font-size: 12.5px;
+            font-weight: 600;
+            font-family: var(--font);
+            cursor: pointer;
+            transition: opacity 0.18s ease;
+        }
+
+        .btn:hover { opacity: 0.85; }
+
+        .btn-primary { background: var(--brand); color: #fff; }
+        .btn-outline {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .chart-container { height: 300px; }
+
+        /* ── Table ── */
+        .table-responsive { overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead th {
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            background: var(--surface-2);
+            border-bottom: 1px solid var(--border);
+        }
+
+        thead th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+        thead th:last-child  { border-radius: 0 var(--radius-sm) 0 0; }
+
+        tbody td {
+            padding: 14px;
+            font-size: 13.5px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        tbody tr { transition: background 0.14s ease; }
+        tbody tr:hover td { background: var(--surface-2); }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .store-name { font-weight: 600; color: var(--navy); }
+        .amount { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+        .rank-num {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .stars { color: #F59E0B; font-size: 13px; }
+
+        /* ── Section label ── */
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin: 28px 0 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-label::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+       
+        @@keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        @@media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @@media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        }
+
+        @@media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .stat-card { padding: 16px 14px 14px; }
+            .stat-value { font-size: 24px; }
+            .stat-icon { width: 36px; height: 36px; }
+            .stat-icon svg { width: 16px; height: 16px; }
+            .dashboard-header h1 { font-size: 22px; }
+        }
+
+        @@media (max-width: 600px) {
+            .chart-container { height: 220px; }
+            .panel { padding: 16px 14px 18px; }
         }
     </style>
 }
 
-<div class="analytics-card">
-    <h3>Sales Overview</h3>
-    <div>
-        <label>Date Range:</label>
-        <select id="dateRange">
-            <option value="7">Last 7 days</option>
-            <option value="30" selected>Last 30 days</option>
-            <option value="90">Last 90 days</option>
-        </select>
-        <button id="refreshChart" class="btn-export">Refresh</button>
-        <button id="exportReportBtn" class="btn-export">Export Report</button>
-    </div>
-    <div class="chart-container">
-        <canvas id="salesChart"></canvas>
-    </div>
-</div>
+<div class="analytics">
 
-<div class="analytics-card">
-    <h3>Top Performing Stores</h3>
-    <div class="table-responsive">
-        <table id="topStoresTable">
-            <thead><tr><th>Store Name</th><th>Revenue</th><th>Orders</th><th>Rating</th></tr></thead>
-            <tbody>
-                @foreach (var store in Model.TopStores)
-                {
-                    <tr><td>@store.Name</td><td>$@store.Revenue</td><td>@store.OrderCount</td><td>⭐ @store.Rating</td></tr>
-                }
-            </tbody>
-        </table>
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-left">
+            <h1>Analytics &amp; Reports</h1>
+            <p>Sales trends, store performance, and platform insights</p>
+        </div>
+        <div>
+            <span class="header-badge">Last 30 Days</span>
+        </div>
     </div>
+
+    <!-- KPI Cards -->
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <div class="stat-title">Revenue (30 days)</div>
+            <div class="stat-value">$@Model.RevenueInRange.ToString("N0")</div>
+            <div class="stat-change">
+                <span class="positive">↑ @Model.RevenueGrowth.ToString("N1")%</span> vs previous period
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            </div>
+            <div class="stat-title">Orders (30 days)</div>
+            <div class="stat-value">@Model.OrdersInRange</div>
+            <div class="stat-change">
+                Avg <span class="positive">$@Model.AvgOrderValue.ToString("N0")</span> per order
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <div class="stat-title">Total Customers</div>
+            <div class="stat-value">@Model.NewCustomers</div>
+            <div class="stat-change">Total registered customers</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <div class="stat-title">Active Stores</div>
+            <div class="stat-value">@Model.ActiveStores</div>
+            <div class="stat-change">With at least one order this period</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <div class="stat-title">Active Subscriptions</div>
+            <div class="stat-value">@Model.ActiveSubscriptions</div>
+            <div class="stat-change">Currently subscribed stores</div>
+        </div>
+
+    </div>
+
+    <!-- Sales Chart -->
+    <div class="section-label">Sales Trend</div>
+    <div class="panel">
+        <div class="panel-header">
+            <h3>Sales Overview</h3>
+            <div class="panel-controls">
+                <select id="dateRange">
+                    <option value="7">Last 7 days</option>
+                    <option value="30" selected>Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                </select>
+                <button id="refreshChart" class="btn btn-primary">Refresh</button>
+                <button id="exportReportBtn" class="btn btn-outline">Export CSV</button>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Top Stores Table -->
+    <div class="section-label">Store Performance</div>
+    <div class="panel">
+        <div class="panel-header">
+            <h3>Top Performing Stores</h3>
+            <span class="panel-tag">Last 30 Days</span>
+        </div>
+        <div class="table-responsive">
+            <table id="topStoresTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Store Name</th>
+                        <th>Revenue</th>
+                        <th>Orders</th>
+                        <th>Avg Order</th>
+                        <th>Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.TopStores.Any())
+                    {
+                        <tr><td colspan="6" class="empty-state">No store data available.</td></tr>
+                    }
+                    else
+                    {
+                        int rank = 1;
+                        @foreach (var store in Model.TopStores)
+                        {
+                            <tr>
+                                <td class="rank-num">@(rank++)</td>
+                                <td><span class="store-name">@store.Name</span></td>
+                                <td><span class="amount">$@store.Revenue.ToString("N2")</span></td>
+                                <td>@store.OrderCount</td>
+                                <td><span class="amount">$@store.AvgOrderValue.ToString("N0")</span></td>
+                                <td><span class="stars">★</span> @store.Rating.ToString("N1")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
         let salesChart;
+
         async function loadChart(days) {
-        // Replace with API call to your backend
-        const response = await fetch(`/api/analytics/sales?days=${days}`);
-        const data = await response.json(); // expects { labels: [], values: [] }
-        if (salesChart) salesChart.destroy();
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        salesChart = new Chart(ctx, {
-        type: 'line',
-        data: { labels: data.labels, datasets: [{ label: 'Sales ($)', data: data.values, borderColor: '#FF6B35' }] }
-        });
+            const res = await fetch(`/AdminAnalytics?handler=Sales&days=${days}`);
+            if (!res.ok) return;
+            const data = await res.json();
+
+            if (salesChart) salesChart.destroy();
+
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Sales ($)',
+                        data: data.values,
+                        borderColor: '#0EA5E9',
+                        backgroundColor: 'rgba(14,165,233,0.10)',
+                        fill: true,
+                        tension: 0.40,
+                        borderWidth: 2.5,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#0EA5E9',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#E4EAF4' },
+                            ticks: { color: '#64748B', font: { size: 11, family: 'Inter' } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#64748B', font: { size: 11, family: 'Inter' } }
+                        }
+                    }
+                }
+            });
         }
+
         document.getElementById('refreshChart').addEventListener('click', () => {
-        const days = document.getElementById('dateRange').value;
-        loadChart(days);
+            loadChart(document.getElementById('dateRange').value);
         });
+
+        document.getElementById('exportReportBtn').addEventListener('click', () => {
+            const rows = [['#', 'Store', 'Revenue', 'Orders', 'Avg Order', 'Rating']];
+            document.querySelectorAll('#topStoresTable tbody tr').forEach(tr => {
+                rows.push([...tr.querySelectorAll('td')].map(td => td.innerText.trim()));
+            });
+            const csv = rows.map(r => r.join(',')).join('\n');
+            const a = document.createElement('a');
+            a.href = 'data:text/csv,' + encodeURIComponent(csv);
+            a.download = 'analytics-report.csv';
+            a.click();
+        });
+
         loadChart(30);
     </script>
 }

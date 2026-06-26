@@ -14,12 +14,15 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
     {
         private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
+        private readonly SignInManager<User> _signInManager;
 
         public RegisterModel(
-            UserManager<User> userManager,
-            ApplicationDbContext context)
+    UserManager<User> userManager,
+    SignInManager<User> signInManager,
+    ApplicationDbContext context)
         {
             _userManager = userManager;
+            _signInManager = signInManager;
             _context = context;
         }
 
@@ -106,7 +109,7 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 EmailConfirmed = true,
                 PhoneNumber = normalizedPhone,
                 FullName = FullName,
-                IsActive = false,
+                IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -132,9 +135,9 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
             _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Your account has been created and is waiting for admin approval.";
+            await _signInManager.SignInAsync(user, isPersistent: false);
 
-            return RedirectToPage("./Login");
+            return RedirectToPage("/Customer1");
         }
 
         private static bool IsValidEmailStrict(string email)

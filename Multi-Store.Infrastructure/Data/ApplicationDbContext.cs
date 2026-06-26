@@ -51,6 +51,7 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<ExploreMedia> ExploreMedia { get; set; }
         public DbSet<ExploreLike> ExploreLikes { get; set; }
         public DbSet<ExploreComment> ExploreComments { get; set; }
+        public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -355,6 +356,7 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<Store>().Property(s => s.CODMaxLimit).HasPrecision(18, 2);
             modelBuilder.Entity<Store>().Property(s => s.Latitude).HasPrecision(18, 6);
             modelBuilder.Entity<Store>().Property(s => s.Longitude).HasPrecision(18, 6);
+            modelBuilder.Entity<Store>().Property(s => s.OutstandingBalance).HasPrecision(18, 2);
 
             modelBuilder.Entity<Product>().Property(p => p.Price).HasPrecision(18, 2);
             modelBuilder.Entity<Product>().Property(p => p.CompareAtPrice).HasPrecision(18, 2);
