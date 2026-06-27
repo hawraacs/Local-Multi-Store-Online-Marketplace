@@ -83,6 +83,10 @@ builder.Services
         options.AppSecret =
             builder.Configuration["Authentication:Facebook:AppSecret"] ?? string.Empty;
     });
+builder.Services.Configure<TwilioSettings>(
+    builder.Configuration.GetSection("Twilio"));
+
+
 
 // ===============================
 // Repositories
@@ -148,7 +152,12 @@ builder.Services.AddScoped<OrderHistoryManager>();
 builder.Services.AddScoped<RecentlyViewedManager>();
 builder.Services.AddScoped<CustomerManager>();
 builder.Services.AddScoped<SessionManager>();
+
 builder.Services.AddScoped<IPromotionManager, PromotionManager>();
+
+builder.Services.AddScoped<OtpManager>();
+builder.Services.AddScoped<EmailotppManager>();
+
 
 var app = builder.Build();
 
