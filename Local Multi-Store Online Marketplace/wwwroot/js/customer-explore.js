@@ -38,8 +38,11 @@
     const modalLikeButton = document.getElementById("modalLikeButton");
     const focusCommentButton = document.getElementById("focusCommentButton");
     const modalShareButton = document.getElementById("modalShareButton");
+    const modalStats = document.getElementById("modalStats");
+    const modalPrimaryActions = document.getElementById("modalPrimaryActions");
 
     const linkedProductSection = document.getElementById("linkedProductSection");
+    const linkedProductLabel = document.getElementById("linkedProductLabel");
     const linkedProductLink = document.getElementById("linkedProductLink");
     const linkedProductImage = document.getElementById("linkedProductImage");
     const linkedProductCategory = document.getElementById("linkedProductCategory");
@@ -50,10 +53,19 @@
     const cartProductButton = document.getElementById("cartProductButton");
     const outOfStockMessage = document.getElementById("outOfStockMessage");
 
+    const commentsSection = document.getElementById("commentsSection");
     const commentForm = document.getElementById("commentForm");
     const commentTextInput = document.getElementById("commentTextInput");
     const modalComments = document.getElementById("modalComments");
     const emptyComments = document.getElementById("emptyComments");
+
+    const productReviewsSection = document.getElementById("productReviewsSection");
+    const productReviewRating = document.getElementById("productReviewRating");
+    const productReviewStars = document.getElementById("productReviewStars");
+    const productReviewCount = document.getElementById("productReviewCount");
+    const writeProductReviewLink = document.getElementById("writeProductReviewLink");
+    const modalProductReviews = document.getElementById("modalProductReviews");
+    const emptyProductReviews = document.getElementById("emptyProductReviews");
 
     const relatedItemsGrid = document.getElementById("relatedItemsGrid");
     const emptyRelatedItems = document.getElementById("emptyRelatedItems");
@@ -72,6 +84,35 @@
         document.querySelector(
             '#antiForgeryForm input[name="__RequestVerificationToken"]'
         )?.value || "";
+
+
+    const loadedGridItems = new Set();
+
+    function getGridItemKey(itemType, postId, productId) {
+        const type = String(itemType || "").toLowerCase();
+
+        if (type === "post" && postId) {
+            return `post-${postId}`;
+        }
+
+        if (productId) {
+            return `product-${productId}`;
+        }
+
+        return "";
+    }
+
+    grid?.querySelectorAll("[data-grid-item]").forEach(tile => {
+        const key = getGridItemKey(
+            tile.dataset.itemType,
+            tile.dataset.postId,
+            tile.dataset.productId
+        );
+
+        if (key) {
+            loadedGridItems.add(key);
+        }
+    });
 
     // =========================================================
     // HELPERS
@@ -261,13 +302,13 @@
         } else {
             mediaMarkup = `
                 <img src="${escapeHtml(
-                mediaUrl || "/images/no-image.png"
+                mediaUrl || "/images/product-placeholder.svg"
             )}"
                      alt="${escapeHtml(
                 item.productName || item.storeName || "Explore item"
             )}"
                      loading="lazy"
-                     onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                     onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
             `;
         }
 
@@ -354,12 +395,13 @@
     // INFINITE SCROLL
     // =========================================================
     async function loadMoreItems() {
-        if (!hasMore || isLoadingMore) {
+        if (!hasMore || isLoadingMore || !grid) {
             return;
         }
 
         isLoadingMore = true;
         loader?.classList.remove("hidden");
+        endOfFeed?.classList.add("hidden");
 
         try {
             const nextPage = currentPage + 1;
@@ -367,11 +409,12 @@
 
             const response = await fetch(
                 `${pageUrl}?handler=ExplorePage` +
-                `&page=${nextPage}` +
+                `&page=${encodeURIComponent(nextPage)}` +
                 `&category=${encodeURIComponent(category)}`,
                 {
                     method: "GET",
                     credentials: "same-origin",
+                    cache: "no-store",
                     headers: {
                         Accept: "application/json"
                     }
@@ -379,24 +422,47 @@
             );
 
             const data = await readJsonResponse(response);
-            const items = Array.isArray(data.items) ? data.items : [];
+            const returnedItems = Array.isArray(data.items)
+                ? data.items
+                : [];
 
-            items.forEach(item => {
-                grid?.appendChild(createGridItemElement(item));
+            const newItems = returnedItems.filter(item => {
+                const key = getGridItemKey(
+                    item.gridItemType,
+                    item.explorePostID,
+                    item.productID
+                );
+
+                if (!key || loadedGridItems.has(key)) {
+                    return false;
+                }
+
+                loadedGridItems.add(key);
+                return true;
             });
 
-            currentPage = nextPage;
+            if (newItems.length > 0) {
+                const fragment = document.createDocumentFragment();
+
+                newItems.forEach(item => {
+                    fragment.appendChild(
+                        createGridItemElement(item)
+                    );
+                });
+
+                grid.appendChild(fragment);
+                emptyState?.classList.add("hidden");
+            }
+
+            currentPage = Number(data.page || nextPage);
             hasMore = data.hasMore === true;
 
             app.dataset.currentPage = String(currentPage);
             app.dataset.hasMore = String(hasMore);
 
-            if (items.length > 0) {
-                emptyState?.classList.add("hidden");
-            }
-
             if (!hasMore) {
                 endOfFeed?.classList.remove("hidden");
+                infiniteObserver?.disconnect();
             }
         } catch (error) {
             showToast(
@@ -409,22 +475,50 @@
         }
     }
 
-    const infiniteObserver = new IntersectionObserver(
-        entries => {
-            if (entries.some(entry => entry.isIntersecting)) {
-                loadMoreItems();
+    const infiniteObserver = sentinel
+        ? new IntersectionObserver(
+            entries => {
+                if (entries.some(entry => entry.isIntersecting)) {
+                    loadMoreItems();
+                }
+            },
+            {
+                root: null,
+                rootMargin: "300px 0px",
+                threshold: 0
             }
-        },
-        {
-            root: null,
-            rootMargin: "650px 0px",
-            threshold: 0
-        }
-    );
+        )
+        : null;
 
-    if (sentinel) {
+    if (sentinel && infiniteObserver) {
         infiniteObserver.observe(sentinel);
     }
+
+    let scrollCheckPending = false;
+
+    window.addEventListener(
+        "scroll",
+        () => {
+            if (scrollCheckPending) {
+                return;
+            }
+
+            scrollCheckPending = true;
+
+            window.requestAnimationFrame(() => {
+                const bottomDistance =
+                    document.documentElement.scrollHeight -
+                    (window.scrollY + window.innerHeight);
+
+                if (bottomDistance <= 450) {
+                    loadMoreItems();
+                }
+
+                scrollCheckPending = false;
+            });
+        },
+        { passive: true }
+    );
 
     // =========================================================
     // REEL PREVIEWS
@@ -485,21 +579,14 @@
         }
 
         if (tile.dataset.productId) {
-            window.location.href =
-                `/CustomerProductDetails?id=${encodeURIComponent(
-                    tile.dataset.productId
-                )}`;
+            openExploreProduct(Number(tile.dataset.productId));
         }
     });
 
     // =========================================================
     // OPEN / CLOSE MODAL
     // =========================================================
-    async function openExplorePost(postId) {
-        if (!Number.isFinite(postId) || postId <= 0) {
-            return;
-        }
-
+    function beginModalOpen() {
         savedScrollPosition = window.scrollY;
 
         modal?.classList.add("open");
@@ -512,6 +599,23 @@
 
         currentPost = null;
         currentMediaIndex = 0;
+    }
+
+    function finishModalOpen(content) {
+        currentPost = content;
+        renderExploreContent(content);
+
+        modalLoading?.classList.add("hidden");
+        modalMediaStage?.classList.remove("hidden");
+        modalInformation?.classList.remove("hidden");
+    }
+
+    async function openExplorePost(postId) {
+        if (!Number.isFinite(postId) || postId <= 0) {
+            return;
+        }
+
+        beginModalOpen();
 
         try {
             const response = await fetch(
@@ -519,6 +623,7 @@
                 {
                     method: "GET",
                     credentials: "same-origin",
+                    cache: "no-store",
                     headers: {
                         Accept: "application/json"
                     }
@@ -526,18 +631,44 @@
             );
 
             const data = await readJsonResponse(response);
-            currentPost = data.post;
-
-            renderExplorePost(currentPost);
-
-            modalLoading?.classList.add("hidden");
-            modalMediaStage?.classList.remove("hidden");
-            modalInformation?.classList.remove("hidden");
+            finishModalOpen(data.post);
         } catch (error) {
             closeExploreModal();
 
             showToast(
-                error.message || "Could not open the post.",
+                error.message || "Could not open the Explore item.",
+                "error"
+            );
+        }
+    }
+
+    async function openExploreProduct(productId) {
+        if (!Number.isFinite(productId) || productId <= 0) {
+            return;
+        }
+
+        beginModalOpen();
+
+        try {
+            const response = await fetch(
+                `${pageUrl}?handler=ExploreProductDetails&id=${productId}`,
+                {
+                    method: "GET",
+                    credentials: "same-origin",
+                    cache: "no-store",
+                    headers: {
+                        Accept: "application/json"
+                    }
+                }
+            );
+
+            const data = await readJsonResponse(response);
+            finishModalOpen(data.product);
+        } catch (error) {
+            closeExploreModal();
+
+            showToast(
+                error.message || "Could not open the product.",
                 "error"
             );
         }
@@ -582,55 +713,87 @@
     });
 
     // =========================================================
-    // RENDER MODAL DETAILS
+    // RENDER SHARED MODAL DETAILS
     // =========================================================
-    function renderExplorePost(post) {
-        modalStoreName.textContent = post.storeName || "Store";
-        modalPostDate.textContent = formatDate(post.createdAt);
+    function renderExploreContent(content) {
+        const isPost =
+            String(content.contentType || "Post").toLowerCase() === "post";
+
+        const hasProduct =
+            content.productID !== null &&
+            content.productID !== undefined;
+
+        modalStoreName.textContent = content.storeName || "Store";
+        modalPostDate.textContent = isPost
+            ? formatDate(content.createdAt)
+            : `${content.categoryName || "Product"} · ${formatDate(content.createdAt)}`;
 
         modalStoreLink.href =
-            `/StoreCustomerProfile?id=${encodeURIComponent(post.storeID)}`;
+            `/StoreCustomerProfile?id=${encodeURIComponent(content.storeID)}`;
 
-        renderStoreAvatar(post);
+        renderStoreAvatar(content);
 
-        modalFollowButton.dataset.storeId = String(post.storeID);
-        setFollowButtonState(post.isFollowingStore === true);
+        modalFollowButton.dataset.storeId = String(content.storeID);
+        setFollowButtonState(content.isFollowingStore === true);
 
-        const caption = String(post.caption || "").trim();
+        const caption = String(
+            content.caption || content.productDescription || ""
+        ).trim();
 
-        modalCaption.textContent =
-            caption || "No caption was added to this post.";
+        modalCaption.textContent = caption || (
+            isPost
+                ? "No caption was added to this post."
+                : "No product description was added."
+        );
 
         modalCaption.classList.toggle("empty", !caption);
 
-        modalViewCount.textContent =
-            Number(post.viewCount || 0).toLocaleString();
+        modalStats?.classList.toggle("hidden", !isPost);
+        modalLikeButton?.classList.toggle("hidden", !isPost);
+        focusCommentButton?.classList.toggle("hidden", !isPost);
+        modalPrimaryActions?.classList.toggle("product-mode", !isPost);
+        commentsSection?.classList.toggle("hidden", !isPost);
 
-        modalLikeCount.textContent =
-            Number(post.likeCount || 0).toLocaleString();
+        if (isPost) {
+            modalViewCount.textContent =
+                Number(content.viewCount || 0).toLocaleString();
 
-        modalCommentCount.textContent =
-            Number(post.commentCount || 0).toLocaleString();
+            modalLikeCount.textContent =
+                Number(content.likeCount || 0).toLocaleString();
 
-        setLikeButtonState(post.isLikedByCurrentCustomer === true);
+            modalCommentCount.textContent =
+                Number(content.commentCount || 0).toLocaleString();
 
-        renderMedia(post.media || []);
-        renderLinkedProduct(post);
-        renderComments(post.comments || []);
-        renderRelatedItems(post.relatedItems || []);
+            setLikeButtonState(
+                content.isLikedByCurrentCustomer === true
+            );
+
+            renderComments(content.comments || []);
+        } else {
+            modalComments.innerHTML = "";
+            emptyComments.classList.add("hidden");
+        }
+
+        renderMedia(content.media || []);
+        renderLinkedProduct(content);
+        renderProductReviews(
+            hasProduct ? content.reviews || [] : [],
+            content
+        );
+        renderRelatedItems(content.relatedItems || []);
     }
 
-    function renderStoreAvatar(post) {
+    function renderStoreAvatar(content) {
         modalStoreAvatar.textContent = "";
         modalStoreAvatar.style.backgroundImage = "";
 
-        if (post.storeLogoUrl) {
+        if (content.storeLogoUrl) {
             modalStoreAvatar.style.backgroundImage =
-                `url("${String(post.storeLogoUrl)
+                `url("${String(content.storeLogoUrl)
                     .replaceAll('"', '\\"')}")`;
         } else {
             modalStoreAvatar.textContent =
-                getInitial(post.storeName);
+                getInitial(content.storeName);
         }
     }
 
@@ -648,7 +811,7 @@
         modalLikeButton.classList.toggle("liked", liked);
 
         const icon = modalLikeButton.querySelector("i");
-        const text = modalLikeButton.querySelector("span");
+        const textElement = modalLikeButton.querySelector("span");
 
         if (icon) {
             icon.className = liked
@@ -656,13 +819,113 @@
                 : "fa-regular fa-heart";
         }
 
-        if (text) {
-            text.textContent = liked ? "Liked" : "Like";
+        if (textElement) {
+            textElement.textContent = liked ? "Liked" : "Like";
         }
 
         if (currentPost) {
             currentPost.isLikedByCurrentCustomer = liked;
         }
+    }
+
+    function setWishlistButtonState(saved) {
+        wishlistProductButton.classList.toggle("saved", saved);
+        wishlistProductButton.disabled = false;
+
+        wishlistProductButton.innerHTML = saved
+            ? '<i class="fa-solid fa-heart"></i> Saved'
+            : '<i class="fa-regular fa-heart"></i> Save';
+
+        if (currentPost) {
+            currentPost.isInWishlist = saved;
+        }
+    }
+
+    function createStarMarkup(rating) {
+        const safeRating = Math.max(0, Math.min(5, Number(rating) || 0));
+        let markup = "";
+
+        for (let index = 1; index <= 5; index += 1) {
+            markup += index <= Math.round(safeRating)
+                ? '<i class="fa-solid fa-star"></i>'
+                : '<i class="fa-regular fa-star"></i>';
+        }
+
+        return markup;
+    }
+
+    function renderProductReviews(reviews, content) {
+        const hasProduct =
+            content.productID !== null &&
+            content.productID !== undefined;
+
+        productReviewsSection?.classList.toggle("hidden", !hasProduct);
+
+        if (!hasProduct) {
+            return;
+        }
+
+        const rating = Number(content.productRating || 0);
+        const totalRatings = Number(
+            content.productTotalRatings || reviews.length || 0
+        );
+
+        productReviewRating.textContent = rating.toFixed(1);
+        productReviewStars.innerHTML = createStarMarkup(rating);
+        productReviewCount.textContent =
+            `${totalRatings.toLocaleString()} ${totalRatings === 1 ? "review" : "reviews"}`;
+
+        writeProductReviewLink.href =
+            `/CreateProductReview/${encodeURIComponent(content.productID)}`;
+
+        modalProductReviews.innerHTML = "";
+
+        if (!Array.isArray(reviews) || reviews.length === 0) {
+            emptyProductReviews.classList.remove("hidden");
+            return;
+        }
+
+        emptyProductReviews.classList.add("hidden");
+
+        reviews.forEach(review => {
+            modalProductReviews.appendChild(
+                createProductReviewElement(review)
+            );
+        });
+    }
+
+    function createProductReviewElement(review) {
+        const item = document.createElement("article");
+        item.className = "product-review-item";
+
+        item.innerHTML = `
+            <span class="comment-avatar">
+                ${escapeHtml(getInitial(review.customerName, "C"))}
+            </span>
+
+            <div class="product-review-content">
+                <div class="product-review-name-row">
+                    <strong>${escapeHtml(review.customerName || "Customer")}</strong>
+                    ${review.isVerifiedPurchase
+                ? '<span class="verified-review">Verified purchase</span>'
+                : ""
+            }
+                </div>
+
+                <div class="review-stars">
+                    ${createStarMarkup(review.rating)}
+                </div>
+
+                ${review.comment
+                ? `<p>${escapeHtml(review.comment)}</p>`
+                : ""
+            }
+
+                <small>${escapeHtml(formatDate(review.createdAt))}</small>
+            </div>
+        `;
+
+        return item;
     }
 
     // =========================================================
@@ -675,7 +938,7 @@
             currentPost.media = [
                 {
                     mediaType: "Image",
-                    mediaUrl: "/images/no-image.png"
+                    mediaUrl: "/images/product-placeholder.svg"
                 }
             ];
         }
@@ -721,10 +984,10 @@
         } else {
             modalMediaContent.innerHTML = `
                 <img src="${escapeHtml(
-                item.mediaUrl || "/images/no-image.png"
+                item.mediaUrl || "/images/product-placeholder.svg"
             )}"
                      alt="Explore post media"
-                     onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                     onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
             `;
         }
 
@@ -773,12 +1036,12 @@
     );
 
     // =========================================================
-    // LINKED PRODUCT
+    // LINKED / NORMAL PRODUCT
     // =========================================================
-    function renderLinkedProduct(post) {
+    function renderLinkedProduct(content) {
         const hasProduct =
-            post.productID !== null &&
-            post.productID !== undefined;
+            content.productID !== null &&
+            content.productID !== undefined;
 
         linkedProductSection.classList.toggle(
             "hidden",
@@ -789,33 +1052,41 @@
             return;
         }
 
+        const isProductOnly =
+            String(content.contentType || "").toLowerCase() === "product";
+
+        linkedProductLabel.textContent =
+            isProductOnly ? "Product details" : "Linked product";
+
         linkedProductLink.href =
             `/CustomerProductDetails?id=${encodeURIComponent(
-                post.productID
+                content.productID
             )}`;
 
         linkedProductImage.src =
-            post.productImageUrl || "/images/no-image.png";
+            content.productImageUrl || "/images/product-placeholder.svg";
 
         linkedProductCategory.textContent =
-            post.categoryName || "Product";
+            content.categoryName || "Product";
 
         linkedProductName.textContent =
-            post.productName || "Product";
+            content.productName || "Product";
 
         linkedProductDescription.textContent =
-            post.productDescription || "";
+            content.productDescription || "";
 
         linkedProductPrice.textContent =
-            formatMoney(post.productPrice);
+            formatMoney(content.productPrice);
 
         wishlistProductButton.dataset.productId =
-            String(post.productID);
+            String(content.productID);
 
         cartProductButton.dataset.productId =
-            String(post.productID);
+            String(content.productID);
 
-        const isOutOfStock = post.isOutOfStock === true;
+        setWishlistButtonState(content.isInWishlist === true);
+
+        const isOutOfStock = content.isOutOfStock === true;
 
         cartProductButton.disabled = isOutOfStock;
         cartProductButton.innerHTML = isOutOfStock
@@ -893,7 +1164,10 @@
     commentForm?.addEventListener("submit", async event => {
         event.preventDefault();
 
-        if (!currentPost) {
+        if (
+            !currentPost ||
+            String(currentPost.contentType || "").toLowerCase() !== "post"
+        ) {
             return;
         }
 
@@ -942,7 +1216,11 @@
     modalComments?.addEventListener("click", async event => {
         const button = event.target.closest("[data-delete-comment]");
 
-        if (!button || !currentPost) {
+        if (
+            !button ||
+            !currentPost ||
+            String(currentPost.contentType || "").toLowerCase() !== "post"
+        ) {
             return;
         }
 
@@ -998,7 +1276,10 @@
     // LIKE
     // =========================================================
     modalLikeButton?.addEventListener("click", async () => {
-        if (!currentPost) {
+        if (
+            !currentPost ||
+            String(currentPost.contentType || "").toLowerCase() !== "post"
+        ) {
             return;
         }
 
@@ -1073,17 +1354,15 @@
 
             try {
                 const data = await postForm(
-                    "ExploreAddWishlist",
+                    "ToggleExploreWishlist",
                     { productId }
                 );
 
-                wishlistProductButton.innerHTML =
-                    '<i class="fa-solid fa-heart"></i> Saved';
-
+                setWishlistButtonState(data.saved === true);
                 showToast(data.message, "success");
             } catch (error) {
-                showToast(error.message, "error");
                 wishlistProductButton.disabled = false;
+                showToast(error.message, "error");
             }
         }
     );
@@ -1157,13 +1436,13 @@
 
             button.innerHTML = `
                 <img src="${escapeHtml(
-                previewUrl || "/images/no-image.png"
+                previewUrl || "/images/product-placeholder.svg"
             )}"
                      alt="${escapeHtml(
                 item.productName || item.storeName || "Related item"
             )}"
                      loading="lazy"
-                     onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                     onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
 
                 <span>
                     ${escapeHtml(
@@ -1200,10 +1479,7 @@
         }
 
         if (item.dataset.productId) {
-            window.location.href =
-                `/CustomerProductDetails?id=${encodeURIComponent(
-                    item.dataset.productId
-                )}`;
+            openExploreProduct(Number(item.dataset.productId));
         }
     });
 
@@ -1215,15 +1491,23 @@
             return;
         }
 
+        const isPost =
+            String(currentPost.contentType || "Post").toLowerCase() === "post";
+
+        const hash = isPost
+            ? `post-${currentPost.explorePostID}`
+            : `product-${currentPost.productID}`;
+
         const shareUrl =
-            `${window.location.origin}${pageUrl}` +
-            `#post-${currentPost.explorePostID}`;
+            `${window.location.origin}${pageUrl}#${hash}`;
 
         const shareData = {
-            title: `${currentPost.storeName} on realnest`,
-            text:
-                currentPost.caption ||
-                "See this Explore post on realnest.",
+            title: isPost
+                ? `${currentPost.storeName} on realnest`
+                : `${currentPost.productName} on realnest`,
+            text: currentPost.caption ||
+                currentPost.productDescription ||
+                "See this item on realnest.",
             url: shareUrl
         };
 
@@ -1234,11 +1518,11 @@
             }
 
             await navigator.clipboard.writeText(shareUrl);
-            showToast("Post link copied.", "success");
+            showToast("Item link copied.", "success");
         } catch (error) {
             if (error?.name !== "AbortError") {
                 showToast(
-                    "The post link could not be shared.",
+                    "The item link could not be shared.",
                     "error"
                 );
             }
@@ -1248,10 +1532,15 @@
     // =========================================================
     // OPTIONAL HASH SUPPORT
     // =========================================================
-    const hashMatch =
+    const postHashMatch =
         window.location.hash.match(/^#post-(\d+)$/);
 
-    if (hashMatch) {
-        openExplorePost(Number(hashMatch[1]));
+    const productHashMatch =
+        window.location.hash.match(/^#product-(\d+)$/);
+
+    if (postHashMatch) {
+        openExplorePost(Number(postHashMatch[1]));
+    } else if (productHashMatch) {
+        openExploreProduct(Number(productHashMatch[1]));
     }
 })();

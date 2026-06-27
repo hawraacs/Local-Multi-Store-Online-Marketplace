@@ -380,11 +380,7 @@
             border: 1px solid rgba(14, 165, 233, 0.15);
         }
 
-        .panel canvas {
-            max-height: 280px;
-        }
-
-        /* ── Grid for charts ── */
+        /* ── Grid for alerts ── */
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -606,6 +602,65 @@
             font-weight: 600;
         }
 
+        /* ── Alert list ── */
+        .alert-list .alert-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+            .alert-list .alert-item:last-child {
+                border-bottom: none;
+            }
+
+            .alert-list .alert-item .alert-store {
+                font-weight: 600;
+            }
+
+            .alert-list .alert-item .alert-status {
+                font-weight: 600;
+            }
+
+            .alert-list .alert-item .alert-date {
+                color: var(--muted);
+                font-size: 12px;
+            }
+
+        /* ── Operational stats grid ── */
+        .stats-grid.operational {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        @@media (max-width: 860px) {
+            .stats-grid.operational {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @@media (max-width: 500px) {
+            .stats-grid.operational {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+            .empty-state i {
+                font-size: 28px;
+                color: var(--border);
+                display: block;
+                margin-bottom: 10px;
+            }
+
         /* ── Responsive tweaks ── */
         @@media (max-width: 600px) {
             .dashboard {
@@ -639,22 +694,6 @@
                 padding: 6px 14px 6px 10px;
             }
         }
-
-        /* ── Empty state ── */
-        .empty-state {
-            text-align: center;
-            padding: 32px 16px;
-            color: var(--muted);
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-            .empty-state i {
-                font-size: 28px;
-                color: var(--border);
-                display: block;
-                margin-bottom: 10px;
-            }
     </style>
 }
 
@@ -672,9 +711,8 @@
         </div>
     </div>
 
-    <!-- KPI Cards -->
+    <!-- ── Platform KPI Cards ── -->
     <div class="stats-grid">
-
         <div class="stat-card">
             <div class="stat-top">
                 <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
@@ -701,10 +739,6 @@
             <div class="stat-body">
                 <div class="stat-title">Total Orders</div>
                 <div class="stat-value">@Model.TotalOrders</div>
-            </div>
-            <div class="stat-footer">
-                <span class="positive"><i class="fas fa-arrow-up"></i> @Model.RevenueGrowthPercentage.ToString("N1")%</span>
-                <span>vs previous month</span>
             </div>
         </div>
 
@@ -737,84 +771,143 @@
                 <span>growth</span>
             </div>
         </div>
-
     </div>
 
-    <!-- Charts -->
+    <!-- ── Operational KPI Cards ── -->
     <div class="section-label">
-        <span class="label-icon"><i class="fas fa-chart-line"></i></span>
-        Analytics
+        <span class="label-icon"><i class="fas fa-cog"></i></span>
+        Operational Status
+    </div>
+    <div class="stats-grid operational">
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon" style="color: var(--warning); background: var(--warning-bg);"><i class="fas fa-clock"></i></div>
+                <span class="stat-trend">Pending</span>
+            </div>
+            <div class="stat-body">
+                <div class="stat-title">Pending Store Approvals</div>
+                <div class="stat-value">@Model.PendingStoreApprovals</div>
+            </div>
+            <div class="stat-footer">
+                <span class="neutral">Awaiting verification</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon" style="color: var(--danger); background: var(--danger-bg);"><i class="fas fa-hourglass-half"></i></div>
+                <span class="stat-trend">Expiring</span>
+            </div>
+            <div class="stat-body">
+                <div class="stat-title">Expiring Subscriptions</div>
+                <div class="stat-value">@Model.StoresExpiringSoon</div>
+            </div>
+            <div class="stat-footer">
+                <span class="neutral">Within next 7 days</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon" style="color: var(--danger); background: var(--danger-bg);"><i class="fas fa-exclamation-triangle"></i></div>
+                <span class="stat-trend">Renewal</span>
+            </div>
+            <div class="stat-body">
+                <div class="stat-title">Waiting for Renewal</div>
+                <div class="stat-value">@Model.StoresWaitingForRenewal</div>
+            </div>
+            <div class="stat-footer">
+                <span class="neutral">Expired or suspended</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Quick Alerts ── -->
+    <div class="section-label">
+        <span class="label-icon"><i class="fas fa-bell"></i></span>
+        Quick Alerts
     </div>
     <div class="grid-2">
+        <!-- Suspended Stores -->
         <div class="panel">
             <div class="panel-header">
-                <h3><i class="fas fa-dollar-sign"></i> Platform Revenue</h3>
-                <span class="panel-tag">Last 12 Months</span>
+                <h3><i class="fas fa-ban" style="color: var(--danger);"></i> Suspended Stores</h3>
+                <span class="panel-tag">@Model.SuspendedStores.Count</span>
             </div>
-            <canvas id="revenueChart"></canvas>
+            @if (!Model.SuspendedStores.Any())
+            {
+                <div class="empty-state"><i class="fas fa-check-circle" style="color: var(--positive);"></i> No suspended stores</div>
+            }
+            else
+            {
+                <div class="alert-list">
+                    @foreach (var store in Model.SuspendedStores)
+                    {
+                        <div class="alert-item">
+                            @* === USE THIS (most reliable) === *@
+                            <a href="@Url.Page("AdminStores", new { tab = "suspended" })" class="alert-store" style="text-decoration:none; color:var(--text);">
+                                @store.StoreName
+                            </a>
+                            <span class="alert-date">@store.AlertDate.ToString("dd MMM yyyy")</span>
+                        </div>
+                    }
+                </div>
+            }
         </div>
 
+        <!-- Expired Stores -->
         <div class="panel">
             <div class="panel-header">
-                <h3><i class="fas fa-boxes"></i> Orders Per Month</h3>
-                <span class="panel-tag">Last 12 Months</span>
+                <h3><i class="fas fa-calendar-times" style="color: var(--danger);"></i> Expired Subscriptions</h3>
+                <span class="panel-tag">@Model.ExpiredStores.Count</span>
             </div>
-            <canvas id="ordersChart"></canvas>
+            @if (!Model.ExpiredStores.Any())
+            {
+                <div class="empty-state"><i class="fas fa-check-circle" style="color: var(--positive);"></i> No expired subscriptions</div>
+            }
+            else
+            {
+                <div class="alert-list">
+                    @foreach (var store in Model.ExpiredStores)
+                    {
+                        <div class="alert-item">
+                            <a href="@Url.Page("AdminStores", new { tab = "expired" })" class="alert-store" style="text-decoration:none; color:var(--text);">
+                                @store.StoreName
+                            </a>
+                            <span class="alert-date">Expired on @store.AlertDate.ToString("dd MMM yyyy")</span>
+                        </div>
+                    }
+                </div>
+            }
         </div>
     </div>
 
-    <!-- Top Stores -->
-    <div class="section-label">
-        <span class="label-icon"><i class="fas fa-trophy"></i></span>
-        Store Performance
-    </div>
-    <div class="table-panel">
+    <!-- Pending Store Requests (full width) -->
+    <div class="panel" style="margin-top: -8px;">
         <div class="panel-header">
-            <h3><i class="fas fa-crown"></i> Top Performing Stores</h3>
+            <h3><i class="fas fa-hourglass-start" style="color: var(--warning);"></i> Pending Store Requests</h3>
+            <span class="panel-tag">@Model.PendingStoreRequests.Count</span>
         </div>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width:50px;">#</th>
-                        <th>Store Name</th>
-                        <th style="text-align:right;">Total Revenue</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.TopStores.Any())
-                    {
-                        <tr>
-                            <td colspan="3" class="empty-state">
-                                <i class="fas fa-store-alt-slash"></i> No store data available.
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        int rank = 1;
-                        @foreach (var store in Model.TopStores)
-                        {
-                            var initials = string.Join("", store.StoreName.Split(' ').Where(w => w.Length > 0).Select(w => w[0])).ToUpper();
-                            if (initials.Length > 2) initials = initials.Substring(0, 2);
-                            <tr>
-                                <td><span class="rank-num">@(rank++)</span></td>
-                                <td>
-                                    <span class="store-name">
-                                        <span class="avatar">@initials</span>
-                                        @store.StoreName
-                                    </span>
-                                </td>
-                                <td style="text-align:right;"><span class="amount">$@store.Revenue.ToString("N2")</span></td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
+        @if (!Model.PendingStoreRequests.Any())
+        {
+            <div class="empty-state"><i class="fas fa-check-circle" style="color: var(--positive);"></i> No pending requests</div>
+        }
+        else
+        {
+            <div class="alert-list">
+                @foreach (var store in Model.PendingStoreRequests)
+                {
+                    <div class="alert-item">
+                        <a href="@Url.Page("AdminStores", new { tab = "pending" })" class="alert-store" style="text-decoration:none; color:var(--text);">
+                            @store.StoreName
+                        </a>
+                        <span class="alert-date">Requested @store.AlertDate.ToString("dd MMM yyyy")</span>
+                    </div>
+                }
+            </div>
+        }
     </div>
-
-    <!-- Recent Orders -->
+    <!-- ── Recent Orders ── -->
     <div class="section-label">
         <span class="label-icon"><i class="fas fa-clock"></i></span>
         Activity
@@ -868,7 +961,7 @@
         </div>
     </div>
 
-    <!-- Recent Stores -->
+    <!-- ── Recent Stores ── -->
     <div class="section-label">
         <span class="label-icon"><i class="fas fa-store-alt"></i></span>
         Stores
@@ -927,152 +1020,3 @@
     </div>
 
 </div>
-
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-    <script>
-        (function() {
-        'use strict';
-
-        // ── Revenue Chart ──
-        const revenueLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyRevenueLabels));
-        const revenueData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyRevenueData));
-
-        const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
-        const gradientRev = ctxRevenue.createLinearGradient(0, 0, 0, 280);
-        gradientRev.addColorStop(0, 'rgba(14, 165, 233, 0.25)');
-        gradientRev.addColorStop(0.5, 'rgba(14, 165, 233, 0.08)');
-        gradientRev.addColorStop(1, 'rgba(14, 165, 233, 0.01)');
-
-        new Chart(ctxRevenue, {
-        type: 'line',
-        data: {
-        labels: revenueLabels,
-        datasets: [{
-        label: 'Revenue',
-        data: revenueData,
-        borderColor: '#0EA5E9',
-        backgroundColor: gradientRev,
-        fill: true,
-        tension: 0.40,
-        borderWidth: 2.5,
-        pointRadius: 3.5,
-        pointBackgroundColor: '#0EA5E9',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointHoverRadius: 7,
-        pointHoverBackgroundColor: '#2563EB',
-        pointHoverBorderColor: '#fff',
-        pointHoverBorderWidth: 2.5,
-        }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { intersect: false, mode: 'index' },
-        plugins: {
-        legend: { display: false },
-        tooltip: {
-        backgroundColor: 'rgba(11,20,55,0.92)',
-        titleFont: { size: 12, weight: '600', family: 'Inter' },
-        bodyFont: { size: 13, weight: '700', family: 'Inter' },
-        padding: 12,
-        cornerRadius: 10,
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        callbacks: {
-        label: function(ctx) {
-        return '$' + ctx.parsed.y.toLocaleString();
-        }
-        }
-        }
-        },
-        scales: {
-        y: {
-        beginAtZero: true,
-        grid: { color: 'rgba(228,236,246,0.6)', drawBorder: false },
-        ticks: {
-        color: '#7A8AA8',
-        font: { size: 11, family: 'Inter', weight: '500' },
-        padding: 8,
-        callback: function(val) { return '$' + val.toLocaleString(); }
-        }
-        },
-        x: {
-        grid: { display: false },
-        ticks: {
-        color: '#7A8AA8',
-        font: { size: 11, family: 'Inter', weight: '500' },
-        padding: 6,
-        maxTicksLimit: 20,
-        }
-        }
-        }
-        }
-        });
-
-        // ── Orders Chart ──
-        const orderLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyOrderLabels));
-        const orderData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyOrderData));
-
-        new Chart(document.getElementById('ordersChart'), {
-        type: 'bar',
-        data: {
-        labels: orderLabels,
-        datasets: [{
-        label: 'Orders',
-        data: orderData,
-        backgroundColor: 'rgba(14,165,233,0.85)',
-        hoverBackgroundColor: '#0284C7',
-        borderRadius: 8,
-        maxBarThickness: 32,
-        }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-        legend: { display: false },
-        tooltip: {
-        backgroundColor: 'rgba(11,20,55,0.92)',
-        titleFont: { size: 12, weight: '600', family: 'Inter' },
-        bodyFont: { size: 13, weight: '700', family: 'Inter' },
-        padding: 12,
-        cornerRadius: 10,
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        callbacks: {
-        label: function(ctx) {
-        return ctx.parsed.y + ' orders';
-        }
-        }
-        }
-        },
-        scales: {
-        y: {
-        beginAtZero: true,
-        grid: { color: 'rgba(228,236,246,0.6)', drawBorder: false },
-        ticks: {
-        color: '#7A8AA8',
-        font: { size: 11, family: 'Inter', weight: '500' },
-        padding: 8,
-        stepSize: 1,
-        }
-        },
-        x: {
-        grid: { display: false },
-        ticks: {
-        color: '#7A8AA8',
-        font: { size: 11, family: 'Inter', weight: '500' },
-        padding: 6,
-        maxTicksLimit: 20,
-        }
-        }
-        }
-        }
-        });
-
-        })();
-    </script>
-}

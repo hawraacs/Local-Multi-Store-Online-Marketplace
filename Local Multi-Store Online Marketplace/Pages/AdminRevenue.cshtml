@@ -1,0 +1,679 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.AdminRevenueModel
+@{
+    ViewData["Title"] = "Revenue Report";
+}
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ── Same as dashboard styles ── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --brand: #0EA5E9;
+            --brand-dark: #0284C7;
+            --brand-light: #7DD3FC;
+            --brand-gradient: linear-gradient(135deg, #0EA5E9 0%, #2563EB 100%);
+            --brand-soft: rgba(14, 165, 233, 0.10);
+            --brand-soft-hover: rgba(14, 165, 233, 0.18);
+            --navy: #0B1437;
+            --navy-light: #1A2745;
+            --bg: #F0F4FA;
+            --surface: #FFFFFF;
+            --surface-2: #F8FAFE;
+            --surface-hover: #F1F6FD;
+            --border: #E4ECF6;
+            --text: #0B1A33;
+            --text-secondary: #4A5A7A;
+            --muted: #7A8AA8;
+            --positive: #10B981;
+            --positive-bg: #D1FAE5;
+            --positive-txt: #065F46;
+            --warning: #F59E0B;
+            --warning-bg: #FEF3C7;
+            --warning-txt: #92400E;
+            --danger: #EF4444;
+            --danger-bg: #FEE2E2;
+            --danger-txt: #991B1B;
+            --info: #3B82F6;
+            --info-bg: #DBEAFE;
+            --info-txt: #1E40AF;
+            --radius-sm: 10px;
+            --radius: 16px;
+            --radius-lg: 24px;
+            --shadow: 0 1px 3px rgba(11, 20, 55, 0.06), 0 6px 20px -8px rgba(11, 20, 55, 0.10);
+            --shadow-lg: 0 12px 40px -12px rgba(11, 20, 55, 0.18);
+            --shadow-hover: 0 16px 48px -12px rgba(11, 20, 55, 0.22);
+            --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --transition: 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: var(--font);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .dashboard {
+            max-width: 1360px;
+            margin: 0 auto;
+            padding: 0 20px 48px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 32px 0 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+
+        .header-left h1 {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            background: var(--brand-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+
+        .header-left p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--navy);
+            color: #fff;
+            border-radius: 999px;
+            padding: 8px 18px 8px 14px;
+            font-size: 12.5px;
+            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(11, 20, 55, 0.20);
+            white-space: nowrap;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin: 28px 0 32px;
+        }
+
+        @@media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @@media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 20px 18px;
+            box-shadow: var(--shadow);
+            transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+            overflow: hidden;
+            position: relative;
+        }
+
+            .stat-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: var(--brand-gradient);
+                opacity: 0;
+                transition: opacity var(--transition);
+            }
+
+            .stat-card:hover {
+                transform: translateY(-4px);
+                box-shadow: var(--shadow-hover);
+                border-color: var(--brand-light);
+            }
+
+                .stat-card:hover::before {
+                    opacity: 1;
+                }
+
+        .stat-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-sm);
+            background: var(--brand-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--brand);
+            transition: background var(--transition), transform var(--transition);
+        }
+
+        .stat-card:hover .stat-icon {
+            background: var(--brand-soft-hover);
+            transform: scale(1.05);
+        }
+
+        .stat-title {
+            color: var(--text-secondary);
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+            .stat-value .currency {
+                font-size: 18px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                margin-right: 2px;
+            }
+
+        .stat-footer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+            margin-top: auto;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            flex-wrap: wrap;
+        }
+
+        /* ── Filters ── */
+        .filter-bar {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 24px;
+            margin-bottom: 28px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1 0 150px;
+        }
+
+            .filter-group label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: var(--muted);
+            }
+
+            .filter-group input, .filter-group select {
+                padding: 8px 12px;
+                border: 1px solid var(--border);
+                border-radius: var(--radius-sm);
+                font-family: var(--font);
+                font-size: 13px;
+                background: var(--surface-2);
+                transition: border-color var(--transition);
+            }
+
+                .filter-group input:focus, .filter-group select:focus {
+                    outline: none;
+                    border-color: var(--brand);
+                    box-shadow: 0 0 0 3px var(--brand-soft);
+                }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--brand-gradient);
+            color: #fff;
+        }
+
+            .btn-primary:hover {
+                transform: scale(1.02);
+                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+            }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+            .btn-outline:hover {
+                background: var(--surface-2);
+                border-color: var(--brand);
+                color: var(--brand);
+            }
+
+        .btn-success {
+            background: var(--positive);
+            color: #fff;
+        }
+
+            .btn-success:hover {
+                background: #059669;
+                transform: scale(1.02);
+            }
+
+        /* ── Table panel ── */
+        .table-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            transition: box-shadow var(--transition), border-color var(--transition);
+        }
+
+            .table-panel:hover {
+                box-shadow: var(--shadow-lg);
+                border-color: var(--brand-light);
+            }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+            .panel-header h3 {
+                font-size: 16px;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+                .panel-header h3 i {
+                    color: var(--brand);
+                    font-size: 18px;
+                }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin: 0 -4px;
+            padding: 0 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+
+        thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            background: var(--surface-2);
+            border-bottom: 1.5px solid var(--border);
+        }
+
+            thead th:first-child {
+                padding-left: 20px;
+                border-radius: var(--radius-sm) 0 0 0;
+            }
+
+            thead th:last-child {
+                padding-right: 20px;
+                border-radius: 0 var(--radius-sm) 0 0;
+                text-align: right;
+            }
+
+        tbody td {
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            font-weight: 500;
+            vertical-align: middle;
+        }
+
+            tbody td:first-child {
+                padding-left: 20px;
+            }
+
+            tbody td:last-child {
+                padding-right: 20px;
+                text-align: right;
+            }
+
+        tbody tr:hover td {
+            background: var(--surface-hover);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .amount {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: var(--text);
+        }
+
+        .store-name {
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .text-muted {
+            color: var(--muted);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            padding: 16px 0 8px;
+        }
+
+            .pagination a, .pagination span {
+                padding: 6px 14px;
+                border-radius: var(--radius-sm);
+                border: 1px solid var(--border);
+                color: var(--text-secondary);
+                text-decoration: none;
+                font-size: 13px;
+                font-weight: 600;
+                transition: all var(--transition);
+            }
+
+                .pagination a:hover {
+                    background: var(--brand-soft);
+                    border-color: var(--brand);
+                    color: var(--brand);
+                }
+
+            .pagination .active {
+                background: var(--brand);
+                color: #fff;
+                border-color: var(--brand);
+            }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+            .empty-state i {
+                font-size: 28px;
+                color: var(--border);
+                display: block;
+                margin-bottom: 10px;
+            }
+
+        @@media (max-width: 600px) {
+            .dashboard {
+                padding: 0 12px 32px;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                flex: 1 1 auto;
+            }
+
+            .filter-actions {
+                justify-content: flex-start;
+            }
+
+            .table-panel {
+                padding: 16px 14px 18px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+        }
+    </style>
+}
+
+<div class="dashboard">
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-left">
+            <h1>Revenue Report</h1>
+            <p>Detailed breakdown of platform revenue per store</p>
+        </div>
+        <div class="header-badge">
+            <i class="fas fa-file-invoice-dollar"></i>
+            @DateTime.Now.ToString("MMM yyyy")
+        </div>
+    </div>
+
+    <!-- ─── Summary Cards ─── -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+            </div>
+            <div class="stat-body">
+                <div class="stat-title">Total Platform Revenue</div>
+                <div class="stat-value"><span class="currency">$</span>@Model.TotalPlatformRevenue.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon" style="color: var(--info); background: var(--info-bg);"><i class="fas fa-percent"></i></div>
+            </div>
+            <div class="stat-body">
+                <div class="stat-title">Total Commission</div>
+                <div class="stat-value"><span class="currency">$</span>@Model.TotalCommission.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon" style="color: var(--warning); background: var(--warning-bg);"><i class="fas fa-calendar-check"></i></div>
+            </div>
+            <div class="stat-body">
+                <div class="stat-title">Total Subscription Fees</div>
+                <div class="stat-value"><span class="currency">$</span>@Model.TotalSubscriptionRevenue.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon" style="color: var(--positive); background: var(--positive-bg);"><i class="fas fa-store"></i></div>
+            </div>
+            <div class="stat-body">
+                <div class="stat-title">Stores with Revenue</div>
+                <div class="stat-value">@Model.TotalStoresWithRevenue</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Filter Bar ─── -->
+    <form method="get" class="filter-bar">
+        <div class="filter-group">
+            <label for="StartDate">From</label>
+            <input type="date" id="StartDate" name="StartDate" value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="filter-group">
+            <label for="EndDate">To</label>
+            <input type="date" id="EndDate" name="EndDate" value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="filter-group">
+            <label for="SearchTerm">Store Name</label>
+            <input type="text" id="SearchTerm" name="SearchTerm" placeholder="Search..." value="@Model.SearchTerm" />
+        </div>
+        <div class="filter-group">
+            <label for="RevenueType">Revenue Type</label>
+            <select id="RevenueType" name="RevenueType">
+                <option value="All" selected="@(Model.RevenueType == "All")">All</option>
+                <option value="Commission" selected="@(Model.RevenueType == "Commission")">Commission only</option>
+                <option value="Subscription" selected="@(Model.RevenueType == "Subscription")">Subscription only</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Apply</button>
+            <a href="@Url.Page("AdminRevenue")" class="btn btn-outline"><i class="fas fa-undo"></i> Reset</a>
+            <a href="@Url.Page("AdminRevenue", "ExportCsv", new { startDate = Model.StartDate, endDate = Model.EndDate, searchTerm = Model.SearchTerm, revenueType = Model.RevenueType })" class="btn btn-success"><i class="fas fa-file-csv"></i> Export CSV</a>
+        </div>
+    </form>
+
+    <!-- ─── Table ─── -->
+    <div class="table-panel">
+        <div class="panel-header">
+            <h3><i class="fas fa-store-alt"></i> Store Revenue Breakdown</h3>
+            <span class="text-muted">@Model.TotalCount stores match filters</span>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Store Name</th>
+                        <th style="text-align:center;">Rate</th>
+                        <th style="text-align:right;">Total Sales</th>
+                        <th style="text-align:right;">Commission</th>
+                        <th style="text-align:right;">Subscription</th>
+                        <th style="text-align:right;">Total Revenue</th>
+                        <th style="text-align:center;">Orders</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.StoreRevenueList.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <i class="fas fa-store-slash"></i> No stores found with the current filters.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model.StoreRevenueList)
+                        {
+                            <tr>
+                                <td><span class="store-name">@item.StoreName</span></td>
+                                <td style="text-align:center; font-weight:600;">@item.CommissionRate%</td>
+                                <td style="text-align:right;"><span class="amount">$@item.TotalSales.ToString("N2")</span></td>
+                                <td style="text-align:right; color:var(--info); font-weight:700;">$@item.Commission.ToString("N2")</td>
+                                <td style="text-align:right; color:var(--warning); font-weight:700;">$@item.SubscriptionFees.ToString("N2")</td>
+                                <td style="text-align:right; font-weight:800; font-size:16px;">$@item.TotalRevenue.ToString("N2")</td>
+                                <td style="text-align:center;">@item.OrderCount</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <div class="pagination">
+                @if (Model.PageIndex > 1)
+                {
+                    <a href="@Url.Page("AdminRevenue", new { pageIndex = Model.PageIndex - 1, startDate = Model.StartDate, endDate = Model.EndDate, searchTerm = Model.SearchTerm, revenueType = Model.RevenueType })"><i class="fas fa-chevron-left"></i></a>
+                }
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    if (i == Model.PageIndex)
+                    {
+                        <span class="active">@i</span>
+                    }
+                    else
+                    {
+                        <a href="@Url.Page("AdminRevenue", new { pageIndex = i, startDate = Model.StartDate, endDate = Model.EndDate, searchTerm = Model.SearchTerm, revenueType = Model.RevenueType })">@i</a>
+                    }
+                }
+                @if (Model.PageIndex < Model.TotalPages)
+                {
+                    <a href="@Url.Page("AdminRevenue", new { pageIndex = Model.PageIndex + 1, startDate = Model.StartDate, endDate = Model.EndDate, searchTerm = Model.SearchTerm, revenueType = Model.RevenueType })"><i class="fas fa-chevron-right"></i></a>
+                }
+            </div>
+        }
+    </div>
+
+</div>
