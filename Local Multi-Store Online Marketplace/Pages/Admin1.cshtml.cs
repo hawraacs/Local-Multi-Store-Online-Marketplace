@@ -1,257 +1,198 @@
-using com.sun.org.apache.xerces.@internal.xs.datatypes;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using Multi_Store.Infrastructure.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Mvc.RazorPages;
+    using Microsoft.EntityFrameworkCore;
+    using Multi_Store.Infrastructure.Data;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
 
-namespace Local_Multi_Store_Online_Marketplace.Pages
-{
-    [Authorize(Roles = "Admin")]
-    public class Admin1Model : PageModel
+    namespace Local_Multi_Store_Online_Marketplace.Pages
     {
-        private readonly ApplicationDbContext _context;
-        public int NewStoresThisMonth { get; set; }
-        public decimal UserGrowthPercentage { get; set; }
-        public List<RecentStoreDto> RecentStores { get; set; } = new();
-        public Admin1Model(ApplicationDbContext context)
+        [Authorize(Roles = "Admin")]
+        public class Admin1Model : PageModel
         {
-            _context = context;
-        }
+            private readonly ApplicationDbContext _context;
 
-        // =========================
-        // DASHBOARD STATS
-        // =========================
-
-        public decimal TotalCommission { get; set; }
-        public decimal TotalSubscriptionRevenue { get; set; }
-        public decimal TotalPlatformRevenue { get; set; }
-
-        public int TotalOrders { get; set; }
-        public int ActiveStores { get; set; }
-        public int TotalUsers { get; set; }
-
-        public List<RecentOrderDto> RecentOrders { get; set; } = new();
-        public List<string> MonthlyRevenueLabels { get; set; } = new();
-        public List<decimal> MonthlyRevenueData { get; set; } = new();
-
-        public List<string> MonthlyOrderLabels { get; set; } = new();
-        public List<int> MonthlyOrderData { get; set; } = new();
-
-        public decimal RevenueGrowthPercentage { get; set; }
-
-        public List<TopStoreDto> TopStores { get; set; } = new();
-        public class TopStoreDto
-        {
-            public string StoreName { get; set; } = "";
-            public decimal Revenue { get; set; }
-        }
-        public async Task OnGetAsync()
-        {
-
-
-            // =========================
-            // COMPLETED ORDERS
-            // =========================
-            var thisMonthStart = new DateTime(DateTime.UtcNow.Date.Year, DateTime.UtcNow.Date.Month, 1);
-
-            NewStoresThisMonth = await _context.Stores
-                .CountAsync(s => s.CreatedAt >= thisMonthStart);
-
-            TotalUsers = await _context.Users.CountAsync();
-
-            var usersLastMonth = await _context.Users
-                .CountAsync(u => u.CreatedAt < thisMonthStart);
-
-            var usersThisMonth = TotalUsers;
-            UserGrowthPercentage = usersLastMonth > 0
-                ? ((decimal)(usersThisMonth - usersLastMonth) / usersLastMonth) * 100 : 0;
-
-            var completedOrders = await _context.Orders
-                .Where(o => o.Status == "Delivered")
-                .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Store)
-                .ToListAsync();
-
-            // =========================
-            // COMMISSION CALCULATION
-            // =========================
-            TotalCommission = completedOrders.Sum(order =>
-                order.OrderItems.Sum(item =>
-                    item.TotalPrice * 0.05m
-                )
-            );
-
-            // =========================
-            // SUBSCRIPTION REVENUE
-            // =========================
-            TotalSubscriptionRevenue = await _context.SubscriptionPayments
-    .SumAsync(p => p.Amount);
-
-            // =========================
-            // TOTAL PLATFORM REVENUE
-            // =========================
-            TotalPlatformRevenue = TotalCommission + TotalSubscriptionRevenue;
-
-            // =========================
-            // BASIC COUNTS
-            // =========================
-            TotalOrders = await _context.Orders.CountAsync();
-
-            ActiveStores = await _context.Stores.CountAsync(s =>
-                s.Status == "Active" &&
-                s.SubscriptionStatus == "Active");
-
-            TotalUsers = await _context.Users.CountAsync();
-
-            // =========================
-            // RECENT ORDERS (SAFE VERSION)
-            // =========================
-            RecentOrders = await _context.Orders
-                .OrderByDescending(o => o.OrderDate)
-                .Take(5)
-                .Select(o => new RecentOrderDto
-                {
-                    OrderNumber = o.OrderNumber,
-                    CustomerName = o.Customer != null
-                        ? o.Customer.User.FullName
-                        : "Unknown",
-
-                    StoreName = o.OrderItems
-                        .Select(oi => oi.Store.StoreName)
-                        .FirstOrDefault() ?? "N/A",
-
-                    Amount = o.TotalAmount,
-                    Status = o.Status
-                })
-                .ToListAsync();
-
-            // ====================================
-            // MONTHLY REVENUE - LAST 12 MONTHS
-            // ====================================
-
-            for (int i = 11; i >= 0; i--)
+            public Admin1Model(ApplicationDbContext context)
             {
-                var monthStart = new DateTime(
-                    DateTime.UtcNow.Date.AddMonths(-i).Year,
-                    DateTime.UtcNow.Date.AddMonths(-i).Month,
-                    1);
-
-                var monthEnd = monthStart.AddMonths(1);
-
-                MonthlyRevenueLabels.Add(monthStart.ToString("MMM yyyy"));
-
-                var monthlyCommission = completedOrders
-                    .Where(o =>
-                        o.OrderDate >= monthStart &&
-                        o.OrderDate < monthEnd)
-                    .Sum(o =>
-                        o.OrderItems.Sum(oi =>
-                            oi.TotalPrice * 0.05m));
-
-                var monthlySubscriptions = await _context.SubscriptionPayments
-    .Where(p =>
-        p.PaymentDate >= monthStart &&
-        p.PaymentDate < monthEnd)
-    .SumAsync(p => p.Amount);
-
-                MonthlyRevenueData.Add(
-                    monthlyCommission + monthlySubscriptions);
+                _context = context;
             }
 
-            // ====================================
-            // ORDERS PER MONTH
-            // ====================================
+            // ── KPI Cards ──
+            public decimal TotalPlatformRevenue { get; set; }
+            public decimal TotalCommission { get; set; }
+            public decimal TotalSubscriptionRevenue { get; set; }
+            public int TotalOrders { get; set; }
+            public int ActiveStores { get; set; }
+            public int TotalUsers { get; set; }
+            public int NewStoresThisMonth { get; set; }
+            public decimal UserGrowthPercentage { get; set; }
 
-            for (int i = 11; i >= 0; i--)
+            // ── Operational Info ──
+            public int PendingStoreApprovals { get; set; }
+            public int StoresExpiringSoon { get; set; }
+            public int StoresWaitingForRenewal { get; set; }
+
+            // ── Quick Alerts ──
+            public List<StoreAlertDto> SuspendedStores { get; set; } = new();
+            public List<StoreAlertDto> ExpiredStores { get; set; } = new();
+            public List<StoreAlertDto> PendingStoreRequests { get; set; } = new();
+
+            // ── Recent Activity ──
+            public List<RecentOrderDto> RecentOrders { get; set; } = new();
+            public List<RecentStoreDto> RecentStores { get; set; } = new();
+
+            public async Task OnGetAsync()
             {
-                var monthStart = new DateTime(
-                    DateTime.UtcNow.Date.AddMonths(-i).Year,
-                    DateTime.UtcNow.Date.AddMonths(-i).Month,
-                    1);
+                var now = DateTime.UtcNow;
+                var monthStart = new DateTime(now.Year, now.Month, 1);
 
-                var monthEnd = monthStart.AddMonths(1);
+                // ── KPI Calculations ──
 
-                MonthlyOrderLabels.Add(monthStart.ToString("MMM"));
+                // 1. Total completed orders for commission
+                var completedOrders = await _context.Orders
+                    .Where(o => o.Status == "Delivered")
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.Store)
+                    .ToListAsync();
 
-                var count = await _context.Orders
-                    .CountAsync(o =>
-                        o.OrderDate >= monthStart &&
-                        o.OrderDate < monthEnd);
+                TotalCommission = completedOrders
+                    .SelectMany(o => o.OrderItems)
+                    .Sum(oi => oi.TotalPrice * oi.Store.CommissionRate / 100m);
 
-                MonthlyOrderData.Add(count);
+                TotalSubscriptionRevenue = await _context.SubscriptionPayments
+                    .SumAsync(p => p.Amount);
+
+                TotalPlatformRevenue = TotalCommission + TotalSubscriptionRevenue;
+
+                TotalOrders = await _context.Orders.CountAsync();
+
+                // Active Stores: Status == "Active" AND SubscriptionStatus == "Active"
+                ActiveStores = await _context.Stores
+                    .CountAsync(s => s.Status == "Active" && s.SubscriptionStatus == "Active");
+
+                TotalUsers = await _context.Users.CountAsync();
+
+                NewStoresThisMonth = await _context.Stores
+                    .CountAsync(s => s.CreatedAt >= monthStart);
+
+                var usersLastMonth = await _context.Users
+                    .CountAsync(u => u.CreatedAt < monthStart);
+
+                UserGrowthPercentage = usersLastMonth > 0
+                    ? ((decimal)(TotalUsers - usersLastMonth) / usersLastMonth) * 100
+                    : 0;
+
+                // ── Operational Info ──
+
+                // Pending store approvals (Status == "Pending")
+                PendingStoreApprovals = await _context.Stores
+                    .CountAsync(s => s.Status == "Pending");
+
+                // Stores with subscription expiring within next 7 days (SubscriptionExpiryDate)
+                var expiryThreshold = now.AddDays(7);
+                StoresExpiringSoon = await _context.Stores
+                    .CountAsync(s => s.SubscriptionStatus == "Active"
+                                     && s.SubscriptionExpiryDate.HasValue
+                                     && s.SubscriptionExpiryDate <= expiryThreshold
+                                     && s.SubscriptionExpiryDate >= now);
+
+                // Stores waiting for renewal (SubscriptionStatus == "Expired" or "Suspended")
+                StoresWaitingForRenewal = await _context.Stores
+                    .CountAsync(s => s.SubscriptionStatus == "Expired" || s.SubscriptionStatus == "Suspended");
+
+                // ── Quick Alerts ──
+
+                // Suspended stores: Status == "Suspended" (or you could use IsSuspended == true)
+                SuspendedStores = await _context.Stores
+                    .Where(s => s.Status == "Suspended")
+                    .Select(s => new StoreAlertDto
+                    {
+                        StoreName = s.StoreName,
+                        Status = s.Status,
+                        AlertDate = s.ApprovedAt ?? s.CreatedAt   // fallback to CreatedAt if not approved
+                    })
+                    .Take(5)
+                    .ToListAsync();
+
+                // Expired subscriptions: SubscriptionStatus == "Expired"
+                ExpiredStores = await _context.Stores
+                    .Where(s => s.SubscriptionStatus == "Expired")
+                    .Select(s => new StoreAlertDto
+                    {
+                        StoreName = s.StoreName,
+                        Status = "Expired",
+                        AlertDate = s.SubscriptionExpiryDate ?? s.CreatedAt
+                    })
+                    .Take(5)
+                    .ToListAsync();
+
+                // Pending store requests: Status == "Pending"
+                PendingStoreRequests = await _context.Stores
+                    .Where(s => s.Status == "Pending")
+                    .Select(s => new StoreAlertDto
+                    {
+                        StoreName = s.StoreName,
+                        Status = "Pending",
+                        AlertDate = s.CreatedAt
+                    })
+                    .Take(5)
+                    .ToListAsync();
+
+                // ── Recent Activity ──
+
+                RecentOrders = await _context.Orders
+                    .OrderByDescending(o => o.OrderDate)
+                    .Take(5)
+                    .Select(o => new RecentOrderDto
+                    {
+                        OrderNumber = o.OrderNumber,
+                        CustomerName = o.Customer != null
+                            ? o.Customer.User.FullName
+                            : "Unknown",
+                        StoreName = o.OrderItems
+                            .Select(oi => oi.Store.StoreName)
+                            .FirstOrDefault() ?? "N/A",
+                        Amount = o.TotalAmount,
+                        Status = o.Status
+                    })
+                    .ToListAsync();
+
+                RecentStores = await _context.Stores
+                    .OrderByDescending(s => s.CreatedAt)
+                    .Take(5)
+                    .Select(s => new RecentStoreDto
+                    {
+                        StoreName = s.StoreName,
+                        CreatedAt = s.CreatedAt,
+                        Status = s.Status
+                    })
+                    .ToListAsync();
             }
-            // ====================================
-            // REVENUE GROWTH
-            // ====================================
+        }
 
-            var currentMonth = DateTime.UtcNow.Date;
-            var currentStart =
-                new DateTime(currentMonth.Year, currentMonth.Month, 1);
+        // ── DTOs ──
+        public class RecentOrderDto
+        {
+            public string OrderNumber { get; set; } = string.Empty;
+            public string CustomerName { get; set; } = string.Empty;
+            public string StoreName { get; set; } = string.Empty;
+            public decimal Amount { get; set; }
+            public string Status { get; set; } = string.Empty;
+        }
 
-            var previousStart =
-                currentStart.AddMonths(-1);
+        public class RecentStoreDto
+        {
+            public string StoreName { get; set; } = string.Empty;
+            public DateTime CreatedAt { get; set; }
+            public string Status { get; set; } = string.Empty;
+        }
 
-            var currentRevenue = MonthlyRevenueData.LastOrDefault();
-
-            var previousRevenue = MonthlyRevenueData.Count > 1
-                ? MonthlyRevenueData[MonthlyRevenueData.Count - 2]
-                : 0;
-
-            if (previousRevenue > 0)
-            {
-                RevenueGrowthPercentage =
-                    ((currentRevenue - previousRevenue)
-                    / previousRevenue) * 100;
-            }
-            // ====================================
-            // TOP 5 STORES
-            // ====================================
-
-            TopStores = await _context.OrderItems
-                .Where(oi => oi.Order.Status == "Delivered")
-                .GroupBy(oi => oi.Store.StoreName)
-                .Select(g => new TopStoreDto
-                {
-                    StoreName = g.Key,
-                    Revenue = g.Sum(x => x.TotalPrice)
-                })
-                .OrderByDescending(x => x.Revenue)
-                .Take(5)
-                .ToListAsync();
-            RecentStores = await _context.Stores
-    .OrderByDescending(s => s.CreatedAt)
-    .Take(5)
-    .Select(s => new RecentStoreDto
-    {
-        StoreName = s.StoreName,
-        CreatedAt = s.CreatedAt,
-        Status = s.Status
-    })
-    .ToListAsync();
-
-
+        public class StoreAlertDto
+        {
+            public string StoreName { get; set; } = string.Empty;
+            public string Status { get; set; } = string.Empty;
+            public DateTime AlertDate { get; set; }
         }
     }
-
-    // =========================
-    // DTO
-    // =========================
-    public class RecentOrderDto
-    {
-        public string OrderNumber { get; set; } = string.Empty;
-        public string CustomerName { get; set; } = string.Empty;
-        public string StoreName { get; set; } = string.Empty;
-        public decimal Amount { get; set; }
-        public string Status { get; set; } = string.Empty;
-    }
-    public class RecentStoreDto
-    {
-        public string StoreName { get; set; } = "";
-        public DateTime CreatedAt { get; set; }
-        public string Status { get; set; } = "";
-    }
-}
