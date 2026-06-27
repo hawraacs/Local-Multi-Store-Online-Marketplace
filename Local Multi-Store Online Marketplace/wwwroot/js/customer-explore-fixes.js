@@ -1,40 +1,60 @@
 ﻿(() => {
     "use strict";
 
-    /*
-       Global image fallback for Customer1.
-
-       Your current HTML and JavaScript use /images/no-image.png,
-       but that file may not exist. This listener catches broken
-       images, including images added later by infinite scroll,
-       modal loading, and related-item rendering.
-    */
-
-    const fallbackUrl = "/images/product-placeholder.svg";
+    const fallbackUrl =
+        "/images/product-placeholder.svg";
 
     document.addEventListener(
         "error",
         event => {
             const image = event.target;
 
-            if (!(image instanceof HTMLImageElement)) {
+            if (
+                !(image instanceof HTMLImageElement)
+            ) {
                 return;
             }
 
-            if (image.dataset.realnestFallbackApplied === "true") {
-                image.style.objectFit = "contain";
-                image.style.background = "#f3f4f6";
+            if (image.closest(".tile-store")) {
+                image.style.display = "none";
+
+                const fallback =
+                    image.nextElementSibling;
+
+                if (fallback) {
+                    fallback.style.display =
+                        "flex";
+                }
+
                 return;
             }
 
-            event.preventDefault();
-            event.stopImmediatePropagation();
+            if (
+                image.dataset
+                    .realnestFallbackApplied ===
+                "true"
+            ) {
+                image.style.objectFit =
+                    "contain";
 
-            image.dataset.realnestFallbackApplied = "true";
+                image.style.background =
+                    "#f3f4f6";
+
+                return;
+            }
+
+            image.dataset
+                .realnestFallbackApplied =
+                "true";
+
             image.onerror = null;
             image.src = fallbackUrl;
-            image.style.objectFit = "contain";
-            image.style.background = "#f3f4f6";
+
+            image.style.objectFit =
+                "contain";
+
+            image.style.background =
+                "#f3f4f6";
         },
         true
     );
