@@ -24,8 +24,11 @@
 
     <title>Chat</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
           rel="stylesheet" />
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
     <style>
         :root {
@@ -39,7 +42,7 @@
             --accent-hover: #f05a22; /* Rich dark orange */
             --accent-light: #fff1eb; /* Pastel orange tint */
             --accent-gradient: linear-gradient(135deg, #ff9f43 0%, #ff6b35 50%, #f05a22 100%); /* Orange-to-coral punch */
-
+            --error-color: #dc2626;
             --online-color: #10b981; /* Active green */
             --offline-color: #78716c; /* Offline grey */
             --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -61,11 +64,7 @@
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
             min-height: 100vh;
-            background: linear-gradient(
-                135deg,
-                #e8eef8 0%,
-                #f7fafc 45%,
-                #e8f1ff 100%);
+            background: linear-gradient( 135deg, #e8eef8 0%, #f7fafc 45%, #e8f1ff 100%);
         }
 
         .page-shell {
@@ -167,26 +166,17 @@
             transition: all 0.2s ease;
         }
 
-        .delete:hover {
-            background: #e11d48;
-            color: white;
-        }
+            .delete:hover {
+                background: #e11d48;
+                color: white;
+            }
 
         /* MESSAGES STREAM */
         .messages {
             flex: 1;
             padding: 18px;
             overflow: auto;
-            background:
-                radial-gradient(
-                    circle at top left,
-                    rgba(37,99,235,.08),
-                    transparent 35%),
-                radial-gradient(
-                    circle at bottom right,
-                    rgba(14,165,233,.08),
-                    transparent 35%),
-                #f8fafc;
+            background: radial-gradient( circle at top left, rgba(37,99,235,.08), transparent 35%), radial-gradient( circle at bottom right, rgba(14,165,233,.08), transparent 35%), #f8fafc;
         }
 
         .msg {
@@ -398,20 +388,23 @@
             background: var(--error-color);
             color: white;
             border: none;
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
+            flex: 0 0 26px;
             border-radius: 50%;
             cursor: pointer;
             font-weight: 900;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            transition: opacity 0.2s ease;
+            font-size: 15px;
+            line-height: 1;
+            transition: background 0.2s ease, transform 0.2s ease;
         }
 
             .preview-remove:hover {
-                opacity: 0.9;
+                background: #b91c1c;
+                transform: scale(1.05);
             }
 
         /* VOICE COMPONENT */
@@ -459,10 +452,10 @@
             gap: 12px;
         }
 
-        .voice-ready-row audio {
-            flex: 1;
-            width: 100%;
-        }
+            .voice-ready-row audio {
+                flex: 1;
+                width: 100%;
+            }
 
         /* IOS VIRTUAL KEYBOARD PANEL */
         .ios-keyboard {
@@ -472,9 +465,9 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        .ios-keyboard.show {
-            display: block;
-        }
+            .ios-keyboard.show {
+                display: block;
+            }
 
         .suggestions {
             display: flex;
@@ -509,15 +502,15 @@
             text-overflow: ellipsis;
         }
 
-        .suggestion-chip:hover {
-            background: white;
-            transform: translateY(-1px);
-        }
+            .suggestion-chip:hover {
+                background: white;
+                transform: translateY(-1px);
+            }
 
-        .suggestion-chip:active {
-            transform: translateY(0);
-            background: #e0ecff;
-        }
+            .suggestion-chip:active {
+                transform: translateY(0);
+                background: #e0ecff;
+            }
 
         .key-row {
             display: flex;
@@ -545,11 +538,11 @@
             transition: background 0.1s ease, transform 0.1s ease;
         }
 
-        .key-btn:active {
-            background: #e5e7eb;
-            transform: translateY(1px);
-            box-shadow: none;
-        }
+            .key-btn:active {
+                background: #e5e7eb;
+                transform: translateY(1px);
+                box-shadow: none;
+            }
 
         .special-key {
             min-width: 54px;
@@ -591,9 +584,9 @@
             margin-top: 10px;
         }
 
-        .emoji-panel.show {
-            display: grid;
-        }
+            .emoji-panel.show {
+                display: grid;
+            }
 
         .emoji-btn {
             height: 38px;
@@ -606,10 +599,10 @@
             transition: transform 0.1s ease;
         }
 
-        .emoji-btn:active {
-            background: #e5e7eb;
-            transform: translateY(1px);
-        }
+            .emoji-btn:active {
+                background: #e5e7eb;
+                transform: translateY(1px);
+            }
 
         /* COMPOSER FORM */
         .composer {
@@ -635,11 +628,11 @@
             font-family: var(--font-family);
         }
 
-        .message-input:focus {
-            background: white;
-            border-color: #93c5fd;
-            box-shadow: 0 0 0 4px rgba(147,197,253,.25);
-        }
+            .message-input:focus {
+                background: white;
+                border-color: #93c5fd;
+                box-shadow: 0 0 0 4px rgba(147,197,253,.25);
+            }
 
         .send,
         .icon-btn {
@@ -663,10 +656,10 @@
             font-size: 14px;
         }
 
-        .send:hover,
-        .icon-btn:hover {
-            background: #1d4ed8;
-        }
+            .send:hover,
+            .icon-btn:hover {
+                background: #1d4ed8;
+            }
 
         .icon-btn {
             width: 42px;
@@ -677,6 +670,12 @@
             color: var(--text-primary);
             border: 1px solid var(--border-color);
         }
+
+            .icon-btn i {
+                font-size: 16px;
+                line-height: 1;
+                pointer-events: none;
+            }
 
         .recording-btn {
             background: #ef4444 !important;
@@ -691,11 +690,11 @@
             color: #111827;
         }
 
-        .product-card img {
-            width: 100%;
-            height: 175px;
-            object-fit: cover;
-        }
+            .product-card img {
+                width: 100%;
+                height: 175px;
+                object-fit: cover;
+            }
 
         .product-body {
             padding: 11px;
@@ -747,8 +746,8 @@
         }
 
         /* =====================================================
-           CHAT TOAST NOTIFICATIONS
-           ===================================================== */
+                   CHAT TOAST NOTIFICATIONS
+                   ===================================================== */
 
         .chat-toast-container {
             position: fixed;
@@ -772,16 +771,14 @@
             box-shadow: 0 18px 45px rgba(15, 23, 42, 0.28);
             opacity: 0;
             transform: translateX(45px);
-            transition:
-                opacity 0.28s ease,
-                transform 0.28s ease;
+            transition: opacity 0.28s ease, transform 0.28s ease;
             pointer-events: auto;
         }
 
-        .chat-toast.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
+            .chat-toast.show {
+                opacity: 1;
+                transform: translateX(0);
+            }
 
         .chat-toast-error {
             background: linear-gradient(135deg, #b91c1c, #dc2626);
@@ -953,16 +950,16 @@
                             @if (msg.Product != null)
                             {
                                 var image =
-                                    msg.Product.Images?
-                                        .FirstOrDefault()?
-                                        .ImageUrl
-                                    ?? "/images/no-image.png";
+                                msg.Product.Images?
+                                .FirstOrDefault()?
+                                .ImageUrl
+                                ?? "/images/product-placeholder.svg";
 
                                 <div class="product-card">
 
                                     <img src="@image"
                                          alt="@msg.Product.ProductName"
-                                         onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                                         onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
 
                                     <div class="product-body">
 
@@ -1002,7 +999,7 @@
                                 @if (!string.IsNullOrWhiteSpace(msg.ImageUrl))
                                 {
                                     var lowerUrl =
-                                        msg.ImageUrl.ToLower();
+                                    msg.ImageUrl.ToLower();
 
                                     if (msg.MessageText == "[VOICE]")
                                     {
@@ -1011,20 +1008,20 @@
                                         </audio>
                                     }
                                     else if (
-                                        msg.MessageText == "[IMAGE]" ||
-                                        lowerUrl.EndsWith(".jpg") ||
-                                        lowerUrl.EndsWith(".jpeg") ||
-                                        lowerUrl.EndsWith(".png") ||
-                                        lowerUrl.EndsWith(".gif") ||
-                                        lowerUrl.EndsWith(".webp"))
+                                    msg.MessageText == "[IMAGE]" ||
+                                    lowerUrl.EndsWith(".jpg") ||
+                                    lowerUrl.EndsWith(".jpeg") ||
+                                    lowerUrl.EndsWith(".png") ||
+                                    lowerUrl.EndsWith(".gif") ||
+                                    lowerUrl.EndsWith(".webp"))
                                     {
                                         <img class="chat-image"
                                              src="@msg.ImageUrl"
                                              alt="Chat attachment"
-                                             onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                                             onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
 
                                         @if (!string.IsNullOrWhiteSpace(msg.MessageText) &&
-                                             msg.MessageText != "[IMAGE]")
+                                       msg.MessageText != "[IMAGE]")
                                         {
                                             <div style="margin-top:6px;">
                                                 @msg.MessageText
@@ -1034,9 +1031,9 @@
                                     else
                                     {
                                         var fileName =
-                                            msg.MessageText
-                                                .Replace("[FILE]", "")
-                                                .Trim();
+                                        msg.MessageText
+                                        .Replace("[FILE]", "")
+                                        .Trim();
 
                                         if (string.IsNullOrWhiteSpace(fileName))
                                         {
@@ -1124,7 +1121,9 @@
 
                         <button type="button"
                                 class="preview-remove"
-                                id="clearAttachmentBtn">
+                                id="clearAttachmentBtn"
+                                title="Remove attachment"
+                                aria-label="Remove attachment">
                             ×
                         </button>
 
@@ -1150,7 +1149,9 @@
 
                         <button type="button"
                                 class="preview-remove"
-                                id="cancelVoiceBtn">
+                                id="cancelVoiceBtn"
+                                title="Cancel recording"
+                                aria-label="Cancel recording">
                             ×
                         </button>
 
@@ -1165,7 +1166,9 @@
 
                         <button type="button"
                                 class="preview-remove"
-                                id="removeVoiceBtn">
+                                id="removeVoiceBtn"
+                                title="Remove voice message"
+                                aria-label="Remove voice message">
                             ×
                         </button>
 
@@ -2346,29 +2349,31 @@
         }
 
         function setRecordButtonNormal() {
-            if (recordBtn) {
-                recordBtn.innerText =
-                    "🎤";
-
-                recordBtn.classList.remove(
-                    "recording-btn");
-
-                recordBtn.style.background =
-                    "#2563eb";
+            if (!recordBtn) {
+                return;
             }
+
+            recordBtn.innerHTML =
+                '<i class="fa-solid fa-microphone"></i>';
+
+            recordBtn.classList.remove(
+                "recording-btn");
+
+            recordBtn.style.background = "";
         }
 
         function setRecordButtonRecording() {
-            if (recordBtn) {
-                recordBtn.innerText =
-                    "⏹";
-
-                recordBtn.classList.add(
-                    "recording-btn");
-
-                recordBtn.style.background =
-                    "#ef4444";
+            if (!recordBtn) {
+                return;
             }
+
+            recordBtn.innerHTML =
+                '<i class="fa-solid fa-stop"></i>';
+
+            recordBtn.classList.add(
+                "recording-btn");
+
+            recordBtn.style.background = "";
         }
 
         if (recordBtn) {
