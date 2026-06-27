@@ -13,6 +13,7 @@ namespace Multi_Store.Core.Entities
         public bool IsVerified { get; set; } = false;
         public int LoyaltyPoints { get; set; } = 0;
         public bool CODBlocked { get; set; } = false;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
         public virtual User User { get; set; } = null!;

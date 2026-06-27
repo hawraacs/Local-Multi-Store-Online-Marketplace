@@ -408,8 +408,9 @@
         <button class="tab-btn" data-tab="pending">⏳ Pending (@Model.PendingCount)</button>
         <button class="tab-btn" data-tab="active">✅ Active</button>
         <button class="tab-btn" data-tab="inactive">❌ Inactive</button>
+        <button class="tab-btn" data-tab="suspended">🚫 Suspended</button>
+        <button class="tab-btn" data-tab="expired">⌛ Expired</button>
     </div>
-
     <div class="table-responsive">
         <table id="storesTable">
             <thead>
@@ -444,7 +445,7 @@
                             daysLeft = (store.SubscriptionExpiryDate.Value.Date - DateTime.UtcNow.Date).Days;
                         }
 
-                        <tr data-status="@statusKey">
+                        <tr data-status="@statusKey" data-substatus="@subStatusKey">
                             <td>@store.StoreName</td>
                             <td>@store.Owner?.FullName</td>
                             <td>@store.OwnerEmail</td>
@@ -546,23 +547,29 @@
 
     function filterTable(tabId) {
         rows.forEach(row => {
+            // Skip the empty state row (colspan)
             if (row.cells.length === 1 && row.cells[0].colSpan) {
                 row.style.display = '';
                 return;
             }
-            const status = row.dataset.status;
+            const status = row.dataset.status;      // from store.Status (lowercase)
+            const subStatus = row.dataset.substatus; // store.SubscriptionStatus (lowercase)
             let shouldShow = false;
+
             switch(tabId) {
                 case 'all': shouldShow = true; break;
                 case 'pending': shouldShow = (status === 'pending'); break;
                 case 'active': shouldShow = (status === 'approved'); break;
-                case 'inactive': shouldShow = (status === 'inactive'); break;
+                case 'inactive': shouldShow = (status !== 'pending' && status !== 'approved'); break;
+                case 'suspended': shouldShow = (status === 'suspended'); break;
+                case 'expired': shouldShow = (subStatus === 'expired'); break;
                 default: shouldShow = true;
             }
             row.style.display = shouldShow ? '' : 'none';
         });
     }
 
+    // Handle tab clicks
     tabs.forEach(btn => {
         btn.addEventListener('click', () => {
             tabs.forEach(b => b.classList.remove('active'));
@@ -570,4 +577,14 @@
             filterTable(btn.dataset.tab);
         });
     });
+
+    // ── Auto‑select tab from URL parameter ──
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+        const targetTab = document.querySelector(`.tab-btn[data-tab="${tabParam}"]`);
+        if (targetTab) {
+            targetTab.click();
+        }
+    }
 </script>
