@@ -13,7 +13,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     [Authorize(Roles = "Customer")]
     public class Customer1Model : PageModel
     {
-        private const int ExplorePageSize = 18;
+        private const int ExplorePageSize = 10;
 
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
@@ -102,7 +102,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         // =====================================================
-        // OPEN ONE EXPLORE POST IN THE MODAL
+        // OPEN ONE EXISTING EXPLORE POST IN THE SHARED MODAL
+        // Existing post likes/comments remain unchanged.
         // =====================================================
         public async Task<IActionResult> OnGetExplorePostDetailsAsync(int id)
         {
@@ -121,6 +122,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     .ThenInclude(p => p!.Images)
                 .Include(p => p.Product)
                     .ThenInclude(p => p!.Category)
+                .Include(p => p.Product)
+                    .ThenInclude(p => p!.Reviews)
+                        .ThenInclude(r => r.Customer)
+                            .ThenInclude(c => c.User)
                 .Include(p => p.Media)
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
@@ -135,7 +140,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (post == null)
             {
                 return JsonError(
-                    "Explore post was not found.",
+                    "Explore item was not found.",
                     StatusCodes.Status404NotFound);
             }
 
@@ -147,8 +152,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     f.CustomerID == customerId.Value &&
                     f.StoreID == post.StoreID);
 
+            var hasAvailableProduct =
+                post.Product != null &&
+                post.Product.IsActive;
+
+            var isInWishlist = hasAvailableProduct &&
+                await _wishlistManager.IsInWishlistAsync(
+                    customerId.Value,
+                    post.Product!.ProductID);
+
             var details = new ExplorePostDetailsViewModel
             {
+                ContentType = "Post",
                 ExplorePostID = post.ExplorePostID,
                 StoreID = post.StoreID,
                 StoreOwnerUserID = post.Store.OwnerUserID,
@@ -167,43 +182,52 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 IsLikedByCurrentCustomer = post.Likes
                     .Any(l => l.CustomerID == customerId.Value),
 
-                ProductID = post.Product != null && post.Product.IsActive
-                    ? post.Product.ProductID
+                ProductID = hasAvailableProduct
+                    ? post.Product!.ProductID
                     : null,
 
-                ProductName = post.Product != null && post.Product.IsActive
-                    ? post.Product.ProductName
+                ProductName = hasAvailableProduct
+                    ? post.Product!.ProductName
                     : null,
 
-                ProductDescription = post.Product != null && post.Product.IsActive
-                    ? post.Product.Description
+                ProductDescription = hasAvailableProduct
+                    ? post.Product!.Description
                     : null,
 
-                ProductPrice = post.Product != null && post.Product.IsActive
-                    ? post.Product.Price
+                ProductPrice = hasAvailableProduct
+                    ? post.Product!.Price
                     : null,
 
-                ProductQuantity = post.Product != null && post.Product.IsActive
-                    ? post.Product.Quantity
+                ProductQuantity = hasAvailableProduct
+                    ? post.Product!.Quantity
                     : null,
 
-                ProductImageUrl = post.Product != null && post.Product.IsActive
-                    ? post.Product.Images
+                ProductImageUrl = hasAvailableProduct
+                    ? post.Product!.Images
                         .OrderByDescending(i => i.IsPrimary)
                         .ThenBy(i => i.DisplayOrder)
                         .Select(i => i.ImageUrl)
-                        .FirstOrDefault() ?? "/images/no-image.png"
+                        .FirstOrDefault() ?? "/images/product-placeholder.svg"
                     : null,
 
-                CategoryID = post.Product != null && post.Product.IsActive
-                    ? post.Product.CategoryID
+                CategoryID = hasAvailableProduct
+                    ? post.Product!.CategoryID
                     : null,
 
-                CategoryName = post.Product != null &&
-                               post.Product.IsActive &&
-                               post.Product.Category != null
+                CategoryName = hasAvailableProduct &&
+                               post.Product!.Category != null
                     ? post.Product.Category.CategoryName
                     : null,
+
+                ProductRating = hasAvailableProduct
+                    ? post.Product!.Rating
+                    : 0,
+
+                ProductTotalRatings = hasAvailableProduct
+                    ? post.Product!.TotalRatings
+                    : 0,
+
+                IsInWishlist = isInWishlist,
 
                 Media = post.Media
                     .OrderBy(m => m.DisplayOrder)
@@ -230,8 +254,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         CreatedAt = c.CreatedAt,
                         CanDelete = c.CustomerID == customerId.Value
                     })
-                    .ToList()
+                    .ToList(),
+
+                Reviews = MapProductReviews(post.Product)
             };
+
+            if (details.Media.Count == 0)
+            {
+                details.Media.Add(new ExploreMediaViewModel
+                {
+                    MediaType = "Image",
+                    MediaUrl = details.ProductImageUrl ??
+                        "/images/product-placeholder.svg",
+                    DisplayOrder = 0
+                });
+            }
 
             details.RelatedItems = await LoadRelatedItemsAsync(
                 currentPostId: post.ExplorePostID,
@@ -243,6 +280,121 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 success = true,
                 post = details
+            });
+        }
+
+        // =====================================================
+        // OPEN A NORMAL PRODUCT IN THE SAME SHEIN-STYLE MODAL
+        // A store owner only creates a normal product. It appears
+        // automatically in Customer Explore without another post.
+        // =====================================================
+        public async Task<IActionResult> OnGetExploreProductDetailsAsync(int id)
+        {
+            var customerId = await GetCurrentCustomerIdAsync();
+
+            if (customerId == null)
+            {
+                return JsonError(
+                    "Please login as a customer first.",
+                    StatusCodes.Status401Unauthorized);
+            }
+
+            var product = await _context.Products
+                .Include(p => p.Store)
+                .Include(p => p.Category)
+                .Include(p => p.Images)
+                .Include(p => p.Reviews)
+                    .ThenInclude(r => r.Customer)
+                        .ThenInclude(c => c.User)
+                .FirstOrDefaultAsync(p =>
+                    p.ProductID == id &&
+                    p.IsActive &&
+                    p.Store != null &&
+                    p.Store.Status == "Approved");
+
+            if (product == null)
+            {
+                return JsonError(
+                    "Product was not found.",
+                    StatusCodes.Status404NotFound);
+            }
+
+            await SaveRecentlyViewedAsync(
+                customerId.Value,
+                product.ProductID);
+
+            var isFollowing = await _context.StoreFollows
+                .AnyAsync(f =>
+                    f.CustomerID == customerId.Value &&
+                    f.StoreID == product.StoreID);
+
+            var isInWishlist = await _wishlistManager
+                .IsInWishlistAsync(
+                    customerId.Value,
+                    product.ProductID);
+
+            var media = product.Images
+                .OrderByDescending(i => i.IsPrimary)
+                .ThenBy(i => i.DisplayOrder)
+                .Select(i => new ExploreMediaViewModel
+                {
+                    ExploreMediaID = i.ImageID,
+                    MediaType = "Image",
+                    MediaUrl = i.ImageUrl,
+                    DisplayOrder = i.DisplayOrder
+                })
+                .ToList();
+
+            if (media.Count == 0)
+            {
+                media.Add(new ExploreMediaViewModel
+                {
+                    MediaType = "Image",
+                    MediaUrl = "/images/product-placeholder.svg",
+                    DisplayOrder = 0
+                });
+            }
+
+            var details = new ExplorePostDetailsViewModel
+            {
+                ContentType = "Product",
+                ExplorePostID = 0,
+                StoreID = product.StoreID,
+                StoreOwnerUserID = product.Store.OwnerUserID,
+                StoreName = product.Store.StoreName,
+                StoreLogoUrl = product.Store.LogoURL,
+                IsFollowingStore = isFollowing,
+
+                PostType = "Product",
+                Caption = product.Description,
+                CreatedAt = product.CreatedAt,
+
+                ProductID = product.ProductID,
+                ProductName = product.ProductName,
+                ProductDescription = product.Description,
+                ProductPrice = product.Price,
+                ProductQuantity = product.Quantity,
+                ProductImageUrl = media.First().MediaUrl,
+                CategoryID = product.CategoryID,
+                CategoryName = product.Category?.CategoryName,
+                ProductRating = product.Rating,
+                ProductTotalRatings = product.TotalRatings,
+                IsInWishlist = isInWishlist,
+
+                Media = media,
+                Reviews = MapProductReviews(product)
+            };
+
+            details.RelatedItems = await LoadRelatedItemsAsync(
+                currentPostId: 0,
+                currentProductId: product.ProductID,
+                storeId: product.StoreID,
+                categoryId: product.CategoryID);
+
+            return new JsonResult(new
+            {
+                success = true,
+                product = details
             });
         }
 
@@ -502,9 +654,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         // =====================================================
-        // ADD LINKED PRODUCT TO WISHLIST FROM MODAL
+        // SAVE / UNSAVE PRODUCT FROM THE SHARED EXPLORE MODAL
         // =====================================================
-        public async Task<IActionResult> OnPostExploreAddWishlistAsync(
+        public async Task<IActionResult> OnPostToggleExploreWishlistAsync(
             int productId)
         {
             var customerId = await GetCurrentCustomerIdAsync();
@@ -530,14 +682,63 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     StatusCodes.Status404NotFound);
             }
 
-            var exists = await _wishlistManager
-                .IsInWishlistAsync(customerId.Value, productId);
+            var saved = await _wishlistManager
+                .IsInWishlistAsync(
+                    customerId.Value,
+                    productId);
 
-            if (exists)
+            if (saved)
+            {
+                await _wishlistManager.RemoveFromWishlistAsync(
+                    customerId.Value,
+                    productId);
+
+                saved = false;
+            }
+            else
+            {
+                await _wishlistManager.AddToWishlistAsync(
+                    customerId.Value,
+                    productId);
+
+                saved = true;
+            }
+
+            return new JsonResult(new
+            {
+                success = true,
+                saved,
+                message = saved
+                    ? $"{product.ProductName} saved to your wishlist."
+                    : $"{product.ProductName} removed from your wishlist."
+            });
+        }
+
+        // Existing handler kept so old links/forms do not break.
+        public async Task<IActionResult> OnPostExploreAddWishlistAsync(
+            int productId)
+        {
+            var customerId = await GetCurrentCustomerIdAsync();
+
+            if (customerId == null)
             {
                 return JsonError(
-                    "This product is already in your wishlist.",
-                    StatusCodes.Status409Conflict);
+                    "Please login as a customer first.",
+                    StatusCodes.Status401Unauthorized);
+            }
+
+            var product = await _context.Products
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p =>
+                    p.ProductID == productId &&
+                    p.IsActive &&
+                    p.Store.Status == "Approved");
+
+            if (product == null)
+            {
+                return JsonError(
+                    "Product is not available.",
+                    StatusCodes.Status404NotFound);
             }
 
             await _wishlistManager.AddToWishlistAsync(
@@ -801,7 +1002,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     MediaUrl = post.Media
                         .OrderBy(m => m.DisplayOrder)
                         .Select(m => m.MediaUrl)
-                        .FirstOrDefault() ?? "/images/no-image.png",
+                        .FirstOrDefault() ?? "/images/product-placeholder.svg",
                     ThumbnailUrl = post.Media
                         .OrderBy(m => m.DisplayOrder)
                         .Select(m => m.ThumbnailUrl)
@@ -830,7 +1031,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     product.IsActive &&
                     product.Store != null &&
                     product.Store.Status == "Approved" &&
-                    product.Images.Any() &&
                     !product.ExplorePosts.Any(post =>
                         post.IsActive &&
                         post.Media.Any()));
@@ -858,7 +1058,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         .OrderByDescending(i => i.IsPrimary)
                         .ThenBy(i => i.DisplayOrder)
                         .Select(i => i.ImageUrl)
-                        .FirstOrDefault() ?? "/images/no-image.png",
+                        .FirstOrDefault() ?? "/images/product-placeholder.svg",
                     ThumbnailUrl = null,
                     MediaCount = product.Images.Count,
                     ProductName = product.ProductName,
@@ -945,7 +1145,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     MediaUrl = post.Media
                         .OrderBy(m => m.DisplayOrder)
                         .Select(m => m.MediaUrl)
-                        .FirstOrDefault() ?? "/images/no-image.png",
+                        .FirstOrDefault() ?? "/images/product-placeholder.svg",
                     ThumbnailUrl = post.Media
                         .OrderBy(m => m.DisplayOrder)
                         .Select(m => m.ThumbnailUrl)
@@ -972,7 +1172,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .Where(product =>
                     product.IsActive &&
                     product.Store.Status == "Approved" &&
-                    product.Images.Any() &&
+                    !product.ExplorePosts.Any(post =>
+                        post.IsActive &&
+                        post.Media.Any()) &&
                     (!currentProductId.HasValue ||
                      product.ProductID != currentProductId.Value) &&
                     (
@@ -1004,7 +1206,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         .OrderByDescending(i => i.IsPrimary)
                         .ThenBy(i => i.DisplayOrder)
                         .Select(i => i.ImageUrl)
-                        .FirstOrDefault() ?? "/images/no-image.png",
+                        .FirstOrDefault() ?? "/images/product-placeholder.svg",
                     ThumbnailUrl = null,
                     MediaCount = product.Images.Count,
                     ProductName = product.ProductName,
@@ -1096,6 +1298,61 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             return CartActionResult.Ok(
                 $"{product.ProductName} added to your cart.");
+        }
+
+        // =====================================================
+        // PRODUCT REVIEWS / RECENTLY VIEWED HELPERS
+        // =====================================================
+        private static List<ExploreProductReviewViewModel>
+            MapProductReviews(Product? product)
+        {
+            if (product == null)
+                return new List<ExploreProductReviewViewModel>();
+
+            return product.Reviews
+                .Where(r => !string.Equals(
+                    r.Status,
+                    "Rejected",
+                    StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(20)
+                .Select(r => new ExploreProductReviewViewModel
+                {
+                    ReviewID = r.ReviewID,
+                    CustomerName = GetCustomerDisplayName(r.Customer),
+                    Rating = r.Rating,
+                    Comment = r.Comment,
+                    IsVerifiedPurchase = r.IsVerifiedPurchase,
+                    CreatedAt = r.CreatedAt
+                })
+                .ToList();
+        }
+
+        private async Task SaveRecentlyViewedAsync(
+            int customerId,
+            int productId)
+        {
+            var existing = await _context.RecentlyViewedProducts
+                .FirstOrDefaultAsync(item =>
+                    item.CustomerID == customerId &&
+                    item.ProductID == productId);
+
+            if (existing == null)
+            {
+                _context.RecentlyViewedProducts.Add(
+                    new RecentlyViewedProduct
+                    {
+                        CustomerID = customerId,
+                        ProductID = productId,
+                        ViewedAt = DateTime.UtcNow
+                    });
+            }
+            else
+            {
+                existing.ViewedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         // =====================================================
@@ -1199,7 +1456,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public string MediaType { get; set; } = "Image";
 
         public string MediaUrl { get; set; }
-            = "/images/no-image.png";
+            = "/images/product-placeholder.svg";
 
         public string? ThumbnailUrl { get; set; }
 
@@ -1216,6 +1473,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
     public class ExplorePostDetailsViewModel
     {
+        public string ContentType { get; set; } = "Post";
+
         public int ExplorePostID { get; set; }
 
         public int StoreID { get; set; }
@@ -1260,10 +1519,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public string? CategoryName { get; set; }
 
+        public decimal ProductRating { get; set; }
+
+        public int ProductTotalRatings { get; set; }
+
+        public bool IsInWishlist { get; set; }
+
         public List<ExploreMediaViewModel> Media { get; set; }
             = new();
 
         public List<ExploreCommentViewModel> Comments { get; set; }
+            = new();
+
+        public List<ExploreProductReviewViewModel> Reviews { get; set; }
             = new();
 
         public List<ExploreGridItemViewModel> RelatedItems { get; set; }
@@ -1302,6 +1570,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public DateTime CreatedAt { get; set; }
 
         public bool CanDelete { get; set; }
+    }
+
+    public class ExploreProductReviewViewModel
+    {
+        public int ReviewID { get; set; }
+
+        public string CustomerName { get; set; } = "Customer";
+
+        public int Rating { get; set; }
+
+        public string? Comment { get; set; }
+
+        public bool IsVerifiedPurchase { get; set; }
+
+        public DateTime CreatedAt { get; set; }
     }
 
     public class CartActionResult
