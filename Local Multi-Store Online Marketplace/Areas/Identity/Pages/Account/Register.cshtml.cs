@@ -1,10 +1,13 @@
 ﻿#nullable disable
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Dtos;
+using Multi_Store.Services.Managers;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
@@ -15,15 +18,25 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
         private readonly SignInManager<User> _signInManager;
-
+        private readonly OtpManager _otpManager;
+        private readonly EmailotppManager _emailOtpManager;
+       
+        private readonly IEmailSender _emailSender;
         public RegisterModel(
     UserManager<User> userManager,
     SignInManager<User> signInManager,
-    ApplicationDbContext context)
+    ApplicationDbContext context,
+      OtpManager otpManager,
+    EmailotppManager emailOtpService
+   , IEmailSender emailSender)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
+            _otpManager = otpManager;
+            _emailOtpManager = emailOtpService;
+           
+            _emailSender = emailSender;
         }
 
         [BindProperty]
@@ -85,28 +98,15 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            var existingEmail = await _userManager.FindByEmailAsync(Email);
+            
 
-            if (existingEmail != null)
-            {
-                ModelState.AddModelError(nameof(Email), "This email is already registered.");
-                return Page();
-            }
-
-            var existingPhone = _context.Users
-                .Any(u => u.PhoneNumber == normalizedPhone);
-
-            if (existingPhone)
-            {
-                ModelState.AddModelError(nameof(PhoneNumber), "This phone number is already registered.");
-                return Page();
-            }
+          
 
             var user = new User
             {
                 UserName = Email,
                 Email = Email,
-                EmailConfirmed = true,
+                EmailConfirmed = false,
                 PhoneNumber = normalizedPhone,
                 FullName = FullName,
                 IsActive = true,
@@ -134,10 +134,28 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
 
             _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
+            // DO NOT LOGIN USER HERE
 
-            await _signInManager.SignInAsync(user, isPersistent: false);
+            var emailOtp = await _otpManager.CreateOtpAsync(new OtpDto
+            {
+                UserId = user.Id,
+                Type = "RegistrationEmail",
+                Destination = user.Email,
+                ExpiryMinutes = 5
+            });
 
-            return RedirectToPage("/Customer1");
+            await _emailSender.SendEmailAsync(
+    user.Email,
+    "Your OTP Code",
+    $"Your OTP code is: {emailOtp.Code}"
+);
+
+            
+
+            // TEMP STORAGE
+            TempData["UserId"] = user.Id;
+
+            return RedirectToPage("VerifyRegistrationOtp");
         }
 
         private static bool IsValidEmailStrict(string email)
