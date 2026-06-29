@@ -52,7 +52,7 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<ExploreLike> ExploreLikes { get; set; }
         public DbSet<ExploreComment> ExploreComments { get; set; }
         public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; }
-
+        public DbSet<OtpCode> OtpCodes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
