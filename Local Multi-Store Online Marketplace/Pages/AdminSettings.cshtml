@@ -4,29 +4,673 @@
     ViewData["Title"] = "System Settings";
 }
 
-<div class="settings-card" style="background:white; border-radius:24px; padding:24px; margin-top:20px;">
-    <h3>Platform Configuration</h3>
-    <form method="post">
-        <div class="mb-3">
-            <label>Platform Name</label>
-            <input type="text" name="PlatformName" class="form-control" value="@Model.PlatformName" />
-        </div>
-        <div class="mb-3">
-            <label>Global Commission Rate (%)</label>
-            <input type="number" step="0.1" name="CommissionRate" class="form-control" value="@Model.CommissionRate" />
-        </div>
-        <div class="mb-3">
-            <label>Base Delivery Fee ($)</label>
-            <input type="number" step="0.5" name="BaseDeliveryFee" class="form-control" value="@Model.BaseDeliveryFee" />
-        </div>
-        <div class="mb-3">
-            <label>Free Delivery Threshold ($)</label>
-            <input type="number" step="1" name="FreeDeliveryThreshold" class="form-control" value="@Model.FreeDeliveryThreshold" />
-        </div>
-        <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" name="MaintenanceMode" @(Model.MaintenanceMode ? "checked" : "") />
-            <label class="form-check-label">Enable Maintenance Mode</label>
-        </div>
-        <button type="submit" class="btn btn-primary">Save Settings</button>
-    </form>
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        /* ── Shared base (same as audit page) ── */
+        body {
+            background: #f1f5f9;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+
+        /* ── Page header ── */
+        .settings-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+            .settings-page-header h2 {
+                font-size: 26px;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+                color: #0b1a33;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+                .settings-page-header h2 i {
+                    color: #2563eb;
+                    font-size: 28px;
+                }
+
+            .settings-page-header .subtitle {
+                color: #64748b;
+                font-size: 14px;
+                font-weight: 400;
+                margin-top: 2px;
+            }
+
+        .settings-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* ── Stats summary cards ── */
+        .settings-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            }
+
+            .stat-card .stat-label {
+                font-size: 13px;
+                font-weight: 500;
+                color: #64748b;
+                letter-spacing: 0.02em;
+                text-transform: uppercase;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .stat-card .stat-value {
+                font-size: 24px;
+                font-weight: 700;
+                color: #0b1a33;
+                margin-top: 4px;
+            }
+
+                .stat-card .stat-value .unit {
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: #94a3b8;
+                    margin-left: 4px;
+                }
+
+        /* ── Main card ── */
+        .settings-card {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 28px 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+
+            .settings-card .card-header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 24px;
+                padding-bottom: 16px;
+                border-bottom: 1px solid #eef2f6;
+            }
+
+                .settings-card .card-header i {
+                    font-size: 22px;
+                    color: #2563eb;
+                    background: #dbeafe;
+                    padding: 10px;
+                    border-radius: 12px;
+                }
+
+                .settings-card .card-header h3 {
+                    font-size: 20px;
+                    font-weight: 600;
+                    color: #0b1a33;
+                    margin: 0;
+                }
+
+                .settings-card .card-header p {
+                    color: #64748b;
+                    font-size: 14px;
+                    margin: 2px 0 0;
+                }
+
+        /* ── Form grid ── */
+        .settings-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px 32px;
+        }
+
+            .settings-form .full-width {
+                grid-column: 1 / -1;
+            }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+            .form-group label {
+                font-weight: 500;
+                font-size: 14px;
+                color: #1e293b;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                .form-group label i {
+                    color: #94a3b8;
+                    font-size: 14px;
+                    width: 18px;
+                }
+
+            .form-group .form-control {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                padding: 10px 14px;
+                font-size: 14px;
+                font-family: inherit;
+                color: #1e293b;
+                transition: border-color 0.2s, box-shadow 0.2s;
+                outline: none;
+                width: 100%;
+            }
+
+                .form-group .form-control:focus {
+                    border-color: #2563eb;
+                    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+                }
+
+                .form-group .form-control::placeholder {
+                    color: #94a3b8;
+                }
+
+                .form-group .form-control[readonly] {
+                    background: #f8fafc;
+                    cursor: not-allowed;
+                }
+
+            .form-group .help-text {
+                font-size: 12px;
+                color: #94a3b8;
+                margin-top: 2px;
+            }
+
+        /* ── Toggle switch (maintenance) ── */
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding-top: 8px;
+        }
+
+        .toggle {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+            .toggle input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            .toggle .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #cbd5e1;
+                transition: .3s;
+                border-radius: 28px;
+            }
+
+                .toggle .slider:before {
+                    position: absolute;
+                    content: "";
+                    height: 20px;
+                    width: 20px;
+                    left: 4px;
+                    bottom: 4px;
+                    background-color: white;
+                    transition: .3s;
+                    border-radius: 50%;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+                }
+
+            .toggle input:checked + .slider {
+                background-color: #2563eb;
+            }
+
+                .toggle input:checked + .slider:before {
+                    transform: translateX(24px);
+                }
+
+        .toggle-label {
+            font-weight: 500;
+            font-size: 14px;
+            color: #1e293b;
+        }
+
+        .toggle-status {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+            .toggle-status .enabled {
+                color: #16a34a;
+                font-weight: 600;
+            }
+
+            .toggle-status .disabled {
+                color: #dc2626;
+                font-weight: 600;
+            }
+
+        /* ── Buttons ── */
+        .form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 20px;
+            border-top: 1px solid #eef2f6;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            min-height: 44px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+            .btn-primary:hover {
+                background: #1d4ed8;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            }
+
+            .btn-primary:active {
+                transform: translateY(0);
+            }
+
+        .btn-outline {
+            background: transparent;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+            .btn-outline:hover {
+                background: #f1f5f9;
+                border-color: #cbd5e1;
+            }
+
+        .btn-success {
+            background: #16a34a;
+            color: white;
+        }
+
+            .btn-success:hover {
+                background: #15803d;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+            }
+
+        .btn i {
+            font-size: 16px;
+        }
+
+        /* ── Toast notification ── */
+        .toast-notification {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0b1a33;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(12px) scale(0.96);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(8px);
+        }
+
+            .toast-notification.show {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                pointer-events: auto;
+            }
+
+            .toast-notification i {
+                font-size: 18px;
+                color: #4ade80;
+            }
+
+        /* ── Responsive ── */
+        @@media (max-width: 768px) {
+            .settings-form {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .settings-page-header h2 {
+                font-size: 20px;
+            }
+
+            .settings-card {
+                padding: 16px 14px;
+            }
+
+            .settings-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stat-card .stat-value {
+                font-size: 20px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+                .form-actions .btn {
+                    width: 100%;
+                    justify-content: center;
+                }
+
+            .toast-notification {
+                left: 16px;
+                right: 16px;
+                bottom: 16px;
+                text-align: center;
+                justify-content: center;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .settings-stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .stat-card {
+                padding: 12px 14px;
+            }
+        }
+    </style>
+}
+
+<!-- ─── Toast ─── -->
+<div id="toast" class="toast-notification">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage">Settings saved successfully</span>
 </div>
+
+<!-- ─── Page Header ─── -->
+<div class="settings-page-header">
+    <div>
+        <h2>
+            <i class="fas fa-sliders-h"></i>
+            System Settings
+            <span class="subtitle">· Manage platform configuration</span>
+        </h2>
+    </div>
+    <div class="settings-header-actions">
+        <button id="resetDefaultsBtn" class="btn btn-outline" type="button">
+            <i class="fas fa-undo-alt"></i> Reset to defaults
+        </button>
+    </div>
+</div>
+
+<!-- ─── Stats Summary ─── -->
+<div class="settings-stats">
+    <div class="stat-card">
+        <div class="stat-label"><i class="fas fa-tag"></i> Commission</div>
+        <div class="stat-value">@Model.CommissionRate<span class="unit">%</span></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="fas fa-truck"></i> Base Delivery</div>
+        <div class="stat-value">$@Model.BaseDeliveryFee<span class="unit">USD</span></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="fas fa-gift"></i> Free Delivery</div>
+        <div class="stat-value">$@Model.FreeDeliveryThreshold<span class="unit">+</span></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="fas fa-power-off"></i> Maintenance</div>
+        <div class="stat-value" id="maintenanceStatusDisplay" style="font-size:20px;">
+            @if (Model.MaintenanceMode)
+            {
+                <span style="color:#16a34a;"><i class="fas fa-check-circle"></i> ON</span>
+            }
+            else
+            {
+                <span style="color:#94a3b8;"><i class="fas fa-circle"></i> OFF</span>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- ─── Main Card ─── -->
+<div class="settings-card">
+    <div class="card-header">
+        <i class="fas fa-cog"></i>
+        <div>
+            <h3>Platform Configuration</h3>
+            <p>Update core business rules and system behaviour</p>
+        </div>
+    </div>
+
+    <form method="post" id="settingsForm">
+        <div class="settings-form">
+            <!-- Platform Name -->
+            <div class="form-group full-width">
+                <label><i class="fas fa-store"></i> Platform Name</label>
+                <input type="text" name="PlatformName" class="form-control" value="@Model.PlatformName" placeholder="e.g. Multi‑Store Market" />
+                <div class="help-text">Displayed in the site header and emails</div>
+            </div>
+
+            <!-- Commission Rate -->
+            <div class="form-group">
+                <label><i class="fas fa-percent"></i> Global Commission Rate</label>
+                <input type="number" step="0.1" name="CommissionRate" class="form-control" value="@Model.CommissionRate" />
+                <div class="help-text">Percentage taken from each sale</div>
+            </div>
+
+            <!-- Base Delivery Fee -->
+            <div class="form-group">
+                <label><i class="fas fa-dollar-sign"></i> Base Delivery Fee</label>
+                <input type="number" step="0.5" name="BaseDeliveryFee" class="form-control" value="@Model.BaseDeliveryFee" />
+                <div class="help-text">Standard shipping cost (USD)</div>
+            </div>
+
+            <!-- Free Delivery Threshold -->
+            <div class="form-group">
+                <label><i class="fas fa-shopping-cart"></i> Free Delivery Threshold</label>
+                <input type="number" step="1" name="FreeDeliveryThreshold" class="form-control" value="@Model.FreeDeliveryThreshold" />
+                <div class="help-text">Orders above this amount get free shipping</div>
+            </div>
+
+            <!-- Maintenance Mode (toggle) -->
+            <div class="form-group">
+                <label><i class="fas fa-power-off"></i> Maintenance Mode</label>
+                <div class="toggle-group">
+                    <div class="toggle">
+                        <input type="checkbox" id="maintenanceToggle" name="MaintenanceMode" @(Model.MaintenanceMode ? "checked" : "") />
+                        <span class="slider"></span>
+                    </div>
+                    <span class="toggle-label">Enable maintenance</span>
+                    <span class="toggle-status">
+                        Status: <span id="maintenanceStatusText" class="@(Model.MaintenanceMode ? "enabled" : "disabled")">
+                        @(Model.MaintenanceMode ? "Enabled" : "Disabled")
+                    </span>
+                </span>
+            </div>
+            <div class="help-text">When enabled, only admins can access the storefront</div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Settings
+            </button>
+            <button type="reset" class="btn btn-outline" id="resetFormBtn">
+                <i class="fas fa-undo-alt"></i> Reset form
+            </button>
+        </div>
+    </div>
+</form>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+
+        // ─── DOM refs ───
+        const form = document.getElementById('settingsForm');
+        const resetFormBtn = document.getElementById('resetFormBtn');
+        const resetDefaultsBtn = document.getElementById('resetDefaultsBtn');
+        const maintenanceToggle = document.getElementById('maintenanceToggle');
+        const maintenanceStatusText = document.getElementById('maintenanceStatusText');
+        const maintenanceStatusDisplay = document.getElementById('maintenanceStatusDisplay');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        // ─── Update maintenance status display ───
+        function updateMaintenanceUI(checked) {
+            if (checked) {
+                maintenanceStatusText.textContent = 'Enabled';
+                maintenanceStatusText.className = 'enabled';
+                maintenanceStatusDisplay.innerHTML = '<span style="color:#16a34a;"><i class="fas fa-check-circle"></i> ON</span>';
+            } else {
+                maintenanceStatusText.textContent = 'Disabled';
+                maintenanceStatusText.className = 'disabled';
+                maintenanceStatusDisplay.innerHTML = '<span style="color:#94a3b8;"><i class="fas fa-circle"></i> OFF</span>';
+            }
+        }
+
+        // ─── Toggle change ───
+        maintenanceToggle.addEventListener('change', function() {
+            updateMaintenanceUI(this.checked);
+        });
+
+        // ─── Reset form (to current model values) ───
+        resetFormBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Reset all input values to their initial values (from model)
+            const inputs = form.querySelectorAll('input:not([type="checkbox"])');
+            inputs.forEach(input => {
+                const defaultValue = input.defaultValue;
+                if (defaultValue !== undefined) {
+                    input.value = defaultValue;
+                }
+            });
+            // Reset checkbox to its default state
+            const checkbox = form.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                const defaultChecked = checkbox.defaultChecked;
+                checkbox.checked = defaultChecked;
+                updateMaintenanceUI(defaultChecked);
+            }
+            showToast('Form reset to current saved values');
+        });
+
+        // ─── Reset to defaults (hardcoded example) ───
+        resetDefaultsBtn.addEventListener('click', function() {
+            // Example defaults – you can adjust these to your actual defaults
+            const defaults = {
+                PlatformName: 'Multi‑Store Market',
+                CommissionRate: 10.0,
+                BaseDeliveryFee: 5.0,
+                FreeDeliveryThreshold: 50,
+                MaintenanceMode: false
+            };
+            const inputs = form.querySelectorAll('input:not([type="checkbox"])');
+            inputs.forEach(input => {
+                const name = input.name;
+                if (defaults.hasOwnProperty(name)) {
+                    input.value = defaults[name];
+                }
+            });
+            const checkbox = form.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = defaults.MaintenanceMode;
+                updateMaintenanceUI(defaults.MaintenanceMode);
+            }
+            showToast('Defaults loaded – click Save to apply');
+        });
+
+        // ─── Toast helper ───
+        let toastTimer = null;
+
+        function showToast(msg, type = 'success') {
+            toastMessage.textContent = msg;
+            const icon = toast.querySelector('i');
+            if (type === 'warning') {
+                icon.className = 'fas fa-exclamation-triangle';
+                icon.style.color = '#fbbf24';
+            } else {
+                icon.className = 'fas fa-check-circle';
+                icon.style.color = '#4ade80';
+            }
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3200);
+        }
+
+        // ─── On form submit success (if you want to show toast) ───
+        // Since we can't intercept the POST easily, we can check for a query param or use a hidden field.
+        // For demo, we'll show a toast when the page loads if a flag is set.
+        // In practice, you could set TempData["SettingsSaved"] = true and check here.
+        // We'll keep it simple: the toast will be shown if the form is submitted successfully (we'll simulate by checking if there's a POST)
+        // Actually we can check if the page was reloaded after POST by looking at the model state or using a hidden input.
+        // For now, we'll just show a toast on page load if there is a success indicator.
+        // We'll add a hidden input or check a query param. Not needed for the design.
+
+        // ─── Init ───
+        // Ensure the toggle UI matches the initial state
+        updateMaintenanceUI(maintenanceToggle.checked);
+
+        console.log('⚙️ Settings page initialized');
+    })();
+</script>
