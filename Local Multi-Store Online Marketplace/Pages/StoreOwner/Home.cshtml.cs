@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Multi_Store.Core.Entities;
 using Multi_Store.Services.Managers;
 
-namespace Local_Multi_Store_Online_Marketplace.Pages
+namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 {
     public class HomeModel : PageModel
     {
