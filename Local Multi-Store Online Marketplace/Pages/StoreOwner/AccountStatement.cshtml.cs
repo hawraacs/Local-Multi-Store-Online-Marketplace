@@ -1,4 +1,3 @@
-using com.sun.xml.@internal.bind.v2.model.core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -22,51 +21,86 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         private readonly ICurrentStoreService _currentStoreService;
         private readonly UserManager<User> _userManager;
         private readonly SubscriptionService _subscriptionService;
+        private readonly IConfiguration _configuration;
 
         public AccountStatementModel(
             ApplicationDbContext context,
             ICurrentStoreService currentStoreService,
             UserManager<User> userManager,
-            SubscriptionService subscriptionService)
+            SubscriptionService subscriptionService,
+            IConfiguration configuration)
         {
             _context = context;
             _currentStoreService = currentStoreService;
             _userManager = userManager;
             _subscriptionService = subscriptionService;
+            _configuration = configuration;
         }
 
-        public Store Store { get; set; }
-
+        public Store Store { get; set; } = null!;
         public StatementSummary Summary { get; set; } = new();
-
         public List<StatementLine> Lines { get; set; } = new();
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync()
+        {
+            var store = await GetStoreAsync();
+            if (store == null)
+                return RedirectToPage("/StoreOwner/Dashboard");
+
+            Store = store;
+            await BuildStatementAsync(store);
+            return Page();
+        }
+
+        // =============================================================
+        // Renew Subscription – redirect to payment page
+        // =============================================================
+        public async Task<IActionResult> OnPostRenewAsync()
+        {
+            var store = await GetStoreAsync();
+            if (store == null)
+                return RedirectToPage("/StoreOwner/Dashboard");
+
+            // Create pending payment record
+            var pendingPayment = await GetOrCreatePendingSubscriptionPaymentAsync(store.StoreID);
+            if (pendingPayment == null)
+            {
+                TempData["ErrorMessage"] = "Unable to create payment request. Please try again.";
+                return RedirectToPage();
+            }
+
+            // Redirect to payment page with the payment ID and a return URL
+            return RedirectToPage("/StoreOwner/StoreOwnerPayment", new
+            {
+                paymentId = pendingPayment.StorePaymentId,
+                returnUrl = Url.Page("/StoreOwner/AccountStatement")
+            });
+        }
+
+        // =============================================================
+        // Helpers
+        // =============================================================
+
+        private async Task<Store?> GetStoreAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user == null) return null;
 
             var store = await _currentStoreService.GetCurrentStoreAsync();
-
             if (store == null)
             {
                 store = await _context.Stores
-                    .FirstOrDefaultAsync(s =>
-                        s.OwnerUserID == user.Id &&
-                        s.Status == "Approved");
+                    .FirstOrDefaultAsync(s => s.OwnerUserID == user.Id && s.Status == "Approved");
             }
+            return store;
+        }
 
-            Store = store;
-
-            if (store == null)
-                return;
-
-            // -------- Delivered Orders --------
-
+        private async Task BuildStatementAsync(Store store)
+        {
+            // Delivered orders
             var deliveredOrderItems = await _context.OrderItems
                 .Include(oi => oi.Order)
-                .Where(oi =>
-                    oi.StoreID == store.StoreID &&
-                    oi.Order.Status == "Delivered")
+                .Where(oi => oi.StoreID == store.StoreID && oi.Order.Status == "Delivered")
                 .OrderBy(oi => oi.Order.OrderDate)
                 .ToListAsync();
 
@@ -82,8 +116,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 })
                 .ToList();
 
-            // -------- Subscription Payments --------
-
+            // Subscription payments
             var subscriptionPayments = await _context.SubscriptionPayments
                 .Where(sp => sp.StoreId == store.StoreID)
                 .OrderBy(sp => sp.PaymentDate)
@@ -117,41 +150,43 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 });
             }
 
-            Lines = lines
-                .OrderByDescending(l => l.Date)
-                .ToList();
+            Lines = lines.OrderByDescending(l => l.Date).ToList();
 
             Summary.TotalGrossRevenue = orderGroups.Sum(o => o.GrossAmount);
             Summary.TotalCommission = orderGroups.Sum(o => o.Commission);
             Summary.TotalSubscriptionFees = subscriptionPayments.Sum(p => p.Amount);
-            Summary.NetRevenue =
-                Summary.TotalGrossRevenue -
-                Summary.TotalCommission -
-                Summary.TotalSubscriptionFees;
-
+            Summary.NetRevenue = Summary.TotalGrossRevenue - Summary.TotalCommission - Summary.TotalSubscriptionFees;
             Summary.OutstandingBalance = store.OutstandingBalance;
         }
 
-        public async Task<IActionResult> OnPostRenewAsync()
+        private async Task<StorePayment?> GetOrCreatePendingSubscriptionPaymentAsync(int storeId)
         {
-            var user = await _userManager.GetUserAsync(User);
+            decimal monthlyFee = _configuration.GetValue<decimal>("StoreSettings:MonthlySubscriptionFee", 20.00m);
+            const string description = "Monthly Subscription Fee";
 
-            var store = await _currentStoreService.GetCurrentStoreAsync();
+            // Check for existing pending payment
+            var existing = await _context.StorePayments
+                .FirstOrDefaultAsync(sp => sp.StoreId == storeId
+                                           && sp.Description == description
+                                           && sp.Status == "Pending");
+            if (existing != null)
+                return existing;
 
-            if (store == null)
+            // Create new pending payment
+            var payment = new StorePayment
             {
-                store = await _context.Stores
-                    .FirstOrDefaultAsync(s =>
-                        s.OwnerUserID == user.Id &&
-                        s.Status == "Approved");
-            }
+                StoreId = storeId,
+                Amount = monthlyFee,
+                Description = description,
+                DueDate = DateTime.UtcNow.AddDays(7),
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow
+            };
 
-            if (store == null)
-                return RedirectToPage();
+            _context.StorePayments.Add(payment);
+            await _context.SaveChangesAsync();
 
-            // Renew for 30 days and record a $20 payment
-            _subscriptionService.ExtendSubscription(store.StoreID);
-            return RedirectToPage();
+            return payment;
         }
     }
 
@@ -167,14 +202,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
     public class StatementLine
     {
         public DateTime Date { get; set; }
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
         public decimal GrossRevenue { get; set; }
         public decimal Commission { get; set; }
         public decimal SubscriptionFee { get; set; }
         public LineType Type { get; set; }
-
-        public decimal NetEffect =>
-            GrossRevenue - Commission - SubscriptionFee;
+        public decimal NetEffect => GrossRevenue - Commission - SubscriptionFee;
     }
 
     public enum LineType

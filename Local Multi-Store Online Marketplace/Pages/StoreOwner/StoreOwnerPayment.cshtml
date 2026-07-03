@@ -1,0 +1,953 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.StoreOwnerPaymentModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Store Owner Payment</title>
+
+    <style>
+            /* ====== Copy all the CSS from the customer payment page ====== */
+            /* (same as OnlinePayment.cshtml – no changes needed) */
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                min-height: 100vh;
+                background: radial-gradient(circle at top left, rgba(255,107,53,0.16), transparent 32%), radial-gradient(circle at bottom right, rgba(17,24,39,0.08), transparent 35%), linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+                font-family: Arial, sans-serif;
+                color: #111827;
+            }
+
+            .payment-page {
+                min-height: 100vh;
+                padding: 45px 22px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .payment-shell {
+                width: 100%;
+                max-width: 980px;
+                display: grid;
+                grid-template-columns: 1fr 1.05fr;
+                gap: 24px;
+                align-items: stretch;
+            }
+
+            .payment-info {
+                background: #111827;
+                color: white;
+                border-radius: 30px;
+                padding: 34px;
+                box-shadow: 0 26px 70px rgba(15,23,42,0.18);
+                position: relative;
+                overflow: hidden;
+            }
+
+                .payment-info::before {
+                    content: "";
+                    position: absolute;
+                    width: 230px;
+                    height: 230px;
+                    border-radius: 50%;
+                    background: rgba(255,107,53,0.22);
+                    right: -80px;
+                    top: -80px;
+                }
+
+                .payment-info::after {
+                    content: "";
+                    position: absolute;
+                    width: 160px;
+                    height: 160px;
+                    border-radius: 50%;
+                    background: rgba(255,255,255,0.08);
+                    left: -60px;
+                    bottom: -60px;
+                }
+
+            .payment-info-content {
+                position: relative;
+                z-index: 2;
+            }
+
+            .secure-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: rgba(255,255,255,0.10);
+                border: 1px solid rgba(255,255,255,0.14);
+                padding: 9px 12px;
+                border-radius: 999px;
+                font-size: 12px;
+                font-weight: 900;
+                color: #fed7aa;
+                margin-bottom: 22px;
+            }
+
+            .payment-info h1 {
+                margin: 0;
+                font-size: 38px;
+                line-height: 1.1;
+                letter-spacing: -1px;
+                font-weight: 900;
+            }
+
+            .payment-info p {
+                color: #cbd5e1;
+                line-height: 1.6;
+                font-weight: 700;
+                margin: 16px 0 26px 0;
+                font-size: 14px;
+            }
+
+            .mini-card {
+                background: linear-gradient(135deg, #ff6b35, #ff9f70);
+                border-radius: 22px;
+                padding: 22px;
+                min-height: 170px;
+                box-shadow: 0 16px 35px rgba(255,107,53,0.22);
+                margin-top: 25px;
+            }
+
+            .mini-card-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                color: white;
+                font-weight: 900;
+                font-size: 14px;
+            }
+
+            .chip {
+                width: 42px;
+                height: 30px;
+                border-radius: 8px;
+                background: rgba(255,255,255,0.72);
+                border: 1px solid rgba(255,255,255,0.6);
+            }
+
+            .card-number-preview {
+                margin-top: 28px;
+                color: white;
+                font-size: 20px;
+                font-weight: 900;
+                letter-spacing: 2px;
+            }
+
+            .card-bottom {
+                margin-top: 22px;
+                display: flex;
+                justify-content: space-between;
+                color: white;
+                font-size: 12px;
+                font-weight: 900;
+                opacity: 0.95;
+            }
+
+            .test-cards {
+                margin-top: 24px;
+                display: grid;
+                gap: 10px;
+            }
+
+            .test-card-row {
+                background: rgba(255,255,255,0.08);
+                border: 1px solid rgba(255,255,255,0.12);
+                border-radius: 14px;
+                padding: 12px;
+                font-size: 12px;
+                font-weight: 800;
+                color: #e5e7eb;
+                line-height: 1.5;
+            }
+
+                .test-card-row strong {
+                    color: white;
+                }
+
+            .success-text {
+                color: #86efac;
+            }
+
+            .decline-text {
+                color: #fca5a5;
+            }
+
+            .payment-card {
+                background: white;
+                border-radius: 30px;
+                box-shadow: 0 26px 70px rgba(15,23,42,0.12);
+                overflow: hidden;
+                border: 1px solid #e5e7eb;
+            }
+
+            .payment-card-header {
+                padding: 28px 30px 18px 30px;
+                border-bottom: 1px solid #eef2f7;
+            }
+
+                .payment-card-header h2 {
+                    margin: 0;
+                    font-size: 28px;
+                    color: #0f172a;
+                    font-weight: 900;
+                    letter-spacing: -0.5px;
+                }
+
+                .payment-card-header p {
+                    margin: 8px 0 0 0;
+                    color: #64748b;
+                    font-size: 14px;
+                    font-weight: 700;
+                }
+
+            .payment-body {
+                padding: 26px 30px 30px 30px;
+            }
+
+            .summary {
+                background: #f8fafc;
+                border: 1px solid #e5e7eb;
+                border-radius: 20px;
+                padding: 16px;
+                margin-bottom: 20px;
+            }
+
+            .summary-row {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 9px 0;
+                border-bottom: 1px solid #e5e7eb;
+                font-weight: 800;
+                color: #334155;
+                font-size: 14px;
+            }
+
+                .summary-row:last-child {
+                    border-bottom: none;
+                }
+
+                .summary-row span:last-child {
+                    color: #111827;
+                    text-align: right;
+                }
+
+            .summary-total {
+                font-size: 20px;
+                color: #111827;
+                font-weight: 900;
+            }
+
+            .hint {
+                background: #fff7ed;
+                border: 1px solid #fed7aa;
+                color: #9a3412;
+                padding: 13px 14px;
+                border-radius: 16px;
+                font-size: 12px;
+                font-weight: 800;
+                line-height: 1.55;
+                margin-bottom: 18px;
+            }
+
+            .message {
+                padding: 13px 14px;
+                border-radius: 16px;
+                margin-bottom: 15px;
+                font-weight: 900;
+                text-align: center;
+                line-height: 1.5;
+                font-size: 13px;
+            }
+
+            .error {
+                background: #fee2e2;
+                color: #991b1b;
+                border: 1px solid #fca5a5;
+            }
+
+            .field {
+                margin-bottom: 15px;
+            }
+
+                .field label {
+                    display: block;
+                    margin-bottom: 7px;
+                    font-size: 13px;
+                    font-weight: 900;
+                    color: #111827;
+                }
+
+                .field input {
+                    width: 100%;
+                    padding: 14px 15px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 15px;
+                    font-weight: 800;
+                    color: #111827;
+                    outline: none;
+                    background: white;
+                    transition: 0.2s ease;
+                }
+
+                    .field input:focus {
+                        border-color: #ff6b35;
+                        box-shadow: 0 0 0 4px rgba(255,107,53,0.13);
+                    }
+
+                    .field input.input-error {
+                        border-color: #dc2626;
+                        box-shadow: 0 0 0 4px rgba(220,38,38,0.10);
+                    }
+
+            .row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            .actions {
+                display: flex;
+                gap: 12px;
+                margin-top: 18px;
+            }
+
+            .btn {
+                flex: 1;
+                border: none;
+                border-radius: 16px;
+                padding: 14px;
+                font-weight: 900;
+                cursor: pointer;
+                text-decoration: none;
+                text-align: center;
+                font-size: 14px;
+                transition: 0.2s ease;
+            }
+
+            .pay-btn {
+                background: #ff6b35;
+                color: white;
+                box-shadow: 0 12px 25px rgba(255,107,53,0.28);
+            }
+
+                .pay-btn:disabled {
+                    cursor: wait;
+                    opacity: 0.70;
+                    transform: none;
+                }
+
+            .back-btn {
+                background: #111827;
+                color: white;
+                box-shadow: 0 12px 25px rgba(17,24,39,0.18);
+            }
+
+            .btn:hover {
+                opacity: 0.94;
+                transform: translateY(-1px);
+            }
+
+            .locked {
+                font-size: 12px;
+                color: #64748b;
+                text-align: center;
+                margin-top: 16px;
+                font-weight: 800;
+            }
+
+            .payment-toast-container {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000001;
+                pointer-events: none;
+            }
+
+            .payment-toast {
+                width: min(400px, calc(100vw - 40px));
+                padding: 15px 16px;
+                border-radius: 15px;
+                color: white;
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                background: linear-gradient(135deg, #b91c1c, #dc2626);
+                box-shadow: 0 18px 45px rgba(15,23,42,0.28);
+                opacity: 0;
+                transform: translateX(45px);
+                transition: opacity 0.28s ease, transform 0.28s ease;
+                pointer-events: auto;
+            }
+
+                .payment-toast.show {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+
+            .payment-toast-icon {
+                width: 34px;
+                height: 34px;
+                flex: 0 0 34px;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.18);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                font-weight: 900;
+            }
+
+            .payment-toast-content {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .payment-toast-title {
+                display: block;
+                margin-bottom: 3px;
+                font-size: 14px;
+                font-weight: 900;
+            }
+
+            .payment-toast-message {
+                display: block;
+                font-size: 13px;
+                font-weight: 700;
+                line-height: 1.5;
+            }
+
+            .payment-toast-close {
+                border: none;
+                background: transparent;
+                color: white;
+                font-size: 23px;
+                line-height: 1;
+                padding: 0;
+                cursor: pointer;
+            }
+
+            .payment-modal-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                padding: 20px;
+                background: rgba(15,23,42,0.70);
+                backdrop-filter: blur(5px);
+                align-items: center;
+                justify-content: center;
+                z-index: 1000000;
+            }
+
+                .payment-modal-overlay.show {
+                    display: flex;
+                }
+
+            .payment-modal-card {
+                width: min(450px, 100%);
+                background: white;
+                border-radius: 24px;
+                box-shadow: 0 25px 70px rgba(0,0,0,0.30);
+                overflow: hidden;
+                animation: paymentModalOpen 0.22s ease;
+            }
+
+            @@keyframes paymentModalOpen {
+                from {
+                    opacity: 0;
+                    transform: translateY(18px) scale(0.96);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+
+            .payment-modal-header {
+                padding: 26px 26px 14px;
+                text-align: center;
+            }
+
+            .payment-modal-icon {
+                width: 60px;
+                height: 60px;
+                margin: 0 auto 14px;
+                border-radius: 50%;
+                background: #fff7ed;
+                color: #ea580c;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 27px;
+            }
+
+            .payment-modal-title {
+                margin: 0;
+                color: #111827;
+                font-size: 21px;
+                font-weight: 900;
+            }
+
+            .payment-modal-body {
+                padding: 0 26px 22px;
+                text-align: center;
+            }
+
+            .payment-modal-message {
+                margin: 0;
+                color: #64748b;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+
+            .payment-modal-total {
+                display: block;
+                margin-top: 12px;
+                color: #111827;
+                font-size: 20px;
+                font-weight: 900;
+            }
+
+            .payment-modal-note {
+                display: block;
+                margin-top: 8px;
+                color: #9a3412;
+                font-size: 12px;
+                font-weight: 800;
+            }
+
+            .payment-modal-actions {
+                display: flex;
+                gap: 10px;
+                padding: 18px 26px 26px;
+            }
+
+            .payment-modal-button {
+                flex: 1;
+                border: none;
+                border-radius: 13px;
+                padding: 13px 16px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 900;
+            }
+
+            .payment-modal-cancel {
+                background: #e5e7eb;
+                color: #374151;
+            }
+
+            .payment-modal-confirm {
+                background: #ff6b35;
+                color: white;
+            }
+
+                .payment-modal-confirm:disabled {
+                    cursor: wait;
+                    opacity: 0.70;
+                }
+
+            @@media (max-width: 900px) {
+                .payment-shell {
+                    grid-template-columns: 1fr;
+                    max-width: 560px;
+                }
+
+                .payment-info {
+                    display: none;
+                }
+            }
+
+            @@media (max-width: 520px) {
+                .payment-page {
+                    padding: 22px 14px;
+                }
+
+                .payment-card-header, .payment-body {
+                    padding-left: 20px;
+                    padding-right: 20px;
+                }
+
+                .row {
+                    grid-template-columns: 1fr;
+                }
+
+                .actions, .payment-modal-actions {
+                    flex-direction: column;
+                }
+
+                .payment-toast-container {
+                    top: 12px;
+                    right: 12px;
+                    left: 12px;
+                }
+
+                .payment-toast {
+                    width: 100%;
+                }
+            }
+    </style>
+</head>
+<body>
+
+    <div id="paymentToastContainer" class="payment-toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+    <div class="payment-page">
+
+        <div class="payment-shell">
+
+            <!-- Left panel: info -->
+            <div class="payment-info">
+                <div class="payment-info-content">
+                    <div class="secure-badge">🔒 Stripe Balance Check</div>
+                    <h1>Pay your store fees securely.</h1>
+                    <p>This page allows you to pay outstanding fees using your Stripe balance. Your card is used only for verification.</p>
+                    <div class="mini-card">
+                        <div class="mini-card-top">
+                            <span id="cardBrandPreview">STORE CARD</span>
+                            <span class="chip"></span>
+                        </div>
+                        <div class="card-number-preview" id="cardNumberPreview">•••• •••• •••• ••••</div>
+                        <div class="card-bottom">
+                            <span id="cardholderPreview">CARDHOLDER</span>
+                            <span id="expiryPreview">MM/YY</span>
+                        </div>
+                    </div>
+                    <div class="test-cards">
+                        <div class="test-card-row"><strong>4242 4242 4242 4242</strong><br /><span class="success-text">Valid Visa test</span></div>
+                        <div class="test-card-row"><strong>5555 5555 5555 4444</strong><br /><span class="success-text">Valid Mastercard test</span></div>
+                        <div class="test-card-row"><strong>4000 0000 0000 0002</strong><br /><span class="decline-text">Declined payment scenario</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right panel: payment form -->
+            <div class="payment-card">
+
+                <div class="payment-card-header">
+                    <h2>Complete Payment</h2>
+                    <p>Confirm the payment using your stored card and Stripe balance.</p>
+                </div>
+
+                <div class="payment-body">
+
+                    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                    {
+                        <div class="message error" id="serverPaymentError" data-message="@Model.ErrorMessage">
+                            @Model.ErrorMessage
+                        </div>
+                    }
+
+                    @if (Model.Payment == null)
+                    {
+                        <div class="message error">Payment request not found.</div>
+                        <div class="actions">
+                            <a href="/StoreOwner/Dashboard" class="btn back-btn">Back to Dashboard</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="summary">
+                            <div class="summary-row"><span>Payment Reference</span><span>#@Model.Payment.StorePaymentId</span></div>
+                            <div class="summary-row"><span>Description</span><span>@Model.Payment.Description</span></div>
+                            <div class="summary-row"><span>Due Date</span><span>@Model.Payment.DueDate.ToString("MMM dd, yyyy")</span></div>
+                            <div class="summary-row summary-total"><span>Amount</span><span>$@Model.Payment.Amount.ToString("N2")</span></div>
+                            @if (Model.CurrentBalance >= 0)
+                            {
+                                <div class="summary-row"><span>Your Stripe Balance</span><span>$@Model.CurrentBalance.ToString("N2")</span></div>
+                            }
+                            else
+                            {
+                                <div class="summary-row"><span>Balance Check</span><span style="color:#dc2626;">Unavailable</span></div>
+                            }
+                        </div>
+
+                        <div class="hint">
+                            Your Stripe balance will be checked. You must have at least the payment amount available. No actual card charge will be made.
+                        </div>
+
+                        <form method="post" id="paymentForm" novalidate>
+                            <input type="hidden" asp-for="PaymentId" />
+
+                            <div class="field">
+                                <label for="CardholderName">Cardholder Name</label>
+                                <input asp-for="CardholderName" id="CardholderName" maxlength="100" placeholder="John Doe" autocomplete="cc-name" />
+                            </div>
+
+                            <div class="field">
+                                <label for="CardNumber">Card Number</label>
+                                <input asp-for="CardNumber" id="CardNumber" type="text" inputmode="numeric" maxlength="19" placeholder="4242 4242 4242 4242" autocomplete="cc-number" />
+                            </div>
+
+                            <div class="row">
+                                <div class="field">
+                                    <label for="ExpiryDate">Expiry Date</label>
+                                    <input asp-for="ExpiryDate" id="ExpiryDate" type="text" inputmode="numeric" maxlength="5" placeholder="MM/YY" autocomplete="cc-exp" />
+                                </div>
+                                <div class="field">
+                                    <label for="Cvv">CVV</label>
+                                    <input asp-for="Cvv" id="Cvv" type="password" inputmode="numeric" maxlength="3" placeholder="123" autocomplete="cc-csc" />
+                                </div>
+                            </div>
+
+                            <div class="actions">
+                                <a href="/StoreOwner/Dashboard" class="btn back-btn">Cancel</a>
+                                <button type="button" id="payNowButton" class="btn pay-btn">Pay Now</button>
+                            </div>
+
+                            <div class="locked">🔒 Secure verification. No card data is stored.</div>
+                        </form>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Payment != null)
+    {
+        <div id="paymentConfirmationModal" class="payment-modal-overlay" role="dialog" aria-modal="true">
+            <div class="payment-modal-card">
+                <div class="payment-modal-header">
+                    <div class="payment-modal-icon">🔒</div>
+                    <h3 id="paymentModalTitle" class="payment-modal-title">Confirm Payment</h3>
+                </div>
+                <div class="payment-modal-body">
+                    <p class="payment-modal-message">
+                        Confirm payment of <strong>$@Model.Payment.Amount.ToString("N2")</strong> from your Stripe balance.
+                        <span class="payment-modal-note">This will check your Stripe account balance.</span>
+                    </p>
+                </div>
+                <div class="payment-modal-actions">
+                    <button type="button" class="payment-modal-button payment-modal-cancel" onclick="closePaymentModal()">Cancel</button>
+                    <button type="button" id="confirmPaymentButton" class="payment-modal-button payment-modal-confirm" onclick="submitPayment()">Confirm Payment</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ================================================ -->
+    <!-- JAVASCRIPT – identical to customer version      -->
+    <!-- ================================================ -->
+    <script>
+            const paymentForm = document.getElementById("paymentForm");
+            const payNowButton = document.getElementById("payNowButton");
+            const cardholderInput = document.getElementById("CardholderName");
+            const cardNumberInput = document.getElementById("CardNumber");
+            const expiryInput = document.getElementById("ExpiryDate");
+            const cvvInput = document.getElementById("Cvv");
+            const paymentModal = document.getElementById("paymentConfirmationModal");
+            let paymentSubmitting = false;
+
+            function showPaymentToast(message, title = "Unable to continue") {
+                const container = document.getElementById("paymentToastContainer");
+                if (!container || !message) return;
+                const oldToast = container.querySelector(".payment-toast");
+                if (oldToast) oldToast.remove();
+                const toast = document.createElement("div");
+                toast.className = "payment-toast";
+                toast.setAttribute("role", "alert");
+                toast.innerHTML = `
+                    <span class="payment-toast-icon">!</span>
+                    <span class="payment-toast-content">
+                        <span class="payment-toast-title"></span>
+                        <span class="payment-toast-message"></span>
+                    </span>
+                    <button type="button" class="payment-toast-close" aria-label="Close notification">&times;</button>
+                `;
+                toast.querySelector(".payment-toast-title").textContent = title;
+                toast.querySelector(".payment-toast-message").textContent = message;
+                const closeButton = toast.querySelector(".payment-toast-close");
+                container.appendChild(toast);
+                window.requestAnimationFrame(function () { toast.classList.add("show"); });
+                const timer = window.setTimeout(removeToast, 5500);
+                function removeToast() {
+                    window.clearTimeout(timer);
+                    toast.classList.remove("show");
+                    window.setTimeout(function () { toast.remove(); }, 280);
+                }
+                closeButton.addEventListener("click", removeToast);
+            }
+
+            function clearInputErrors() {
+                [cardholderInput, cardNumberInput, expiryInput, cvvInput].forEach(function (input) {
+                    input?.classList.remove("input-error");
+                });
+            }
+
+            function setInputError(input) {
+                input?.classList.add("input-error");
+                input?.focus();
+            }
+
+            function isValidLuhn(cardNumber) {
+                let sum = 0;
+                let doubleDigit = false;
+                for (let index = cardNumber.length - 1; index >= 0; index--) {
+                    let digit = Number(cardNumber[index]);
+                    if (Number.isNaN(digit)) return false;
+                    if (doubleDigit) {
+                        digit *= 2;
+                        if (digit > 9) digit -= 9;
+                    }
+                    sum += digit;
+                    doubleDigit = !doubleDigit;
+                }
+                return sum % 10 === 0;
+            }
+
+            function getCardBrand(cardNumber) {
+                if (cardNumber.length !== 16) return "Unsupported";
+                if (cardNumber.startsWith("4")) return "Visa";
+                const prefix = Number(cardNumber.slice(0, 2));
+                if (prefix >= 51 && prefix <= 55) return "Mastercard";
+                return "Unsupported";
+            }
+
+            function isExpiryValid(expiry) {
+                // Use a regex literal – no C# at here, plain JavaScript
+                if (!/^\d{2}\/\d{2}$/.test(expiry)) return false;
+                const parts = expiry.split("/");
+                const month = Number(parts[0]);
+                const year = Number(parts[1]);
+                if (month < 1 || month > 12) return false;
+                const now = new Date();
+                const currentYear = now.getFullYear() % 100;
+                const currentMonth = now.getMonth() + 1;
+                return year > currentYear || (year === currentYear && month >= currentMonth);
+            }
+
+            function validatePaymentForm() {
+                clearInputErrors();
+                const cardholder = cardholderInput?.value.trim() ?? "";
+                const cleanCard = cardNumberInput?.value.replace(/\D/g, "") ?? "";
+                const expiry = expiryInput?.value.trim() ?? "";
+                const cvv = cvvInput?.value.replace(/\D/g, "") ?? "";
+
+                if (cardholder.length < 3) {
+                    setInputError(cardholderInput);
+                    showPaymentToast("Enter a valid cardholder name.", "Cardholder name required");
+                    return false;
+                }
+                if (cleanCard.length !== 16) {
+                    setInputError(cardNumberInput);
+                    showPaymentToast("Card number must contain exactly 16 digits.", "Invalid card number");
+                    return false;
+                }
+                const cardBrand = getCardBrand(cleanCard);
+                if (cardBrand === "Unsupported") {
+                    setInputError(cardNumberInput);
+                    showPaymentToast("Only 16-digit Visa and Mastercard test cards are supported.", "Unsupported card type");
+                    return false;
+                }
+                if (!isValidLuhn(cleanCard)) {
+                    setInputError(cardNumberInput);
+                    showPaymentToast("The card number is not valid. Check the digits and try again.", "Invalid card number");
+                    return false;
+                }
+                if (!isExpiryValid(expiry)) {
+                    setInputError(expiryInput);
+                    showPaymentToast("Enter a valid future expiry date using MM/YY.", "Invalid expiry date");
+                    return false;
+                }
+                if (cvv.length !== 3) {
+                    setInputError(cvvInput);
+                    showPaymentToast("CVV must contain exactly 3 digits.", "Invalid CVV");
+                    return false;
+                }
+                return true;
+            }
+
+            function openPaymentModal() {
+                if (!validatePaymentForm()) return;
+                if (!paymentModal) return;
+                paymentModal.classList.add("show");
+                document.body.style.overflow = "hidden";
+            }
+
+            function closePaymentModal() {
+                if (paymentSubmitting) return;
+                paymentModal?.classList.remove("show");
+                document.body.style.overflow = "";
+            }
+
+            function submitPayment() {
+                if (!paymentForm || paymentSubmitting) return;
+                paymentSubmitting = true;
+                const confirmButton = document.getElementById("confirmPaymentButton");
+                if (confirmButton) { confirmButton.disabled = true; confirmButton.textContent = "Processing..."; }
+                if (payNowButton) { payNowButton.disabled = true; payNowButton.textContent = "Processing..."; }
+                paymentForm.submit();
+            }
+
+            payNowButton?.addEventListener("click", openPaymentModal);
+            paymentForm?.addEventListener("submit", function (event) {
+                if (!paymentSubmitting) {
+                    event.preventDefault();
+                    openPaymentModal();
+                }
+            });
+            paymentModal?.addEventListener("click", function (event) {
+                if (event.target === paymentModal) closePaymentModal();
+            });
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") closePaymentModal();
+            });
+
+            // Live preview updates
+            cardNumberInput?.addEventListener("input", function () {
+                const digits = this.value.replace(/\D/g, "").slice(0, 16);
+                this.value = digits.replace(/(\d{4})(?=\d)/g, "$1 ");
+                const preview = document.getElementById("cardNumberPreview");
+                const brandPreview = document.getElementById("cardBrandPreview");
+                if (preview) preview.textContent = this.value || "•••• •••• •••• ••••";
+                if (brandPreview) {
+                    const brand = getCardBrand(digits);
+                    brandPreview.textContent = brand === "Unsupported" ? "STORE CARD" : brand.toUpperCase();
+                }
+                this.classList.remove("input-error");
+            });
+
+            expiryInput?.addEventListener("input", function () {
+                const digits = this.value.replace(/\D/g, "").slice(0, 4);
+                this.value = digits.length > 2 ? digits.slice(0, 2) + "/" + digits.slice(2) : digits;
+                const preview = document.getElementById("expiryPreview");
+                if (preview) preview.textContent = this.value || "MM/YY";
+                this.classList.remove("input-error");
+            });
+
+            cvvInput?.addEventListener("input", function () {
+                this.value = this.value.replace(/\D/g, "").slice(0, 3);
+                this.classList.remove("input-error");
+            });
+
+            cardholderInput?.addEventListener("input", function () {
+                const preview = document.getElementById("cardholderPreview");
+                if (preview) preview.textContent = this.value.trim().toUpperCase() || "CARDHOLDER";
+                this.classList.remove("input-error");
+            });
+
+            // Initial preview population
+            document.addEventListener("DOMContentLoaded", function () {
+                const serverError = document.getElementById("serverPaymentError");
+                const errorMessage = serverError?.dataset.message;
+                if (errorMessage) showPaymentToast(errorMessage, "Payment was not completed");
+                cardNumberInput?.dispatchEvent(new Event("input"));
+                expiryInput?.dispatchEvent(new Event("input"));
+                cardholderInput?.dispatchEvent(new Event("input"));
+            });
+    </script>
+
+</body>
+</html>

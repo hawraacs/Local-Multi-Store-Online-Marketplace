@@ -1,288 +1,322 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Authorization;
-    using Microsoft.AspNetCore.Identity;
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.AspNetCore.Mvc.RazorPages;
-    using Microsoft.EntityFrameworkCore;
-    using Multi_Store.Core.Entities;
-    using Multi_Store.Infrastructure.Data;
-    using Stripe;
-    using System;
-    using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Multi_Store.Core.Entities;
+using Multi_Store.Infrastructure.Data;
+using Stripe;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 {
-
     [Authorize(Roles = "StoreOwner")]
-        public class StoreOwnerPaymentModel : PageModel
+    public class StoreOwnerPaymentModel : PageModel
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<User> _userManager;
+        private readonly ILogger<StoreOwnerPaymentModel> _logger;
+        private readonly IConfiguration _configuration;
+
+        public StoreOwnerPaymentModel(
+            ApplicationDbContext context,
+            UserManager<User> userManager,
+            ILogger<StoreOwnerPaymentModel> logger,
+            IConfiguration configuration)
         {
-            private readonly ApplicationDbContext _context;
-            private readonly UserManager<User> _userManager;
-            private readonly ILogger<StoreOwnerPaymentModel> _logger;
-            private readonly StripeConfiguration _stripeConfig;
+            _context = context;
+            _userManager = userManager;
+            _logger = logger;
+            _configuration = configuration;
+        }
 
-            public StoreOwnerPaymentModel(
-                ApplicationDbContext context,
-                UserManager<User> userManager,
-                ILogger<StoreOwnerPaymentModel> logger,
-                StripeConfiguration stripeConfig)
+        public StorePayment? Payment { get; set; }
+        public string? ErrorMessage { get; set; }
+        public decimal CurrentBalance { get; set; } = -1; // -1 = unavailable
+
+        [BindProperty]
+        public int PaymentId { get; set; }
+
+        [BindProperty]
+        public string CardholderName { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string CardNumber { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string ExpiryDate { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string Cvv { get; set; } = string.Empty;
+
+        [BindProperty(SupportsGet = true)]
+        public string? ReturnUrl { get; set; }
+
+        public async Task<IActionResult> OnGetAsync(int paymentId, string? returnUrl = null)
+        {
+            PaymentId = paymentId;
+            ReturnUrl = returnUrl;
+
+            var payment = await LoadPaymentForCurrentStoreOwnerAsync(paymentId);
+            if (payment == null)
             {
-                _context = context;
-                _userManager = userManager;
-                _logger = logger;
-                _stripeConfig = stripeConfig;
-            }
-
-            public StorePayment? Payment { get; set; }
-            public string? ErrorMessage { get; set; }
-            public decimal CurrentBalance { get; set; }
-
-            [BindProperty]
-            public int PaymentId { get; set; }
-
-            // For the form
-            [BindProperty]
-            public string CardholderName { get; set; } = string.Empty;
-
-            [BindProperty]
-            public string CardNumber { get; set; } = string.Empty;
-
-            [BindProperty]
-            public string ExpiryDate { get; set; } = string.Empty;
-
-            [BindProperty]
-            public string Cvv { get; set; } = string.Empty;
-
-            public async Task<IActionResult> OnGetAsync(int paymentId)
-            {
-                PaymentId = paymentId;
-
-                var payment = await LoadPaymentForCurrentStoreOwnerAsync(paymentId);
-                if (payment == null)
-                {
-                    ErrorMessage = "Payment request not found or you are not authorized.";
-                    return Page();
-                }
-
-                Payment = payment;
-
-                // Check if already paid
-                if (payment.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
-                {
-                    TempData["Success"] = "This payment has already been completed.";
-                    return RedirectToPage("/StoreOwnerDashboard");
-                }
-
-                // Validate that the store has a Stripe account
-                if (string.IsNullOrWhiteSpace(payment.Store.StripeAccountId))
-                {
-                    ErrorMessage = "Your store does not have a Stripe account linked. Please contact support.";
-                    return Page();
-                }
-
-                // Optionally fetch current Stripe balance for display
-                await FetchStripeBalance(payment.Store.StripeAccountId);
-
+                ErrorMessage = "Payment request not found or you are not authorized.";
                 return Page();
             }
 
-            public async Task<IActionResult> OnPostAsync()
+            Payment = payment;
+
+            if (payment.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
             {
-                var payment = await LoadPaymentForCurrentStoreOwnerAsync(PaymentId);
-                if (payment == null)
-                {
-                    ErrorMessage = "Payment request not found or you are not authorized.";
-                    return Page();
-                }
-
-                Payment = payment;
-
-                // Re-validate state
-                if (payment.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
-                {
-                    TempData["Success"] = "This payment is already completed.";
-                    return RedirectToPage("/StoreOwnerDashboard");
-                }
-
-                if (string.IsNullOrWhiteSpace(payment.Store.StripeAccountId))
-                {
-                    ErrorMessage = "Your store does not have a Stripe account linked.";
-                    return Page();
-                }
-
-                NormalizePaymentInput();
-
-                // Validate card details (same logic as customer version)
-                var cardValidationError = ValidateCardInput();
-                if (!string.IsNullOrWhiteSpace(cardValidationError))
-                {
-                    ErrorMessage = cardValidationError;
-                    return Page();
-                }
-
-                // Check Stripe balance
-                var balanceSufficient = await CheckStripeBalance(payment.Store.StripeAccountId, payment.Amount);
-                if (!balanceSufficient)
-                {
-                    ErrorMessage = "Insufficient funds in your Stripe account. Please add funds and try again.";
-                    return Page();
-                }
-
-                // Process the payment (simulate or actually debit via Stripe)
-                await using var transaction = await _context.Database.BeginTransactionAsync();
-
-                try
-                {
-                    // Optionally create a Stripe transfer (or just record)
-                    // For demonstration, we just mark as paid and record a transfer ID placeholder.
-                    var transferId = $"TRANSFER-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}";
-
-                    payment.Status = "Paid";
-                    payment.PaidAt = DateTime.UtcNow;
-                    payment.StripeTransferId = transferId;
-
-                    // Optionally create a Payment record (if you have a generic Payment table)
-                    // You can reuse the existing Payment entity or create a separate StorePaymentTransaction.
-
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    TempData["Success"] = $"Payment of ${payment.Amount:F2} was successfully processed. Reference: {transferId}.";
-                    return RedirectToPage("/StoreOwnerDashboard");
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    _logger.LogError(ex, "Store owner payment failed for payment {PaymentId}.", PaymentId);
-                    ErrorMessage = "An error occurred while processing your payment. Please try again.";
-                    return Page();
-                }
+                TempData["Success"] = "This payment has already been completed.";
+                if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
+                    return Redirect(ReturnUrl);
+                return RedirectToPage("/StoreOwner/Dashboard");
             }
 
-            // -------------------------------------------------------------
-            // Helper methods
-            // -------------------------------------------------------------
-
-            private async Task<StorePayment?> LoadPaymentForCurrentStoreOwnerAsync(int paymentId)
+            // If no Stripe account is linked, set a dummy balance for demo
+            if (string.IsNullOrWhiteSpace(payment.Store.StripeAccountId))
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return null;
-
-                // Get the store owned by this user (assuming one store per user)
-                var store = await _context.Stores
-                    .FirstOrDefaultAsync(s => s.UserId == user.Id);
-                if (store == null) return null;
-
-                return await _context.StorePayments
-                    .Include(sp => sp.Store)
-                    .FirstOrDefaultAsync(sp => sp.StorePaymentId == paymentId && sp.StoreId == store.StoreId);
+                // For demo purposes, treat as having sufficient balance
+                CurrentBalance = 9999; // dummy positive balance
+            }
+            else
+            {
+                await FetchStripeBalance(payment.Store.StripeAccountId);
             }
 
-            private void NormalizePaymentInput()
+            return Page();
+        }
+
+        public async Task<IActionResult> OnPostAsync()
+        {
+            var payment = await LoadPaymentForCurrentStoreOwnerAsync(PaymentId);
+            if (payment == null)
             {
-                CardholderName = CardholderName?.Trim() ?? string.Empty;
-                CardNumber = CardNumber?.Replace(" ", "").Replace("-", "").Trim() ?? string.Empty;
-                ExpiryDate = ExpiryDate?.Trim() ?? string.Empty;
-                Cvv = Cvv?.Trim() ?? string.Empty;
+                ErrorMessage = "Payment request not found or you are not authorized.";
+                return Page();
             }
 
-            private string? ValidateCardInput()
+            Payment = payment;
+
+            if (payment.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
             {
-                // Same validation logic as in OnlinePaymentModel – you can copy that.
-                // I'll include a condensed version here.
-                if (string.IsNullOrWhiteSpace(CardholderName) || CardholderName.Length < 3)
-                    return "Cardholder name is required (min 3 characters).";
-                if (string.IsNullOrWhiteSpace(CardNumber) || CardNumber.Length != 16 || !CardNumber.All(char.IsDigit))
-                    return "Card number must be exactly 16 digits.";
-                if (!IsValidLuhn(CardNumber))
-                    return "Invalid card number. Please check the digits.";
-                if (!IsValidExpiry(ExpiryDate))
-                    return "Invalid expiry date (MM/YY) or card has expired.";
-                if (string.IsNullOrWhiteSpace(Cvv) || Cvv.Length != 3 || !Cvv.All(char.IsDigit))
-                    return "CVV must be exactly 3 digits.";
-                return null;
+                TempData["Success"] = "This payment is already completed.";
+                if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
+                    return Redirect(ReturnUrl);
+                return RedirectToPage("/StoreOwner/Dashboard");
             }
 
-            private static bool IsValidLuhn(string cardNumber)
+            NormalizePaymentInput();
+
+            var cardValidationError = ValidateCardInput();
+            if (!string.IsNullOrWhiteSpace(cardValidationError))
             {
-                int sum = 0;
-                bool doubleDigit = false;
-                for (int i = cardNumber.Length - 1; i >= 0; i--)
+                ErrorMessage = cardValidationError;
+                return Page();
+            }
+
+            // Check balance - if no Stripe account, assume sufficient
+            bool balanceSufficient;
+            if (string.IsNullOrWhiteSpace(payment.Store.StripeAccountId))
+            {
+                balanceSufficient = true; // bypass for demo
+            }
+            else
+            {
+                balanceSufficient = await CheckStripeBalance(payment.Store.StripeAccountId, payment.Amount);
+            }
+
+            if (!balanceSufficient)
+            {
+                ErrorMessage = "Insufficient funds in your Stripe account. Please add funds and try again.";
+                return Page();
+            }
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var transferId = $"TRANSFER-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}";
+
+                // 1. Mark payment as paid
+                payment.Status = "Paid";
+                payment.PaidAt = DateTime.UtcNow;
+                payment.StripeTransferId = transferId;
+
+                // 2. If this is a subscription payment, update store and create SubscriptionPayment record
+                bool isSubscriptionPayment = payment.Description?.Equals("Monthly Subscription Fee", StringComparison.OrdinalIgnoreCase) == true;
+
+                if (isSubscriptionPayment)
                 {
-                    int digit = cardNumber[i] - '0';
-                    if (doubleDigit)
+                    var store = payment.Store;
+
+                    // Extend subscription by 1 month
+                    DateTime newExpiry = DateTime.UtcNow.AddMonths(1);
+                    if (store.SubscriptionExpiryDate.HasValue && store.SubscriptionExpiryDate.Value > DateTime.UtcNow)
                     {
-                        digit *= 2;
-                        if (digit > 9) digit -= 9;
+                        newExpiry = store.SubscriptionExpiryDate.Value.AddMonths(1);
                     }
-                    sum += digit;
-                    doubleDigit = !doubleDigit;
-                }
-                return sum % 10 == 0;
-            }
 
-            private static bool IsValidExpiry(string expiry)
-            {
-                if (!System.Text.RegularExpressions.Regex.IsMatch(expiry, @"^\d{2}/\d{2}$")) return false;
-                var parts = expiry.Split('/');
-                if (!int.TryParse(parts[0], out int month) || !int.TryParse(parts[1], out int year)) return false;
-                if (month < 1 || month > 12) return false;
-                int currentYear = DateTime.UtcNow.Year % 100;
-                int currentMonth = DateTime.UtcNow.Month;
-                return year > currentYear || (year == currentYear && month >= currentMonth);
-            }
+                    store.SubscriptionStatus = "Active";
+                    store.SubscriptionExpiryDate = newExpiry;
+                    store.LastPaymentDate = DateTime.UtcNow;
+                    store.LastPaymentAmount = payment.Amount;
 
-            // Stripe integration methods
-            private async Task FetchStripeBalance(string stripeAccountId)
-            {
-                try
-                {
-                    // Set your API key – loaded from configuration
-                    StripeConfiguration.ApiKey = _stripeConfig.SecretKey;
-
-                    var balanceService = new BalanceService();
-                    var balance = await balanceService.GetAsync(new BalanceGetOptions
+                    // Create a SubscriptionPayment record for transaction history
+                    var subscriptionPayment = new SubscriptionPayment
                     {
-                        StripeAccount = stripeAccountId
-                    });
+                        StoreId = store.StoreID,
+                        Amount = payment.Amount,
+                        PaymentDate = DateTime.UtcNow,
+                        Reference = $"Subscription renewal - {transferId}"
+                    };
+                    _context.SubscriptionPayments.Add(subscriptionPayment);
+                }
 
-                    // Get available balance (assuming currency is USD)
-                    var available = balance.Available.FirstOrDefault();
-                    CurrentBalance = available?.Amount ?? 0;
-                    // Convert from cents to dollars if needed (Stripe amounts are in cents)
-                    CurrentBalance /= 100; // Stripe returns in cents
-                }
-                catch
-                {
-                    // Log error, but don't block the page
-                    CurrentBalance = -1; // indicate error
-                }
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["Success"] = $"Payment of ${payment.Amount:F2} was successfully processed.";
+
+                // 3. Redirect to ReturnUrl if provided and safe, else fallback
+                if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
+                    return Redirect(ReturnUrl);
+
+                // Fallback: if subscription payment, go to account statement; otherwise product creation
+                if (isSubscriptionPayment)
+                    return RedirectToPage("/StoreOwner/AccountStatement");
+
+                return RedirectToPage("/StoreOwner/Products/Create");
             }
-
-            private async Task<bool> CheckStripeBalance(string stripeAccountId, decimal requiredAmount)
+            catch (Exception ex)
             {
-                try
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Store owner payment failed for payment {PaymentId}.", PaymentId);
+                ErrorMessage = "An error occurred while processing your payment. Please try again.";
+                return Page();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Helper methods
+        // -------------------------------------------------------------
+
+        private async Task<StorePayment?> LoadPaymentForCurrentStoreOwnerAsync(int paymentId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return null;
+
+            int userIdInt = user.Id;
+
+            var store = await _context.Stores
+                .FirstOrDefaultAsync(s => s.OwnerUserID == userIdInt);
+            if (store == null) return null;
+
+            return await _context.StorePayments
+                .Include(sp => sp.Store)
+                .FirstOrDefaultAsync(sp => sp.StorePaymentId == paymentId && sp.StoreId == store.StoreID);
+        }
+
+        private void NormalizePaymentInput()
+        {
+            CardholderName = CardholderName?.Trim() ?? string.Empty;
+            CardNumber = CardNumber?.Replace(" ", "").Replace("-", "").Trim() ?? string.Empty;
+            ExpiryDate = ExpiryDate?.Trim() ?? string.Empty;
+            Cvv = Cvv?.Trim() ?? string.Empty;
+        }
+
+        private string? ValidateCardInput()
+        {
+            if (string.IsNullOrWhiteSpace(CardholderName) || CardholderName.Length < 3)
+                return "Cardholder name is required (min 3 characters).";
+            if (string.IsNullOrWhiteSpace(CardNumber) || CardNumber.Length != 16 || !CardNumber.All(char.IsDigit))
+                return "Card number must be exactly 16 digits.";
+            if (!IsValidLuhn(CardNumber))
+                return "Invalid card number. Please check the digits.";
+            if (!IsValidExpiry(ExpiryDate))
+                return "Invalid expiry date (MM/YY) or card has expired.";
+            if (string.IsNullOrWhiteSpace(Cvv) || Cvv.Length != 3 || !Cvv.All(char.IsDigit))
+                return "CVV must be exactly 3 digits.";
+            return null;
+        }
+
+        private static bool IsValidLuhn(string cardNumber)
+        {
+            int sum = 0;
+            bool doubleDigit = false;
+            for (int i = cardNumber.Length - 1; i >= 0; i--)
+            {
+                int digit = cardNumber[i] - '0';
+                if (doubleDigit)
                 {
-                    StripeConfiguration.ApiKey = _stripeConfig.SecretKey;
-
-                    var balanceService = new BalanceService();
-                    var balance = await balanceService.GetAsync(new BalanceGetOptions
-                    {
-                        StripeAccount = stripeAccountId
-                    });
-
-                    // Sum available balances (in cents)
-                    long totalAvailableCents = balance.Available.Sum(b => b.Amount);
-                    decimal totalAvailable = totalAvailableCents / 100m; // convert to dollars
-
-                    return totalAvailable >= requiredAmount;
+                    digit *= 2;
+                    if (digit > 9) digit -= 9;
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to check Stripe balance for account {AccountId}.", stripeAccountId);
-                    return false; // fail safe
-                }
+                sum += digit;
+                doubleDigit = !doubleDigit;
+            }
+            return sum % 10 == 0;
+        }
+
+        private static bool IsValidExpiry(string expiry)
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(expiry, @"^\d{2}/\d{2}$")) return false;
+            var parts = expiry.Split('/');
+            if (!int.TryParse(parts[0], out int month) || !int.TryParse(parts[1], out int year)) return false;
+            if (month < 1 || month > 12) return false;
+            int currentYear = DateTime.UtcNow.Year % 100;
+            int currentMonth = DateTime.UtcNow.Month;
+            return year > currentYear || (year == currentYear && month >= currentMonth);
+        }
+
+        // Stripe methods – using RequestOptions for connected account
+        private async Task FetchStripeBalance(string stripeAccountId)
+        {
+            try
+            {
+                StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
+
+                var balanceService = new BalanceService();
+                var balance = await balanceService.GetAsync(
+                    options: null,
+                    requestOptions: new RequestOptions { StripeAccount = stripeAccountId }
+                );
+
+                var available = balance.Available.FirstOrDefault();
+                CurrentBalance = available?.Amount ?? 0;
+                CurrentBalance /= 100; // Stripe amounts in cents
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not fetch Stripe balance for account {AccountId}.", stripeAccountId);
+                CurrentBalance = -1;
+            }
+        }
+
+        private async Task<bool> CheckStripeBalance(string stripeAccountId, decimal requiredAmount)
+        {
+            try
+            {
+                StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
+
+                var balanceService = new BalanceService();
+                var balance = await balanceService.GetAsync(
+                    options: null,
+                    requestOptions: new RequestOptions { StripeAccount = stripeAccountId }
+                );
+
+                long totalAvailableCents = balance.Available.Sum(b => b.Amount);
+                decimal totalAvailable = totalAvailableCents / 100m;
+                return totalAvailable >= requiredAmount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to check Stripe balance for account {AccountId}.", stripeAccountId);
+                return false;
             }
         }
     }
+}
