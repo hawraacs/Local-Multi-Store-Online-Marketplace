@@ -53,11 +53,22 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<ExploreComment> ExploreComments { get; set; }
         public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; }
         public DbSet<OtpCode> OtpCodes { get; set; }
+        public DbSet<StorePayment> StorePayments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<StorePayment>(entity =>
+            {
+                entity.HasKey(e => e.StorePaymentId);
+                entity.Property(e => e.Amount).HasPrecision(18, 2);
+                entity.Property(e => e.Status).HasMaxLength(20);
+                entity.HasOne(e => e.Store)
+                      .WithMany(s => s.StorePayments)
+                      .HasForeignKey(e => e.StoreId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
             // ================= KEYS =================
             modelBuilder.Entity<AuditLog>().HasKey(e => e.AuditLogID);
             modelBuilder.Entity<Cart>().HasKey(e => e.CartID);

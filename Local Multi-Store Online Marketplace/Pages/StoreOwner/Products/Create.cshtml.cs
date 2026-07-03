@@ -16,18 +16,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
         private readonly ApplicationDbContext _context;
         private readonly ICurrentStoreService _currentStoreService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IConfiguration _configuration;
 
-        public CreateModel(ApplicationDbContext context, ICurrentStoreService currentStoreService, IWebHostEnvironment webHostEnvironment)
+        public CreateModel(
+            ApplicationDbContext context,
+            ICurrentStoreService currentStoreService,
+            IWebHostEnvironment webHostEnvironment,
+            IConfiguration configuration)
         {
             _context = context;
             _currentStoreService = currentStoreService;
             _webHostEnvironment = webHostEnvironment;
+            _configuration = configuration;
         }
 
         [BindProperty]
         public ProductViewModel ProductVM { get; set; } = new();
         public List<SelectListItem> CategoriesSelectList { get; set; } = new();
 
+        // =============================================================
+        // ON GET – Check subscription status
+        // =============================================================
         public async Task<IActionResult> OnGetAsync()
         {
             if (!await _currentStoreService.IsStoreOwnerAsync())
@@ -40,6 +49,28 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
                 return RedirectToPage("/StoreOwner/Dashboard");
             }
 
+            // ✅ Check if subscription is active (trial or paid)
+            if (!IsSubscriptionActive(store))
+            {
+                // Create or get a pending payment record for monthly subscription
+                var pendingPayment = await GetOrCreatePendingSubscriptionPaymentAsync(store.StoreID);
+
+                if (pendingPayment == null)
+                {
+                    TempData["ErrorMessage"] = "Unable to create payment request. Please try again.";
+                    return RedirectToPage("/StoreOwner/Products/Index");
+                }
+
+                // Redirect to the payment page with the payment ID
+                // After successful payment, return to this page.
+                return RedirectToPage("/StoreOwner/StoreOwnerPayment", new
+                {
+                    paymentId = pendingPayment.StorePaymentId,
+                    returnUrl = Url.Page("/StoreOwner/Products/Create")
+                });
+            }
+
+            // ✅ Subscription active – allowed to create product
             ViewData["StoreName"] = store.StoreName;
             ViewData["StoreId"] = store.StoreID;
 
@@ -48,8 +79,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
             return Page();
         }
 
+        // =============================================================
+        // ON POST – Product creation logic
+        // =============================================================
         public async Task<IActionResult> OnPostAsync()
         {
+            // Extra safety: re-check subscription on POST to prevent bypass
             if (!await _currentStoreService.IsStoreOwnerAsync())
                 return RedirectToPage("/Account/AccessDenied");
 
@@ -58,6 +93,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
             {
                 TempData["ErrorMessage"] = "Store not found.";
                 return RedirectToPage("/StoreOwner/Dashboard");
+            }
+
+            if (!IsSubscriptionActive(store))
+            {
+                TempData["ErrorMessage"] = "Your subscription has expired. Please renew to add products.";
+                return RedirectToPage("/StoreOwner/Products/Index");
             }
 
             ProductVM.ProductName = ProductVM.ProductName?.Trim() ?? "";
@@ -80,23 +121,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
             if (!ModelState.IsValid)
             {
                 await LoadCategories();
-
                 ViewData["StoreName"] = store.StoreName;
-
                 return Page();
             }
 
             var category = await _context.Categories
-    .FirstOrDefaultAsync(c =>
-        c.CategoryID == ProductVM.CategoryID &&
-        c.IsActive);
+                .FirstOrDefaultAsync(c => c.CategoryID == ProductVM.CategoryID && c.IsActive);
 
             if (category == null)
             {
                 ModelState.AddModelError("", "Selected category is invalid.");
-
                 await LoadCategories();
-
                 return Page();
             }
 
@@ -116,7 +151,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
                 Description = ProductVM.Description,
                 Price = ProductVM.Price,
                 CompareAtPrice = ProductVM.CompareAtPrice,
-                OriginalPrice = ProductVM.OriginalPrice,   // ✅ save cost price
+                OriginalPrice = ProductVM.OriginalPrice,
                 Quantity = ProductVM.Quantity,
                 LowStockThreshold = ProductVM.LowStockThreshold > 0 ? ProductVM.LowStockThreshold : 5,
                 Weight = ProductVM.Weight,
@@ -136,7 +171,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
             return RedirectToPage("/StoreOwner/Products/Index");
         }
 
-        
+        // =============================================================
+        // HELPER METHODS
+        // =============================================================
+
         private async Task LoadCategories()
         {
             CategoriesSelectList = await _context.Categories
@@ -152,6 +190,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
                 })
                 .ToListAsync();
         }
+
         private async Task SaveProductImages(int productId, List<IFormFile> images)
         {
             string folder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "products", productId.ToString());
@@ -185,6 +224,66 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
             slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[^a-z0-9-]", "");
             slug = System.Text.RegularExpressions.Regex.Replace(slug, @"-+", "-");
             return slug.Trim('-');
+        }
+
+        // =============================================================
+        // SUBSCRIPTION HELPERS
+        // =============================================================
+
+        /// <summary>
+        /// Checks if the store has an active subscription (trial or paid).
+        /// </summary>
+        private bool IsSubscriptionActive(Store store)
+        {
+            // Trial period (first month free)
+            if (store.SubscriptionStatus?.Equals("Trial", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                if (store.SubscriptionExpiryDate.HasValue && store.SubscriptionExpiryDate.Value > DateTime.UtcNow)
+                    return true;
+            }
+
+            // Paid subscription
+            if (store.SubscriptionStatus?.Equals("Active", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                if (store.SubscriptionExpiryDate.HasValue && store.SubscriptionExpiryDate.Value > DateTime.UtcNow)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets or creates a pending payment for the monthly subscription fee.
+        /// </summary>
+        private async Task<StorePayment?> GetOrCreatePendingSubscriptionPaymentAsync(int storeId)
+        {
+            decimal monthlyFee = _configuration.GetValue<decimal>("StoreSettings:MonthlySubscriptionFee", 20.00m);
+            const string description = "Monthly Subscription Fee";
+
+            // Check for existing pending payment
+            var existing = await _context.StorePayments
+                .FirstOrDefaultAsync(sp => sp.StoreId == storeId
+                                           && sp.Description == description
+                                           && sp.Status == "Pending");
+
+            if (existing != null)
+                return existing;
+
+            // Create new pending payment
+            var payment = new StorePayment
+            {
+                StoreId = storeId,
+                Amount = monthlyFee,
+                Description = description,
+                DueDate = DateTime.UtcNow.AddDays(7),
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.StorePayments.Add(payment);
+            await _context.SaveChangesAsync();
+
+            return payment;
         }
     }
 }
