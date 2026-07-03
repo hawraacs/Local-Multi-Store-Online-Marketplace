@@ -6,11 +6,15 @@ using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
 using Multi_Store.Infrastructure.Data;
-using Multi_Store.Services;
+using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+// Alias to avoid conflict with your SubscriptionService
+using MySubscriptionService = Multi_Store.Services.SubscriptionService;
+using StripeCustomer = Stripe.Customer;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 {
@@ -20,21 +24,24 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         private readonly ApplicationDbContext _context;
         private readonly ICurrentStoreService _currentStoreService;
         private readonly UserManager<User> _userManager;
-        private readonly SubscriptionService _subscriptionService;
+        private readonly MySubscriptionService _subscriptionService;  // alias used
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AccountStatementModel> _logger;   // ✅ added
 
         public AccountStatementModel(
             ApplicationDbContext context,
             ICurrentStoreService currentStoreService,
             UserManager<User> userManager,
-            SubscriptionService subscriptionService,
-            IConfiguration configuration)
+            MySubscriptionService subscriptionService,
+            IConfiguration configuration,
+            ILogger<AccountStatementModel> logger)   // ✅ injected
         {
             _context = context;
             _currentStoreService = currentStoreService;
             _userManager = userManager;
             _subscriptionService = subscriptionService;
             _configuration = configuration;
+            _logger = logger;   // ✅ assigned
         }
 
         public Store Store { get; set; } = null!;
@@ -53,7 +60,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         }
 
         // =============================================================
-        // Renew Subscription – redirect to payment page
+        // Renew Subscription – try auto-charge with saved card, else manual
         // =============================================================
         public async Task<IActionResult> OnPostRenewAsync()
         {
@@ -61,7 +68,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             if (store == null)
                 return RedirectToPage("/StoreOwner/Dashboard");
 
-            // Create pending payment record
+            // If we have saved card, attempt auto-charge
+            if (!string.IsNullOrEmpty(store.StripeCustomerId) && !string.IsNullOrEmpty(store.StripePaymentMethodId))
+            {
+                var success = await ChargeSavedCardAsync(store, 20.00m);
+                if (success)
+                {
+                    TempData["Success"] = "Subscription renewed automatically using your saved card.";
+                    return RedirectToPage();
+                }
+                // fall through to manual payment
+            }
+
+            // Manual: create pending payment and redirect to payment page
             var pendingPayment = await GetOrCreatePendingSubscriptionPaymentAsync(store.StoreID);
             if (pendingPayment == null)
             {
@@ -69,7 +88,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 return RedirectToPage();
             }
 
-            // Redirect to payment page with the payment ID and a return URL
             return RedirectToPage("/StoreOwner/StoreOwnerPayment", new
             {
                 paymentId = pendingPayment.StorePaymentId,
@@ -80,6 +98,69 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         // =============================================================
         // Helpers
         // =============================================================
+
+        private async Task<bool> ChargeSavedCardAsync(Store store, decimal amount)
+        {
+            try
+            {
+                StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
+
+                var options = new PaymentIntentCreateOptions
+                {
+                    Amount = (long)(amount * 100),
+                    Currency = "usd",
+                    Customer = store.StripeCustomerId,
+                    PaymentMethod = store.StripePaymentMethodId,
+                    OffSession = true,
+                    Confirm = true,
+                };
+                var service = new PaymentIntentService();
+                var intent = await service.CreateAsync(options);
+
+                if (intent.Status == "succeeded")
+                {
+                    // Record payment and extend subscription
+                    await using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        var transferId = intent.Id;
+
+                        DateTime newExpiry = DateTime.UtcNow.AddMonths(1);
+                        if (store.SubscriptionExpiryDate.HasValue && store.SubscriptionExpiryDate.Value > DateTime.UtcNow)
+                            newExpiry = store.SubscriptionExpiryDate.Value.AddMonths(1);
+
+                        store.SubscriptionStatus = "Active";
+                        store.SubscriptionExpiryDate = newExpiry;
+                        store.LastPaymentDate = DateTime.UtcNow;
+                        store.LastPaymentAmount = amount;
+
+                        var subscriptionPayment = new SubscriptionPayment
+                        {
+                            StoreId = store.StoreID,
+                            Amount = amount,
+                            PaymentDate = DateTime.UtcNow,
+                            Reference = $"Auto-renewal - {transferId}"
+                        };
+                        _context.SubscriptionPayments.Add(subscriptionPayment);
+
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                        return true;
+                    }
+                    catch
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                }
+                return false;
+            }
+            catch (StripeException ex)
+            {
+                _logger.LogError(ex, "Auto-renewal failed for store {StoreId}.", store.StoreID);
+                return false;
+            }
+        }
 
         private async Task<Store?> GetStoreAsync()
         {
@@ -97,7 +178,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
         private async Task BuildStatementAsync(Store store)
         {
-            // Delivered orders
             var deliveredOrderItems = await _context.OrderItems
                 .Include(oi => oi.Order)
                 .Where(oi => oi.StoreID == store.StoreID && oi.Order.Status == "Delivered")
@@ -116,7 +196,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 })
                 .ToList();
 
-            // Subscription payments
             var subscriptionPayments = await _context.SubscriptionPayments
                 .Where(sp => sp.StoreId == store.StoreID)
                 .OrderBy(sp => sp.PaymentDate)
@@ -164,7 +243,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             decimal monthlyFee = _configuration.GetValue<decimal>("StoreSettings:MonthlySubscriptionFee", 20.00m);
             const string description = "Monthly Subscription Fee";
 
-            // Check for existing pending payment
             var existing = await _context.StorePayments
                 .FirstOrDefaultAsync(sp => sp.StoreId == storeId
                                            && sp.Description == description
@@ -172,7 +250,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             if (existing != null)
                 return existing;
 
-            // Create new pending payment
             var payment = new StorePayment
             {
                 StoreId = storeId,

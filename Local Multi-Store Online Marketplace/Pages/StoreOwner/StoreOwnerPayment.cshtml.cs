@@ -10,6 +10,10 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
+// Alias to avoid ambiguity with your Customer entity
+using StripeCustomer = Stripe.Customer;
+using StripePaymentMethod = Stripe.PaymentMethod;
+
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 {
     [Authorize(Roles = "StoreOwner")]
@@ -34,7 +38,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
         public StorePayment? Payment { get; set; }
         public string? ErrorMessage { get; set; }
-        public decimal CurrentBalance { get; set; } = -1; // -1 = unavailable
+        public decimal CurrentBalance { get; set; } = -1;
 
         [BindProperty]
         public int PaymentId { get; set; }
@@ -71,16 +75,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             if (payment.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
             {
                 TempData["Success"] = "This payment has already been completed.";
-                if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
-                    return Redirect(ReturnUrl);
-                return RedirectToPage("/StoreOwner/Dashboard");
+                return RedirectToLocalOrDashboard();
             }
 
-            // If no Stripe account is linked, set a dummy balance for demo
             if (string.IsNullOrWhiteSpace(payment.Store.StripeAccountId))
             {
-                // For demo purposes, treat as having sufficient balance
-                CurrentBalance = 9999; // dummy positive balance
+                CurrentBalance = 9999; // dummy for demo
             }
             else
             {
@@ -104,9 +104,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             if (payment.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
             {
                 TempData["Success"] = "This payment is already completed.";
-                if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
-                    return Redirect(ReturnUrl);
-                return RedirectToPage("/StoreOwner/Dashboard");
+                return RedirectToLocalOrDashboard();
             }
 
             NormalizePaymentInput();
@@ -118,20 +116,25 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 return Page();
             }
 
-            // Check balance - if no Stripe account, assume sufficient
-            bool balanceSufficient;
-            if (string.IsNullOrWhiteSpace(payment.Store.StripeAccountId))
+            var store = payment.Store;
+
+            // Save payment method if not already stored
+            if (string.IsNullOrEmpty(store.StripeCustomerId) || string.IsNullOrEmpty(store.StripePaymentMethodId))
             {
-                balanceSufficient = true; // bypass for demo
+                await SavePaymentMethodAsync(store, CardNumber, ExpiryDate, Cvv, CardholderName);
+                await _context.SaveChangesAsync();
             }
-            else
+
+            // Check balance (if Stripe account linked)
+            bool balanceSufficient = true;
+            if (!string.IsNullOrWhiteSpace(store.StripeAccountId))
             {
-                balanceSufficient = await CheckStripeBalance(payment.Store.StripeAccountId, payment.Amount);
+                balanceSufficient = await CheckStripeBalance(store.StripeAccountId, payment.Amount);
             }
 
             if (!balanceSufficient)
             {
-                ErrorMessage = "Insufficient funds in your Stripe account. Please add funds and try again.";
+                ErrorMessage = "Insufficient funds in your Stripe account. Please add funds or use a card payment.";
                 return Page();
             }
 
@@ -141,31 +144,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             {
                 var transferId = $"TRANSFER-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}";
 
-                // 1. Mark payment as paid
                 payment.Status = "Paid";
                 payment.PaidAt = DateTime.UtcNow;
                 payment.StripeTransferId = transferId;
 
-                // 2. If this is a subscription payment, update store and create SubscriptionPayment record
                 bool isSubscriptionPayment = payment.Description?.Equals("Monthly Subscription Fee", StringComparison.OrdinalIgnoreCase) == true;
 
                 if (isSubscriptionPayment)
                 {
-                    var store = payment.Store;
-
-                    // Extend subscription by 1 month
                     DateTime newExpiry = DateTime.UtcNow.AddMonths(1);
                     if (store.SubscriptionExpiryDate.HasValue && store.SubscriptionExpiryDate.Value > DateTime.UtcNow)
-                    {
                         newExpiry = store.SubscriptionExpiryDate.Value.AddMonths(1);
-                    }
 
                     store.SubscriptionStatus = "Active";
                     store.SubscriptionExpiryDate = newExpiry;
                     store.LastPaymentDate = DateTime.UtcNow;
                     store.LastPaymentAmount = payment.Amount;
 
-                    // Create a SubscriptionPayment record for transaction history
                     var subscriptionPayment = new SubscriptionPayment
                     {
                         StoreId = store.StoreID,
@@ -180,16 +175,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 await transaction.CommitAsync();
 
                 TempData["Success"] = $"Payment of ${payment.Amount:F2} was successfully processed.";
-
-                // 3. Redirect to ReturnUrl if provided and safe, else fallback
-                if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
-                    return Redirect(ReturnUrl);
-
-                // Fallback: if subscription payment, go to account statement; otherwise product creation
-                if (isSubscriptionPayment)
-                    return RedirectToPage("/StoreOwner/AccountStatement");
-
-                return RedirectToPage("/StoreOwner/Products/Create");
+                return RedirectToLocalOrDashboard();
             }
             catch (Exception ex)
             {
@@ -201,8 +187,90 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         }
 
         // -------------------------------------------------------------
-        // Helper methods
+        // Stripe Payment Method Saving (uses aliases)
         // -------------------------------------------------------------
+        private async Task SavePaymentMethodAsync(Store store, string cardNumber, string expiry, string cvv, string cardholderName)
+        {
+            StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
+
+            var expParts = expiry.Split('/');
+            var expMonth = int.Parse(expParts[0]);
+            var expYear = int.Parse(expParts[1]);
+
+            var paymentMethodOptions = new PaymentMethodCreateOptions
+            {
+                Type = "card",
+                Card = new PaymentMethodCardOptions
+                {
+                    Number = cardNumber,
+                    ExpMonth = expMonth,
+                    ExpYear = expYear,
+                    Cvc = cvv,
+                },
+                BillingDetails = new PaymentMethodBillingDetailsOptions
+                {
+                    Name = cardholderName,
+                }
+            };
+            var paymentMethodService = new PaymentMethodService();
+            var paymentMethod = await paymentMethodService.CreateAsync(paymentMethodOptions);
+
+            var customerService = new CustomerService();
+            StripeCustomer customer;
+
+            if (!string.IsNullOrEmpty(store.StripeCustomerId))
+            {
+                customer = await customerService.GetAsync(store.StripeCustomerId);
+            }
+            else
+            {
+                var customerOptions = new CustomerCreateOptions
+                {
+                    Email = store.Email,
+                    Name = store.StoreName,
+                    PaymentMethod = paymentMethod.Id,
+                    InvoiceSettings = new CustomerInvoiceSettingsOptions
+                    {
+                        DefaultPaymentMethod = paymentMethod.Id,
+                    },
+                };
+                customer = await customerService.CreateAsync(customerOptions);
+                store.StripeCustomerId = customer.Id;
+            }
+
+            // Attach payment method to customer
+            var attachOptions = new PaymentMethodAttachOptions
+            {
+                Customer = customer.Id,
+            };
+            await paymentMethodService.AttachAsync(paymentMethod.Id, attachOptions);
+
+            // Set as default
+            var updateOptions = new CustomerUpdateOptions
+            {
+                InvoiceSettings = new CustomerInvoiceSettingsOptions
+                {
+                    DefaultPaymentMethod = paymentMethod.Id,
+                }
+            };
+            await customerService.UpdateAsync(customer.Id, updateOptions);
+
+            store.StripePaymentMethodId = paymentMethod.Id;
+        }
+
+        // -------------------------------------------------------------
+        // Helpers
+        // -------------------------------------------------------------
+        private IActionResult RedirectToLocalOrDashboard()
+        {
+            if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
+                return Redirect(ReturnUrl);
+
+            if (Payment?.Description?.Equals("Monthly Subscription Fee", StringComparison.OrdinalIgnoreCase) == true)
+                return RedirectToPage("/StoreOwner/AccountStatement");
+
+            return RedirectToPage("/StoreOwner/Products/Create");
+        }
 
         private async Task<StorePayment?> LoadPaymentForCurrentStoreOwnerAsync(int paymentId)
         {
@@ -272,7 +340,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             return year > currentYear || (year == currentYear && month >= currentMonth);
         }
 
-        // Stripe methods – using RequestOptions for connected account
         private async Task FetchStripeBalance(string stripeAccountId)
         {
             try
@@ -287,7 +354,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
                 var available = balance.Available.FirstOrDefault();
                 CurrentBalance = available?.Amount ?? 0;
-                CurrentBalance /= 100; // Stripe amounts in cents
+                CurrentBalance /= 100;
             }
             catch (Exception ex)
             {
