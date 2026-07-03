@@ -18,16 +18,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         private readonly ApplicationDbContext _context;
         private readonly ICurrentStoreService _currentStoreService;
         private readonly UserManager<User> _userManager;
-        
 
+        private readonly IConfiguration _configuration;
         public DashboardModel(
-            ApplicationDbContext context,
-            ICurrentStoreService currentStoreService,
-            UserManager<User> userManager)
+    ApplicationDbContext context,
+    ICurrentStoreService currentStoreService,
+    UserManager<User> userManager,
+    IConfiguration configuration)
         {
             _context = context;
             _currentStoreService = currentStoreService;
             _userManager = userManager;
+            _configuration = configuration;
         }
 
         public Store Store { get; set; } = new();
@@ -36,7 +38,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public List<TopProduct> TopProducts { get; set; } = new();
         public List<LowStockProduct> LowStockProducts { get; set; } = new();
         public List<SalesDataPoint> WeeklySales { get; set; } = new();
-        
+        public decimal StripeBalance { get; set; } = 0;
         public async Task<IActionResult> OnGetAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -62,6 +64,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             }
 
             Store = store;
+            if (!string.IsNullOrWhiteSpace(store.StripeAccountId))
+            {
+                StripeBalance = await GetStripeBalanceAsync(store.StripeAccountId);
+            }
 
             ViewData["StoreName"] = store.StoreName;
             ViewData["StoreId"] = store.StoreID;
@@ -318,6 +324,28 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 DayName = d.ToString("ddd")
             }).ToList();
         }
+        private async Task<decimal> GetStripeBalanceAsync(string stripeAccountId)
+        {
+            try
+            {
+                Stripe.StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
+
+                var balanceService = new Stripe.BalanceService();
+
+                var balance = await balanceService.GetAsync(
+                    new Stripe.BalanceGetOptions(),
+                    new Stripe.RequestOptions { StripeAccount = stripeAccountId }
+                );
+
+                var available = balance.Available.FirstOrDefault();
+
+                return (available?.Amount ?? 0) / 100m;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
     }
 
     public class DashboardStats
@@ -347,7 +375,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
     }
 
     public class RecentOrder
-    {
+    { 
         public int OrderID { get; set; }
         public string OrderNumber { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
