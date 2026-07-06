@@ -15,21 +15,11 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8" />
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet" />
-
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #fdfbf7; /* Cozy warm white canvas */
@@ -471,12 +461,13 @@
 
         .suggestions {
             display: flex;
-            justify-content: center;
+            justify-content: flex-start; /* Aligns chips nicely from the left */
             gap: 8px;
-            margin-bottom: 12px;
-            padding: 0 4px;
+            padding: 10px 18px 10px;
             overflow-x: auto;
             scrollbar-width: none;
+            background: #ffffff;
+            border-top: 1px solid var(--border-color);
         }
 
             .suggestions::-webkit-scrollbar {
@@ -484,8 +475,7 @@
             }
 
         .suggestion-chip {
-            min-width: 90px;
-            max-width: 180px;
+            flex-shrink: 0;
             height: 32px;
             padding: 0 16px;
             border: 1px solid var(--border-color);
@@ -498,12 +488,11 @@
             box-shadow: var(--shadow-sm);
             transition: all 0.2s ease;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
             .suggestion-chip:hover {
                 background: white;
+                border-color: var(--accent-color);
                 transform: translateY(-1px);
             }
 
@@ -884,20 +873,15 @@
         }
     </style>
 </head>
-
 <body>
 
-    <div id="chatToastContainer"
-         class="chat-toast-container"
-         aria-live="polite"
-         aria-atomic="true">
-    </div>
+    <div class="chat-toast-container" id="chatToastContainer"></div>
 
     <div class="page-shell">
 
         <div class="wrapper">
 
-            <!-- CONVERSATION HEADER -->
+            <!-- HEADER TOPBAR -->
             <div class="topbar">
 
                 <div class="user">
@@ -913,7 +897,7 @@
                         </div>
 
                         <div class="@(Model.IsOnlineUser ? "online" : "offline")">
-                            <i class="fa-solid fa-circle" style="font-size: 7px;"></i>
+                            <span class="status-indicator"></span>
                             @(Model.IsOnlineUser ? "Online" : "Offline")
                         </div>
 
@@ -921,29 +905,24 @@
 
                 </div>
 
-                <form method="post"
-                      asp-page-handler="DeleteChat">
+                <div class="actions">
 
-                    <input type="hidden"
-                           name="userId"
-                           value="@Model.ReceiverId" />
+                    <form method="post" asp-page-handler="DeleteChat" asp-route-userId="@Model.OtherUser?.Id" style="display:inline;">
+                        <button type="submit" class="delete" onclick="return confirm('Are you sure you want to delete this conversation? This action cannot be undone.');">
+                            Delete
+                        </button>
+                    </form>
 
-                    <button type="submit"
-                            class="delete"
-                            onclick="return confirm('Delete this conversation?')">
-                        Delete
-                    </button>
-
-                </form>
+                </div>
 
             </div>
 
-            <div class="messages"
-                 id="messagesBox">
+            <!-- MESSAGES STREAM -->
+            <div class="messages" id="messagesBox">
 
                 @foreach (var msg in Model.Messages)
                 {
-                    <div class="msg @(msg.SenderID == Model.CurrentUserId ? "me" : "other")">
+                    <div class="msg @(msg.SenderID == Model.CurrentUserId ? "me" : "other")" style="margin-bottom: 14px;">
 
                         <div class="bubble">
 
@@ -957,9 +936,7 @@
 
                                 <div class="product-card">
 
-                                    <img src="@image"
-                                         alt="@msg.Product.ProductName"
-                                         onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
+                                    <img src="@image" alt="Product Image" />
 
                                     <div class="product-body">
 
@@ -977,15 +954,13 @@
 
                                         @if (User.IsInRole("StoreOwner"))
                                         {
-                                            <a href="/Home?productId=@msg.ProductID"
-                                               class="product-link">
+                                            <a href="/Dashboard/Products/Edit/@msg.Product.ProductID" class="product-link">
                                                 View Product
                                             </a>
                                         }
                                         else
                                         {
-                                            <a href="/CustomerProductDetails?id=@msg.ProductID"
-                                               class="product-link">
+                                            <a href="/ProductDetails?id=@msg.Product.ProductID" class="product-link">
                                                 View Product
                                             </a>
                                         }
@@ -1003,9 +978,8 @@
 
                                     if (msg.MessageText == "[VOICE]")
                                     {
-                                        <audio controls
-                                               src="@msg.ImageUrl">
-                                        </audio>
+                                        <audio src="@msg.ImageUrl" controls></audio>
+                                        
                                     }
                                     else if (
                                     msg.MessageText == "[IMAGE]" ||
@@ -1015,17 +989,14 @@
                                     lowerUrl.EndsWith(".gif") ||
                                     lowerUrl.EndsWith(".webp"))
                                     {
-                                        <img class="chat-image"
-                                             src="@msg.ImageUrl"
-                                             alt="Chat attachment"
-                                             onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
+                                        <img src="@msg.ImageUrl" class="chat-image" alt="Uploaded Image" />
 
                                         @if (!string.IsNullOrWhiteSpace(msg.MessageText) &&
                                        msg.MessageText != "[IMAGE]")
                                         {
-                                            <div style="margin-top:6px;">
+                                            <p style="margin-top: 6px;">
                                                 @msg.MessageText
-                                            </div>
+                                            </p>
                                         }
                                     }
                                     else
@@ -1040,9 +1011,7 @@
                                             fileName = "Download file";
                                         }
 
-                                        <a href="@msg.ImageUrl"
-                                           download
-                                           class="file-link">
+                                        <a href="@msg.ImageUrl" class="file-link" target="_blank" download>
                                             📎 @fileName
                                         </a>
                                     }
@@ -1053,11 +1022,8 @@
                                 }
                             }
 
-                            <!-- BUBBLE TIME AND READ RECEIPT -->
                             <div class="time">
-
-                                <span class="message-time"
-                                      data-utc='@DateTime.SpecifyKind(msg.SentAt, DateTimeKind.Utc).ToString("yyyy-MM-ddTHH:mm:ss.fffZ")'>
+                                <span class="message-time" data-utc="@msg.SentAt.ToString("o")">
                                     ...
                                 </span>
 
@@ -1066,13 +1032,13 @@
                                     if (msg.IsRead)
                                     {
                                         <span class="seen-status seen">
-                                            <i class="fa-solid fa-check-double"></i> Seen
+                                            ✔ Seen
                                         </span>
                                     }
                                     else
                                     {
                                         <span class="seen-status sent">
-                                            <i class="fa-solid fa-check"></i> Sent
+                                            ✔ Sent
                                         </span>
                                     }
                                 }
@@ -1081,19 +1047,9 @@
 
                             @if (msg.SenderID == Model.CurrentUserId)
                             {
-                                <form method="post"
-                                      asp-page-handler="DeleteMessage">
+                                <form method="post" asp-page-handler="DeleteMessage" asp-route-messageId="@msg.MessageID" asp-route-userId="@(msg.SenderID == Model.CurrentUserId ? msg.ReceiverID : msg.SenderID)">
 
-                                    <input type="hidden"
-                                           name="messageId"
-                                           value="@msg.MessageID" />
-
-                                    <input type="hidden"
-                                           name="userId"
-                                           value="@Model.ReceiverId" />
-
-                                    <button type="submit"
-                                            class="delete-message-btn">
+                                    <button type="submit" class="delete-message-btn" onclick="return confirm('Delete this message?');">
                                         delete
                                     </button>
 
@@ -1107,23 +1063,16 @@
 
             </div>
 
-            <!-- COMPOSER CONTROLS -->
+            <!-- COMPOSER FIELD -->
             <div class="composer-area">
 
-                <div class="attach-preview"
-                     id="attachPreview">
+                <div class="attach-preview" id="attachPreview">
 
                     <div class="preview-row">
 
-                        <div class="preview-text"
-                             id="previewText">
-                        </div>
+                        <span class="preview-text" id="previewText"></span>
 
-                        <button type="button"
-                                class="preview-remove"
-                                id="clearAttachmentBtn"
-                                title="Remove attachment"
-                                aria-label="Remove attachment">
+                        <button class="preview-remove" id="clearAttachmentBtn" type="button">
                             ×
                         </button>
 
@@ -1131,44 +1080,32 @@
 
                 </div>
 
-                <div class="voice-panel"
-                     id="voicePanel">
+                <!-- VOICE COMPONENT -->
+                <div class="voice-panel" id="voicePanel">
 
-                    <div class="voice-recording-row"
-                         id="voiceRecordingRow">
+                    <div class="voice-recording-row" id="voiceRecordingRow">
 
                         <div class="record-dot"></div>
 
-                        <div>
+                        <span>
                             Recording voice...
-                        </div>
+                        </span>
 
-                        <div id="recordTimer">
+                        <span id="recordTimer">
                             00:00
-                        </div>
+                        </span>
 
-                        <button type="button"
-                                class="preview-remove"
-                                id="cancelVoiceBtn"
-                                title="Cancel recording"
-                                aria-label="Cancel recording">
+                        <button class="preview-remove" id="cancelVoiceBtn" type="button">
                             ×
                         </button>
 
                     </div>
 
-                    <div class="voice-ready-row"
-                         id="voiceReadyRow">
+                    <div class="voice-ready-row" id="voiceReadyRow">
 
-                        <audio controls
-                               id="voiceAudio">
-                        </audio>
+                        <audio id="voiceAudio" controls></audio>
 
-                        <button type="button"
-                                class="preview-remove"
-                                id="removeVoiceBtn"
-                                title="Remove voice message"
-                                aria-label="Remove voice message">
+                        <button class="preview-remove" id="removeVoiceBtn" type="button">
                             ×
                         </button>
 
@@ -1176,30 +1113,8 @@
 
                 </div>
 
-                <div class="ios-keyboard"
-                     id="iosKeyboard">
-
-                    <div class="suggestions">
-
-                        <button type="button"
-                                class="suggestion-chip"
-                                data-suggestion="">
-                            Type...
-                        </button>
-
-                        <button type="button"
-                                class="suggestion-chip"
-                                data-suggestion="">
-                            Suggestions
-                        </button>
-
-                        <button type="button"
-                                class="suggestion-chip"
-                                data-suggestion="">
-                            Here
-                        </button>
-
-                    </div>
+                <!-- IOS VIRTUAL KEYBOARD PANEL -->
+                <div class="ios-keyboard" id="iosKeyboard">
 
                     <div class="key-row">
 
@@ -1232,9 +1147,7 @@
 
                     <div class="key-row">
 
-                        <button type="button"
-                                class="key-btn special-key"
-                                id="shiftKey">
+                        <button type="button" class="key-btn special-key" id="shiftKey">
                             ABC
                         </button>
 
@@ -1246,9 +1159,7 @@
                         <button type="button" class="key-btn letter-key" data-key="n">n</button>
                         <button type="button" class="key-btn letter-key" data-key="m">m</button>
 
-                        <button type="button"
-                                class="key-btn special-key"
-                                id="backspaceKey">
+                        <button type="button" class="key-btn special-key" id="backspaceKey">
                             ⌫
                         </button>
 
@@ -1256,34 +1167,25 @@
 
                     <div class="key-row bottom-row">
 
-                        <button type="button"
-                                class="key-btn special-key"
-                                id="numbersKey">
+                        <button type="button" class="key-btn special-key" id="numbersKey">
                             123
                         </button>
 
-                        <button type="button"
-                                class="key-btn emoji-key"
-                                id="emojiKey">
+                        <button type="button" class="key-btn emoji-key" id="emojiKey">
                             ☺
                         </button>
 
-                        <button type="button"
-                                class="key-btn space-key"
-                                id="spaceKey">
+                        <button type="button" class="key-btn space-key" id="spaceKey">
                             space
                         </button>
 
-                        <button type="button"
-                                class="key-btn special-key"
-                                id="returnKey">
+                        <button type="button" class="key-btn special-key" id="returnKey">
                             return
                         </button>
 
                     </div>
 
-                    <div class="emoji-panel"
-                         id="emojiPanel">
+                    <div class="emoji-panel" id="emojiPanel">
 
                         <button type="button" class="emoji-btn" data-emoji="😀">😀</button>
                         <button type="button" class="emoji-btn" data-emoji="😁">😁</button>
@@ -1326,54 +1228,36 @@
 
                 </div>
 
-                <!-- Input Form Composition -->
-                <form method="post"
-                      asp-page-handler="Send"
-                      class="composer"
-                      enctype="multipart/form-data"
-                      id="chatForm">
+                <!-- SUGGESTED MESSAGES (Always visible directly above the inputs, similar to Messenger) -->
+                <div class="suggestions">
+                    <button type="button" class="suggestion-chip" data-suggestion="hello">hello</button>
+                    <button type="button" class="suggestion-chip" data-suggestion="is this available">is this available</button>
+                    <button type="button" class="suggestion-chip" data-suggestion="how much">how much</button>
+                </div>
 
-                    <input type="hidden"
-                           name="receiverId"
-                           value="@Model.ReceiverId" />
+                <form id="chatForm" method="post" asp-page-handler="Send" asp-route-receiverId="@Model.OtherUser?.Id" enctype="multipart/form-data">
 
-                    <input type="file"
-                           name="AttachmentFile"
-                           id="attachmentFile"
-                           style="display:none;"
-                           accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,audio/*,.webm,.ogg,.m4a" />
+                    <div class="composer">
 
-                    <button type="button"
-                            class="icon-btn"
-                            id="keyboardToggleBtn"
-                            title="Keyboard">
-                        <i class="fa-regular fa-keyboard"></i>
-                    </button>
+                        <button class="icon-btn" type="button" onclick="document.getElementById('attachmentFile').click();">
+                            📎
+                        </button>
 
-                    <button type="button"
-                            class="icon-btn"
-                            onclick="document.getElementById('attachmentFile').click();"
-                            title="Attach file">
-                        <i class="fa-solid fa-paperclip"></i>
-                    </button>
+                        <button class="icon-btn" id="recordBtn" type="button">
+                            🎤
+                        </button>
 
-                    <button type="button"
-                            class="icon-btn"
-                            id="recordBtn"
-                            title="Record voice">
-                        <i class="fa-solid fa-microphone"></i>
-                    </button>
+                        <button class="icon-btn" id="keyboardToggleBtn" type="button">
+                            ⌨
+                        </button>
 
-                    <textarea name="MessageText"
-                              class="message-input"
-                              id="messageInput"
-                              rows="1"
-                              placeholder="Message..."></textarea>
+                        <input type="file" id="attachmentFile" name="AttachmentFile" style="display:none;" />
 
-                    <button class="send"
-                            type="submit">
-                        Send
-                    </button>
+                        <textarea class="message-input" id="messageInput" name="MessageText" rows="1" placeholder="Type a message..."></textarea>
+
+                        <button class="send" type="submit">Send</button>
+
+                    </div>
 
                 </form>
 
@@ -1383,7 +1267,6 @@
 
     </div>
 
-    <!-- CORE INTERACTIVE JAVASCRIPT -->
     <script>
         function showChatToast(
             message,
@@ -1657,7 +1540,7 @@
         const numberValues = [
             "1", "2", "3", "4", "5", "6",
             "7", "8", "9", "0",
-            ".", "?", "!", "@@", "#", "$",
+            ".", "?", "!",  "#", "$",
             "%", "&", "-",
             "+", "(", ")", "/", "'", ":", ";"
         ];
@@ -1947,43 +1830,18 @@
                             return;
                         }
 
-                        const currentText =
-                            messageInput.value;
+                        // Populate the suggestion directly into the input
+                        messageInput.value = suggestion;
 
-                        const endsWithSpace =
-                            currentText.endsWith(" ");
-
-                        if (currentText.trim().length === 0) {
-                            messageInput.value =
-                                suggestion + " ";
-                        }
-                        else {
-                            const lastSpaceIndex =
-                                currentText.lastIndexOf(" ");
-
-                            if (lastSpaceIndex === -1) {
-                                messageInput.value =
-                                    suggestion + " ";
-                            }
-                            else if (endsWithSpace) {
-                                messageInput.value =
-                                    currentText +
-                                    suggestion +
-                                    " ";
-                            }
-                            else {
-                                messageInput.value =
-                                    currentText.substring(
-                                        0,
-                                        lastSpaceIndex + 1) +
-                                    suggestion +
-                                    " ";
+                        // Send immediately by programmatically clicking the "Send" button
+                        if (chatForm) {
+                            const sendButton = chatForm.querySelector('button[type="submit"]') || chatForm.querySelector('.send');
+                            if (sendButton) {
+                                sendButton.click();
+                            } else {
+                                chatForm.requestSubmit();
                             }
                         }
-
-                        messageInput.focus();
-                        resizeMessageInput();
-                        updateSmartSuggestions();
                     });
             });
 
@@ -2354,7 +2212,7 @@
             }
 
             recordBtn.innerHTML =
-                '<i class="fa-solid fa-microphone"></i>';
+                '🎤';
 
             recordBtn.classList.remove(
                 "recording-btn");
@@ -2368,7 +2226,7 @@
             }
 
             recordBtn.innerHTML =
-                '<i class="fa-solid fa-stop"></i>';
+                '⏹';
 
             recordBtn.classList.add(
                 "recording-btn");
@@ -2603,8 +2461,5 @@
         updateMessageTimes();
         updateSmartSuggestions();
     </script>
-
 </body>
-
 </html>
-

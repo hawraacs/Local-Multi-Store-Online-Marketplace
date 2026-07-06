@@ -17,6 +17,8 @@ namespace Multi_Store.Infrastructure.Data
         }
 
         // ================= DbSets =================
+        public DbSet<BlockRelation> BlockRelations { get; set; }
+        public DbSet<ProductHide> ProductHides { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<CustomerAddress> CustomerAddresses { get; set; }
         public DbSet<Store> Stores { get; set; }
