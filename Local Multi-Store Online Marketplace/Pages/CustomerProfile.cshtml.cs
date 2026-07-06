@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -60,6 +64,69 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         [BindProperty]
         public string DeliveryPassword { get; set; } = string.Empty;
+
+        // ==========================================
+        // Instagram-style Profile Fields
+        // ==========================================
+        public int LoyaltyPoints { get; set; }
+        public bool IsVerified { get; set; }
+        public string Gender { get; set; } = "Not Specified";
+        public DateTime? DateOfBirth { get; set; }
+        public bool CODBlocked { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public List<StoreFollow> FollowedStoresList { get; set; } = new();
+        public List<Wishlist> WishlistList { get; set; } = new();
+        public List<Review> ReviewsList { get; set; } = new();
+
+        // Safe property lookups to prevent compile-time or runtime issues with dynamic entities
+        public static string GetSafeString(object? obj, string[] propertyNames, string defaultValue = "")
+        {
+            if (obj == null) return defaultValue;
+            var type = obj.GetType();
+            foreach (var name in propertyNames)
+            {
+                var prop = type.GetProperty(name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
+                if (prop != null)
+                {
+                    var val = prop.GetValue(obj);
+                    if (val != null) return val.ToString() ?? defaultValue;
+                }
+            }
+            return defaultValue;
+        }
+
+        public static int GetSafeInt(object? obj, string[] propertyNames, int defaultValue = 0)
+        {
+            if (obj == null) return defaultValue;
+            var type = obj.GetType();
+            foreach (var name in propertyNames)
+            {
+                var prop = type.GetProperty(name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
+                if (prop != null)
+                {
+                    var val = prop.GetValue(obj);
+                    if (val != null && int.TryParse(val.ToString(), out int res)) return res;
+                }
+            }
+            return defaultValue;
+        }
+
+        public static decimal GetSafeDecimal(object? obj, string[] propertyNames, decimal defaultValue = 0)
+        {
+            if (obj == null) return defaultValue;
+            var type = obj.GetType();
+            foreach (var name in propertyNames)
+            {
+                var prop = type.GetProperty(name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
+                if (prop != null)
+                {
+                    var val = prop.GetValue(obj);
+                    if (val != null && decimal.TryParse(val.ToString(), out decimal res)) return res;
+                }
+            }
+            return defaultValue;
+        }
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -219,8 +286,35 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             await LoadDeliveryAccessStatusAsync(user);
 
-            var customer = await _context.Customers
-                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+            // Safe lookup with robust try-catches around navigation inclusions
+            Customer? customer = null;
+            try
+            {
+                customer = await _context.Customers
+                    .Include(c => c.FollowedStores)
+                        .ThenInclude(fs => fs.Store)
+                    .Include(c => c.Wishlists)
+                        .ThenInclude(w => w.Product)
+                    .Include(c => c.Reviews)
+                        .ThenInclude(r => r.Product)
+                    .FirstOrDefaultAsync(c => c.UserID == user.Id);
+            }
+            catch
+            {
+                try
+                {
+                    customer = await _context.Customers
+                        .Include("FollowedStores")
+                        .Include("Wishlists")
+                        .Include("Reviews")
+                        .FirstOrDefaultAsync(c => c.UserID == user.Id);
+                }
+                catch
+                {
+                    customer = await _context.Customers
+                        .FirstOrDefaultAsync(c => c.UserID == user.Id);
+                }
+            }
 
             if (customer == null)
             {
@@ -230,11 +324,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return true;
             }
 
+            LoyaltyPoints = customer.LoyaltyPoints;
+            IsVerified = customer.IsVerified;
+            Gender = customer.Gender ?? "Not Specified";
+            DateOfBirth = customer.DateOfBirth;
+            CODBlocked = customer.CODBlocked;
+            CreatedAt = customer.CreatedAt;
+
+            FollowedStoresList = customer.FollowedStores?.ToList() ?? new List<StoreFollow>();
+            WishlistList = customer.Wishlists?.ToList() ?? new List<Wishlist>();
+            ReviewsList = customer.Reviews?.ToList() ?? new List<Review>();
+
             OrdersCount = await _context.Orders
                 .CountAsync(o => o.CustomerID == customer.CustomerID);
 
-            WishlistCount = await _context.Wishlists
-                .CountAsync(w => w.CustomerID == customer.CustomerID);
+            WishlistCount = WishlistList.Count;
 
             AddressesCount = await _context.CustomerAddresses
                 .CountAsync(a => a.CustomerID == customer.CustomerID);

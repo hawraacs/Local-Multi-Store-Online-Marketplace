@@ -403,6 +403,51 @@
             flex-wrap: wrap;
         }
 
+        .post-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .post-menu-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .post-menu-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 28px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            min-width: 160px;
+            z-index: 999;
+            overflow: hidden;
+        }
+
+            .post-menu-dropdown form {
+                margin: 0;
+            }
+
+            .post-menu-dropdown button {
+                width: 100%;
+                padding: 10px;
+                background: none;
+                border: none;
+                text-align: left;
+                cursor: pointer;
+                font-size: 13px;
+            }
+
+                .post-menu-dropdown button:hover {
+                    background: var(--accent-light);
+                }
+
         .btn-action {
             display: inline-flex;
             align-items: center;
@@ -865,6 +910,32 @@
                                 <button class="btn-follow-action btn-follow">Follow</button>
                             </form>
                         }
+
+
+                        <div class="post-menu">
+                            <button type="button" class="post-menu-btn" onclick="toggleMenu(this)">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+
+                            <div class="post-menu-dropdown">
+
+                                <form method="post" asp-page-handler="BlockPost">
+                                    <input type="hidden" name="storeId" value="@product.StoreID" />
+                                    <button type="submit">Block Store</button>
+                                </form>
+
+                                <form method="post" asp-page-handler="ReportPost">
+                                    <input type="hidden" name="productId" value="@product.ProductID" />
+                                    <button type="submit">Report</button>
+                                </form>
+
+                                <form method="post" asp-page-handler="NotInterested">
+                                    <input type="hidden" name="productId" value="@product.ProductID" />
+                                    <button type="submit">Not Interested</button>
+                                </form>
+
+                            </div>
+                        </div>
                     </div>
 
                     <!-- POST IMAGE -->
@@ -986,6 +1057,25 @@
         }
 
     </div>
+    <script>
+        function toggleMenu(btn) {
+            const menu = btn.nextElementSibling;
+
+            // close all other menus
+            document.querySelectorAll('.post-menu-dropdown').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
+            });
+
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.post-menu')) {
+                document.querySelectorAll('.post-menu-dropdown')
+                    .forEach(m => m.style.display = 'none');
+            }
+        });
+    </script>
 
     <!-- Toast Alert Auto-Dismiss Logic -->
     <script>
