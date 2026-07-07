@@ -6,6 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services.Dtos;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
@@ -45,7 +48,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public StoreDTO Store { get; set; } = new StoreDTO();
 
         [BindProperty]
-        public DeliveryPersonDTO Delivery { get; set; } = new DeliveryPersonDTO();
+        public DeliveryPersonDTO Delivery { get; set; }
+            = new DeliveryPersonDTO();
 
         public bool HasPendingDeliveryRequest { get; set; }
 
@@ -53,13 +57,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public bool HasRejectedDeliveryRequest { get; set; }
 
-        public string DeliveryAccessMessage { get; set; } = string.Empty;
+        public string DeliveryAccessMessage { get; set; }
+            = string.Empty;
+
+        public string DeliveryAccountEmail { get; set; }
+            = string.Empty;
 
         [BindProperty]
-        public string DeliveryEmail { get; set; } = string.Empty;
-
-        [BindProperty]
-        public string DeliveryPassword { get; set; } = string.Empty;
+        public string DeliveryPassword { get; set; }
+            = string.Empty;
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -67,7 +73,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (!loaded)
             {
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
             return Page();
@@ -79,13 +87,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (user == null)
             {
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
-            user.FullName = CustomerFullName?.Trim() ?? string.Empty;
-            user.PhoneNumber = CustomerPhone?.Trim() ?? string.Empty;
+            user.FullName =
+                CustomerFullName?.Trim()
+                ?? string.Empty;
 
-            var result = await _userManager.UpdateAsync(user);
+            user.PhoneNumber =
+                CustomerPhone?.Trim()
+                ?? string.Empty;
+
+            var result =
+                await _userManager.UpdateAsync(user);
 
             if (!result.Succeeded)
             {
@@ -93,253 +109,437 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 foreach (var error in result.Errors)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    ModelState.AddModelError(
+                        string.Empty,
+                        error.Description);
                 }
 
                 return Page();
             }
 
-            TempData["Success"] = "Profile updated successfully.";
+            TempData["Success"] =
+                "Profile updated successfully.";
 
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostDeliveryLoginAsync()
+        public async Task<IActionResult>
+            OnPostDeliveryLoginAsync()
         {
-            var loaded = await LoadCustomerProfileAsync();
+            /*
+             * Get the currently logged-in Customer.
+             */
+            var currentCustomerUser =
+                await _userManager.GetUserAsync(User);
 
-            if (!loaded)
+            if (currentCustomerUser == null)
             {
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
-            if (string.IsNullOrWhiteSpace(DeliveryEmail) ||
-                string.IsNullOrWhiteSpace(DeliveryPassword))
+            if (string.IsNullOrWhiteSpace(DeliveryPassword))
             {
-                TempData["DeliveryLoginError"] = "Please enter delivery email and password.";
+                TempData["DeliveryLoginError"] =
+                    "Please enter your delivery password.";
+
                 return RedirectToPage();
             }
 
-            var deliveryEmail = DeliveryEmail.Trim();
-
-            var deliveryUser = await _userManager.FindByEmailAsync(deliveryEmail);
-
-            if (deliveryUser == null)
-            {
-                TempData["DeliveryLoginError"] = "Delivery account not found.";
-                return RedirectToPage();
-            }
-
-            var isDelivery = await _userManager.IsInRoleAsync(deliveryUser, "Delivery");
-
-            if (!isDelivery)
-            {
-                TempData["DeliveryLoginError"] = "This account is not a delivery account.";
-                return RedirectToPage();
-            }
-
-            var passwordValid = await _userManager.CheckPasswordAsync(
-                deliveryUser,
-                DeliveryPassword);
-
-            if (!passwordValid)
-            {
-                TempData["DeliveryLoginError"] = "Invalid delivery password.";
-                return RedirectToPage();
-            }
-
-            var deliveryProfile = await _context.DeliveryPersons
-                .FirstOrDefaultAsync(d =>
-                    d.UserID == deliveryUser.Id &&
-                    d.IsActive &&
-                    d.Status == "Approved");
+            /*
+             * Security:
+             *
+             * We do not accept a Delivery email from the HTML form.
+             * The server finds the Delivery account linked to the
+             * currently logged-in Customer.
+             */
+            var deliveryProfile =
+                await _context.DeliveryPersons
+                    .AsNoTracking()
+                    .Where(d =>
+                        d.RequestedByUserID ==
+                        currentCustomerUser.Id)
+                    .OrderByDescending(d =>
+                        d.DeliveryPersonID)
+                    .FirstOrDefaultAsync();
 
             if (deliveryProfile == null)
             {
-                TempData["DeliveryLoginError"] = "Approved delivery profile was not found.";
+                TempData["DeliveryLoginError"] =
+                    "No delivery account is linked to your customer account.";
+
                 return RedirectToPage();
             }
 
+            var deliveryStatus =
+                deliveryProfile.Status?.Trim();
+
+            if (!string.Equals(
+                deliveryStatus,
+                "Approved",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["DeliveryLoginError"] =
+                    "Your delivery account is not approved.";
+
+                return RedirectToPage();
+            }
+
+            if (!deliveryProfile.IsActive)
+            {
+                TempData["DeliveryLoginError"] =
+                    "Your delivery account is currently inactive.";
+
+                return RedirectToPage();
+            }
+
+            /*
+             * UserID now points to the separate Delivery login
+             * created by the Admin.
+             */
+            var deliveryUser =
+                await _userManager.FindByIdAsync(
+                    deliveryProfile.UserID.ToString());
+
+            if (deliveryUser == null ||
+                !deliveryUser.IsActive)
+            {
+                TempData["DeliveryLoginError"] =
+                    "Delivery account is unavailable.";
+
+                return RedirectToPage();
+            }
+
+            /*
+             * Confirm that the linked account has the Delivery role.
+             */
+            var isDelivery =
+                await _userManager.IsInRoleAsync(
+                    deliveryUser,
+                    "Delivery");
+
+            if (!isDelivery)
+            {
+                TempData["DeliveryLoginError"] =
+                    "Delivery account is not configured correctly.";
+
+                return RedirectToPage();
+            }
+
+            /*
+             * Check the Delivery password.
+             * Lockout protection is enabled after failed attempts.
+             */
+            var passwordResult =
+                await _signInManager
+                    .CheckPasswordSignInAsync(
+                        deliveryUser,
+                        DeliveryPassword,
+                        lockoutOnFailure: true);
+
+            if (passwordResult.IsLockedOut)
+            {
+                TempData["DeliveryLoginError"] =
+                    "This delivery account is temporarily locked. Please try again later.";
+
+                return RedirectToPage();
+            }
+
+            if (!passwordResult.Succeeded)
+            {
+                TempData["DeliveryLoginError"] =
+                    "Invalid delivery credentials.";
+
+                return RedirectToPage();
+            }
+
+            /*
+             * Password is correct.
+             * Sign out the Customer account.
+             */
             await _signInManager.SignOutAsync();
 
+            /*
+             * Sign in the linked Delivery account.
+             */
             await _signInManager.SignInAsync(
                 deliveryUser,
                 isPersistent: false);
 
-            return LocalRedirect("/DeliveryDashboard");
+            /*
+             * Force newly created Delivery accounts
+             * to replace their temporary password.
+             */
+            if (deliveryUser.MustChangePassword)
+            {
+                return LocalRedirect(
+                    "/DeliveryFirstPasswordChange");
+            }
+
+            return LocalRedirect(
+                "/DeliveryDashboard");
         }
 
-        public async Task<IActionResult> OnPostStoreRequestAsync()
+        public async Task<IActionResult>
+            OnPostStoreRequestAsync()
         {
-            var loaded = await LoadCustomerProfileAsync();
+            var loaded =
+                await LoadCustomerProfileAsync();
 
             if (!loaded)
             {
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
             Store.Status = "Pending";
 
-            TempData["Success"] = "Store owner request submitted successfully. Waiting for admin approval.";
+            TempData["Success"] =
+                "Store owner request submitted successfully. Waiting for admin approval.";
 
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostDeliveryRequestAsync()
+        public async Task<IActionResult>
+            OnPostDeliveryRequestAsync()
         {
-            var loaded = await LoadCustomerProfileAsync();
+            var loaded =
+                await LoadCustomerProfileAsync();
 
             if (!loaded)
             {
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
             Delivery.Status = "Pending";
 
-            TempData["Success"] = "Delivery staff request submitted successfully. Waiting for admin approval.";
+            TempData["Success"] =
+                "Delivery staff request submitted successfully. Waiting for admin approval.";
 
             return RedirectToPage();
         }
 
-        private async Task<bool> LoadCustomerProfileAsync()
+        private async Task<bool>
+            LoadCustomerProfileAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user =
+                await _userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return false;
             }
 
-            CustomerFullName = !string.IsNullOrWhiteSpace(user.FullName)
-                ? user.FullName
-                : user.UserName ?? "Customer";
+            CustomerFullName =
+                !string.IsNullOrWhiteSpace(user.FullName)
+                    ? user.FullName
+                    : user.UserName ?? "Customer";
 
-            CustomerEmail = user.Email ?? string.Empty;
-            CustomerPhone = user.PhoneNumber ?? "No phone number";
+            CustomerEmail =
+                user.Email
+                ?? string.Empty;
+
+            CustomerPhone =
+                !string.IsNullOrWhiteSpace(user.PhoneNumber)
+                    ? user.PhoneNumber
+                    : "No phone number";
 
             await LoadDeliveryAccessStatusAsync(user);
 
-            var customer = await _context.Customers
-                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+            var customer =
+                await _context.Customers
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c =>
+                        c.UserID == user.Id);
 
             if (customer == null)
             {
                 OrdersCount = 0;
                 WishlistCount = 0;
                 AddressesCount = 0;
+
                 return true;
             }
 
-            OrdersCount = await _context.Orders
-                .CountAsync(o => o.CustomerID == customer.CustomerID);
+            OrdersCount =
+                await _context.Orders
+                    .CountAsync(o =>
+                        o.CustomerID ==
+                        customer.CustomerID);
 
-            WishlistCount = await _context.Wishlists
-                .CountAsync(w => w.CustomerID == customer.CustomerID);
+            WishlistCount =
+                await _context.Wishlists
+                    .CountAsync(w =>
+                        w.CustomerID ==
+                        customer.CustomerID);
 
-            AddressesCount = await _context.CustomerAddresses
-                .CountAsync(a => a.CustomerID == customer.CustomerID);
+            AddressesCount =
+                await _context.CustomerAddresses
+                    .CountAsync(a =>
+                        a.CustomerID ==
+                        customer.CustomerID);
 
             return true;
         }
 
-        private async Task LoadDeliveryAccessStatusAsync(User user)
+        private async Task
+            LoadDeliveryAccessStatusAsync(User user)
         {
             HasPendingDeliveryRequest = false;
             HasApprovedDeliveryAccount = false;
             HasRejectedDeliveryRequest = false;
+
             DeliveryAccessMessage = string.Empty;
+            DeliveryAccountEmail = string.Empty;
 
-            var deliveryRequest = await _context.DeliveryPersons
-                .OrderByDescending(d => d.DeliveryPersonID)
-                .FirstOrDefaultAsync(d => d.UserID == user.Id);
+            /*
+             * New records:
+             * RequestedByUserID stores the original Customer ID.
+             *
+             * Old pending records:
+             * UserID may still contain the Customer ID before
+             * the Admin creates the separate Delivery account.
+             *
+             * We never match accounts by phone number.
+             */
+            var deliveryRequest =
+                await _context.DeliveryPersons
+                    .AsNoTracking()
+                    .Where(d =>
+                        d.RequestedByUserID == user.Id
+                        ||
+                        (
+                            d.RequestedByUserID == null
+                            &&
+                            d.UserID == user.Id
+                        ))
+                    .OrderByDescending(d =>
+                        d.DeliveryPersonID)
+                    .FirstOrDefaultAsync();
 
             if (deliveryRequest == null)
             {
-                var customerPhone = NormalizePhone(user.PhoneNumber);
+                DeliveryAccessMessage =
+                    "Submit your vehicle and license information to join our delivery fleet.";
 
-                if (!string.IsNullOrWhiteSpace(customerPhone))
-                {
-                    var allDeliveryRequests = await _context.DeliveryPersons
-                        .OrderByDescending(d => d.DeliveryPersonID)
-                        .ToListAsync();
-
-                    deliveryRequest = allDeliveryRequests
-                        .FirstOrDefault(d =>
-                            NormalizePhone(d.PhoneNumber) == customerPhone);
-                }
-            }
-
-            if (deliveryRequest == null)
-            {
-                DeliveryAccessMessage = "Submit your vehicle and license information to join our delivery fleet.";
                 return;
             }
 
-            var status = deliveryRequest.Status?.Trim();
+            var status =
+                deliveryRequest.Status?.Trim();
 
-            if (status == "Pending")
+            if (string.Equals(
+                status,
+                "Pending",
+                StringComparison.OrdinalIgnoreCase))
             {
                 HasPendingDeliveryRequest = true;
-                DeliveryAccessMessage = "Your delivery request is pending admin approval.";
+
+                DeliveryAccessMessage =
+                    "Your delivery request is pending admin approval.";
+
                 return;
             }
 
-            if (status == "Approved" && deliveryRequest.IsActive)
+            if (string.Equals(
+                    status,
+                    "Approved",
+                    StringComparison.OrdinalIgnoreCase)
+                &&
+                !deliveryRequest.IsActive)
             {
+                DeliveryAccessMessage =
+                    "Your delivery account is approved but currently inactive. Please contact the admin.";
+
+                return;
+            }
+
+            if (string.Equals(
+                    status,
+                    "Approved",
+                    StringComparison.OrdinalIgnoreCase)
+                &&
+                deliveryRequest.IsActive)
+            {
+                /*
+                 * Load the separate Delivery Identity user.
+                 */
+                var deliveryUser =
+                    await _userManager.FindByIdAsync(
+                        deliveryRequest.UserID.ToString());
+
+                if (deliveryUser == null ||
+                    !deliveryUser.IsActive)
+                {
+                    DeliveryAccessMessage =
+                        "Your delivery account is unavailable. Please contact the admin.";
+
+                    return;
+                }
+
+                var isDelivery =
+                    await _userManager.IsInRoleAsync(
+                        deliveryUser,
+                        "Delivery");
+
+                if (!isDelivery)
+                {
+                    DeliveryAccessMessage =
+                        "Your delivery account is not configured correctly. Please contact the admin.";
+
+                    return;
+                }
+
+                DeliveryAccountEmail =
+                    deliveryUser.Email
+                    ?? deliveryUser.UserName
+                    ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(
+                    DeliveryAccountEmail))
+                {
+                    DeliveryAccessMessage =
+                        "Your delivery account email is unavailable. Please contact the admin.";
+
+                    return;
+                }
+
                 HasApprovedDeliveryAccount = true;
-                DeliveryAccessMessage = "Your delivery account is approved. Use the delivery email and password provided by the admin.";
+
+                DeliveryAccessMessage =
+                    "Your delivery account is approved. Enter the password provided by the admin.";
+
                 return;
             }
 
-            if (status == "Approved" && !deliveryRequest.IsActive)
-            {
-                DeliveryAccessMessage = "Your delivery account is approved but currently inactive. Please contact the admin.";
-                return;
-            }
-
-            if (status == "Rejected")
+            if (string.Equals(
+                status,
+                "Rejected",
+                StringComparison.OrdinalIgnoreCase))
             {
                 HasRejectedDeliveryRequest = true;
 
-                DeliveryAccessMessage = !string.IsNullOrWhiteSpace(deliveryRequest.RejectionReason)
-                    ? $"Your delivery request was rejected: {deliveryRequest.RejectionReason}. You can submit a new request."
-                    : "Your delivery request was rejected. You can submit a new request.";
+                if (!string.IsNullOrWhiteSpace(
+                    deliveryRequest.RejectionReason))
+                {
+                    DeliveryAccessMessage =
+                        $"Your delivery request was rejected: {deliveryRequest.RejectionReason}. You can submit a new request.";
+                }
+                else
+                {
+                    DeliveryAccessMessage =
+                        "Your delivery request was rejected. You can submit a new request.";
+                }
 
                 return;
             }
 
-            DeliveryAccessMessage = "Submit your vehicle and license information to join our delivery fleet.";
-        }
-
-        private static string NormalizePhone(string? phone)
-        {
-            if (string.IsNullOrWhiteSpace(phone))
-            {
-                return string.Empty;
-            }
-
-            var digits = new string(phone.Where(char.IsDigit).ToArray());
-
-            if (string.IsNullOrWhiteSpace(digits))
-            {
-                return string.Empty;
-            }
-
-            if (digits.StartsWith("00961"))
-            {
-                digits = digits.Substring(5);
-            }
-            else if (digits.StartsWith("961"))
-            {
-                digits = digits.Substring(3);
-            }
-
-            if (!digits.StartsWith("0"))
-            {
-                digits = "0" + digits;
-            }
-
-            return digits;
+            DeliveryAccessMessage =
+                "Submit your vehicle and license information to join our delivery fleet.";
         }
     }
 }
