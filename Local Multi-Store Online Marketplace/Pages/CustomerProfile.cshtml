@@ -5,23 +5,24 @@
     Layout = null;
 
     var deliveryLoginError =
-        TempData.Peek("DeliveryLoginError")?.ToString();
+        TempData["DeliveryLoginError"]?.ToString();
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
+
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
 
     <title>My Profile | Realnest</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
-          rel="stylesheet">
+          rel="stylesheet" />
 
     <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
         * {
@@ -335,6 +336,12 @@
                     box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
                 }
 
+                .delivery-login-form input[readonly] {
+                    background: #e9eef5;
+                    color: #475569;
+                    cursor: not-allowed;
+                }
+
         .delivery-login-btn {
             border: none;
             background: #1e3a5f;
@@ -343,10 +350,12 @@
             border-radius: 14px;
             font-weight: 800;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
 
             .delivery-login-btn:hover {
                 background: #FF6B35;
+                transform: translateY(-1px);
             }
 
         .delivery-error {
@@ -409,7 +418,7 @@
             padding: 32px 20px 40px;
             color: #5b6e8c;
             font-size: 13px;
-            border-top: 1px solid rgba(0,0,0,0.05);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
             margin-top: 20px;
         }
     </style>
@@ -422,23 +431,28 @@
 
         <div>
             <a href="/Customer1">
-                <i class="fas fa-home"></i> Dashboard
+                <i class="fas fa-home"></i>
+                Dashboard
             </a>
 
             <a href="/CustomerProducts">
-                <i class="fas fa-store"></i> Shop
+                <i class="fas fa-store"></i>
+                Shop
             </a>
 
             <a href="/CustomerCart">
-                <i class="fas fa-shopping-cart"></i> Cart
+                <i class="fas fa-shopping-cart"></i>
+                Cart
             </a>
 
             <a href="/CustomerOrders">
-                <i class="fas fa-truck"></i> Orders
+                <i class="fas fa-truck"></i>
+                Orders
             </a>
 
             <a href="/CustomerProfile">
-                <i class="fas fa-user-circle"></i> Profile
+                <i class="fas fa-user-circle"></i>
+                Profile
             </a>
         </div>
     </div>
@@ -465,7 +479,9 @@
             </div>
 
             <div>
-                <h2>@Model.CustomerFullName</h2>
+                <h2>
+                    @Model.CustomerFullName
+                </h2>
 
                 <p>
                     <i class="fas fa-envelope"
@@ -483,17 +499,26 @@
 
                 <div class="stats">
                     <div>
-                        <strong>@Model.OrdersCount</strong>
+                        <strong>
+                            @Model.OrdersCount
+                        </strong>
+
                         <span>Orders</span>
                     </div>
 
                     <div>
-                        <strong>@Model.WishlistCount</strong>
+                        <strong>
+                            @Model.WishlistCount
+                        </strong>
+
                         <span>Wishlist</span>
                     </div>
 
                     <div>
-                        <strong>@Model.AddressesCount</strong>
+                        <strong>
+                            @Model.AddressesCount
+                        </strong>
+
                         <span>Addresses</span>
                     </div>
                 </div>
@@ -510,18 +535,21 @@
 
             <a class="btn"
                href="/Identity/Account/Manage/Index">
+
                 <i class="fas fa-user-edit"></i>
                 Edit Profile
             </a>
 
             <a class="btn"
                href="/Identity/Account/Manage/ChangePassword">
+
                 <i class="fas fa-key"></i>
                 Change Password
             </a>
 
             <a class="btn"
                href="/CustomerAddresses">
+
                 <i class="fas fa-location-dot"></i>
                 My Addresses
             </a>
@@ -556,7 +584,8 @@
                 Delivery Staff Access
             </h3>
 
-            @if (!string.IsNullOrWhiteSpace(Model.DeliveryAccessMessage))
+            @if (!string.IsNullOrWhiteSpace(
+            Model.DeliveryAccessMessage))
             {
                 if (Model.HasPendingDeliveryRequest)
                 {
@@ -578,7 +607,9 @@
                 }
                 else
                 {
-                    <p>@Model.DeliveryAccessMessage</p>
+                    <p>
+                        @Model.DeliveryAccessMessage
+                    </p>
                 }
             }
 
@@ -596,14 +627,18 @@
                 <div id="deliveryLoginBox"
                      class="delivery-login-card @(string.IsNullOrWhiteSpace(deliveryLoginError) ? "" : "open")">
 
-                    <h4>Login as Delivery 🚚</h4>
+                    <h4>
+                        Login as Delivery 🚚
+                    </h4>
 
                     <p>
-                        Enter the delivery email and password given by the admin.
-                        This will switch you from your customer account to your delivery account.
+                        This Delivery account is linked securely
+                        to your Customer account. Enter only the
+                        Delivery password given by the admin.
                     </p>
 
-                    @if (!string.IsNullOrWhiteSpace(deliveryLoginError))
+                    @if (!string.IsNullOrWhiteSpace(
+                   deliveryLoginError))
                     {
                         <div class="delivery-error">
                             @deliveryLoginError
@@ -616,40 +651,36 @@
                           autocomplete="off">
 
                         <div class="form-group">
-                            <label for="DeliveryEmail">
-                                Delivery Email
+                            <label for="DeliveryAccountEmail">
+                                Your Delivery Email
                             </label>
 
-                            <input id="DeliveryEmail"
-                                   name="DeliveryEmail"
+                            <input id="DeliveryAccountEmail"
                                    type="email"
-                                   value=""
-                                   placeholder="Enter delivery email"
-                                   autocomplete="off"
-                                   data-lpignore="true"
-                                   data-form-type="other"
-                                   required />
+                                   value="@Model.DeliveryAccountEmail"
+                                   readonly
+                                   aria-readonly="true"
+                                   tabindex="-1" />
                         </div>
 
                         <div class="form-group">
-                            <label for="DeliveryPassword">
+                            <label asp-for="DeliveryPassword">
                                 Delivery Password
                             </label>
 
-                            <input id="DeliveryPassword"
-                                   name="DeliveryPassword"
+                            <input asp-for="DeliveryPassword"
                                    type="password"
-                                   value=""
                                    placeholder="Enter delivery password"
-                                   autocomplete="new-password"
+                                   autocomplete="current-password"
                                    data-lpignore="true"
-                                   data-form-type="other"
+                                   data-form-type="password"
                                    required />
                         </div>
 
                         <button type="submit"
                                 class="delivery-login-btn">
 
+                            <i class="fas fa-right-to-bracket"></i>
                             Open Delivery Dashboard
                         </button>
                     </form>
@@ -687,7 +718,9 @@
     <script>
         function toggleDeliveryLogin() {
             const loginBox =
-                document.getElementById("deliveryLoginBox");
+                document.getElementById(
+                    "deliveryLoginBox"
+                );
 
             if (!loginBox) {
                 return;
@@ -696,42 +729,45 @@
             loginBox.classList.toggle("open");
 
             if (loginBox.classList.contains("open")) {
-                clearDeliveryFields();
+                clearDeliveryPassword();
 
-                setTimeout(function () {
-                    const emailInput =
-                        document.getElementById("DeliveryEmail");
+                window.setTimeout(function () {
+                    const passwordInput =
+                        document.getElementById(
+                            "DeliveryPassword"
+                        );
 
-                    if (emailInput) {
-                        emailInput.focus();
+                    if (passwordInput) {
+                        passwordInput.focus();
                     }
                 }, 50);
             }
         }
 
-        function clearDeliveryFields() {
-            const emailInput =
-                document.getElementById("DeliveryEmail");
-
+        function clearDeliveryPassword() {
             const passwordInput =
-                document.getElementById("DeliveryPassword");
-
-            if (emailInput) {
-                emailInput.value = "";
-            }
+                document.getElementById(
+                    "DeliveryPassword"
+                );
 
             if (passwordInput) {
                 passwordInput.value = "";
             }
         }
 
-        document.addEventListener("DOMContentLoaded", function () {
-            clearDeliveryFields();
-        });
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+                clearDeliveryPassword();
+            }
+        );
 
-        window.addEventListener("pageshow", function () {
-            clearDeliveryFields();
-        });
+        window.addEventListener(
+            "pageshow",
+            function () {
+                clearDeliveryPassword();
+            }
+        );
     </script>
 
 </body>
