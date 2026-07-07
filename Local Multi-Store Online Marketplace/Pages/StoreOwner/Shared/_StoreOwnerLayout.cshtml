@@ -246,118 +246,126 @@
 <body class="store-owner-body">
     <div class="store-owner-wrapper">
 
-        <!-- Top Navigation Bar -->
-        <nav class="store-top-nav">
-            <div class="nav-container">
+        <!--
+            TOP NAVIGATION BAR – Conditionally hidden if ViewData["HideNavbar"] is true
+        -->
+        @if (ViewData["HideNavbar"] == null || !(bool)ViewData["HideNavbar"])
+        {
+            <nav class="store-top-nav">
+                <div class="nav-container">
 
-                <div class="nav-brand">
-                    <a href="/StoreOwner/Dashboard">
-                        <i class="fas fa-store"></i>
-                        <span>Store Owner Panel</span>
-                    </a>
-                </div>
+                    <div class="nav-brand">
+                        <a href="/StoreOwner/Dashboard">
+                            <i class="fas fa-store"></i>
+                            <span>Store Owner Panel</span>
+                        </a>
+                    </div>
 
-                <div class="nav-search">
-                    <i class="fas fa-search"></i>
-                    <input type="text"
-                           placeholder="Search orders, products..."
-                           id="globalSearch" />
-                </div>
+                    <div class="nav-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text"
+                               placeholder="Search orders, products..."
+                               id="globalSearch" />
+                    </div>
 
-                <div class="nav-actions">
+                    <div class="nav-actions">
 
-                    <!-- Dynamic Notifications -->
-                    <div class="notification-wrapper">
-                        <div class="notification-bell" id="notificationBell">
-                            <i class="fas fa-bell"></i>
-
-                            @if (unreadCount > 0)
-                            {
-                                <span class="badge">@unreadCount</span>
-                            }
-                        </div>
-
-                        <div class="notification-dropdown" id="notificationDropdown">
-                            <div class="notification-header">
-                                <span>Notifications</span>
+                        <!-- Dynamic Notifications -->
+                        <div class="notification-wrapper">
+                            <div class="notification-bell" id="notificationBell">
+                                <i class="fas fa-bell"></i>
 
                                 @if (unreadCount > 0)
                                 {
-                                    <span class="notification-count-text">
-                                        @unreadCount unread
-                                    </span>
+                                    <span class="badge">@unreadCount</span>
                                 }
                             </div>
 
-                            @if (unreadNotifications.Any())
-                            {
-                                foreach (var notification in unreadNotifications.Take(10))
+                            <div class="notification-dropdown" id="notificationDropdown">
+                                <div class="notification-header">
+                                    <span>Notifications</span>
+
+                                    @if (unreadCount > 0)
+                                    {
+                                        <span class="notification-count-text">
+                                            @unreadCount unread
+                                        </span>
+                                    }
+                                </div>
+
+                                @if (unreadNotifications.Any())
                                 {
-                                    <div class="notification-item">
-                                        <div class="notification-title">
-                                            @notification.Title
-                                        </div>
+                                    foreach (var notification in unreadNotifications.Take(10))
+                                    {
+                                        <div class="notification-item">
+                                            <div class="notification-title">
+                                                @notification.Title
+                                            </div>
 
-                                        <div class="notification-message">
-                                            @notification.Message
-                                        </div>
+                                            <div class="notification-message">
+                                                @notification.Message
+                                            </div>
 
-                                        <div class="notification-date">
-                                            @notification.SentAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                            <div class="notification-date">
+                                                @notification.SentAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                            </div>
                                         </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="empty-notification">
+                                        No new notifications
                                     </div>
                                 }
-                            }
-                            else
-                            {
-                                <div class="empty-notification">
-                                    No new notifications
-                                </div>
-                            }
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- User Dropdown with Logout -->
-                    <div class="user-dropdown" id="userDropdown">
-                        <img src="~/images/default-avatar.png"
-                             alt="Avatar"
-                             class="user-avatar" />
+                        <!-- User Dropdown with Logout -->
+                        <div class="user-dropdown" id="userDropdown">
+                            <img src="~/images/default-avatar.png"
+                                 alt="Avatar"
+                                 class="user-avatar" />
 
-                        <span class="user-name">@User.Identity?.Name</span>
+                            <span class="user-name">@User.Identity?.Name</span>
 
-                        <i class="fas fa-chevron-down"></i>
+                            <i class="fas fa-chevron-down"></i>
 
-                        <div class="dropdown-menu" id="userDropdownMenu">
-                            <a href="/StoreOwner/StoreProfile" class="dropdown-item">
-                                <i class="fas fa-user"></i> Profile
-                            </a>
-                            <a href="/StoreOwner/Settings/Index" class="dropdown-item">
-                                <i class="fas fa-cog"></i> Settings
-                            </a>
-                            <hr style="margin: 6px 0; border-color: #e5e7eb;" />
-                            <form method="post"
-                                  asp-area="Identity"
-                                  asp-page="/Account/Logout"
-                                  asp-route-returnUrl="/"
-                                  class="store-logout-form">
-                                <button type="submit" class="dropdown-item danger">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
-                                </button>
-                            </form>
+                            <div class="dropdown-menu" id="userDropdownMenu">
+                                <a href="/StoreOwner/StoreProfile" class="dropdown-item">
+                                    <i class="fas fa-user"></i> Profile
+                                </a>
+                                <a href="/StoreOwner/Settings/Index" class="dropdown-item">
+                                    <i class="fas fa-cog"></i> Settings
+                                </a>
+                                <hr style="margin: 6px 0; border-color: #e5e7eb;" />
+                                <form method="post"
+                                      asp-area="Identity"
+                                      asp-page="/Account/Logout"
+                                      asp-route-returnUrl="/"
+                                      class="store-logout-form">
+                                    <button type="submit" class="dropdown-item danger">
+                                        <i class="fas fa-sign-out-alt"></i> Logout
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
 
+                    </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+        }
 
         <div class="store-main-container">
 
             <!-- Sidebar -->
             <aside class="store-sidebar">
                 <div class="sidebar-menu">
+                    <!--
+                        FIXED HOME LINK – now points to the correct StoreOwner/Home page
+                    -->
                     <div class="menu-item @(currentPage.Contains("Home") ? "active" : "")">
-                        <a href="/Home">
+                        <a href="/StoreOwner/Home">
                             <i class="fas fa-home"></i>
                             <span>Home</span>
                         </a>

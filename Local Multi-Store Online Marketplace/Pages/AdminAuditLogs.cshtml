@@ -4,36 +4,1176 @@
     ViewData["Title"] = "Audit Logs";
 }
 
-<div class="audit-card" style="background:white; border-radius:24px; padding:24px; margin-top:20px;">
-    <h3>System Audit Trail</h3>
-    <div class="filter-bar" style="display:flex; gap:12px; margin-bottom:20px;">
-        <input type="text" id="searchLog" placeholder="User or Action...">
-        <input type="date" id="dateFrom">
-        <input type="date" id="dateTo">
-        <button id="exportAuditBtn" class="btn-export" style="background:#2563eb; color:white; border:none; padding:8px 16px; border-radius:40px;">Export CSV</button>
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        /* ── Base ── */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f1f5f9;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* ── Page Header ── */
+        .audit-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+            .audit-page-header h2 {
+                font-size: 26px;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+                color: #0b1a33;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+                .audit-page-header h2 i {
+                    color: #2563eb;
+                    font-size: 28px;
+                }
+
+            .audit-page-header .subtitle {
+                color: #64748b;
+                font-size: 14px;
+                font-weight: 400;
+                margin-top: 2px;
+            }
+
+        .audit-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* ── Stats Row ── */
+        .audit-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            }
+
+            .stat-card .stat-label {
+                font-size: 13px;
+                font-weight: 500;
+                color: #64748b;
+                letter-spacing: 0.02em;
+                text-transform: uppercase;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .stat-card .stat-value {
+                font-size: 28px;
+                font-weight: 700;
+                color: #0b1a33;
+                margin-top: 4px;
+                letter-spacing: -0.01em;
+            }
+
+                .stat-card .stat-value .trend {
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: #22c55e;
+                    margin-left: 8px;
+                }
+
+        /* ── Main Card ── */
+        .audit-card {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 28px 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            transition: box-shadow 0.2s ease;
+        }
+
+            .audit-card:hover {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04), 0 12px 40px rgba(0, 0, 0, 0.07);
+            }
+
+        /* ── Filter Bar ── */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+            align-items: center;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 16px;
+            border: 1px solid #e9edf4;
+        }
+
+            .filter-bar .filter-group {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                flex: 1 1 180px;
+                min-width: 140px;
+            }
+
+                .filter-bar .filter-group i {
+                    color: #94a3b8;
+                    font-size: 14px;
+                    width: 18px;
+                    text-align: center;
+                }
+
+            .filter-bar input,
+            .filter-bar select {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                padding: 8px 14px;
+                font-size: 14px;
+                font-family: inherit;
+                color: #1e293b;
+                width: 100%;
+                transition: border-color 0.2s, box-shadow 0.2s;
+                outline: none;
+                min-height: 40px;
+            }
+
+                .filter-bar input:focus,
+                .filter-bar select:focus {
+                    border-color: #2563eb;
+                    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+                }
+
+                .filter-bar input::placeholder {
+                    color: #94a3b8;
+                }
+
+                .filter-bar input[type="date"] {
+                    min-width: 140px;
+                }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            white-space: nowrap;
+            min-height: 40px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+            .btn-primary:hover {
+                background: #1d4ed8;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            }
+
+            .btn-primary:active {
+                transform: translateY(0);
+            }
+
+        .btn-outline {
+            background: transparent;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+            .btn-outline:hover {
+                background: #f1f5f9;
+                border-color: #cbd5e1;
+            }
+
+        .btn-success {
+            background: #16a34a;
+            color: white;
+        }
+
+            .btn-success:hover {
+                background: #15803d;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+            }
+
+        .btn-danger-outline {
+            background: transparent;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+
+            .btn-danger-outline:hover {
+                background: #fef2f2;
+                border-color: #f87171;
+            }
+
+        .btn i {
+            font-size: 14px;
+        }
+
+        /* ── Table ── */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 14px;
+            border: 1px solid #eef2f6;
+        }
+
+        #auditTable {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 640px;
+        }
+
+            #auditTable thead {
+                background: #f8fafc;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+                #auditTable thead th {
+                    padding: 14px 18px;
+                    text-align: left;
+                    font-weight: 600;
+                    font-size: 12px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    color: #64748b;
+                    white-space: nowrap;
+                    position: sticky;
+                    top: 0;
+                    background: #f8fafc;
+                    z-index: 2;
+                }
+
+                    #auditTable thead th i {
+                        margin-right: 4px;
+                        font-size: 12px;
+                        opacity: 0.6;
+                    }
+
+            #auditTable tbody tr {
+                border-bottom: 1px solid #f1f5f9;
+                transition: background 0.12s ease;
+            }
+
+                #auditTable tbody tr:last-child {
+                    border-bottom: none;
+                }
+
+                #auditTable tbody tr:hover {
+                    background: #f8fafc;
+                }
+
+            #auditTable tbody td {
+                padding: 14px 18px;
+                color: #1e293b;
+                vertical-align: middle;
+                line-height: 1.4;
+            }
+
+            #auditTable .timestamp-cell {
+                font-family: 'JetBrains Mono', 'SF Mono', monospace;
+                font-size: 13px;
+                color: #475569;
+                white-space: nowrap;
+            }
+
+            #auditTable .user-cell {
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                #auditTable .user-cell .avatar {
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 50%;
+                    background: #e2e8f0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #475569;
+                    flex-shrink: 0;
+                }
+
+        /* ── Action Badge ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            text-transform: capitalize;
+        }
+
+            .badge i {
+                font-size: 11px;
+            }
+
+        .badge-create {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-update {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-delete {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-login {
+            background: #e0f2fe;
+            color: #075985;
+        }
+
+        .badge-logout {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .badge-export {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-import {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .badge-default {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        /* ── Entity name ── */
+        .entity-cell {
+            font-weight: 500;
+            color: #0f172a;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+            .entity-cell .entity-type {
+                font-weight: 400;
+                color: #94a3b8;
+                font-size: 11px;
+                margin-left: 4px;
+            }
+
+        /* ── IP ── */
+        .ip-cell {
+            font-family: 'JetBrains Mono', 'SF Mono', monospace;
+            font-size: 13px;
+            color: #64748b;
+            letter-spacing: 0.01em;
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 56px 20px;
+            color: #94a3b8;
+        }
+
+            .empty-state i {
+                font-size: 48px;
+                color: #cbd5e1;
+                margin-bottom: 12px;
+                display: block;
+            }
+
+            .empty-state h4 {
+                font-size: 18px;
+                font-weight: 600;
+                color: #475569;
+                margin: 0 0 4px;
+            }
+
+            .empty-state p {
+                font-size: 14px;
+                margin: 0;
+            }
+
+        /* ── Pagination ── */
+        .audit-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #eef2f6;
+        }
+
+            .audit-pagination .info {
+                font-size: 14px;
+                color: #64748b;
+            }
+
+                .audit-pagination .info strong {
+                    color: #1e293b;
+                }
+
+        .pagination-controls {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+            .pagination-controls button {
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                border: 1px solid #e2e8f0;
+                background: white;
+                color: #1e293b;
+                font-weight: 500;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.15s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+                .pagination-controls button:hover:not(:disabled) {
+                    background: #f1f5f9;
+                    border-color: #cbd5e1;
+                }
+
+                .pagination-controls button.active {
+                    background: #2563eb;
+                    color: white;
+                    border-color: #2563eb;
+                }
+
+                .pagination-controls button:disabled {
+                    opacity: 0.4;
+                    cursor: not-allowed;
+                }
+
+                .pagination-controls button i {
+                    font-size: 14px;
+                }
+
+        /* ── Toast notification ── */
+        .toast-notification {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0b1a33;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(12px) scale(0.96);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(8px);
+        }
+
+            .toast-notification.show {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                pointer-events: auto;
+            }
+
+            .toast-notification i {
+                font-size: 18px;
+                color: #4ade80;
+            }
+
+        /* ── Responsive ── */
+        @@media (max-width: 768px) {
+            .audit-page-header h2 {
+                font-size: 20px;
+            }
+
+            .audit-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stat-card .stat-value {
+                font-size: 22px;
+            }
+
+            .audit-card {
+                padding: 16px 14px 16px;
+            }
+
+            .filter-bar {
+                padding: 12px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+                .filter-bar .filter-group {
+                    flex: 1 1 auto;
+                    min-width: unset;
+                }
+
+            .filter-actions {
+                margin-left: 0;
+                justify-content: stretch;
+            }
+
+                .filter-actions .btn {
+                    flex: 1;
+                    justify-content: center;
+                }
+
+            #auditTable thead th,
+            #auditTable tbody td {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .audit-pagination {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+
+            .pagination-controls {
+                justify-content: center;
+            }
+
+            .toast-notification {
+                left: 16px;
+                right: 16px;
+                bottom: 16px;
+                text-align: center;
+                justify-content: center;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .audit-stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .stat-card {
+                padding: 12px 14px;
+            }
+
+                .stat-card .stat-value {
+                    font-size: 20px;
+                }
+
+                .stat-card .stat-label {
+                    font-size: 11px;
+                }
+
+            .audit-card {
+                padding: 12px 10px 12px;
+                border-radius: 16px;
+            }
+
+            .filter-bar {
+                padding: 10px;
+                border-radius: 12px;
+            }
+
+            #auditTable {
+                font-size: 12px;
+                min-width: 480px;
+            }
+
+                #auditTable thead th,
+                #auditTable tbody td {
+                    padding: 8px 10px;
+                }
+
+            .badge {
+                font-size: 10px;
+                padding: 2px 10px;
+            }
+        }
+    </style>
+}
+
+<!-- ─── Toast ─── -->
+<div id="toast" class="toast-notification">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage">Logs exported successfully</span>
+</div>
+
+<!-- ─── Page Content ─── -->
+<div class="audit-page-header">
+    <div>
+        <h2>
+            <i class="fas fa-clipboard-list"></i>
+            Audit Logs
+            <span class="subtitle">· System activity trail</span>
+        </h2>
     </div>
+    <div class="audit-header-actions">
+        <button id="refreshBtn" class="btn btn-outline" title="Refresh logs">
+            <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+        <button id="clearFiltersBtn" class="btn btn-outline">
+            <i class="fas fa-times"></i> Clear filters
+        </button>
+    </div>
+</div>
+
+<!-- ─── Stats ─── -->
+<div class="audit-stats" id="statsContainer">
+    <div class="stat-card">
+        <div class="stat-label"><i class="fas fa-list-ul"></i> Total logs</div>
+        <div class="stat-value" id="totalLogs">@Model.Logs.Count</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="fas fa-users"></i> Unique users</div>
+        <div class="stat-value" id="uniqueUsers">@Model.Logs.Select(l => l.UserName).Distinct().Count()</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="fas fa-clock"></i> Today</div>
+        <div class="stat-value" id="todayLogs">
+            @Model.Logs.Count(l => l.Timestamp.Date == DateTime.Today)
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="fas fa-bolt"></i> Actions</div>
+        <div class="stat-value" id="actionCount">
+            @Model.Logs.GroupBy(l => l.Action).Count()
+            <span class="trend">types</span>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Main Card ─── -->
+<div class="audit-card">
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <div class="filter-group">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchLog" placeholder="Search user, action, entity…" autocomplete="off">
+        </div>
+        <div class="filter-group">
+            <i class="fas fa-calendar-alt"></i>
+            <input type="date" id="dateFrom" title="From date">
+        </div>
+        <div class="filter-group">
+            <i class="fas fa-calendar-alt"></i>
+            <input type="date" id="dateTo" title="To date">
+        </div>
+        <div class="filter-group" style="flex:0.7 1 120px; min-width:100px;">
+            <i class="fas fa-tag"></i>
+            <select id="actionFilter">
+                <option value="">All actions</option>
+                @{
+                    var actions = Model.Logs.Select(l => l.Action).Distinct().OrderBy(a => a);
+                }
+                @foreach (var action in actions)
+                {
+                    <option value="@action">@action</option>
+                }
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button id="exportAuditBtn" class="btn btn-success">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Table -->
     <div class="table-responsive">
         <table id="auditTable">
-            <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Entity</th><th>IP Address</th></tr></thead>
-            <tbody>
+            <thead>
+                <tr>
+                    <th><i class="far fa-clock"></i> Timestamp</th>
+                    <th><i class="far fa-user"></i> User</th>
+                    <th><i class="fas fa-bolt"></i> Action</th>
+                    <th><i class="far fa-file"></i> Entity</th>
+                    <th><i class="fas fa-network-wired"></i> IP Address</th>
+                </tr>
+            </thead>
+            <tbody id="auditTableBody">
                 @foreach (var log in Model.Logs)
                 {
-                    <tr><td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td><td>@log.UserName</td><td>@log.Action</td><td>@log.EntityName</td><td>@log.IPAddress</td></tr>
+                    var badgeClass = log.Action?.ToLower() switch
+                    {
+                        "create" => "badge-create",
+                        "update" => "badge-update",
+                        "delete" => "badge-delete",
+                        "login" => "badge-login",
+                        "logout" => "badge-logout",
+                        "export" => "badge-export",
+                        "import" => "badge-import",
+                        _ => "badge-default"
+                    };
+                    var icon = log.Action?.ToLower() switch
+                    {
+                        "create" => "fa-plus-circle",
+                        "update" => "fa-pen",
+                        "delete" => "fa-trash-alt",
+                        "login" => "fa-sign-in-alt",
+                        "logout" => "fa-sign-out-alt",
+                        "export" => "fa-download",
+                        "import" => "fa-upload",
+                        _ => "fa-circle"
+                    };
+                    var initials = string.IsNullOrEmpty(log.UserName) ? "?" :
+                    string.Join("", log.UserName.Split(' ').Where(x => !string.IsNullOrEmpty(x)).Select(x => x[0])).ToUpper();
+                    if (initials.Length > 2) initials = initials[..2];
+                    <tr data-username="@log.UserName" data-action="@log.Action" data-entity="@log.EntityName"
+                        data-timestamp="@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")"
+                        data-date="@log.Timestamp.ToString("yyyy-MM-dd")">
+                        <td class="timestamp-cell">@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>
+                            <div class="user-cell">
+                                <span class="avatar">@initials</span>
+                                @log.UserName
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge @badgeClass">
+                                <i class="fas @icon"></i> @log.Action
+                            </span>
+                        </td>
+                        <td class="ip-cell">@log.IPAddress</td>
+                    </tr>
                 }
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination (client‑side demo) -->
+    <div class="audit-pagination">
+        <div class="info">
+            Showing <strong id="showingStart">1</strong> – <strong id="showingEnd">@Math.Min(10, Model.Logs.Count)</strong>
+            of <strong id="totalCount">@Model.Logs.Count</strong> entries
+        </div>
+        <div class="pagination-controls" id="paginationControls">
+            <button id="prevPage" disabled><i class="fas fa-chevron-left"></i></button>
+            <button class="active" data-page="1">1</button>
+            <button id="nextPage" @(Model.Logs.Count <= 10 ? "disabled" : "")><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </div>
 </div>
 
 <script>
-    // simple client‑side filtering
-    const searchLog = document.getElementById('searchLog');
-    const auditRows = document.querySelectorAll('#auditTable tbody tr');
-    searchLog.addEventListener('keyup', () => {
-        const term = searchLog.value.toLowerCase();
-        auditRows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(term) ? '' : 'none';
+    (function() {
+        'use strict';
+
+        // ─── DOM refs ───
+        const searchInput = document.getElementById('searchLog');
+        const dateFrom = document.getElementById('dateFrom');
+        const dateTo = document.getElementById('dateTo');
+        const actionFilter = document.getElementById('actionFilter');
+        const tableBody = document.getElementById('auditTableBody');
+        const allRows = Array.from(tableBody.querySelectorAll('tr'));
+        const totalLogsEl = document.getElementById('totalLogs');
+        const uniqueUsersEl = document.getElementById('uniqueUsers');
+        const todayLogsEl = document.getElementById('todayLogs');
+        const actionCountEl = document.getElementById('actionCount');
+        const showingStart = document.getElementById('showingStart');
+        const showingEnd = document.getElementById('showingEnd');
+        const totalCount = document.getElementById('totalCount');
+        const prevBtn = document.getElementById('prevPage');
+        const nextBtn = document.getElementById('nextPage');
+        const paginationContainer = document.getElementById('paginationControls');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        const PAGE_SIZE = 10;
+        let currentPage = 1;
+        let filteredRows = [...allRows];
+        let totalFiltered = allRows.length;
+
+        // ─── Helpers ───
+        function getInitials(name) {
+            if (!name) return '?';
+            const parts = name.split(' ').filter(Boolean);
+            let init = parts.map(p => p[0]).join('').toUpperCase();
+            if (init.length > 2) init = init.slice(0, 2);
+            return init;
+        }
+
+        function getBadgeClass(action) {
+            const map = {
+                'create': 'badge-create',
+                'update': 'badge-update',
+                'delete': 'badge-delete',
+                'login': 'badge-login',
+                'logout': 'badge-logout',
+                'export': 'badge-export',
+                'import': 'badge-import'
+            };
+            return map[action?.toLowerCase()] || 'badge-default';
+        }
+
+        function getActionIcon(action) {
+            const map = {
+                'create': 'fa-plus-circle',
+                'update': 'fa-pen',
+                'delete': 'fa-trash-alt',
+                'login': 'fa-sign-in-alt',
+                'logout': 'fa-sign-out-alt',
+                'export': 'fa-download',
+                'import': 'fa-upload'
+            };
+            return map[action?.toLowerCase()] || 'fa-circle';
+        }
+
+        function getActionColor(action) {
+            const map = {
+                'create': '#166534',
+                'update': '#1e40af',
+                'delete': '#991b1b',
+                'login': '#075985',
+                'logout': '#475569',
+                'export': '#92400e',
+                'import': '#5b21b6'
+            };
+            return map[action?.toLowerCase()] || '#475569';
+        }
+
+        // ─── Render table ───
+        function renderPage() {
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const end = Math.min(start + PAGE_SIZE, filteredRows.length);
+            const pageRows = filteredRows.slice(start, end);
+
+            // hide all, then show page rows
+            allRows.forEach(row => row.style.display = 'none');
+            pageRows.forEach(row => row.style.display = '');
+
+            // update pagination info
+            showingStart.textContent = filteredRows.length === 0 ? 0 : start + 1;
+            showingEnd.textContent = end;
+            totalCount.textContent = filteredRows.length;
+
+            // update stats
+            updateStats();
+
+            // update pagination buttons
+            const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE) || 1;
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+
+            // rebuild page buttons
+            const existingBtns = paginationContainer.querySelectorAll('button:not(#prevPage):not(#nextPage)');
+            existingBtns.forEach(b => b.remove());
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.dataset.page = i;
+                if (i === currentPage) btn.classList.add('active');
+                btn.addEventListener('click', () => {
+                    currentPage = i;
+                    renderPage();
+                });
+                paginationContainer.insertBefore(btn, nextBtn);
+            }
+
+            // update "show more" info
+            if (filteredRows.length === 0) {
+                // show empty state
+                if (!document.querySelector('.empty-state')) {
+                    const empty = document.createElement('tr');
+                    empty.className = 'empty-state';
+                    empty.innerHTML = `
+                                <td colspan="5">
+                                    <i class="fas fa-search"></i>
+                                    <h4>No logs found</h4>
+                                    <p>Try adjusting your filters</p>
+                                </td>
+                            `;
+                    tableBody.appendChild(empty);
+                }
+            } else {
+                const emptyEl = tableBody.querySelector('.empty-state');
+                if (emptyEl) emptyEl.remove();
+            }
+        }
+
+        // ─── Filter logic ───
+        function applyFilters() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const fromVal = dateFrom.value;
+            const toVal = dateTo.value;
+            const actionVal = actionFilter.value.toLowerCase();
+
+            filteredRows = allRows.filter(row => {
+                const username = (row.dataset.username || '').toLowerCase();
+                const action = (row.dataset.action || '').toLowerCase();
+                const entity = (row.dataset.entity || '').toLowerCase();
+                const timestamp = row.dataset.timestamp || '';
+                const date = row.dataset.date || '';
+
+                // search
+                let match = true;
+                if (searchTerm) {
+                    match = username.includes(searchTerm) ||
+                        action.includes(searchTerm) ||
+                        entity.includes(searchTerm);
+                }
+
+                // date from
+                if (match && fromVal) {
+                    match = date >= fromVal;
+                }
+
+                // date to
+                if (match && toVal) {
+                    match = date <= toVal;
+                }
+
+                // action filter
+                if (match && actionVal) {
+                    match = action === actionVal;
+                }
+
+                return match;
+            });
+
+            currentPage = 1;
+            renderPage();
+        }
+
+        // ─── Update stats ───
+        function updateStats() {
+            const visible = filteredRows;
+            const total = visible.length;
+
+            // unique users
+            const users = new Set();
+            visible.forEach(row => {
+                const u = row.dataset.username || '';
+                if (u) users.add(u);
+            });
+
+            // today
+            const today = new Date().toISOString().slice(0, 10);
+            const todayCount = visible.filter(row => row.dataset.date === today).length;
+
+            // action types
+            const actionSet = new Set();
+            visible.forEach(row => {
+                const a = row.dataset.action || '';
+                if (a) actionSet.add(a);
+            });
+
+            totalLogsEl.textContent = total;
+            uniqueUsersEl.textContent = users.size;
+            todayLogsEl.textContent = todayCount;
+            actionCountEl.innerHTML = `${actionSet.size} <span class="trend">types</span>`;
+        }
+
+        // ─── Export CSV ───
+        function exportCSV() {
+            const visible = filteredRows;
+            if (visible.length === 0) {
+                showToast('No logs to export', 'warning');
+                return;
+            }
+
+            let csv = '\uFEFFTimestamp,User,Action,Entity,IP Address\n';
+            visible.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 5) return;
+                // timestamp, user, action, entity, ip
+                const ts = cells[0].textContent.trim();
+                const user = cells[1].textContent.trim().replace(/,/g, ';');
+                const action = cells[2].textContent.trim().replace(/,/g, ';');
+                const entity = cells[3].textContent.trim().replace(/,/g, ';');
+                const ip = cells[4].textContent.trim();
+                csv += `"${ts}","${user}","${action}","${entity}","${ip}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            const dateStr = new Date().toISOString().slice(0, 10);
+            link.download = `audit_logs_${dateStr}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+
+            showToast(`Exported ${visible.length} log entries`);
+        }
+
+        // ─── Toast ───
+        let toastTimer = null;
+
+        function showToast(msg, type = 'success') {
+            toastMessage.textContent = msg;
+            const icon = toast.querySelector('i');
+            if (type === 'warning') {
+                icon.className = 'fas fa-exclamation-triangle';
+                icon.style.color = '#fbbf24';
+            } else {
+                icon.className = 'fas fa-check-circle';
+                icon.style.color = '#4ade80';
+            }
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3200);
+        }
+
+        // ─── Refresh ───
+        function refreshLogs() {
+            const btn = document.getElementById('refreshBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing…';
+            btn.disabled = true;
+            // Simulate refresh – reload the page after a short delay
+            setTimeout(() => {
+                location.reload();
+            }, 600);
+        }
+
+        // ─── Clear filters ───
+        function clearFilters() {
+            searchInput.value = '';
+            dateFrom.value = '';
+            dateTo.value = '';
+            actionFilter.value = '';
+            applyFilters();
+            showToast('Filters cleared');
+        }
+
+        // ─── Debounce ───
+        function debounce(fn, delay = 280) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        // ─── Event listeners ───
+        searchInput.addEventListener('input', debounce(applyFilters, 200));
+        dateFrom.addEventListener('change', applyFilters);
+        dateTo.addEventListener('change', applyFilters);
+        actionFilter.addEventListener('change', applyFilters);
+
+        document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
+        document.getElementById('refreshBtn').addEventListener('click', refreshLogs);
+
+        document.getElementById('exportAuditBtn').addEventListener('click', exportCSV);
+
+        // keyboard shortcut: Escape to clear search
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                searchInput.value = '';
+                applyFilters();
+                searchInput.blur();
+            }
         });
-    });
+
+        // ─── Init ───
+        // Ensure all rows have avatars with initials (for rows that might not have been rendered server-side with avatar)
+        allRows.forEach(row => {
+            const userCell = row.querySelector('.user-cell');
+            if (userCell) {
+                const avatar = userCell.querySelector('.avatar');
+                if (avatar) {
+                    const name = row.dataset.username || '';
+                    avatar.textContent = getInitials(name);
+                }
+            }
+            // ensure badge class is set
+            const action = row.dataset.action || '';
+            const badge = row.querySelector('.badge');
+            if (badge) {
+                // remove existing badge classes
+                badge.className = 'badge';
+                badge.classList.add(getBadgeClass(action));
+                // ensure icon
+                const iconEl = badge.querySelector('i');
+                if (iconEl) {
+                    iconEl.className = `fas ${getActionIcon(action)}`;
+                }
+            }
+        });
+
+        // initial render
+        applyFilters();
+
+        // Handle window resize for responsive table
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                // re-render pagination info if needed
+            }, 200);
+        });
+
+        console.log('🔍 Audit logs initialized');
+    })();
 </script>

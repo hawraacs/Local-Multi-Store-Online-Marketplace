@@ -28,6 +28,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public decimal TotalRevenue { get; set; }
 
+        public decimal TotalCommission { get; set; }  // ★ NEW
+
         public int PendingCount { get; set; }
 
         public int DeliveredCount { get; set; }
@@ -364,7 +366,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                             customer.User)
                     .Include(o => o.OrderItems)
                         .ThenInclude(orderItem =>
-                            orderItem.Store)
+                            orderItem.Store)          // ★ Include Store for CommissionRate
                     .Include(o => o.DeliveryAssignment)
                         .ThenInclude(assignment =>
                             assignment!.DeliveryPerson)
@@ -419,6 +421,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                                         $"{item.Quantity}x {item.ProductName}"))
                                 : "No items";
 
+                        // ★ Commission calculation
+                        var commission =
+                            order.OrderItems
+                                .Where(oi => oi.Store != null)
+                                .Sum(oi =>
+                                    oi.TotalPrice * oi.Store!.CommissionRate / 100m);
+
                         return new AdminOrderDto
                         {
                             OrderId =
@@ -435,6 +444,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                             TotalAmount =
                                 order.TotalAmount,
+
+                            Commission =
+                                commission,        // ★ NEW field
 
                             Status =
                                 string.IsNullOrWhiteSpace(order.Status)
@@ -481,6 +493,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                             StringComparison.OrdinalIgnoreCase))
                     .Sum(order =>
                         order.TotalAmount);
+
+            // ★ Total commission across all orders
+            TotalCommission =
+                Orders.Sum(order => order.Commission);
 
             PendingCount =
                 Orders.Count(order =>
@@ -617,6 +633,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public decimal TotalAmount { get; set; }
 
+        public decimal Commission { get; set; }   // ★ NEW
+
         public string Status { get; set; }
             = string.Empty;
 
@@ -638,4 +656,3 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public string? CancellationReason { get; set; }
     }
 }
-

@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
+using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services;
 using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
@@ -15,15 +17,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly StoreManager _storeManager;
         private readonly SubscriptionService _subscriptionService;
         private readonly UserManager<User> _userManager;
+        private readonly ApplicationDbContext _context;
 
         public AdminStoresModel(
             StoreManager storeManager,
             SubscriptionService subscriptionService,
-            UserManager<User> userManager)
+            UserManager<User> userManager,
+            ApplicationDbContext context)
         {
             _storeManager = storeManager;
             _subscriptionService = subscriptionService;
             _userManager = userManager;
+            _context = context;
         }
 
         public List<StoreDTO> Stores { get; set; } = new();
@@ -39,8 +44,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             Stores = allStores?.Where(s => s != null).ToList() ?? new();
         }
 
-        // ================= STORE MANAGEMENT =================
-
+        // ── Existing handlers (Approve, Reject, Activate, Deactivate) ──
         public async Task<IActionResult> OnPostApprove(int id)
         {
             var admin = await _userManager.GetUserAsync(User);
@@ -48,11 +52,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
 
             var result = await _storeManager.ApproveStoreWithAccountAsync(id, admin.Id, _userManager);
-
             TempData["Email"] = result.email;
             TempData["Password"] = result.password;
             TempData["Success"] = "Store approved successfully.";
-
             return RedirectToPage();
         }
 
@@ -70,7 +72,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
 
             await _storeManager.ActivateStoreAsync(id, admin.Id);
-
             TempData["Success"] = "Store activated successfully.";
             return RedirectToPage();
         }
@@ -78,34 +79,91 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public async Task<IActionResult> OnPostDeactivate(int id)
         {
             await _storeManager.DeactivateStoreAsync(id);
-
             TempData["Success"] = "Store deactivated successfully.";
             return RedirectToPage();
         }
 
-        // ================= SUBSCRIPTION FIX (THIS WAS MISSING) =================
-
-        public IActionResult OnPostExtend(int id)
+        // ── New: Reactivate a suspended store ──
+        public async Task<IActionResult> OnPostReactivateStore(int id)
         {
-            _subscriptionService.ExtendSubscription(id);
+            var store = await _context.Stores.FindAsync(id);
+            if (store == null)
+            {
+                TempData["Error"] = "Store not found.";
+                return RedirectToPage();
+            }
 
-            TempData["Success"] = "Subscription extended by 30 days.";
+            store.Status = "Approved";
+            store.SubscriptionStatus = "Active";
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Store reactivated successfully.";
             return RedirectToPage();
         }
 
-        public IActionResult OnPostSuspend(int id)
+        // ── Fixed Suspend: updates both Status and SubscriptionStatus ──
+        public async Task<IActionResult> OnPostSuspend(int id)
         {
-            _subscriptionService.SetStoreStatus(id, "Suspended");
+            var store = await _context.Stores.FindAsync(id);
+            if (store == null)
+            {
+                TempData["Error"] = "Store not found.";
+                return RedirectToPage();
+            }
 
-            TempData["Success"] = "Subscription suspended.";
+            store.Status = "Suspended";
+            store.SubscriptionStatus = "Suspended";
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Store suspended.";
             return RedirectToPage();
         }
 
-        public IActionResult OnPostActivateSubscription(int id)
+        // ── Fixed ActivateSubscription ──
+        public async Task<IActionResult> OnPostActivateSubscription(int id)
         {
-            _subscriptionService.SetStoreStatus(id, "Active");
+            var store = await _context.Stores.FindAsync(id);
+            if (store == null)
+            {
+                TempData["Error"] = "Store not found.";
+                return RedirectToPage();
+            }
+
+            // If the store was suspended, bring it back
+            if (store.Status == "Suspended")
+                store.Status = "Approved";
+
+            store.SubscriptionStatus = "Active";
+            await _context.SaveChangesAsync();
 
             TempData["Success"] = "Subscription activated.";
+            return RedirectToPage();
+        }
+
+        // ── Fixed Extend ──
+        public async Task<IActionResult> OnPostExtend(int id)
+        {
+            var store = await _context.Stores.FindAsync(id);
+            if (store == null)
+            {
+                TempData["Error"] = "Store not found.";
+                return RedirectToPage();
+            }
+
+            var newExpiry = DateTime.UtcNow.AddDays(30);
+            if (store.SubscriptionExpiryDate.HasValue && store.SubscriptionExpiryDate > DateTime.UtcNow)
+                newExpiry = store.SubscriptionExpiryDate.Value.AddDays(30);
+
+            store.SubscriptionExpiryDate = newExpiry;
+            store.SubscriptionStatus = "Active";
+
+            // If the store was suspended, reactivate it as well
+            if (store.Status == "Suspended")
+                store.Status = "Approved";
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Subscription extended by 30 days.";
             return RedirectToPage();
         }
     }

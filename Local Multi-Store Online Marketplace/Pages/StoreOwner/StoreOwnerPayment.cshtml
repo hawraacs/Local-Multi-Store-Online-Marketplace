@@ -1,0 +1,1325 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.StoreOwnerPaymentModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Store Owner Payment · Secure Checkout</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
+
+    <style>
+            /* ============================================================
+                           PROFESSIONAL PAYMENT PAGE — refined, modern, accessible
+                           ============================================================ */
+
+            /* ---------- reset & base ---------- */
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                min-height: 100vh;
+                background: #f1f5f9;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 24px;
+                color: #0b1a2b;
+                line-height: 1.5;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+
+                /* subtle background texture */
+                body::before {
+                    content: '';
+                    position: fixed;
+                    inset: 0;
+                    z-index: -1;
+                    background: radial-gradient(ellipse at 20% 50%, rgba(255, 107, 53, 0.08), transparent 55%), radial-gradient(ellipse at 80% 20%, rgba(17, 24, 39, 0.04), transparent 50%), radial-gradient(ellipse at 60% 80%, rgba(255, 107, 53, 0.05), transparent 45%), #f1f5f9;
+                }
+
+            /* ---------- main container ---------- */
+            .payment-shell {
+                width: 100%;
+                max-width: 1120px;
+                display: grid;
+                grid-template-columns: 1fr 1.1fr;
+                gap: 28px;
+                align-items: stretch;
+            }
+
+            /* ---------- left panel: info / branding ---------- */
+            .payment-info {
+                background: linear-gradient(145deg, #0b1a2b 0%, #142b3f 100%);
+                color: #ffffff;
+                border-radius: 32px;
+                padding: 38px 34px 34px;
+                box-shadow: 0 30px 60px rgba(11, 26, 43, 0.25);
+                position: relative;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+                .payment-info::before {
+                    content: '';
+                    position: absolute;
+                    width: 340px;
+                    height: 340px;
+                    border-radius: 50%;
+                    background: radial-gradient(circle, rgba(255, 107, 53, 0.18), transparent 70%);
+                    right: -120px;
+                    top: -100px;
+                    pointer-events: none;
+                }
+
+                .payment-info::after {
+                    content: '';
+                    position: absolute;
+                    width: 200px;
+                    height: 200px;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.03);
+                    left: -70px;
+                    bottom: -60px;
+                    pointer-events: none;
+                }
+
+            .payment-info-content {
+                position: relative;
+                z-index: 2;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .secure-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: rgba(255, 255, 255, 0.07);
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                padding: 7px 14px 7px 12px;
+                border-radius: 100px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.3px;
+                color: #fcd4b8;
+                text-transform: uppercase;
+                width: fit-content;
+                margin-bottom: 28px;
+            }
+
+                .secure-badge svg {
+                    width: 14px;
+                    height: 14px;
+                    fill: none;
+                    stroke: currentColor;
+                    stroke-width: 2.5;
+                    stroke-linecap: round;
+                    stroke-linejoin: round;
+                }
+
+            .payment-info h1 {
+                margin: 0 0 8px;
+                font-size: 34px;
+                font-weight: 900;
+                line-height: 1.1;
+                letter-spacing: -0.02em;
+                background: linear-gradient(to right, #ffffff, #d4dce8);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            .payment-info .subhead {
+                font-size: 14px;
+                font-weight: 500;
+                color: #94a9c9;
+                margin-bottom: 30px;
+                line-height: 1.6;
+                max-width: 90%;
+            }
+
+            /* mini card */
+            .mini-card {
+                background: linear-gradient(135deg, #ff6b35, #e85a2a);
+                border-radius: 20px;
+                padding: 22px 24px 24px;
+                box-shadow: 0 18px 35px rgba(255, 107, 53, 0.30);
+                margin-top: auto;
+                position: relative;
+                overflow: hidden;
+            }
+
+                .mini-card::after {
+                    content: '';
+                    position: absolute;
+                    width: 140px;
+                    height: 140px;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.07);
+                    right: -50px;
+                    bottom: -50px;
+                    pointer-events: none;
+                }
+
+            .mini-card-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                color: rgba(255, 255, 255, 0.85);
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+            }
+
+            .chip {
+                width: 38px;
+                height: 26px;
+                border-radius: 6px;
+                background: rgba(255, 255, 255, 0.70);
+                border: 1px solid rgba(255, 255, 255, 0.35);
+                box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+            }
+
+            .card-number-preview {
+                margin-top: 24px;
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 800;
+                letter-spacing: 2.5px;
+                font-family: 'Inter', monospace;
+            }
+
+            .card-bottom {
+                margin-top: 18px;
+                display: flex;
+                justify-content: space-between;
+                color: rgba(255, 255, 255, 0.80);
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+                .card-bottom span:last-child {
+                    font-family: 'Inter', monospace;
+                    letter-spacing: 1px;
+                }
+
+            /* test cards */
+            .test-cards {
+                margin-top: 24px;
+                display: grid;
+                gap: 8px;
+            }
+
+            .test-card-row {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.07);
+                border-radius: 12px;
+                padding: 10px 14px;
+                font-size: 11px;
+                font-weight: 600;
+                color: #b0c4dd;
+                line-height: 1.5;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+                .test-card-row strong {
+                    color: #ffffff;
+                    font-weight: 700;
+                    font-family: 'Inter', monospace;
+                    letter-spacing: 0.5px;
+                }
+
+                .test-card-row .badge {
+                    font-size: 9px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    padding: 3px 10px;
+                    border-radius: 100px;
+                    background: rgba(255, 255, 255, 0.08);
+                    color: #b0c4dd;
+                }
+
+                    .test-card-row .badge.success {
+                        background: rgba(52, 211, 153, 0.18);
+                        color: #6ee7b7;
+                    }
+
+                    .test-card-row .badge.decline {
+                        background: rgba(248, 113, 113, 0.15);
+                        color: #fca5a5;
+                    }
+
+            /* ---------- right panel: payment card ---------- */
+            .payment-card {
+                background: #ffffff;
+                border-radius: 32px;
+                box-shadow: 0 30px 60px rgba(11, 26, 43, 0.10), 0 1px 3px rgba(0, 0, 0, 0.02);
+                overflow: hidden;
+                border: 1px solid rgba(255, 255, 255, 0.50);
+                backdrop-filter: blur(2px);
+                display: flex;
+                flex-direction: column;
+            }
+
+            .payment-card-header {
+                padding: 30px 32px 16px 32px;
+                border-bottom: 1px solid #f0f4fa;
+            }
+
+                .payment-card-header h2 {
+                    margin: 0;
+                    font-size: 26px;
+                    font-weight: 800;
+                    color: #0b1a2b;
+                    letter-spacing: -0.02em;
+                }
+
+                .payment-card-header p {
+                    margin: 4px 0 0;
+                    color: #5f7a9a;
+                    font-size: 14px;
+                    font-weight: 500;
+                }
+
+            .payment-body {
+                padding: 24px 32px 32px;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* summary */
+            .summary {
+                background: #f8fafd;
+                border: 1px solid #e9eef4;
+                border-radius: 18px;
+                padding: 16px 18px;
+                margin-bottom: 18px;
+            }
+
+            .summary-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                padding: 8px 0;
+                border-bottom: 1px solid #e9eef4;
+                font-size: 13px;
+                font-weight: 600;
+                color: #2d4059;
+            }
+
+                .summary-row:last-child {
+                    border-bottom: none;
+                }
+
+                .summary-row span:last-child {
+                    color: #0b1a2b;
+                    text-align: right;
+                    font-weight: 700;
+                }
+
+            .summary-total {
+                font-size: 20px !important;
+                font-weight: 900 !important;
+                color: #0b1a2b !important;
+                padding-top: 4px;
+            }
+
+                .summary-total span:last-child {
+                    font-size: 22px;
+                    color: #0b1a2b !important;
+                }
+
+            .summary .balance-row {
+                border-bottom: none;
+                padding-top: 10px;
+                margin-top: 2px;
+                border-top: 2px dashed #dce3ec;
+            }
+
+                .summary .balance-row span:last-child {
+                    font-weight: 800;
+                    color: #0b7b4b;
+                }
+
+                .summary .balance-row .insufficient {
+                    color: #b91c1c !important;
+                }
+
+            .hint {
+                background: #fef9f4;
+                border: 1px solid #fed7aa;
+                color: #8a4a1a;
+                padding: 12px 16px;
+                border-radius: 14px;
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 1.6;
+                margin-bottom: 18px;
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+                .hint svg {
+                    flex: 0 0 18px;
+                    width: 18px;
+                    height: 18px;
+                    margin-top: 1px;
+                    fill: none;
+                    stroke: #b45a1c;
+                    stroke-width: 2;
+                    stroke-linecap: round;
+                    stroke-linejoin: round;
+                }
+
+            /* message */
+            .message {
+                padding: 12px 16px;
+                border-radius: 14px;
+                margin-bottom: 16px;
+                font-weight: 600;
+                text-align: center;
+                font-size: 13px;
+                line-height: 1.5;
+            }
+
+                .message.error {
+                    background: #fef2f2;
+                    color: #991b1b;
+                    border: 1px solid #fecaca;
+                }
+
+                .message.success {
+                    background: #ecfdf5;
+                    color: #065f46;
+                    border: 1px solid #a7f3d0;
+                }
+
+            /* form */
+            .field {
+                margin-bottom: 16px;
+            }
+
+                .field label {
+                    display: block;
+                    margin-bottom: 6px;
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #1e2f44;
+                    letter-spacing: 0.3px;
+                    text-transform: uppercase;
+                }
+
+                .field input {
+                    width: 100%;
+                    padding: 13px 16px;
+                    border: 1.5px solid #e2e8f0;
+                    border-radius: 14px;
+                    font-size: 15px;
+                    font-weight: 500;
+                    color: #0b1a2b;
+                    background: #ffffff;
+                    outline: none;
+                    transition: border-color 0.2s, box-shadow 0.2s;
+                    font-family: 'Inter', monospace;
+                }
+
+                    .field input::placeholder {
+                        color: #a0b8d0;
+                        font-weight: 400;
+                        font-size: 14px;
+                        font-family: 'Inter', sans-serif;
+                    }
+
+                    .field input:focus {
+                        border-color: #ff6b35;
+                        box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.12);
+                    }
+
+                    .field input.input-error {
+                        border-color: #dc2626;
+                        box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08);
+                    }
+
+            .row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 14px;
+            }
+
+            .actions {
+                display: flex;
+                gap: 14px;
+                margin-top: 22px;
+            }
+
+            .btn {
+                flex: 1;
+                border: none;
+                border-radius: 16px;
+                padding: 14px 18px;
+                font-weight: 700;
+                font-size: 14px;
+                cursor: pointer;
+                text-decoration: none;
+                text-align: center;
+                transition: all 0.2s ease;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                font-family: 'Inter', sans-serif;
+            }
+
+                .btn:active {
+                    transform: scale(0.97);
+                }
+
+            .pay-btn {
+                background: linear-gradient(135deg, #ff6b35, #f55a2a);
+                color: #ffffff;
+                box-shadow: 0 12px 28px rgba(255, 107, 53, 0.30);
+                border: 1px solid rgba(255, 255, 255, 0.10);
+            }
+
+                .pay-btn:hover:not(:disabled) {
+                    box-shadow: 0 16px 35px rgba(255, 107, 53, 0.38);
+                    transform: translateY(-2px);
+                }
+
+                .pay-btn:disabled {
+                    cursor: wait;
+                    opacity: 0.65;
+                    transform: none;
+                    box-shadow: 0 8px 20px rgba(255, 107, 53, 0.18);
+                }
+
+            .back-btn {
+                background: #eef2f7;
+                color: #1e2f44;
+                border: 1px solid #dce3ec;
+            }
+
+                .back-btn:hover {
+                    background: #e2e8f0;
+                    transform: translateY(-2px);
+                }
+
+            .locked {
+                font-size: 11px;
+                color: #7a94b5;
+                text-align: center;
+                margin-top: 18px;
+                font-weight: 600;
+                letter-spacing: 0.2px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+            }
+
+                .locked svg {
+                    width: 14px;
+                    height: 14px;
+                    stroke: #7a94b5;
+                    stroke-width: 2;
+                    fill: none;
+                    stroke-linecap: round;
+                    stroke-linejoin: round;
+                }
+
+            /* ---------- toast ---------- */
+            .payment-toast-container {
+                position: fixed;
+                top: 24px;
+                right: 24px;
+                z-index: 1000001;
+                pointer-events: none;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                max-width: 420px;
+                width: 100%;
+            }
+
+            .payment-toast {
+                width: 100%;
+                padding: 16px 18px;
+                border-radius: 16px;
+                color: #ffffff;
+                display: flex;
+                align-items: flex-start;
+                gap: 14px;
+                background: linear-gradient(135deg, #b91c1c, #991b1b);
+                box-shadow: 0 20px 50px rgba(11, 26, 43, 0.25);
+                opacity: 0;
+                transform: translateX(30px) scale(0.96);
+                transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+                pointer-events: auto;
+                border: 1px solid rgba(255, 255, 255, 0.06);
+            }
+
+                .payment-toast.show {
+                    opacity: 1;
+                    transform: translateX(0) scale(1);
+                }
+
+            .payment-toast-icon {
+                width: 32px;
+                height: 32px;
+                flex: 0 0 32px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.15);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                font-weight: 800;
+            }
+
+            .payment-toast-content {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .payment-toast-title {
+                display: block;
+                font-weight: 800;
+                font-size: 13px;
+                letter-spacing: 0.2px;
+                margin-bottom: 2px;
+            }
+
+            .payment-toast-message {
+                display: block;
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 1.5;
+                opacity: 0.90;
+            }
+
+            .payment-toast-close {
+                border: none;
+                background: transparent;
+                color: rgba(255, 255, 255, 0.60);
+                font-size: 22px;
+                line-height: 1;
+                padding: 0 0 0 6px;
+                cursor: pointer;
+                transition: color 0.2s;
+            }
+
+                .payment-toast-close:hover {
+                    color: #ffffff;
+                }
+
+            /* ---------- modal ---------- */
+            .payment-modal-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                padding: 20px;
+                background: rgba(11, 26, 43, 0.60);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                align-items: center;
+                justify-content: center;
+                z-index: 1000000;
+            }
+
+                .payment-modal-overlay.show {
+                    display: flex;
+                }
+
+            .payment-modal-card {
+                width: min(440px, 100%);
+                background: #ffffff;
+                border-radius: 28px;
+                box-shadow: 0 40px 80px rgba(11, 26, 43, 0.30);
+                overflow: hidden;
+                animation: modalIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            }
+
+            @@keyframes modalIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px) scale(0.96);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+
+            .payment-modal-header {
+                padding: 28px 28px 12px;
+                text-align: center;
+            }
+
+            .payment-modal-icon {
+                width: 56px;
+                height: 56px;
+                margin: 0 auto 14px;
+                border-radius: 50%;
+                background: #fef6f0;
+                color: #e85a2a;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+            }
+
+            .payment-modal-title {
+                margin: 0;
+                color: #0b1a2b;
+                font-size: 20px;
+                font-weight: 800;
+            }
+
+            .payment-modal-body {
+                padding: 4px 28px 18px;
+                text-align: center;
+            }
+
+            .payment-modal-message {
+                margin: 0;
+                color: #4a6580;
+                font-size: 14px;
+                line-height: 1.7;
+                font-weight: 500;
+            }
+
+            .payment-modal-total {
+                display: block;
+                margin-top: 10px;
+                color: #0b1a2b;
+                font-size: 22px;
+                font-weight: 900;
+            }
+
+            .payment-modal-note {
+                display: block;
+                margin-top: 6px;
+                color: #8a4a1a;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .payment-modal-actions {
+                display: flex;
+                gap: 12px;
+                padding: 14px 28px 28px;
+            }
+
+            .payment-modal-button {
+                flex: 1;
+                border: none;
+                border-radius: 14px;
+                padding: 14px 18px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 700;
+                font-family: 'Inter', sans-serif;
+                transition: all 0.2s ease;
+            }
+
+                .payment-modal-button:active {
+                    transform: scale(0.97);
+                }
+
+            .payment-modal-cancel {
+                background: #eef2f7;
+                color: #1e2f44;
+                border: 1px solid #dce3ec;
+            }
+
+                .payment-modal-cancel:hover {
+                    background: #e2e8f0;
+                }
+
+            .payment-modal-confirm {
+                background: linear-gradient(135deg, #ff6b35, #f55a2a);
+                color: #ffffff;
+                box-shadow: 0 12px 28px rgba(255, 107, 53, 0.25);
+            }
+
+                .payment-modal-confirm:hover:not(:disabled) {
+                    box-shadow: 0 16px 35px rgba(255, 107, 53, 0.32);
+                    transform: translateY(-2px);
+                }
+
+                .payment-modal-confirm:disabled {
+                    cursor: wait;
+                    opacity: 0.65;
+                    transform: none;
+                }
+
+            /* ---------- responsive ---------- */
+            @@media (max-width: 920px) {
+                .payment-shell {
+                    grid-template-columns: 1fr;
+                    max-width: 560px;
+                }
+
+                .payment-info {
+                    display: none;
+                }
+
+                .payment-card-header {
+                    padding: 24px 24px 14px;
+                }
+
+                .payment-body {
+                    padding: 18px 24px 26px;
+                }
+
+                .payment-card-header h2 {
+                    font-size: 22px;
+                }
+            }
+
+            @@media (max-width: 500px) {
+                body {
+                    padding: 12px;
+                }
+
+                .payment-card-header {
+                    padding: 20px 18px 12px;
+                }
+
+                .payment-body {
+                    padding: 14px 18px 20px;
+                }
+
+                .row {
+                    grid-template-columns: 1fr;
+                    gap: 0;
+                }
+
+                .actions {
+                    flex-direction: column;
+                    gap: 10px;
+                }
+
+                .payment-modal-actions {
+                    flex-direction: column;
+                    gap: 10px;
+                }
+
+                .payment-toast-container {
+                    top: 12px;
+                    right: 12px;
+                    left: 12px;
+                    max-width: none;
+                }
+
+                .payment-toast {
+                    border-radius: 14px;
+                    padding: 14px 16px;
+                }
+
+                .summary-total {
+                    font-size: 18px !important;
+                }
+
+                .payment-card {
+                    border-radius: 24px;
+                }
+            }
+
+            /* ---------- utilities ---------- */
+            .sr-only {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                border: 0;
+            }
+    </style>
+</head>
+<body>
+
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div id="paymentToastContainer" class="payment-toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+    <!-- ===== PAGE ===== -->
+    <div class="payment-page">
+
+        <div class="payment-shell">
+
+            <!-- ===== LEFT PANEL: BRANDING & INFO ===== -->
+            <div class="payment-info" aria-label="Payment information">
+                <div class="payment-info-content">
+                    <div class="secure-badge">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" /><path d="M12 12m-3 0a3 3 0 1 0 6 0 3 3 0 1 0-6 0" /><path d="M12 12v5" /></svg>
+                        Stripe Balance Check
+                    </div>
+                    <h1>Secure store<br />fee payment</h1>
+                    <p class="subhead">Verify your identity and pay outstanding fees using your Stripe balance. Your card is used for verification only.</p>
+
+                    <!-- mini card preview -->
+                    <div class="mini-card">
+                        <div class="mini-card-top">
+                            <span id="cardBrandPreview">STORE CARD</span>
+                            <span class="chip"></span>
+                        </div>
+                        <div class="card-number-preview" id="cardNumberPreview">•••• •••• •••• ••••</div>
+                        <div class="card-bottom">
+                            <span id="cardholderPreview">CARDHOLDER</span>
+                            <span id="expiryPreview">MM/YY</span>
+                        </div>
+                    </div>
+
+                    <!-- test cards -->
+                    <div class="test-cards">
+                        <div class="test-card-row">
+                            <strong>4242 4242 4242 4242</strong>
+                            <span class="badge success">✓ Visa</span>
+                        </div>
+                        <div class="test-card-row">
+                            <strong>5555 5555 5555 4444</strong>
+                            <span class="badge success">✓ Mastercard</span>
+                        </div>
+                        <div class="test-card-row">
+                            <strong>4000 0000 0000 0002</strong>
+                            <span class="badge decline">✗ Declined</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== RIGHT PANEL: PAYMENT FORM ===== -->
+            <div class="payment-card">
+
+                <div class="payment-card-header">
+                    <h2>Complete payment</h2>
+                    <p>Confirm with your stored card &amp; Stripe balance</p>
+                </div>
+
+                <div class="payment-body">
+
+                    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                    {
+                        <div class="message error" id="serverPaymentError" data-message="@Model.ErrorMessage">
+                            @Model.ErrorMessage
+                        </div>
+                    }
+
+                    @if (Model.Payment == null)
+                    {
+                        <div class="message error">Payment request not found.</div>
+                        <div class="actions">
+                            <a href="/StoreOwner/Dashboard" class="btn back-btn">← Back to Dashboard</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- SUMMARY -->
+                        <div class="summary">
+                            <div class="summary-row">
+                                <span>Reference</span>
+                                <span>#@Model.Payment.StorePaymentId</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Description</span>
+                                <span>@Model.Payment.Description</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Due date</span>
+                                <span>@Model.Payment.DueDate.ToString("MMM dd, yyyy")</span>
+                            </div>
+                            <div class="summary-row summary-total">
+                                <span>Amount</span>
+                                <span>$@Model.Payment.Amount.ToString("N2")</span>
+                            </div>
+                            @if (Model.CurrentBalance >= 0)
+                            {
+                                var sufficient = Model.CurrentBalance >= Model.Payment.Amount;
+                                <div class="summary-row balance-row">
+                                    <span>Your Stripe balance</span>
+                                    <span class="@(sufficient ? "" : "insufficient")">$@Model.CurrentBalance.ToString("N2")</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="summary-row balance-row">
+                                    <span>Balance check</span>
+                                    <span style="color:#b91c1c;">Unavailable</span>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- HINT -->
+                        <div class="hint">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="12" x2="12" y2="16" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+                            <span>Your Stripe balance will be checked. You must have at least the payment amount available. No actual card charge is made.</span>
+                        </div>
+
+                        <!-- FORM -->
+                        <form method="post" id="paymentForm" novalidate>
+                            <input type="hidden" asp-for="PaymentId" />
+
+                            <div class="field">
+                                <label for="CardholderName">Cardholder name</label>
+                                <input asp-for="CardholderName" id="CardholderName" maxlength="100" placeholder="John Doe" autocomplete="cc-name" />
+                            </div>
+
+                            <div class="field">
+                                <label for="CardNumber">Card number</label>
+                                <input asp-for="CardNumber" id="CardNumber" type="text" inputmode="numeric" maxlength="19" placeholder="4242 4242 4242 4242" autocomplete="cc-number" />
+                            </div>
+
+                            <div class="row">
+                                <div class="field">
+                                    <label for="ExpiryDate">Expiry date</label>
+                                    <input asp-for="ExpiryDate" id="ExpiryDate" type="text" inputmode="numeric" maxlength="5" placeholder="MM/YY" autocomplete="cc-exp" />
+                                </div>
+                                <div class="field">
+                                    <label for="Cvv">CVV</label>
+                                    <input asp-for="Cvv" id="Cvv" type="password" inputmode="numeric" maxlength="3" placeholder="•••" autocomplete="cc-csc" />
+                                </div>
+                            </div>
+
+                            <div class="actions">
+                                <a href="/StoreOwner/Dashboard" class="btn back-btn">Cancel</a>
+                                <button type="button" id="payNowButton" class="btn pay-btn">
+                                    <span>Pay now</span>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                                </button>
+                            </div>
+
+                            <div class="locked">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                                Secure verification. No card data is stored.
+                            </div>
+                        </form>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== CONFIRMATION MODAL ===== -->
+    @if (Model.Payment != null)
+    {
+        <div id="paymentConfirmationModal" class="payment-modal-overlay" role="dialog" aria-modal="true">
+            <div class="payment-modal-card">
+                <div class="payment-modal-header">
+                    <div class="payment-modal-icon">🔒</div>
+                    <h3 id="paymentModalTitle" class="payment-modal-title">Confirm payment</h3>
+                </div>
+                <div class="payment-modal-body">
+                    <p class="payment-modal-message">
+                        Confirm payment of
+                        <span class="payment-modal-total">$@Model.Payment.Amount.ToString("N2")</span>
+                        from your Stripe balance.
+                        <span class="payment-modal-note">This will check your Stripe account balance.</span>
+                    </p>
+                </div>
+                <div class="payment-modal-actions">
+                    <button type="button" class="payment-modal-button payment-modal-cancel" onclick="closePaymentModal()">Cancel</button>
+                    <button type="button" id="confirmPaymentButton" class="payment-modal-button payment-modal-confirm" onclick="submitPayment()">Confirm payment</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ============================================================
+    JAVASCRIPT — all logic, no external deps
+    ============================================================ -->
+    <script>
+            (function() {
+                'use strict';
+
+                // DOM refs
+                const paymentForm = document.getElementById('paymentForm');
+                const payNowButton = document.getElementById('payNowButton');
+                const cardholderInput = document.getElementById('CardholderName');
+                const cardNumberInput = document.getElementById('CardNumber');
+                const expiryInput = document.getElementById('ExpiryDate');
+                const cvvInput = document.getElementById('Cvv');
+                const paymentModal = document.getElementById('paymentConfirmationModal');
+                let paymentSubmitting = false;
+
+                // ---- toast ----
+                function showPaymentToast(message, title) {
+                    title = title || 'Unable to continue';
+                    const container = document.getElementById('paymentToastContainer');
+                    if (!container || !message) return;
+
+                    const old = container.querySelector('.payment-toast');
+                    if (old) old.remove();
+
+                    const toast = document.createElement('div');
+                    toast.className = 'payment-toast';
+                    toast.setAttribute('role', 'alert');
+                    toast.innerHTML = `
+                        <span class="payment-toast-icon">!</span>
+                        <span class="payment-toast-content">
+                            <span class="payment-toast-title">${title}</span>
+                            <span class="payment-toast-message">${message}</span>
+                        </span>
+                        <button type="button" class="payment-toast-close" aria-label="Close notification">&times;</button>
+                    `;
+                    const closeBtn = toast.querySelector('.payment-toast-close');
+                    container.appendChild(toast);
+
+                    requestAnimationFrame(function() {
+                        toast.classList.add('show');
+                    });
+
+                    let timer = setTimeout(removeToast, 5500);
+
+                    function removeToast() {
+                        clearTimeout(timer);
+                        toast.classList.remove('show');
+                        setTimeout(function() { toast.remove(); }, 300);
+                    }
+
+                    closeBtn.addEventListener('click', removeToast);
+                }
+
+                // ---- input error helpers ----
+                function clearInputErrors() {
+                    [cardholderInput, cardNumberInput, expiryInput, cvvInput].forEach(function(inp) {
+                        if (inp) inp.classList.remove('input-error');
+                    });
+                }
+
+                function setInputError(inp) {
+                    if (inp) {
+                        inp.classList.add('input-error');
+                        inp.focus();
+                    }
+                }
+
+                // ---- Luhn ----
+                function isValidLuhn(cardNumber) {
+                    var sum = 0;
+                    var doubleDigit = false;
+                    for (var i = cardNumber.length - 1; i >= 0; i--) {
+                        var digit = Number(cardNumber[i]);
+                        if (isNaN(digit)) return false;
+                        if (doubleDigit) {
+                            digit *= 2;
+                            if (digit > 9) digit -= 9;
+                        }
+                        sum += digit;
+                        doubleDigit = !doubleDigit;
+                    }
+                    return sum % 10 === 0;
+                }
+
+                // ---- card brand ----
+                function getCardBrand(cardNumber) {
+                    if (cardNumber.length !== 16) return 'Unsupported';
+                    if (cardNumber.startsWith('4')) return 'Visa';
+                    var prefix = Number(cardNumber.slice(0, 2));
+                    if (prefix >= 51 && prefix <= 55) return 'Mastercard';
+                    return 'Unsupported';
+                }
+
+                // ---- expiry ----
+                function isExpiryValid(expiry) {
+                    if (!/^\d{2}\/\d{2}$/.test(expiry)) return false;
+                    var parts = expiry.split('/');
+                    var month = Number(parts[0]);
+                    var year = Number(parts[1]);
+                    if (month < 1 || month > 12) return false;
+                    var now = new Date();
+                    var currentYear = now.getFullYear() % 100;
+                    var currentMonth = now.getMonth() + 1;
+                    return year > currentYear || (year === currentYear && month >= currentMonth);
+                }
+
+                // ---- validate form ----
+                function validatePaymentForm() {
+                    clearInputErrors();
+
+                    var cardholder = (cardholderInput ? cardholderInput.value.trim() : '');
+                    var rawCard = (cardNumberInput ? cardNumberInput.value.replace(/\D/g, '') : '');
+                    var expiry = (expiryInput ? expiryInput.value.trim() : '');
+                    var cvv = (cvvInput ? cvvInput.value.replace(/\D/g, '') : '');
+
+                    if (cardholder.length < 3) {
+                        setInputError(cardholderInput);
+                        showPaymentToast('Enter a valid cardholder name.', 'Cardholder name required');
+                        return false;
+                    }
+
+                    if (rawCard.length !== 16) {
+                        setInputError(cardNumberInput);
+                        showPaymentToast('Card number must contain exactly 16 digits.', 'Invalid card number');
+                        return false;
+                    }
+
+                    var brand = getCardBrand(rawCard);
+                    if (brand === 'Unsupported') {
+                        setInputError(cardNumberInput);
+                        showPaymentToast('Only 16-digit Visa and Mastercard test cards are supported.', 'Unsupported card type');
+                        return false;
+                    }
+
+                    if (!isValidLuhn(rawCard)) {
+                        setInputError(cardNumberInput);
+                        showPaymentToast('The card number is not valid. Check the digits and try again.', 'Invalid card number');
+                        return false;
+                    }
+
+                    if (!isExpiryValid(expiry)) {
+                        setInputError(expiryInput);
+                        showPaymentToast('Enter a valid future expiry date using MM/YY.', 'Invalid expiry date');
+                        return false;
+                    }
+
+                    if (cvv.length !== 3) {
+                        setInputError(cvvInput);
+                        showPaymentToast('CVV must contain exactly 3 digits.', 'Invalid CVV');
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                // ---- modal ----
+                function openPaymentModal() {
+                    if (!validatePaymentForm()) return;
+                    if (paymentModal) {
+                        paymentModal.classList.add('show');
+                        document.body.style.overflow = 'hidden';
+                    }
+                }
+
+                window.closePaymentModal = function() {
+                    if (paymentSubmitting) return;
+                    if (paymentModal) {
+                        paymentModal.classList.remove('show');
+                        document.body.style.overflow = '';
+                    }
+                };
+
+                window.submitPayment = function() {
+                    if (!paymentForm || paymentSubmitting) return;
+                    paymentSubmitting = true;
+                    var confirmBtn = document.getElementById('confirmPaymentButton');
+                    if (confirmBtn) {
+                        confirmBtn.disabled = true;
+                        confirmBtn.textContent = 'Processing…';
+                    }
+                    if (payNowButton) {
+                        payNowButton.disabled = true;
+                        payNowButton.innerHTML = 'Processing…';
+                    }
+                    paymentForm.submit();
+                };
+
+                // ---- event binding ----
+                if (payNowButton) {
+                    payNowButton.addEventListener('click', openPaymentModal);
+                }
+
+                if (paymentForm) {
+                    paymentForm.addEventListener('submit', function(e) {
+                        if (!paymentSubmitting) {
+                            e.preventDefault();
+                            openPaymentModal();
+                        }
+                    });
+                }
+
+                if (paymentModal) {
+                    paymentModal.addEventListener('click', function(e) {
+                        if (e.target === paymentModal) closePaymentModal();
+                    });
+                }
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') closePaymentModal();
+                });
+
+                // ---- live preview ----
+                if (cardNumberInput) {
+                    cardNumberInput.addEventListener('input', function() {
+                        var digits = this.value.replace(/\D/g, '').slice(0, 16);
+                        this.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+                        var preview = document.getElementById('cardNumberPreview');
+                        var brandPreview = document.getElementById('cardBrandPreview');
+                        if (preview) preview.textContent = this.value || '•••• •••• •••• ••••';
+                        if (brandPreview) {
+                            var brand = getCardBrand(digits);
+                            brandPreview.textContent = brand === 'Unsupported' ? 'STORE CARD' : brand.toUpperCase();
+                        }
+                        this.classList.remove('input-error');
+                    });
+                }
+
+                if (expiryInput) {
+                    expiryInput.addEventListener('input', function() {
+                        var digits = this.value.replace(/\D/g, '').slice(0, 4);
+                        this.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
+                        var preview = document.getElementById('expiryPreview');
+                        if (preview) preview.textContent = this.value || 'MM/YY';
+                        this.classList.remove('input-error');
+                    });
+                }
+
+                if (cvvInput) {
+                    cvvInput.addEventListener('input', function() {
+                        this.value = this.value.replace(/\D/g, '').slice(0, 3);
+                        this.classList.remove('input-error');
+                    });
+                }
+
+                if (cardholderInput) {
+                    cardholderInput.addEventListener('input', function() {
+                        var preview = document.getElementById('cardholderPreview');
+                        if (preview) preview.textContent = this.value.trim().toUpperCase() || 'CARDHOLDER';
+                        this.classList.remove('input-error');
+                    });
+                }
+
+                // ---- init previews ----
+                document.addEventListener('DOMContentLoaded', function() {
+                    var serverError = document.getElementById('serverPaymentError');
+                    if (serverError) {
+                        var msg = serverError.dataset.message || serverError.textContent.trim();
+                        if (msg) showPaymentToast(msg, 'Payment was not completed');
+                    }
+                    if (cardNumberInput) cardNumberInput.dispatchEvent(new Event('input'));
+                    if (expiryInput) expiryInput.dispatchEvent(new Event('input'));
+                    if (cardholderInput) cardholderInput.dispatchEvent(new Event('input'));
+                });
+
+            })();
+    </script>
+
+</body>
+</html>
