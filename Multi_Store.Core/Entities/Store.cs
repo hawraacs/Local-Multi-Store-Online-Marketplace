@@ -48,6 +48,12 @@ namespace Multi_Store.Core.Entities
         public bool CODSupported { get; set; } = true;
 
         public decimal CODMaxLimit { get; set; } = 5000;
+        public string? StripeAccountId { get; set; }
+        public ICollection<StorePayment> StorePayments { get; set; } = new List<StorePayment>();
+
+        //stripe
+        public string? StripeCustomerId { get; set; }
+        public string? StripePaymentMethodId { get; set; }
 
         // UC-31: Fixed delivery fee option
         public bool HasFixedDeliveryFee { get; set; } = false;

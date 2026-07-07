@@ -13,100 +13,127 @@
             gap: 20px;
             margin-bottom: 30px;
         }
+
         .summary-card {
             background: white;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        .summary-card .label {
-            font-size: 14px;
-            color: #6c757d;
-        }
-        .summary-card .value {
-            font-size: 24px;
-            font-weight: bold;
-        }
+
+            .summary-card .label {
+                font-size: 14px;
+                color: #6c757d;
+            }
+
+            .summary-card .value {
+                font-size: 24px;
+                font-weight: bold;
+            }
+
         .statement-table {
             background: white;
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
+
         th, td {
             padding: 12px 8px;
             border-bottom: 1px solid #eee;
             text-align: left;
         }
+
         th {
             background: #f8f9fa;
             font-weight: 600;
         }
-        .positive { color: #28a745; }
-        .negative { color: #dc3545; }
-        .badge-order { background: #e9ecef; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
-        .badge-subscription { background: #cce5ff; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+
+        .positive {
+            color: #28a745;
+        }
+
+        .negative {
+            color: #dc3545;
+        }
+
+        .badge-order {
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .badge-subscription {
+            background: #cce5ff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .subscription-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .subscription-status {
+            font-weight: bold;
+        }
+
+            .subscription-status.active {
+                color: #28a745;
+            }
+
+            .subscription-status.expired {
+                color: #dc3545;
+            }
+
+        .btn-renew {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+            .btn-renew:hover {
+                background: #218838;
+            }
     </style>
 }
 
 <h2>Account Statement</h2>
 <p>@Model.Store?.StoreName</p>
-<div class="statement-table" style="margin-bottom:25px;">
 
-    <h4>Subscription</h4>
-
-    <div class="row">
-
-        <div class="col-md-4">
-
-            <strong>Status</strong><br />
-
-            @if (Model.Store.SubscriptionStatus == "Active")
-            {
-                <span style="color:green;font-weight:bold;">
-                    Active
-                </span>
-            }
-            else
-            {
-                <span style="color:red;font-weight:bold;">
-                    @Model.Store.SubscriptionStatus
-                </span>
-            }
-
-        </div>
-
-        <div class="col-md-4">
-
-            <strong>Expires On</strong><br />
-
-            @(Model.Store.SubscriptionExpiryDate?.ToString("dd MMM yyyy"))
-
-        </div>
-
-        <div class="col-md-4">
-
-            <strong>Renew</strong><br />
-
-            <form method="post" asp-page-handler="Renew">
-
-                <button class="btn btn-success">
-
-                    Renew Subscription ($20)
-
-                </button>
-
-            </form>
-
-        </div>
-
+<!-- Subscription Renewal Box -->
+<div class="subscription-box">
+    <div>
+        <strong>Subscription Status:</strong>
+        <span class="subscription-status @(Model.Store.SubscriptionExpiryDate >= DateTime.Now ? "active" : "expired")">
+            @(Model.Store.SubscriptionExpiryDate >= DateTime.Now ? "Active" : "Expired")
+        </span>
+        <br />
+        <span>Expires: @(Model.Store.SubscriptionExpiryDate?.ToString("dd MMM yyyy") ?? "Not Available")</span>
     </div>
-
+    <form method="post" asp-page-handler="Renew">
+        <button type="submit" class="btn-renew">Renew Subscription ($20)</button>
+    </form>
 </div>
+
+<!-- Summary Cards -->
 <div class="summary-grid">
     <div class="summary-card">
         <div class="label">Gross Revenue</div>
@@ -133,33 +160,8 @@
         </div>
     </div>
 </div>
-<div class="statement-table" style="margin-bottom:25px;">
-    <h4>Subscription</h4>
 
-    <p>
-        <strong>Status:</strong>
-
-        @if (Model.Store.SubscriptionExpiryDate >= DateTime.Now)
-        {
-            <span style="color:green;">Active</span>
-        }
-        else
-        {
-            <span style="color:red;">Expired</span>
-        }
-    </p>
-
-    <p>
-        <strong>Expires:</strong>
-        @(Model.Store.SubscriptionExpiryDate?.ToString("dd MMM yyyy") ?? "Not Available")
-    </p>
-
-    <form method="post" asp-page-handler="Renew">
-        <button class="btn btn-success">
-            Renew Subscription ($20)
-        </button>
-    </form>
-</div>
+<!-- Transaction History -->
 <div class="statement-table">
     <h4>Transaction History</h4>
     <table>

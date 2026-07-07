@@ -202,6 +202,36 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("Multi_Store.Core.Entities.BlockRelation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BlockedRole")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("BlockedUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BlockerRole")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("BlockerUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BlockRelations");
+                });
+
             modelBuilder.Entity("Multi_Store.Core.Entities.Cart", b =>
                 {
                     b.Property<int>("CartID")
@@ -482,6 +512,9 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.Property<bool>("CODBlocked")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
@@ -1072,6 +1105,57 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.ToTable("OrderStatusHistories");
                 });
 
+            modelBuilder.Entity("Multi_Store.Core.Entities.OtpCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiryTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FailedOtpAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastSentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("OtpCodes");
+                });
+
             modelBuilder.Entity("Multi_Store.Core.Entities.PasswordResetOtp", b =>
                 {
                     b.Property<int>("PasswordResetOtpID")
@@ -1233,6 +1317,28 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("StoreID");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("Multi_Store.Core.Entities.ProductHide", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ProductHides");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.ProductImage", b =>
@@ -1650,6 +1756,15 @@ namespace Multi_Store.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("StripeAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StripeCustomerId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StripePaymentMethodId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("SubscriptionExpiryDate")
                         .HasColumnType("datetime2");
 
@@ -1700,6 +1815,49 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("StoreID");
 
                     b.ToTable("StoreFollows");
+                });
+
+            modelBuilder.Entity("Multi_Store.Core.Entities.StorePayment", b =>
+                {
+                    b.Property<int>("StorePaymentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StorePaymentId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("StoreId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StripeTransferId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("StorePaymentId");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("StorePayments");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.SubscriptionPayment", b =>
@@ -2269,6 +2427,17 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("Multi_Store.Core.Entities.OtpCode", b =>
+                {
+                    b.HasOne("Multi_Store.Core.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Multi_Store.Core.Entities.PasswordResetOtp", b =>
                 {
                     b.HasOne("Multi_Store.Core.Entities.User", "User")
@@ -2464,6 +2633,17 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Navigation("Store");
                 });
 
+            modelBuilder.Entity("Multi_Store.Core.Entities.StorePayment", b =>
+                {
+                    b.HasOne("Multi_Store.Core.Entities.Store", "Store")
+                        .WithMany("StorePayments")
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Store");
+                });
+
             modelBuilder.Entity("Multi_Store.Core.Entities.SubscriptionPayment", b =>
                 {
                     b.HasOne("Multi_Store.Core.Entities.Store", "Store")
@@ -2609,6 +2789,8 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Navigation("Products");
 
                     b.Navigation("Reviews");
+
+                    b.Navigation("StorePayments");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.User", b =>
