@@ -9,7 +9,7 @@
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1118,7 +1118,7 @@
                     <div id="deliveryLoginBox" class="delivery-login-card @(string.IsNullOrWhiteSpace(deliveryLoginError) ? "" : "open")">
                         <h4 style="font-weight:600; margin-bottom:6px;">Delivery Log In</h4>
                         <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
-                            Enter the authorized delivery credentials assigned by your system administrator.
+                            This delivery account is linked securely to your customer account. Enter only the delivery password provided by the administrator.
                         </p>
 
                         @if (!string.IsNullOrWhiteSpace(deliveryLoginError))
@@ -1130,13 +1130,22 @@
 
                         <form method="post" asp-page-handler="DeliveryLogin" class="delivery-login-form" autocomplete="off">
                             <div class="form-group">
-                                <label for="DeliveryEmail">Delivery Email</label>
-                                <input id="DeliveryEmail" name="DeliveryEmail" type="email" placeholder="Enter delivery email" required />
+                                <label for="DeliveryAccountEmail">Your Delivery Email</label>
+                                <input id="DeliveryAccountEmail"
+                                       type="email"
+                                       value="@Model.DeliveryAccountEmail"
+                                       readonly
+                                       aria-readonly="true"
+                                       tabindex="-1" />
                             </div>
 
                             <div class="form-group">
-                                <label for="DeliveryPassword">Delivery Password</label>
-                                <input id="DeliveryPassword" name="DeliveryPassword" type="password" placeholder="Enter delivery password" autocomplete="new-password" required />
+                                <label asp-for="DeliveryPassword">Delivery Password</label>
+                                <input asp-for="DeliveryPassword"
+                                       type="password"
+                                       placeholder="Enter delivery password"
+                                       autocomplete="current-password"
+                                       required />
                             </div>
 
                             <button type="submit" class="delivery-login-btn">
@@ -1228,7 +1237,6 @@
 
     <script>
         // Modal Handlers (Profile Edit)
-        // Modal Handlers (Profile Edit)
         function openEditModal() {
             document.getElementById("editProfileModal").style.display = "block";
         }
@@ -1277,34 +1285,42 @@
         // Delivery form login expander
         function toggleDeliveryLogin() {
             const loginBox = document.getElementById("deliveryLoginBox");
-            if (!loginBox) return;
+
+            if (!loginBox) {
+                return;
+            }
 
             loginBox.classList.toggle("open");
 
             if (loginBox.classList.contains("open")) {
-                clearDeliveryFields();
-                setTimeout(function () {
-                    const emailInput = document.getElementById("DeliveryEmail");
-                    if (emailInput) {
-                        emailInput.focus();
+                clearDeliveryPassword();
+
+                window.setTimeout(function () {
+                    const passwordInput =
+                        document.getElementById("DeliveryPassword");
+
+                    if (passwordInput) {
+                        passwordInput.focus();
                     }
                 }, 50);
             }
         }
 
-        function clearDeliveryFields() {
-            const emailInput = document.getElementById("DeliveryEmail");
-            const passwordInput = document.getElementById("DeliveryPassword");
-            if (emailInput) emailInput.value = "";
-            if (passwordInput) passwordInput.value = "";
+        function clearDeliveryPassword() {
+            const passwordInput =
+                document.getElementById("DeliveryPassword");
+
+            if (passwordInput) {
+                passwordInput.value = "";
+            }
         }
 
         document.addEventListener("DOMContentLoaded", function () {
-            clearDeliveryFields();
+            clearDeliveryPassword();
         });
 
         window.addEventListener("pageshow", function () {
-            clearDeliveryFields();
+            clearDeliveryPassword();
         });
     </script>
 
