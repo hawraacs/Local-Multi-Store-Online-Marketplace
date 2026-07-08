@@ -9,6 +9,7 @@ namespace Multi_Store.Services.Dtos
         public int StoreID { get; set; }
 
         public int OwnerUserID { get; set; }
+        public int? RequestedByUserID { get; set; }
 
         public string StoreName { get; set; } = string.Empty;
 

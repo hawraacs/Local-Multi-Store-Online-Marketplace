@@ -24,6 +24,15 @@ public class StoreRepository : Repository<Store>, IStoreRepository
     public async Task<Store?> GetByOwnerIdAsync(int ownerUserId)
         => await _context.Stores
             .FirstOrDefaultAsync(s => s.OwnerUserID == ownerUserId);
+    public async Task<Store?> GetByRequestedByUserIdAsync(
+    int requestedByUserId)
+    => await _context.Stores
+        .FirstOrDefaultAsync(s =>
+            s.RequestedByUserID == requestedByUserId ||
+            (
+                s.RequestedByUserID == null &&
+                s.OwnerUserID == requestedByUserId
+            ));
 
     public async Task<Store?> GetStoreDetailsAsync(int storeId)
         => await _context.Stores
