@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Net;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -18,17 +20,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly SubscriptionService _subscriptionService;
         private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
+        private readonly IEmailSender _emailSender;
+        private readonly ILogger<AdminStoresModel> _logger;
 
         public AdminStoresModel(
-            StoreManager storeManager,
-            SubscriptionService subscriptionService,
-            UserManager<User> userManager,
-            ApplicationDbContext context)
+        StoreManager storeManager,
+        SubscriptionService subscriptionService,
+        UserManager<User> userManager,
+        ApplicationDbContext context,
+        IEmailSender emailSender,
+        ILogger<AdminStoresModel> logger)
         {
             _storeManager = storeManager;
             _subscriptionService = subscriptionService;
             _userManager = userManager;
             _context = context;
+            _emailSender = emailSender;
+            _logger = logger;
         }
 
         public List<StoreDTO> Stores { get; set; } = new();
@@ -77,8 +85,59 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     new { area = "Identity" });
             }
 
+            if (id <= 0)
+            {
+                TempData["Error"] =
+                    "Invalid store request.";
+
+                return RedirectToPage();
+            }
+
             try
             {
+                // Read the pending request before StoreManager changes
+                // OwnerUserID to the generated StoreOwner account.
+                var storeRequest =
+                    await _context.Stores
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(store =>
+                            store.StoreID == id);
+
+                if (storeRequest == null)
+                {
+                    TempData["Error"] =
+                        "Store request was not found.";
+
+                    return RedirectToPage();
+                }
+
+                // RequestedByUserID permanently points to the Customer.
+                // OwnerUserID is kept as fallback for older requests.
+                var originalCustomerUserId =
+                    storeRequest.RequestedByUserID
+                    ?? storeRequest.OwnerUserID;
+
+                var originalCustomer =
+                    await _userManager.FindByIdAsync(
+                        originalCustomerUserId.ToString());
+
+                if (originalCustomer == null)
+                {
+                    TempData["Error"] =
+                        "The Customer account linked to this request was not found.";
+
+                    return RedirectToPage();
+                }
+
+                if (string.IsNullOrWhiteSpace(originalCustomer.Email))
+                {
+                    TempData["Error"] =
+                        "The Customer does not have a registered email address.";
+
+                    return RedirectToPage();
+                }
+
+                // Create the separate StoreOwner account and approve the store.
                 var result =
                     await _storeManager
                         .ApproveStoreWithAccountAsync(
@@ -86,22 +145,136 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                             admin.Id,
                             _userManager);
 
+                // Keep these for the existing Admin page.
                 TempData["Email"] =
                     result.email;
 
                 TempData["Password"] =
                     result.password;
 
-                TempData["Success"] =
-                    "Store approved and Store Owner account created successfully.";
+                // An already-approved account has no recoverable plain password.
+                if (string.Equals(
+                        result.password,
+                        "Use existing password",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    TempData["Success"] =
+                        "This Store is already approved. No new password was generated or emailed.";
+
+                    return RedirectToPage();
+                }
+
+                var safeCustomerName =
+                    WebUtility.HtmlEncode(
+                        string.IsNullOrWhiteSpace(originalCustomer.FullName)
+                            ? "Customer"
+                            : originalCustomer.FullName.Trim());
+
+                var safeStoreName =
+                    WebUtility.HtmlEncode(
+                        string.IsNullOrWhiteSpace(storeRequest.StoreName)
+                            ? "your store"
+                            : storeRequest.StoreName.Trim());
+
+                var safeStoreOwnerEmail =
+                    WebUtility.HtmlEncode(result.email);
+
+                var safeStoreOwnerPassword =
+                    WebUtility.HtmlEncode(result.password);
+
+                var emailBody = $@"
+<div style='background:#f3f4f6;padding:30px;
+            font-family:Arial,sans-serif;color:#1f2937;'>
+
+    <div style='max-width:620px;margin:auto;background:#ffffff;
+                border:1px solid #e5e7eb;border-radius:14px;
+                overflow:hidden;'>
+
+        <div style='background:#ff6b35;color:#ffffff;padding:24px;'>
+            <h2 style='margin:0;'>Store Owner Account Approved</h2>
+        </div>
+
+        <div style='padding:28px;line-height:1.6;'>
+
+            <p>Hello <strong>{safeCustomerName}</strong>,</p>
+
+            <p>
+                Your store <strong>{safeStoreName}</strong>
+                was approved successfully.
+            </p>
+
+            <p>
+                A separate Store Owner account was created for you.
+            </p>
+
+            <div style='background:#f8fafc;border:1px solid #e2e8f0;
+                        border-radius:10px;padding:18px;margin:22px 0;'>
+
+                <p style='margin:0 0 14px;'>
+                    <strong>Store Owner Email</strong><br />
+                    {safeStoreOwnerEmail}
+                </p>
+
+                <p style='margin:0;'>
+                    <strong>Store Owner Password</strong><br />
+                    {safeStoreOwnerPassword}
+                </p>
+
+            </div>
+
+            <p>
+                Sign in to your Customer account, open your Profile,
+                choose Management, then click
+                <strong>Login as Store Owner</strong>.
+            </p>
+
+            <p style='color:#64748b;font-size:13px;margin-bottom:0;'>
+                Keep these credentials private and do not share them.
+            </p>
+
+        </div>
+    </div>
+</div>";
+
+                try
+                {
+                    await _emailSender.SendEmailAsync(
+                        originalCustomer.Email,
+                        "Your Realnest Store Owner Account",
+                        emailBody);
+
+                    _logger.LogInformation(
+                        "Store Owner credentials were emailed to Customer {CustomerEmail} for Store {StoreId}.",
+                        originalCustomer.Email,
+                        id);
+
+                    TempData["Success"] =
+                        "Store approved successfully. The Store Owner email and password were sent to the Customer's registered email.";
+                }
+                catch (Exception emailException)
+                {
+                    _logger.LogError(
+                        emailException,
+                        "Store {StoreId} was approved, but the credentials email failed for {CustomerEmail}.",
+                        id,
+                        originalCustomer.Email);
+
+                    TempData["Error"] =
+                        "The Store was approved and the Store Owner account was created, but the email could not be sent. Check the SMTP settings and give the displayed credentials to the Customer manually.";
+                }
             }
             catch (InvalidOperationException ex)
             {
                 TempData["Error"] =
                     ex.Message;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(
+                    ex,
+                    "Unexpected error while approving Store {StoreId}.",
+                    id);
+
                 TempData["Error"] =
                     "An unexpected error occurred while approving the store.";
             }
