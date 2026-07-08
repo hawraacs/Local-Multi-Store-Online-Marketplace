@@ -1,0 +1,510 @@
+﻿@page "{customerId:int}"
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreViewCustomerModel
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Customer Profile | Realnest</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #fafafa;
+            color: #262626;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: #ffffff;
+            border-bottom: 1px solid #dbdbdb;
+            padding: 12px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+            .topbar > div:first-child {
+                font-size: 24px;
+                font-weight: 700;
+                letter-spacing: -0.5px;
+                color: #262626;
+                font-style: italic;
+            }
+
+        .back-link {
+            color: #262626;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .back-link:hover {
+                color: #FF6B35;
+            }
+
+        .profile-container {
+            max-width: 935px;
+            width: 100%;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            padding-bottom: 44px;
+            border-bottom: 1px solid #dbdbdb;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f5f7fa 0%, #cbd5e1 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 70px;
+            color: #475569;
+            border: 2px solid #dbdbdb;
+            flex-shrink: 0;
+        }
+
+        .profile-details {
+            flex-grow: 1;
+        }
+
+        .profile-username-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .profile-username {
+            font-size: 28px;
+            font-weight: 300;
+            color: #262626;
+            display: flex;
+            align-items: center;
+        }
+
+        .follow-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .following-yes {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .following-no {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .profile-stats-row {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            font-size: 16px;
+            color: #262626;
+        }
+
+        .stat-count {
+            font-weight: 600;
+        }
+
+        .profile-bio {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #262626;
+        }
+
+        .bio-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .bio-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .loyalty-badge {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 32px 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+            .orders-table th,
+            .orders-table td {
+                text-align: left;
+                padding: 12px 16px;
+                font-size: 14px;
+                border-bottom: 1px solid #f1f5f9;
+            }
+
+            .orders-table th {
+                background: #fafafa;
+                color: #64748b;
+                font-weight: 600;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .orders-table tr:last-child td {
+                border-bottom: none;
+            }
+
+        .reviews-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .review-row {
+            background: #ffffff;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .review-main h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 6px;
+        }
+
+        .review-main p {
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.5;
+            font-style: italic;
+        }
+
+        .stars-row {
+            display: flex;
+            gap: 2px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8e8e8e;
+            background: #fff;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+        }
+
+        .empty-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+            color: #dbdbdb;
+        }
+
+        .empty-state h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            font-size: 13px;
+            max-width: 350px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .warning-banner {
+            background: #fff7ed;
+            color: #9a3412;
+            border: 1px solid #fed7aa;
+            padding: 14px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8e8e8e;
+            font-size: 12px;
+            border-top: 1px solid #dbdbdb;
+            margin-top: 40px;
+        }
+
+        @@media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 24px;
+                padding-bottom: 24px;
+            }
+
+            .profile-stats-row {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <div>realnest</div>
+        <a class="back-link" href="/StoreDashboard">
+            <i class="fas fa-arrow-left"></i> Back to Store Dashboard
+        </a>
+    </div>
+
+    <div class="profile-container">
+
+        @if (Model.StoreOwnerHasNoStore)
+        {
+            <div class="warning-banner">
+                <i class="fas fa-exclamation-triangle"></i>
+                We couldn't find a store linked to your account.
+            </div>
+        }
+        else if (Model.CustomerNotFound)
+        {
+            <div class="warning-banner">
+                <i class="fas fa-exclamation-triangle"></i>
+                This customer could not be found.
+            </div>
+        }
+        else
+        {
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-astronaut"></i>
+                </div>
+
+                <div class="profile-details">
+                    <div class="profile-username-row">
+                        <h2 class="profile-username">
+                            @Model.CustomerFullName
+                            @if (Model.IsVerified)
+                            {
+                                <span title="Verified Customer">
+                                    <i class="fas fa-check-circle" style="color: #0095f6; font-size: 18px; margin-left: 8px;"></i>
+                                </span>
+                            }
+                        </h2>
+
+                        @if (Model.IsFollowingThisStore)
+                        {
+                            <span class="follow-status-badge following-yes">
+                                <i class="fas fa-heart"></i> Follows Your Store
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="follow-status-badge following-no">
+                                <i class="far fa-heart"></i> Not Following
+                            </span>
+                        }
+                    </div>
+
+                    <div class="profile-stats-row">
+                        <div class="stat-item">
+                            <span class="stat-count">@Model.OrdersWithThisStoreCount</span> orders with your store
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-count">@Model.ReviewsForThisStore.Count</span> reviews on your products
+                        </div>
+                    </div>
+
+                    <div class="profile-bio">
+                        <p><i class="fas fa-envelope" style="color:#8e8e8e; margin-right:4px;"></i> @Model.CustomerEmail</p>
+                        <p><i class="fas fa-phone" style="color:#8e8e8e; margin-right:4px;"></i> @Model.CustomerPhone</p>
+
+                        <div class="bio-badges">
+                            <span class="bio-badge loyalty-badge">
+                                <i class="fas fa-star"></i> @Model.LoyaltyPoints Loyalty Pts
+                            </span>
+                            <span class="bio-badge">
+                                <i class="fas fa-venus-mars"></i> @Model.Gender
+                            </span>
+                            <span class="bio-badge">
+                                <i class="fas fa-calendar-alt"></i> Joined @Model.CreatedAt.ToString("MMM yyyy")
+                            </span>
+                            @if (Model.CODBlocked)
+                            {
+                                <span class="bio-badge" style="background:#fee2e2; color:#b91c1c;">
+                                    <i class="fas fa-ban"></i> COD Restricted
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders with this store -->
+            <div class="section-title">
+                <i class="fas fa-receipt" style="color:#FF6B35;"></i> Orders With Your Store
+            </div>
+
+            @if (Model.OrdersWithThisStore.Any())
+            {
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.OrdersWithThisStore)
+                        {
+                            var orderId = Local_Multi_Store_Online_Marketplace.Pages.StoreViewCustomerModel.GetSafeInt(order, new[] { "OrderID", "Id" }, 0);
+                            var orderDate = Local_Multi_Store_Online_Marketplace.Pages.StoreViewCustomerModel.GetSafeString(order, new[] { "OrderDate", "CreatedAt" }, "");
+                            var orderStatus = Local_Multi_Store_Online_Marketplace.Pages.StoreViewCustomerModel.GetSafeString(order, new[] { "Status" }, "Unknown");
+                            var orderTotal = Local_Multi_Store_Online_Marketplace.Pages.StoreViewCustomerModel.GetSafeString(order, new[] { "TotalAmount", "Total" }, "0.00");
+
+                            <tr>
+                                <td>#@orderId</td>
+                                <td>@orderDate</td>
+                                <td>@orderStatus</td>
+                                <td>$@orderTotal</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="fas fa-receipt"></i></div>
+                    <h3>No Orders Yet</h3>
+                    <p>This customer hasn't placed any orders with your store yet.</p>
+                </div>
+            }
+
+            <!-- Reviews for this store's products -->
+            <div class="section-title">
+                <i class="far fa-star" style="color:#FF6B35;"></i> Reviews on Your Products
+            </div>
+
+            @if (Model.ReviewsForThisStore.Any())
+            {
+                <div class="reviews-container">
+                    @foreach (var r in Model.ReviewsForThisStore)
+                    {
+                        var productName = Local_Multi_Store_Online_Marketplace.Pages.StoreViewCustomerModel.GetSafeString(r.Product, new[] { "ProductName", "Name" }, "Product");
+                        var rating = Local_Multi_Store_Online_Marketplace.Pages.StoreViewCustomerModel.GetSafeInt(r, new[] { "Rating", "Stars", "Score" }, 5);
+                        var comment = Local_Multi_Store_Online_Marketplace.Pages.StoreViewCustomerModel.GetSafeString(r, new[] { "Comment", "Text", "ReviewText", "Description" }, "No feedback left.");
+
+                        <div class="review-row">
+                            <div class="review-main">
+                                <h4>@productName</h4>
+                                <p>"@comment"</p>
+                            </div>
+                            <div class="stars-row">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= rating)
+                                    {
+                                        <i class="fas fa-star" style="color: #FFC107;"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="far fa-star" style="color: #dbdbdb;"></i>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="far fa-star"></i></div>
+                    <h3>No Reviews Yet</h3>
+                    <p>This customer hasn't reviewed any of your products yet.</p>
+                </div>
+            }
+        }
+
+    </div>
+
+    <footer>
+        <span>✨ Realnest — your local marketplace companion ✨</span>
+    </footer>
+
+</body>
+</html>
