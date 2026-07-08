@@ -5,7 +5,14 @@
     Layout = null;
 
     var deliveryLoginError =
-        TempData.Peek("DeliveryLoginError")?.ToString();
+        TempData["DeliveryLoginError"]?.ToString();
+
+    var storeOwnerLoginError =
+        TempData["StoreOwnerLoginError"]?.ToString();
+
+    var shouldOpenManagementTab =
+        !string.IsNullOrWhiteSpace(deliveryLoginError) ||
+        !string.IsNullOrWhiteSpace(storeOwnerLoginError);
 }
 
 <!DOCTYPE html>
@@ -1074,13 +1081,149 @@
             <div class="settings-card">
                 <h3>
                     <i class="fas fa-store" style="color:#FF6B35;"></i>
-                    Become a Store Owner
+                    Store Owner Access
                 </h3>
-                <p>Submit a request and wait for admin approval. Start selling products locally on Realnest.</p>
 
-                <a href="/StoreRequest" class="settings-btn">
-                    <i class="fas fa-chalkboard-user"></i> Request Store Owner Account
-                </a>
+                @if (!string.IsNullOrWhiteSpace(Model.StoreAccessMessage))
+                {
+                    if (Model.HasPendingStoreRequest)
+                    {
+                        <div class="warning-message">
+                            <i class="fas fa-clock"></i>
+                            @Model.StoreAccessMessage
+                        </div>
+                    }
+                    else if (Model.HasApprovedStoreOwnerAccount)
+                    {
+                        <div class="info-message">
+                            <i class="fas fa-info-circle"></i>
+                            @Model.StoreAccessMessage
+                        </div>
+                    }
+                    else if (Model.HasRejectedStoreRequest)
+                    {
+                        <div class="error-message"
+                             style="padding:10px; border-radius:8px; font-size:14px; margin-bottom:12px;">
+                            <i class="fas fa-times-circle"></i>
+                            @Model.StoreAccessMessage
+                        </div>
+                    }
+                    else if (Model.HasStoreRequest)
+                    {
+                        <div class="warning-message">
+                            <i class="fas fa-triangle-exclamation"></i>
+                            @Model.StoreAccessMessage
+                        </div>
+                    }
+                    else
+                    {
+                        <p>@Model.StoreAccessMessage</p>
+                    }
+                }
+
+                @if (Model.HasApprovedStoreOwnerAccount)
+                {
+                    <button type="button"
+                            id="showStoreOwnerLoginButton"
+                            class="settings-btn"
+                            onclick="toggleStoreOwnerLogin()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Login as Store Owner
+                    </button>
+
+                    <div id="storeOwnerLoginBox"
+                         class="delivery-login-card @(string.IsNullOrWhiteSpace(storeOwnerLoginError) ? "" : "open")">
+
+                        <h4 style="font-weight:600; margin-bottom:6px;">
+                            Store Owner Log In
+                        </h4>
+
+                        <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
+                            This Store Owner account is linked securely to your customer account.
+                            Enter the Store Owner password provided by the administrator.
+                        </p>
+
+                        @if (!string.IsNullOrWhiteSpace(storeOwnerLoginError))
+                        {
+                            <div class="error-message"
+                                 style="padding:10px; border-radius:8px; font-size:13px; margin-bottom:12px;">
+                                @storeOwnerLoginError
+                            </div>
+                        }
+
+                        <form method="post"
+                              asp-page-handler="StoreOwnerLogin"
+                              class="delivery-login-form"
+                              autocomplete="off">
+
+                            <div class="form-group">
+                                <label for="StoreOwnerAccountEmail">
+                                    Your Store Owner Email
+                                </label>
+
+                                <input id="StoreOwnerAccountEmail"
+                                       type="email"
+                                       value="@Model.StoreOwnerAccountEmail"
+                                       readonly
+                                       aria-readonly="true"
+                                       tabindex="-1" />
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="StoreOwnerPassword">
+                                    Store Owner Password
+                                </label>
+
+                                <input asp-for="StoreOwnerPassword"
+                                       type="password"
+                                       placeholder="Enter Store Owner password"
+                                       autocomplete="current-password"
+                                       required />
+                            </div>
+
+                            <button type="submit"
+                                    class="delivery-login-btn">
+                                Open Store Owner Dashboard
+                            </button>
+                        </form>
+                    </div>
+                }
+                else if (Model.HasPendingStoreRequest)
+                {
+                    <button type="button"
+                            class="settings-btn"
+                            style="opacity:0.6; cursor:not-allowed;"
+                            disabled>
+                        <i class="fas fa-clock"></i>
+                        Waiting for Admin Approval
+                    </button>
+                }
+                else if (Model.HasRejectedStoreRequest)
+                {
+                    <a href="/StoreRequest"
+                       class="settings-btn">
+                        <i class="fas fa-rotate-right"></i>
+                        Update and Resubmit Store Request
+                    </a>
+                }
+                else if (!Model.HasStoreRequest)
+                {
+                    <a href="/StoreRequest"
+                       class="settings-btn">
+                        <i class="fas fa-chalkboard-user"></i>
+                        Request Store Owner Account
+                    </a>
+                }
+                else
+                {
+                    <button type="button"
+                            class="settings-btn"
+                            style="opacity:0.6; cursor:not-allowed;"
+                            disabled>
+                        <i class="fas fa-ban"></i>
+                        Store Owner Access Unavailable
+                    </button>
+                }
             </div>
 
             <div class="settings-card">
@@ -1315,12 +1458,55 @@
             }
         }
 
+        // Store Owner form login expander
+        function toggleStoreOwnerLogin() {
+            const loginBox =
+                document.getElementById("storeOwnerLoginBox");
+
+            if (!loginBox) {
+                return;
+            }
+
+            loginBox.classList.toggle("open");
+
+            if (loginBox.classList.contains("open")) {
+                clearStoreOwnerPassword();
+
+                window.setTimeout(function () {
+                    const passwordInput =
+                        document.getElementById("StoreOwnerPassword");
+
+                    if (passwordInput) {
+                        passwordInput.focus();
+                    }
+                }, 50);
+            }
+        }
+
+        function clearStoreOwnerPassword() {
+            const passwordInput =
+                document.getElementById("StoreOwnerPassword");
+
+            if (passwordInput) {
+                passwordInput.value = "";
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
             clearDeliveryPassword();
+            clearStoreOwnerPassword();
+
+            const shouldOpenManagementTab =
+        @shouldOpenManagementTab.ToString().ToLowerInvariant();
+
+            if (shouldOpenManagementTab) {
+                switchTab("settings-tab");
+            }
         });
 
         window.addEventListener("pageshow", function () {
             clearDeliveryPassword();
+            clearStoreOwnerPassword();
         });
     </script>
 

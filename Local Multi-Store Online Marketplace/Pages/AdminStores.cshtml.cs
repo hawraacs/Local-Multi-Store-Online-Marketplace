@@ -34,137 +34,501 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public List<StoreDTO> Stores { get; set; } = new();
 
         public int PendingCount =>
-            Stores.Count(s =>
-                s.Status != null &&
-                s.Status.Trim().Equals("Pending", StringComparison.OrdinalIgnoreCase));
+            Stores.Count(store =>
+                string.Equals(
+                    store.Status?.Trim(),
+                    "Pending",
+                    StringComparison.OrdinalIgnoreCase));
 
         public async Task OnGetAsync()
         {
-            var allStores = await _storeManager.GetAllStoresAsync();
-            Stores = allStores?.Where(s => s != null).ToList() ?? new();
+            try
+            {
+                var allStores =
+                    await _storeManager.GetAllStoresAsync();
+
+                Stores = allStores?
+                    .Where(store => store != null)
+                    .ToList()
+                    ?? new List<StoreDTO>();
+            }
+            catch (Exception ex)
+            {
+                Stores = new List<StoreDTO>();
+
+                TempData["Error"] =
+                    $"Unable to load stores: {ex.Message}";
+            }
         }
 
-        // ── Existing handlers (Approve, Reject, Activate, Deactivate) ──
+        // =====================================================
+        // APPROVE
+        // Creates the separate StoreOwner login.
+        // =====================================================
         public async Task<IActionResult> OnPostApprove(int id)
         {
-            var admin = await _userManager.GetUserAsync(User);
-            if (admin == null)
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            var admin =
+                await _userManager.GetUserAsync(User);
 
-            var result = await _storeManager.ApproveStoreWithAccountAsync(id, admin.Id, _userManager);
-            TempData["Email"] = result.email;
-            TempData["Password"] = result.password;
-            TempData["Success"] = "Store approved successfully.";
+            if (admin == null)
+            {
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
+            }
+
+            try
+            {
+                var result =
+                    await _storeManager
+                        .ApproveStoreWithAccountAsync(
+                            id,
+                            admin.Id,
+                            _userManager);
+
+                TempData["Email"] =
+                    result.email;
+
+                TempData["Password"] =
+                    result.password;
+
+                TempData["Success"] =
+                    "Store approved and Store Owner account created successfully.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] =
+                    ex.Message;
+            }
+            catch (Exception)
+            {
+                TempData["Error"] =
+                    "An unexpected error occurred while approving the store.";
+            }
+
             return RedirectToPage();
         }
 
+        // =====================================================
+        // REJECT
+        // No StoreOwner account is created.
+        // =====================================================
         public async Task<IActionResult> OnPostReject(int id)
         {
-            await _storeManager.RejectStoreAsync(id);
-            TempData["Success"] = "Store rejected successfully.";
+            try
+            {
+                await _storeManager
+                    .RejectStoreAsync(id);
+
+                TempData["Success"] =
+                    "Store rejected successfully.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] =
+                    ex.Message;
+            }
+            catch (Exception)
+            {
+                TempData["Error"] =
+                    "An unexpected error occurred while rejecting the store.";
+            }
+
             return RedirectToPage();
         }
 
+        // =====================================================
+        // ACTIVATE
+        // Reactivates both Store and generated StoreOwner user.
+        // =====================================================
         public async Task<IActionResult> OnPostActivate(int id)
         {
-            var admin = await _userManager.GetUserAsync(User);
-            if (admin == null)
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            var admin =
+                await _userManager.GetUserAsync(User);
 
-            await _storeManager.ActivateStoreAsync(id, admin.Id);
-            TempData["Success"] = "Store activated successfully.";
+            if (admin == null)
+            {
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
+            }
+
+            try
+            {
+                await _storeManager
+                    .ActivateStoreAsync(
+                        id,
+                        admin.Id);
+
+                TempData["Success"] =
+                    "Store and Store Owner account activated successfully.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] =
+                    ex.Message;
+            }
+            catch (Exception)
+            {
+                TempData["Error"] =
+                    "An unexpected error occurred while activating the store.";
+            }
+
             return RedirectToPage();
         }
 
+        // =====================================================
+        // DEACTIVATE
+        // Disables both Store and generated StoreOwner user.
+        // Customer account remains untouched.
+        // =====================================================
         public async Task<IActionResult> OnPostDeactivate(int id)
         {
-            await _storeManager.DeactivateStoreAsync(id);
-            TempData["Success"] = "Store deactivated successfully.";
+            try
+            {
+                await _storeManager
+                    .DeactivateStoreAsync(id);
+
+                TempData["Success"] =
+                    "Store and Store Owner account deactivated successfully.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] =
+                    ex.Message;
+            }
+            catch (Exception)
+            {
+                TempData["Error"] =
+                    "An unexpected error occurred while deactivating the store.";
+            }
+
             return RedirectToPage();
         }
 
-        // ── New: Reactivate a suspended store ──
+        // =====================================================
+        // REACTIVATE SUSPENDED STORE
+        // =====================================================
         public async Task<IActionResult> OnPostReactivateStore(int id)
         {
-            var store = await _context.Stores.FindAsync(id);
-            if (store == null)
+            var admin =
+                await _userManager.GetUserAsync(User);
+
+            if (admin == null)
             {
-                TempData["Error"] = "Store not found.";
-                return RedirectToPage();
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
-            store.Status = "Approved";
-            store.SubscriptionStatus = "Active";
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _storeManager
+                    .ActivateStoreAsync(
+                        id,
+                        admin.Id);
 
-            TempData["Success"] = "Store reactivated successfully.";
+                var store =
+                    await _context.Stores
+                        .FirstOrDefaultAsync(s =>
+                            s.StoreID == id);
+
+                if (store == null)
+                {
+                    TempData["Error"] =
+                        "Store not found.";
+
+                    return RedirectToPage();
+                }
+
+                store.Status =
+                    "Approved";
+
+                store.SubscriptionStatus =
+                    "Active";
+
+                store.IsSuspended =
+                    false;
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] =
+                    "Store and Store Owner account reactivated successfully.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] =
+                    ex.Message;
+            }
+            catch (Exception)
+            {
+                TempData["Error"] =
+                    "An unexpected error occurred while reactivating the store.";
+            }
+
             return RedirectToPage();
         }
 
-        // ── Fixed Suspend: updates both Status and SubscriptionStatus ──
+        // =====================================================
+        // SUSPEND
+        // Suspends Store and disables StoreOwner login.
+        // =====================================================
         public async Task<IActionResult> OnPostSuspend(int id)
         {
-            var store = await _context.Stores.FindAsync(id);
-            if (store == null)
+            try
             {
-                TempData["Error"] = "Store not found.";
-                return RedirectToPage();
+                var storeSnapshot =
+                    await _context.Stores
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(s =>
+                            s.StoreID == id);
+
+                if (storeSnapshot == null)
+                {
+                    TempData["Error"] =
+                        "Store not found.";
+
+                    return RedirectToPage();
+                }
+
+                if (!StatusEquals(
+                        storeSnapshot.Status,
+                        "Suspended"))
+                {
+                    await _storeManager
+                        .DeactivateStoreAsync(id);
+                }
+
+                var store =
+                    await _context.Stores
+                        .FirstOrDefaultAsync(s =>
+                            s.StoreID == id);
+
+                if (store == null)
+                {
+                    TempData["Error"] =
+                        "Store not found.";
+
+                    return RedirectToPage();
+                }
+
+                store.Status =
+                    "Suspended";
+
+                store.SubscriptionStatus =
+                    "Suspended";
+
+                store.IsSuspended =
+                    true;
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] =
+                    "Store suspended and Store Owner login disabled.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] =
+                    ex.Message;
+            }
+            catch (Exception)
+            {
+                TempData["Error"] =
+                    "An unexpected error occurred while suspending the store.";
             }
 
-            store.Status = "Suspended";
-            store.SubscriptionStatus = "Suspended";
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "Store suspended.";
             return RedirectToPage();
         }
 
-        // ── Fixed ActivateSubscription ──
-        public async Task<IActionResult> OnPostActivateSubscription(int id)
+        // =====================================================
+        // ACTIVATE SUBSCRIPTION
+        // =====================================================
+        public async Task<IActionResult>
+            OnPostActivateSubscription(int id)
         {
-            var store = await _context.Stores.FindAsync(id);
-            if (store == null)
+            var admin =
+                await _userManager.GetUserAsync(User);
+
+            if (admin == null)
             {
-                TempData["Error"] = "Store not found.";
-                return RedirectToPage();
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
-            // If the store was suspended, bring it back
-            if (store.Status == "Suspended")
-                store.Status = "Approved";
+            try
+            {
+                var storeSnapshot =
+                    await _context.Stores
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(s =>
+                            s.StoreID == id);
 
-            store.SubscriptionStatus = "Active";
-            await _context.SaveChangesAsync();
+                if (storeSnapshot == null)
+                {
+                    TempData["Error"] =
+                        "Store not found.";
 
-            TempData["Success"] = "Subscription activated.";
+                    return RedirectToPage();
+                }
+
+                if (StatusEquals(
+                        storeSnapshot.Status,
+                        "Suspended") ||
+                    StatusEquals(
+                        storeSnapshot.Status,
+                        "Inactive"))
+                {
+                    await _storeManager
+                        .ActivateStoreAsync(
+                            id,
+                            admin.Id);
+                }
+
+                var store =
+                    await _context.Stores
+                        .FirstOrDefaultAsync(s =>
+                            s.StoreID == id);
+
+                if (store == null)
+                {
+                    TempData["Error"] =
+                        "Store not found.";
+
+                    return RedirectToPage();
+                }
+
+                store.SubscriptionStatus =
+                    "Active";
+
+                store.IsSuspended =
+                    false;
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] =
+                    "Subscription activated successfully.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] =
+                    ex.Message;
+            }
+            catch (Exception)
+            {
+                TempData["Error"] =
+                    "An unexpected error occurred while activating the subscription.";
+            }
+
             return RedirectToPage();
         }
 
-        // ── Fixed Extend ──
+        // =====================================================
+        // EXTEND SUBSCRIPTION
+        // =====================================================
         public async Task<IActionResult> OnPostExtend(int id)
         {
-            var store = await _context.Stores.FindAsync(id);
-            if (store == null)
+            var admin =
+                await _userManager.GetUserAsync(User);
+
+            if (admin == null)
             {
-                TempData["Error"] = "Store not found.";
-                return RedirectToPage();
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
             }
 
-            var newExpiry = DateTime.UtcNow.AddDays(30);
-            if (store.SubscriptionExpiryDate.HasValue && store.SubscriptionExpiryDate > DateTime.UtcNow)
-                newExpiry = store.SubscriptionExpiryDate.Value.AddDays(30);
+            try
+            {
+                var storeSnapshot =
+                    await _context.Stores
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(s =>
+                            s.StoreID == id);
 
-            store.SubscriptionExpiryDate = newExpiry;
-            store.SubscriptionStatus = "Active";
+                if (storeSnapshot == null)
+                {
+                    TempData["Error"] =
+                        "Store not found.";
 
-            // If the store was suspended, reactivate it as well
-            if (store.Status == "Suspended")
-                store.Status = "Approved";
+                    return RedirectToPage();
+                }
 
-            await _context.SaveChangesAsync();
+                if (StatusEquals(
+                        storeSnapshot.Status,
+                        "Suspended") ||
+                    StatusEquals(
+                        storeSnapshot.Status,
+                        "Inactive"))
+                {
+                    await _storeManager
+                        .ActivateStoreAsync(
+                            id,
+                            admin.Id);
+                }
 
-            TempData["Success"] = "Subscription extended by 30 days.";
+                var store =
+                    await _context.Stores
+                        .FirstOrDefaultAsync(s =>
+                            s.StoreID == id);
+
+                if (store == null)
+                {
+                    TempData["Error"] =
+                        "Store not found.";
+
+                    return RedirectToPage();
+                }
+
+                var newExpiry =
+                    DateTime.UtcNow.AddDays(30);
+
+                if (store.SubscriptionExpiryDate.HasValue &&
+                    store.SubscriptionExpiryDate.Value >
+                    DateTime.UtcNow)
+                {
+                    newExpiry =
+                        store.SubscriptionExpiryDate
+                            .Value
+                            .AddDays(30);
+                }
+
+                store.SubscriptionExpiryDate =
+                    newExpiry;
+
+                store.SubscriptionStatus =
+                    "Active";
+
+                store.IsSuspended =
+                    false;
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] =
+                    "Subscription extended by 30 days.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] =
+                    ex.Message;
+            }
+            catch (Exception)
+            {
+                TempData["Error"] =
+                    "An unexpected error occurred while extending the subscription.";
+            }
+
             return RedirectToPage();
+        }
+
+        private static bool StatusEquals(
+            string? value,
+            string expected)
+        {
+            return string.Equals(
+                value?.Trim(),
+                expected,
+                StringComparison.OrdinalIgnoreCase);
         }
     }
 }

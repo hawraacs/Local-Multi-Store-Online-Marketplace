@@ -12,6 +12,7 @@ namespace Multi_Store.Core.Reposinterface
         Task<Store?> GetByCodeAsync(string storeCode);
 
         Task<Store?> GetByOwnerIdAsync(int ownerUserId);
+        Task<Store?> GetByRequestedByUserIdAsync(int requestedByUserId);
 
         Task<Store?> GetStoreDetailsAsync(int storeId);
 
