@@ -1,283 +1,782 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.HomeModel
 @{
-    Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
-    ViewData["Title"] = Model.Store?.StoreName ?? "Store Profile";
+    Layout = null;
 }
 
-<!-- Tailwind CSS and FontAwesome Icons -->
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-    /* Premium Orange & White Styling Details */
-    .instagram-avatar-ring {
-        background: linear-gradient(45deg, #FF5722, #FF9800);
-        padding: 3px;
-    }
+    <title>@(Model.Store?.StoreName ?? "Store Profile") | Realnest</title>
 
-    .text-brand-orange {
-        color: #FF5722;
-    }
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-    .bg-brand-orange {
-        background-color: #FF5722;
-    }
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .bg-brand-orange-hover:hover {
-        background-color: #E64A19;
-    }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #fafafa;
+            color: #262626;
+            min-height: 100vh;
+        }
 
-    .border-brand-orange {
-        border-color: #FF5722;
-    }
-</style>
+        /* Topbar */
+        .topbar {
+            background: #ffffff;
+            border-bottom: 1px solid #dbdbdb;
+            padding: 12px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-<div class="bg-white min-h-screen pb-12">
-    <div class="max-w-4xl mx-auto px-4 pt-8">
-
-        <!-- INSTAGRAM-STYLE PROFILE HEADER -->
-        <div class="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-16 border-b border-gray-200 pb-10 mb-8">
-
-            <!-- Left: Avatar Ring (Styled like an Active IG Story) -->
-            <div class="flex-shrink-0">
-                <div class="instagram-avatar-ring rounded-full shadow-md">
-                    <div class="bg-white rounded-full p-1">
-                        <img class="w-24 h-24 md:w-36 md:h-36 rounded-full object-cover"
-                             src="@(Model.Store.LogoURL ?? "/images/store.png")"
-                             alt="@Model.Store.StoreName Logo" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right: Details, Buttons, Stats & Bio -->
-            <div class="flex-1 text-center md:text-left">
-                <div class="flex flex-col md:flex-row md:items-center gap-4 mb-5">
-                    <h2 class="text-2xl font-light text-gray-800 tracking-tight">@Model.Store.StoreName</h2>
-
-                    <a asp-page="/StoreOwner/StoreProfile"
-                       class="inline-block px-6 py-1.5 border border-gray-300 text-gray-700 hover:text-orange-500 hover:border-orange-500 font-bold text-xs rounded-md transition-all">
-                        Edit Profile
-                    </a>
-                </div>
-
-                <!-- Stats Row -->
-                <div class="flex justify-center md:justify-start gap-8 text-sm text-gray-600 mb-5">
-                    <div>
-                        <span class="font-bold text-gray-900">@Model.Products.Count</span> products
-                    </div>
-                    <div>
-                        <span class="font-bold text-gray-900">@Model.FollowersCount</span> followers
-                    </div>
-                </div>
-
-                <!-- Bio / Description Area -->
-                <div class="text-sm text-gray-800 space-y-1 max-w-lg">
-                    <span class="font-bold block text-orange-500">Official Store Account</span>
-                    <p class="leading-relaxed text-gray-600">@Model.Store.Description</p>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- PROFILE TABS SELECTOR (Instagram Style) -->
-        <div class="flex justify-center border-t border-gray-200 mb-6">
-            <div class="flex items-center space-x-12">
-                <button class="flex items-center space-x-1.5 border-t-2 border-orange-500 py-3 text-xs font-bold tracking-widest text-orange-500 uppercase focus:outline-none">
-                    <i class="fa-solid fa-table-cells text-sm"></i>
-                    <span>Products</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- INSTAGRAM EXPLORE-STYLE PRODUCT THUMBNAIL GRID -->
-        <div class="grid grid-cols-3 gap-1 md:gap-4">
-            @foreach (var p in Model.Products)
-            {
-                var img = p.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
-
-                <!-- Interactive Instagram Square Card -->
-                <div id="product-@p.ProductID"
-                     onclick="openProductModal(@p.ProductID)"
-                     class="aspect-square relative group overflow-hidden bg-gray-50 cursor-pointer rounded shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
-
-                    <img src="@img"
-                         alt="@p.ProductName"
-                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-
-                    <!-- Dark Hover Overlay showing Price & Interaction details -->
-                    <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white space-y-1">
-                        <span class="font-extrabold text-sm md:text-lg tracking-tight">$@p.Price</span>
-                        <div class="flex items-center space-x-2 text-xs opacity-90">
-                            <i class="fa-solid fa-star text-orange-400"></i>
-                            <span>@(p.Reviews?.Count ?? 0) Reviews</span>
-                        </div>
-                    </div>
-
-                    <!-- Highlight marker for query-selected item -->
-                    <div id="highlight-border-@p.ProductID" class="absolute inset-0 border-4 border-transparent pointer-events-none transition-all duration-300"></div>
-                </div>
+            .topbar > div:first-child {
+                font-size: 24px;
+                font-weight: 700;
+                letter-spacing: -0.5px;
+                color: #262626;
+                font-style: italic;
             }
-        </div>
 
-    </div>
-</div>
+            .topbar > div:last-child {
+                display: flex;
+                gap: 20px;
+                flex-wrap: wrap;
+            }
 
-<!-- INSTAGRAM-STYLE DETAIL MODALS (ONE FOR EACH PRODUCT) -->
-@foreach (var p in Model.Products)
-{
-    var img = p.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+            .topbar a {
+                color: #262626;
+                text-decoration: none;
+                font-weight: 500;
+                padding: 8px 12px;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
 
-    <div id="modal-@p.ProductID"
-         class="hidden fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-70 flex items-center justify-center p-4 transition-opacity duration-300"
-         onclick="handleOutsideClick(event, @p.ProductID)">
-
-        <!-- Modal Wrapper Content Container -->
-        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full overflow-hidden flex flex-col md:flex-row max-h-[90vh] md:max-h-[80vh]">
-
-            <!-- Left Side: Product Media Panel -->
-            <div class="w-full md:w-3/5 bg-black flex items-center justify-center relative aspect-square md:aspect-auto">
-                <img src="@img" alt="@p.ProductName" class="max-w-full max-h-full object-contain" />
-                <button onclick="closeProductModal(@p.ProductID)" class="absolute top-4 left-4 md:hidden text-white bg-black bg-opacity-50 w-8 h-8 rounded-full flex items-center justify-center">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
-            </div>
-
-            <!-- Right Side: Details & Interactive Review Thread -->
-            <div class="w-full md:w-2/5 flex flex-col bg-white border-l border-gray-100">
-
-                <!-- Inner Header: Store Profile metadata -->
-                <div class="p-4 border-b border-gray-100 flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <img class="w-8 h-8 rounded-full object-cover"
-                             src="@(Model.Store.LogoURL ?? "/images/store.png")"
-                             alt="@Model.Store.StoreName Logo" />
-                        <div>
-                            <span class="font-bold text-xs text-gray-800">@Model.Store.StoreName</span>
-                            <span class="text-[10px] text-gray-400 block font-medium">Store Owner View</span>
-                        </div>
-                    </div>
-                    <button onclick="closeProductModal(@p.ProductID)" class="hidden md:inline-block text-gray-400 hover:text-gray-600">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
-                </div>
-
-                <!-- Product General Meta Summary -->
-                <div class="p-4 border-b border-gray-50 bg-gray-50/50">
-                    <h3 class="font-bold text-sm text-gray-900 mb-1">@p.ProductName</h3>
-                    <div class="text-base font-extrabold text-orange-500 mb-2">$@p.Price</div>
-                    <p class="text-xs text-gray-600 leading-relaxed">@p.Description</p>
-                </div>
-
-                <!-- Scrolling Section: Customer Reviews -->
-                <div class="flex-1 overflow-y-auto p-4 space-y-4 max-h-[350px]">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Feedback Section</span>
-
-                    @if (p.Reviews != null && p.Reviews.Any())
-                    {
-                        @foreach (var review in p.Reviews.OrderByDescending(r => r.CreatedAt))
-                        {
-                            <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 relative group/review">
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <span class="font-bold text-xs text-gray-800">
-                                        @review.Customer?.User?.FullName
-                                    </span>
-                                    <span class="text-xs text-orange-400">
-                                        @for (int i = 0; i < review.Rating; i++)
-                                        {
-                                            <i class="fa-solid fa-star"></i>
-                                        }
-                                    </span>
-                                </div>
-                                <p class="text-xs text-gray-600 leading-relaxed mb-3">@review.Comment</p>
-
-                                <!-- Delete Action Form -->
-                                <form method="post"
-                                      asp-page-handler="DeleteReview"
-                                      asp-route-reviewId="@review.ReviewID"
-                                      class="m-0">
-                                    <button type="submit"
-                                            class="w-full bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center space-x-1">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                        <span>Remove Review</span>
-                                    </button>
-                                </form>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <div class="text-center py-6 text-gray-400 text-xs">
-                            <i class="fa-solid fa-message text-lg mb-2 block opacity-30"></i>
-                            No reviews posted for this item yet.
-                        </div>
-                    }
-                </div>
-
-            </div>
-        </div>
-    </div>
-}
-
-<!-- DIALOG TOGGLE SCRIPTS & AUTO-HIGHLIGHT ROUTINE -->
-<script>
-    function openProductModal(id) {
-        const modal = document.getElementById('modal-' + id);
-        if (modal) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.classList.add('overflow-hidden');
-        }
-    }
-
-    function closeProductModal(id) {
-        const modal = document.getElementById('modal-' + id);
-        if (modal) {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.body.classList.remove('overflow-hidden');
-        }
-    }
-
-    function handleOutsideClick(event, id) {
-        const modal = document.getElementById('modal-' + id);
-        if (event.target === modal) {
-            closeProductModal(id);
-        }
-    }
-
-    window.onload = function () {
-        const params = new URLSearchParams(window.location.search);
-        const productId = params.get('productId');
-
-        if (productId) {
-            const productCard = document.getElementById('product-' + productId);
-            const borderIndicator = document.getElementById('highlight-border-' + productId);
-
-            if (productCard) {
-                // Instantly scroll smoothly to view the targeted product
-                productCard.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-
-                // Apply active orange pulse border styling to the target
-                if (borderIndicator) {
-                    borderIndicator.style.borderColor = '#FF5722';
+                .topbar a:hover {
+                    color: #FF6B35;
+                    background: #fafafa;
                 }
 
-                // Programmatically pop open its corresponding IG modal drawer
-                setTimeout(() => {
-                    openProductModal(productId);
-                }, 800);
+        /* Instagram Layout Grid */
+        .profile-container {
+            max-width: 935px;
+            width: 100%;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
 
-                // Auto-clear active highlights after 4 seconds
-                setTimeout(() => {
-                    if (borderIndicator) {
-                        borderIndicator.style.borderColor = 'transparent';
-                    }
-                }, 4000);
+        /* Header Section */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            padding-bottom: 44px;
+            border-bottom: 1px solid #dbdbdb;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar-container {
+            flex-shrink: 0;
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #dbdbdb;
+        }
+
+        .profile-avatar-fallback {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f5f7fa 0%, #cbd5e1 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 70px;
+            color: #475569;
+            border: 2px solid #dbdbdb;
+        }
+
+        .profile-details {
+            flex-grow: 1;
+        }
+
+        .profile-username-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .profile-username {
+            font-size: 28px;
+            font-weight: 300;
+            color: #262626;
+            display: flex;
+            align-items: center;
+        }
+
+        .edit-profile-btn {
+            background-color: transparent;
+            border: 1px solid #dbdbdb;
+            border-radius: 4px;
+            color: #262626;
+            padding: 5px 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.15s ease;
+        }
+
+            .edit-profile-btn:hover {
+                background-color: #fafafa;
+                border-color: #a8a8a8;
+            }
+
+        .profile-stats-row {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            font-size: 16px;
+            color: #262626;
+        }
+
+        .stat-count {
+            font-weight: 600;
+        }
+
+        .profile-bio {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #262626;
+        }
+
+            .profile-bio h1 {
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 4px;
+                color: #FF6B35;
+            }
+
+        .bio-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .bio-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        /* Instagram Navigation Tabs */
+        .profile-tabs {
+            display: flex;
+            justify-content: center;
+            border-top: 1px solid #dbdbdb;
+            gap: 60px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            border-top: 1px solid transparent;
+            color: #262626;
+            cursor: default;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 16px 0;
+            text-transform: uppercase;
+            margin-top: -1px;
+            border-top: 1px solid #262626;
+        }
+
+        /* Instagram grid (3 columns) */
+        .instagram-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+            margin-top: 20px;
+        }
+
+        /* Product Cards */
+        .product-grid-item {
+            background: #ffffff;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+            .product-grid-item:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            }
+
+            .product-grid-item img {
+                width: 100%;
+                height: 200px;
+                object-fit: cover;
+                border-bottom: 1px solid #efefef;
+            }
+
+        .product-details {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+            .product-details h4 {
+                font-size: 15px;
+                font-weight: 600;
+                color: #262626;
+                margin-bottom: 6px;
+                height: 40px;
+                overflow: hidden;
+            }
+
+            .product-details .price {
+                font-size: 16px;
+                font-weight: 700;
+                color: #FF6B35;
+                margin-bottom: 4px;
+            }
+
+            .product-details .review-count {
+                font-size: 12px;
+                color: #8e8e8e;
+            }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8e8e8e;
+        }
+
+        .empty-icon {
+            font-size: 50px;
+            margin-bottom: 16px;
+            color: #dbdbdb;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            max-width: 350px;
+            margin: 0 auto 20px;
+            line-height: 1.5;
+        }
+
+        /* Reviews inside modal */
+        .review-row {
+            background: #fafafa;
+            border: 1px solid #f1f5f9;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .review-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .reviewer-link {
+            font-size: 13px;
+            font-weight: 600;
+            color: #262626;
+            text-decoration: none;
+        }
+
+            .reviewer-link:hover {
+                color: #FF6B35;
+                text-decoration: underline;
+            }
+
+        .stars-row {
+            display: flex;
+            gap: 2px;
+            font-size: 12px;
+        }
+
+        .review-row p {
+            font-size: 13px;
+            color: #4b5563;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .delete-review-btn {
+            width: 100%;
+            background: #fee2e2;
+            color: #991b1b;
+            border: none;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 7px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+            .delete-review-btn:hover {
+                background: #fecaca;
+            }
+
+        /* Modals (same overlay style as customer profile) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+            .modal.flex {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 16px;
+            }
+
+        .product-modal-content {
+            background-color: #ffffff;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 85vh;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @@media (min-width: 768px) {
+            .product-modal-content {
+                flex-direction: row;
             }
         }
-    };
-</script>
+
+        .product-modal-media {
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+            .product-modal-media img {
+                max-width: 100%;
+                max-height: 320px;
+                object-fit: contain;
+            }
+
+        @@media (min-width: 768px) {
+            .product-modal-media {
+                width: 55%;
+            }
+
+                .product-modal-media img {
+                    max-height: 100%;
+                }
+        }
+
+        .product-modal-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .product-modal-header {
+            padding: 16px;
+            border-bottom: 1px solid #dbdbdb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .product-modal-store {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .product-modal-store img {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 1px solid #dbdbdb;
+            }
+
+            .product-modal-store span {
+                font-size: 13px;
+                font-weight: 600;
+                color: #262626;
+            }
+
+        .close-modal {
+            font-size: 22px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+            .close-modal:hover {
+                color: #333;
+            }
+
+        .product-modal-meta {
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+            background: #fafafa;
+        }
+
+            .product-modal-meta h3 {
+                font-size: 15px;
+                font-weight: 600;
+                color: #262626;
+                margin-bottom: 6px;
+            }
+
+            .product-modal-meta .price {
+                font-size: 17px;
+                font-weight: 700;
+                color: #FF6B35;
+                margin-bottom: 8px;
+            }
+
+            .product-modal-meta p {
+                font-size: 13px;
+                color: #64748b;
+                line-height: 1.5;
+            }
+
+        .product-modal-reviews {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+            .product-modal-reviews > span {
+                font-size: 11px;
+                font-weight: 700;
+                color: #8e8e8e;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                display: block;
+                margin-bottom: 10px;
+            }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8e8e8e;
+            font-size: 12px;
+            border-top: 1px solid #dbdbdb;
+            margin-top: 40px;
+        }
+
+        @@media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 24px;
+                padding-bottom: 24px;
+            }
+
+            .profile-stats-row {
+                justify-content: center;
+            }
+
+            .instagram-grid {
+                grid-template-columns: repeat(1, 1fr);
+                gap: 16px;
+            }
+
+            .profile-tabs {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <div>realnest</div>
+
+        <div>
+            <a href="/StoreOwner/Dashboard">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+            <a href="/StoreOwner/Products">
+                <i class="fas fa-boxes-stacked"></i> Products
+            </a>
+            <a href="/StoreOwner/Orders">
+                <i class="fas fa-truck"></i> Orders
+            </a>
+            <a href="/StoreOwner/Home">
+                <i class="fas fa-store"></i> Profile
+            </a>
+        </div>
+    </div>
+
+    <div class="profile-container">
+
+        <!-- Instagram Profile Header -->
+        <div class="profile-header">
+            <div class="profile-avatar-container">
+                @if (!string.IsNullOrWhiteSpace(Model.Store?.LogoURL))
+                {
+                    <img class="profile-avatar" src="@Model.Store.LogoURL" alt="@Model.Store.StoreName Logo" />
+                }
+                else
+                {
+                    <div class="profile-avatar-fallback">
+                        <i class="fas fa-store"></i>
+                    </div>
+                }
+            </div>
+
+            <div class="profile-details">
+                <div class="profile-username-row">
+                    <h2 class="profile-username">
+                        @Model.Store?.StoreName
+                    </h2>
+                    <a asp-page="/StoreOwner/StoreProfile" class="edit-profile-btn">Edit Profile</a>
+                </div>
+
+                <div class="profile-stats-row">
+                    <div class="stat-item">
+                        <span class="stat-count">@Model.Products.Count</span> products
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-count">@Model.FollowersCount</span> followers
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-count">@Model.Products.Sum(p => p.Reviews?.Count ?? 0)</span> reviews
+                    </div>
+                </div>
+
+                <div class="profile-bio">
+                    <h1>Official Store Account</h1>
+                    <p>@Model.Store?.Description</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs (single Products tab, kept for visual consistency) -->
+        <div class="profile-tabs">
+            <button class="tab-btn">
+                <i class="fas fa-table-cells"></i> Products
+            </button>
+        </div>
+
+        <!-- Products Grid -->
+        @if (Model.Products.Any())
+        {
+            <div class="instagram-grid">
+                @foreach (var p in Model.Products)
+                {
+                    var img = p.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+
+                    <div class="product-grid-item" onclick="openProductModal(@p.ProductID)">
+                        <img src="@img" alt="@p.ProductName" />
+                        <div class="product-details">
+                            <h4>@p.ProductName</h4>
+                            <span class="price">$@p.Price</span>
+                            <span class="review-count"><i class="fas fa-star" style="color:#FFC107;"></i> @(p.Reviews?.Count ?? 0) reviews</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fas fa-box-open"></i></div>
+                <h3>No Products Yet</h3>
+                <p>Once you add products to your store, they'll show up here just like an Instagram feed.</p>
+            </div>
+        }
+
+    </div>
+
+    <!-- One modal per product -->
+    @foreach (var p in Model.Products)
+    {
+        var img = p.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+
+        <div id="modal-@p.ProductID" class="modal" onclick="handleOutsideClick(event, @p.ProductID)">
+            <div class="product-modal-content" onclick="event.stopPropagation()">
+
+                <div class="product-modal-media">
+                    <img src="@img" alt="@p.ProductName" />
+                </div>
+
+                <div class="product-modal-info">
+                    <div class="product-modal-header">
+                        <div class="product-modal-store">
+                            @if (!string.IsNullOrWhiteSpace(Model.Store?.LogoURL))
+                            {
+                                <img src="@Model.Store.LogoURL" alt="@Model.Store.StoreName" />
+                            }
+                            <span>@Model.Store?.StoreName</span>
+                        </div>
+                        <span class="close-modal" onclick="closeProductModal(@p.ProductID)">&times;</span>
+                    </div>
+
+                    <div class="product-modal-meta">
+                        <h3>@p.ProductName</h3>
+                        <div class="price">$@p.Price</div>
+                        <p>@p.Description</p>
+                    </div>
+
+                    <div class="product-modal-reviews">
+                        <span>Feedback Section</span>
+
+                        @if (p.Reviews != null && p.Reviews.Any())
+                        {
+                            @foreach (var review in p.Reviews.OrderByDescending(r => r.CreatedAt))
+                            {
+                                <div class="review-row">
+                                    <div class="review-top">
+                                        <a href="/StoreViewCustomer/@review.CustomerID" class="reviewer-link">
+                                            @review.Customer?.User?.FullName
+                                        </a>
+                                        <div class="stars-row">
+                                            @for (int i = 0; i < review.Rating; i++)
+                                            {
+                                                <i class="fas fa-star" style="color:#FFC107;"></i>
+                                            }
+                                        </div>
+                                    </div>
+                                    <p>@review.Comment</p>
+
+                                    <form method="post" asp-page-handler="DeleteReview" asp-route-reviewId="@review.ReviewID">
+                                        <button type="submit" class="delete-review-btn">
+                                            <i class="fa-solid fa-trash-can"></i> Remove Review
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="empty-state" style="padding:30px 10px;">
+                                <div class="empty-icon" style="font-size:32px; margin-bottom:8px;"><i class="far fa-comment"></i></div>
+                                <p style="margin:0;">No reviews posted for this item yet.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <footer>
+        <span>✨ Realnest — your local marketplace companion ✨</span>
+    </footer>
+
+    <script>
+        function openProductModal(id) {
+            const modal = document.getElementById('modal-' + id);
+            if (modal) {
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeProductModal(id) {
+            const modal = document.getElementById('modal-' + id);
+            if (modal) {
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function handleOutsideClick(event, id) {
+            const modal = document.getElementById('modal-' + id);
+            if (event.target === modal) {
+                closeProductModal(id);
+            }
+        }
+
+        window.onload = function () {
+            const params = new URLSearchParams(window.location.search);
+            const productId = params.get('productId');
+
+            if (productId) {
+                const productCard = document.getElementById('modal-' + productId)
+                    ? document.querySelector('[onclick*="openProductModal(' + productId + ')"]')
+                    : null;
+
+                if (productCard) {
+                    productCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => openProductModal(productId), 800);
+                }
+            }
+        };
+    </script>
+
+</body>
+</html>
