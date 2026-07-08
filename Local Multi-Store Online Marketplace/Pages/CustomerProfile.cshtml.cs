@@ -65,6 +65,24 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public string DeliveryPassword { get; set; } = string.Empty;
 
         // ==========================================
+        // STORE OWNER ACCESS
+        // ==========================================
+        public bool HasStoreRequest { get; set; }
+
+        public bool HasPendingStoreRequest { get; set; }
+
+        public bool HasApprovedStoreOwnerAccount { get; set; }
+
+        public bool HasRejectedStoreRequest { get; set; }
+
+        public string StoreAccessMessage { get; set; } = string.Empty;
+
+        public string StoreOwnerAccountEmail { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string StoreOwnerPassword { get; set; } = string.Empty;
+
+        // ==========================================
         // Instagram-style Profile Fields
         // ==========================================
         public int LoyaltyPoints { get; set; }
@@ -283,6 +301,128 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return LocalRedirect("/DeliveryDashboard");
         }
 
+        public async Task<IActionResult> OnPostStoreOwnerLoginAsync()
+        {
+            var currentCustomerUser = await _userManager.GetUserAsync(User);
+
+            if (currentCustomerUser == null)
+            {
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
+            }
+
+            if (string.IsNullOrWhiteSpace(StoreOwnerPassword))
+            {
+                TempData["StoreOwnerLoginError"] =
+                    "Please enter your Store Owner password.";
+
+                return RedirectToPage();
+            }
+
+            // Security: the server selects only the Store account
+            // that belongs to the currently signed-in Customer.
+            var storeProfile = await _context.Stores
+                .AsNoTracking()
+                .Where(s =>
+                    s.RequestedByUserID == currentCustomerUser.Id
+                    ||
+                    (
+                        s.RequestedByUserID == null
+                        &&
+                        s.OwnerUserID == currentCustomerUser.Id
+                    ))
+                .OrderByDescending(s => s.StoreID)
+                .FirstOrDefaultAsync();
+
+            if (storeProfile == null)
+            {
+                TempData["StoreOwnerLoginError"] =
+                    "No Store Owner account is linked to your customer account.";
+
+                return RedirectToPage();
+            }
+
+            var storeStatus = storeProfile.Status?.Trim();
+
+            if (!string.Equals(
+                    storeStatus,
+                    "Approved",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["StoreOwnerLoginError"] =
+                    "Your Store Owner account is not approved.";
+
+                return RedirectToPage();
+            }
+
+            if (storeProfile.IsSuspended ||
+                string.Equals(
+                    storeProfile.SubscriptionStatus?.Trim(),
+                    "Suspended",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["StoreOwnerLoginError"] =
+                    "Your Store Owner account is currently suspended.";
+
+                return RedirectToPage();
+            }
+
+            var storeOwnerUser = await _userManager.FindByIdAsync(
+                storeProfile.OwnerUserID.ToString());
+
+            if (storeOwnerUser == null || !storeOwnerUser.IsActive)
+            {
+                TempData["StoreOwnerLoginError"] =
+                    "Store Owner account is currently unavailable.";
+
+                return RedirectToPage();
+            }
+
+            var isStoreOwner = await _userManager.IsInRoleAsync(
+                storeOwnerUser,
+                "StoreOwner");
+
+            if (!isStoreOwner)
+            {
+                TempData["StoreOwnerLoginError"] =
+                    "Store Owner account is not configured correctly.";
+
+                return RedirectToPage();
+            }
+
+            var passwordResult = await _signInManager.CheckPasswordSignInAsync(
+                storeOwnerUser,
+                StoreOwnerPassword,
+                lockoutOnFailure: true);
+
+            if (passwordResult.IsLockedOut)
+            {
+                TempData["StoreOwnerLoginError"] =
+                    "This Store Owner account is temporarily locked. Please try again later.";
+
+                return RedirectToPage();
+            }
+
+            if (!passwordResult.Succeeded)
+            {
+                TempData["StoreOwnerLoginError"] =
+                    "Invalid Store Owner credentials.";
+
+                return RedirectToPage();
+            }
+
+            await _signInManager.SignOutAsync();
+
+            await _signInManager.SignInAsync(
+                storeOwnerUser,
+                isPersistent: false);
+
+           
+            return LocalRedirect(
+                "/StoreOwner/Dashboard");
+        }
+
         public async Task<IActionResult> OnPostStoreRequestAsync()
         {
             var loaded = await LoadCustomerProfileAsync();
@@ -332,6 +472,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             CustomerPhone = user.PhoneNumber ?? "No phone number";
 
             await LoadDeliveryAccessStatusAsync(user);
+            await LoadStoreAccessStatusAsync(user);
 
             // Safe lookup with robust try-catches around navigation inclusions
             Customer? customer = null;
@@ -521,6 +662,145 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 "Submit your vehicle and license information to join our delivery fleet.";
         }
 
+        private async Task LoadStoreAccessStatusAsync(User user)
+        {
+            HasStoreRequest = false;
+            HasPendingStoreRequest = false;
+            HasApprovedStoreOwnerAccount = false;
+            HasRejectedStoreRequest = false;
+            StoreAccessMessage = string.Empty;
+            StoreOwnerAccountEmail = string.Empty;
 
+            // New records are permanently linked through RequestedByUserID.
+            // The OwnerUserID fallback keeps legacy Store requests working.
+            var storeRequest = await _context.Stores
+                .AsNoTracking()
+                .Where(s =>
+                    s.RequestedByUserID == user.Id
+                    ||
+                    (
+                        s.RequestedByUserID == null
+                        &&
+                        s.OwnerUserID == user.Id
+                    ))
+                .OrderByDescending(s => s.StoreID)
+                .FirstOrDefaultAsync();
+
+            if (storeRequest == null)
+            {
+                StoreAccessMessage =
+                    "Submit your store information to request a Store Owner account.";
+
+                return;
+            }
+
+            HasStoreRequest = true;
+
+            var status = storeRequest.Status?.Trim();
+
+            if (string.Equals(
+                    status,
+                    "Pending",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                HasPendingStoreRequest = true;
+                StoreAccessMessage =
+                    "Your store request is pending admin approval.";
+
+                return;
+            }
+
+            if (string.Equals(
+                    status,
+                    "Rejected",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                HasRejectedStoreRequest = true;
+                StoreAccessMessage =
+                    "Your store request was rejected. You can update your information and submit it again.";
+
+                return;
+            }
+
+            if (string.Equals(
+                    status,
+                    "Inactive",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                StoreAccessMessage =
+                    "Your Store Owner account is currently inactive. Please contact the admin.";
+
+                return;
+            }
+
+            if (string.Equals(
+                    status,
+                    "Suspended",
+                    StringComparison.OrdinalIgnoreCase)
+                ||
+                storeRequest.IsSuspended
+                ||
+                string.Equals(
+                    storeRequest.SubscriptionStatus?.Trim(),
+                    "Suspended",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                StoreAccessMessage =
+                    "Your Store Owner account is currently suspended. Please contact the admin.";
+
+                return;
+            }
+
+            if (string.Equals(
+                    status,
+                    "Approved",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                var storeOwnerUser = await _userManager.FindByIdAsync(
+                    storeRequest.OwnerUserID.ToString());
+
+                if (storeOwnerUser == null || !storeOwnerUser.IsActive)
+                {
+                    StoreAccessMessage =
+                        "Your Store Owner account is unavailable. Please contact the admin.";
+
+                    return;
+                }
+
+                var isStoreOwner = await _userManager.IsInRoleAsync(
+                    storeOwnerUser,
+                    "StoreOwner");
+
+                if (!isStoreOwner)
+                {
+                    StoreAccessMessage =
+                        "Your Store Owner account is not configured correctly. Please contact the admin.";
+
+                    return;
+                }
+
+                StoreOwnerAccountEmail =
+                    storeOwnerUser.Email
+                    ?? storeOwnerUser.UserName
+                    ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(StoreOwnerAccountEmail))
+                {
+                    StoreAccessMessage =
+                        "Your Store Owner account email is unavailable. Please contact the admin.";
+
+                    return;
+                }
+
+                HasApprovedStoreOwnerAccount = true;
+                StoreAccessMessage =
+                    "Your Store Owner account is approved. Enter the password provided by the administrator.";
+
+                return;
+            }
+
+            StoreAccessMessage =
+                "Submit your store information to request a Store Owner account.";
+        }
     }
 }
