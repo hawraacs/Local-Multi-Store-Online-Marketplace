@@ -106,6 +106,10 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
             modelBuilder.Entity<Store>().HasIndex(s => s.StoreCode).IsUnique();
             modelBuilder.Entity<Store>().HasIndex(s => s.OwnerUserID).IsUnique();
+            modelBuilder.Entity<Store>()
+    .HasIndex(s => s.RequestedByUserID)
+    .IsUnique()
+    .HasFilter("[RequestedByUserID] IS NOT NULL");
             modelBuilder.Entity<Category>().HasIndex(c => c.CategorySlug).IsUnique();
             modelBuilder.Entity<Coupon>().HasIndex(c => c.CouponCode).IsUnique();
             modelBuilder.Entity<Order>().HasIndex(o => o.OrderNumber).IsUnique();
@@ -129,6 +133,12 @@ namespace Multi_Store.Infrastructure.Data
                 .WithOne(u => u.Store)
                 .HasForeignKey<Store>(s => s.OwnerUserID)
                 .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Store>()
+    .HasOne<User>()
+    .WithMany()
+    .HasForeignKey(s => s.RequestedByUserID)
+    .OnDelete(DeleteBehavior.Restrict);
+
 
             modelBuilder.Entity<DeliveryPerson>()
                 .HasOne(d => d.User)

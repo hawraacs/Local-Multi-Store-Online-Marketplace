@@ -8,6 +8,8 @@ namespace Multi_Store.Core.Entities
         public int StoreID { get; set; }
 
         public int OwnerUserID { get; set; }
+        public int? RequestedByUserID { get; set; }
+
 
         public string StoreName { get; set; } = string.Empty;
 

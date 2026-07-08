@@ -8,7 +8,8 @@ namespace Multi_Store.Services.Managers
     public class StoreManager
     {
         private readonly IStoreRepository _storeRepository;
-
+        private const string DefaultStoreOwnerPassword =
+    "StoreOwner@12345";
         public StoreManager(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
@@ -31,69 +32,278 @@ namespace Multi_Store.Services.Managers
         public async Task<int> RegisterStoreAsync(StoreDTO dto)
         {
             if (dto == null)
+            {
                 throw new ArgumentNullException(nameof(dto));
+            }
 
-            var existingStore = await _storeRepository.GetByOwnerIdAsync(dto.OwnerUserID);
+            if (dto.OwnerUserID <= 0)
+            {
+                throw new InvalidOperationException(
+                    "Invalid customer account.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.StoreName))
+            {
+                throw new InvalidOperationException(
+                    "Store name is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.Email))
+            {
+                throw new InvalidOperationException(
+                    "Store email is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
+            {
+                throw new InvalidOperationException(
+                    "Store phone number is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.AddressLine1))
+            {
+                throw new InvalidOperationException(
+                    "Store address is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.City))
+            {
+                throw new InvalidOperationException(
+                    "City is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.Area))
+            {
+                throw new InvalidOperationException(
+                    "Area is required.");
+            }
+
+            // Search using the permanent original-Customer link.
+            // The repository also supports old Stores where
+            // RequestedByUserID is still null.
+            var existingStore =
+                await _storeRepository
+                    .GetByRequestedByUserIdAsync(dto.OwnerUserID);
 
             if (existingStore != null)
             {
-                if (existingStore.Status == "Pending")
-                    throw new InvalidOperationException("You already have a pending store request.");
-
-                if (existingStore.Status == "Approved")
-                    throw new InvalidOperationException("You are already a store owner.");
-
-                if (existingStore.Status == "Rejected")
+                if (string.Equals(
+                        existingStore.Status?.Trim(),
+                        "Pending",
+                        StringComparison.OrdinalIgnoreCase))
                 {
-                    existingStore.StoreName = dto.StoreName;
-                    existingStore.Email = dto.Email;
-                    existingStore.PhoneNumber = dto.PhoneNumber;
-                    existingStore.AddressLine1 = dto.AddressLine1;
-                    existingStore.AddressLine2 = dto.AddressLine2;
-                    existingStore.City = dto.City;
-                    existingStore.Area = dto.Area;
-                    existingStore.Description = dto.Description;
-                    existingStore.BusinessLicenseNumber = dto.BusinessLicenseNumber;
-                    existingStore.BusinessLicenseURL = dto.BusinessLicenseURL;
-                    existingStore.Latitude = dto.Latitude;
-                    existingStore.Longitude = dto.Longitude;
-                    existingStore.HasFixedDeliveryFee = dto.HasFixedDeliveryFee;
-                    existingStore.FixedDeliveryFee = dto.FixedDeliveryFee;
-                    existingStore.Status = "Pending";
-                    existingStore.ApprovedAt = null;
-                    existingStore.ApprovedBy = null;
+                    throw new InvalidOperationException(
+                        "You already have a pending store request.");
+                }
 
-                    await _storeRepository.UpdateAsync(existingStore);
+                if (string.Equals(
+                        existingStore.Status?.Trim(),
+                        "Approved",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException(
+                        "You are already a store owner.");
+                }
+
+                if (string.Equals(
+                        existingStore.Status?.Trim(),
+                        "Inactive",
+                        StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(
+                        existingStore.Status?.Trim(),
+                        "Suspended",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException(
+                        "A store account already exists but is currently inactive.");
+                }
+
+                if (string.Equals(
+                        existingStore.Status?.Trim(),
+                        "Rejected",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    // Permanently preserve the Customer who submitted
+                    // the original Store request.
+                    existingStore.RequestedByUserID ??=
+                        dto.OwnerUserID;
+
+                    // Before approval, OwnerUserID temporarily points
+                    // to the original Customer account.
+                    existingStore.OwnerUserID =
+                        dto.OwnerUserID;
+
+                    existingStore.StoreName =
+                        dto.StoreName.Trim();
+
+                    existingStore.Email =
+                        dto.Email.Trim();
+
+                    existingStore.PhoneNumber =
+                        dto.PhoneNumber.Trim();
+
+                    existingStore.AddressLine1 =
+                        dto.AddressLine1.Trim();
+
+                    existingStore.AddressLine2 =
+                        string.IsNullOrWhiteSpace(dto.AddressLine2)
+                            ? null
+                            : dto.AddressLine2.Trim();
+
+                    existingStore.City =
+                        dto.City.Trim();
+
+                    existingStore.Area =
+                        dto.Area.Trim();
+
+                    existingStore.Description =
+                        dto.Description?.Trim()
+                        ?? string.Empty;
+
+                    existingStore.BusinessLicenseNumber =
+                        string.IsNullOrWhiteSpace(
+                            dto.BusinessLicenseNumber)
+                            ? null
+                            : dto.BusinessLicenseNumber.Trim();
+
+                    existingStore.BusinessLicenseURL =
+                        string.IsNullOrWhiteSpace(
+                            dto.BusinessLicenseURL)
+                            ? null
+                            : dto.BusinessLicenseURL.Trim();
+
+                    existingStore.Latitude =
+                        dto.Latitude;
+
+                    existingStore.Longitude =
+                        dto.Longitude;
+
+                    existingStore.HasFixedDeliveryFee =
+                        dto.HasFixedDeliveryFee;
+
+                    existingStore.FixedDeliveryFee =
+                        dto.HasFixedDeliveryFee
+                            ? dto.FixedDeliveryFee
+                            : null;
+
+                    existingStore.CommissionRate =
+                        dto.CommissionRate;
+
+                    existingStore.CODSupported =
+                        dto.CODSupported;
+
+                    existingStore.CODMaxLimit =
+                        dto.CODMaxLimit;
+
+                    existingStore.Status =
+                        "Pending";
+
+                    existingStore.ApprovedAt =
+                        null;
+
+                    existingStore.ApprovedBy =
+                        null;
+
+                    await _storeRepository
+                        .UpdateAsync(existingStore);
+
                     return existingStore.StoreID;
                 }
+
+                throw new InvalidOperationException(
+                    "A store request already exists for this customer.");
             }
 
             var store = new Store
             {
-                OwnerUserID = dto.OwnerUserID,
-                StoreName = dto.StoreName,
-                Email = dto.Email,
-                PhoneNumber = dto.PhoneNumber,
-                AddressLine1 = dto.AddressLine1,
-                AddressLine2 = dto.AddressLine2,
-                City = dto.City,
-                Area = dto.Area,
-                Description = dto.Description,
-                BusinessLicenseNumber = dto.BusinessLicenseNumber,
-                BusinessLicenseURL = dto.BusinessLicenseURL,
-                Latitude = dto.Latitude,
-                Longitude = dto.Longitude,
-                HasFixedDeliveryFee = dto.HasFixedDeliveryFee,
-                FixedDeliveryFee = dto.FixedDeliveryFee,
-                StoreCode = "ST-" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
-                Status = "Pending",
-                CreatedAt = DateTime.UtcNow,
-                CommissionRate = dto.CommissionRate,
-                CODSupported = dto.CODSupported,
-                CODMaxLimit = dto.CODMaxLimit
+                // Before approval, both fields point to the Customer.
+                // After approval, only OwnerUserID will be changed
+                // to the generated StoreOwner account.
+                OwnerUserID =
+                    dto.OwnerUserID,
+
+                RequestedByUserID =
+                    dto.OwnerUserID,
+
+                StoreName =
+                    dto.StoreName.Trim(),
+
+                Email =
+                    dto.Email.Trim(),
+
+                PhoneNumber =
+                    dto.PhoneNumber.Trim(),
+
+                AddressLine1 =
+                    dto.AddressLine1.Trim(),
+
+                AddressLine2 =
+                    string.IsNullOrWhiteSpace(dto.AddressLine2)
+                        ? null
+                        : dto.AddressLine2.Trim(),
+
+                City =
+                    dto.City.Trim(),
+
+                Area =
+                    dto.Area.Trim(),
+
+                Description =
+                    dto.Description?.Trim()
+                    ?? string.Empty,
+
+                BusinessLicenseNumber =
+                    string.IsNullOrWhiteSpace(
+                        dto.BusinessLicenseNumber)
+                        ? null
+                        : dto.BusinessLicenseNumber.Trim(),
+
+                BusinessLicenseURL =
+                    string.IsNullOrWhiteSpace(
+                        dto.BusinessLicenseURL)
+                        ? null
+                        : dto.BusinessLicenseURL.Trim(),
+
+                Latitude =
+                    dto.Latitude,
+
+                Longitude =
+                    dto.Longitude,
+
+                HasFixedDeliveryFee =
+                    dto.HasFixedDeliveryFee,
+
+                FixedDeliveryFee =
+                    dto.HasFixedDeliveryFee
+                        ? dto.FixedDeliveryFee
+                        : null,
+
+                StoreCode =
+                    "ST-" +
+                    Guid.NewGuid()
+                        .ToString("N")[..8]
+                        .ToUpperInvariant(),
+
+                Status =
+                    "Pending",
+
+                CreatedAt =
+                    DateTime.UtcNow,
+
+                CommissionRate =
+                    dto.CommissionRate,
+
+                CODSupported =
+                    dto.CODSupported,
+
+                CODMaxLimit =
+                    dto.CODMaxLimit
             };
 
-            var saved = await _storeRepository.AddAsync(store);
+            var saved =
+                await _storeRepository
+                    .AddAsync(store);
+
             return saved.StoreID;
         }
 
@@ -101,42 +311,222 @@ namespace Multi_Store.Services.Managers
         // APPROVAL
         // =====================
 
-        public async Task<(string email, string password)> ApproveStoreWithAccountAsync(
-            int storeId,
-            int adminId,
-            UserManager<User> userManager)
+        public async Task<(string email, string password)>
+     ApproveStoreWithAccountAsync(
+         int storeId,
+         int adminId,
+         UserManager<User> userManager)
         {
-            var store = await _storeRepository.GetByIdAsync(storeId)
-                ?? throw new Exception("Store not found");
-
-            var owner = await userManager.FindByIdAsync(store.OwnerUserID.ToString())
-                ?? throw new Exception("User not found");
-
-            if (!await userManager.IsInRoleAsync(owner, "StoreOwner"))
+            if (storeId <= 0)
             {
-                var result = await userManager.AddToRoleAsync(owner, "StoreOwner");
-
-                if (!result.Succeeded)
-                    throw new Exception(string.Join(",", result.Errors.Select(e => e.Description)));
+                throw new InvalidOperationException(
+                    "Invalid store request.");
             }
 
-            store.Status = "Approved";
-            store.ApprovedAt = DateTime.UtcNow;
-            store.ApprovedBy = adminId;
+            if (adminId <= 0)
+            {
+                throw new InvalidOperationException(
+                    "Invalid admin account.");
+            }
 
-            // Subscription
-            store.TrialStartDate = DateTime.UtcNow;
-            store.SubscriptionExpiryDate = DateTime.UtcNow.AddDays(30);
-            store.SubscriptionStatus = "Active";
+            if (userManager == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(userManager));
+            }
 
-            // First month free
-            store.TrialStartDate = DateTime.UtcNow;
-            store.SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(1);
-            store.SubscriptionStatus = "Active";
+            var store = await _storeRepository
+                .GetByIdAsync(storeId);
 
-            await _storeRepository.UpdateAsync(store);
+            if (store == null)
+            {
+                throw new InvalidOperationException(
+                    "Store request was not found.");
+            }
 
-            return (owner.Email ?? string.Empty, "Use existing password");
+            var cleanStatus = store.Status?.Trim();
+
+            // Prevent creating a second StoreOwner account
+            // if Approve is clicked again.
+            if (string.Equals(
+                    cleanStatus,
+                    "Approved",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                var existingStoreOwner =
+                    await userManager.FindByIdAsync(
+                        store.OwnerUserID.ToString());
+
+                if (existingStoreOwner == null)
+                {
+                    throw new InvalidOperationException(
+                        "The approved Store Owner account was not found.");
+                }
+
+                var hasStoreOwnerRole =
+                    await userManager.IsInRoleAsync(
+                        existingStoreOwner,
+                        "StoreOwner");
+
+                if (!hasStoreOwnerRole)
+                {
+                    var addRoleResult =
+                        await userManager.AddToRoleAsync(
+                            existingStoreOwner,
+                            "StoreOwner");
+
+                    if (!addRoleResult.Succeeded)
+                    {
+                        throw new InvalidOperationException(
+                            GetIdentityErrors(addRoleResult));
+                    }
+                }
+
+                return (
+                    existingStoreOwner.Email
+                        ?? existingStoreOwner.UserName
+                        ?? string.Empty,
+                    "Use existing password"
+                );
+            }
+
+            if (!string.Equals(
+                    cleanStatus,
+                    "Pending",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    "Only pending store requests can be approved.");
+            }
+
+            // Preserve the permanent link to the Customer
+            // who originally submitted the request.
+            store.RequestedByUserID ??=
+                store.OwnerUserID;
+
+            var originalCustomer =
+                await userManager.FindByIdAsync(
+                    store.RequestedByUserID.Value.ToString());
+
+            if (originalCustomer == null)
+            {
+                throw new InvalidOperationException(
+                    "The Customer account linked to this store request was not found.");
+            }
+
+            string storeOwnerEmail;
+            var counter = 1;
+
+            do
+            {
+                storeOwnerEmail =
+                    $"storeowner{counter}@gmail.com";
+
+                counter++;
+            }
+            while (await userManager.FindByEmailAsync(
+                       storeOwnerEmail) != null);
+
+            var storeOwnerUser = new User
+            {
+                UserName = storeOwnerEmail,
+                Email = storeOwnerEmail,
+
+                FullName =
+                    !string.IsNullOrWhiteSpace(
+                        originalCustomer.FullName)
+                        ? originalCustomer.FullName.Trim()
+                        : store.StoreName.Trim(),
+
+                PhoneNumber =
+                    store.PhoneNumber?.Trim(),
+
+                EmailConfirmed = true,
+
+                PhoneNumberConfirmed =
+                    !string.IsNullOrWhiteSpace(
+                        store.PhoneNumber),
+
+                IsActive = true,
+
+                MustChangePassword = false,
+
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var createResult =
+                await userManager.CreateAsync(
+                    storeOwnerUser,
+                    DefaultStoreOwnerPassword);
+
+            if (!createResult.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    GetIdentityErrors(createResult));
+            }
+
+            var roleResult =
+                await userManager.AddToRoleAsync(
+                    storeOwnerUser,
+                    "StoreOwner");
+
+            if (!roleResult.Succeeded)
+            {
+                await userManager.DeleteAsync(
+                    storeOwnerUser);
+
+                throw new InvalidOperationException(
+                    GetIdentityErrors(roleResult));
+            }
+
+            try
+            {
+                // OwnerUserID now points to the generated
+                // StoreOwner account.
+                store.OwnerUserID =
+                    storeOwnerUser.Id;
+
+                // RequestedByUserID remains linked to
+                // the original Customer account.
+                store.Status =
+                    "Approved";
+
+                store.ApprovedAt =
+                    DateTime.UtcNow;
+
+                store.ApprovedBy =
+                    adminId;
+
+                // First month free.
+                store.TrialStartDate =
+                    DateTime.UtcNow;
+
+                store.SubscriptionExpiryDate =
+                    DateTime.UtcNow.AddMonths(1);
+
+                store.SubscriptionStatus =
+                    "Active";
+
+                store.IsSuspended =
+                    false;
+
+                await _storeRepository
+                    .UpdateAsync(store);
+            }
+            catch
+            {
+                // Do not leave an unused StoreOwner account
+                // if updating the Store fails.
+                await userManager.DeleteAsync(
+                    storeOwnerUser);
+
+                throw;
+            }
+
+            return (
+                storeOwnerEmail,
+                DefaultStoreOwnerPassword
+            );
         }
 
         public async Task RejectStoreAsync(int storeId)
@@ -261,6 +651,24 @@ namespace Multi_Store.Services.Managers
             return _storeRepository.DeleteProductReviewAsync(
                 reviewId,
                 storeOwnerId);
+        }
+        private static string GetIdentityErrors(
+    IdentityResult result)
+        {
+            return string.Join(
+                " | ",
+                result.Errors.Select(
+                    error => error.Description));
+        }
+
+        private static bool StatusEquals(
+            string? value,
+            string expected)
+        {
+            return string.Equals(
+                value?.Trim(),
+                expected,
+                StringComparison.OrdinalIgnoreCase);
         }
     }
 }
