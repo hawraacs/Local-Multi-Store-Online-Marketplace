@@ -157,6 +157,7 @@ builder.Services.AddScoped<IPromotionManager, PromotionManager>();
 
 builder.Services.AddScoped<OtpManager>();
 builder.Services.AddScoped<EmailotppManager>();
+builder.Services.AddScoped<SmsOtpManager>();
 
 
 var app = builder.Build();

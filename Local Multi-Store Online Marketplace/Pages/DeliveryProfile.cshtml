@@ -1,16 +1,25 @@
 ﻿@page "/DeliveryProfile"
 @model Local_Multi_Store_Online_Marketplace.Pages.DeliveryProfileModel
+
 @{
     Layout = null;
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
     <title>Delivery Profile</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             background: #f4f6f9;
@@ -33,7 +42,7 @@
             color: white;
             border-radius: 22px;
             padding: 26px;
-            box-shadow: 0 16px 35px rgba(15,23,42,.18);
+            box-shadow: 0 16px 35px rgba(15, 23, 42, .18);
             margin-bottom: 22px;
             display: flex;
             justify-content: space-between;
@@ -109,7 +118,7 @@
             border-radius: 18px;
             padding: 22px;
             border: 1px solid #e5e7eb;
-            box-shadow: 0 10px 25px rgba(15,23,42,.08);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, .08);
             margin-bottom: 20px;
         }
 
@@ -130,7 +139,7 @@
             border: 1px solid #e5e7eb;
             border-radius: 18px;
             padding: 18px;
-            box-shadow: 0 8px 20px rgba(15,23,42,.07);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, .07);
         }
 
             .stat-card span {
@@ -204,6 +213,7 @@
             border-radius: 13px;
             margin-bottom: 18px;
             font-weight: 900;
+            line-height: 1.5;
         }
 
         .error {
@@ -224,6 +234,27 @@
             border-radius: 13px;
             margin-bottom: 18px;
             font-weight: 800;
+            line-height: 1.5;
+        }
+
+            .validation-summary-errors ul {
+                margin: 0;
+                padding-left: 20px;
+            }
+
+        .validation-summary-valid {
+            display: none;
+        }
+
+        .field-validation-error {
+            color: #b91c1c;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .field-validation-valid {
+            display: none;
         }
 
         .form-grid {
@@ -250,18 +281,32 @@
 
         input,
         select {
+            width: 100%;
             padding: 12px 13px;
             border-radius: 12px;
             border: 1px solid #d1d5db;
             outline: none;
             font-size: 14px;
+            background: white;
         }
 
             input:focus,
             select:focus {
                 border-color: #1e3a5f;
-                box-shadow: 0 0 0 3px rgba(30,58,95,.12);
+                box-shadow: 0 0 0 3px rgba(30, 58, 95, .12);
             }
+
+        .readonly-input {
+            background: #f3f4f6;
+            color: #374151;
+            cursor: not-allowed;
+        }
+
+        .hint {
+            color: #6b7280;
+            font-size: 12px;
+            line-height: 1.4;
+        }
 
         .save-btn {
             margin-top: 16px;
@@ -279,6 +324,30 @@
             .save-btn:hover {
                 background: #ff6b35;
             }
+
+        .phone-divider {
+            margin: 24px 0;
+            border: none;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .phone-section-title {
+            font-size: 17px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .phone-description {
+            margin: 0 0 16px;
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .otp-form {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed #d1d5db;
+        }
 
         .assignment {
             border: 1px solid #e5e7eb;
@@ -345,124 +414,180 @@
 </head>
 
 <body>
+
     <partial name="_DeliveryNav" />
+
     <div class="page">
         <div class="container">
 
             @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
             {
-                <div class="error">@Model.ErrorMessage</div>
+                <div class="error">
+                    @Model.ErrorMessage
+                </div>
             }
             else
             {
                 <div class="top-card">
+
                     <div class="identity">
+
                         <div class="avatar">
                             @(string.IsNullOrWhiteSpace(Model.Profile.FullName)
                                 ? "D"
-                                : Model.Profile.FullName.Substring(0, 1).ToUpper())
+                                : Model.Profile.FullName
+                                .Substring(0, 1)
+                                .ToUpper())
                         </div>
 
                         <div>
                             <h1>@Model.Profile.FullName</h1>
+
                             <p>
                                 Delivery Partner • @Model.Profile.Area
                             </p>
                         </div>
+
                     </div>
 
                     <div class="top-actions">
-                        <a href="/DeliveryDashboard" class="btn btn-light">
+
+                        <a href="/DeliveryDashboard"
+                           class="btn btn-light">
                             ← Dashboard
                         </a>
 
-                        <a href="/DeliveryDashboard" class="btn btn-orange">
+                        <a href="/DeliveryDashboard"
+                           class="btn btn-orange">
                             My Deliveries
                         </a>
+
                     </div>
+
                 </div>
 
                 @if (TempData["Success"] != null)
                 {
-                    <div class="success">@TempData["Success"]</div>
+                    <div class="success">
+                        @TempData["Success"]
+                    </div>
                 }
 
                 <div asp-validation-summary="All"></div>
 
                 <div class="stats">
+
                     <div class="stat-card">
                         <span>Total Assignments</span>
-                        <strong>@Model.Profile.TotalAssignments</strong>
+                        <strong>
+                            @Model.Profile.TotalAssignments
+                        </strong>
                     </div>
 
                     <div class="stat-card">
                         <span>Today</span>
-                        <strong>@Model.Profile.TodayAssignments</strong>
+                        <strong>
+                            @Model.Profile.TodayAssignments
+                        </strong>
                     </div>
 
                     <div class="stat-card">
                         <span>Completed</span>
-                        <strong>@Model.Profile.CompletedDeliveries</strong>
+                        <strong>
+                            @Model.Profile.CompletedDeliveries
+                        </strong>
                     </div>
 
                     <div class="stat-card">
                         <span>Active</span>
-                        <strong>@Model.Profile.ActiveDeliveries</strong>
+                        <strong>
+                            @Model.Profile.ActiveDeliveries
+                        </strong>
                     </div>
+
                 </div>
 
                 <div class="grid">
+
                     <div>
+
                         <div class="card">
                             <h2>Profile Information</h2>
 
                             <div class="info-list">
+
                                 <div class="info-row">
                                     <label>Status</label>
+
                                     <span>
-                                        @if (Model.Profile.IsActive && Model.Profile.Status == "Approved")
+                                        @if (Model.Profile.IsActive &&
+                                       Model.Profile.Status == "Approved")
                                         {
-                                            <span class="badge badge-approved">Approved & Active</span>
+                                            <span class="badge badge-approved">
+                                                Approved & Active
+                                            </span>
                                         }
                                         else
                                         {
-                                            <span class="badge badge-off">@Model.Profile.Status</span>
+                                            <span class="badge badge-off">
+                                                @Model.Profile.Status
+                                            </span>
                                         }
                                     </span>
                                 </div>
 
                                 <div class="info-row">
                                     <label>Phone</label>
-                                    <span>@Model.Profile.PhoneNumber</span>
+
+                                    <span>
+                                        @Model.Profile.PhoneNumber
+                                    </span>
                                 </div>
 
                                 <div class="info-row">
                                     <label>Vehicle</label>
-                                    <span>@Model.Profile.VehicleType</span>
+
+                                    <span>
+                                        @Model.Profile.VehicleType
+                                    </span>
                                 </div>
 
                                 <div class="info-row">
                                     <label>Vehicle Number</label>
-                                    <span>@Model.Profile.VehicleNumber</span>
+
+                                    <span>
+                                        @Model.Profile.VehicleNumber
+                                    </span>
                                 </div>
 
                                 <div class="info-row">
                                     <label>License Number</label>
-                                    <span>@Model.Profile.DrivingLicenseNumber</span>
+
+                                    <span>
+                                        @Model.Profile.DrivingLicenseNumber
+                                    </span>
                                 </div>
 
                                 <div class="info-row">
                                     <label>Rating</label>
-                                    <span>⭐ @Model.Profile.Rating.ToString("0.0")</span>
+
+                                    <span>
+                                        ⭐ @Model.Profile.Rating.ToString("0.0")
+                                    </span>
                                 </div>
 
                                 <div class="info-row">
                                     <label>Approved At</label>
-                                    <span>@Model.FormatLocalTime(Model.Profile.ApprovedAt)</span>
+
+                                    <span>
+                                        @Model.FormatLocalTime(
+                                                 Model.Profile.ApprovedAt)
+                                    </span>
                                 </div>
 
                                 <div class="info-row">
                                     <label>Last Location</label>
+
                                     <span>
                                         @if (Model.Profile.CurrentLatitude.HasValue &&
                                        Model.Profile.CurrentLongitude.HasValue)
@@ -478,15 +603,24 @@
 
                                 <div class="info-row">
                                     <label>Location Updated</label>
-                                    <span>@Model.FormatLocalTime(Model.Profile.LastLocationUpdate)</span>
+
+                                    <span>
+                                        @Model.FormatLocalTime(
+                                                 Model.Profile.LastLocationUpdate)
+                                    </span>
                                 </div>
 
                                 <div class="info-row">
                                     <label>ID Proof</label>
+
                                     <span>
-                                        @if (!string.IsNullOrWhiteSpace(Model.Profile.IDProofURL))
+                                        @if (!string.IsNullOrWhiteSpace(
+                                       Model.Profile.IDProofURL))
                                         {
-                                            <a class="id-link" href="@Model.Profile.IDProofURL" target="_blank">
+                                            <a class="id-link"
+                                               href="@Model.Profile.IDProofURL"
+                                               target="_blank"
+                                               rel="noopener noreferrer">
                                                 View File
                                             </a>
                                         }
@@ -496,13 +630,15 @@
                                         }
                                     </span>
                                 </div>
+
                             </div>
                         </div>
 
                         <div class="card">
                             <h2>Active Deliveries</h2>
 
-                            @if (Model.ActiveAssignments == null || !Model.ActiveAssignments.Any())
+                            @if (Model.ActiveAssignments == null ||
+                           !Model.ActiveAssignments.Any())
                             {
                                 <div class="empty">
                                     No active deliveries right now.
@@ -510,136 +646,496 @@
                             }
                             else
                             {
-                                @foreach (var item in Model.ActiveAssignments)
+                                @foreach (var item in
+                               Model.ActiveAssignments)
                                 {
                                     <div class="assignment">
-                                        <h3>Order @item.OrderNumber</h3>
+
+                                        <h3>
+                                            Order @item.OrderNumber
+                                        </h3>
 
                                         <p>
-                                            <strong>Assignment:</strong>
-                                            <span class="badge badge-busy">@item.AssignmentStatus</span>
+                                            <strong>
+                                                Assignment:
+                                            </strong>
+
+                                            <span class="badge badge-busy">
+                                                @item.AssignmentStatus
+                                            </span>
                                         </p>
 
                                         <p>
-                                            <strong>Order Status:</strong>
+                                            <strong>
+                                                Order Status:
+                                            </strong>
+
                                             @item.OrderStatus
                                         </p>
 
                                         <p>
-                                            <strong>Address:</strong>
+                                            <strong>
+                                                Address:
+                                            </strong>
+
                                             @item.CustomerAddress
                                         </p>
 
                                         <p>
-                                            <strong>Total:</strong>
+                                            <strong>
+                                                Total:
+                                            </strong>
+
                                             $@item.TotalAmount.ToString("N2")
                                         </p>
 
                                         <p>
-                                            <strong>Payment:</strong>
-                                            @item.PaymentMethod - @item.PaymentStatus
+                                            <strong>
+                                                Payment:
+                                            </strong>
+
+                                            @item.PaymentMethod
+                                            -
+                                            @item.PaymentStatus
                                         </p>
 
                                         <p>
-                                            <strong>Assigned:</strong>
-                                            @Model.FormatLocalTime(item.AssignedAt)
+                                            <strong>
+                                                Assigned:
+                                            </strong>
+
+                                            @Model.FormatLocalTime(
+                                                     item.AssignedAt)
                                         </p>
 
-                                        <a href="/DeliveryDashboard" class="btn btn-orange">
+                                        <a href="/DeliveryDashboard"
+                                           class="btn btn-orange">
                                             Manage Delivery
                                         </a>
+
                                     </div>
                                 }
                             }
                         </div>
+
                     </div>
 
                     <div>
+
                         <div class="card">
                             <h2>Edit Delivery Profile</h2>
 
-                            <form method="post" asp-page-handler="Update">
+                            @* ==========================================
+                               FORM 1: UPDATE NORMAL PROFILE INFORMATION
+                               ========================================== *@
+
+                            <form method="post"
+                                  asp-page-handler="Update">
+
                                 <div class="form-grid">
-                                    <div class="form-group full">
-                                        <label>Full Name</label>
-                                        <input asp-for="Input.FullName" />
-                                    </div>
+
+
 
                                     <div class="form-group full">
-                                        <label>Phone Number</label>
-                                        <input asp-for="Input.PhoneNumber" />
+
+
+                                        <label asp-for="Input.FullName">
+
+
+                                            Full Name
+
+
+                                        </label>
+
+
+
+                                        <input asp-for="Input.FullName"
+                                               maxlength="100"
+                                               placeholder="Enter full name" />
+
+
+
+                                        <span asp-validation-for="Input.FullName"
+                                              class="field-validation-error">
+
+
+                                        </span>
+
+
+                                    </div>
+
+
+
+                                    <div class="form-group full">
+                                        <label asp-for="Input.PhoneNumber">
+                                            Current Phone Number
+                                        </label>
+
+                                        @if (Model.CanEditPhoneNumber)
+                                        {
+                                            <input asp-for="Input.PhoneNumber"
+                                                   type="tel"
+                                                   inputmode="tel"
+                                                   autocomplete="tel"
+                                                   maxlength="20"
+                                                   placeholder="+96176123456" />
+
+                                            <span asp-validation-for="Input.PhoneNumber"
+                                                  class="field-validation-error">
+                                            </span>
+
+                                            <span class="hint">
+                                                Current phone verified.
+                                                You can edit this number
+                                                and click Save Changes
+                                                within 10 minutes.
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <input asp-for="Input.PhoneNumber"
+                                                   class="readonly-input"
+                                                   readonly
+                                                   aria-readonly="true" />
+
+                                            <span class="hint">
+                                                Verify your current phone
+                                                below before editing this
+                                                number.
+                                            </span>
+                                        }
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Vehicle Type</label>
-                                        <select asp-for="Input.VehicleType">
-                                            <option value="">Select vehicle type</option>
-                                            <option value="Motorcycle">Motorcycle</option>
-                                            <option value="Car">Car</option>
-                                            <option value="Van">Van</option>
-                                            <option value="Bicycle">Bicycle</option>
+                                        <label asp-for="Input.VehicleType">
+                                            Vehicle Type
+                                        </label>
+
+                                        <select asp-for="Input.VehicleType"
+                                                id="profileVehicleType"
+                                                onchange="updateProfileVehicleFields()">
+
+                                            <option value="">
+                                                Select vehicle type
+                                            </option>
+
+                                            <option value="Motorcycle">
+                                                Motorcycle
+                                            </option>
+
+                                            <option value="Car">
+                                                Car
+                                            </option>
+
+                                            <option value="Van">
+                                                Van
+                                            </option>
+
+                                            <option value="Bicycle">
+                                                Bicycle
+                                            </option>
                                         </select>
+
+                                        <span asp-validation-for="Input.VehicleType"
+                                              class="field-validation-error">
+                                        </span>
+                                    </div>
+
+                                    <div class="form-group"
+                                         id="profileVehicleNumberGroup">
+
+                                        <label asp-for="Input.VehicleNumber">
+                                            Vehicle Number
+                                        </label>
+
+                                        <input asp-for="Input.VehicleNumber"
+                                               id="profileVehicleNumber"
+                                               maxlength="20"
+                                               placeholder="Example: B 123456" />
+
+                                        <span asp-validation-for="Input.VehicleNumber"
+                                              class="field-validation-error">
+                                        </span>
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Vehicle Number</label>
-                                        <input asp-for="Input.VehicleNumber" />
-                                    </div>
+                                        <label asp-for="Input.Area">
+                                            Working Area
+                                        </label>
 
-                                    <div class="form-group">
-                                        <label>Working Area</label>
                                         <select asp-for="Input.Area">
-                                            <option value="">Select your area</option>
-                                            <option value="Beirut">Beirut</option>
-                                            <option value="Mount Lebanon">Mount Lebanon</option>
-                                            <option value="Tripoli">Tripoli</option>
-                                            <option value="Saida">Saida</option>
-                                            <option value="Tyre">Tyre</option>
-                                            <option value="Zahle">Zahle</option>
-                                            <option value="Bekaa">Bekaa</option>
-                                            <option value="Jounieh">Jounieh</option>
-                                            <option value="Byblos">Byblos</option>
-                                            <option value="Nabatieh">Nabatieh</option>
+
+                                            <option value="">
+                                                Select your area
+                                            </option>
+
+                                            <option value="Beirut">
+                                                Beirut
+                                            </option>
+
+                                            <option value="Mount Lebanon">
+                                                Mount Lebanon
+                                            </option>
+
+                                            <option value="Tripoli">
+                                                Tripoli
+                                            </option>
+
+                                            <option value="Saida">
+                                                Saida
+                                            </option>
+
+                                            <option value="Tyre">
+                                                Tyre
+                                            </option>
+
+                                            <option value="Zahle">
+                                                Zahle
+                                            </option>
+
+                                            <option value="Bekaa">
+                                                Bekaa
+                                            </option>
+
+                                            <option value="Jounieh">
+                                                Jounieh
+                                            </option>
+
+                                            <option value="Byblos">
+                                                Byblos
+                                            </option>
+
+                                            <option value="Nabatieh">
+                                                Nabatieh
+                                            </option>
+
                                         </select>
+
+                                        <span asp-validation-for="Input.Area"
+                                              class="field-validation-error">
+                                        </span>
                                     </div>
 
-                                    <div class="form-group">
-                                        <label>Driving License Number</label>
-                                        <input asp-for="Input.DrivingLicenseNumber" />
+                                    <div class="form-group"
+                                         id="profileLicenseGroup">
+
+                                        <label asp-for="Input.DrivingLicenseNumber">
+                                            Driving License Number
+                                        </label>
+
+                                        <input asp-for="Input.DrivingLicenseNumber"
+                                               id="profileLicenseNumber"
+                                               maxlength="25"
+                                               placeholder="Enter license number" />
+
+                                        <span asp-validation-for="Input.DrivingLicenseNumber"
+                                              class="field-validation-error">
+                                        </span>
                                     </div>
+
                                 </div>
 
-                                <button type="submit" class="save-btn">
+                                <button type="submit"
+                                        class="save-btn">
                                     Save Changes
                                 </button>
+
                             </form>
+
+                            <hr class="phone-divider" />
+
+                            @if (!Model.CanEditPhoneNumber)
+                            {
+                                <h2 class="phone-section-title">
+                                    Verify Current Phone
+                                </h2>
+
+                                <p class="phone-description">
+                                    For security, a verification code will be
+                                    sent by SMS to your current phone number:
+                                    <strong>@Model.Profile.PhoneNumber</strong>.
+                                </p>
+
+                                @if (!string.IsNullOrWhiteSpace(
+                               Model.PhoneMessage))
+                                {
+                                    <div class="success">
+                                        @Model.PhoneMessage
+                                    </div>
+                                }
+
+                                <form method="post"
+                                      asp-page-handler="SendPhoneOtp">
+
+                                    <button type="submit"
+                                            class="save-btn">
+                                        Send OTP to Current Phone
+                                    </button>
+
+                                </form>
+
+                                @if (Model.ShowPhoneOtpForm)
+                                {
+                                    <form method="post"
+                                          asp-page-handler="VerifyPhoneOtp"
+                                          class="otp-form">
+
+                                        <div class="form-group full">
+                                            <label asp-for="PhoneOtpCode">
+                                                OTP Code
+                                            </label>
+
+                                            <input asp-for="PhoneOtpCode"
+                                                   type="text"
+                                                   inputmode="numeric"
+                                                   autocomplete="one-time-code"
+                                                   maxlength="10"
+                                                   placeholder="Enter verification code" />
+
+                                            <span asp-validation-for="PhoneOtpCode"
+                                                  class="field-validation-error">
+                                            </span>
+
+                                            <span class="hint">
+                                                Enter the code sent to
+                                                @Model.Profile.PhoneNumber
+                                            </span>
+                                        </div>
+
+                                        <button type="submit"
+                                                class="save-btn">
+                                            Verify Current Phone
+                                        </button>
+
+                                    </form>
+                                }
+                            }
+                            else
+                            {
+                                <h2 class="phone-section-title">
+                                    Phone Editing Enabled
+                                </h2>
+
+                                <div class="success">
+                                    Your current phone was verified.
+                                    Edit the Current Phone Number field above,
+                                    then click Save Changes. Editing remains
+                                    available for 10 minutes.
+                                </div>
+                            }
+
                         </div>
 
                         <div class="card">
                             <h2>Profile Notes</h2>
 
                             <div class="info-list">
+
                                 <div class="info-row">
                                     <label>GPS Tracking</label>
-                                    <span>Updated from dashboard</span>
+
+                                    <span>
+                                        Updated from dashboard
+                                    </span>
                                 </div>
 
                                 <div class="info-row">
                                     <label>Order Actions</label>
-                                    <span>Use Delivery Dashboard</span>
+
+                                    <span>
+                                        Use Delivery Dashboard
+                                    </span>
                                 </div>
 
                                 <div class="info-row">
                                     <label>Approval</label>
-                                    <span>Managed by Admin</span>
+
+                                    <span>
+                                        Managed by Admin
+                                    </span>
                                 </div>
+
                             </div>
                         </div>
+
                     </div>
+
                 </div>
             }
 
         </div>
     </div>
+
+    <script>
+        function updateProfileVehicleFields() {
+            const vehicleType =
+                document.getElementById(
+                    "profileVehicleType");
+
+            const vehicleNumberGroup =
+                document.getElementById(
+                    "profileVehicleNumberGroup");
+
+            const licenseGroup =
+                document.getElementById(
+                    "profileLicenseGroup");
+
+            const vehicleNumber =
+                document.getElementById(
+                    "profileVehicleNumber");
+
+            const licenseNumber =
+                document.getElementById(
+                    "profileLicenseNumber");
+
+            if (!vehicleType ||
+                !vehicleNumberGroup ||
+                !licenseGroup ||
+                !vehicleNumber ||
+                !licenseNumber) {
+                return;
+            }
+
+            const isMotorVehicle =
+                vehicleType.value === "Motorcycle" ||
+                vehicleType.value === "Car" ||
+                vehicleType.value === "Van";
+
+            const isBicycle =
+                vehicleType.value === "Bicycle";
+
+            vehicleNumber.required =
+                isMotorVehicle;
+
+            licenseNumber.required =
+                isMotorVehicle;
+
+            if (isBicycle) {
+                vehicleNumberGroup.style.display =
+                    "none";
+
+                licenseGroup.style.display =
+                    "none";
+
+                vehicleNumber.value =
+                    "";
+
+                licenseNumber.value =
+                    "";
+            }
+            else {
+                vehicleNumberGroup.style.display =
+                    "flex";
+
+                licenseGroup.style.display =
+                    "flex";
+            }
+        }
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            updateProfileVehicleFields);
+    </script>
+
 </body>
 </html>
