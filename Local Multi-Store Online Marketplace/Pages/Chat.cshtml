@@ -402,6 +402,27 @@
             font-size: 14px;
         }
 
+
+        .unread-badge {
+            background: var(--accent-gradient);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+        }
+
+        .chat-item.unread .name,
+        .chat-item.unread .last-message {
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
         /* RESPONSIVE DESIGN */
         @@media (max-width: 768px) {
             .topbar .menu {
@@ -432,7 +453,7 @@
     </style>
 </head>
 <body>
-<<<<<<< HEAD
+
 
     <!-- DESKTOP TOP BAR -->
     <div class="topbar">
@@ -550,7 +571,7 @@
                 {
                     var online = await Model.IsOnline(chat.UserId);
 
-                    <a class="chat-item"
+                    <a class="chat-item @(chat.UnreadCount > 0 ? "unread" : "")"
                        asp-page="/ChatConversation"
                        asp-route-userId="@chat.UserId">
 
@@ -573,14 +594,21 @@
                             </div>
                         </div>
 
-                        <div class="right-status @(online ? "online" : "offline")">
-                            <i class="fa-solid fa-circle" style="font-size: 8px;"></i>
-                            @(online ? "Online" : "Offline")
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                            <div class="right-status @(online ? "online" : "offline")">
+                                <i class="fa-solid fa-circle" style="font-size: 8px;"></i>
+                                @(online ? "Online" : "Offline")
+                            </div>
+                            @if (chat.UnreadCount > 0)
+                            {
+                                <div class="unread-badge">@chat.UnreadCount</div>
+                            }
                         </div>
 
                     </a>
                 }
-            }
+                }
+            
             else
             {
                 <div class="empty">
