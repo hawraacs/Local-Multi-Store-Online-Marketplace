@@ -407,10 +407,13 @@
             flex-direction: column;
         }
 
-        @@media (min-width: 768px) {
-            .product-modal-content {
-                flex-direction: row;
-            }
+       @@media (min-width: 768px) {
+            .product-modal-content
+
+        {
+            flex-direction: row;
+        }
+
         }
 
         .product-modal-media {
@@ -419,6 +422,7 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            position: relative;
         }
 
             .product-modal-media img {
@@ -428,13 +432,16 @@
             }
 
         @@media (min-width: 768px) {
-            .product-modal-media {
-                width: 55%;
-            }
+            .product-modal-media
 
-                .product-modal-media img {
-                    max-height: 100%;
-                }
+        {
+            width: 55%;
+        }
+
+        .product-modal-media img {
+            max-height: 100%;
+        }
+
         }
 
         .product-modal-info {
@@ -526,6 +533,64 @@
                 margin-bottom: 10px;
             }
 
+        /* Lightbox nav arrows */
+        .modal-nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1100;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #dbdbdb;
+            color: #262626;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            transition: background-color 0.15s ease, transform 0.15s ease;
+        }
+
+            .modal-nav-arrow:hover {
+                background: #ffffff;
+                transform: translateY(-50%) scale(1.05);
+            }
+
+            .modal-nav-arrow.prev {
+                left: 24px;
+            }
+
+            .modal-nav-arrow.next {
+                right: 24px;
+            }
+
+            .modal-nav-arrow.disabled {
+                opacity: 0.3;
+                pointer-events: none;
+            }
+
+        @@media (max-width: 640px) {
+            .modal-nav-arrow
+
+        {
+            width: 36px;
+            height: 36px;
+            font-size: 15px;
+        }
+
+        .modal-nav-arrow.prev {
+            left: 8px;
+        }
+
+        .modal-nav-arrow.next {
+            right: 8px;
+        }
+
+        }
+
         footer {
             text-align: center;
             padding: 40px 20px;
@@ -536,25 +601,28 @@
         }
 
         @@media (max-width: 768px) {
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
-                gap: 24px;
-                padding-bottom: 24px;
-            }
+            .profile-header
 
-            .profile-stats-row {
-                justify-content: center;
-            }
+        {
+            flex-direction: column;
+            text-align: center;
+            gap: 24px;
+            padding-bottom: 24px;
+        }
 
-            .instagram-grid {
-                grid-template-columns: repeat(1, 1fr);
-                gap: 16px;
-            }
+        .profile-stats-row {
+            justify-content: center;
+        }
 
-            .profile-tabs {
-                gap: 20px;
-            }
+        .instagram-grid {
+            grid-template-columns: repeat(1, 1fr);
+            gap: 16px;
+        }
+
+        .profile-tabs {
+            gap: 20px;
+        }
+
         }
     </style>
 </head>
@@ -661,12 +729,20 @@
 
     </div>
 
+    <!-- Nav arrows sit outside the modals, shown/hidden by JS -->
+    <div class="modal-nav-arrow prev" id="navPrev" onclick="goToAdjacentProduct(-1)">
+        <i class="fas fa-chevron-left"></i>
+    </div>
+    <div class="modal-nav-arrow next" id="navNext" onclick="goToAdjacentProduct(1)">
+        <i class="fas fa-chevron-right"></i>
+    </div>
+
     <!-- One modal per product -->
     @foreach (var p in Model.Products)
     {
         var img = p.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
 
-        <div id="modal-@p.ProductID" class="modal" onclick="handleOutsideClick(event, @p.ProductID)">
+        <div id="modal-@p.ProductID" class="modal" data-product-id="@p.ProductID" onclick="handleOutsideClick(event, @p.ProductID)">
             <div class="product-modal-content" onclick="event.stopPropagation()">
 
                 <div class="product-modal-media">
@@ -738,11 +814,18 @@
     </footer>
 
     <script>
+        // Ordered list of product IDs, in the same order they appear in the grid.
+        // Used to figure out "next" and "previous" when navigating like an Instagram lightbox.
+        const productOrder = [@Html.Raw(string.Join(",", Model.Products.Select(p => p.ProductID)))];
+        let currentProductId = null;
+
         function openProductModal(id) {
             const modal = document.getElementById('modal-' + id);
             if (modal) {
                 modal.classList.add('flex');
                 document.body.style.overflow = 'hidden';
+                currentProductId = id;
+                updateNavArrows();
             }
         }
 
@@ -751,6 +834,8 @@
             if (modal) {
                 modal.classList.remove('flex');
                 document.body.style.overflow = '';
+                currentProductId = null;
+                hideNavArrows();
             }
         }
 
@@ -761,7 +846,83 @@
             }
         }
 
+        function updateNavArrows() {
+            const navPrev = document.getElementById('navPrev');
+            const navNext = document.getElementById('navNext');
+            if (currentProductId === null) {
+                hideNavArrows();
+                return;
+            }
+
+            const index = productOrder.indexOf(currentProductId);
+            navPrev.style.display = 'flex';
+            navNext.style.display = 'flex';
+
+            navPrev.classList.toggle('disabled', index <= 0);
+            navNext.classList.toggle('disabled', index === -1 || index >= productOrder.length - 1);
+        }
+
+        function hideNavArrows() {
+            document.getElementById('navPrev').style.display = 'none';
+            document.getElementById('navNext').style.display = 'none';
+        }
+
+        // direction: -1 for previous post, 1 for next post
+        function goToAdjacentProduct(direction) {
+            if (currentProductId === null) return;
+
+            const index = productOrder.indexOf(currentProductId);
+            const newIndex = index + direction;
+
+            if (newIndex < 0 || newIndex >= productOrder.length) return;
+
+            const newId = productOrder[newIndex];
+            closeProductModal(currentProductId);
+            openProductModal(newId);
+        }
+
+        // Keyboard navigation: left/right arrows move between posts, Escape closes
+        document.addEventListener('keydown', function (e) {
+            if (currentProductId === null) return;
+
+            if (e.key === 'ArrowRight') {
+                goToAdjacentProduct(1);
+            } else if (e.key === 'ArrowLeft') {
+                goToAdjacentProduct(-1);
+            } else if (e.key === 'Escape') {
+                closeProductModal(currentProductId);
+            }
+        });
+
+        // Swipe navigation for touch devices
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const SWIPE_THRESHOLD = 50;
+
+        document.addEventListener('touchstart', function (e) {
+            if (currentProductId === null) return;
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', function (e) {
+            if (currentProductId === null) return;
+            touchEndX = e.changedTouches[0].screenX;
+            const diff = touchEndX - touchStartX;
+
+            if (Math.abs(diff) < SWIPE_THRESHOLD) return;
+
+            if (diff < 0) {
+                // swiped left -> next post
+                goToAdjacentProduct(1);
+            } else {
+                // swiped right -> previous post
+                goToAdjacentProduct(-1);
+            }
+        }, { passive: true });
+
         window.onload = function () {
+            hideNavArrows();
+
             const params = new URLSearchParams(window.location.search);
             const productId = params.get('productId');
 

@@ -2,118 +2,156 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Home";
+    Layout = null;
 }
 
-@section Styles {
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Realnest</title>
+
+    <!-- Bootstrap 5 (no longer inherited from _Layout since this page is standalone) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" />
+
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
         :root {
-            --bg-color: #fdfbf7; /* Cozy warm white canvas */
+            --bg-color: #f8f7fc;
             --card-bg: #ffffff;
-            --border-color: #f3ece3; /* Soft warm borders */
-            --text-primary: #1c1917; /* Slate dark brown/black */
-            --text-secondary: #78716c; /* Elegant muted stone gray */
-            /* White & Orange Sunset Palette */
-            --accent-color: #ff6b35; /* Radiant bright orange */
-            --accent-hover: #f05a22; /* Rich dark orange */
-            --accent-light: #fff1eb; /* Pastel orange tint */
-            --accent-gradient: linear-gradient(135deg, #ff9f43 0%, #ff6b35 50%, #f05a22 100%); /* Orange-to-coral punch */
-
-            --success-color: #10b981; /* Healthy green */
+            --border-color: #ece8f6;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-steel: #4f46e5;
+            --accent-light: #f3effe;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            --success-color: #10b981;
             --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --shadow-sm: 0 4px 12px rgba(255, 107, 53, 0.04);
-            --shadow-md: 0 10px 30px rgba(255, 107, 53, 0.08);
-            --shadow-lg: 0 20px 40px rgba(255, 107, 53, 0.12);
+            --shadow-sm: 0 4px 12px rgba(30, 27, 46, 0.04);
+            --shadow-md: 0 10px 30px rgba(30, 27, 46, 0.07);
+            --shadow-lg: 0 20px 40px rgba(30, 27, 46, 0.1);
+        }
+
+        body {
+            margin: 0;
         }
 
         .home-wrapper {
-            margin-left: calc(50% - 50vw);
-            margin-right: calc(50% - 50vw);
             background: var(--bg-color);
             color: var(--text-primary);
-            overflow: hidden;
             font-family: var(--font-family);
         }
 
-        .home-hero {
-            min-height: 86vh;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 80px 24px;
-            background: radial-gradient(circle at 12% 18%, rgba(255, 107, 53, 0.08), transparent 38%), radial-gradient(circle at 88% 28%, rgba(245, 158, 11, 0.06), transparent 34%), #fdfbf7;
+        /* Reveal-on-scroll base state */
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
         }
 
-            .home-hero::before {
-                content: "";
-                position: absolute;
-                inset: 0;
-                background-image: linear-gradient(rgba(255, 107, 53, 0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 107, 53, 0.015) 1px, transparent 1px);
-                background-size: 58px 58px;
+            .reveal.is-visible {
                 opacity: 1;
-                pointer-events: none;
+                transform: translateY(0);
             }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .reveal {
+                opacity: 1;
+                transform: none;
+                transition: none;
+            }
+        }
+
+        /* HERO */
+        .home-hero {
+            position: relative;
+            overflow: hidden;
+            padding: 6rem 0 5rem;
+            background: linear-gradient(120deg, rgba(30, 20, 60, 0.82) 0%, rgba(76, 29, 149, 0.68) 55%, rgba(79, 70, 229, 0.55) 100%), url('https://images.unsplash.com/photo-1535400615069-ca160e4e8de5?auto=format&fit=crop&w=1740&q=80') center/cover no-repeat;
+        }
 
             .home-hero::after {
                 content: "";
                 position: absolute;
-                width: 520px;
-                height: 520px;
-                border-radius: 50%;
-                background: rgba(255, 107, 53, 0.04);
-                filter: blur(100px);
-                bottom: -190px;
-                right: -130px;
+                inset: 0;
+                background: radial-gradient(circle at 85% 15%, rgba(124, 58, 237, 0.35), transparent 45%);
                 pointer-events: none;
             }
 
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            max-width: 1120px;
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1.05fr 0.95fr;
-            align-items: center;
-            gap: 50px;
+        .hero-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            pointer-events: none;
+            opacity: 0.55;
+            animation: float 9s ease-in-out infinite;
+        }
+
+        .hero-orb-1 {
+            width: 260px;
+            height: 260px;
+            background: #a78bfa;
+            top: -60px;
+            left: -60px;
+            animation-delay: 0s;
+        }
+
+        .hero-orb-2 {
+            width: 200px;
+            height: 200px;
+            background: #818cf8;
+            bottom: -50px;
+            right: 8%;
+            animation-delay: 2.5s;
+        }
+
+        @@keyframes float {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-22px) scale(1.05);
+            }
         }
 
         .hero-text-panel {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid var(--border-color);
-            border-radius: 30px;
-            padding: 52px 46px;
-            box-shadow: var(--shadow-lg);
+            position: relative;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.97);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 1.75rem;
+            padding: 3rem 2.75rem;
+            box-shadow: 0 30px 60px rgba(15, 10, 35, 0.35);
             backdrop-filter: blur(14px);
+            height: 100%;
         }
 
         .hero-badge {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 0.6rem;
             background: var(--accent-light);
-            border: 1px solid rgba(255, 107, 53, 0.15);
+            border: 1px solid rgba(109, 40, 217, 0.15);
             color: var(--accent-color);
-            padding: 10px 18px;
+            padding: 0.55rem 1.1rem;
             border-radius: 999px;
-            font-size: 13px;
+            font-size: 0.8rem;
             font-weight: 800;
-            margin-bottom: 24px;
         }
 
-            .hero-badge i {
-                color: var(--accent-color);
-            }
-
         .hero-title {
-            font-size: 58px;
+            font-size: clamp(2.1rem, 4vw, 3.5rem);
             line-height: 1.1;
-            letter-spacing: -1.6px;
+            letter-spacing: -1.2px;
             font-weight: 900;
-            margin-bottom: 24px;
             color: var(--text-primary);
         }
 
@@ -124,41 +162,35 @@
             }
 
         .hero-description {
-            font-size: 17px;
+            font-size: 1.05rem;
             line-height: 1.7;
             color: var(--text-secondary);
-            margin-bottom: 34px;
             max-width: 620px;
-        }
-
-        .hero-actions {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            align-items: center;
         }
 
         .hero-btn {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            padding: 15px 30px;
-            border-radius: 50px;
+            gap: 0.6rem;
+            padding: 0.85rem 1.85rem;
+            border-radius: 0.65rem;
             font-weight: 800;
             text-decoration: none;
+            font-size: 0.95rem;
             transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            font-size: 15px;
+            border: none;
         }
 
         .hero-btn-primary {
             background: var(--accent-gradient);
             color: white;
-            box-shadow: 0 10px 25px rgba(255, 107, 53, 0.3);
+            box-shadow: 0 10px 25px rgba(109, 40, 217, 0.3);
         }
 
             .hero-btn-primary:hover {
-                box-shadow: 0 14px 30px rgba(255, 107, 53, 0.4);
+                box-shadow: 0 14px 32px rgba(109, 40, 217, 0.42);
                 transform: translateY(-3px);
+                color: white;
             }
 
         .hero-btn-secondary {
@@ -177,55 +209,31 @@
 
         .hero-card {
             position: relative;
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid var(--border-color);
-            border-radius: 30px;
-            padding: 24px;
-            box-shadow: var(--shadow-md);
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 1.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 20px 50px rgba(10, 6, 30, 0.3);
             backdrop-filter: blur(18px);
+            height: 100%;
         }
-
-            .hero-card::before {
-                content: "";
-                position: absolute;
-                inset: -1px;
-                border-radius: 30px;
-                background: linear-gradient(135deg, rgba(255,161,67,0.2), transparent, rgba(255,107,53,0.15));
-                z-index: -1;
-            }
 
         .market-card {
             background: #ffffff;
-            color: var(--text-primary);
-            border-radius: 24px;
-            padding: 24px;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
             box-shadow: var(--shadow-lg);
-            border: 1px solid rgba(255, 107, 53, 0.05);
-        }
-
-        .market-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 22px;
-        }
-
-        .market-card-title {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--text-primary);
+            border: 1px solid rgba(109, 40, 217, 0.06);
         }
 
         .market-pill {
             background: var(--accent-light);
             color: var(--accent-color);
-            padding: 6px 14px;
+            padding: 0.35rem 0.85rem;
             border-radius: 50px;
-            font-size: 12px;
+            font-size: 0.7rem;
             font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
             .market-pill::before {
@@ -233,19 +241,29 @@
                 width: 6px;
                 height: 6px;
                 border-radius: 50%;
-                background-color: var(--accent-color);
+                background-color: var(--success-color);
                 display: inline-block;
+                margin-right: 0.35rem;
+                animation: pulse-dot 1.8s ease-in-out infinite;
             }
 
+        @@keyframes pulse-dot {
+            0%, 100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.35;
+            }
+        }
+
         .product-preview {
-            display: grid;
-            grid-template-columns: 82px 1fr;
-            gap: 16px;
+            display: flex;
             align-items: center;
-            padding: 14px;
-            border-radius: 20px;
+            gap: 1rem;
+            padding: 0.85rem;
+            border-radius: 1.1rem;
             background: var(--bg-color);
-            margin-bottom: 14px;
             border: 1px solid var(--border-color);
             transition: all 0.25s ease;
         }
@@ -253,25 +271,29 @@
             .product-preview:hover {
                 transform: translateY(-3px);
                 box-shadow: var(--shadow-md);
-                border-color: var(--accent-color);
+                border-color: var(--accent-steel);
             }
 
-        .product-icon {
-            width: 82px;
-            height: 82px;
-            border-radius: 16px;
-            background: var(--accent-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            color: var(--accent-color);
+        .product-thumb {
+            flex: 0 0 64px;
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            overflow: hidden;
             box-shadow: var(--shadow-sm);
+            position: relative;
         }
 
+            .product-thumb img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+            }
+
         .product-preview h4 {
-            margin: 0 0 6px;
-            font-size: 15px;
+            margin: 0 0 0.2rem;
+            font-size: 0.95rem;
             font-weight: 800;
             color: var(--text-primary);
         }
@@ -279,315 +301,505 @@
         .product-preview p {
             margin: 0;
             color: var(--text-secondary);
-            font-size: 12px;
-        }
-
-        .product-preview strong {
-            display: block;
-            margin-top: 6px;
-            color: var(--accent-color);
-            font-size: 13px;
-            font-weight: 800;
-        }
-
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 18px;
+            font-size: 0.78rem;
         }
 
         .stat-box {
             background: var(--bg-color);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 14px;
+            border-radius: 1rem;
+            padding: 0.85rem;
             text-align: center;
-            transition: border-color 0.2s ease;
+            transition: border-color 0.2s ease, transform 0.2s ease;
         }
 
             .stat-box:hover {
-                border-color: var(--accent-color);
+                border-color: var(--accent-steel);
+                transform: translateY(-2px);
             }
 
             .stat-box strong {
                 display: block;
-                font-size: 18px;
+                font-size: 1.1rem;
                 color: var(--accent-color);
                 font-weight: 800;
             }
 
             .stat-box span {
-                font-size: 11px;
+                font-size: 0.68rem;
                 color: var(--text-secondary);
                 font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
             }
 
-        /* FEATURES SECTION */
-        .home-features {
-            background: #faf8f5;
-            padding: 80px 24px;
+        /* SECTION HEADINGS (shared) */
+        .section-eyebrow {
+            display: inline-block;
+            color: var(--accent-color);
+            font-weight: 800;
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+        }
+
+        .section-heading {
+            font-size: clamp(1.6rem, 3vw, 2.1rem);
+            font-weight: 900;
+            letter-spacing: -0.8px;
+            color: var(--text-primary);
+        }
+
+        .section-subtext {
+            color: var(--text-secondary);
+            font-size: 0.98rem;
+            max-width: 560px;
+        }
+
+        /* HOW IT WORKS */
+        .home-how {
+            padding: 5rem 0;
+            background: var(--card-bg);
             border-top: 1px solid var(--border-color);
         }
 
-        .features-container {
-            max-width: 1120px;
-            margin: auto;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 28px;
+        .how-step {
+            position: relative;
+            height: 100%;
+            padding: 0 0.5rem;
+        }
+
+        .how-step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.85rem;
+            background: var(--accent-gradient);
+            color: #fff;
+            font-weight: 900;
+            font-size: 1.15rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 10px 20px rgba(109, 40, 217, 0.2);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .how-step:hover .how-step-number {
+            transform: scale(1.08) rotate(-4deg);
+        }
+
+        .how-step h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .how-step p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .how-step-connector {
+            display: none;
+        }
+
+        @@media (min-width: 992px) {
+            .how-step-connector {
+                display: block;
+                position: absolute;
+                top: 1.5rem;
+                left: calc(100% - 0.5rem);
+                width: calc(100% - 2rem);
+                height: 2px;
+                background: repeating-linear-gradient(90deg, var(--border-color) 0 8px, transparent 8px 14px);
+            }
+        }
+
+        /* GALLERY STRIP */
+        .home-gallery {
+            padding: 5rem 0;
+            background: var(--bg-color);
+        }
+
+        .gallery-tile {
+            position: relative;
+            border-radius: 1.25rem;
+            overflow: hidden;
+            height: 220px;
+            box-shadow: var(--shadow-md);
+        }
+
+            .gallery-tile img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+                transition: transform 0.6s ease;
+            }
+
+            .gallery-tile:hover img {
+                transform: scale(1.08);
+            }
+
+            .gallery-tile::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(180deg, transparent 45%, rgba(20, 14, 40, 0.75) 100%);
+            }
+
+        .gallery-caption {
+            position: absolute;
+            left: 1.1rem;
+            bottom: 0.9rem;
+            z-index: 2;
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.95rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* FEATURES SECTION */
+        .home-features {
+            background: #f2f0f9;
+            padding: 5rem 0;
+            border-top: 1px solid var(--border-color);
         }
 
         .feature-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 38px 28px;
+            border-radius: 1.5rem;
+            padding: 2.4rem 1.75rem;
             text-align: center;
+            height: 100%;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: var(--shadow-sm);
         }
 
             .feature-card:hover {
                 transform: translateY(-6px);
-                border-color: var(--accent-color);
+                border-color: var(--accent-steel);
                 box-shadow: var(--shadow-lg);
             }
 
             .feature-card i {
-                width: 66px;
-                height: 66px;
+                width: 62px;
+                height: 62px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
                 background: var(--accent-light);
                 color: var(--accent-color);
-                border-radius: 20px;
-                font-size: 26px;
-                margin-bottom: 22px;
+                border-radius: 18px;
+                font-size: 1.5rem;
+                margin-bottom: 1.3rem;
                 box-shadow: var(--shadow-sm);
+                transition: transform 0.3s ease;
+            }
+
+            .feature-card:hover i {
+                transform: scale(1.1) rotate(-6deg);
             }
 
             .feature-card h3 {
                 color: var(--text-primary);
-                font-size: 20px;
+                font-size: 1.15rem;
                 font-weight: 800;
-                margin-bottom: 12px;
+                margin-bottom: 0.6rem;
             }
 
             .feature-card p {
                 color: var(--text-secondary);
                 line-height: 1.6;
                 margin: 0;
-                font-size: 14px;
+                font-size: 0.88rem;
             }
 
-        /* RESPONSIVE STYLES */
-        @@media (max-width: 950px) {
-            .hero-content {
-                grid-template-columns: 1fr;
-                gap: 40px;
-            }
-
-            .hero-title {
-                font-size: 44px;
-            }
-
+        @@media (max-width: 991.98px) {
             .hero-text-panel {
                 text-align: center;
-                padding: 42px 24px;
             }
 
             .hero-description {
                 margin-left: auto;
                 margin-right: auto;
             }
-
-            .hero-actions {
-                justify-content: center;
-            }
-
-            .features-container {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
         }
 
-        @@media (max-width: 560px) {
-            .home-hero {
-                padding: 48px 16px;
-            }
-
-            .hero-title {
-                font-size: 34px;
-            }
-
-            .hero-card {
-                padding: 12px;
-            }
-
-            .stats-row {
-                grid-template-columns: 1fr;
-            }
-
+        @@media (max-width: 575.98px) {
             .hero-btn {
                 width: 100%;
                 justify-content: center;
             }
+
+            .gallery-tile {
+                height: 170px;
+            }
         }
     </style>
-}
+</head>
 
-<div class="home-wrapper">
+<body>
 
-    <!-- HERO SECTION -->
-    <section class="home-hero">
+    <div class="home-wrapper">
 
-        <div class="hero-content">
+        <!-- HERO SECTION -->
+        <section class="home-hero">
+            <div class="hero-orb hero-orb-1"></div>
+            <div class="hero-orb hero-orb-2"></div>
+            <div class="container">
+                <div class="row g-4 g-lg-5 align-items-center">
 
-            <!-- TEXT PANEL -->
-            <div class="hero-text-panel">
+                    <!-- TEXT PANEL -->
+                    <div class="col-lg-7">
+                        <div class="hero-text-panel reveal">
 
-                <div class="hero-badge">
-                    <i class="fas fa-bolt"></i>
-                    Fast, secure, and local marketplace
-                </div>
+                            <div class="hero-badge mb-4">
+                                <i class="fas fa-bolt"></i>
+                                Fast, secure, and local marketplace
+                            </div>
 
-                <h1 class="hero-title">
-                    Multi Store Online <span>Marketplace</span>
-                </h1>
+                            <h1 class="hero-title mb-4">
+                                Multi Store Online <span>Marketplace</span>
+                            </h1>
 
-                <p class="hero-description">
-                    Discover trusted local stores, shop products easily,
-                    track your orders, and enjoy a smooth marketplace
-                    experience built for customers, store owners, and delivery teams.
-                </p>
+                            <p class="hero-description mb-4">
+                                Discover trusted local stores, shop products easily,
+                                track your orders, and enjoy a smooth marketplace
+                                experience built for customers, store owners, and delivery teams.
+                            </p>
 
-                <div class="hero-actions">
-                    <a asp-area="Identity"
-                       asp-page="/Account/Register"
-                       class="hero-btn hero-btn-primary">
-                        <i class="fas fa-user-plus"></i>
-                        Get Started
-                    </a>
+                            <div class="d-flex flex-wrap gap-3 justify-content-lg-start justify-content-center">
+                                <a asp-area="Identity"
+                                   asp-page="/Account/Register"
+                                   class="hero-btn hero-btn-primary">
+                                    <i class="fas fa-user-plus"></i>
+                                    Get Started
+                                </a>
 
-                    <a asp-area="Identity"
-                       asp-page="/Account/Login"
-                       class="hero-btn hero-btn-secondary">
-                        <i class="fas fa-right-to-bracket"></i>
-                        Sign In
-                    </a>
-                </div>
+                                <a asp-area="Identity"
+                                   asp-page="/Account/Login"
+                                   class="hero-btn hero-btn-secondary">
+                                    <i class="fas fa-right-to-bracket"></i>
+                                    Sign In
+                                </a>
+                            </div>
 
-            </div>
-
-            <!-- LIVE CARD PREVIEW -->
-            <div class="hero-card">
-
-                <div class="market-card">
-
-                    <div class="market-card-header">
-                        <div class="market-card-title">
-                            Marketplace Preview
-                        </div>
-
-                        <div class="market-pill">
-                            Live
                         </div>
                     </div>
 
-                    <div class="product-preview">
-                        <div class="product-icon">
+                    <!-- LIVE CARD PREVIEW -->
+                    <div class="col-lg-5">
+                        <div class="hero-card reveal" style="transition-delay: 0.12s;">
+                            <div class="market-card">
+
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <div class="fw-bold" style="font-size:1.1rem;">Marketplace Preview</div>
+                                    <div class="market-pill">Live</div>
+                                </div>
+
+                                <div class="product-preview mb-3">
+                                    <div class="product-thumb">
+                                        <img src="https://images.unsplash.com/photo-1604124900062-cf98463691ee?auto=format&fit=crop&w=200&q=70" alt="Fresh produce stall" loading="lazy" />
+                                    </div>
+                                    <div>
+                                        <h4>Local Stores</h4>
+                                        <p>Browse multiple trusted sellers in one place.</p>
+                                    </div>
+                                </div>
+
+                                <div class="product-preview mb-3">
+                                    <div class="product-thumb">
+                                        <img src="https://images.unsplash.com/photo-1606824722920-4c652a70f348?auto=format&fit=crop&w=200&q=70" alt="Packaged goods on shelves" loading="lazy" />
+                                    </div>
+                                    <div>
+                                        <h4>Easy Shopping</h4>
+                                        <p>Add items to cart, checkout, and track orders.</p>
+                                    </div>
+                                </div>
+
+                                <div class="product-preview mb-4">
+                                    <div class="product-thumb">
+                                        <img src="https://images.unsplash.com/photo-1668104130113-b86b10423cb0?auto=format&fit=crop&w=200&q=70" alt="Busy outdoor market" loading="lazy" />
+                                    </div>
+                                    <div>
+                                        <h4>Fast Delivery</h4>
+                                        <p>Delivery workflow for customers and delivery teams.</p>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 text-center">
+                                    <div class="col-4">
+                                        <div class="stat-box">
+                                            <strong>24/7</strong>
+                                            <span>Access</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="stat-box">
+                                            <strong>Multi</strong>
+                                            <span>Stores</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="stat-box">
+                                            <strong>Safe</strong>
+                                            <span>Shopping</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- HOW IT WORKS -->
+        <section class="home-how">
+            <div class="container">
+
+                <div class="text-center mx-auto mb-5 reveal" style="max-width: 620px;">
+                    <span class="section-eyebrow">How it works</span>
+                    <h2 class="section-heading mb-3">Up and running in three steps</h2>
+                    <p class="section-subtext mx-auto">
+                        Whether you're here to shop, sell, deliver, or manage, getting started takes just a minute.
+                    </p>
+                </div>
+
+                <div class="row g-4 g-lg-5">
+
+                    <div class="col-lg-4">
+                        <div class="how-step reveal">
+                            <div class="how-step-connector"></div>
+                            <div class="how-step-number">1</div>
+                            <h3>Create your account</h3>
+                            <p>Sign up in a few seconds and tell us whether you're shopping, selling, or delivering.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="how-step reveal" style="transition-delay: 0.1s;">
+                            <div class="how-step-connector"></div>
+                            <div class="how-step-number">2</div>
+                            <h3>Get your dashboard</h3>
+                            <p>Land straight in the view built for your role, browsing, store management, or delivery tracking.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="how-step reveal" style="transition-delay: 0.2s;">
+                            <div class="how-step-number">3</div>
+                            <h3>Start using the marketplace</h3>
+                            <p>Place orders, list products, or manage deliveries, all backed by secure, role-based access.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- GALLERY STRIP -->
+        <section class="home-gallery">
+            <div class="container">
+
+                <div class="text-center mx-auto mb-5 reveal" style="max-width: 620px;">
+                    <span class="section-eyebrow">Inside the marketplace</span>
+                    <h2 class="section-heading mb-3">Real stores, real people</h2>
+                    <p class="section-subtext mx-auto">
+                        A glimpse of the local sellers and markets that make this marketplace worth shopping in.
+                    </p>
+                </div>
+
+                <div class="row g-4">
+
+                    <div class="col-md-4">
+                        <div class="gallery-tile reveal">
+                            <img src="https://images.unsplash.com/photo-1662899311670-7e6bbe986166?auto=format&fit=crop&w=800&q=75" alt="Shoppers browsing a busy market" loading="lazy" />
+                            <span class="gallery-caption">Busy market days</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="gallery-tile reveal" style="transition-delay: 0.1s;">
+                            <img src="https://images.unsplash.com/photo-1604124900062-cf98463691ee?auto=format&fit=crop&w=800&q=75" alt="Fresh produce stall" loading="lazy" />
+                            <span class="gallery-caption">Fresh, local goods</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="gallery-tile reveal" style="transition-delay: 0.2s;">
+                            <img src="https://images.unsplash.com/photo-1591530919276-d2db1109f212?auto=format&fit=crop&w=800&q=75" alt="Storefront signage" loading="lazy" />
+                            <span class="gallery-caption">Independent sellers</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- CORE FEATURES GRID -->
+        <section class="home-features">
+            <div class="container">
+                <div class="row g-4">
+
+                    <div class="col-md-4">
+                        <div class="feature-card reveal">
                             <i class="fas fa-store"></i>
-                        </div>
-
-                        <div>
-                            <h4>Local Stores</h4>
-                            <p>Browse multiple trusted sellers in one place.</p>
-                            <strong>Fast access</strong>
+                            <h3>Multi Stores</h3>
+                            <p>Customers can browse products from many stores inside one organized marketplace.</p>
                         </div>
                     </div>
 
-                    <div class="product-preview">
-                        <div class="product-icon">
-                            <i class="fas fa-cart-shopping"></i>
-                        </div>
-
-                        <div>
-                            <h4>Easy Shopping</h4>
-                            <p>Add items to cart, checkout, and track orders.</p>
-                            <strong>Secure checkout</strong>
+                    <div class="col-md-4">
+                        <div class="feature-card reveal" style="transition-delay: 0.1s;">
+                            <i class="fas fa-truck"></i>
+                            <h3>Fast Delivery</h3>
+                            <p>Orders can be managed and delivered through a clear delivery workflow.</p>
                         </div>
                     </div>
 
-                    <div class="product-preview">
-                        <div class="product-icon">
-                            <i class="fas fa-truck-fast"></i>
-                        </div>
-
-                        <div>
-                            <h4>Fast Delivery</h4>
-                            <p>Delivery workflow for customers and delivery teams.</p>
-                            <strong>Reliable service</strong>
-                        </div>
-                    </div>
-
-                    <div class="stats-row">
-                        <div class="stat-box">
-                            <strong>24/7</strong>
-                            <span>Access</span>
-                        </div>
-
-                        <div class="stat-box">
-                            <strong>Multi</strong>
-                            <span>Stores</span>
-                        </div>
-
-                        <div class="stat-box">
-                            <strong>Safe</strong>
-                            <span>Shopping</span>
+                    <div class="col-md-4">
+                        <div class="feature-card reveal" style="transition-delay: 0.2s;">
+                            <i class="fas fa-shield-alt"></i>
+                            <h3>Secure Shopping</h3>
+                            <p>Role-based access, authentication, and protected customer experience.</p>
                         </div>
                     </div>
 
                 </div>
-
             </div>
+        </section>
 
-        </div>
+    </div>
 
-    </section>
+    <script>
+        (function () {
+            var targets = document.querySelectorAll('.home-wrapper .reveal');
+            if (!('IntersectionObserver' in window) || targets.length === 0) {
+                targets.forEach(function (el) { el.classList.add('is-visible'); });
+                return;
+            }
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+            targets.forEach(function (el) { observer.observe(el); });
+        })();
+    </script>
 
-    <!-- CORE FEATURES GRID -->
-    <section class="home-features">
+</body>
 
-        <div class="features-container">
-
-            <div class="feature-card">
-                <i class="fas fa-store"></i>
-                <h3>Multi Stores</h3>
-                <p>
-                    Customers can browse products from many stores inside one organized marketplace.
-                </p>
-            </div>
-
-            <div class="feature-card">
-                <i class="fas fa-truck"></i>
-                <h3>Fast Delivery</h3>
-                <p>
-                    Orders can be managed and delivered through a clear delivery workflow.
-                </p>
-            </div>
-
-            <div class="feature-card">
-                <i class="fas fa-shield-alt"></i>
-                <h3>Secure Shopping</h3>
-                <p>
-                    Role-based access, authentication, and protected customer experience.
-                </p>
-            </div>
-
-        </div>
-
-    </section>
-
-</div>
+</html>
