@@ -29,6 +29,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public List<User> SearchUsers { get; set; } = new();
         public List<InboxItem> Inbox { get; set; } = new();
+        public int TotalUnread { get; set; }
 
         public async Task OnGetAsync()
         {
@@ -60,26 +61,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 await _messagingManager.GetMessagesForUserAsync(CurrentUserId);
 
             Inbox = messages
-                .GroupBy(m =>
-                    m.SenderID == CurrentUserId
-                        ? m.ReceiverID
-                        : m.SenderID)
-                .Select(g => new InboxItem
-                {
-                    UserId = g.Key,
-                    UserName = allUsers
-                        .FirstOrDefault(x => x.Id == g.Key)
-                        ?.UserName ?? "User",
+        .GroupBy(m =>
+            m.SenderID == CurrentUserId
+                ? m.ReceiverID
+                : m.SenderID)
+        .Select(g => new InboxItem
+        {
+            UserId = g.Key,
+            UserName = allUsers
+                .FirstOrDefault(x => x.Id == g.Key)
+                ?.UserName ?? "User",
+            LastMessage = g
+                .OrderByDescending(x => x.SentAt)
+                .FirstOrDefault()
+                ?.MessageText ?? "?? Shared Product",
+            LastTime = g.Max(x => x.SentAt),
+            UnreadCount = g.Count(x => x.ReceiverID == CurrentUserId && !x.IsRead)
+        })
+        .OrderByDescending(x => x.LastTime)
+        .ToList();
 
-                    LastMessage = g
-                        .OrderByDescending(x => x.SentAt)
-                        .FirstOrDefault()
-                        ?.MessageText ?? "?? Shared Product",
-
-                    LastTime = g.Max(x => x.SentAt)
-                })
-                .OrderByDescending(x => x.LastTime)
-                .ToList();
+            TotalUnread = Inbox.Sum(x => x.UnreadCount);
 
             await _sessionManager.TouchAsync(CurrentUserId);
         }
@@ -96,5 +98,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public string UserName { get; set; }
         public string LastMessage { get; set; }
         public DateTime LastTime { get; set; }
+        public int UnreadCount { get; set; }
     }
 }

@@ -14,15 +14,18 @@ namespace Multi_Store.Services.Managers
         private readonly IChatMessageRepository _chatRepo;
         private readonly IAuditLogRepository _audit;
         private readonly IMapper _mapper;
+        private readonly NotificationManager _notificationManager;
 
         public MessagingManager(
             IChatMessageRepository chatRepo,
+            NotificationManager notificationManager,
             IAuditLogRepository audit,
             IMapper mapper)
         {
             _chatRepo = chatRepo;
             _audit = audit;
             _mapper = mapper;
+            _notificationManager = notificationManager;
         }
 
         public async Task<List<ChatMessageDTO>> GetMessagesForUserAsync(int userId)
@@ -103,7 +106,19 @@ namespace Multi_Store.Services.Managers
                 NewValue = "Message sent",
                 ActionDate = DateTime.UtcNow
             });
+            var preview = string.IsNullOrWhiteSpace(message.MessageText)
+    ? "📷 Sent you a product"
+    : (message.MessageText.Length > 60
+        ? message.MessageText.Substring(0, 60) + "..."
+        : message.MessageText);
 
+            await _notificationManager.SendAsync(
+                userId: message.ReceiverID,
+                title: "New Message",
+                message: preview,
+                type: "Message",
+                referenceId: message.MessageID,
+                sentVia: "Chat");
             return message.MessageID;
         }
 
