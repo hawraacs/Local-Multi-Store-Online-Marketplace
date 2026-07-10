@@ -406,11 +406,23 @@
         try {
             const nextPage = currentPage + 1;
             const category = app.dataset.category || "";
+            const searchTerm = app.dataset.searchTerm || "";
+            const categoryId = app.dataset.categoryId || "";
+            const storeId = app.dataset.storeId || "";
+            const area = app.dataset.area || "";
+            const minPrice = app.dataset.minPrice || "";
+            const maxPrice = app.dataset.maxPrice || "";
 
             const response = await fetch(
                 `${pageUrl}?handler=ExplorePage` +
                 `&page=${encodeURIComponent(nextPage)}` +
-                `&category=${encodeURIComponent(category)}`,
+                `&category=${encodeURIComponent(category)}` +
+                `&searchTerm=${encodeURIComponent(searchTerm)}` +
+                `&categoryId=${encodeURIComponent(categoryId)}` +
+                `&storeId=${encodeURIComponent(storeId)}` +
+                `&area=${encodeURIComponent(area)}` +
+                `&minPrice=${encodeURIComponent(minPrice)}` +
+                `&maxPrice=${encodeURIComponent(maxPrice)}`,
                 {
                     method: "GET",
                     credentials: "same-origin",
