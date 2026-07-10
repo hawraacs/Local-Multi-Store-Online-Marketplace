@@ -973,11 +973,32 @@
             button.textContent = 'Blocking...';
             form.submit();
         }
-        function productUrl(id) { const u = new URL(window.location.href); u.searchParams.set('id', storeId); u.hash = 'product-' + id; return u.toString(); }
+               function profileUrl() {
+            return `${window.location.origin}/StoreCustomerProfile?id=${storeId}`;
+        }
+
+        function productUrl(id) {
+            return `${window.location.origin}/StoreCustomerProfile?id=${storeId}#product-${id}`;
+        }
         async function copyText(value, message) { try { await navigator.clipboard.writeText(value); toast(message); } catch { toast('Could not copy the link.', false); } }
-        function copyCurrentUrl() { copyText(window.location.href.split('#')[0], 'Profile link copied.'); }
-        function shareProfileWhatsApp() { window.open('https://wa.me/?text=' + encodeURIComponent('View ' + storeName + ' on realnest\n' + window.location.href.split('#')[0]), '_blank'); }
-        async function shareProfile() { const data={title:storeName,text:'View this store profile on realnest',url:window.location.href.split('#')[0]}; if(navigator.share){try{await navigator.share(data);}catch{}}else{copyCurrentUrl();} }
+                function copyCurrentUrl() {
+            copyText(profileUrl(), 'Profile link copied.');
+        }
+        function shareProfileWhatsApp() {
+            const message =
+                `🏪 ${storeName}\n` +
+                `Store profile on realnest\n` +
+                profileUrl();
+
+            window.open(
+                'https://wa.me/?text=' + encodeURIComponent(message),
+                '_blank',
+                'noopener,noreferrer'
+            );
+        }
+        function shareProfile() {
+            shareProfileWhatsApp();
+        }
 
         function openProduct(el) {
             currentProduct = { id: Number(el.dataset.productId), name: el.dataset.productName, description: el.dataset.description, price: el.dataset.price, quantity: Number(el.dataset.quantity), image: el.dataset.image };
@@ -1004,9 +1025,35 @@
         function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
         function closeProduct() { document.getElementById('productBackdrop').classList.remove('open'); document.body.style.overflow = ''; history.replaceState(null, '', window.location.pathname + '?id=' + storeId); }
         function backdropClose(e,id) { if(e.target.id===id){ if(id==='productBackdrop') closeProduct(); else document.getElementById(id).classList.remove('open'); } }
-        function currentShareData() { return { title: currentProduct.name, text: currentProduct.name + ' - $' + currentProduct.price + ' from ' + storeName, url: productUrl(currentProduct.id) }; }
-        async function shareCurrentProduct() { if(!currentProduct)return; const d=currentShareData(); if(navigator.share){try{await navigator.share(d);}catch{}}else{copyText(d.url,'Product link copied.');} }
-        function shareCurrentProductWhatsApp() { if(!currentProduct)return; const d=currentShareData(); window.open('https://wa.me/?text='+encodeURIComponent(d.text+'\n'+d.url),'_blank'); }
+                function currentShareData() {
+            return {
+                title: currentProduct.name,
+                text:
+                    `🛍️ ${currentProduct.name}\n` +
+                    `$${currentProduct.price}\n` +
+                    `From ${storeName}`,
+                url: productUrl(currentProduct.id)
+            };
+        }
+        function shareCurrentProduct() {
+            shareCurrentProductWhatsApp();
+        }
+        function shareCurrentProductWhatsApp() {
+            if (!currentProduct)
+                return;
+
+            const message =
+                `🛍️ ${currentProduct.name}\n` +
+                `Price: $${currentProduct.price}\n` +
+                `Store: ${storeName}\n` +
+                productUrl(currentProduct.id);
+
+            window.open(
+                'https://wa.me/?text=' + encodeURIComponent(message),
+                '_blank',
+                'noopener,noreferrer'
+            );
+        }
         function copyCurrentProductLink() { if(currentProduct) copyText(productUrl(currentProduct.id),'Product link copied.'); }
         const repostStorageKey = 'realnest_reposted_products';
 
@@ -1088,6 +1135,21 @@
         {
             <text>toast(@Html.Raw(JsonSerializer.Serialize(TempData["Error"]?.ToString())), false);</text>
         }
+                window.addEventListener('DOMContentLoaded', function () {
+            const match = window.location.hash.match(/^#product-(\d+)$/);
+
+            if (!match)
+                return;
+
+            const productId = match[1];
+
+            const productTile = document.querySelector(
+                `.tile[data-product-id="${productId}"]`
+            );
+
+            if (productTile)
+                openProduct(productTile);
+        });
     </script>
 </body>
 </html>
