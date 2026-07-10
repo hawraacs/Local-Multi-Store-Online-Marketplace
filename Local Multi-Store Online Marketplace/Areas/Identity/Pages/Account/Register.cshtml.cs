@@ -42,6 +42,9 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         [BindProperty]
         [Required(ErrorMessage = "Full name is required.")]
         public string FullName { get; set; }
+        [BindProperty]
+        [Required(ErrorMessage = "Username is required.")]
+        public string Username { get; set; }
 
         [BindProperty]
         [Required(ErrorMessage = "Email is required.")]
@@ -77,6 +80,7 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPostAsync()
         {
             FullName = FullName?.Trim();
+            Username = Username?.Trim();
             Email = Email?.Trim().ToLower();
             CountryCode = CountryCode?.Trim();
             PhoneNumber = PhoneNumber?.Trim();
@@ -93,18 +97,27 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 ModelState.AddModelError(nameof(PhoneNumber), "Please enter a valid phone number for the selected country.");
             }
 
+            if (!string.IsNullOrWhiteSpace(Username))
+            {
+                var existingUser = await _userManager.FindByNameAsync(Username);
+                if (existingUser != null)
+                {
+                    ModelState.AddModelError(nameof(Username), "This username is already taken.");
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 return Page();
             }
 
-            
 
-          
+
+
 
             var user = new User
             {
-                UserName = Email,
+                UserName = Username,
                 Email = Email,
                 EmailConfirmed = false,
                 PhoneNumber = normalizedPhone,
