@@ -17,24 +17,23 @@
 
     <style>
         :root {
-            --bg-color: #fdfbf7; /* Cozy warm white canvas */
+            --bg-color: #faf9fc;
             --card-bg: #ffffff;
-            --border-color: #f3ece3; /* Soft warm borders */
-            --text-primary: #1c1917; /* Slate dark brown/black */
-            --text-secondary: #78716c; /* Elegant muted stone gray */
-            /* White & Orange Sunset Palette */
-            --accent-color: #ff6b35; /* Radiant bright orange */
-            --accent-hover: #f05a22; /* Rich dark orange */
-            --accent-light: #fff1eb; /* Pastel orange tint */
-            --accent-gradient: linear-gradient(135deg, #ff9f43 0%, #ff5252 100%); /* Orange-to-coral punch */
-
+            --border-color: #ece8f6;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            /* Purple / Indigo palette, matching the rest of the site */
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
             --like-color: #ef4444;
-            --success-color: #f59e0b; /* Golden amber orange */
-            --error-color: #ea580c; /* Fiery orange-red */
+            --success-color: #10b981;
+            --error-color: #dc2626;
             --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --shadow-sm: 0 4px 12px rgba(255, 107, 53, 0.04);
-            --shadow-md: 0 10px 30px rgba(255, 107, 53, 0.08);
-            --shadow-lg: 0 20px 40px rgba(255, 107, 53, 0.12);
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
+            --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
         }
 
         * {
@@ -49,9 +48,10 @@
             color: var(--text-primary);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
+            padding-bottom: 84px;
         }
 
-        /* TOP BAR */
+        /* TOP BAR - brand only now; the menu has moved to the bottom nav */
         .topbar {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(15px);
@@ -63,7 +63,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 4px 20px rgba(28, 25, 23, 0.02);
+            box-shadow: 0 4px 20px rgba(30, 27, 46, 0.02);
         }
 
         .brand-logo {
@@ -72,7 +72,7 @@
             font-weight: 800;
             letter-spacing: -0.5px;
             text-decoration: none;
-            background: linear-gradient(135deg, #ff9f43 0%, #ff6b35 50%, #f05a22 100%);
+            background: var(--accent-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
@@ -82,58 +82,19 @@
 
             .brand-logo i {
                 font-size: 20px;
-                background: linear-gradient(135deg, #ff9f43 0%, #ff6b35 100%);
+                background: var(--accent-gradient);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
             }
 
+        /* Desktop menu is retired in favor of the always-on bottom nav */
         .menu {
-            display: flex;
-            align-items: center;
-            gap: 24px;
+            display: none !important;
         }
 
-            .menu a {
-                color: var(--text-primary);
-                text-decoration: none;
-                font-size: 14px;
-                font-weight: 600;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-                padding: 8px 14px;
-                border-radius: 50px;
-            }
-
-                .menu a i {
-                    font-size: 16px;
-                    color: var(--text-secondary);
-                    transition: color 0.2s ease;
-                }
-
-                .menu a:hover {
-                    color: var(--accent-color);
-                    background-color: var(--accent-light);
-                }
-
-                    .menu a:hover i {
-                        color: var(--accent-color);
-                    }
-
-                .menu a.active {
-                    color: #ffffff;
-                    background: var(--accent-gradient);
-                    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
-                }
-
-                    .menu a.active i {
-                        color: #ffffff;
-                    }
-
-        /* BOTTOM NAV FOR MOBILE */
+        /* BOTTOM NAV - now shown at every screen size, Instagram style */
         .bottom-nav {
-            display: none;
+            display: flex !important;
             position: fixed;
             bottom: 0;
             left: 0;
@@ -145,7 +106,7 @@
             z-index: 1000;
             justify-content: space-around;
             align-items: center;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
             padding-bottom: env(safe-area-inset-bottom);
         }
 
@@ -160,12 +121,18 @@
                 font-size: 10px;
                 font-weight: 600;
                 flex: 1;
-                transition: color 0.2s ease;
+                border-radius: 12px;
+                transition: color 0.2s ease, background-color 0.2s ease;
             }
 
                 .bottom-nav a i {
                     font-size: 20px;
                     transition: transform 0.2s ease;
+                }
+
+                .bottom-nav a:hover {
+                    color: var(--accent-color);
+                    background: var(--accent-light);
                 }
 
                 .bottom-nav a:active i {
@@ -174,7 +141,12 @@
 
                 .bottom-nav a.active {
                     color: var(--accent-color);
+                    font-weight: 700;
                 }
+
+                    .bottom-nav a.active i {
+                        transform: scale(1.1);
+                    }
 
         /* CATEGORIES NAVBAR (Instagram Stories visual style) */
         .category-navbar {
@@ -216,7 +188,7 @@
             background: var(--accent-gradient) !important;
             color: #ffffff !important;
             border-color: transparent !important;
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.35) !important;
+            box-shadow: 0 4px 15px rgba(109, 40, 217, 0.35) !important;
         }
 
         /* FEED CONTAINER */
@@ -275,7 +247,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 3px 10px rgba(255, 107, 53, 0.2);
+            box-shadow: 0 3px 10px rgba(109, 40, 217, 0.2);
         }
 
             .store-avatar span {
@@ -317,7 +289,7 @@
         .btn-follow {
             color: #ffffff;
             background: var(--accent-gradient);
-            box-shadow: 0 4px 10px rgba(255, 107, 53, 0.2);
+            box-shadow: 0 4px 10px rgba(109, 40, 217, 0.2);
         }
 
             .btn-follow:hover {
@@ -327,12 +299,12 @@
 
         .btn-unfollow {
             color: var(--text-secondary);
-            background-color: #f5f2eb;
+            background-color: #f1eef8;
             border: 1px solid var(--border-color);
         }
 
             .btn-unfollow:hover {
-                background-color: #ebe6db;
+                background-color: #e7e1f5;
                 color: var(--text-primary);
             }
 
@@ -341,7 +313,7 @@
             width: 100%;
             aspect-ratio: 1.1 / 1; /* Vibrant squared-landscape crop */
             overflow: hidden;
-            background-color: #f7f5f0;
+            background-color: #f3f0fa;
             position: relative;
         }
 
@@ -470,7 +442,7 @@
             }
 
             .btn-action:hover {
-                background: #fffdfa;
+                background: #fdfcff;
                 border-color: var(--accent-color);
                 color: var(--accent-color);
                 transform: translateY(-1px);
@@ -492,13 +464,13 @@
             background: var(--accent-gradient);
             color: #ffffff;
             border: none;
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
+            box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
         }
 
             .btn-feed-cart:hover {
                 color: #ffffff;
                 opacity: 0.95;
-                box-shadow: 0 6px 15px rgba(255, 107, 53, 0.35);
+                box-shadow: 0 6px 15px rgba(109, 40, 217, 0.35);
             }
 
         .btn-feed-share {
@@ -605,7 +577,7 @@
 
         .comment {
             padding: 10px 0;
-            border-bottom: 1px solid #faf8f5;
+            border-bottom: 1px solid #f7f5fb;
             font-size: 13px;
         }
 
@@ -643,7 +615,7 @@
             padding: 80px 30px;
             background: var(--card-bg);
             border-radius: 20px;
-            border: 2px dashed #e5dec9;
+            border: 2px dashed #ded4f5;
             color: var(--text-secondary);
             margin-top: 30px;
             box-shadow: var(--shadow-sm);
@@ -687,7 +659,7 @@
             background: var(--card-bg);
             border-radius: 14px;
             padding: 16px 20px;
-            box-shadow: 0 15px 35px rgba(28, 25, 23, 0.12);
+            box-shadow: 0 15px 35px rgba(30, 27, 46, 0.12);
             display: flex;
             align-items: center;
             gap: 14px;
@@ -756,18 +728,6 @@
                 font-size: 22px;
             }
 
-            .topbar .menu {
-                display: none;
-            }
-
-            .bottom-nav {
-                display: flex;
-            }
-
-            body {
-                padding-bottom: 80px;
-            }
-
             .feed-container {
                 padding: 0 12px;
             }
@@ -807,13 +767,8 @@
         }
     </div>
 
-    <!-- DESKTOP TOP BAR -->
-    <div class="topbar">
-        <div>
-            <a href="/Customer1" class="brand-logo">
-                <i class="fa-solid fa-shop"></i> realnest
-            </a>
-        </div>
+    <!-- TOP BAR: brand only, the menu has moved to the bottom nav -->
+    
 
         <div class="menu">
             <a href="/Customer1"><i class="fa-solid fa-compass"></i> Explore</a>
@@ -826,12 +781,13 @@
         </div>
     </div>
 
-    <!-- MOBILE BOTTOM NAVIGATION -->
+    <!-- BOTTOM NAVIGATION - now shown at every screen size -->
     <div class="bottom-nav">
         <a href="/Customer1"><i class="fa-solid fa-compass"></i><span>Explore</span></a>
         <a href="/CustomerFeed" class="active"><i class="fa-solid fa-house"></i><span>Feed</span></a>
         <a href="/CustomerProducts"><i class="fa-solid fa-bag-shopping"></i><span>Shop</span></a>
         <a href="/CustomerCart"><i class="fa-solid fa-cart-shopping"></i><span>Cart</span></a>
+        <a href="/CustomerOrders"><i class="fa-solid fa-receipt"></i><span>Orders</span></a>
         <a href="/Chat"><i class="fa-solid fa-paper-plane"></i><span>Chat</span></a>
         <a href="/CustomerProfile"><i class="fa-solid fa-user"></i><span>Profile</span></a>
     </div>

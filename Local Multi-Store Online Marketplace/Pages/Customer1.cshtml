@@ -28,6 +28,379 @@
     <link rel="stylesheet"
           href="~/css/customer-explore-polish.css"
           asp-append-version="true" />
+
+    <!-- ============================================================
+         PALETTE + BOTTOM-NAV OVERRIDES
+         customer-explore.css and customer-explore-polish.css aren't
+         available to edit directly, so this block re-themes the page
+         and repositions navigation using the classes already present
+         in the markup below. If you can share those two files, these
+         rules can be merged in properly instead of layered on top.
+         ============================================================ -->
+    <style>
+        :root {
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-steel: #4f46e5;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            --bg-color: #faf9fc;
+            --text-primary: #1e1b2e;
+        }
+
+        /* ---- Palette: recolor the visible brand/accent surfaces ---- */
+
+        .brand-mark {
+            color: #ffffff !important;
+            background: var(--accent-gradient) !important;
+        }
+
+        .category-chip.active {
+            background: var(--accent-gradient) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+        }
+
+        .tile-price {
+            background: var(--accent-gradient) !important;
+            color: #ffffff !important;
+        }
+
+        .tile-badge {
+            background: rgba(109, 40, 217, 0.85) !important;
+            color: #ffffff !important;
+        }
+
+        .follow-button,
+        .primary-product-button,
+        .comment-submit-button {
+            background: var(--accent-gradient) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+        }
+
+        .modal-action-button:hover,
+        .secondary-product-button:hover,
+        .write-review-link,
+        .explore-intro h1 span {
+            background: var(--accent-gradient) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            color: var(--accent-color) !important;
+        }
+
+        .explore-intro .eyebrow,
+        .product-review-stars,
+        .intro-stat .stat-icon {
+            color: var(--accent-color) !important;
+        }
+
+        .loader-spinner {
+            border-top-color: var(--accent-color) !important;
+        }
+
+        .mobile-bottom-nav a.active {
+            color: var(--accent-color) !important;
+        }
+
+        /* ---- Navigation lives only in the bottom nav now (topbar removed) ---- */
+
+        .mobile-bottom-nav {
+            display: flex !important;
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 200;
+            background: #ffffff;
+            border-top: 1px solid #ece8f6;
+            justify-content: space-between;
+            gap: 2px;
+            padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+            overflow-x: auto;
+        }
+
+            .mobile-bottom-nav a {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+                font-size: 10.5px;
+                color: #6b6478;
+                text-decoration: none;
+                padding: 4px 6px;
+                flex-shrink: 0;
+            }
+
+                .mobile-bottom-nav a i {
+                    font-size: 17px;
+                }
+
+        /* ---- Broader catch-all: any other likely accent-colored surfaces ---- */
+
+        .category-chip:hover {
+            border-color: var(--accent-color) !important;
+            color: var(--accent-color) !important;
+        }
+
+        .tile-store-fallback {
+            background: var(--accent-gradient) !important;
+            color: #ffffff !important;
+        }
+
+        .modal-store-avatar {
+            background: var(--accent-gradient) !important;
+        }
+
+        .media-nav {
+            color: var(--accent-color) !important;
+        }
+
+            .media-nav:hover {
+                background: var(--accent-light) !important;
+            }
+
+        .grid-legend i,
+        .modal-caption a,
+        .modal-store-link:hover strong,
+        .comments-list a {
+            color: var(--accent-color) !important;
+        }
+
+        .modal-action-button.active,
+        .modal-action-button.liked,
+        .modal-action-button[aria-pressed="true"] {
+            color: var(--accent-color) !important;
+        }
+
+        .comment-submit-button i {
+            color: #ffffff !important;
+        }
+
+        ::selection {
+            background: var(--accent-light);
+            color: var(--accent-color);
+        }
+
+        a {
+            color: var(--accent-color);
+        }
+
+        /* ---- Background: replace black/dark page background with a fresh, light one ---- */
+
+        html,
+        body {
+            background: var(--bg-color, #faf9fc) !important;
+        }
+
+        .explore-page {
+            background: var(--bg-color, #faf9fc) !important;
+            position: relative;
+            overflow-x: hidden;
+            padding-bottom: 82px;
+        }
+
+
+        /* Light lavender hero, no gradient, no dark background */
+        .explore-intro {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            background: #efeaf9 !important;
+            border-radius: 20px;
+            padding: 8px;
+        }
+
+            .explore-intro > div:first-child,
+            .explore-intro h1,
+            .explore-intro p {
+                background: transparent !important;
+                color: var(--text-primary) !important;
+            }
+
+            .explore-intro .eyebrow {
+                color: var(--accent-color) !important;
+                background: rgba(109, 40, 217, 0.10) !important;
+            }
+
+            .explore-intro p {
+                opacity: 0.85;
+            }
+
+            .explore-intro h1 span {
+                background: var(--accent-gradient) !important;
+                -webkit-background-clip: text !important;
+                background-clip: text !important;
+                -webkit-text-fill-color: transparent !important;
+                color: var(--accent-color) !important;
+            }
+
+        .intro-stat {
+            background: #ffffff !important;
+            border: 1px solid #e3dbf7 !important;
+        }
+
+            .intro-stat strong,
+            .intro-stat span {
+                color: var(--text-primary) !important;
+            }
+
+            .intro-stat .stat-icon {
+                color: var(--accent-color) !important;
+            }
+
+        .explore-intro::before,
+        .explore-intro::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            z-index: -1;
+            opacity: 0.35;
+            animation: exploreOrbFloat 12s ease-in-out infinite;
+        }
+
+        .explore-intro::before {
+            width: 260px;
+            height: 260px;
+            background: #c4b5fd;
+            top: -100px;
+            left: -60px;
+        }
+
+        .explore-intro::after {
+            width: 220px;
+            height: 220px;
+            background: #a7f3d0;
+            bottom: -90px;
+            right: -40px;
+            animation-delay: 3s;
+        }
+
+        @@keyframes exploreOrbFloat {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-16px) scale(1.06);
+            }
+        }
+
+        /* ---- Life: gentle entrance animations ---- */
+
+        @@keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .explore-intro, .category-chip, .explore-tile, .intro-stat, .explore-intro::before, .explore-intro::after {
+                animation: none !important;
+            }
+        }
+
+        .explore-intro > div,
+        .intro-stat {
+            animation: fadeSlideUp 0.55s ease both;
+        }
+
+        .intro-stat {
+            animation-delay: 0.1s;
+        }
+
+        .category-chip {
+            animation: fadeSlideUp 0.4s ease both;
+        }
+
+            .category-chip:nth-child(1) {
+                animation-delay: 0.02s;
+            }
+
+            .category-chip:nth-child(2) {
+                animation-delay: 0.06s;
+            }
+
+            .category-chip:nth-child(3) {
+                animation-delay: 0.10s;
+            }
+
+            .category-chip:nth-child(4) {
+                animation-delay: 0.14s;
+            }
+
+            .category-chip:nth-child(5) {
+                animation-delay: 0.18s;
+            }
+
+            .category-chip:nth-child(6) {
+                animation-delay: 0.22s;
+            }
+
+        .explore-tile {
+            animation: fadeSlideUp 0.45s ease both;
+            transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+        }
+
+            .explore-tile:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 14px 28px rgba(109, 40, 217, 0.18) !important;
+            }
+
+        .intro-stat .stat-icon {
+            animation: pulseGlow 3.4s ease-in-out infinite;
+        }
+
+        @@keyframes pulseGlow {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 0.88;
+            }
+        }
+
+        /* ---- Clearer bottom nav buttons ---- */
+
+        .mobile-bottom-nav {
+            box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
+        }
+
+            .mobile-bottom-nav a {
+                border-radius: 12px;
+                transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+            }
+
+                .mobile-bottom-nav a:hover {
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                }
+
+                .mobile-bottom-nav a.active {
+                    background: var(--accent-light) !important;
+                    font-weight: 700;
+                    transform: translateY(-2px);
+                }
+
+                .mobile-bottom-nav a i {
+                    transition: transform 0.2s ease;
+                }
+
+                .mobile-bottom-nav a.active i {
+                    transform: scale(1.12);
+                }
+    </style>
 </head>
 
 <body>
@@ -35,68 +408,7 @@
         @Html.AntiForgeryToken()
     </form>
 
-    <header class="customer-topbar">
-        <a href="/Customer1" class="brand">
-            <span class="brand-mark">
-                <i class="fa-solid fa-location-dot"></i>
-            </span>
-            <span>realnest</span>
-        </a>
-
-        <nav class="desktop-nav" aria-label="Customer navigation">
-            <a href="/Customer1" class="active">
-                <i class="fa-solid fa-compass"></i>
-                Explore
-            </a>
-
-            <a href="/CustomerFeed">
-                <i class="fa-solid fa-house"></i>
-                Feed
-            </a>
-
-            <a href="/CustomerProducts">
-                <i class="fa-solid fa-bag-shopping"></i>
-                Shop
-            </a>
-
-            <a href="/CustomerCart">
-                <i class="fa-solid fa-cart-shopping"></i>
-                Cart
-            </a>
-
-            <a href="/CustomerPromotions">
-                <i class="fa-solid fa-tags"></i>
-                Promotions
-            </a>
-
-            <a href="/CustomerOrders">
-                <i class="fa-solid fa-box"></i>
-                Orders
-            </a>
-
-            <a href="/Chat">
-                <i class="fa-solid fa-paper-plane"></i>
-                Chat
-            </a>
-
-            <a href="/CustomerProfile">
-                <i class="fa-solid fa-user"></i>
-                Profile
-            </a>
-        </nav>
-
-        <form method="post"
-              asp-area="Identity"
-              asp-page="/Account/Logout"
-              asp-route-returnUrl="/"
-              class="logout-form">
-
-            <button type="submit" class="logout-button">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                <span>Logout</span>
-            </button>
-        </form>
-    </header>
+    <!-- Top bar removed: brand and logout button taken out; navigation lives in the bottom nav below -->
 
     <main id="exploreApp"
           class="explore-page"
@@ -109,8 +421,8 @@
                 <span class="eyebrow">Discover local stores</span>
 
                 <h1>
-                    Find your next
-                    <span>favorite product.</span>
+                    Shop local,
+                    <span>discover more.</span>
                 </h1>
 
                 <p>
@@ -364,7 +676,7 @@
     </main>
 
     <nav class="mobile-bottom-nav"
-         aria-label="Mobile customer navigation">
+         aria-label="Customer navigation">
 
         <a href="/Customer1" class="active">
             <i class="fa-solid fa-compass"></i>
@@ -384,6 +696,16 @@
         <a href="/CustomerCart">
             <i class="fa-solid fa-cart-shopping"></i>
             <span>Cart</span>
+        </a>
+
+        <a href="/CustomerPromotions">
+            <i class="fa-solid fa-tags"></i>
+            <span>Promos</span>
+        </a>
+
+        <a href="/CustomerOrders">
+            <i class="fa-solid fa-box"></i>
+            <span>Orders</span>
         </a>
 
         <a href="/Chat">
