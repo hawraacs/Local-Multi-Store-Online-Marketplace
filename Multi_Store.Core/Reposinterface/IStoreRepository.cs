@@ -14,6 +14,14 @@ namespace Multi_Store.Core.Reposinterface
         Task<Store?> GetByOwnerIdAsync(int ownerUserId);
         Task<Store?> GetByRequestedByUserIdAsync(int requestedByUserId);
 
+        Task<bool> IsPhoneUsedAsync(
+            string normalizedPhone,
+            int? excludedStoreId = null);
+
+        Task<bool> IsBusinessLicenseNumberUsedAsync(
+            string normalizedLicenseNumber,
+            int? excludedStoreId = null);
+
         Task<Store?> GetStoreDetailsAsync(int storeId);
 
         Task<List<Store>> SearchStoresAsync(string keyword);
