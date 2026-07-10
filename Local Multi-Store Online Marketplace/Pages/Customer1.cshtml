@@ -373,6 +373,112 @@
                 .mobile-bottom-nav a.active i {
                     transform: scale(1.12);
                 }
+
+
+        .market-filter-panel {
+            margin: 22px 0 16px;
+            padding: 18px;
+            border: 1px solid #e7e2f2;
+            border-radius: 18px;
+            background: #ffffff;
+            box-shadow: 0 10px 28px rgba(67, 46, 110, 0.07);
+        }
+
+        .market-filter-grid {
+            display: grid;
+            grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(150px, 1fr)) repeat(2, minmax(120px, .75fr));
+            gap: 12px;
+        }
+
+        .market-filter-field label {
+            display: block;
+            margin-bottom: 6px;
+            color: #5f5870;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .market-filter-field input,
+        .market-filter-field select {
+            width: 100%;
+            min-height: 44px;
+            padding: 0 12px;
+            border: 1px solid #ded8eb;
+            border-radius: 12px;
+            background: #fff;
+            color: #1e1b2e;
+            outline: none;
+        }
+
+            .market-filter-field input:focus,
+            .market-filter-field select:focus {
+                border-color: var(--accent-color);
+                box-shadow: 0 0 0 3px rgba(109, 40, 217, .10);
+            }
+
+        .market-filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .market-filter-button,
+        .market-filter-clear {
+            min-height: 42px;
+            padding: 0 18px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .market-filter-button {
+            border: none;
+            color: #fff;
+            background: var(--accent-gradient);
+        }
+
+        .market-filter-clear {
+            border: 1px solid #ded8eb;
+            color: #5f5870;
+            background: #fff;
+        }
+
+        @@media (max-width: 1100px) {
+            .market-filter-grid
+
+        {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        }
+
+        @@media (max-width: 700px) {
+            .market-filter-grid
+
+        {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .market-filter-field:first-child {
+            grid-column: 1 / -1;
+        }
+
+        .market-filter-actions {
+            justify-content: stretch;
+        }
+
+        .market-filter-button, .market-filter-clear {
+            flex: 1;
+        }
+
+        }
     </style>
 </head>
 
@@ -384,6 +490,12 @@
     <main id="exploreApp"
           class="explore-page"
           data-category="@(Model.SelectedCategory ?? string.Empty)"
+          data-search-term="@(Model.SearchTerm ?? string.Empty)"
+          data-category-id="@(Model.CategoryId?.ToString() ?? string.Empty)"
+          data-store-id="@(Model.StoreId?.ToString() ?? string.Empty)"
+          data-area="@(Model.Area ?? string.Empty)"
+          data-min-price="@(Model.MinPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
+          data-max-price="@(Model.MaxPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
           data-current-page="1"
           data-has-more="@Model.HasMoreItems.ToString().ToLowerInvariant()">
 
@@ -419,10 +531,87 @@
             </div>
         </section>
 
+        <form method="get" asp-page="/Customer1" class="market-filter-panel">
+            <input type="hidden" name="category" value="@Model.SelectedCategory" />
+
+            <div class="market-filter-grid">
+                <div class="market-filter-field">
+                    <label for="exploreSearch">Search products or stores</label>
+                    <input id="exploreSearch" name="SearchTerm" value="@Model.SearchTerm"
+                           placeholder="What are you looking for?" />
+                </div>
+
+                <div class="market-filter-field">
+                    <label for="exploreCategory">Category</label>
+                    <select id="exploreCategory" name="CategoryId">
+                        <option value="">All categories</option>
+                        @foreach (var filterCategory in Model.FilterCategories)
+                        {
+                            <option value="@filterCategory.CategoryID"
+                                    selected="@(Model.CategoryId == filterCategory.CategoryID ? "selected" : null)">
+                                @filterCategory.CategoryName
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="market-filter-field">
+                    <label for="exploreStore">Store</label>
+                    <select id="exploreStore" name="StoreId">
+                        <option value="">All stores</option>
+                        @foreach (var filterStore in Model.FilterStores)
+                        {
+                            <option value="@filterStore.StoreID"
+                                    selected="@(Model.StoreId == filterStore.StoreID ? "selected" : null)">
+                                @filterStore.StoreName
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="market-filter-field">
+                    <label for="exploreArea">Area</label>
+                    <select id="exploreArea" name="Area">
+                        <option value="">All areas</option>
+                        @foreach (var filterArea in Model.FilterAreas)
+                        {
+                            <option value="@filterArea" selected="@(Model.Area == filterArea ? "selected" : null)">@filterArea</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="market-filter-field">
+                    <label for="exploreMinPrice">Min price</label>
+                    <input id="exploreMinPrice" type="number" min="0" step="0.01"
+                           name="MinPrice" value="@Model.MinPrice" placeholder="$0" />
+                </div>
+
+                <div class="market-filter-field">
+                    <label for="exploreMaxPrice">Max price</label>
+                    <input id="exploreMaxPrice" type="number" min="0" step="0.01"
+                           name="MaxPrice" value="@Model.MaxPrice" placeholder="Any" />
+                </div>
+            </div>
+
+            <div class="market-filter-actions">
+                <a asp-page="/Customer1" class="market-filter-clear">
+                    <i class="fa-solid fa-rotate-left"></i> Clear
+                </a>
+                <button type="submit" class="market-filter-button">
+                    <i class="fa-solid fa-magnifying-glass"></i> Search / Filter
+                </button>
+            </div>
+        </form>
+
         <section class="category-section"
                  aria-label="Product categories">
 
             <a asp-page="/Customer1"
+               asp-route-searchTerm="@Model.SearchTerm"
+               asp-route-storeId="@Model.StoreId"
+               asp-route-area="@Model.Area"
+               asp-route-minPrice="@Model.MinPrice"
+               asp-route-maxPrice="@Model.MaxPrice"
                class="category-chip @(string.IsNullOrWhiteSpace(Model.SelectedCategory) ? "active" : string.Empty)">
                 All
             </a>
@@ -436,6 +625,11 @@
 
                 <a asp-page="/Customer1"
                    asp-route-category="@category"
+                   asp-route-searchTerm="@Model.SearchTerm"
+                   asp-route-storeId="@Model.StoreId"
+                   asp-route-area="@Model.Area"
+                   asp-route-minPrice="@Model.MinPrice"
+                   asp-route-maxPrice="@Model.MaxPrice"
                    class="category-chip @(isActive ? "active" : string.Empty)">
                     @category
                 </a>
@@ -664,10 +858,6 @@
             <span>Feed</span>
         </a>
 
-        <a href="/CustomerProducts">
-            <i class="fa-solid fa-bag-shopping"></i>
-            <span>Shop</span>
-        </a>
 
         <a href="/CustomerCart">
             <i class="fa-solid fa-cart-shopping"></i>
