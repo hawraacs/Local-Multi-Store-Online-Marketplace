@@ -34,6 +34,78 @@ public class StoreRepository : Repository<Store>, IStoreRepository
                 s.OwnerUserID == requestedByUserId
             ));
 
+    public async Task<bool> IsPhoneUsedAsync(
+        string normalizedPhone,
+        int? excludedStoreId = null)
+    {
+        var query =
+            _context.Stores
+                .AsNoTracking()
+                .AsQueryable();
+
+        if (excludedStoreId.HasValue)
+        {
+            query =
+                query.Where(s =>
+                    s.StoreID !=
+                    excludedStoreId.Value);
+        }
+
+        var localNumber =
+            normalizedPhone.StartsWith(
+                "+961",
+                StringComparison.Ordinal)
+                    ? normalizedPhone.Substring(4)
+                    : normalizedPhone;
+
+        var localWithZero =
+            "0" + localNumber;
+
+        var internationalWithoutPlus =
+            "961" + localNumber;
+
+        var internationalWithDoubleZero =
+            "00961" + localNumber;
+
+        return await query.AnyAsync(s =>
+            s.PhoneNumber == normalizedPhone ||
+            s.PhoneNumber == localNumber ||
+            s.PhoneNumber == localWithZero ||
+            s.PhoneNumber == internationalWithoutPlus ||
+            s.PhoneNumber == internationalWithDoubleZero);
+    }
+
+    public async Task<bool>
+        IsBusinessLicenseNumberUsedAsync(
+            string normalizedLicenseNumber,
+            int? excludedStoreId = null)
+    {
+        var query =
+            _context.Stores
+                .AsNoTracking()
+                .AsQueryable();
+
+        if (excludedStoreId.HasValue)
+        {
+            query =
+                query.Where(s =>
+                    s.StoreID !=
+                    excludedStoreId.Value);
+        }
+
+        var comparisonValue =
+            normalizedLicenseNumber
+                .Trim()
+                .ToUpper();
+
+        return await query.AnyAsync(s =>
+            s.BusinessLicenseNumber != null &&
+            s.BusinessLicenseNumber
+                .Trim()
+                .ToUpper() ==
+            comparisonValue);
+    }
+
     public async Task<Store?> GetStoreDetailsAsync(int storeId)
         => await _context.Stores
             .Include(s => s.Owner)
