@@ -29,14 +29,6 @@
           href="~/css/customer-explore-polish.css"
           asp-append-version="true" />
 
-    <!-- ============================================================
-         PALETTE + BOTTOM-NAV OVERRIDES
-         customer-explore.css and customer-explore-polish.css aren't
-         available to edit directly, so this block re-themes the page
-         and repositions navigation using the classes already present
-         in the markup below. If you can share those two files, these
-         rules can be merged in properly instead of layered on top.
-         ============================================================ -->
     <style>
         :root {
             --accent-color: #6d28d9;
@@ -47,8 +39,6 @@
             --bg-color: #faf9fc;
             --text-primary: #1e1b2e;
         }
-
-        /* ---- Palette: recolor the visible brand/accent surfaces ---- */
 
         .brand-mark {
             color: #ffffff !important;
@@ -81,8 +71,7 @@
 
         .modal-action-button:hover,
         .secondary-product-button:hover,
-        .write-review-link,
-        .explore-intro h1 span {
+        .write-review-link {
             background: var(--accent-gradient) !important;
             -webkit-background-clip: text !important;
             background-clip: text !important;
@@ -90,7 +79,6 @@
             color: var(--accent-color) !important;
         }
 
-        .explore-intro .eyebrow,
         .product-review-stars,
         .intro-stat .stat-icon {
             color: var(--accent-color) !important;
@@ -103,8 +91,6 @@
         .mobile-bottom-nav a.active {
             color: var(--accent-color) !important;
         }
-
-        /* ---- Navigation lives only in the bottom nav now (topbar removed) ---- */
 
         .mobile-bottom-nav {
             display: flex !important;
@@ -136,8 +122,6 @@
                 .mobile-bottom-nav a i {
                     font-size: 17px;
                 }
-
-        /* ---- Broader catch-all: any other likely accent-colored surfaces ---- */
 
         .category-chip:hover {
             border-color: var(--accent-color) !important;
@@ -187,8 +171,6 @@
             color: var(--accent-color);
         }
 
-        /* ---- Background: replace black/dark page background with a fresh, light one ---- */
-
         html,
         body {
             background: var(--bg-color, #faf9fc) !important;
@@ -201,94 +183,86 @@
             padding-bottom: 82px;
         }
 
-
-        /* Light lavender hero, no gradient, no dark background */
         .explore-intro {
             position: relative;
             overflow: hidden;
             isolation: isolate;
-            background: #efeaf9 !important;
             border-radius: 20px;
-            padding: 8px;
+            padding: 36px 32px;
+            min-height: 300px;
+            background: #2a2140;
         }
 
-            .explore-intro > div:first-child,
-            .explore-intro h1,
-            .explore-intro p {
-                background: transparent !important;
-                color: var(--text-primary) !important;
+        .intro-slide {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 1.4s ease;
+            z-index: 0;
+        }
+
+            .intro-slide.active {
+                opacity: 1;
             }
 
-            .explore-intro .eyebrow {
-                color: var(--accent-color) !important;
-                background: rgba(109, 40, 217, 0.10) !important;
-            }
+        .explore-intro::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(20, 14, 40, 0.72) 0%, rgba(35, 22, 70, 0.62) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
 
-            .explore-intro p {
-                opacity: 0.85;
-            }
+        .explore-intro > div:first-child,
+        .explore-intro h1,
+        .explore-intro p {
+            position: relative;
+            z-index: 2;
+            background: transparent !important;
+            color: #ffffff !important;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+        }
 
-            .explore-intro h1 span {
-                background: var(--accent-gradient) !important;
-                -webkit-background-clip: text !important;
-                background-clip: text !important;
-                -webkit-text-fill-color: transparent !important;
-                color: var(--accent-color) !important;
-            }
+        .explore-intro .eyebrow {
+            position: relative;
+            z-index: 2;
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.24) !important;
+        }
+
+        .explore-intro p {
+            opacity: 1;
+        }
+
+        .explore-intro h1 span {
+            position: relative;
+            z-index: 2;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            -webkit-text-fill-color: unset !important;
+            color: #d8cef0 !important;
+        }
 
         .intro-stat {
-            background: #ffffff !important;
-            border: 1px solid #e3dbf7 !important;
+            position: relative;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.14) !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            backdrop-filter: blur(6px);
         }
 
             .intro-stat strong,
             .intro-stat span {
-                color: var(--text-primary) !important;
+                color: #ffffff !important;
             }
 
             .intro-stat .stat-icon {
-                color: var(--accent-color) !important;
+                color: #d8cef0 !important;
             }
-
-        .explore-intro::before,
-        .explore-intro::after {
-            content: "";
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(70px);
-            z-index: -1;
-            opacity: 0.35;
-            animation: exploreOrbFloat 12s ease-in-out infinite;
-        }
-
-        .explore-intro::before {
-            width: 260px;
-            height: 260px;
-            background: #c4b5fd;
-            top: -100px;
-            left: -60px;
-        }
-
-        .explore-intro::after {
-            width: 220px;
-            height: 220px;
-            background: #a7f3d0;
-            bottom: -90px;
-            right: -40px;
-            animation-delay: 3s;
-        }
-
-        @@keyframes exploreOrbFloat {
-            0%, 100% {
-                transform: translateY(0) scale(1);
-            }
-
-            50% {
-                transform: translateY(-16px) scale(1.06);
-            }
-        }
-
-        /* ---- Life: gentle entrance animations ---- */
 
         @@keyframes fadeSlideUp {
             from {
@@ -303,8 +277,9 @@
         }
 
         @@media (prefers-reduced-motion: reduce) {
-            .explore-intro, .category-chip, .explore-tile, .intro-stat, .explore-intro::before, .explore-intro::after {
+            .explore-intro, .category-chip, .explore-tile, .intro-stat, .intro-slide {
                 animation: none !important;
+                transition: none !important;
             }
         }
 
@@ -371,8 +346,6 @@
             }
         }
 
-        /* ---- Clearer bottom nav buttons ---- */
-
         .mobile-bottom-nav {
             box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
         }
@@ -408,8 +381,6 @@
         @Html.AntiForgeryToken()
     </form>
 
-    <!-- Top bar removed: brand and logout button taken out; navigation lives in the bottom nav below -->
-
     <main id="exploreApp"
           class="explore-page"
           data-category="@(Model.SelectedCategory ?? string.Empty)"
@@ -417,6 +388,11 @@
           data-has-more="@Model.HasMoreItems.ToString().ToLowerInvariant()">
 
         <section class="explore-intro">
+
+            <div class="intro-slide active" style="background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Fashion_model_looking_at_the_camera.jpg');"></div>
+            <div class="intro-slide" style="background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Smartphone_in_Hand_(Unsplash).jpg');"></div>
+            <div class="intro-slide" style="background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Fondue_dish.jpg');"></div>
+
             <div>
                 <span class="eyebrow">Discover local stores</span>
 
@@ -719,10 +695,6 @@
         </a>
     </nav>
 
-    <!-- =====================================================
-         SHARED EXPLORE QUICK-VIEW MODAL
-         Opens both existing Explore posts and normal products.
-         ===================================================== -->
     <div id="exploreModal"
          class="explore-modal"
          aria-hidden="true"
@@ -994,5 +966,19 @@
             asp-append-version="true"></script>
     <script src="~/js/customer-explore-fixes.js"
             asp-append-version="true"></script>
+
+    <script>
+        (function () {
+            var slides = document.querySelectorAll('.explore-intro .intro-slide');
+            if (slides.length === 0) return;
+
+            var current = 0;
+            setInterval(function () {
+                slides[current].classList.remove('active');
+                current = (current + 1) % slides.length;
+                slides[current].classList.add('active');
+            }, 4000);
+        })();
+    </script>
 </body>
 </html>
