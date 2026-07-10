@@ -12,7 +12,9 @@ namespace Multi_Store.Core.Reposinterface
         Task<Store?> GetByCodeAsync(string storeCode);
 
         Task<Store?> GetByOwnerIdAsync(int ownerUserId);
-        Task<Store?> GetByRequestedByUserIdAsync(int requestedByUserId);
+
+        Task<Store?> GetByRequestedByUserIdAsync(
+            int requestedByUserId);
 
         Task<bool> IsPhoneUsedAsync(
             string normalizedPhone,
@@ -52,7 +54,9 @@ namespace Multi_Store.Core.Reposinterface
 
         Task UnfollowStoreAsync(int customerId, int storeId);
 
-        Task<bool> IsFollowingAsync(int customerId, int storeId);
+        Task<bool> IsFollowingAsync(
+            int customerId,
+            int storeId);
 
         Task<int> GetFollowersCountAsync(int storeId);
 
@@ -61,8 +65,9 @@ namespace Multi_Store.Core.Reposinterface
         // =====================
 
         Task<List<Review>> GetStoreReviewsAsync(int storeId);
+
         Task DeleteProductReviewAsync(
-     int reviewId,
-     int storeOwnerId);
+            int reviewId,
+            int storeOwnerId);
     }
 }
