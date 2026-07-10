@@ -2,6 +2,8 @@
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface;
 using Multi_Store.Services.Dtos;
+using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace Multi_Store.Services.Managers
 {
@@ -25,286 +27,219 @@ namespace Multi_Store.Services.Managers
         public Task<Store?> GetByUserIdAsync(int userId)
             => _storeRepository.GetByOwnerIdAsync(userId);
 
+        public Task<Store?> GetByRequestedByUserIdAsync(
+            int requestedByUserId)
+            => _storeRepository
+                .GetByRequestedByUserIdAsync(
+                    requestedByUserId);
+
         // =====================
         // REGISTER STORE
         // =====================
 
-        public async Task<int> RegisterStoreAsync(StoreDTO dto)
+        /*
+         * Use this method from the Store Request page.
+         * Expected business validation failures are returned as a result
+         * instead of being thrown as exceptions.
+         */
+        public async Task<StoreRegistrationResult>
+            TryRegisterStoreAsync(
+                StoreDTO? dto)
         {
             if (dto == null)
             {
-                throw new ArgumentNullException(nameof(dto));
+                return StoreRegistrationResult.Failure(
+                    "Invalid store request.");
             }
 
             if (dto.OwnerUserID <= 0)
             {
-                throw new InvalidOperationException(
+                return StoreRegistrationResult.Failure(
                     "Invalid customer account.");
             }
 
-            if (string.IsNullOrWhiteSpace(dto.StoreName))
+            NormalizeStoreRequest(
+                dto);
+
+            var validationError =
+                GetStoreRequestValidationError(
+                    dto);
+
+            if (!string.IsNullOrWhiteSpace(
+                    validationError))
             {
-                throw new InvalidOperationException(
-                    "Store name is required.");
+                return StoreRegistrationResult.Failure(
+                    validationError);
             }
 
-            if (string.IsNullOrWhiteSpace(dto.Email))
-            {
-                throw new InvalidOperationException(
-                    "Store email is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
-            {
-                throw new InvalidOperationException(
-                    "Store phone number is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(dto.AddressLine1))
-            {
-                throw new InvalidOperationException(
-                    "Store address is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(dto.City))
-            {
-                throw new InvalidOperationException(
-                    "City is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(dto.Area))
-            {
-                throw new InvalidOperationException(
-                    "Area is required.");
-            }
-
-            // Search using the permanent original-Customer link.
-            // The repository also supports old Stores where
-            // RequestedByUserID is still null.
             var existingStore =
                 await _storeRepository
-                    .GetByRequestedByUserIdAsync(dto.OwnerUserID);
+                    .GetByRequestedByUserIdAsync(
+                        dto.OwnerUserID);
 
             if (existingStore != null)
             {
-                if (string.Equals(
-                        existingStore.Status?.Trim(),
-                        "Pending",
-                        StringComparison.OrdinalIgnoreCase))
+                if (StatusEquals(
+                        existingStore.Status,
+                        "Pending"))
                 {
-                    throw new InvalidOperationException(
+                    return StoreRegistrationResult.Failure(
                         "You already have a pending store request.");
                 }
 
-                if (string.Equals(
-                        existingStore.Status?.Trim(),
-                        "Approved",
-                        StringComparison.OrdinalIgnoreCase))
+                if (StatusEquals(
+                        existingStore.Status,
+                        "Approved"))
                 {
-                    throw new InvalidOperationException(
+                    return StoreRegistrationResult.Failure(
                         "You are already a store owner.");
                 }
 
-                if (string.Equals(
-                        existingStore.Status?.Trim(),
-                        "Inactive",
-                        StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(
-                        existingStore.Status?.Trim(),
-                        "Suspended",
-                        StringComparison.OrdinalIgnoreCase))
+                if (StatusEquals(
+                        existingStore.Status,
+                        "Inactive") ||
+                    StatusEquals(
+                        existingStore.Status,
+                        "Suspended"))
                 {
-                    throw new InvalidOperationException(
+                    return StoreRegistrationResult.Failure(
                         "A store account already exists but is currently inactive.");
                 }
 
-                if (string.Equals(
-                        existingStore.Status?.Trim(),
-                        "Rejected",
-                        StringComparison.OrdinalIgnoreCase))
+                if (!StatusEquals(
+                        existingStore.Status,
+                        "Rejected"))
                 {
-                    // Permanently preserve the Customer who submitted
-                    // the original Store request.
-                    existingStore.RequestedByUserID ??=
-                        dto.OwnerUserID;
-
-                    // Before approval, OwnerUserID temporarily points
-                    // to the original Customer account.
-                    existingStore.OwnerUserID =
-                        dto.OwnerUserID;
-
-                    existingStore.StoreName =
-                        dto.StoreName.Trim();
-
-                    existingStore.Email =
-                        dto.Email.Trim();
-
-                    existingStore.PhoneNumber =
-                        dto.PhoneNumber.Trim();
-
-                    existingStore.AddressLine1 =
-                        dto.AddressLine1.Trim();
-
-                    existingStore.AddressLine2 =
-                        string.IsNullOrWhiteSpace(dto.AddressLine2)
-                            ? null
-                            : dto.AddressLine2.Trim();
-
-                    existingStore.City =
-                        dto.City.Trim();
-
-                    existingStore.Area =
-                        dto.Area.Trim();
-
-                    existingStore.Description =
-                        dto.Description?.Trim()
-                        ?? string.Empty;
-
-                    existingStore.BusinessLicenseNumber =
-                        string.IsNullOrWhiteSpace(
-                            dto.BusinessLicenseNumber)
-                            ? null
-                            : dto.BusinessLicenseNumber.Trim();
-
-                    existingStore.BusinessLicenseURL =
-                        string.IsNullOrWhiteSpace(
-                            dto.BusinessLicenseURL)
-                            ? null
-                            : dto.BusinessLicenseURL.Trim();
-
-                    existingStore.Latitude =
-                        dto.Latitude;
-
-                    existingStore.Longitude =
-                        dto.Longitude;
-
-                    existingStore.HasFixedDeliveryFee =
-                        dto.HasFixedDeliveryFee;
-
-                    existingStore.FixedDeliveryFee =
-                        dto.HasFixedDeliveryFee
-                            ? dto.FixedDeliveryFee
-                            : null;
-
-                    existingStore.CommissionRate =
-                        dto.CommissionRate;
-
-                    existingStore.CODSupported =
-                        dto.CODSupported;
-
-                    existingStore.CODMaxLimit =
-                        dto.CODMaxLimit;
-
-                    existingStore.Status =
-                        "Pending";
-
-                    existingStore.ApprovedAt =
-                        null;
-
-                    existingStore.ApprovedBy =
-                        null;
-
-                    await _storeRepository
-                        .UpdateAsync(existingStore);
-
-                    return existingStore.StoreID;
+                    return StoreRegistrationResult.Failure(
+                        "A store request already exists for this customer.");
                 }
-
-                throw new InvalidOperationException(
-                    "A store request already exists for this customer.");
             }
 
-            var store = new Store
+            var excludedStoreId =
+                existingStore?.StoreID;
+
+            var phoneUsed =
+                await _storeRepository
+                    .IsPhoneUsedAsync(
+                        dto.PhoneNumber,
+                        excludedStoreId);
+
+            if (phoneUsed)
             {
-                // Before approval, both fields point to the Customer.
-                // After approval, only OwnerUserID will be changed
-                // to the generated StoreOwner account.
-                OwnerUserID =
-                    dto.OwnerUserID,
+                return StoreRegistrationResult.Failure(
+                    "This phone number is already used by another store.");
+            }
 
-                RequestedByUserID =
-                    dto.OwnerUserID,
+            var licenseUsed =
+                await _storeRepository
+                    .IsBusinessLicenseNumberUsedAsync(
+                        dto.BusinessLicenseNumber!,
+                        excludedStoreId);
 
-                StoreName =
-                    dto.StoreName.Trim(),
+            if (licenseUsed)
+            {
+                return StoreRegistrationResult.Failure(
+                    "This business license number is already registered.");
+            }
 
-                Email =
-                    dto.Email.Trim(),
+            if (existingStore != null)
+            {
+                ApplyStoreRequestData(
+                    existingStore,
+                    dto);
 
-                PhoneNumber =
-                    dto.PhoneNumber.Trim(),
+                existingStore.RequestedByUserID ??=
+                    dto.OwnerUserID;
 
-                AddressLine1 =
-                    dto.AddressLine1.Trim(),
+                existingStore.OwnerUserID =
+                    dto.OwnerUserID;
 
-                AddressLine2 =
-                    string.IsNullOrWhiteSpace(dto.AddressLine2)
-                        ? null
-                        : dto.AddressLine2.Trim(),
+                existingStore.Status =
+                    "Pending";
 
-                City =
-                    dto.City.Trim(),
+                existingStore.CreatedAt =
+                    DateTime.UtcNow;
 
-                Area =
-                    dto.Area.Trim(),
+                existingStore.ApprovedAt =
+                    null;
 
-                Description =
-                    dto.Description?.Trim()
-                    ?? string.Empty,
+                existingStore.ApprovedBy =
+                    null;
 
-                BusinessLicenseNumber =
-                    string.IsNullOrWhiteSpace(
-                        dto.BusinessLicenseNumber)
-                        ? null
-                        : dto.BusinessLicenseNumber.Trim(),
+                existingStore.SubscriptionStatus =
+                    "Pending";
 
-                BusinessLicenseURL =
-                    string.IsNullOrWhiteSpace(
-                        dto.BusinessLicenseURL)
-                        ? null
-                        : dto.BusinessLicenseURL.Trim(),
+                existingStore.IsSuspended =
+                    false;
 
-                Latitude =
-                    dto.Latitude,
+                await _storeRepository
+                    .UpdateAsync(
+                        existingStore);
 
-                Longitude =
-                    dto.Longitude,
+                return StoreRegistrationResult.Success(
+                    existingStore.StoreID,
+                    "Your updated store request was resubmitted successfully.");
+            }
 
-                HasFixedDeliveryFee =
-                    dto.HasFixedDeliveryFee,
+            var store =
+                new Store
+                {
+                    OwnerUserID =
+                        dto.OwnerUserID,
 
-                FixedDeliveryFee =
-                    dto.HasFixedDeliveryFee
-                        ? dto.FixedDeliveryFee
-                        : null,
+                    RequestedByUserID =
+                        dto.OwnerUserID,
 
-                StoreCode =
-                    "ST-" +
-                    Guid.NewGuid()
-                        .ToString("N")[..8]
-                        .ToUpperInvariant(),
+                    StoreCode =
+                        "ST-" +
+                        Guid.NewGuid()
+                            .ToString("N")[..8]
+                            .ToUpperInvariant(),
 
-                Status =
-                    "Pending",
+                    Status =
+                        "Pending",
 
-                CreatedAt =
-                    DateTime.UtcNow,
+                    SubscriptionStatus =
+                        "Pending",
 
-                CommissionRate =
-                    dto.CommissionRate,
+                    CreatedAt =
+                        DateTime.UtcNow
+                };
 
-                CODSupported =
-                    dto.CODSupported,
-
-                CODMaxLimit =
-                    dto.CODMaxLimit
-            };
+            ApplyStoreRequestData(
+                store,
+                dto);
 
             var saved =
                 await _storeRepository
-                    .AddAsync(store);
+                    .AddAsync(
+                        store);
 
-            return saved.StoreID;
+            return StoreRegistrationResult.Success(
+                saved.StoreID,
+                "Your store request was submitted successfully.");
+        }
+
+        /*
+         * Compatibility method for any older code that still calls
+         * RegisterStoreAsync. The Store Request page should use
+         * TryRegisterStoreAsync instead.
+         */
+        public async Task<int> RegisterStoreAsync(
+            StoreDTO dto)
+        {
+            var result =
+                await TryRegisterStoreAsync(
+                    dto);
+
+            if (!result.Succeeded ||
+                !result.StoreId.HasValue)
+            {
+                throw new InvalidOperationException(
+                    result.Message);
+            }
+
+            return result.StoreId.Value;
         }
 
         // =====================
@@ -609,7 +544,7 @@ namespace Multi_Store.Services.Managers
                 CODMaxLimit = s.CODMaxLimit,
                 CreatedAt = s.CreatedAt,
                 ApprovedAt = s.ApprovedAt,
-                ApprovedBy = s.ApprovedBy ,
+                ApprovedBy = s.ApprovedBy,
 
                 SubscriptionStatus = s.SubscriptionStatus,
                 SubscriptionExpiryDate = s.SubscriptionExpiryDate,
@@ -652,6 +587,294 @@ namespace Multi_Store.Services.Managers
                 reviewId,
                 storeOwnerId);
         }
+        private static void NormalizeStoreRequest(
+            StoreDTO dto)
+        {
+            dto.StoreName =
+                dto.StoreName?.Trim()
+                ?? string.Empty;
+
+            dto.Email =
+                dto.Email?.Trim()
+                    .ToLowerInvariant()
+                ?? string.Empty;
+
+            dto.PhoneNumber =
+                NormalizeLebanesePhone(
+                    dto.PhoneNumber);
+
+            dto.Description =
+                dto.Description?.Trim()
+                ?? string.Empty;
+
+            dto.AddressLine1 =
+                dto.AddressLine1?.Trim()
+                ?? string.Empty;
+
+            dto.AddressLine2 =
+                string.IsNullOrWhiteSpace(
+                    dto.AddressLine2)
+                    ? null
+                    : dto.AddressLine2.Trim();
+
+            dto.City =
+                dto.City?.Trim()
+                ?? string.Empty;
+
+            dto.Area =
+                dto.Area?.Trim()
+                ?? string.Empty;
+
+            dto.BusinessLicenseNumber =
+                dto.BusinessLicenseNumber?.Trim()
+                ?? string.Empty;
+
+            dto.BusinessLicenseURL =
+                dto.BusinessLicenseURL?.Trim();
+        }
+
+        private static string?
+            GetStoreRequestValidationError(
+                StoreDTO dto)
+        {
+            if (dto.StoreName.Length < 2 ||
+                dto.StoreName.Length > 100)
+            {
+                return
+                    "Store name must contain between 2 and 100 characters.";
+            }
+
+            if (!new EmailAddressAttribute()
+                    .IsValid(
+                        dto.Email) ||
+                dto.Email.Length > 150)
+            {
+                return
+                    "Enter a valid business contact email.";
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    dto.PhoneNumber))
+            {
+                return
+                    "Enter a valid Lebanese phone number.";
+            }
+
+            if (dto.Description.Length < 20 ||
+                dto.Description.Length > 1000)
+            {
+                return
+                    "Store description must contain between 20 and 1000 characters.";
+            }
+
+            if (dto.AddressLine1.Length < 5 ||
+                dto.AddressLine1.Length > 250)
+            {
+                return
+                    "Store address must contain between 5 and 250 characters.";
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    dto.BusinessLicenseNumber) ||
+                dto.BusinessLicenseNumber.Length < 3 ||
+                dto.BusinessLicenseNumber.Length > 50)
+            {
+                return
+                    "Business license number must contain between 3 and 50 characters.";
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    dto.BusinessLicenseURL))
+            {
+                return
+                    "Business license document is required.";
+            }
+
+            if (!IsValidCityArea(
+                    dto.City,
+                    dto.Area))
+            {
+                return
+                    "The selected area does not match the selected city.";
+            }
+
+            if (!IsInsideLebanon(
+                    dto.Latitude,
+                    dto.Longitude))
+            {
+                return
+                    "The store location must be inside Lebanon.";
+            }
+
+            if (dto.HasFixedDeliveryFee &&
+                (!dto.FixedDeliveryFee.HasValue ||
+                 dto.FixedDeliveryFee.Value < 0))
+            {
+                return
+                    "Enter a valid fixed delivery fee.";
+            }
+
+            return null;
+        }
+
+        private static void ApplyStoreRequestData(
+            Store store,
+            StoreDTO dto)
+        {
+            store.StoreName =
+                dto.StoreName;
+
+            store.Email =
+                dto.Email;
+
+            store.PhoneNumber =
+                dto.PhoneNumber;
+
+            store.Description =
+                dto.Description;
+
+            store.AddressLine1 =
+                dto.AddressLine1;
+
+            store.AddressLine2 =
+                dto.AddressLine2;
+
+            store.City =
+                dto.City;
+
+            store.Area =
+                dto.Area;
+
+            store.Latitude =
+                dto.Latitude;
+
+            store.Longitude =
+                dto.Longitude;
+
+            store.BusinessLicenseNumber =
+                dto.BusinessLicenseNumber;
+
+            store.BusinessLicenseURL =
+                dto.BusinessLicenseURL;
+
+            store.HasFixedDeliveryFee =
+                dto.HasFixedDeliveryFee;
+
+            store.FixedDeliveryFee =
+                dto.HasFixedDeliveryFee
+                    ? dto.FixedDeliveryFee
+                    : null;
+
+            store.CommissionRate =
+                dto.CommissionRate;
+
+            store.CODSupported =
+                dto.CODSupported;
+
+            store.CODMaxLimit =
+                dto.CODMaxLimit;
+        }
+
+        private static string NormalizeLebanesePhone(
+            string? phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(
+                    phoneNumber))
+            {
+                return string.Empty;
+            }
+
+            var value =
+                Regex.Replace(
+                    phoneNumber.Trim(),
+                    @"[\s()-]",
+                    string.Empty);
+
+            if (value.StartsWith(
+                    "00961",
+                    StringComparison.Ordinal))
+            {
+                value =
+                    "+" + value.Substring(2);
+            }
+            else if (value.StartsWith(
+                         "961",
+                         StringComparison.Ordinal))
+            {
+                value =
+                    "+" + value;
+            }
+            else if (value.StartsWith(
+                         "0",
+                         StringComparison.Ordinal))
+            {
+                value =
+                    "+961" + value.Substring(1);
+            }
+            else if (!value.StartsWith(
+                         "+",
+                         StringComparison.Ordinal))
+            {
+                value =
+                    "+961" + value;
+            }
+
+            return Regex.IsMatch(
+                value,
+                @"^\+961[0-9]{7,8}$")
+                    ? value
+                    : string.Empty;
+        }
+
+        private static bool IsValidCityArea(
+            string city,
+            string area)
+        {
+            var expectedArea =
+                city switch
+                {
+                    "Beirut" =>
+                        "Beirut",
+
+                    "Tripoli" =>
+                        "North Lebanon",
+
+                    "Saida" or "Tyre" =>
+                        "South Lebanon",
+
+                    "Zahle" =>
+                        "Bekaa",
+
+                    "Jounieh" or "Byblos" or
+                    "Aley" or "Baabda" =>
+                        "Mount Lebanon",
+
+                    "Nabatieh" =>
+                        "Nabatieh",
+
+                    _ =>
+                        string.Empty
+                };
+
+            return !string.IsNullOrWhiteSpace(
+                       expectedArea)
+                   &&
+                   string.Equals(
+                       expectedArea,
+                       area,
+                       StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsInsideLebanon(
+            decimal latitude,
+            decimal longitude)
+        {
+            return latitude >= 33.0m &&
+                   latitude <= 34.8m &&
+                   longitude >= 35.0m &&
+                   longitude <= 36.8m;
+        }
+
         private static string GetIdentityErrors(
     IdentityResult result)
         {
@@ -669,6 +892,39 @@ namespace Multi_Store.Services.Managers
                 value?.Trim(),
                 expected,
                 StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    public sealed class StoreRegistrationResult
+    {
+        public bool Succeeded { get; private set; }
+
+        public int? StoreId { get; private set; }
+
+        public string Message { get; private set; }
+            = string.Empty;
+
+        public static StoreRegistrationResult Success(
+            int storeId,
+            string message)
+        {
+            return new StoreRegistrationResult
+            {
+                Succeeded = true,
+                StoreId = storeId,
+                Message = message
+            };
+        }
+
+        public static StoreRegistrationResult Failure(
+            string message)
+        {
+            return new StoreRegistrationResult
+            {
+                Succeeded = false,
+                StoreId = null,
+                Message = message
+            };
         }
     }
 }
