@@ -1,10 +1,11 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Identity;
-using Multi_Store.Core.Entities;
-using Multi_Store.Services.Managers;
-using Multi_Store.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Multi_Store.Core.Entities;
+using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Managers;
+using Multi_Store.Services.Dtos;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
@@ -16,60 +17,61 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly MessagingManager _messagingManager;
         private readonly WishlistManager _wishlistManager;
         private readonly ApplicationDbContext _context;
-        private readonly CartManager _cartManager;
 
         public StoreCustomerProfileModel(
-    StoreManager storeManager,
-    UserManager<User> userManager,
-    CustomerManager customerManager,
-    MessagingManager messagingManager,
-    WishlistManager wishlistManager,
-    CartManager cartManager,
-    ApplicationDbContext context)
+            StoreManager storeManager,
+            UserManager<User> userManager,
+            CustomerManager customerManager,
+            MessagingManager messagingManager,
+            WishlistManager wishlistManager,
+            CartManager cartManager,
+            ApplicationDbContext context)
         {
             _storeManager = storeManager;
             _userManager = userManager;
             _customerManager = customerManager;
             _messagingManager = messagingManager;
             _wishlistManager = wishlistManager;
-            _cartManager = cartManager;
             _context = context;
         }
 
-        public Store Store { get; set; }
+        public Store Store { get; set; } = null!;
         public List<Product> Products { get; set; } = new();
-
         public int FollowersCount { get; set; }
         public bool IsFollowing { get; set; }
+        public bool IsBlocked { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
             var store = await _storeManager.GetStoreByIdAsync(id);
-
-            if (store == null)
+            if (store == null || !string.Equals(store.Status, "Approved", StringComparison.OrdinalIgnoreCase))
                 return NotFound();
 
             Store = store;
             Products = await _context.Products
-     .Include(p => p.Images)
-     .Include(p => p.Reviews)
-         .ThenInclude(r => r.Customer)
-             .ThenInclude(c => c.User)
-     .Where(p => p.StoreID == id)
-     .ToListAsync();
+                .AsNoTracking()
+                .Include(p => p.Images)
+                .Include(p => p.Reviews)
+                    .ThenInclude(r => r.Customer)
+                        .ThenInclude(c => c.User)
+                .Where(p => p.StoreID == id && p.IsActive)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
             FollowersCount = await _storeManager.GetFollowersCountAsync(id);
 
             var user = await _userManager.GetUserAsync(User);
-
             if (user != null)
             {
                 var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
-
                 if (customer != null)
                 {
-                    IsFollowing =
-                        await _storeManager.IsFollowingAsync(customer.CustomerID, id);
+                    IsFollowing = await _storeManager.IsFollowingAsync(customer.CustomerID, id);
                 }
+
+                IsBlocked = await _context.BlockRelations.AnyAsync(b =>
+                    b.BlockerUserId == user.Id &&
+                    b.BlockedUserId == store.OwnerUserID);
             }
 
             return Page();
@@ -77,51 +79,191 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public async Task<IActionResult> OnPostFollowAsync(int storeId)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToPage(new { id = storeId });
-
-            var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
-            if (customer == null) return RedirectToPage(new { id = storeId });
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return RedirectToLogin();
 
             await _storeManager.FollowStoreAsync(customer.CustomerID, storeId);
-
+            TempData["Success"] = "Store followed successfully.";
             return RedirectToPage(new { id = storeId });
         }
 
         public async Task<IActionResult> OnPostUnfollowAsync(int storeId)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToPage(new { id = storeId });
-
-            var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
-            if (customer == null) return RedirectToPage(new { id = storeId });
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return RedirectToLogin();
 
             await _storeManager.UnfollowStoreAsync(customer.CustomerID, storeId);
-
+            TempData["Success"] = "Store unfollowed.";
             return RedirectToPage(new { id = storeId });
         }
 
-
-        public async Task<IActionResult> OnPostAddReviewAsync(
-    int productId,
-    int rating,
-    string comment)
+        public async Task<IActionResult> OnPostBlockStoreAsync(int storeId)
         {
             var user = await _userManager.GetUserAsync(User);
-
             if (user == null)
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                return RedirectToLogin();
 
-            var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
+            var store = await _context.Stores.FirstOrDefaultAsync(s => s.StoreID == storeId);
+            if (store == null)
+                return NotFound();
 
+            if (store.OwnerUserID == user.Id)
+            {
+                TempData["Error"] = "You cannot block your own store.";
+                return RedirectToPage(new { id = storeId });
+            }
+
+            var existing = await _context.BlockRelations.FirstOrDefaultAsync(b =>
+                b.BlockerUserId == user.Id &&
+                b.BlockedUserId == store.OwnerUserID);
+
+            if (existing == null)
+            {
+                _context.BlockRelations.Add(new BlockRelation
+                {
+                    BlockerUserId = user.Id,
+                    BlockedUserId = store.OwnerUserID,
+                    BlockerRole = "Customer",
+                    BlockedRole = "StoreOwner",
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
+                if (customer != null)
+                {
+                    var follow = await _context.StoreFollows.FirstOrDefaultAsync(f =>
+                        f.CustomerID == customer.CustomerID && f.StoreID == storeId);
+                    if (follow != null)
+                        _context.StoreFollows.Remove(follow);
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Success"] = "Store blocked.";
+            return RedirectToPage("/Customer1");
+        }
+
+        public async Task<IActionResult> OnPostUnblockStoreAsync(int storeId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToLogin();
+
+            var store = await _context.Stores.FirstOrDefaultAsync(s => s.StoreID == storeId);
+            if (store == null)
+                return NotFound();
+
+            var existing = await _context.BlockRelations.FirstOrDefaultAsync(b =>
+                b.BlockerUserId == user.Id && b.BlockedUserId == store.OwnerUserID);
+
+            if (existing != null)
+            {
+                _context.BlockRelations.Remove(existing);
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Success"] = "Store unblocked.";
+            return RedirectToPage(new { id = storeId });
+        }
+
+        public async Task<IActionResult> OnPostReportStoreAsync(
+            int storeId,
+            string? complaintType,
+            string? description)
+        {
+            var customer = await GetCurrentCustomerAsync();
             if (customer == null)
-                return RedirectToPage();
+                return RedirectToLogin();
+
+            var storeExists = await _context.Stores.AnyAsync(s => s.StoreID == storeId);
+            if (!storeExists)
+                return NotFound();
+
+            var cleanType = string.IsNullOrWhiteSpace(complaintType)
+                ? "Store report"
+                : complaintType.Trim();
+            var cleanDescription = description?.Trim();
+
+            if (string.IsNullOrWhiteSpace(cleanDescription))
+            {
+                TempData["Error"] = "Please explain why you are reporting this store.";
+                return RedirectToPage(new { id = storeId });
+            }
+
+            _context.Complaints.Add(new Complaint
+            {
+                CustomerID = customer.CustomerID,
+                StoreID = storeId,
+                ProductID = null,
+                OrderID = null,
+                ComplaintType = cleanType,
+                Description = cleanDescription,
+                Status = "Pending Review",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Your report was submitted for review.";
+            return RedirectToPage(new { id = storeId });
+        }
+
+        public async Task<IActionResult> OnPostReportProductAsync(
+            int productId,
+            string? description)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return RedirectToLogin();
 
             var product = await _context.Products
-                .FirstOrDefaultAsync(x => x.ProductID == productId);
-
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ProductID == productId);
             if (product == null)
-                return RedirectToPage();
+                return NotFound();
+
+            var cleanDescription = description?.Trim();
+            if (string.IsNullOrWhiteSpace(cleanDescription))
+            {
+                TempData["Error"] = "Please explain why you are reporting this product.";
+                return RedirectToPage(new { id = product.StoreID });
+            }
+
+            _context.Complaints.Add(new Complaint
+            {
+                CustomerID = customer.CustomerID,
+                StoreID = product.StoreID,
+                ProductID = product.ProductID,
+                ComplaintType = "Product report",
+                Description = cleanDescription,
+                Status = "Pending Review",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Product report submitted.";
+            return RedirectToPage(new { id = product.StoreID });
+        }
+
+        public async Task<IActionResult> OnPostAddReviewAsync(int productId, int rating, string comment)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return RedirectToLogin();
+
+            var product = await _context.Products.FirstOrDefaultAsync(x => x.ProductID == productId);
+            if (product == null)
+                return NotFound();
+
+            rating = Math.Clamp(rating, 1, 5);
+            var cleanComment = comment?.Trim();
+            if (string.IsNullOrWhiteSpace(cleanComment))
+            {
+                TempData["Error"] = "Please write a review.";
+                return RedirectToPage(new { id = product.StoreID });
+            }
 
             _context.Reviews.Add(new Review
             {
@@ -129,102 +271,69 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 ProductID = productId,
                 StoreID = product.StoreID,
                 Rating = rating,
-                Comment = comment,
+                Comment = cleanComment,
                 Status = "Approved",
                 CreatedAt = DateTime.UtcNow
             });
 
             await _context.SaveChangesAsync();
-
-            return RedirectToPage(new
-            {
-                id = product.StoreID
-            });
+            TempData["Success"] = "Review posted.";
+            return RedirectToPage(new { id = product.StoreID });
         }
+
         public async Task<IActionResult> OnPostAddWishlistAsync(int productId)
         {
-            var user = await _userManager.GetUserAsync(User);
-
-            if (user == null)
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
-
-            var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
-
+            var customer = await GetCurrentCustomerAsync();
             if (customer == null)
-                return RedirectToPage();
+                return RedirectToLogin();
 
             var product = await _context.Products
-                .FirstOrDefaultAsync(p =>
-                    p.ProductID == productId &&
-                    p.IsActive);
-
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ProductID == productId && p.IsActive);
             if (product == null)
-                return RedirectToPage();
+                return NotFound();
 
-            var exists = await _wishlistManager.IsInWishlistAsync(
-                customer.CustomerID,
-                productId);
+            if (!await _wishlistManager.IsInWishlistAsync(customer.CustomerID, productId))
+                await _wishlistManager.AddToWishlistAsync(customer.CustomerID, productId);
 
-            if (!exists)
-            {
-                await _wishlistManager.AddToWishlistAsync(
-                    customer.CustomerID,
-                    productId);
-            }
-
-            return RedirectToPage(new
-            {
-                id = product.StoreID
-            });
+            TempData["Success"] = "Product saved to wishlist.";
+            return RedirectToPage(new { id = product.StoreID });
         }
-        public async Task<IActionResult> OnPostShareToStoreAsync(
-    int productId,
-    int storeOwnerId)
+
+        public async Task<IActionResult> OnPostShareToStoreAsync(int productId, int storeOwnerId)
         {
             var user = await _userManager.GetUserAsync(User);
-
             if (user == null)
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
-
-            await _messagingManager.SendProductAsync(
-                user.Id,
-                storeOwnerId,
-                productId);
+                return RedirectToLogin();
 
             var product = await _context.Products
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.ProductID == productId);
+            if (product == null)
+                return NotFound();
 
-            return RedirectToPage(new
-            {
-                id = product?.StoreID
-            });
+            await _messagingManager.SendProductAsync(user.Id, storeOwnerId, productId);
+            TempData["Success"] = "Product shared in chat.";
+            return RedirectToPage(new { id = product.StoreID });
         }
+
         public async Task<IActionResult> OnPostAddToCartAsync(int productId)
         {
-            var user = await _userManager.GetUserAsync(User);
-
-            if (user == null)
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
-
-            var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
-
+            var customer = await GetCurrentCustomerAsync();
             if (customer == null)
-                return RedirectToPage();
+                return RedirectToLogin();
 
             var product = await _context.Products
-                .FirstOrDefaultAsync(p =>
-                    p.ProductID == productId &&
-                    p.IsActive);
-
+                .FirstOrDefaultAsync(p => p.ProductID == productId && p.IsActive);
             if (product == null)
             {
                 TempData["Error"] = "Product not found.";
-                return RedirectToPage(new { id = product?.StoreID });
+                return RedirectToPage();
             }
 
             if (product.Quantity <= 0)
             {
-                TempData["Error"] = "Out of stock.";
+                TempData["Error"] = "This product is out of stock.";
                 return RedirectToPage(new { id = product.StoreID });
             }
 
@@ -241,15 +350,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     UpdatedAt = DateTime.UtcNow,
                     ExpiresAt = DateTime.UtcNow.AddDays(7)
                 };
-
                 _context.Carts.Add(cart);
                 await _context.SaveChangesAsync();
             }
 
-            var existingItem = await _context.CartItems
-                .FirstOrDefaultAsync(ci =>
-                    ci.CartID == cart.CartID &&
-                    ci.ProductID == productId);
+            var existingItem = await _context.CartItems.FirstOrDefaultAsync(ci =>
+                ci.CartID == cart.CartID && ci.ProductID == productId);
 
             if (existingItem == null)
             {
@@ -261,13 +367,33 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     PriceAtAddTime = product.Price,
                     AddedAt = DateTime.UtcNow
                 });
-
-                await _context.SaveChangesAsync();
+            }
+            else if (existingItem.Quantity < product.Quantity)
+            {
+                existingItem.Quantity += 1;
+            }
+            else
+            {
+                TempData["Error"] = "You already added the available quantity.";
+                return RedirectToPage(new { id = product.StoreID });
             }
 
-            TempData["Success"] = "Added to cart.";
+            cart.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
 
+            TempData["Success"] = "Added to cart.";
             return RedirectToPage(new { id = product.StoreID });
         }
+
+        private async Task<CustomerDTO?> GetCurrentCustomerAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            return user == null
+                ? null
+                : await _customerManager.GetCustomerByUserIdAsync(user.Id);
+        }
+
+        private IActionResult RedirectToLogin() =>
+            RedirectToPage("/Account/Login", new { area = "Identity" });
     }
 }
