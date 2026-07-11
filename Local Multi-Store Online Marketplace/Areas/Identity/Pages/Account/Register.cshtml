@@ -23,17 +23,52 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        :root {
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-steel: #4f46e5;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            --pop-yellow: #ffc93c;
+            --pop-coral: #ff6b6b;
+            --pop-mint: #2ee6a6;
+            --pop-pink: #ff8fc7;
+            --bg-color: #f8f7fc;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            --border-color: #ece8f6;
         }
 
         body {
             width: 100%;
             min-height: 100vh;
-            background: #1f1f1f;
+            background: var(--bg-color);
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+        }
+
+        /* -------- Entrance animation -------- */
+        @@keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .container, .right-side > *, .scene * {
+                animation: none !important;
+            }
         }
 
         .container {
@@ -41,48 +76,258 @@
             min-height: 750px;
             background: white;
             display: flex;
-            border-radius: 15px;
+            border-radius: 28px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 25px 60px rgba(30, 27, 46, 0.22);
+            animation: fadeSlideUp 0.6s ease both;
         }
 
+        .right-side > * {
+            animation: fadeSlideUp 0.5s ease both;
+        }
+
+            .right-side > *:nth-child(1) {
+                animation-delay: 0.08s;
+            }
+
+            .right-side > *:nth-child(2) {
+                animation-delay: 0.14s;
+            }
+
+            .right-side > *:nth-child(3) {
+                animation-delay: 0.2s;
+            }
+
+            .right-side > *:nth-child(4) {
+                animation-delay: 0.26s;
+            }
+
+        /* -------- Left playful illustrated panel -------- */
         .left-side {
-            width: 50%;
-            background: url('/images/register-bg.jpg');
-            background-size: cover;
-            background-position: center;
+            width: 42%;
             position: relative;
+            overflow: hidden;
+            background: linear-gradient(160deg, #7c3aed 0%, #6366f1 55%, #4338ca 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px 48px 30px;
         }
 
+            /* Soft organic blobs for texture */
             .left-side::before {
                 content: "";
                 position: absolute;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.4);
+                width: 320px;
+                height: 320px;
+                border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%;
+                background: rgba(255, 255, 255, 0.08);
+                top: -80px;
+                left: -90px;
             }
 
-        .overlay {
-            position: absolute;
-            bottom: 60px;
-            left: 50px;
-            color: white;
+            .left-side::after {
+                content: "";
+                position: absolute;
+                width: 260px;
+                height: 260px;
+                border-radius: 60% 40% 35% 65% / 55% 65% 35% 45%;
+                background: rgba(255, 201, 60, 0.12);
+                bottom: -70px;
+                right: -60px;
+            }
+
+        .badge {
+            position: relative;
             z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            backdrop-filter: blur(6px);
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+            width: fit-content;
         }
 
-            .overlay h1 {
-                font-size: 50px;
-                margin-bottom: 15px;
-                line-height: 1.1;
+        /* -------- Illustration: scrolling phone with floating goods -------- */
+        .scene {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        .scene-svg-wrap {
+            width: 100%;
+            max-width: 430px;
+            animation: sceneBob 3s ease-in-out infinite;
+        }
+
+        @@keyframes sceneBob {
+            0%, 100% {
+                transform: translateY(0);
             }
 
-            .overlay p {
-                font-size: 18px;
-                width: 80%;
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .float-item {
+            animation: floatUpDown 3s ease-in-out infinite;
+            transform-origin: center;
+        }
+
+            .float-item.delay1 {
+                animation-delay: .3s;
             }
 
+            .float-item.delay2 {
+                animation-delay: .6s;
+            }
+
+            .float-item.delay3 {
+                animation-delay: .9s;
+            }
+
+            .float-item.delay4 {
+                animation-delay: 1.2s;
+            }
+
+            .float-item.delay5 {
+                animation-delay: 1.5s;
+            }
+
+            .float-item.delay6 {
+                animation-delay: 1.8s;
+            }
+
+        @@keyframes floatUpDown {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-9px) rotate(6deg);
+            }
+        }
+
+        .twinkle {
+            animation: twinkle 1.8s ease-in-out infinite;
+        }
+
+            .twinkle.delay1 {
+                animation-delay: .6s;
+            }
+
+            .twinkle.delay2 {
+                animation-delay: 1.1s;
+            }
+
+            .twinkle.delay3 {
+                animation-delay: 1.6s;
+            }
+
+        @@keyframes twinkle {
+            0%, 100% {
+                opacity: 0.35;
+                transform: scale(0.85);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.15);
+            }
+        }
+
+        /* scrolling hand + feed motion */
+        .hand-scroll {
+            animation: handScroll 1.8s ease-in-out infinite;
+            transform-origin: center;
+        }
+
+        @@keyframes handScroll {
+            0% {
+                transform: translateY(14px);
+            }
+
+            50% {
+                transform: translateY(-18px);
+            }
+
+            100% {
+                transform: translateY(14px);
+            }
+        }
+
+        .feed-scroll {
+            animation: feedScroll 2.4s linear infinite;
+        }
+
+        @@keyframes feedScroll {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(-16px);
+            }
+        }
+
+        .ripple {
+            transform-origin: center;
+            animation: ripplePulse 1.8s ease-out infinite;
+        }
+
+        .ripple-mid {
+            animation-delay: 0.3s;
+        }
+
+        @@keyframes ripplePulse {
+            0% {
+                transform: scale(0.6);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+            }
+        }
+
+        .overlay-text {
+            position: relative;
+            z-index: 2;
+            color: white;
+            text-align: center;
+        }
+
+            .overlay-text h1 {
+                font-size: 32px;
+                line-height: 1.2;
+                letter-spacing: -0.5px;
+                margin-bottom: 8px;
+                text-shadow: 0 2px 16px rgba(0,0,0,0.2);
+            }
+
+            .overlay-text p {
+                font-size: 15px;
+                opacity: 0.9;
+                max-width: 340px;
+                margin: 0 auto;
+            }
+
+        /* -------- Right form panel -------- */
         .right-side {
-            width: 50%;
+            width: 58%;
             padding: 60px;
             overflow-y: auto;
         }
@@ -93,28 +338,35 @@
         }
 
             .top-btn a {
-                background: black;
-                color: white;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: var(--accent-light);
+                color: var(--accent-color);
                 padding: 10px 25px;
                 border-radius: 30px;
                 text-decoration: none;
                 transition: .3s;
+                font-weight: 600;
             }
 
                 .top-btn a:hover {
-                    background: #1f2b6c;
+                    background: var(--accent-color);
+                    color: #fff;
+                    transform: scale(1.03);
                 }
 
         .title {
-            font-size: 42px;
+            font-size: 40px;
             font-weight: bold;
-            color: #1f2b6c;
-            margin-bottom: 10px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
 
         .subtitle {
-            color: gray;
-            margin-bottom: 20px;
+            color: var(--text-secondary);
+            margin-bottom: 22px;
             font-size: 15px;
         }
 
@@ -137,18 +389,19 @@
             .form-group select {
                 width: 100%;
                 padding: 15px;
-                border: 1px solid #ccc;
-                border-radius: 10px;
+                border: 1.5px solid var(--border-color);
+                border-radius: 12px;
                 font-size: 16px;
-                transition: .3s;
-                background: white;
+                transition: .25s;
+                background: #fbfaff;
             }
 
                 .form-group input:focus,
                 .form-group select:focus {
                     outline: none;
-                    border-color: #1f2b6c;
-                    box-shadow: 0 0 5px rgba(31,43,108,0.2);
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.10);
+                    background: white;
                 }
 
         .phone-row {
@@ -160,18 +413,22 @@
         .btn-register {
             width: 100%;
             padding: 15px;
-            background: #1f2b6c;
+            background: var(--accent-gradient);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 18px;
+            font-weight: 700;
             cursor: pointer;
-            transition: .3s;
+            transition: .25s;
             margin-top: 10px;
+            box-shadow: 0 8px 24px rgba(109, 40, 217, 0.3);
         }
 
             .btn-register:hover {
-                background: black;
+                box-shadow: 0 12px 32px rgba(109, 40, 217, 0.4);
+                transform: translateY(-2px);
+                background: linear-gradient(135deg, #5b21b6 0%, #6d28d9 55%, #4338ca 100%);
             }
 
         .text-danger {
@@ -208,14 +465,156 @@
 
         <div class="left-side">
 
-            <div class="overlay">
+            <div class="badge">
+                <i class="fas fa-hand-pointer"></i>
+                Join the marketplace
+            </div>
 
-                <h1>Local Multi Store Marketplace</h1>
+            <div class="scene">
+                <div class="scene-svg-wrap">
+                    <svg viewBox="0 0 380 400" xmlns="http://www.w3.org/2000/svg">
 
+                        <defs>
+                            <linearGradient id="skinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffd9b3"></stop>
+                                <stop offset="100%" stop-color="#e8a878"></stop>
+                            </linearGradient>
+                        </defs>
+
+                        <!-- scattered sparkles -->
+                        <g class="twinkle" fill="#ffc93c">
+                            <path d="M28 46 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4 z"></path>
+                        </g>
+                        <g class="twinkle delay1" fill="#ffffff">
+                            <circle cx="345" cy="66" r="4"></circle>
+                        </g>
+                        <g class="twinkle delay2" fill="#2ee6a6">
+                            <path d="M335 260 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z"></path>
+                        </g>
+                        <g class="twinkle delay3" fill="#ff8fc7">
+                            <circle cx="20" cy="280" r="4"></circle>
+                        </g>
+
+                        <!-- floating goods surrounding the phone -->
+                        <g class="float-item">
+                            <rect x="10" y="86" width="36" height="32" rx="7" fill="#ff6b6b"></rect>
+                            <path d="M18 86 q10 -15 20 0" stroke="#c23f3f" stroke-width="3" fill="none"></path>
+                        </g>
+
+                        <g class="float-item delay1">
+                            <circle cx="325" cy="118" r="20" fill="#ffc93c"></circle>
+                            <path d="M316 118 h18 M325 109 v18" stroke="#b8871a" stroke-width="2"></path>
+                        </g>
+
+                        <g class="float-item delay2">
+                            <path d="M32 196 l32 0 -6 28 -20 0 z" fill="#2ee6a6"></path>
+                            <path d="M32 196 l16 -15 16 15" stroke="#1c9f76" stroke-width="2" fill="none"></path>
+                        </g>
+
+                        <g class="float-item delay3">
+                            <path d="M332 200 l15 -22 15 22 z" fill="#a78bfa"></path>
+                        </g>
+
+                        <g class="float-item delay4">
+                            <path d="M320 34 c0 -11 18 -11 18 0 c0 9 -9 11 -9 18 c0 -7 -9 -9 -9 -18 z" fill="#ff8fc7"></path>
+                        </g>
+
+                        <g class="float-item delay5">
+                            <rect x="14" y="238" width="28" height="28" rx="14" fill="#4f46e5"></rect>
+                            <text x="28" y="257" font-size="15" fill="#ffffff" text-anchor="middle" font-weight="bold">%</text>
+                        </g>
+
+                        <g class="float-item delay6">
+                            <path d="M318 296 l30 0 -4 15 -22 0 z" fill="#ff6b6b"></path>
+                            <circle cx="327" cy="316" r="4" fill="#1e1b2e"></circle>
+                            <circle cx="339" cy="316" r="4" fill="#1e1b2e"></circle>
+                        </g>
+
+                        <!-- phone body (bigger) -->
+                        <g>
+                            <rect x="98" y="18" width="184" height="352" rx="38" fill="#1e1b2e"></rect>
+                            <rect x="112" y="38" width="156" height="300" rx="22" fill="#ffffff"></rect>
+
+                            <!-- scrolling product feed, clipped to the screen -->
+                            <clipPath id="screenClip">
+                                <rect x="112" y="38" width="156" height="300" rx="22"></rect>
+                            </clipPath>
+
+                            <g clip-path="url(#screenClip)">
+                                <g class="feed-scroll">
+                                    <rect x="122" y="48" width="136" height="64" rx="10" fill="#f3effe"></rect>
+                                    <rect x="132" y="60" width="42" height="40" rx="7" fill="#ff6b6b"></rect>
+                                    <rect x="182" y="63" width="54" height="8" rx="4" fill="#c7bffa"></rect>
+                                    <rect x="182" y="80" width="36" height="8" rx="4" fill="#e4defb"></rect>
+
+                                    <rect x="122" y="122" width="136" height="64" rx="10" fill="#f3effe"></rect>
+                                    <rect x="132" y="134" width="42" height="40" rx="7" fill="#ffc93c"></rect>
+                                    <rect x="182" y="137" width="54" height="8" rx="4" fill="#c7bffa"></rect>
+                                    <rect x="182" y="154" width="36" height="8" rx="4" fill="#e4defb"></rect>
+
+                                    <rect x="122" y="196" width="136" height="64" rx="10" fill="#f3effe"></rect>
+                                    <rect x="132" y="208" width="42" height="40" rx="7" fill="#2ee6a6"></rect>
+                                    <rect x="182" y="211" width="54" height="8" rx="4" fill="#c7bffa"></rect>
+                                    <rect x="182" y="228" width="36" height="8" rx="4" fill="#e4defb"></rect>
+
+                                    <rect x="122" y="270" width="136" height="64" rx="10" fill="#f3effe"></rect>
+                                    <rect x="132" y="282" width="42" height="40" rx="7" fill="#a78bfa"></rect>
+                                    <rect x="182" y="285" width="54" height="8" rx="4" fill="#c7bffa"></rect>
+                                    <rect x="182" y="302" width="36" height="8" rx="4" fill="#e4defb"></rect>
+
+                                    <rect x="122" y="344" width="136" height="64" rx="10" fill="#f3effe"></rect>
+                                    <rect x="132" y="356" width="42" height="40" rx="7" fill="#ff8fc7"></rect>
+                                    <rect x="182" y="359" width="54" height="8" rx="4" fill="#c7bffa"></rect>
+                                    <rect x="182" y="376" width="36" height="8" rx="4" fill="#e4defb"></rect>
+                                </g>
+                            </g>
+
+                            <!-- home indicator -->
+                            <rect x="164" y="330" width="52" height="5" rx="2.5" fill="#c7bffa"></rect>
+                        </g>
+
+                        <!-- whole hand scrolling the screen: fist with curled knuckles + one extended finger -->
+                        <g class="hand-scroll">
+                            <circle class="ripple ripple-outer" cx="212" cy="248" r="16" fill="#ffffff" opacity="0.3"></circle>
+                            <circle class="ripple ripple-mid" cx="212" cy="248" r="10" fill="#ffffff" opacity="0.5"></circle>
+
+                            <!-- extended index finger touching the screen -->
+                            <rect x="200" y="234" width="24" height="60" rx="12" fill="url(#skinGrad)" stroke="#d99566" stroke-width="1.5"></rect>
+
+                            <!-- fist / back of hand with curled fingers -->
+                            <path d="M180 288
+                                     q0 -20 22 -20
+                                     l40 0
+                                     q22 0 22 20
+                                     l0 46
+                                     q0 18 -20 18
+                                     l-44 0
+                                     q-20 0 -20 -18
+                                     z"
+                                  fill="url(#skinGrad)" stroke="#d99566" stroke-width="1.5"></path>
+
+                            <!-- curled-knuckle bumps along the top of the fist -->
+                            <circle cx="196" cy="290" r="9" fill="url(#skinGrad)" stroke="#d99566" stroke-width="1.2"></circle>
+                            <circle cx="214" cy="286" r="9" fill="url(#skinGrad)" stroke="#d99566" stroke-width="1.2"></circle>
+                            <circle cx="232" cy="290" r="9" fill="url(#skinGrad)" stroke="#d99566" stroke-width="1.2"></circle>
+
+                            <!-- thumb tucked along the side -->
+                            <path d="M180 300 q-16 -4 -16 12 q0 14 15 15 l9 -4 z"
+                                  fill="url(#skinGrad)" stroke="#d99566" stroke-width="1.5"></path>
+
+                            <!-- fingertip highlight -->
+                            <ellipse cx="212" cy="238" rx="10" ry="7" fill="#ffe9d6" opacity="0.85"></ellipse>
+                        </g>
+
+                    </svg>
+                </div>
+            </div>
+
+            <div class="overlay-text">
+                <h1>Swipe, tap, and it's yours</h1>
                 <p>
-                    Discover trusted stores around your area
+                    Create your account and start scrolling through everything local stores have to offer.
                 </p>
-
             </div>
 
         </div>
@@ -223,7 +622,10 @@
         <div class="right-side">
 
             <div class="top-btn">
-                <a asp-page="./Login">Sign In</a>
+                <a asp-page="./Login">
+                    <i class="fas fa-right-to-bracket"></i>
+                    Sign In
+                </a>
             </div>
 
             <div class="title">
@@ -234,7 +636,7 @@
                 Register your customer account
             </div>
 
-            
+
 
             <form method="post">
 
@@ -243,6 +645,11 @@
                 <div class="form-group">
                     <input asp-for="FullName" placeholder="Full Name" />
                     <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <input asp-for="Username" placeholder="Username" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
                 </div>
 
                 <div class="form-group">

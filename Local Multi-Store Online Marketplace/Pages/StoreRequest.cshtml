@@ -1,17 +1,78 @@
 ﻿@page "/StoreRequest"
 @model Local_Multi_Store_Online_Marketplace.Pages.StoreRequestModel
+@using System.Text.Json
+
 @{
     Layout = null;
+
+    var pageTitle =
+        Model.IsResubmission
+            ? "Update and Resubmit Store Request"
+            : "Request to Become a Store Owner";
+
+    var toastMessages =
+        new List<Dictionary<string, string>>();
+
+    if (TempData["Error"] is string errorMessage &&
+        !string.IsNullOrWhiteSpace(errorMessage))
+    {
+        toastMessages.Add(
+            new Dictionary<string, string>
+                    {
+                        ["type"] = "error",
+                        ["message"] = errorMessage
+                    });
+    }
+
+    if (TempData["Success"] is string successMessage &&
+        !string.IsNullOrWhiteSpace(successMessage))
+    {
+        toastMessages.Add(
+            new Dictionary<string, string>
+                    {
+                        ["type"] = "success",
+                        ["message"] = successMessage
+                    });
+    }
+
+    foreach (var modelStateEntry in
+             ViewData.ModelState.Values)
+    {
+        foreach (var modelError in
+                 modelStateEntry.Errors)
+        {
+            var message =
+                !string.IsNullOrWhiteSpace(
+                    modelError.ErrorMessage)
+                    ? modelError.ErrorMessage
+                    : "Please check the submitted information.";
+
+            if (!toastMessages.Any(x =>
+                    x["message"] == message))
+            {
+                toastMessages.Add(
+                    new Dictionary<string, string>
+                            {
+                                ["type"] = "error",
+                                ["message"] = message
+                            });
+            }
+        }
+    }
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Store Owner Request</title>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>@pageTitle</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet">
+          rel="stylesheet" />
 
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -29,7 +90,7 @@
         }
 
         .topbar {
-            background: #111;
+            background: #111827;
             color: white;
             padding: 20px 30px;
             font-size: 20px;
@@ -50,7 +111,7 @@
             max-width: 100%;
             padding: 34px;
             border-radius: 18px;
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .10);
             border: 1px solid #e5e7eb;
         }
 
@@ -58,7 +119,7 @@
             margin-bottom: 25px;
         }
 
-            .header-box h2 {
+            .header-box h1 {
                 margin: 0 0 8px;
                 font-size: 26px;
                 font-weight: 700;
@@ -71,15 +132,18 @@
                 line-height: 1.6;
             }
 
-        .message {
+        .message,
+        .validation-summary-errors {
             padding: 12px 14px;
             border-radius: 10px;
             margin-bottom: 18px;
             font-size: 14px;
             font-weight: 600;
+            line-height: 1.5;
         }
 
-        .error-message {
+        .error-message,
+        .validation-summary-errors {
             color: #991b1b;
             background: #fee2e2;
             border: 1px solid #fca5a5;
@@ -89,6 +153,24 @@
             color: #166534;
             background: #dcfce7;
             border: 1px solid #86efac;
+        }
+
+        .validation-summary-errors ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .validation-summary-valid,
+        .field-validation-valid {
+            display: none;
+        }
+
+        .field-validation-error {
+            display: block;
+            margin-top: 5px;
+            color: #b91c1c;
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .form-grid {
@@ -127,7 +209,7 @@
         }
 
         textarea {
-            min-height: 95px;
+            min-height: 105px;
             resize: vertical;
         }
 
@@ -135,7 +217,7 @@
             select:focus,
             textarea:focus {
                 border-color: #111827;
-                box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.10);
+                box-shadow: 0 0 0 3px rgba(17, 24, 39, .10);
             }
 
         .hint {
@@ -145,6 +227,21 @@
             color: #6b7280;
             line-height: 1.5;
         }
+
+        .existing-file {
+            margin-top: 8px;
+            padding: 10px 12px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #1e40af;
+        }
+
+            .existing-file a {
+                color: #1d4ed8;
+                font-weight: 700;
+            }
 
         .location-panel {
             background: #f9fafb;
@@ -206,6 +303,28 @@
             font-weight: 700;
         }
 
+        .confirmation {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            background: #f9fafb;
+        }
+
+            .confirmation input {
+                width: 18px;
+                height: 18px;
+                margin-top: 2px;
+                flex: 0 0 auto;
+            }
+
+            .confirmation label {
+                margin: 0;
+                line-height: 1.5;
+            }
+
         .submit-btn {
             margin-top: 25px;
             width: 100%;
@@ -217,12 +336,18 @@
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
-            transition: 0.2s ease;
+            transition: .2s ease;
         }
 
             .submit-btn:hover {
                 background: #ff6b35;
                 transform: translateY(-1px);
+            }
+
+            .submit-btn:disabled {
+                opacity: .65;
+                cursor: not-allowed;
+                transform: none;
             }
 
         .back-link {
@@ -251,6 +376,74 @@
                 height: 300px;
             }
         }
+
+        .toast-container {
+            position: fixed;
+            top: 22px;
+            right: 22px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: min(390px, calc(100vw - 32px));
+            pointer-events: none;
+        }
+
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 15px 16px;
+            border-radius: 14px;
+            color: white;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .22);
+            transform: translateX(120%);
+            opacity: 0;
+            transition: transform .28s ease, opacity .28s ease;
+            pointer-events: auto;
+        }
+
+            .toast.show {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+        .toast-error {
+            background: #b91c1c;
+        }
+
+        .toast-success {
+            background: #15803d;
+        }
+
+        .toast-icon {
+            flex: 0 0 auto;
+            font-size: 18px;
+            line-height: 1.3;
+        }
+
+        .toast-message {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .toast-close {
+            flex: 0 0 auto;
+            border: 0;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            font-size: 19px;
+            line-height: 1;
+            padding: 0;
+            opacity: .85;
+        }
+
+            .toast-close:hover {
+                opacity: 1;
+            }
     </style>
 </head>
 
@@ -261,91 +454,162 @@
     </div>
 
     <div class="page-wrapper">
-
         <div class="card">
 
             <div class="header-box">
-                <h2>Become a Store Owner 🏪</h2>
+                <h1>@pageTitle 🏪</h1>
+
                 <p>
-                    Fill in your store information carefully. Select your store location on the map or use your current location.
-                    Your request will be reviewed by the admin before your store becomes active.
+                    Submit accurate business information, upload the business
+                    license, and select the exact store location. The admin
+                    will review the request before activating the store.
                 </p>
             </div>
 
-            @if (TempData["Error"] != null)
-            {
-                <div class="message error-message">
-                    @TempData["Error"]
-                </div>
-            }
+            <div id="toastContainer"
+                 class="toast-container"
+                 aria-live="polite"
+                 aria-atomic="true">
+            </div>
 
-            @if (TempData["Success"] != null)
-            {
-                <div class="message success-message">
-                    @TempData["Success"]
-                </div>
-            }
-
-            <form method="post">
+            <form method="post"
+                  enctype="multipart/form-data"
+                  id="storeRequestForm">
 
                 <div class="form-grid">
 
                     <div class="form-group">
-                        <label>Store Name</label>
-                        <input asp-for="Store.StoreName"
-                               placeholder="Example: Fatima Shop"
-                               required />
+                        <label asp-for="Input.StoreName">
+                            Store Name
+                        </label>
+
+                        <input asp-for="Input.StoreName"
+                               maxlength="100"
+                               placeholder="Example: Fatima Shop" />
+
+                        <span asp-validation-for="Input.StoreName"></span>
                     </div>
 
                     <div class="form-group">
-                        <label>Store Email</label>
-                        <input asp-for="Store.Email"
+                        <label asp-for="Input.Email">
+                            Business Contact Email
+                        </label>
+
+                        <input asp-for="Input.Email"
                                type="email"
-                               placeholder="example@store.com"
-                               required />
+                               maxlength="150"
+                               autocomplete="email"
+                               placeholder="example@store.com" />
+
+                        <span asp-validation-for="Input.Email"></span>
                     </div>
 
                     <div class="form-group">
-                        <label>Phone Number</label>
-                        <input asp-for="Store.PhoneNumber"
+                        <label asp-for="Input.PhoneNumber">
+                            Business Phone Number
+                        </label>
+
+                        <input asp-for="Input.PhoneNumber"
                                type="tel"
-                               placeholder="Example: 78 123 456"
-                               pattern="^[0-9+\s-]{6,20}$"
-                               required />
-                        <span class="hint">Use numbers only or +961 format.</span>
-                    </div>
+                               maxlength="20"
+                               autocomplete="tel"
+                               placeholder="+96178123456" />
 
-                    <div class="form-group">
-                        <label>Business License Number</label>
-                        <input asp-for="Store.BusinessLicenseNumber"
-                               placeholder="Enter license number"
-                               required />
-                    </div>
+                        <span asp-validation-for="Input.PhoneNumber"></span>
 
-                    <div class="form-group full">
-                        <label>Store Description</label>
-                        <textarea asp-for="Store.Description"
-                                  placeholder="Describe what your store sells, your products, and your business activity..."
-                                  required></textarea>
-                    </div>
-
-                    <div class="form-group full">
-                        <label>Store Address</label>
-                        <input asp-for="Store.AddressLine1"
-                               id="StoreAddress"
-                               placeholder="Street, building, floor, nearby landmark"
-                               required />
                         <span class="hint">
-                            You can type manually,Click on the map, drag the marker, use your current location, or enter the address manually if the map is unavailable.
+                            Accepted formats include 78123456,
+                            0096178123456, or +96178123456.
                         </span>
                     </div>
 
-                    <input asp-for="Store.Latitude" type="hidden" id="StoreLatitude" />
-                    <input asp-for="Store.Longitude" type="hidden" id="StoreLongitude" />
+                    <div class="form-group">
+                        <label asp-for="Input.BusinessLicenseNumber">
+                            Business License Number
+                        </label>
+
+                        <input asp-for="Input.BusinessLicenseNumber"
+                               maxlength="50"
+                               placeholder="Enter license number" />
+
+                        <span asp-validation-for="Input.BusinessLicenseNumber"></span>
+                    </div>
+
+                    <div class="form-group full">
+                        <label asp-for="BusinessLicenseFile">
+                            Business License Document
+                        </label>
+
+                        <input asp-for="BusinessLicenseFile"
+                               type="file"
+                               accept=".jpg,.jpeg,.png,.pdf" />
+
+                        <span asp-validation-for="BusinessLicenseFile"></span>
+
+                        <span class="hint">
+                            Upload JPG, PNG, or PDF. Maximum size: 5 MB.
+                        </span>
+
+                        @if (!string.IsNullOrWhiteSpace(
+                        Model.ExistingBusinessLicenseURL))
+                        {
+                            <div class="existing-file">
+                                Existing document:
+                                <a href="@Model.ExistingBusinessLicenseURL"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
+                                    View File
+                                </a>
+                                — upload a new file only if it changed.
+                            </div>
+                        }
+                    </div>
+
+                    <div class="form-group full">
+                        <label asp-for="Input.Description">
+                            Store Description
+                        </label>
+
+                        <textarea asp-for="Input.Description"
+                                  maxlength="1000"
+                                  placeholder="Describe the products and business activity..."></textarea>
+
+                        <span asp-validation-for="Input.Description"></span>
+                    </div>
+
+                    <div class="form-group full">
+                        <label asp-for="Input.AddressLine1">
+                            Store Address
+                        </label>
+
+                        <input asp-for="Input.AddressLine1"
+                               id="StoreAddress"
+                               maxlength="250"
+                               placeholder="Street, building, floor, nearby landmark" />
+
+                        <span asp-validation-for="Input.AddressLine1"></span>
+
+                        <span class="hint">
+                            Enter the address manually or select the exact
+                            location using the map.
+                        </span>
+                    </div>
+
+                    <input asp-for="Input.Latitude"
+                           type="hidden"
+                           id="StoreLatitude" />
+
+                    <input asp-for="Input.Longitude"
+                           type="hidden"
+                           id="StoreLongitude" />
 
                     <div class="form-group">
-                        <label>City</label>
-                        <select asp-for="Store.City" id="StoreCity" required>
+                        <label asp-for="Input.City">
+                            City
+                        </label>
+
+                        <select asp-for="Input.City"
+                                id="StoreCity">
                             <option value="">Select city</option>
                             <option value="Beirut">Beirut</option>
                             <option value="Tripoli">Tripoli</option>
@@ -358,19 +622,22 @@
                             <option value="Aley">Aley</option>
                             <option value="Baabda">Baabda</option>
                         </select>
+
+                        <span asp-validation-for="Input.City"></span>
                     </div>
 
                     <div class="form-group">
-                        <label>Area</label>
-                        <select asp-for="Store.Area" id="StoreArea" required>
+                        <label asp-for="Input.Area">
+                            Governorate / Area
+                        </label>
+
+                        <select asp-for="Input.Area"
+                                id="StoreArea"
+                                data-selected-area="@Model.Input.Area">
                             <option value="">Select area</option>
-                            <option value="Beirut">Beirut</option>
-                            <option value="Mount Lebanon">Mount Lebanon</option>
-                            <option value="North Lebanon">North Lebanon</option>
-                            <option value="South Lebanon">South Lebanon</option>
-                            <option value="Bekaa">Bekaa</option>
-                            <option value="Nabatieh">Nabatieh</option>
                         </select>
+
+                        <span asp-validation-for="Input.Area"></span>
                     </div>
 
                     <div class="form-group full">
@@ -387,182 +654,518 @@
 
                             <div id="storeMap"></div>
 
-                            <div id="storeMapMessage" class="map-message">
-                                Click on the map, drag the marker, or use your current location.
+                            <div id="storeMapMessage"
+                                 class="map-message">
+                                Click the map, drag the marker, or use
+                                your current location.
                             </div>
 
-                            <div id="storeCoordinateBox" class="coordinate-box"></div>
+                            <div id="storeCoordinateBox"
+                                 class="coordinate-box">
+                            </div>
                         </div>
+                    </div>
+
+                    <div class="form-group full">
+                        <div class="confirmation">
+                            <input asp-for="Input.ConfirmInformation"
+                                   type="checkbox" />
+
+                            <label asp-for="Input.ConfirmInformation">
+                                I confirm that the submitted store,
+                                contact, license, address, and location
+                                information is accurate.
+                            </label>
+                        </div>
+
+                        <span asp-validation-for="Input.ConfirmInformation"></span>
                     </div>
 
                 </div>
 
-                <button type="submit" class="submit-btn">
-                    Submit Store Request
+                <button type="submit"
+                        class="submit-btn"
+                        id="submitStoreRequestButton">
+                    @(Model.IsResubmission
+                        ? "Update and Resubmit Store Request"
+                        : "Submit Store Owner Request")
                 </button>
 
             </form>
 
-            <a href="/CustomerProfile" class="back-link">
+            <a href="/CustomerProfile"
+               class="back-link">
                 ← Back to Profile
             </a>
 
         </div>
-
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
+        const serverToasts =
+        @Html.Raw(
+                     JsonSerializer.Serialize(
+                         toastMessages));
+
+        const cityAreaMap = {
+            "Beirut": "Beirut",
+            "Tripoli": "North Lebanon",
+            "Saida": "South Lebanon",
+            "Tyre": "South Lebanon",
+            "Zahle": "Bekaa",
+            "Jounieh": "Mount Lebanon",
+            "Byblos": "Mount Lebanon",
+            "Nabatieh": "Nabatieh",
+            "Aley": "Mount Lebanon",
+            "Baabda": "Mount Lebanon"
+        };
+
         let storeMap;
         let storeMarker;
 
-        document.addEventListener("DOMContentLoaded", function () {
-            initStoreMap();
-        });
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+                configureAreaOptions();
+                initStoreMap();
+                configureSubmitProtection();
 
-        function initStoreMap() {
-            const defaultLat = 33.8938;
-            const defaultLng = 35.5018;
-
-            storeMap = L.map("storeMap").setView([defaultLat, defaultLng], 12);
-
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                maxZoom: 19,
-                attribution: "&copy; OpenStreetMap contributors"
-            }).addTo(storeMap);
-
-            storeMarker = L.marker([defaultLat, defaultLng], {
-                draggable: true
-            }).addTo(storeMap);
-
-            storeMap.on("click", function (e) {
-                const lat = e.latlng.lat;
-                const lng = e.latlng.lng;
-
-                storeMarker.setLatLng([lat, lng]);
-                setStoreCoordinates(lat, lng);
-                reverseStoreGeocode(lat, lng);
+                serverToasts.forEach(
+                    toast =>
+                        showToast(
+                            toast.message,
+                            toast.type));
             });
 
-            storeMarker.on("dragend", function () {
-                const position = storeMarker.getLatLng();
+        document
+            .getElementById("StoreCity")
+            .addEventListener(
+                "change",
+                function () {
+                    configureAreaOptions(true);
+                });
 
-                setStoreCoordinates(position.lat, position.lng);
-                reverseStoreGeocode(position.lat, position.lng);
-            });
-        }
+        function configureAreaOptions(clearSelection) {
+            const citySelect =
+                document.getElementById("StoreCity");
 
-        function setStoreCoordinates(lat, lng) {
-            document.getElementById("StoreLatitude").value = lat;
-            document.getElementById("StoreLongitude").value = lng;
+            const areaSelect =
+                document.getElementById("StoreArea");
 
-            document.getElementById("storeMapMessage").innerText =
-                "Selected location: " + lat.toFixed(6) + ", " + lng.toFixed(6);
-
-            const coordinateBox = document.getElementById("storeCoordinateBox");
-            coordinateBox.style.display = "block";
-            coordinateBox.innerText =
-                "Coordinates captured: " + lat.toFixed(6) + ", " + lng.toFixed(6);
-        }
-
-        function useCurrentStoreLocation() {
-            const message = document.getElementById("storeMapMessage");
-
-            if (!navigator.geolocation) {
-                message.innerText = "Location is not supported. Please enter the address manually.";
+            if (!citySelect || !areaSelect) {
                 return;
             }
 
-            message.innerText = "Detecting location...";
+            const previousArea =
+                clearSelection
+                    ? ""
+                    : areaSelect.dataset.selectedArea || areaSelect.value;
+
+            areaSelect.innerHTML =
+                '<option value="">Select area</option>';
+
+            const expectedArea =
+                cityAreaMap[citySelect.value];
+
+            if (!expectedArea) {
+                return;
+            }
+
+            const option =
+                document.createElement("option");
+
+            option.value =
+                expectedArea;
+
+            option.textContent =
+                expectedArea;
+
+            areaSelect.appendChild(
+                option);
+
+            if (previousArea === expectedArea) {
+                areaSelect.value =
+                    expectedArea;
+            }
+            else {
+                areaSelect.value =
+                    expectedArea;
+            }
+        }
+
+        function initStoreMap() {
+            const defaultLat =
+                33.8938;
+
+            const defaultLng =
+                35.5018;
+
+            const latitudeInput =
+                document.getElementById("StoreLatitude");
+
+            const longitudeInput =
+                document.getElementById("StoreLongitude");
+
+            const savedLat =
+                Number.parseFloat(
+                    latitudeInput.value);
+
+            const savedLng =
+                Number.parseFloat(
+                    longitudeInput.value);
+
+            const hasSavedCoordinates =
+                Number.isFinite(savedLat) &&
+                Number.isFinite(savedLng) &&
+                savedLat !== 0 &&
+                savedLng !== 0;
+
+            const initialLat =
+                hasSavedCoordinates
+                    ? savedLat
+                    : defaultLat;
+
+            const initialLng =
+                hasSavedCoordinates
+                    ? savedLng
+                    : defaultLng;
+
+            storeMap =
+                L.map(
+                    "storeMap",
+                    {
+                        maxBounds: [
+                            [32.8, 34.8],
+                            [35.0, 36.8]
+                        ],
+                        maxBoundsViscosity: 1.0
+                    })
+                    .setView(
+                        [initialLat, initialLng],
+                        hasSavedCoordinates
+                            ? 15
+                            : 9);
+
+            L.tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+                    maxZoom: 19,
+                    attribution:
+                        "&copy; OpenStreetMap contributors"
+                })
+                .addTo(storeMap);
+
+            storeMarker =
+                L.marker(
+                    [initialLat, initialLng],
+                    {
+                        draggable: true
+                    })
+                    .addTo(storeMap);
+
+            if (hasSavedCoordinates) {
+                setStoreCoordinates(
+                    savedLat,
+                    savedLng);
+            }
+
+            storeMap.on(
+                "click",
+                function (event) {
+                    updateStoreLocation(
+                        event.latlng.lat,
+                        event.latlng.lng,
+                        true);
+                });
+
+            storeMarker.on(
+                "dragend",
+                function () {
+                    const position =
+                        storeMarker.getLatLng();
+
+                    updateStoreLocation(
+                        position.lat,
+                        position.lng,
+                        true);
+                });
+        }
+
+        function updateStoreLocation(
+            latitude,
+            longitude,
+            shouldReverseGeocode) {
+            storeMarker.setLatLng(
+                [latitude, longitude]);
+
+            setStoreCoordinates(
+                latitude,
+                longitude);
+
+            if (shouldReverseGeocode) {
+                reverseStoreGeocode(
+                    latitude,
+                    longitude);
+            }
+        }
+
+        function setStoreCoordinates(
+            latitude,
+            longitude) {
+            document
+                .getElementById("StoreLatitude")
+                .value =
+                    latitude.toFixed(7);
+
+            document
+                .getElementById("StoreLongitude")
+                .value =
+                    longitude.toFixed(7);
+
+            document
+                .getElementById("storeMapMessage")
+                .innerText =
+                    "Selected location: " +
+                    latitude.toFixed(6) +
+                    ", " +
+                    longitude.toFixed(6);
+
+            const coordinateBox =
+                document.getElementById(
+                    "storeCoordinateBox");
+
+            coordinateBox.style.display =
+                "block";
+
+            coordinateBox.innerText =
+                "Coordinates captured: " +
+                latitude.toFixed(6) +
+                ", " +
+                longitude.toFixed(6);
+        }
+
+        function useCurrentStoreLocation() {
+            const message =
+                document.getElementById(
+                    "storeMapMessage");
+
+            if (!navigator.geolocation) {
+                message.innerText =
+                    "Location is not supported. Select the location manually on the map.";
+
+                return;
+            }
+
+            message.innerText =
+                "Detecting location...";
 
             navigator.geolocation.getCurrentPosition(
                 function (position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
+                    const latitude =
+                        position.coords.latitude;
 
-                    storeMap.setView([lat, lng], 15);
-                    storeMarker.setLatLng([lat, lng]);
+                    const longitude =
+                        position.coords.longitude;
 
-                    setStoreCoordinates(lat, lng);
-                    reverseStoreGeocode(lat, lng);
+                    storeMap.setView(
+                        [latitude, longitude],
+                        15);
+
+                    updateStoreLocation(
+                        latitude,
+                        longitude,
+                        true);
                 },
                 function () {
-                    message.innerText = "Location permission denied or unavailable. Please enter address manually or click on the map.";
+                    message.innerText =
+                        "Location permission was denied or unavailable. Select the location manually on the map.";
                 },
                 {
                     enableHighAccuracy: true,
                     timeout: 10000,
                     maximumAge: 0
-                }
-            );
+                });
         }
 
-        async function reverseStoreGeocode(lat, lng) {
+        async function reverseStoreGeocode(
+            latitude,
+            longitude) {
             try {
-                const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
-                const response = await fetch(url);
-                const data = await response.json();
+                const url =
+                    "https://nominatim.openstreetmap.org/reverse" +
+                    "?format=jsonv2" +
+                    "&lat=" +
+                    encodeURIComponent(latitude) +
+                    "&lon=" +
+                    encodeURIComponent(longitude);
 
-                if (data && data.display_name) {
-                    document.getElementById("StoreAddress").value = data.display_name;
+                const response =
+                    await fetch(
+                        url,
+                        {
+                            headers: {
+                                "Accept-Language": "en"
+                            }
+                        });
 
-                    if (data.address) {
-                        fillStoreAddressParts(data.address);
+                if (!response.ok) {
+                    throw new Error(
+                        "Reverse geocoding failed.");
+                }
+
+                const data =
+                    await response.json();
+
+                if (data?.display_name) {
+                    document
+                        .getElementById("StoreAddress")
+                        .value =
+                            data.display_name;
+                }
+            }
+            catch {
+                document
+                    .getElementById("storeMapMessage")
+                    .innerText =
+                        "The map location was saved. Enter the address manually if needed.";
+            }
+        }
+
+        function configureSubmitProtection() {
+            const form =
+                document.getElementById(
+                    "storeRequestForm");
+
+            const submitButton =
+                document.getElementById(
+                    "submitStoreRequestButton");
+
+            if (!form || !submitButton) {
+                return;
+            }
+
+            form.addEventListener(
+                "submit",
+                function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+
+                        const invalidFields =
+                            Array.from(
+                                form.querySelectorAll(
+                                    ":invalid"));
+
+                        const shownMessages =
+                            new Set();
+
+                        invalidFields.forEach(
+                            field => {
+                                const message =
+                                    field.validationMessage ||
+                                    "Please complete the required information.";
+
+                                if (!shownMessages.has(
+                                        message))
+                                {
+                                    shownMessages.add(
+                                        message);
+
+                                    showToast(
+                                        message,
+                                        "error");
+                                }
+                            });
+
+                        if (invalidFields.length > 0) {
+                            invalidFields[0].focus();
+                        }
+
+                        return;
                     }
-                } else {
-                    document.getElementById("storeMapMessage").innerText =
-                        "Could not convert location to address. Please enter address manually.";
-                }
-            } catch {
-                document.getElementById("storeMapMessage").innerText =
-                    "Map address service failed. Please enter address manually.";
-            }
+
+                    submitButton.disabled =
+                        true;
+
+                    submitButton.textContent =
+                        "Submitting Request...";
+                });
         }
 
-        function fillStoreAddressParts(address) {
-            if (!address) {
+        function showToast(
+            message,
+            type) {
+            if (!message) {
                 return;
             }
 
-            const city =
-                address.city ||
-                address.town ||
-                address.village ||
-                address.municipality ||
-                "";
+            const container =
+                document.getElementById(
+                    "toastContainer");
 
-            const area =
-                address.state ||
-                address.county ||
-                address.region ||
-                "";
-
-            if (city) {
-                setSelectValueIfExists("StoreCity", city);
-            }
-
-            if (area) {
-                setSelectValueIfExists("StoreArea", area);
-            }
-        }
-
-        function setSelectValueIfExists(selectId, value) {
-            const select = document.getElementById(selectId);
-
-            if (!select || !value) {
+            if (!container) {
                 return;
             }
 
-            const normalizedValue = value.toLowerCase();
+            const toast =
+                document.createElement(
+                    "div");
 
-            for (let i = 0; i < select.options.length; i++) {
-                if (select.options[i].value.toLowerCase() === normalizedValue ||
-                    select.options[i].text.toLowerCase() === normalizedValue) {
-                    select.selectedIndex = i;
-                    return;
-                }
-            }
+            const safeType =
+                type === "success"
+                    ? "success"
+                    : "error";
+
+            toast.className =
+                `toast toast-${safeType}`;
+
+            const icon =
+                safeType === "success"
+                    ? "✓"
+                    : "!";
+
+            toast.innerHTML =
+                `<span class="toast-icon">${icon}</span>` +
+                `<span class="toast-message"></span>` +
+                `<button type="button" class="toast-close" aria-label="Close">×</button>`;
+
+            toast
+                .querySelector(
+                    ".toast-message")
+                .textContent =
+                    message;
+
+            const removeToast =
+                () => {
+                    toast.classList.remove(
+                        "show");
+
+                    window.setTimeout(
+                        () => toast.remove(),
+                        280);
+                };
+
+            toast
+                .querySelector(
+                    ".toast-close")
+                .addEventListener(
+                    "click",
+                    removeToast);
+
+            container.appendChild(
+                toast);
+
+            window.requestAnimationFrame(
+                () =>
+                    toast.classList.add(
+                        "show"));
+
+            window.setTimeout(
+                removeToast,
+                safeType === "success"
+                    ? 4500
+                    : 6500);
         }
     </script>
 

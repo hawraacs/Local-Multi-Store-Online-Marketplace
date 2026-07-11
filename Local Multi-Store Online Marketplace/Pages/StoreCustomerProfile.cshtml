@@ -1,339 +1,1155 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.StoreCustomerProfileModel
-
+@using System.Text.Json
 @{
     Layout = null;
+    var storeLogo = string.IsNullOrWhiteSpace(Model.Store.LogoURL)
+        ? "/images/store.png"
+        : Model.Store.LogoURL;
 }
-
-<link rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
-
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
-<style>
-    body {
-        font-family: 'Segoe UI', Arial, sans-serif;
-        background: #f3f4f6;
-        margin: 0;
-        color: #1f2937;
-    }
-
-    .profile-container {
-        max-width: 1100px;
-        margin: 40px auto;
-        background: white;
-        border-radius: 18px;
-        padding: 30px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    }
-
-    /* HEADER */
-    .header {
-        display: flex;
-        gap: 25px;
-        align-items: center;
-        padding-bottom: 25px;
-        border-bottom: 1px solid #ececec;
-    }
-
-    .logo {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 4px solid #fff;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-    }
-
-    .header h2 {
-        margin: 0;
-        font-size: 32px;
-        font-weight: 700;
-    }
-
-    .stats {
-        color: #6b7280;
-        margin: 10px 0 15px;
-    }
-
-    /* BUTTONS */
-    .btn {
-        padding: 10px 18px;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-block;
-        transition: 0.25s;
-    }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            opacity: 0.9;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@Model.Store.StoreName | Store Profile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <style>
+        :root {
+            --accent: #6d28d9;
+            --accent2: #7c3aed;
+            --text: #17131f;
+            --muted: #746d7f;
+            --line: #e9e5ee;
+            --bg: #faf9fc;
+            --danger: #dc2626;
         }
 
-    .follow-btn {
-        background: #2563eb;
-        color: white;
-    }
-
-    .chat-btn {
-        background: #111827;
-        color: white;
-        margin-left: 10px;
-    }
-
-    /* PRODUCTS GRID */
-    .products {
-        margin-top: 30px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 25px;
-    }
-
-    .product {
-        background: white;
-        border-radius: 18px;
-        overflow: hidden;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-        transition: 0.3s;
-    }
-
-        .product:hover {
-            transform: translateY(-5px);
+        * {
+            box-sizing: border-box;
         }
 
-        .product img {
-            width: 100%;
-            height: 240px;
-            object-fit: cover;
-        }
-
-    .product-body {
-        padding: 18px;
-    }
-
-        .product-body h3 {
+        html, body {
             margin: 0;
+            min-height: 100%;
+            font-family: Inter,Arial,sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        button, input, textarea, select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .page-shell {
+            width: min(100%,1040px);
+            margin: 0 auto;
+            padding: 24px 18px 80px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+
+        .back-link {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 50%;
+            background: #fff;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .brand {
+            font-weight: 800;
+            letter-spacing: -.5px;
+        }
+
+        .icon-btn {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            color: var(--text);
             font-size: 20px;
         }
 
-    .price {
-        font-size: 22px;
-        font-weight: bold;
-        color: #f97316;
-        margin: 10px 0;
-    }
+        .profile-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 30px;
+        }
 
-    /* ACTIONS */
-    .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 15px;
-    }
+        .profile-head {
+            display: grid;
+            grid-template-columns: 150px 1fr auto;
+            gap: 28px;
+            align-items: center;
+        }
 
-        .actions form {
+        .avatar-ring {
+            width: 142px;
+            height: 142px;
+            border-radius: 50%;
+            padding: 4px;
+            background: linear-gradient(135deg,#f97316,#e11d48,#7c3aed);
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 5px solid #fff;
+            background: #f4f1f7;
+        }
+
+        .name-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+            .name-row h1 {
+                margin: 0;
+                font-size: 25px;
+                letter-spacing: -.7px;
+            }
+
+        .verified {
+            color: #3b82f6;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            margin: 20px 0 14px;
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 16px;
+        }
+
+        .stat span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .bio {
+            max-width: 620px;
+            color: #45404c;
+            font-size: 14px;
+            line-height: 1.6;
             margin: 0;
+            white-space: pre-line;
         }
 
-    .btn-cart {
-        background: #2563eb;
-        color: white;
-    }
-
-    .btn-review {
-        background: #10b981;
-        color: white;
-    }
-
-    .btn-share {
-        background: #7c3aed;
-        color: white;
-    }
-
-    /* COMMENTS */
-    .comments-section {
-        margin-top: 20px;
-        padding-top: 15px;
-        border-top: 1px solid #eee;
-    }
-
-    .comment {
-        background: #f9fafb;
-        border-radius: 10px;
-        padding: 10px;
-        margin-bottom: 10px;
-    }
-
-        .comment strong {
-            margin-right: 8px;
+        .profile-actions {
+            display: flex;
+            gap: 9px;
+            flex-wrap: wrap;
+            margin-top: 20px;
         }
 
-        .comment span {
+            .profile-actions form {
+                margin: 0;
+            }
+
+        .btn {
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            padding: 0 17px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .btn-soft {
+            background: #f1eef5;
+            color: var(--text);
+        }
+
+        .btn-green {
+            background: #16a34a;
+            border-color: #16a34a;
+            color: #fff;
+        }
+
+        .more-wrap {
+            position: relative;
+            align-self: start;
+        }
+
+        .menu {
+            position: absolute;
+            right: 0;
+            top: 48px;
+            width: 240px;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: 0 18px 50px rgba(24,16,32,.14);
+            overflow: hidden;
+            z-index: 50;
+            display: none;
+        }
+
+            .menu.open {
+                display: block;
+            }
+
+            .menu button {
+                width: 100%;
+                border: 0;
+                background: #fff;
+                padding: 14px 16px;
+                text-align: left;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                color: var(--text);
+            }
+
+                .menu button:hover {
+                    background: #f8f6fa;
+                }
+
+            .menu .danger {
+                color: var(--danger);
+            }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 54px;
+            margin-top: 22px;
+            border-top: 1px solid var(--line);
+        }
+
+        .tab {
+            border: 0;
+            background: transparent;
+            padding: 16px 4px 13px;
+            border-top: 2px solid transparent;
+            margin-top: -1px;
+            font-weight: 700;
+            color: var(--muted);
+        }
+
+            .tab.active {
+                color: var(--text);
+                border-top-color: var(--text);
+            }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .tile {
+            position: relative;
+            aspect-ratio: 1/1;
+            border: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #eee;
+        }
+
+            .tile img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+                transition: transform .25s ease;
+            }
+
+            .tile:hover img {
+                transform: scale(1.03);
+            }
+
+        .tile-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 22px;
+            background: rgba(0,0,0,.35);
+            color: #fff;
+            opacity: 0;
+            transition: .2s;
+            font-weight: 700;
+        }
+
+        .tile:hover .tile-overlay {
+            opacity: 1;
+        }
+
+        .stock-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            border-radius: 999px;
+            padding: 6px 9px;
+            background: rgba(255,255,255,.93);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .repost-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            display: none;
+            place-items: center;
+            border-radius: 50%;
+            background: rgba(22,163,74,.95);
+            color: #fff;
+            font-size: 14px;
+            box-shadow: 0 6px 18px rgba(0,0,0,.18);
+            z-index: 2;
+        }
+
+            .repost-badge.show {
+                display: grid;
+            }
+
+        .action.reposted {
+            color: #16a34a;
+            border-color: #bbf7d0;
+            background: #f0fdf4;
+        }
+
+        .empty {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            text-align: center;
+            padding: 70px 20px;
+            margin-top: 12px;
+            color: var(--muted);
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(10,7,13,.68);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+            .modal-backdrop.open {
+                display: flex;
+            }
+
+        .product-modal {
+            width: min(1100px,96vw);
+            height: min(720px,92vh);
+            background: #fff;
+            border-radius: 18px;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: minmax(0,1.25fr) minmax(350px,.75fr);
+            position: relative;
+        }
+
+        .media-pane {
+            background: #0f0f10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+        }
+
+            .media-pane img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+
+        .details-pane {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .modal-head {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 15px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .mini-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .modal-head strong {
+            flex: 1;
+        }
+
+        .close-btn {
+            border: 0;
+            background: transparent;
+            font-size: 22px;
+        }
+
+        .modal-scroll {
+            overflow: auto;
+            padding: 18px;
+        }
+
+        .product-title {
+            margin: 0;
+            font-size: 21px;
+        }
+
+        .price {
+            color: #ea580c;
+            font-size: 22px;
+            font-weight: 800;
+            margin: 8px 0;
+        }
+
+        .description {
+            color: #514b58;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .action-row {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 8px;
+            margin: 18px 0;
+        }
+
+            .action-row form {
+                margin: 0;
+            }
+
+        .action {
+            width: 100%;
+            min-height: 48px;
+            border: 1px solid var(--line);
+            background: #fff;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--text);
+        }
+
+            .action i {
+                font-size: 18px;
+            }
+
+            .action:disabled {
+                opacity: .48;
+                cursor: not-allowed;
+            }
+
+        .review-box {
+            border-top: 1px solid var(--line);
+            padding-top: 16px;
+        }
+
+        .review-form {
+            display: grid;
+            grid-template-columns: 90px 1fr auto;
+            gap: 8px;
+        }
+
+            .review-form input, .review-form select, .report-form textarea, .report-form select {
+                border: 1px solid var(--line);
+                border-radius: 10px;
+                padding: 10px;
+                background: #fff;
+            }
+
+            .review-form button {
+                border: 0;
+                border-radius: 10px;
+                padding: 0 15px;
+                background: var(--accent);
+                color: #fff;
+                font-weight: 700;
+            }
+
+        .reviews {
+            margin-top: 15px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .review {
+            background: #faf9fc;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .review-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .stars {
             color: #f59e0b;
         }
-</style>
 
-<div class="profile-container">
+        .review p {
+            margin: 8px 0 0;
+            color: #4b4551;
+        }
 
-    <!-- HEADER -->
-    <div class="header">
+        .dialog {
+            width: min(460px,94vw);
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+        }
 
-        <img class="logo"
-             src="@(Model.Store.LogoURL ?? "/images/store.png")" />
+            .dialog h3 {
+                margin: 0 0 8px;
+            }
 
-        <div>
-            <h2>@Model.Store.StoreName</h2>
+            .dialog p {
+                color: var(--muted);
+                font-size: 14px;
+            }
 
-            <div class="stats">
-                Followers: @Model.FollowersCount
+        .report-form {
+            display: grid;
+            gap: 12px;
+        }
+
+            .report-form textarea {
+                min-height: 120px;
+                resize: vertical;
+            }
+
+        .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 9px;
+        }
+
+        .danger-submit {
+            background: var(--danger);
+            color: #fff;
+            border: 0;
+            border-radius: 10px;
+            padding: 11px 16px;
+            font-weight: 700;
+        }
+
+        .block-confirm-toast {
+            position: fixed;
+            top: 22px;
+            right: 22px;
+            width: min(390px, calc(100vw - 32px));
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: 0 18px 55px rgba(24,16,32,.20);
+            padding: 16px;
+            z-index: 9999;
+            display: none;
+            animation: toastSlideIn .22s ease;
+        }
+
+            .block-confirm-toast.open {
+                display: block;
+            }
+
+        .block-confirm-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            margin-bottom: 7px;
+        }
+
+            .block-confirm-title i {
+                color: var(--danger);
+            }
+
+        .block-confirm-toast p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .block-confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+            .block-confirm-actions button {
+                border: 0;
+                border-radius: 9px;
+                padding: 9px 14px;
+                font-weight: 700;
+            }
+
+        .block-confirm-cancel {
+            background: #f1eef5;
+            color: var(--text);
+        }
+
+        .block-confirm-submit {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        @@keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@media(max-width:760px) {
+            .page-shell {
+                padding: 12px 0 70px;
+            }
+
+            .topbar {
+                padding: 0 14px;
+            }
+
+            .profile-card {
+                border-radius: 0;
+                border-left: 0;
+                border-right: 0;
+                padding: 22px 16px 0;
+            }
+
+            .profile-head {
+                grid-template-columns: 88px 1fr auto;
+                gap: 14px;
+                align-items: start;
+            }
+
+            .avatar-ring {
+                width: 84px;
+                height: 84px;
+            }
+
+            .name-row h1 {
+                font-size: 19px;
+            }
+
+            .stats {
+                gap: 18px;
+                margin: 14px 0 10px;
+            }
+
+            .bio {
+                grid-column: 1/-1;
+            }
+
+            .profile-actions {
+                grid-column: 1/-1;
+                display: grid;
+                grid-template-columns: repeat(3,1fr);
+            }
+
+                .profile-actions .btn {
+                    width: 100%;
+                    padding: 0 8px;
+                }
+
+            .tabs {
+                margin-top: 18px;
+            }
+
+            .product-grid {
+                gap: 2px;
+            }
+
+            .product-modal {
+                height: 94vh;
+                grid-template-columns: 1fr;
+                grid-template-rows: 46% 54%;
+                border-radius: 14px;
+            }
+
+            .action-row {
+                grid-template-columns: repeat(4,1fr);
+            }
+
+            .review-form {
+                grid-template-columns: 1fr;
+            }
+
+                .review-form button {
+                    min-height: 42px;
+                }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <div class="topbar">
+            <a class="back-link" asp-page="/Customer1" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></a>
+            <div class="brand">realnest</div>
+            <div style="width:42px"></div>
+        </div>
+
+        <section class="profile-card">
+            <div class="profile-head">
+                <div class="avatar-ring"><img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" /></div>
+                <div>
+                    <div class="name-row"><h1>@Model.Store.StoreName</h1><i class="fa-solid fa-circle-check verified" title="Approved store"></i></div>
+                    <div class="stats">
+                        <div class="stat"><strong>@Model.Products.Count</strong><span>posts</span></div>
+                        <div class="stat"><strong>@Model.FollowersCount</strong><span>followers</span></div>
+                        <div class="stat"><strong>@Model.Store.Rating.ToString("0.0")</strong><span>rating</span></div>
+                    </div>
+                    <p class="bio">@Model.Store.Description</p>
+                    <div class="profile-actions">
+                        @if (Model.IsFollowing)
+                        {
+                            <form method="post" asp-page-handler="Unfollow" asp-route-storeId="@Model.Store.StoreID"><button class="btn btn-soft" type="submit"><i class="fa-solid fa-user-check"></i> Following</button></form>
+                        }
+                        else
+                        {
+                            <form method="post" asp-page-handler="Follow" asp-route-storeId="@Model.Store.StoreID"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-user-plus"></i> Follow</button></form>
+                        }
+                        <a class="btn btn-soft" asp-page="/ChatConversation" asp-route-userId="@Model.Store.OwnerUserID"><i class="fa-regular fa-paper-plane"></i> Message</a>
+                        <a class="btn btn-green" asp-page="/CreateReview" asp-route-storeId="@Model.Store.StoreID"><i class="fa-regular fa-star"></i> Review</a>
+                    </div>
+                </div>
+                <div class="more-wrap">
+                    <button class="icon-btn" id="profileMoreButton" type="button" aria-label="More options"><i class="fa-solid fa-ellipsis"></i></button>
+                    <div class="menu" id="profileMenu">
+                        <button type="button" onclick="shareProfile()"><i class="fa-solid fa-share-nodes"></i> Share profile</button>
+                        <button type="button" onclick="shareProfileWhatsApp()"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</button>
+                        <button type="button" onclick="copyCurrentUrl()"><i class="fa-regular fa-copy"></i> Copy profile link</button>
+                        <button type="button" onclick="openReportDialog()"><i class="fa-regular fa-flag"></i> Report</button>
+                        @if (Model.IsBlocked)
+                        {
+                            <form method="post" asp-page-handler="UnblockStore" asp-route-storeId="@Model.Store.StoreID"><button type="submit"><i class="fa-solid fa-user-check"></i> Unblock</button></form>
+                        }
+                        else
+                        {
+                            <form method="post"
+                                  asp-page-handler="BlockStore"
+                                  asp-route-storeId="@Model.Store.StoreID"
+                                  id="blockStoreForm">
+                                <button type="button"
+                                        class="danger"
+                                        onclick="showBlockConfirmation()">
+                                    <i class="fa-solid fa-ban"></i> Block
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
             </div>
+            <div class="tabs"><button class="tab active" type="button"><i class="fa-solid fa-table-cells"></i> POSTS</button></div>
+        </section>
 
-            <form method="post"
-                  asp-page-handler="Follow"
-                  asp-route-storeId="@Model.Store.StoreID">
-                <button class="btn follow-btn">
-                    Follow
-                </button>
-            </form>
+        @if (Model.Products.Any())
+        {
+            <div class="product-grid">
+                @foreach (var p in Model.Products)
+                {
+                    var image = p.Images?.OrderByDescending(i => i.IsPrimary).ThenBy(i => i.DisplayOrder).FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+                    var approvedReviews = p.Reviews?.Where(r => r.Status == "Approved").ToList() ?? new List<Multi_Store.Core.Entities.Review>();
+                    <button class="tile" type="button"
+                            data-product-id="@p.ProductID"
+                            data-product-name="@p.ProductName"
+                            data-description="@p.Description"
+                            data-price="@p.Price.ToString("0.00")"
+                            data-quantity="@p.Quantity"
+                            data-image="@image"
+                            onclick="openProduct(this)">
+                        <img src="@image" alt="@p.ProductName" loading="lazy" />
+                        @if (p.Quantity <= 0)
+                        {
+                            <span class="stock-badge">OUT OF STOCK</span>
+                        }
+                        <span class="repost-badge" id="repostBadge-@p.ProductID" title="Reposted"><i class="fa-solid fa-retweet"></i></span>
+                        <span class="tile-overlay"><span><i class="fa-regular fa-star"></i> @approvedReviews.Count</span><span><i class="fa-solid fa-bag-shopping"></i> View</span></span>
+                    </button>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty"><i class="fa-regular fa-images" style="font-size:44px"></i><h3>No products yet</h3><p>This store has not published any active products.</p></div>
+        }
+    </div>
 
-            <a class="btn chat-btn"
-               asp-page="/ChatConversation"
-               asp-route-userId="@Model.Store.OwnerUserID">
-                Chat
-            </a>
+    <div class="modal-backdrop" id="productBackdrop" onclick="backdropClose(event,'productBackdrop')">
+        <article class="product-modal">
+            <div class="media-pane"><img id="modalImage" src="" alt="" /></div>
+            <div class="details-pane">
+                <header class="modal-head"><img class="mini-avatar" src="@storeLogo" alt="" /><strong>@Model.Store.StoreName</strong><button class="close-btn" type="button" onclick="closeProduct()">&times;</button></header>
+                <div class="modal-scroll">
+                    <h2 class="product-title" id="modalName"></h2>
+                    <div class="price" id="modalPrice"></div>
+                    <p class="description" id="modalDescription"></p>
+                    <div class="action-row">
+                        <form method="post" asp-page-handler="AddToCart" id="cartForm"><input type="hidden" name="productId" id="cartProductId" /><button class="action" id="cartButton" type="submit"><i class="fa-solid fa-bag-shopping"></i><span>Add</span></button></form>
+                        <form method="post" asp-page-handler="AddWishlist" id="wishlistForm"><input type="hidden" name="productId" id="wishlistProductId" /><button class="action" type="submit"><i class="fa-regular fa-bookmark"></i><span>Save</span></button></form>
+                        <button class="action" type="button" onclick="shareCurrentProduct()"><i class="fa-regular fa-paper-plane"></i><span>Share</span></button>
+                        <button class="action" id="repostButton" type="button" onclick="repostCurrentProduct()"><i class="fa-solid fa-retweet"></i><span id="repostButtonText">Repost</span></button>
+                    </div>
+                    <div class="action-row">
+                        <button class="action" type="button" onclick="shareCurrentProductWhatsApp()"><i class="fa-brands fa-whatsapp"></i><span>WhatsApp</span></button>
+                        <button class="action" type="button" onclick="copyCurrentProductLink()"><i class="fa-regular fa-copy"></i><span>Copy link</span></button>
+                        <form method="post" asp-page-handler="ShareToStore" id="chatShareForm"><input type="hidden" name="productId" id="chatProductId" /><input type="hidden" name="storeOwnerId" value="@Model.Store.OwnerUserID" /><button class="action" type="submit"><i class="fa-regular fa-message"></i><span>Send in chat</span></button></form>
+                        <button class="action" type="button" onclick="openProductReportDialog()"><i class="fa-regular fa-flag"></i><span>Report</span></button>
+                    </div>
+                    <section class="review-box">
+                        <h3>Ratings &amp; reviews</h3>
+                        <form method="post" asp-page-handler="AddReview" class="review-form">
+                            <input type="hidden" name="productId" id="reviewProductId" />
+                            <select name="rating" required><option value="">Rating</option><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select>
+                            <input type="text" name="comment" placeholder="Write a review..." maxlength="1000" required />
+                            <button type="submit">Post</button>
+                        </form>
+                        <div class="reviews" id="modalReviews"></div>
+                    </section>
+                </div>
+            </div>
+        </article>
+    </div>
 
-            <form method="get"
-                  asp-page="/CreateReview"
-                  asp-route-storeId="@Model.Store.StoreID"
-                  style="display:inline; margin-left:10px;">
-                <button class="btn follow-btn" style="background:#16a34a;">
-                    Review Store
-                </button>
+    <div class="modal-backdrop" id="reportBackdrop" onclick="backdropClose(event,'reportBackdrop')">
+        <div class="dialog">
+            <button class="close-btn" style="position:absolute;right:14px;top:10px" type="button" onclick="closeReportDialog()">&times;</button>
+            <h3>Report @Model.Store.StoreName</h3><p>Your report will be sent to the platform administration for review.</p>
+            <form method="post" asp-page-handler="ReportStore" class="report-form">
+                <input type="hidden" name="storeId" value="@Model.Store.StoreID" />
+                <select name="complaintType" required><option value="">Choose a reason</option><option>Spam or misleading content</option><option>Fraud or suspicious activity</option><option>Harassment or inappropriate content</option><option>Counterfeit or prohibited products</option><option>Other</option></select>
+                <textarea name="description" placeholder="Explain what happened..." maxlength="2000" required></textarea>
+                <div class="dialog-actions"><button class="btn btn-soft" type="button" onclick="closeReportDialog()">Cancel</button><button class="danger-submit" type="submit">Submit report</button></div>
             </form>
         </div>
     </div>
 
-    <!-- PRODUCTS -->
-    <div class="products">
-
-        @foreach (var p in Model.Products)
-        {
-            var img = p.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
-
-            <div class="product">
-
-                <img src="@img" />
-
-                <div class="product-body">
-
-                    <h3>@p.ProductName</h3>
-
-                    <div class="price">
-                        $@p.Price
-                    </div>
-
-                    <p>@p.Description</p>
-
-                    <div class="actions">
-
-                        <form method="post" asp-page-handler="AddReview">
-                            <input type="hidden" name="productId" value="@p.ProductID" />
-
-                            <input type="number" name="rating" min="1" max="5" placeholder="Rating" required />
-
-                            <input type="text" name="comment" placeholder="Write a comment..." required />
-
-                            <button class="btn btn-review">Post Comment</button>
-                        </form>
-
-                        <form method="post"
-                              asp-page-handler="AddToCart"
-                              asp-route-productId="@p.ProductID">
-                            <button class="btn btn-cart">🛒 Add</button>
-                        </form>
-
-                        <form method="post"
-                              asp-page-handler="AddWishlist"
-                              asp-route-productId="@p.ProductID">
-                            <button class="btn btn-review" style="background:#e11d48;">
-                                ❤️ Wishlist
-                            </button>
-                        </form>
-
-                        <form method="post"
-                              asp-page-handler="ShareToStore"
-                              asp-route-productId="@p.ProductID"
-                              asp-route-storeOwnerId="@Model.Store.OwnerUserID">
-                            <button class="btn btn-share">
-                                🔗 Share
-                            </button>
-                        </form>
-
-                    </div>
-
-                    <div class="comments-section">
-
-                        @if (p.Reviews != null && p.Reviews.Any())
-                        {
-                            @foreach (var review in p.Reviews
-                           .Where(r => r.Status == "Approved")
-                           .OrderByDescending(r => r.CreatedAt))
-                            {
-                                <div class="comment">
-
-                                    <strong>
-                                        @review.Customer?.User?.FullName
-                                    </strong>
-
-                                    <span>⭐ @review.Rating</span>
-
-                                    <div>@review.Comment</div>
-
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <p>No reviews yet.</p>
-                        }
-
-                    </div>
-
-                </div>
-
-            </div>
-        }
-
+    <div class="modal-backdrop" id="productReportBackdrop" onclick="backdropClose(event,'productReportBackdrop')">
+        <div class="dialog">
+            <button class="close-btn" style="position:absolute;right:14px;top:10px" type="button" onclick="closeProductReportDialog()">&times;</button>
+            <h3>Report product</h3><p>Tell us why this product should be reviewed.</p>
+            <form method="post" asp-page-handler="ReportProduct" class="report-form">
+                <input type="hidden" name="productId" id="reportProductId" />
+                <textarea name="description" placeholder="Describe the problem..." maxlength="2000" required></textarea>
+                <div class="dialog-actions"><button class="btn btn-soft" type="button" onclick="closeProductReportDialog()">Cancel</button><button class="danger-submit" type="submit">Submit report</button></div>
+            </form>
+        </div>
     </div>
 
-</div>
+    <div class="block-confirm-toast"
+         id="blockConfirmToast"
+         role="alertdialog"
+         aria-modal="true"
+         aria-labelledby="blockConfirmTitle">
+        <div class="block-confirm-title" id="blockConfirmTitle">
+            <i class="fa-solid fa-ban"></i>
+            Block this store?
+        </div>
+        <p>You will stop seeing this store and it will also be removed from your following list.</p>
+        <div class="block-confirm-actions">
+            <button type="button"
+                    class="block-confirm-cancel"
+                    onclick="hideBlockConfirmation()">
+                Cancel
+            </button>
+            <button type="button"
+                    class="block-confirm-submit"
+                    id="confirmBlockButton"
+                    onclick="submitBlockStore()">
+                Block
+            </button>
+        </div>
+    </div>
 
-<!-- TOAST -->
-@if (TempData["Success"] != null)
-{
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script>
-        Toastify({
-            text: "@TempData["Success"]",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "#10b981"
-        }).showToast();
-    </script>
-}
+        const storeName = @Html.Raw(JsonSerializer.Serialize(Model.Store.StoreName));
+        const storeId = @Model.Store.StoreID;
+        let currentProduct = null;
 
-@if (TempData["Error"] != null)
-{
-    <script>
-        Toastify({
-            text: "@TempData["Error"]",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "#ef4444"
-        }).showToast();
+        const reviewsByProduct = {
+        @foreach (var p in Model.Products)
+        {
+            var reviews = p.Reviews?.Where(r => r.Status == "Approved").OrderByDescending(r => r.CreatedAt).Select(r => new
+            {
+                customer = r.Customer?.User?.FullName ?? "Customer",
+                rating = r.Rating,
+                comment = r.Comment,
+                createdAt = r.CreatedAt.ToString("MMM d, yyyy")
+            }).ToList() ?? new();
+            <text>@p.ProductID: @Html.Raw(JsonSerializer.Serialize(reviews)),</text>
+        }
+        };
+
+        const profileMenu = document.getElementById('profileMenu');
+        document.getElementById('profileMoreButton').addEventListener('click', e => { e.stopPropagation(); profileMenu.classList.toggle('open'); });
+        document.addEventListener('click', () => profileMenu.classList.remove('open'));
+        profileMenu.addEventListener('click', e => e.stopPropagation());
+
+        function toast(message, ok = true) {
+            Toastify({ text: message, duration: 2800, gravity: 'top', position: 'right', style: { background: ok ? '#16a34a' : '#dc2626' } }).showToast();
+        }
+
+        function showBlockConfirmation() {
+            profileMenu.classList.remove('open');
+            document.getElementById('blockConfirmToast').classList.add('open');
+        }
+
+        function hideBlockConfirmation() {
+            document.getElementById('blockConfirmToast').classList.remove('open');
+        }
+
+        function submitBlockStore() {
+            const form = document.getElementById('blockStoreForm');
+            const button = document.getElementById('confirmBlockButton');
+
+            if (!form || !button)
+                return;
+
+            button.disabled = true;
+            button.textContent = 'Blocking...';
+            form.submit();
+        }
+               function profileUrl() {
+            return `${window.location.origin}/StoreCustomerProfile?id=${storeId}`;
+        }
+
+        function productUrl(id) {
+            return `${window.location.origin}/StoreCustomerProfile?id=${storeId}#product-${id}`;
+        }
+        async function copyText(value, message) { try { await navigator.clipboard.writeText(value); toast(message); } catch { toast('Could not copy the link.', false); } }
+                function copyCurrentUrl() {
+            copyText(profileUrl(), 'Profile link copied.');
+        }
+        function shareProfileWhatsApp() {
+            const message =
+                `🏪 ${storeName}\n` +
+                `Store profile on realnest\n` +
+                profileUrl();
+
+            window.open(
+                'https://wa.me/?text=' + encodeURIComponent(message),
+                '_blank',
+                'noopener,noreferrer'
+            );
+        }
+        function shareProfile() {
+            shareProfileWhatsApp();
+        }
+
+        function openProduct(el) {
+            currentProduct = { id: Number(el.dataset.productId), name: el.dataset.productName, description: el.dataset.description, price: el.dataset.price, quantity: Number(el.dataset.quantity), image: el.dataset.image };
+            document.getElementById('modalImage').src = currentProduct.image;
+            document.getElementById('modalName').textContent = currentProduct.name;
+            document.getElementById('modalPrice').textContent = '$' + currentProduct.price;
+            document.getElementById('modalDescription').textContent = currentProduct.description || 'No description.';
+            ['cartProductId','wishlistProductId','chatProductId','reviewProductId','reportProductId'].forEach(id => document.getElementById(id).value = currentProduct.id);
+            const cartButton = document.getElementById('cartButton');
+            cartButton.disabled = currentProduct.quantity <= 0;
+            cartButton.querySelector('span').textContent = currentProduct.quantity <= 0 ? 'Out of stock' : 'Add';
+            renderReviews(currentProduct.id);
+            updateRepostUi(currentProduct.id);
+            document.getElementById('productBackdrop').classList.add('open');
+            document.body.style.overflow = 'hidden';
+            history.replaceState(null, '', productUrl(currentProduct.id));
+        }
+        function renderReviews(id) {
+            const target = document.getElementById('modalReviews');
+            const reviews = reviewsByProduct[id] || [];
+            if (!reviews.length) { target.innerHTML = '<p style="color:#746d7f">No reviews yet.</p>'; return; }
+            target.innerHTML = reviews.map(r => `<div class="review"><div class="review-top"><strong>${escapeHtml(r.customer)}</strong><span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span></div><p>${escapeHtml(r.comment || '')}</p><small style="color:#8a8390">${escapeHtml(r.createdAt)}</small></div>`).join('');
+        }
+        function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+        function closeProduct() { document.getElementById('productBackdrop').classList.remove('open'); document.body.style.overflow = ''; history.replaceState(null, '', window.location.pathname + '?id=' + storeId); }
+        function backdropClose(e,id) { if(e.target.id===id){ if(id==='productBackdrop') closeProduct(); else document.getElementById(id).classList.remove('open'); } }
+                function currentShareData() {
+            return {
+                title: currentProduct.name,
+                text:
+                    `🛍️ ${currentProduct.name}\n` +
+                    `$${currentProduct.price}\n` +
+                    `From ${storeName}`,
+                url: productUrl(currentProduct.id)
+            };
+        }
+        function shareCurrentProduct() {
+            shareCurrentProductWhatsApp();
+        }
+        function shareCurrentProductWhatsApp() {
+            if (!currentProduct)
+                return;
+
+            const message =
+                `🛍️ ${currentProduct.name}\n` +
+                `Price: $${currentProduct.price}\n` +
+                `Store: ${storeName}\n` +
+                productUrl(currentProduct.id);
+
+            window.open(
+                'https://wa.me/?text=' + encodeURIComponent(message),
+                '_blank',
+                'noopener,noreferrer'
+            );
+        }
+        function copyCurrentProductLink() { if(currentProduct) copyText(productUrl(currentProduct.id),'Product link copied.'); }
+        const repostStorageKey = 'realnest_reposted_products';
+
+        function getRepostedProductIds() {
+            try {
+                const value = JSON.parse(localStorage.getItem(repostStorageKey) || '[]');
+                return Array.isArray(value) ? value.map(Number) : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveRepostedProductIds(ids) {
+            localStorage.setItem(repostStorageKey, JSON.stringify([...new Set(ids.map(Number))]));
+        }
+
+        function isProductReposted(productId) {
+            return getRepostedProductIds().includes(Number(productId));
+        }
+
+        function updateRepostUi(productId) {
+            const reposted = isProductReposted(productId);
+            const badge = document.getElementById('repostBadge-' + productId);
+            if (badge) badge.classList.toggle('show', reposted);
+
+            if (currentProduct && Number(currentProduct.id) === Number(productId)) {
+                const button = document.getElementById('repostButton');
+                const text = document.getElementById('repostButtonText');
+                if (button) button.classList.toggle('reposted', reposted);
+                if (text) text.textContent = reposted ? 'Reposted' : 'Repost';
+            }
+        }
+
+        function refreshAllRepostBadges() {
+            document.querySelectorAll('[id^="repostBadge-"]').forEach(badge => {
+                const productId = Number(badge.id.replace('repostBadge-', ''));
+                updateRepostUi(productId);
+            });
+        }
+
+        function repostCurrentProduct() {
+            if (!currentProduct) return;
+
+            const productId = Number(currentProduct.id);
+            const ids = getRepostedProductIds();
+            const alreadyReposted = ids.includes(productId);
+
+            if (alreadyReposted) {
+                saveRepostedProductIds(ids.filter(id => id !== productId));
+                toast('Repost removed.');
+            } else {
+                ids.push(productId);
+                saveRepostedProductIds(ids);
+                toast('Product reposted.');
+            }
+
+            updateRepostUi(productId);
+        }
+        function openReportDialog(){ profileMenu.classList.remove('open'); document.getElementById('reportBackdrop').classList.add('open'); }
+        function closeReportDialog(){ document.getElementById('reportBackdrop').classList.remove('open'); }
+        function openProductReportDialog(){ if(!currentProduct)return; document.getElementById('reportProductId').value=currentProduct.id; document.getElementById('productReportBackdrop').classList.add('open'); }
+        function closeProductReportDialog(){ document.getElementById('productReportBackdrop').classList.remove('open'); }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeProduct();
+                closeReportDialog();
+                closeProductReportDialog();
+                hideBlockConfirmation();
+            }
+        });
+
+        refreshAllRepostBadges();
+
+        @if (TempData["Success"] != null)
+        {
+            <text>toast(@Html.Raw(JsonSerializer.Serialize(TempData["Success"]?.ToString())));</text>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <text>toast(@Html.Raw(JsonSerializer.Serialize(TempData["Error"]?.ToString())), false);</text>
+        }
+                window.addEventListener('DOMContentLoaded', function () {
+            const match = window.location.hash.match(/^#product-(\d+)$/);
+
+            if (!match)
+                return;
+
+            const productId = match[1];
+
+            const productTile = document.querySelector(
+                `.tile[data-product-id="${productId}"]`
+            );
+
+            if (productTile)
+                openProduct(productTile);
+        });
     </script>
-}
+</body>
+</html>

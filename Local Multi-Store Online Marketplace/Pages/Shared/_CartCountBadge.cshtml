@@ -1,0 +1,49 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using Multi_Store.Core.Entities
+@using Multi_Store.Infrastructure.Data
+@inject UserManager<User> UserManager
+@inject ApplicationDbContext DbContext
+
+@{
+    int cartCount = 0;
+
+    var currentUser = await UserManager.GetUserAsync(User);
+
+    if (currentUser != null)
+    {
+        var customer = await DbContext.Customers
+            .FirstOrDefaultAsync(c => c.UserID == currentUser.Id);
+
+        if (customer != null)
+        {
+            cartCount = await DbContext.CartItems
+                .Where(ci => ci.Cart.CustomerID == customer.CustomerID)
+                .CountAsync();
+        }
+    }
+}
+
+@if (cartCount > 0)
+{
+    <span class="js-cart-badge" style="
+    position: absolute;
+    top: -4px;
+    right: 18px;
+    background: #ef4444;
+    color: white;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 1.5px solid white;
+    line-height: 1;
+    z-index: 5;">
+        @cartCount
+    </span>
+}

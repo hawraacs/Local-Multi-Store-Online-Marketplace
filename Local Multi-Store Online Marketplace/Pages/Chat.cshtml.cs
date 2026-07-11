@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Multi_Store.Core.Entities;
+using Multi_Store.Core.Reposinterface;
 using Multi_Store.Services.Managers;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
@@ -11,15 +12,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly UserManager<User> _userManager;
         private readonly MessagingManager _messagingManager;
         private readonly SessionManager _sessionManager;
+        private readonly IStoreRepository _storeRepository;
 
         public ChatModel(
             UserManager<User> userManager,
             MessagingManager messagingManager,
-            SessionManager sessionManager)
+            SessionManager sessionManager,
+            IStoreRepository storeRepository)
         {
             _userManager = userManager;
             _messagingManager = messagingManager;
             _sessionManager = sessionManager;
+            _storeRepository = storeRepository;
         }
 
         public int CurrentUserId { get; set; }
@@ -49,10 +53,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 string term = SearchText.Trim().ToLower();
 
+                var matchingStores = await _storeRepository.SearchStoresAsync(term);
+
+                var matchingStoreOwnerIds = matchingStores
+                    .Select(s => s.OwnerUserID)
+                    .ToList();
+
                 SearchUsers = allUsers
                     .Where(u =>
                         (u.UserName ?? "").ToLower().Contains(term)
-                        || (u.Email ?? "").ToLower().Contains(term))
+                        || (u.Email ?? "").ToLower().Contains(term)
+                        || matchingStoreOwnerIds.Contains(u.Id))
                     .ToList();
             }
 

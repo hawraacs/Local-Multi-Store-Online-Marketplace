@@ -45,6 +45,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public string? SelectedCategory { get; set; }
         public List<Product> Products { get; set; } = new();
         public List<int> FollowingStoreIds { get; set; } = new();
+        public List<FeedCategoryFilterViewModel> FilterCategories { get; set; } = new();
+        public List<FeedStoreFilterViewModel> FilterStores { get; set; } = new();
+        public List<string> FilterAreas { get; set; } = new();
+
+        [BindProperty(SupportsGet = true)] public string ViewMode { get; set; } = "Following";
+        [BindProperty(SupportsGet = true)] public string? SearchTerm { get; set; }
+        [BindProperty(SupportsGet = true)] public int? CategoryId { get; set; }
+        [BindProperty(SupportsGet = true)] public int? StoreId { get; set; }
+        [BindProperty(SupportsGet = true)] public string? Area { get; set; }
+        [BindProperty(SupportsGet = true)] public decimal? MinPrice { get; set; }
+        [BindProperty(SupportsGet = true)] public decimal? MaxPrice { get; set; }
+
+        public bool ShowingAllProducts => string.Equals(ViewMode, "All", StringComparison.OrdinalIgnoreCase);
 
         public async Task OnGetAsync(string? category)
         {
@@ -54,43 +67,115 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
             if (customer == null) return;
 
+            ViewMode = ShowingAllProducts ? "All" : "Following";
             SelectedCategory = category;
 
-            // ? LOAD BLOCKED USERS FIRST
+            await LoadFilterOptionsAsync();
+
+            FollowingStoreIds = await _context.StoreFollows
+                .Where(f => f.CustomerID == customer.CustomerID)
+                .Select(f => f.StoreID)
+                .ToListAsync();
+
             var blockedUserIds = await _context.BlockRelations
                 .Where(b => b.BlockerUserId == customer.UserID)
                 .Select(b => b.BlockedUserId)
                 .ToListAsync();
 
-            // GET FEED
-            var products = await _storeManager.GetFeedProductsAsync(customer.CustomerID);
             var hiddenProductIds = await _context.ProductHides
-    .Where(x => x.CustomerId == customer.CustomerID)
-    .Select(x => x.ProductId)
-    .ToListAsync();
-            products = products
-    .Where(p => !hiddenProductIds.Contains(p.ProductID))
-    .ToList();
+                .Where(x => x.CustomerId == customer.CustomerID)
+                .Select(x => x.ProductId)
+                .ToListAsync();
 
-            // ? APPLY BLOCK FILTER (REAL FIX)
-            products = products
-                .Where(p => !blockedUserIds.Contains(p.Store.OwnerUserID))
-                .ToList();
+            var query = _context.Products
+                .AsNoTracking()
+                .Include(p => p.Store)
+                .Include(p => p.Images)
+                .Include(p => p.Category)
+                .Include(p => p.Reviews)
+                    .ThenInclude(r => r.Customer)
+                        .ThenInclude(c => c.User)
+                .Where(p =>
+                    p.IsActive &&
+                    p.Store != null &&
+                    p.Store.Status == "Approved" &&
+                    !hiddenProductIds.Contains(p.ProductID) &&
+                    !blockedUserIds.Contains(p.Store.OwnerUserID));
 
-            // CATEGORY FILTER
-            if (!string.IsNullOrWhiteSpace(category) && category != "All")
+            if (!ShowingAllProducts)
             {
-                products = products
-                    .Where(p => p.Category != null &&
-                                p.Category.CategoryName.Equals(category, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                query = query.Where(p => FollowingStoreIds.Contains(p.StoreID));
             }
 
-            Products = products;
+            if (!string.IsNullOrWhiteSpace(category) && category != "All")
+            {
+                query = query.Where(p =>
+                    p.Category != null &&
+                    p.Category.CategoryName == category);
+            }
 
-            FollowingStoreIds = await _context.StoreFollows
-                .Where(f => f.CustomerID == customer.CustomerID)
-                .Select(f => f.StoreID)
+            var search = SearchTerm?.Trim();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(p =>
+                    p.ProductName.Contains(search) ||
+                    p.Description.Contains(search) ||
+                    p.Store.StoreName.Contains(search) ||
+                    (p.Category != null && p.Category.CategoryName.Contains(search)));
+            }
+
+            if (CategoryId.HasValue && CategoryId.Value > 0)
+                query = query.Where(p => p.CategoryID == CategoryId.Value);
+
+            if (StoreId.HasValue && StoreId.Value > 0)
+                query = query.Where(p => p.StoreID == StoreId.Value);
+
+            if (!string.IsNullOrWhiteSpace(Area))
+            {
+                var selectedArea = Area.Trim();
+                query = query.Where(p => p.Store.Area == selectedArea);
+            }
+
+            if (MinPrice.HasValue)
+                query = query.Where(p => p.Price >= MinPrice.Value);
+
+            if (MaxPrice.HasValue)
+                query = query.Where(p => p.Price <= MaxPrice.Value);
+
+            Products = await query
+                .OrderByDescending(p => p.CreatedAt)
+                .ThenByDescending(p => p.ProductID)
+                .ToListAsync();
+        }
+
+        private async Task LoadFilterOptionsAsync()
+        {
+            FilterCategories = await _context.Categories.AsNoTracking()
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.DisplayOrder)
+                .ThenBy(c => c.CategoryName)
+                .Select(c => new FeedCategoryFilterViewModel
+                {
+                    CategoryID = c.CategoryID,
+                    CategoryName = c.CategoryName
+                })
+                .ToListAsync();
+
+            FilterStores = await _context.Stores.AsNoTracking()
+                .Where(s => s.Status == "Approved")
+                .OrderBy(s => s.StoreName)
+                .Select(s => new FeedStoreFilterViewModel
+                {
+                    StoreID = s.StoreID,
+                    StoreName = s.StoreName
+                })
+                .ToListAsync();
+
+            FilterAreas = await _context.Stores.AsNoTracking()
+                .Where(s => s.Status == "Approved" && s.Area != null && s.Area != "")
+                .Select(s => s.Area!)
+                .Distinct()
+                .OrderBy(a => a)
                 .ToListAsync();
         }
 
@@ -242,4 +327,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
     }
+
+    public class FeedCategoryFilterViewModel
+    {
+        public int CategoryID { get; set; }
+        public string CategoryName { get; set; } = string.Empty;
+    }
+
+    public class FeedStoreFilterViewModel
+    {
+        public int StoreID { get; set; }
+        public string StoreName { get; set; } = string.Empty;
+    }
+
 }
