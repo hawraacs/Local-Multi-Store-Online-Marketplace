@@ -22,7 +22,17 @@
 
         foreach (var n in messageNotifications)
         {
-            var relatedMessage = await ChatMessageRepo.GetByIdAsync(n.ReferenceID!.Value);
+            ChatMessage? relatedMessage;
+
+            try
+            {
+                relatedMessage = await ChatMessageRepo.GetByIdAsync(n.ReferenceID!.Value);
+            }
+            catch (Exception)
+            {
+                // Referenced ChatMessage no longer exists (deleted, etc.) - skip this notification.
+                continue;
+            }
 
             if (relatedMessage != null)
             {
