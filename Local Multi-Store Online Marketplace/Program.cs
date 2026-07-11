@@ -43,7 +43,15 @@ builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
 // ===============================
 // Identity
 // ===============================
-builder.Services.AddIdentity<User, IdentityRole<int>>()
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
+{
+    options.SignIn.RequireConfirmedEmail = false;
+    options.User.RequireUniqueEmail = true;
+
+    options.Lockout.MaxFailedAccessAttempts = 10;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromSeconds(30);
+    options.Lockout.AllowedForNewUsers = true;
+})
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
