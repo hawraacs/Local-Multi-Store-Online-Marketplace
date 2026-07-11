@@ -1,47 +1,139 @@
 ﻿@page "{storeId:int}"
-@model  Local_Multi_Store_Online_Marketplace.Pages.StoreReviewsModel
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreReviewsModel
 
 @{
     ViewData["Title"] = "Store Reviews";
     Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
 }
 
-<h2>Store Reviews</h2>
+@section Styles {
+    <style>
+        :root {
+            /* -------- Brand colors (Purple / Indigo) -------- */
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            /* -------- Neutral palette -------- */
+            --bg-color: #f8f7fc;
+            --card-bg: #ffffff;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            --text-muted: #9691a4;
+            --border-color: #ece8f6;
+            /* -------- Semantic -------- */
+            --error-color: #dc2626;
+            /* -------- Shadows -------- */
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+        }
+
+        .reviews-heading {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.4px;
+            margin-bottom: 20px;
+        }
+
+        .empty-reviews {
+            background: var(--card-bg);
+            border: 1px dashed var(--border-color);
+            border-radius: 18px;
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .review-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .review-customer {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .review-stars {
+            display: inline-block;
+            margin: 6px 0 10px;
+            font-size: 14px;
+        }
+
+        .review-comment {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .review-date {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .review-delete-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fef2f2;
+            color: var(--error-color);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: all 0.2s ease;
+        }
+
+            .review-delete-btn:hover {
+                background: var(--error-color);
+                color: white;
+            }
+    </style>
+}
+
+<h2 class="reviews-heading">Store Reviews</h2>
 
 @if (!Model.Reviews.Any())
 {
-    <p>No reviews yet.</p>
+    <div class="empty-reviews">No reviews yet.</div>
 }
 else
 {
     @foreach (var r in Model.Reviews)
     {
-        <div style="border:1px solid #ddd; padding:12px; margin-bottom:10px; border-radius:8px;">
+        <div class="review-card">
 
             <!-- Customer Name -->
-            <strong>
+            <div class="review-customer">
                 @(r.CustomerName ?? "Unknown Customer")
-            </strong>
-
-            <br />
+            </div>
 
             <!-- Rating -->
-            <span>
+            <div class="review-stars">
                 @for (int i = 0; i < r.Rating; i++)
                 {
                     <span>⭐</span>
                 }
-            </span>
+            </div>
 
-            <p>@r.Comment</p>
+            <p class="review-comment">@r.Comment</p>
 
-            <small>@r.CreatedAt.ToString("yyyy-MM-dd")</small>
+            <small class="review-date">@r.CreatedAt.ToString("yyyy-MM-dd")</small>
 
             <form method="post" asp-page-handler="Delete">
                 <input type="hidden" name="reviewId" value="@r.ReviewID" />
 
-                <button type="submit"
-                        style="background:red;color:white;border:none;padding:5px 10px;margin-top:5px;">
+                <button type="submit" class="review-delete-btn">
+                    <i class="fa-solid fa-trash-can"></i>
                     Delete
                 </button>
             </form>
