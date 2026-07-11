@@ -22,19 +22,25 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly SessionManager _sessionManager;
         private readonly ProductManager _productManager;
         private readonly IWebHostEnvironment _environment;
+        private readonly NotificationManager _notificationManager;
+        private readonly Multi_Store.Core.Reposinterface.IChatMessageRepository _chatMessageRepository;
 
         public ChatConversationModel(
             UserManager<User> userManager,
             MessagingManager messagingManager,
             SessionManager sessionManager,
             ProductManager productManager,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            NotificationManager notificationManager,
+            Multi_Store.Core.Reposinterface.IChatMessageRepository chatMessageRepository)
         {
             _userManager = userManager;
             _messagingManager = messagingManager;
             _sessionManager = sessionManager;
             _productManager = productManager;
             _environment = environment;
+            _notificationManager = notificationManager;
+            _chatMessageRepository = chatMessageRepository;
         }
 
         public List<ChatMessageDTO> Messages { get; set; } = new();
@@ -79,6 +85,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
 
             await _messagingManager.MarkConversationAsReadAsync(userId, CurrentUserId);
+
+            var unreadMessageNotifications = await _notificationManager.GetUnreadAsync(CurrentUserId);
+
+            foreach (var n in unreadMessageNotifications.Where(x => x.Type == "Message" && x.ReferenceID.HasValue))
+            {
+                var relatedMessage = await _chatMessageRepository.GetByIdAsync(n.ReferenceID!.Value);
+
+                if (relatedMessage != null && relatedMessage.SenderID == userId)
+                {
+                    await _notificationManager.MarkAsReadAsync(n.NotificationID);
+                }
+            }
 
             Messages = (await _messagingManager.GetConversationAsync(CurrentUserId, userId))
                 .OrderBy(x => x.SentAt)
