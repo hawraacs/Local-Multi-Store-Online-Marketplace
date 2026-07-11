@@ -37,252 +37,519 @@
     @await RenderSectionAsync("Styles", required: false)
 
     <style>
-            :root {
-                /* -------- Brand colors (Purple / Indigo) -------- */
-                --accent-color: #6d28d9;
-                --accent-hover: #5b21b6;
-                --accent-light: #f3effe;
-                --accent-steel: #4f46e5;
-                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-                /* -------- Neutral palette -------- */
-                --bg-color: #f8f7fc;
-                --card-bg: #ffffff;
-                --text-primary: #1e1b2e;
-                --text-secondary: #6b6478;
-                --text-muted: #9691a4;
-                --border-color: #ece8f6;
-                /* -------- Semantic -------- */
-                --success-color: #10b981;
-                --error-color: #dc2626;
-                --warning-color: #f59e0b;
-                /* -------- Shadows -------- */
-                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
-                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
-                --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.18);
-                --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        :root {
+            /* -------- Brand colors (Purple / Indigo) -------- */
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-steel: #4f46e5;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            /* -------- Neutral palette -------- */
+            --bg-color: #f8f7fc;
+            --card-bg: #ffffff;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            --text-muted: #9691a4;
+            --border-color: #ece8f6;
+            /* -------- Sidebar / Navbar palette — "Premium Silver" -------- */
+            --sidebar-bg: linear-gradient(180deg, #E8EDF2 0%, #D5DCE3 100%);
+            --sidebar-bg-alt: #D5DCE3;
+            --sidebar-active-bg: #4C1D95;
+            --sidebar-hover-bg: #D5DCE3;
+            --sidebar-text: #1E1B4B;
+            --sidebar-text-dim: #5B527A;
+            --sidebar-border: #C8D0D8;
+            --sidebar-icon: #7A73A0;
+            --sidebar-icon-active: #FFFFFF;
+            --sidebar-accent: #4C1D95;
+            --sidebar-active-accent-bar: #FFFFFF;
+            --sidebar-shadow: rgba(30, 27, 75, 0.10);
+            /* -------- Navbar (matches sidebar exactly) -------- */
+            --navbar-bg: var(--sidebar-bg);
+            --navbar-bg-alt: var(--sidebar-bg-alt);
+            --navbar-border: var(--sidebar-border);
+            --navbar-text-dim: var(--sidebar-text-dim);
+            /* -------- Semantic -------- */
+            --success-color: #10b981;
+            --error-color: #dc2626;
+            --warning-color: #f59e0b;
+            /* -------- Shadows -------- */
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+            --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.18);
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body.store-owner-body {
+            font-family: var(--font-family);
+            background: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        /* ============================================================
+           ANIMATED COLLAPSIBLE SIDEBAR (Admin-style, purple brand)
+           ============================================================ */
+        .store-sidebar {
+            width: 260px !important;
+            background: var(--sidebar-bg) !important;
+            border-right: 1px solid var(--sidebar-border) !important;
+            padding: 18px 14px !important;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: width 0.3s ease;
+            box-shadow: 4px 0 20px var(--sidebar-shadow);
+            overflow-x: hidden;
+        }
+
+        .sidebar-toggle {
+            width: 42px;
+            height: 42px;
+            border: 1px solid var(--sidebar-border);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.6);
+            color: var(--sidebar-text);
+            cursor: pointer;
+            margin-bottom: 14px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+            .sidebar-toggle:hover {
+                background: var(--sidebar-active-bg);
+                color: #ffffff;
+                transform: rotate(90deg) scale(1.05);
             }
 
-            body.store-owner-body {
-                font-family: var(--font-family);
-                background: var(--bg-color);
-                color: var(--text-primary);
+            .sidebar-toggle i {
+                font-size: 17px;
             }
 
-            .notification-wrapper {
+        .sidebar-title {
+            color: var(--sidebar-text);
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--sidebar-border);
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .sidebar-title i {
+                color: var(--sidebar-accent);
+            }
+
+        .sidebar-section-title {
+            color: var(--sidebar-text-dim);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 16px;
+            margin-bottom: 6px;
+            padding-left: 10px;
+        }
+
+            .sidebar-section-title:first-of-type {
+                margin-top: 0;
+            }
+
+        .sidebar-menu {
+            padding: 0 !important;
+        }
+
+        .menu-item {
+            margin: 0 !important;
+        }
+
+            .menu-item a {
                 position: relative;
-                display: inline-block;
+                color: var(--sidebar-text) !important;
+                padding: 11px 14px !important;
+                border-radius: 12px !important;
+                font-weight: 500 !important;
+                font-size: 0.92rem !important;
+                transition: all 0.25s ease !important;
+                overflow: hidden;
             }
 
-            .notification-bell {
-                position: relative;
-                cursor: pointer;
-                width: 42px;
-                height: 42px;
-                border-radius: 12px;
+                .menu-item a i {
+                    color: var(--sidebar-icon) !important;
+                    transition: color 0.2s ease;
+                }
+
+            .menu-item:hover a {
+                background: var(--sidebar-hover-bg) !important;
+                color: var(--sidebar-text) !important;
+                transform: translateX(6px);
+                box-shadow: 0 4px 14px rgba(30, 27, 75, 0.10);
+            }
+
+                .menu-item:hover a i {
+                    color: var(--sidebar-accent) !important;
+                }
+
+            .menu-item.active a {
+                background: var(--sidebar-active-bg) !important;
+                color: var(--sidebar-icon-active) !important;
+                box-shadow: 0 6px 16px rgba(76, 29, 149, 0.35) !important;
+            }
+
+                .menu-item.active a i {
+                    color: var(--sidebar-icon-active) !important;
+                }
+
+                .menu-item.active a::before {
+                    content: "";
+                    position: absolute;
+                    left: 0;
+                    top: 15%;
+                    height: 70%;
+                    width: 4px;
+                    background: var(--sidebar-active-accent-bar);
+                    border-radius: 10px;
+                }
+
+        /* collapsed mode */
+        .store-sidebar.collapsed {
+            width: 80px !important;
+        }
+
+            .store-sidebar.collapsed .sidebar-title span,
+            .store-sidebar.collapsed .sidebar-section-title,
+            .store-sidebar.collapsed .menu-item a span,
+            .store-sidebar.collapsed .store-details {
+                display: none;
+            }
+
+            .store-sidebar.collapsed .menu-item a {
+                justify-content: center;
+            }
+
+            .store-sidebar.collapsed .store-info-card {
+                justify-content: center;
+            }
+
+        /* main content grows to fill the space the sidebar gives up */
+        .store-main-content.sidebar-collapsed-content {
+            margin-left: 80px !important;
+        }
+
+        @@media (max-width: 768px) {
+            .store-main-content.sidebar-collapsed-content {
+                margin-left: 64px !important;
+            }
+        }
+
+        /* store info footer (bottom of sidebar) */
+        .store-info-card-link {
+            margin-top: auto;
+        }
+
+        .store-info-card {
+            background: var(--sidebar-bg-alt) !important;
+            border: 1px solid var(--sidebar-border) !important;
+        }
+
+            .store-info-card .store-logo {
+                background: rgba(255, 255, 255, 0.6) !important;
+                box-shadow: none !important;
+            }
+
+                .store-info-card .store-logo i {
+                    color: var(--sidebar-accent) !important;
+                }
+
+            .store-info-card h4 {
+                color: var(--sidebar-text) !important;
+            }
+
+        /* scrollbar */
+        .store-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .store-sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .store-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(30, 27, 75, 0.18);
+            border-radius: 20px;
+        }
+
+            .store-sidebar::-webkit-scrollbar-thumb:hover {
+                background: rgba(30, 27, 75, 0.32);
+            }
+
+        /* page content shift, animated like admin panel */
+        .store-main-content {
+            transition: margin-left 0.35s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        @@media (max-width: 768px) {
+            .store-sidebar {
+                width: 220px !important;
+            }
+
+            .store-sidebar.collapsed {
+                width: 64px !important;
+            }
+        }
+
+        /* ============================================================
+           TOP NAV — Premium Silver, matches sidebar exactly
+           ============================================================ */
+        .store-top-nav {
+            background: var(--navbar-bg) !important;
+            border-bottom: 1px solid var(--navbar-border) !important;
+        }
+
+            .store-top-nav .nav-brand a {
+                color: var(--sidebar-text) !important;
+            }
+
+            .store-top-nav .nav-search i {
+                color: var(--navbar-text-dim) !important;
+            }
+
+            .store-top-nav .nav-search input {
+                background: rgba(255, 255, 255, 0.6) !important;
+                border: 1.5px solid var(--navbar-border) !important;
+                color: var(--sidebar-text) !important;
+            }
+
+                .store-top-nav .nav-search input::placeholder {
+                    color: var(--navbar-text-dim) !important;
+                }
+
+                .store-top-nav .nav-search input:focus {
+                    border-color: var(--sidebar-accent) !important;
+                    background: var(--card-bg) !important;
+                }
+
+        .notification-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--sidebar-icon) !important;
+            transition: 0.2s ease;
+        }
+
+            .notification-bell:hover {
+                background: var(--sidebar-hover-bg) !important;
+                color: var(--sidebar-accent) !important;
+            }
+
+            .notification-bell .badge {
+                position: absolute;
+                top: 2px;
+                right: 2px;
+                background: var(--error-color);
+                color: white;
+                border-radius: 999px;
+                min-width: 18px;
+                height: 18px;
+                padding: 0 5px;
+                font-size: 11px;
+                font-weight: 800;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: var(--text-primary);
-                transition: 0.2s ease;
             }
 
-                .notification-bell:hover {
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            width: 360px;
+            max-height: 420px;
+            overflow-y: auto;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+        }
+
+            .notification-dropdown.show {
+                display: block;
+            }
+
+        .notification-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 800;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-count-text {
+            background: var(--accent-light);
+            color: var(--accent-color);
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .notification-item {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.15s ease;
+        }
+
+            .notification-item:hover {
+                background: var(--bg-color);
+            }
+
+            .notification-item:last-child {
+                border-bottom: none;
+            }
+
+        .notification-title {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .notification-message {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 7px;
+        }
+
+        .notification-date {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .empty-notification {
+            padding: 28px 18px;
+            text-align: center;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .user-dropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 14px 6px 6px;
+            border-radius: 40px;
+            transition: background 0.2s ease;
+        }
+
+            .user-dropdown:hover {
+                background: var(--sidebar-hover-bg);
+            }
+
+            .user-dropdown .user-avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 1.5px solid var(--navbar-border);
+            }
+
+            .user-dropdown .user-name {
+                font-weight: 600;
+                font-size: 14px;
+                color: var(--sidebar-text);
+            }
+
+            .user-dropdown > i.fa-chevron-down {
+                color: var(--navbar-text-dim);
+            }
+
+            .user-dropdown .dropdown-menu {
+                display: none;
+                position: absolute;
+                top: 48px;
+                right: 0;
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+                box-shadow: var(--shadow-lg);
+                min-width: 190px;
+                z-index: 9999;
+                padding: 8px;
+            }
+
+                .user-dropdown .dropdown-menu.show {
+                    display: block;
+                }
+
+            .user-dropdown .dropdown-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 14px;
+                color: var(--text-primary);
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+                transition: background 0.15s, color 0.15s;
+                border: none;
+                background: none;
+                width: 100%;
+                text-align: left;
+                cursor: pointer;
+                font-family: inherit;
+                border-radius: 10px;
+            }
+
+                .user-dropdown .dropdown-item:hover {
                     background: var(--accent-light);
                     color: var(--accent-color);
                 }
 
-                .notification-bell .badge {
-                    position: absolute;
-                    top: 2px;
-                    right: 2px;
-                    background: var(--error-color);
-                    color: white;
-                    border-radius: 999px;
-                    min-width: 18px;
-                    height: 18px;
-                    padding: 0 5px;
-                    font-size: 11px;
-                    font-weight: 800;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
+                .user-dropdown .dropdown-item.danger {
+                    color: var(--error-color);
                 }
 
-            .notification-dropdown {
-                display: none;
-                position: absolute;
-                top: 50px;
-                right: 0;
-                width: 360px;
-                max-height: 420px;
-                overflow-y: auto;
-                background: var(--card-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 18px;
-                box-shadow: var(--shadow-lg);
-                z-index: 9999;
-            }
-
-                .notification-dropdown.show {
-                    display: block;
-                }
-
-            .notification-header {
-                padding: 16px 18px;
-                border-bottom: 1px solid var(--border-color);
-                font-weight: 800;
-                color: var(--text-primary);
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .notification-count-text {
-                background: var(--accent-light);
-                color: var(--accent-color);
-                padding: 4px 10px;
-                border-radius: 999px;
-                font-size: 12px;
-                font-weight: 700;
-            }
-
-            .notification-item {
-                padding: 14px 18px;
-                border-bottom: 1px solid var(--border-color);
-                transition: background 0.15s ease;
-            }
-
-                .notification-item:hover {
-                    background: var(--bg-color);
-                }
-
-                .notification-item:last-child {
-                    border-bottom: none;
-                }
-
-            .notification-title {
-                font-weight: 700;
-                color: var(--text-primary);
-                margin-bottom: 5px;
-                font-size: 14px;
-            }
-
-            .notification-message {
-                color: var(--text-secondary);
-                font-size: 13px;
-                line-height: 1.5;
-                margin-bottom: 7px;
-            }
-
-            .notification-date {
-                color: var(--text-muted);
-                font-size: 12px;
-            }
-
-            .empty-notification {
-                padding: 28px 18px;
-                text-align: center;
-                color: var(--text-muted);
-                font-weight: 600;
-            }
-
-            .user-dropdown {
-                position: relative;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                cursor: pointer;
-                padding: 6px 14px 6px 6px;
-                border-radius: 40px;
-                transition: background 0.2s ease;
-            }
-
-                .user-dropdown:hover {
-                    background: var(--accent-light);
-                }
-
-                .user-dropdown .user-avatar {
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 50%;
-                    object-fit: cover;
-                    border: 1.5px solid var(--border-color);
-                }
-
-                .user-dropdown .user-name {
-                    font-weight: 600;
-                    font-size: 14px;
-                    color: var(--text-primary);
-                }
-
-                .user-dropdown .dropdown-menu {
-                    display: none;
-                    position: absolute;
-                    top: 48px;
-                    right: 0;
-                    background: var(--card-bg);
-                    border: 1px solid var(--border-color);
-                    border-radius: 16px;
-                    box-shadow: var(--shadow-lg);
-                    min-width: 190px;
-                    z-index: 9999;
-                    padding: 8px;
-                }
-
-                    .user-dropdown .dropdown-menu.show {
-                        display: block;
-                    }
-
-                .user-dropdown .dropdown-item {
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    padding: 10px 14px;
-                    color: var(--text-primary);
-                    font-size: 14px;
-                    font-weight: 500;
-                    text-decoration: none;
-                    transition: background 0.15s, color 0.15s;
-                    border: none;
-                    background: none;
-                    width: 100%;
-                    text-align: left;
-                    cursor: pointer;
-                    font-family: inherit;
-                    border-radius: 10px;
-                }
-
-                    .user-dropdown .dropdown-item:hover {
-                        background: var(--accent-light);
-                        color: var(--accent-color);
-                    }
-
-                    .user-dropdown .dropdown-item.danger {
+                    .user-dropdown .dropdown-item.danger:hover {
+                        background: #fef2f2;
                         color: var(--error-color);
                     }
 
-                        .user-dropdown .dropdown-item.danger:hover {
-                            background: #fef2f2;
-                            color: var(--error-color);
-                        }
+        .store-info-card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
 
-            .store-info-card-link {
+            .store-info-card-link:hover {
                 text-decoration: none;
                 color: inherit;
-                display: block;
+                opacity: 0.95;
             }
 
-                .store-info-card-link:hover {
-                    text-decoration: none;
-                    color: inherit;
-                    opacity: 0.95;
-                }
-
-            .nav-actions {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-            }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
     </style>
 </head>
 
@@ -401,12 +668,26 @@
 
         <div class="store-main-container">
 
-            <!-- Sidebar -->
-            <aside class="store-sidebar">
+            <!-- Sidebar (collapsible, animated — same behavior as Admin panel) -->
+            <aside class="store-sidebar" id="storeSidebar">
+
+                <button class="sidebar-toggle"
+                        type="button"
+                        onclick="toggleStoreSidebar()"
+                        aria-expanded="true"
+                        aria-controls="storeSidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <div class="sidebar-title">
+                    <i class="fas fa-store"></i>
+                    <span>Store Panel</span>
+                </div>
+
                 <div class="sidebar-menu">
-                    <!--
-                        FIXED HOME LINK – now points to the correct StoreOwner/Home page
-                    -->
+
+                    <div class="sidebar-section-title">Main</div>
+
                     <div class="menu-item @(currentPage.Contains("Home") ? "active" : "")">
                         <a href="/StoreOwner/Home">
                             <i class="fas fa-home"></i>
@@ -420,6 +701,8 @@
                             <span>Dashboard</span>
                         </a>
                     </div>
+
+                    <div class="sidebar-section-title">Management</div>
 
                     <div class="menu-item @(currentPage.Contains("StoreProfile") ? "active" : "")">
                         <a href="/StoreOwner/StoreProfile">
@@ -456,13 +739,6 @@
                         </a>
                     </div>
 
-                    <div class="menu-item @(currentPage.Contains("Chat") ? "active" : "")">
-                        <a href="/Chat">
-                            <i class="fas fa-comment-dots"></i>
-                            <span>Chat</span>
-                        </a>
-                    </div>
-
                     <div class="menu-item @(currentPage.Contains("Reviews") ? "active" : "")">
                         <a asp-page="/StoreReviews" asp-route-storeId="@ViewData["StoreId"]">
                             <i class="fas fa-star"></i>
@@ -477,12 +753,24 @@
                         </a>
                     </div>
 
+                    <div class="sidebar-section-title">Communication</div>
+
+                    <div class="menu-item @(currentPage.Contains("Chat") ? "active" : "")">
+                        <a href="/Chat">
+                            <i class="fas fa-comment-dots"></i>
+                            <span>Chat</span>
+                        </a>
+                    </div>
+
+                    <div class="sidebar-section-title">System</div>
+
                     <div class="menu-item @(currentPage.Contains("Settings") ? "active" : "")">
                         <a href="/StoreOwner/Settings/Index">
                             <i class="fas fa-cog"></i>
                             <span>Settings</span>
                         </a>
                     </div>
+
                 </div>
 
                 <!-- Store Info Card -->
@@ -565,6 +853,47 @@
         event.stopPropagation();
         });
         }
+
+        // ------------------------------------------------------------
+        // Collapsible sidebar (same animation/behavior as the Admin panel)
+        // ------------------------------------------------------------
+        function applyStoreSidebarState() {
+            const sidebar = document.getElementById("storeSidebar");
+            const content = document.querySelector(".store-main-content");
+            if (!sidebar) return;
+
+            const isCollapsed = localStorage.getItem("storeSidebarCollapsed") === "true";
+
+            if (isCollapsed) {
+                sidebar.classList.add("collapsed");
+                if (content) content.classList.add("sidebar-collapsed-content");
+            } else {
+                sidebar.classList.remove("collapsed");
+                if (content) content.classList.remove("sidebar-collapsed-content");
+            }
+        }
+
+        function toggleStoreSidebar() {
+            const sidebar = document.getElementById("storeSidebar");
+            const content = document.querySelector(".store-main-content");
+            if (!sidebar) return;
+
+            const isCollapsed = sidebar.classList.toggle("collapsed");
+            const expanded = !isCollapsed;
+
+            if (content) {
+                content.classList.toggle("sidebar-collapsed-content", isCollapsed);
+            }
+
+            const toggleBtn = sidebar.querySelector(".sidebar-toggle");
+            if (toggleBtn) {
+                toggleBtn.setAttribute("aria-expanded", expanded);
+            }
+
+            localStorage.setItem("storeSidebarCollapsed", isCollapsed ? "true" : "false");
+        }
+
+        document.addEventListener("DOMContentLoaded", applyStoreSidebarState);
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
