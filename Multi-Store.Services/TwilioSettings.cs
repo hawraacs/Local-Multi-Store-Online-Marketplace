@@ -9,7 +9,12 @@ namespace Multi_Store.Services
     public class TwilioSettings
     {
         public string AccountSid { get; set; }
+            = string.Empty;
+
         public string AuthToken { get; set; }
-        public string FromNumber { get; set; }
+            = string.Empty;
+
+        public string VerifyServiceSid { get; set; }
+            = string.Empty;
     }
 }

@@ -40,6 +40,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public bool HasMoreItems { get; set; }
 
+        public List<ExploreCategoryFilterViewModel> FilterCategories { get; set; } = new();
+        public List<ExploreStoreFilterViewModel> FilterStores { get; set; } = new();
+        public List<string> FilterAreas { get; set; } = new();
+
+        [BindProperty(SupportsGet = true)] public string? SearchTerm { get; set; }
+        [BindProperty(SupportsGet = true)] public int? CategoryId { get; set; }
+        [BindProperty(SupportsGet = true)] public int? StoreId { get; set; }
+        [BindProperty(SupportsGet = true)] public string? Area { get; set; }
+        [BindProperty(SupportsGet = true)] public decimal? MinPrice { get; set; }
+        [BindProperty(SupportsGet = true)] public decimal? MaxPrice { get; set; }
+
         // =====================================================
         // INITIAL PAGE
         // =====================================================
@@ -57,6 +68,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
 
             SelectedCategory = NormalizeCategory(category);
+            await LoadExploreFilterOptionsAsync();
 
             NavbarCategories = await _context.Categories
                 .AsNoTracking()
@@ -69,7 +81,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var pageResult = await LoadExplorePageAsync(
                 page: 1,
-                category: SelectedCategory);
+                category: SelectedCategory,
+                searchTerm: SearchTerm,
+                categoryId: CategoryId,
+                storeId: StoreId,
+                area: Area,
+                minPrice: MinPrice,
+                maxPrice: MaxPrice);
 
             InitialItems = pageResult.Items;
             HasMoreItems = pageResult.HasMore;
@@ -83,14 +101,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // =====================================================
         public async Task<IActionResult> OnGetExplorePageAsync(
             int page = 1,
-            string? category = null)
+            string? category = null,
+            string? searchTerm = null,
+            int? categoryId = null,
+            int? storeId = null,
+            string? area = null,
+            decimal? minPrice = null,
+            decimal? maxPrice = null)
         {
-            if (page < 1)
-                page = 1;
+            if (page < 1) page = 1;
 
             var result = await LoadExplorePageAsync(
-                page,
-                NormalizeCategory(category));
+                page, NormalizeCategory(category), searchTerm, categoryId,
+                storeId, area, minPrice, maxPrice);
 
             return new JsonResult(new
             {
@@ -962,10 +985,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // Explore posts + products that do not already have an active post
         // =====================================================
         private async Task<ExplorePageResult> LoadExplorePageAsync(
-            int page,
-            string? category)
+            int page, string? category, string? searchTerm, int? categoryId,
+            int? storeId, string? area, decimal? minPrice, decimal? maxPrice)
         {
             var normalizedCategory = NormalizeCategory(category);
+            var normalizedSearch = searchTerm?.Trim();
+            var normalizedArea = area?.Trim();
 
             var postsQuery = _context.ExplorePosts
                 .AsNoTracking()
@@ -984,6 +1009,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     post.Product.Category.CategoryName.ToLower() ==
                         normalizedCategory.ToLower());
             }
+
+            if (!string.IsNullOrWhiteSpace(normalizedSearch))
+                postsQuery = postsQuery.Where(post =>
+                    post.Caption.Contains(normalizedSearch) ||
+                    post.Store.StoreName.Contains(normalizedSearch) ||
+                    (post.Product != null && (
+                        post.Product.ProductName.Contains(normalizedSearch) ||
+                        post.Product.Description.Contains(normalizedSearch) ||
+                        (post.Product.Category != null && post.Product.Category.CategoryName.Contains(normalizedSearch)))));
+
+            if (categoryId.HasValue && categoryId.Value > 0)
+                postsQuery = postsQuery.Where(post => post.Product != null && post.Product.CategoryID == categoryId.Value);
+            if (storeId.HasValue && storeId.Value > 0)
+                postsQuery = postsQuery.Where(post => post.StoreID == storeId.Value);
+            if (!string.IsNullOrWhiteSpace(normalizedArea))
+                postsQuery = postsQuery.Where(post => post.Store.Area == normalizedArea);
+            if (minPrice.HasValue)
+                postsQuery = postsQuery.Where(post => post.Product != null && post.Product.Price >= minPrice.Value);
+            if (maxPrice.HasValue)
+                postsQuery = postsQuery.Where(post => post.Product != null && post.Product.Price <= maxPrice.Value);
 
             var postItems = await postsQuery
                 .Select(post => new ExploreGridItemViewModel
@@ -1042,6 +1087,24 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     product.Category.CategoryName.ToLower() ==
                         normalizedCategory.ToLower());
             }
+
+            if (!string.IsNullOrWhiteSpace(normalizedSearch))
+                productsQuery = productsQuery.Where(product =>
+                    product.ProductName.Contains(normalizedSearch) ||
+                    product.Description.Contains(normalizedSearch) ||
+                    product.Store.StoreName.Contains(normalizedSearch) ||
+                    (product.Category != null && product.Category.CategoryName.Contains(normalizedSearch)));
+
+            if (categoryId.HasValue && categoryId.Value > 0)
+                productsQuery = productsQuery.Where(product => product.CategoryID == categoryId.Value);
+            if (storeId.HasValue && storeId.Value > 0)
+                productsQuery = productsQuery.Where(product => product.StoreID == storeId.Value);
+            if (!string.IsNullOrWhiteSpace(normalizedArea))
+                productsQuery = productsQuery.Where(product => product.Store.Area == normalizedArea);
+            if (minPrice.HasValue)
+                productsQuery = productsQuery.Where(product => product.Price >= minPrice.Value);
+            if (maxPrice.HasValue)
+                productsQuery = productsQuery.Where(product => product.Price <= maxPrice.Value);
 
             var productItems = await productsQuery
                 .Select(product => new ExploreGridItemViewModel
@@ -1355,6 +1418,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             await _context.SaveChangesAsync();
         }
 
+        private async Task LoadExploreFilterOptionsAsync()
+        {
+            FilterCategories = await _context.Categories.AsNoTracking()
+                .Where(c => c.IsActive).OrderBy(c => c.DisplayOrder).ThenBy(c => c.CategoryName)
+                .Select(c => new ExploreCategoryFilterViewModel { CategoryID = c.CategoryID, CategoryName = c.CategoryName })
+                .ToListAsync();
+
+            FilterStores = await _context.Stores.AsNoTracking()
+                .Where(s => s.Status == "Approved").OrderBy(s => s.StoreName)
+                .Select(s => new ExploreStoreFilterViewModel { StoreID = s.StoreID, StoreName = s.StoreName })
+                .ToListAsync();
+
+            FilterAreas = await _context.Stores.AsNoTracking()
+                .Where(s => s.Status == "Approved" && s.Area != null && s.Area != "")
+                .Select(s => s.Area!).Distinct().OrderBy(a => a).ToListAsync();
+        }
+
         // =====================================================
         // CURRENT CUSTOMER
         // =====================================================
@@ -1585,6 +1665,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public bool IsVerifiedPurchase { get; set; }
 
         public DateTime CreatedAt { get; set; }
+    }
+
+    public class ExploreCategoryFilterViewModel
+    {
+        public int CategoryID { get; set; }
+        public string CategoryName { get; set; } = string.Empty;
+    }
+
+    public class ExploreStoreFilterViewModel
+    {
+        public int StoreID { get; set; }
+        public string StoreName { get; set; } = string.Empty;
     }
 
     public class CartActionResult

@@ -28,6 +28,458 @@
     <link rel="stylesheet"
           href="~/css/customer-explore-polish.css"
           asp-append-version="true" />
+
+    <style>
+        :root {
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-steel: #4f46e5;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            --bg-color: #faf9fc;
+            --text-primary: #1e1b2e;
+        }
+
+        .brand-mark {
+            color: #ffffff !important;
+            background: var(--accent-gradient) !important;
+        }
+
+        .category-chip.active {
+            background: var(--accent-gradient) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+        }
+
+        .tile-price {
+            background: var(--accent-gradient) !important;
+            color: #ffffff !important;
+        }
+
+        .tile-badge {
+            background: rgba(109, 40, 217, 0.85) !important;
+            color: #ffffff !important;
+        }
+
+        .follow-button,
+        .primary-product-button,
+        .comment-submit-button {
+            background: var(--accent-gradient) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+        }
+
+        .modal-action-button:hover,
+        .secondary-product-button:hover,
+        .write-review-link {
+            background: var(--accent-gradient) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            color: var(--accent-color) !important;
+        }
+
+        .product-review-stars,
+        .intro-stat .stat-icon {
+            color: var(--accent-color) !important;
+        }
+
+        .loader-spinner {
+            border-top-color: var(--accent-color) !important;
+        }
+
+        .mobile-bottom-nav a.active {
+            color: var(--accent-color) !important;
+        }
+
+        .mobile-bottom-nav {
+            display: flex !important;
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 200;
+            background: #ffffff;
+            border-top: 1px solid #ece8f6;
+            justify-content: space-between;
+            gap: 2px;
+            padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+            overflow-x: auto;
+        }
+
+            .mobile-bottom-nav a {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+                font-size: 10.5px;
+                color: #6b6478;
+                text-decoration: none;
+                padding: 4px 6px;
+                flex-shrink: 0;
+            }
+
+                .mobile-bottom-nav a i {
+                    font-size: 17px;
+                }
+
+        .category-chip:hover {
+            border-color: var(--accent-color) !important;
+            color: var(--accent-color) !important;
+        }
+
+        .tile-store-fallback {
+            background: var(--accent-gradient) !important;
+            color: #ffffff !important;
+        }
+
+        .modal-store-avatar {
+            background: var(--accent-gradient) !important;
+        }
+
+        .media-nav {
+            color: var(--accent-color) !important;
+        }
+
+            .media-nav:hover {
+                background: var(--accent-light) !important;
+            }
+
+        .grid-legend i,
+        .modal-caption a,
+        .modal-store-link:hover strong,
+        .comments-list a {
+            color: var(--accent-color) !important;
+        }
+
+        .modal-action-button.active,
+        .modal-action-button.liked,
+        .modal-action-button[aria-pressed="true"] {
+            color: var(--accent-color) !important;
+        }
+
+        .comment-submit-button i {
+            color: #ffffff !important;
+        }
+
+        ::selection {
+            background: var(--accent-light);
+            color: var(--accent-color);
+        }
+
+        a {
+            color: var(--accent-color);
+        }
+
+        html,
+        body {
+            background: var(--bg-color, #faf9fc) !important;
+        }
+
+        .explore-page {
+            background: var(--bg-color, #faf9fc) !important;
+            position: relative;
+            overflow-x: hidden;
+            padding-bottom: 82px;
+        }
+
+        .explore-intro {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            border-radius: 20px;
+            padding: 36px 32px;
+            min-height: 300px;
+            background: #2a2140;
+        }
+
+        .intro-slide {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 1.4s ease;
+            z-index: 0;
+        }
+
+            .intro-slide.active {
+                opacity: 1;
+            }
+
+        .explore-intro::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(20, 14, 40, 0.72) 0%, rgba(35, 22, 70, 0.62) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .explore-intro > div:first-child,
+        .explore-intro h1,
+        .explore-intro p {
+            position: relative;
+            z-index: 2;
+            background: transparent !important;
+            color: #ffffff !important;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+        }
+
+        .explore-intro .eyebrow {
+            position: relative;
+            z-index: 2;
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.24) !important;
+        }
+
+        .explore-intro p {
+            opacity: 1;
+        }
+
+        .explore-intro h1 span {
+            position: relative;
+            z-index: 2;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            -webkit-text-fill-color: unset !important;
+            color: #d8cef0 !important;
+        }
+
+        .intro-stat {
+            position: relative;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.14) !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            backdrop-filter: blur(6px);
+        }
+
+            .intro-stat strong,
+            .intro-stat span {
+                color: #ffffff !important;
+            }
+
+            .intro-stat .stat-icon {
+                color: #d8cef0 !important;
+            }
+
+        @@keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .explore-intro, .category-chip, .explore-tile, .intro-stat, .intro-slide {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+
+        .explore-intro > div,
+        .intro-stat {
+            animation: fadeSlideUp 0.55s ease both;
+        }
+
+        .intro-stat {
+            animation-delay: 0.1s;
+        }
+
+        .category-chip {
+            animation: fadeSlideUp 0.4s ease both;
+        }
+
+            .category-chip:nth-child(1) {
+                animation-delay: 0.02s;
+            }
+
+            .category-chip:nth-child(2) {
+                animation-delay: 0.06s;
+            }
+
+            .category-chip:nth-child(3) {
+                animation-delay: 0.10s;
+            }
+
+            .category-chip:nth-child(4) {
+                animation-delay: 0.14s;
+            }
+
+            .category-chip:nth-child(5) {
+                animation-delay: 0.18s;
+            }
+
+            .category-chip:nth-child(6) {
+                animation-delay: 0.22s;
+            }
+
+        .explore-tile {
+            animation: fadeSlideUp 0.45s ease both;
+            transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+        }
+
+            .explore-tile:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 14px 28px rgba(109, 40, 217, 0.18) !important;
+            }
+
+        .intro-stat .stat-icon {
+            animation: pulseGlow 3.4s ease-in-out infinite;
+        }
+
+        @@keyframes pulseGlow {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 0.88;
+            }
+        }
+
+        .mobile-bottom-nav {
+            box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
+        }
+
+            .mobile-bottom-nav a {
+                border-radius: 12px;
+                transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+            }
+
+                .mobile-bottom-nav a:hover {
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                }
+
+                .mobile-bottom-nav a.active {
+                    background: var(--accent-light) !important;
+                    font-weight: 700;
+                    transform: translateY(-2px);
+                }
+
+                .mobile-bottom-nav a i {
+                    transition: transform 0.2s ease;
+                }
+
+                .mobile-bottom-nav a.active i {
+                    transform: scale(1.12);
+                }
+
+
+        .market-filter-panel {
+            margin: 22px 0 16px;
+            padding: 18px;
+            border: 1px solid #e7e2f2;
+            border-radius: 18px;
+            background: #ffffff;
+            box-shadow: 0 10px 28px rgba(67, 46, 110, 0.07);
+        }
+
+        .market-filter-grid {
+            display: grid;
+            grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(150px, 1fr)) repeat(2, minmax(120px, .75fr));
+            gap: 12px;
+        }
+
+        .market-filter-field label {
+            display: block;
+            margin-bottom: 6px;
+            color: #5f5870;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .market-filter-field input,
+        .market-filter-field select {
+            width: 100%;
+            min-height: 44px;
+            padding: 0 12px;
+            border: 1px solid #ded8eb;
+            border-radius: 12px;
+            background: #fff;
+            color: #1e1b2e;
+            outline: none;
+        }
+
+            .market-filter-field input:focus,
+            .market-filter-field select:focus {
+                border-color: var(--accent-color);
+                box-shadow: 0 0 0 3px rgba(109, 40, 217, .10);
+            }
+
+        .market-filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .market-filter-button,
+        .market-filter-clear {
+            min-height: 42px;
+            padding: 0 18px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .market-filter-button {
+            border: none;
+            color: #fff;
+            background: var(--accent-gradient);
+        }
+
+        .market-filter-clear {
+            border: 1px solid #ded8eb;
+            color: #5f5870;
+            background: #fff;
+        }
+
+        @@media (max-width: 1100px) {
+            .market-filter-grid
+
+        {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        }
+
+        @@media (max-width: 700px) {
+            .market-filter-grid
+
+        {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .market-filter-field:first-child {
+            grid-column: 1 / -1;
+        }
+
+        .market-filter-actions {
+            justify-content: stretch;
+        }
+
+        .market-filter-button, .market-filter-clear {
+            flex: 1;
+        }
+
+        }
+    </style>
 </head>
 
 <body>
@@ -35,82 +487,30 @@
         @Html.AntiForgeryToken()
     </form>
 
-    <header class="customer-topbar">
-        <a href="/Customer1" class="brand">
-            <span class="brand-mark">
-                <i class="fa-solid fa-location-dot"></i>
-            </span>
-            <span>realnest</span>
-        </a>
-
-        <nav class="desktop-nav" aria-label="Customer navigation">
-            <a href="/Customer1" class="active">
-                <i class="fa-solid fa-compass"></i>
-                Explore
-            </a>
-
-            <a href="/CustomerFeed">
-                <i class="fa-solid fa-house"></i>
-                Feed
-            </a>
-
-            <a href="/CustomerProducts">
-                <i class="fa-solid fa-bag-shopping"></i>
-                Shop
-            </a>
-
-            <a href="/CustomerCart">
-                <i class="fa-solid fa-cart-shopping"></i>
-                Cart
-            </a>
-
-            <a href="/CustomerPromotions">
-                <i class="fa-solid fa-tags"></i>
-                Promotions
-            </a>
-
-            <a href="/CustomerOrders">
-                <i class="fa-solid fa-box"></i>
-                Orders
-            </a>
-
-            <a href="/Chat">
-                <i class="fa-solid fa-paper-plane"></i>
-                Chat
-            </a>
-
-            <a href="/CustomerProfile">
-                <i class="fa-solid fa-user"></i>
-                Profile
-            </a>
-        </nav>
-
-        <form method="post"
-              asp-area="Identity"
-              asp-page="/Account/Logout"
-              asp-route-returnUrl="/"
-              class="logout-form">
-
-            <button type="submit" class="logout-button">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                <span>Logout</span>
-            </button>
-        </form>
-    </header>
-
     <main id="exploreApp"
           class="explore-page"
           data-category="@(Model.SelectedCategory ?? string.Empty)"
+          data-search-term="@(Model.SearchTerm ?? string.Empty)"
+          data-category-id="@(Model.CategoryId?.ToString() ?? string.Empty)"
+          data-store-id="@(Model.StoreId?.ToString() ?? string.Empty)"
+          data-area="@(Model.Area ?? string.Empty)"
+          data-min-price="@(Model.MinPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
+          data-max-price="@(Model.MaxPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
           data-current-page="1"
           data-has-more="@Model.HasMoreItems.ToString().ToLowerInvariant()">
 
         <section class="explore-intro">
+
+            <div class="intro-slide active" style="background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Fashion_model_looking_at_the_camera.jpg');"></div>
+            <div class="intro-slide" style="background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Smartphone_in_Hand_(Unsplash).jpg');"></div>
+            <div class="intro-slide" style="background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Fondue_dish.jpg');"></div>
+
             <div>
                 <span class="eyebrow">Discover local stores</span>
 
                 <h1>
-                    Find your next
-                    <span>favorite product.</span>
+                    Shop local,
+                    <span>discover more.</span>
                 </h1>
 
                 <p>
@@ -131,10 +531,87 @@
             </div>
         </section>
 
+        <form method="get" asp-page="/Customer1" class="market-filter-panel">
+            <input type="hidden" name="category" value="@Model.SelectedCategory" />
+
+            <div class="market-filter-grid">
+                <div class="market-filter-field">
+                    <label for="exploreSearch">Search products or stores</label>
+                    <input id="exploreSearch" name="SearchTerm" value="@Model.SearchTerm"
+                           placeholder="What are you looking for?" />
+                </div>
+
+                <div class="market-filter-field">
+                    <label for="exploreCategory">Category</label>
+                    <select id="exploreCategory" name="CategoryId">
+                        <option value="">All categories</option>
+                        @foreach (var filterCategory in Model.FilterCategories)
+                        {
+                            <option value="@filterCategory.CategoryID"
+                                    selected="@(Model.CategoryId == filterCategory.CategoryID ? "selected" : null)">
+                                @filterCategory.CategoryName
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="market-filter-field">
+                    <label for="exploreStore">Store</label>
+                    <select id="exploreStore" name="StoreId">
+                        <option value="">All stores</option>
+                        @foreach (var filterStore in Model.FilterStores)
+                        {
+                            <option value="@filterStore.StoreID"
+                                    selected="@(Model.StoreId == filterStore.StoreID ? "selected" : null)">
+                                @filterStore.StoreName
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="market-filter-field">
+                    <label for="exploreArea">Area</label>
+                    <select id="exploreArea" name="Area">
+                        <option value="">All areas</option>
+                        @foreach (var filterArea in Model.FilterAreas)
+                        {
+                            <option value="@filterArea" selected="@(Model.Area == filterArea ? "selected" : null)">@filterArea</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="market-filter-field">
+                    <label for="exploreMinPrice">Min price</label>
+                    <input id="exploreMinPrice" type="number" min="0" step="0.01"
+                           name="MinPrice" value="@Model.MinPrice" placeholder="$0" />
+                </div>
+
+                <div class="market-filter-field">
+                    <label for="exploreMaxPrice">Max price</label>
+                    <input id="exploreMaxPrice" type="number" min="0" step="0.01"
+                           name="MaxPrice" value="@Model.MaxPrice" placeholder="Any" />
+                </div>
+            </div>
+
+            <div class="market-filter-actions">
+                <a asp-page="/Customer1" class="market-filter-clear">
+                    <i class="fa-solid fa-rotate-left"></i> Clear
+                </a>
+                <button type="submit" class="market-filter-button">
+                    <i class="fa-solid fa-magnifying-glass"></i> Search / Filter
+                </button>
+            </div>
+        </form>
+
         <section class="category-section"
                  aria-label="Product categories">
 
             <a asp-page="/Customer1"
+               asp-route-searchTerm="@Model.SearchTerm"
+               asp-route-storeId="@Model.StoreId"
+               asp-route-area="@Model.Area"
+               asp-route-minPrice="@Model.MinPrice"
+               asp-route-maxPrice="@Model.MaxPrice"
                class="category-chip @(string.IsNullOrWhiteSpace(Model.SelectedCategory) ? "active" : string.Empty)">
                 All
             </a>
@@ -148,6 +625,11 @@
 
                 <a asp-page="/Customer1"
                    asp-route-category="@category"
+                   asp-route-searchTerm="@Model.SearchTerm"
+                   asp-route-storeId="@Model.StoreId"
+                   asp-route-area="@Model.Area"
+                   asp-route-minPrice="@Model.MinPrice"
+                   asp-route-maxPrice="@Model.MaxPrice"
                    class="category-chip @(isActive ? "active" : string.Empty)">
                     @category
                 </a>
@@ -364,7 +846,7 @@
     </main>
 
     <nav class="mobile-bottom-nav"
-         aria-label="Mobile customer navigation">
+         aria-label="Customer navigation">
 
         <a href="/Customer1" class="active">
             <i class="fa-solid fa-compass"></i>
@@ -376,14 +858,21 @@
             <span>Feed</span>
         </a>
 
-        <a href="/CustomerProducts">
-            <i class="fa-solid fa-bag-shopping"></i>
-            <span>Shop</span>
+
+        <a href="/CustomerCart" style="position:relative;">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <partial name="_CartCountBadge" />
+            <span>Cart</span>
         </a>
 
-        <a href="/CustomerCart">
-            <i class="fa-solid fa-cart-shopping"></i>
-            <span>Cart</span>
+        <a href="/CustomerPromotions">
+            <i class="fa-solid fa-tags"></i>
+            <span>Promos</span>
+        </a>
+
+        <a href="/CustomerOrders">
+            <i class="fa-solid fa-box"></i>
+            <span>Orders</span>
         </a>
 
         <a href="/Chat">
@@ -397,10 +886,6 @@
         </a>
     </nav>
 
-    <!-- =====================================================
-         SHARED EXPLORE QUICK-VIEW MODAL
-         Opens both existing Explore posts and normal products.
-         ===================================================== -->
     <div id="exploreModal"
          class="explore-modal"
          aria-hidden="true"
@@ -672,5 +1157,19 @@
             asp-append-version="true"></script>
     <script src="~/js/customer-explore-fixes.js"
             asp-append-version="true"></script>
+
+    <script>
+        (function () {
+            var slides = document.querySelectorAll('.explore-intro .intro-slide');
+            if (slides.length === 0) return;
+
+            var current = 0;
+            setInterval(function () {
+                slides[current].classList.remove('active');
+                current = (current + 1) % slides.length;
+                slides[current].classList.add('active');
+            }, 4000);
+        })();
+    </script>
 </body>
 </html>

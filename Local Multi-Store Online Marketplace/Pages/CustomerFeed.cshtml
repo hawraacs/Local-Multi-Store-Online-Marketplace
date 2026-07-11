@@ -17,24 +17,23 @@
 
     <style>
         :root {
-            --bg-color: #fdfbf7; /* Cozy warm white canvas */
+            --bg-color: #faf9fc;
             --card-bg: #ffffff;
-            --border-color: #f3ece3; /* Soft warm borders */
-            --text-primary: #1c1917; /* Slate dark brown/black */
-            --text-secondary: #78716c; /* Elegant muted stone gray */
-            /* White & Orange Sunset Palette */
-            --accent-color: #ff6b35; /* Radiant bright orange */
-            --accent-hover: #f05a22; /* Rich dark orange */
-            --accent-light: #fff1eb; /* Pastel orange tint */
-            --accent-gradient: linear-gradient(135deg, #ff9f43 0%, #ff5252 100%); /* Orange-to-coral punch */
-
+            --border-color: #ece8f6;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            /* Purple / Indigo palette, matching the rest of the site */
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
             --like-color: #ef4444;
-            --success-color: #f59e0b; /* Golden amber orange */
-            --error-color: #ea580c; /* Fiery orange-red */
+            --success-color: #10b981;
+            --error-color: #dc2626;
             --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --shadow-sm: 0 4px 12px rgba(255, 107, 53, 0.04);
-            --shadow-md: 0 10px 30px rgba(255, 107, 53, 0.08);
-            --shadow-lg: 0 20px 40px rgba(255, 107, 53, 0.12);
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
+            --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
         }
 
         * {
@@ -49,9 +48,10 @@
             color: var(--text-primary);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
+            padding-bottom: 84px;
         }
 
-        /* TOP BAR */
+        /* TOP BAR - brand only now; the menu has moved to the bottom nav */
         .topbar {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(15px);
@@ -63,7 +63,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 4px 20px rgba(28, 25, 23, 0.02);
+            box-shadow: 0 4px 20px rgba(30, 27, 46, 0.02);
         }
 
         .brand-logo {
@@ -72,7 +72,7 @@
             font-weight: 800;
             letter-spacing: -0.5px;
             text-decoration: none;
-            background: linear-gradient(135deg, #ff9f43 0%, #ff6b35 50%, #f05a22 100%);
+            background: var(--accent-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
@@ -82,58 +82,19 @@
 
             .brand-logo i {
                 font-size: 20px;
-                background: linear-gradient(135deg, #ff9f43 0%, #ff6b35 100%);
+                background: var(--accent-gradient);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
             }
 
+        /* Desktop menu is retired in favor of the always-on bottom nav */
         .menu {
-            display: flex;
-            align-items: center;
-            gap: 24px;
+            display: none !important;
         }
 
-            .menu a {
-                color: var(--text-primary);
-                text-decoration: none;
-                font-size: 14px;
-                font-weight: 600;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-                padding: 8px 14px;
-                border-radius: 50px;
-            }
-
-                .menu a i {
-                    font-size: 16px;
-                    color: var(--text-secondary);
-                    transition: color 0.2s ease;
-                }
-
-                .menu a:hover {
-                    color: var(--accent-color);
-                    background-color: var(--accent-light);
-                }
-
-                    .menu a:hover i {
-                        color: var(--accent-color);
-                    }
-
-                .menu a.active {
-                    color: #ffffff;
-                    background: var(--accent-gradient);
-                    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
-                }
-
-                    .menu a.active i {
-                        color: #ffffff;
-                    }
-
-        /* BOTTOM NAV FOR MOBILE */
+        /* BOTTOM NAV - now shown at every screen size, Instagram style */
         .bottom-nav {
-            display: none;
+            display: flex !important;
             position: fixed;
             bottom: 0;
             left: 0;
@@ -145,7 +106,7 @@
             z-index: 1000;
             justify-content: space-around;
             align-items: center;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
             padding-bottom: env(safe-area-inset-bottom);
         }
 
@@ -160,12 +121,18 @@
                 font-size: 10px;
                 font-weight: 600;
                 flex: 1;
-                transition: color 0.2s ease;
+                border-radius: 12px;
+                transition: color 0.2s ease, background-color 0.2s ease;
             }
 
                 .bottom-nav a i {
                     font-size: 20px;
                     transition: transform 0.2s ease;
+                }
+
+                .bottom-nav a:hover {
+                    color: var(--accent-color);
+                    background: var(--accent-light);
                 }
 
                 .bottom-nav a:active i {
@@ -174,7 +141,12 @@
 
                 .bottom-nav a.active {
                     color: var(--accent-color);
+                    font-weight: 700;
                 }
+
+                    .bottom-nav a.active i {
+                        transform: scale(1.1);
+                    }
 
         /* CATEGORIES NAVBAR (Instagram Stories visual style) */
         .category-navbar {
@@ -216,7 +188,7 @@
             background: var(--accent-gradient) !important;
             color: #ffffff !important;
             border-color: transparent !important;
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.35) !important;
+            box-shadow: 0 4px 15px rgba(109, 40, 217, 0.35) !important;
         }
 
         /* FEED CONTAINER */
@@ -275,7 +247,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 3px 10px rgba(255, 107, 53, 0.2);
+            box-shadow: 0 3px 10px rgba(109, 40, 217, 0.2);
         }
 
             .store-avatar span {
@@ -317,7 +289,7 @@
         .btn-follow {
             color: #ffffff;
             background: var(--accent-gradient);
-            box-shadow: 0 4px 10px rgba(255, 107, 53, 0.2);
+            box-shadow: 0 4px 10px rgba(109, 40, 217, 0.2);
         }
 
             .btn-follow:hover {
@@ -327,12 +299,12 @@
 
         .btn-unfollow {
             color: var(--text-secondary);
-            background-color: #f5f2eb;
+            background-color: #f1eef8;
             border: 1px solid var(--border-color);
         }
 
             .btn-unfollow:hover {
-                background-color: #ebe6db;
+                background-color: #e7e1f5;
                 color: var(--text-primary);
             }
 
@@ -341,7 +313,7 @@
             width: 100%;
             aspect-ratio: 1.1 / 1; /* Vibrant squared-landscape crop */
             overflow: hidden;
-            background-color: #f7f5f0;
+            background-color: #f3f0fa;
             position: relative;
         }
 
@@ -470,7 +442,7 @@
             }
 
             .btn-action:hover {
-                background: #fffdfa;
+                background: #fdfcff;
                 border-color: var(--accent-color);
                 color: var(--accent-color);
                 transform: translateY(-1px);
@@ -492,13 +464,13 @@
             background: var(--accent-gradient);
             color: #ffffff;
             border: none;
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
+            box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
         }
 
             .btn-feed-cart:hover {
                 color: #ffffff;
                 opacity: 0.95;
-                box-shadow: 0 6px 15px rgba(255, 107, 53, 0.35);
+                box-shadow: 0 6px 15px rgba(109, 40, 217, 0.35);
             }
 
         .btn-feed-share {
@@ -605,7 +577,7 @@
 
         .comment {
             padding: 10px 0;
-            border-bottom: 1px solid #faf8f5;
+            border-bottom: 1px solid #f7f5fb;
             font-size: 13px;
         }
 
@@ -643,7 +615,7 @@
             padding: 80px 30px;
             background: var(--card-bg);
             border-radius: 20px;
-            border: 2px dashed #e5dec9;
+            border: 2px dashed #ded4f5;
             color: var(--text-secondary);
             margin-top: 30px;
             box-shadow: var(--shadow-sm);
@@ -687,7 +659,7 @@
             background: var(--card-bg);
             border-radius: 14px;
             padding: 16px 20px;
-            box-shadow: 0 15px 35px rgba(28, 25, 23, 0.12);
+            box-shadow: 0 15px 35px rgba(30, 27, 46, 0.12);
             display: flex;
             align-items: center;
             gap: 14px;
@@ -756,18 +728,6 @@
                 font-size: 22px;
             }
 
-            .topbar .menu {
-                display: none;
-            }
-
-            .bottom-nav {
-                display: flex;
-            }
-
-            body {
-                padding-bottom: 80px;
-            }
-
             .feed-container {
                 padding: 0 12px;
             }
@@ -780,6 +740,153 @@
             .post-body {
                 padding: 16px;
             }
+        }
+
+
+        .feed-tools {
+            max-width: 980px;
+            margin: 24px auto 18px;
+            padding: 0 16px;
+        }
+
+        .feed-mode-switch {
+            display: inline-flex;
+            gap: 6px;
+            padding: 5px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: var(--shadow-sm);
+        }
+
+            .feed-mode-switch a {
+                min-height: 40px;
+                padding: 0 18px;
+                border-radius: 10px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                color: var(--text-secondary);
+                text-decoration: none;
+                font-size: 13px;
+                font-weight: 800;
+            }
+
+                .feed-mode-switch a.active {
+                    color: #fff;
+                    background: var(--accent-gradient);
+                }
+
+        .feed-filter-panel {
+            padding: 18px;
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: var(--shadow-md);
+        }
+
+        .feed-filter-grid {
+            display: grid;
+            grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(145px, 1fr)) repeat(2, minmax(115px, .75fr));
+            gap: 12px;
+        }
+
+        .feed-filter-field label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .feed-filter-field input,
+        .feed-filter-field select {
+            width: 100%;
+            min-height: 43px;
+            padding: 0 12px;
+            border: 1px solid #ded8eb;
+            border-radius: 11px;
+            background: #fff;
+            color: var(--text-primary);
+            outline: none;
+        }
+
+            .feed-filter-field input:focus,
+            .feed-filter-field select:focus {
+                border-color: var(--accent-color);
+                box-shadow: 0 0 0 3px rgba(109, 40, 217, .10);
+            }
+
+        .feed-filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .feed-filter-submit,
+        .feed-filter-clear {
+            min-height: 42px;
+            padding: 0 18px;
+            border-radius: 11px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .feed-filter-submit {
+            border: none;
+            color: #fff;
+            background: var(--accent-gradient);
+        }
+
+        .feed-filter-clear {
+            border: 1px solid #ded8eb;
+            color: var(--text-secondary);
+            background: #fff;
+        }
+
+        .feed-result-note {
+            margin: 12px 2px 0;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        @@media (max-width: 1000px) {
+            .feed-filter-grid
+
+        {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        }
+
+        @@media (max-width: 680px) {
+            .feed-filter-grid
+
+        {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .feed-filter-field:first-child {
+            grid-column: 1 / -1;
+        }
+
+        .feed-filter-actions {
+            justify-content: stretch;
+        }
+
+        .feed-filter-submit, .feed-filter-clear {
+            flex: 1;
+        }
+
         }
     </style>
 </head>
@@ -807,50 +914,150 @@
         }
     </div>
 
-    <!-- DESKTOP TOP BAR -->
-    <div class="topbar">
-        <div>
-            <a href="/Customer1" class="brand-logo">
-                <i class="fa-solid fa-shop"></i> realnest
-            </a>
-        </div>
+    <!-- TOP BAR: brand only, the menu has moved to the bottom nav -->
 
-        <div class="menu">
-            <a href="/Customer1"><i class="fa-solid fa-compass"></i> Explore</a>
-            <a href="/CustomerFeed" class="active"><i class="fa-solid fa-house"></i> Feed</a>
-            <a href="/CustomerProducts"><i class="fa-solid fa-bag-shopping"></i> Shop</a>
-            <a href="/CustomerCart"><i class="fa-solid fa-cart-shopping"></i> Cart</a>
-            <a href="/CustomerOrders"><i class="fa-solid fa-receipt"></i> Orders</a>
-            <a href="/Chat"><i class="fa-solid fa-paper-plane"></i> Chat</a>
-            <a href="/CustomerProfile"><i class="fa-solid fa-user"></i> Profile</a>
-        </div>
+
+    <div class="menu">
+        <a href="/Customer1"><i class="fa-solid fa-compass"></i> Explore</a>
+        <a href="/CustomerFeed" class="active"><i class="fa-solid fa-house"></i> Feed</a>
+        <a href="/CustomerCart"><i class="fa-solid fa-cart-shopping"></i> Cart</a>
+        <a href="/CustomerOrders"><i class="fa-solid fa-receipt"></i> Orders</a>
+        <a href="/Chat"><i class="fa-solid fa-paper-plane"></i> Chat</a>
+        <a href="/CustomerProfile"><i class="fa-solid fa-user"></i> Profile</a>
+    </div>
     </div>
 
-    <!-- MOBILE BOTTOM NAVIGATION -->
+    <!-- BOTTOM NAVIGATION - now shown at every screen size -->
     <div class="bottom-nav">
         <a href="/Customer1"><i class="fa-solid fa-compass"></i><span>Explore</span></a>
         <a href="/CustomerFeed" class="active"><i class="fa-solid fa-house"></i><span>Feed</span></a>
-        <a href="/CustomerProducts"><i class="fa-solid fa-bag-shopping"></i><span>Shop</span></a>
         <a href="/CustomerCart"><i class="fa-solid fa-cart-shopping"></i><span>Cart</span></a>
+        <a href="/CustomerOrders"><i class="fa-solid fa-receipt"></i><span>Orders</span></a>
         <a href="/Chat"><i class="fa-solid fa-paper-plane"></i><span>Chat</span></a>
         <a href="/CustomerProfile"><i class="fa-solid fa-user"></i><span>Profile</span></a>
     </div>
 
+    <section class="feed-tools">
+        <div class="feed-mode-switch" aria-label="Feed mode">
+            <a asp-page="/CustomerFeed"
+               asp-route-viewMode="Following"
+               class="@(!Model.ShowingAllProducts ? "active" : "")">
+                <i class="fa-solid fa-user-group"></i> Following
+            </a>
+            <a asp-page="/CustomerFeed"
+               asp-route-viewMode="All"
+               class="@(Model.ShowingAllProducts ? "active" : "")">
+                <i class="fa-solid fa-store"></i> All Products
+            </a>
+        </div>
+
+        <form method="get" asp-page="/CustomerFeed" class="feed-filter-panel">
+            <input type="hidden" name="ViewMode" value="@Model.ViewMode" />
+            <input type="hidden" name="category" value="@Model.SelectedCategory" />
+
+            <div class="feed-filter-grid">
+                <div class="feed-filter-field">
+                    <label for="feedSearch">Search products or stores</label>
+                    <input id="feedSearch" name="SearchTerm" value="@Model.SearchTerm"
+                           placeholder="What are you looking for?" />
+                </div>
+
+                <div class="feed-filter-field">
+                    <label for="feedCategory">Category</label>
+                    <select id="feedCategory" name="CategoryId">
+                        <option value="">All categories</option>
+                        @foreach (var filterCategory in Model.FilterCategories)
+                        {
+                            <option value="@filterCategory.CategoryID"
+                                    selected="@(Model.CategoryId == filterCategory.CategoryID ? "selected" : null)">
+                                @filterCategory.CategoryName
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="feed-filter-field">
+                    <label for="feedStore">Store</label>
+                    <select id="feedStore" name="StoreId">
+                        <option value="">All stores</option>
+                        @foreach (var filterStore in Model.FilterStores)
+                        {
+                            <option value="@filterStore.StoreID"
+                                    selected="@(Model.StoreId == filterStore.StoreID ? "selected" : null)">
+                                @filterStore.StoreName
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="feed-filter-field">
+                    <label for="feedArea">Area</label>
+                    <select id="feedArea" name="Area">
+                        <option value="">All areas</option>
+                        @foreach (var filterArea in Model.FilterAreas)
+                        {
+                            <option value="@filterArea" selected="@(Model.Area == filterArea ? "selected" : null)">@filterArea</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="feed-filter-field">
+                    <label for="feedMinPrice">Min price</label>
+                    <input id="feedMinPrice" type="number" min="0" step="0.01"
+                           name="MinPrice" value="@Model.MinPrice" placeholder="$0" />
+                </div>
+
+                <div class="feed-filter-field">
+                    <label for="feedMaxPrice">Max price</label>
+                    <input id="feedMaxPrice" type="number" min="0" step="0.01"
+                           name="MaxPrice" value="@Model.MaxPrice" placeholder="Any" />
+                </div>
+            </div>
+
+            <div class="feed-filter-actions">
+                <a asp-page="/CustomerFeed" asp-route-viewMode="@Model.ViewMode" class="feed-filter-clear">
+                    <i class="fa-solid fa-rotate-left"></i> Clear
+                </a>
+                <button type="submit" class="feed-filter-submit">
+                    <i class="fa-solid fa-magnifying-glass"></i> Search / Filter
+                </button>
+            </div>
+
+            <p class="feed-result-note">
+                @(Model.ShowingAllProducts
+                    ? "Showing products from all approved stores, including stores you do not follow."
+                    : "Showing products from stores you follow.")
+            </p>
+        </form>
+    </section>
+
     <!-- STORIES / CATEGORY NAVIGATION -->
     <div class="category-navbar">
         <a asp-page="/CustomerFeed"
+           asp-route-viewMode="@Model.ViewMode"
+           asp-route-searchTerm="@Model.SearchTerm"
+           asp-route-storeId="@Model.StoreId"
+           asp-route-area="@Model.Area"
+           asp-route-minPrice="@Model.MinPrice"
+           asp-route-maxPrice="@Model.MaxPrice"
            class="@(string.IsNullOrEmpty(Model.SelectedCategory) ? "active-category" : "")">
             All
         </a>
 
-        @foreach (var category in Model.NavbarCategories)
+        @foreach (var category in Model.NavbarCategories.Where(c => c != "All"))
         {
             var isActive =
             (category == "All" && string.IsNullOrEmpty(Model.SelectedCategory))
             || Model.SelectedCategory == category;
 
             <a asp-page="/CustomerFeed"
-               asp-route-category="@(category == "All" ? null : category)"
+               asp-route-category="@category"
+               asp-route-viewMode="@Model.ViewMode"
+               asp-route-searchTerm="@Model.SearchTerm"
+               asp-route-storeId="@Model.StoreId"
+               asp-route-area="@Model.Area"
+               asp-route-minPrice="@Model.MinPrice"
+               asp-route-maxPrice="@Model.MaxPrice"
                class="@(isActive ? "active-category" : "")">
                 @category
             </a>
@@ -1051,8 +1258,12 @@
                 <div class="empty-icon">
                     <i class="fa-regular fa-folder-open"></i>
                 </div>
-                <h3>Your Feed is Empty</h3>
-                <p>Follow local store owners to see their exclusive products and updates listed here.</p>
+                <h3>@(Model.ShowingAllProducts ? "No Products Found" : "Your Feed is Empty")</h3>
+                <p>
+                    @(Model.ShowingAllProducts
+                        ? "Try changing the search term or clearing one of the filters."
+                        : "Follow local stores, or open All Products to browse every approved store.")
+                </p>
             </div>
         }
 

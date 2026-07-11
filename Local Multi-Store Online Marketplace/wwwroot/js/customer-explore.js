@@ -406,11 +406,23 @@
         try {
             const nextPage = currentPage + 1;
             const category = app.dataset.category || "";
+            const searchTerm = app.dataset.searchTerm || "";
+            const categoryId = app.dataset.categoryId || "";
+            const storeId = app.dataset.storeId || "";
+            const area = app.dataset.area || "";
+            const minPrice = app.dataset.minPrice || "";
+            const maxPrice = app.dataset.maxPrice || "";
 
             const response = await fetch(
                 `${pageUrl}?handler=ExplorePage` +
                 `&page=${encodeURIComponent(nextPage)}` +
-                `&category=${encodeURIComponent(category)}`,
+                `&category=${encodeURIComponent(category)}` +
+                `&searchTerm=${encodeURIComponent(searchTerm)}` +
+                `&categoryId=${encodeURIComponent(categoryId)}` +
+                `&storeId=${encodeURIComponent(storeId)}` +
+                `&area=${encodeURIComponent(area)}` +
+                `&minPrice=${encodeURIComponent(minPrice)}` +
+                `&maxPrice=${encodeURIComponent(maxPrice)}`,
                 {
                     method: "GET",
                     credentials: "same-origin",
@@ -1388,6 +1400,8 @@
                 '<i class="fa-solid fa-check"></i> Added';
 
             showToast(data.message, "success");
+
+            refreshCartBadge();
         } catch (error) {
             showToast(error.message, "error");
 
@@ -1542,5 +1556,57 @@
         openExplorePost(Number(postHashMatch[1]));
     } else if (productHashMatch) {
         openExploreProduct(Number(productHashMatch[1]));
+    }
+
+    // =========================================================
+    // LIVE CART BADGE UPDATE
+    // =========================================================
+    async function refreshCartBadge() {
+        try {
+            const response = await fetch("/api/cart/count", {
+                method: "GET",
+                credentials: "same-origin",
+                cache: "no-store"
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            const count = Number(data.count || 0);
+
+            const cartLink = document.querySelector(
+                'a[href="/CustomerCart"]'
+            );
+
+            if (!cartLink) {
+                return;
+            }
+
+            let badge = cartLink.querySelector(".js-cart-badge");
+
+            if (count > 0) {
+                if (!badge) {
+                    badge = document.createElement("span");
+                    badge.className = "js-cart-badge";
+                    badge.style.cssText =
+                        "position:absolute;top:-4px;right:18px;" +
+                        "background:#ef4444;color:white;" +
+                        "min-width:16px;height:16px;border-radius:999px;" +
+                        "font-size:10px;font-weight:800;display:flex;" +
+                        "align-items:center;justify-content:center;" +
+                        "padding:0 4px;border:1.5px solid white;" +
+                        "line-height:1;z-index:5;";
+                    cartLink.appendChild(badge);
+                }
+
+                badge.textContent = String(count);
+            } else if (badge) {
+                badge.remove();
+            }
+        } catch {
+            // Silent fail: badge simply won't update this time.
+        }
     }
 })();

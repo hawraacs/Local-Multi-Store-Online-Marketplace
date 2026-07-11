@@ -1,0 +1,197 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Multi_Store.Core.Entities
+@using Multi_Store.Core.Reposinterface
+@using Multi_Store.Services.Managers
+@inject UserManager<User> UserManager
+@inject NotificationManager NotificationManagerService
+@inject IChatMessageRepository ChatMessageRepo
+
+@{
+    var bellItems = new List<(int NotificationID, string Title, string Message, int SenderUserId)>();
+
+    var currentUser = await UserManager.GetUserAsync(User);
+
+    if (currentUser != null)
+    {
+        var unread = await NotificationManagerService.GetUnreadAsync(currentUser.Id);
+
+        var messageNotifications = unread
+            .Where(n => n.Type == "Message" && n.ReferenceID.HasValue)
+            .OrderByDescending(n => n.SentAt)
+            .ToList();
+
+        foreach (var n in messageNotifications)
+        {
+            var relatedMessage = await ChatMessageRepo.GetByIdAsync(n.ReferenceID!.Value);
+
+            if (relatedMessage != null)
+            {
+                bellItems.Add((n.NotificationID, n.Title, n.Message, relatedMessage.SenderID));
+            }
+        }
+    }
+}
+
+<style>
+    .message-bell-wrapper {
+        position: relative;
+        display: inline-flex;
+    }
+
+    .message-bell-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 1px solid #e5e7eb;
+        background: white;
+        color: #111827;
+        cursor: pointer;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+        position: relative;
+    }
+
+    .message-bell-count {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        background: #ef4444;
+        color: white;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        border: 2px solid white;
+    }
+
+    .message-bell-dropdown {
+        display: none;
+        position: absolute;
+        top: 52px;
+        right: 0;
+        width: 320px;
+        max-height: 380px;
+        overflow-y: auto;
+        background: white;
+        border-radius: 18px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 18px 45px rgba(0,0,0,0.18);
+        z-index: 9999;
+    }
+
+        .message-bell-dropdown.show {
+            display: block;
+        }
+
+    .message-bell-head {
+        padding: 14px 15px;
+        border-bottom: 1px solid #e5e7eb;
+        font-weight: 800;
+        font-size: 14px;
+    }
+
+    .message-bell-item {
+        display: block;
+        padding: 12px 15px;
+        background: #eff6ff;
+        border-bottom: 1px solid #dbeafe;
+        text-decoration: none;
+        color: #111827;
+    }
+
+    .message-bell-item-title {
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .message-bell-item-msg {
+        font-size: 12px;
+        color: #374151;
+    }
+
+    .message-bell-empty {
+        padding: 25px 15px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 13px;
+    }
+</style>
+
+<div class="message-bell-wrapper">
+
+    <button type="button" class="message-bell-btn" onclick="toggleMessageBell(this)">
+        🔔
+        @if (bellItems.Count > 0)
+        {
+            <span class="message-bell-count">@bellItems.Count</span>
+        }
+    </button>
+
+    <div class="message-bell-dropdown">
+
+        <div class="message-bell-head">Messages</div>
+
+        @if (!bellItems.Any())
+        {
+            <div class="message-bell-empty">No new messages.</div>
+        }
+        else
+        {
+            @foreach (var item in bellItems)
+            {
+                <a class="message-bell-item" href="/ChatConversation?userId=@item.SenderUserId">
+                    <div class="message-bell-item-title">@item.Title</div>
+                    <div class="message-bell-item-msg">@item.Message</div>
+                </a>
+            }
+        }
+
+    </div>
+
+</div>
+
+<script>
+    function toggleMessageBell(btn) {
+        const dropdown = btn.parentElement.querySelector(".message-bell-dropdown");
+
+        if (!dropdown) {
+            return;
+        }
+
+        const isOpening = !dropdown.classList.contains("show");
+
+        dropdown.classList.toggle("show");
+
+        if (isOpening) {
+            const countBadge = btn.querySelector(".message-bell-count");
+
+            if (countBadge) {
+                countBadge.remove();
+            }
+
+            fetch("/api/notifications/mark-messages-read", {
+                method: "POST",
+                credentials: "same-origin"
+            }).catch(function () {
+                // silent fail is fine here, badge already hidden visually
+            });
+        }
+    }
+
+    document.addEventListener("click", function (event) {
+        document.querySelectorAll(".message-bell-wrapper").forEach(function (wrapper) {
+            if (!wrapper.contains(event.target)) {
+                const dropdown = wrapper.querySelector(".message-bell-dropdown");
+                if (dropdown) dropdown.classList.remove("show");
+            }
+        });
+    });
+</script>
