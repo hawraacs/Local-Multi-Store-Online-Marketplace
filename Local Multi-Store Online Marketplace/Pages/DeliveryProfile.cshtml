@@ -242,31 +242,74 @@
                 font-weight: 700;
             }
 
-        /* ================= GRID LAYOUT ================= */
-        .grid {
-            display: grid;
-            grid-template-columns: 1.1fr .9fr;
-            gap: 20px;
-        }
-
-        .card {
+        /* ================= UNIFIED TAB MODULE ================= */
+        .profile-module {
             background: var(--surface);
-            border-radius: 20px;
-            padding: 22px;
+            border-radius: 24px;
+            box-shadow: var(--shadow-md);
             border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 20px;
+            padding: 28px;
+            max-width: 100%;
         }
 
-            .card h2 {
-                margin: 0 0 16px;
-                font-size: 16.5px;
-                font-family: 'Sora', sans-serif;
-                font-weight: 700;
-                display: flex;
-                align-items: center;
-                gap: 8px;
+        .profile-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 12px 20px;
+            font-weight: 700;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            color: var(--ink-900);
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: all .25s ease;
+        }
+
+            .tab-btn:hover {
+                transform: translateY(-2px);
             }
+
+            .tab-btn.active {
+                background: var(--primary);
+                color: white;
+                border-color: var(--primary);
+                box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+            }
+
+        .profile-section {
+            animation: sectionFadeIn .25s ease;
+        }
+
+        @@keyframes sectionFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-inner h2 {
+            margin: 0 0 16px;
+            font-size: 16.5px;
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
         /* ================= INFO ROWS (vehicle / location / rating) ================= */
         .info-list {
@@ -430,6 +473,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 14px;
+            max-width: 640px;
         }
 
         .form-group {
@@ -482,6 +526,7 @@
         .save-btn {
             margin-top: 16px;
             width: 100%;
+            max-width: 640px;
             padding: 14px;
             border: none;
             border-radius: 13px;
@@ -502,6 +547,7 @@
             margin: 24px 0;
             border: none;
             border-top: 1px solid var(--border);
+            max-width: 640px;
         }
 
         .phone-section-title {
@@ -515,19 +561,17 @@
             color: var(--ink-400);
             font-size: 13px;
             line-height: 1.5;
+            max-width: 640px;
         }
 
         .otp-form {
             margin-top: 16px;
             padding-top: 16px;
             border-top: 1px dashed #d1d5db;
+            max-width: 640px;
         }
 
         @@media (max-width: 900px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
             .driver-stats-row {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -548,6 +592,22 @@
 
             .driver-stats-row {
                 margin: -36px 14px 20px;
+            }
+
+            .profile-module {
+                padding: 18px;
+                border-radius: 20px;
+            }
+
+            .profile-tabs {
+                gap: 8px;
+            }
+
+            .tab-btn {
+                padding: 10px 14px;
+                font-size: 12px;
+                flex: 1 1 calc(50% - 8px);
+                text-align: center;
             }
         }
     </style>
@@ -653,12 +713,46 @@
 
                 </div>
 
-                <div class="grid">
+                <!-- ================= UNIFIED TAB MODULE ================= -->
+                <div class="profile-module">
 
-                    <div>
+                    <div class="profile-tabs">
 
-                        <!-- ================= VEHICLE INFORMATION ================= -->
-                        <div class="card">
+                        <button type="button"
+                                class="tab-btn active"
+                                onclick="showProfileTab('vehicle', this)">
+                            🚗 Vehicle Information
+                        </button>
+
+                        <button type="button"
+                                class="tab-btn"
+                                onclick="showProfileTab('location', this)">
+                            📍 Location Information
+                        </button>
+
+                        <button type="button"
+                                class="tab-btn"
+                                onclick="showProfileTab('ratings', this)">
+                            ⭐ Ratings
+                        </button>
+
+                        <button type="button"
+                                class="tab-btn"
+                                onclick="showProfileTab('deliveries', this)">
+                            📦 Active Deliveries
+                        </button>
+
+                        <button type="button"
+                                class="tab-btn"
+                                onclick="showProfileTab('editprofile', this)">
+                            ✏️ Edit Profile
+                        </button>
+
+                    </div>
+
+                    <!-- ================= VEHICLE INFORMATION ================= -->
+                    <div id="vehicle" class="profile-section">
+                        <div class="section-inner">
                             <h2>🚗 Vehicle Information</h2>
 
                             <div class="info-list">
@@ -700,9 +794,11 @@
 
                             </div>
                         </div>
+                    </div>
 
-                        <!-- ================= LOCATION INFORMATION ================= -->
-                        <div class="card">
+                    <!-- ================= LOCATION INFORMATION ================= -->
+                    <div id="location" class="profile-section" style="display:none;">
+                        <div class="section-inner">
                             <h2>📍 Location Information</h2>
 
                             <div class="info-list">
@@ -745,9 +841,11 @@
 
                             </div>
                         </div>
+                    </div>
 
-                        <!-- ================= RATINGS ================= -->
-                        <div class="card">
+                    <!-- ================= RATINGS ================= -->
+                    <div id="ratings" class="profile-section" style="display:none;">
+                        <div class="section-inner">
                             <h2>⭐ Ratings</h2>
 
                             <div class="info-list">
@@ -759,9 +857,11 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- ================= ACTIVE DELIVERIES ================= -->
-                        <div class="card">
+                    <!-- ================= ACTIVE DELIVERIES ================= -->
+                    <div id="deliveries" class="profile-section" style="display:none;">
+                        <div class="section-inner">
                             <h2>📦 Active Deliveries</h2>
 
                             @if (Model.ActiveAssignments == null ||
@@ -844,13 +944,11 @@
                                 }
                             }
                         </div>
-
                     </div>
 
-                    <div>
-
-                        <!-- ================= EDIT PROFILE FORM ================= -->
-                        <div class="card">
+                    <!-- ================= EDIT PROFILE ================= -->
+                    <div id="editprofile" class="profile-section" style="display:none;">
+                        <div class="section-inner">
                             <h2>✏️ Edit Delivery Profile</h2>
 
                             @* ==========================================
@@ -1137,7 +1235,6 @@
                             }
 
                         </div>
-
                     </div>
 
                 </div>
@@ -1147,6 +1244,28 @@
     </div>
 
     <script>
+        function showProfileTab(id, buttonEl) {
+            document.querySelectorAll(".profile-section")
+                .forEach(function (section) {
+                    section.style.display = "none";
+                });
+
+            document.querySelectorAll(".tab-btn")
+                .forEach(function (btn) {
+                    btn.classList.remove("active");
+                });
+
+            var target = document.getElementById(id);
+
+            if (target) {
+                target.style.display = "block";
+            }
+
+            if (buttonEl) {
+                buttonEl.classList.add("active");
+            }
+        }
+
         function updateProfileVehicleFields() {
             const vehicleType =
                 document.getElementById(
