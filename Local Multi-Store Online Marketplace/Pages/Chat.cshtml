@@ -4,8 +4,6 @@
     var isStoreOwner = User.IsInRole("StoreOwner");
     var isCustomer = User.IsInRole("Customer");
 
-    // Store owners get the real store-owner sidebar/top-nav via the shared layout.
-    // Everyone else (Customer, Delivery) renders as a standalone page (Layout = null).
     Layout = isStoreOwner ? "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml" : null;
 
     if (isStoreOwner)
@@ -256,8 +254,7 @@
                 box-shadow: 0 3px 8px rgba(109, 40, 217, 0.25);
             }
 
-            .chat-item.unread .name,
-            .chat-item.unread .last-message {
+            .chat-item.unread .name, .chat-item.unread .last-message {
                 font-weight: 800;
                 color: var(--text-primary);
             }
@@ -284,22 +281,14 @@
                 </div>
 
                 <form method="get" class="search-box">
-                    <input type="text"
-                           name="SearchText"
-                           value="@Model.SearchText"
-                           placeholder="Search by username or email..." />
-
-                    <button type="submit">
-                        Search
-                    </button>
+                    <input type="text" name="SearchText" value="@Model.SearchText" placeholder="Search by username or email..." />
+                    <button type="submit">Search</button>
                 </form>
             </div>
 
             @if (!string.IsNullOrWhiteSpace(Model.SearchText))
             {
-                <div class="section-title">
-                    Search Results
-                </div>
+                <div class="section-title">Search Results</div>
 
                 @if (Model.SearchUsers.Any())
                 {
@@ -307,43 +296,28 @@
                     {
                         var online = await Model.IsOnline(user.Id);
 
-                        <a class="chat-item"
-                           asp-page="/ChatConversation"
-                           asp-route-userId="@user.Id">
-
+                        <a class="chat-item" asp-page="/ChatConversation" asp-route-userId="@user.Id">
                             <div class="left">
                                 <div class="avatar-container">
-                                    <div class="avatar">
-                                        @(user.UserName?.Substring(0, 1).ToUpper())
-                                    </div>
+                                    <div class="avatar">@(user.UserName?.Substring(0, 1).ToUpper())</div>
                                     <div class="status-dot @(online ? "dot-online" : "dot-offline")"></div>
                                 </div>
-
                                 <div>
-                                    <div class="name">
-                                        @user.UserName
-                                    </div>
-
-                                    <div class="last-message">
-                                        @user.Email
-                                    </div>
+                                    <div class="name">@user.UserName</div>
+                                    <div class="last-message">@user.Email</div>
                                 </div>
                             </div>
-
                             <div class="right-status @(online ? "online" : "offline")">
                                 <i class="fa-solid fa-circle" style="font-size: 8px;"></i>
                                 @(online ? "Online" : "Offline")
                             </div>
-
                         </a>
                     }
                 }
                 else
                 {
                     <div class="empty">
-                        <div class="empty-icon">
-                            <i class="fa-regular fa-face-frown"></i>
-                        </div>
+                        <div class="empty-icon"><i class="fa-regular fa-face-frown"></i></div>
                         <h3>No Users Found</h3>
                         <p>Try searching for a different username or email address.</p>
                     </div>
@@ -351,9 +325,7 @@
             }
             else
             {
-                <div class="section-title">
-                    Recent Chats
-                </div>
+                <div class="section-title">Recent Chats</div>
 
                 @if (Model.Inbox.Any())
                 {
@@ -361,29 +333,17 @@
                     {
                         var online = await Model.IsOnline(chat.UserId);
 
-                        <a class="chat-item @(chat.UnreadCount > 0 ? "unread" : "")"
-                           asp-page="/ChatConversation"
-                           asp-route-userId="@chat.UserId">
-
+                        <a class="chat-item @(chat.UnreadCount > 0 ? "unread" : "")" asp-page="/ChatConversation" asp-route-userId="@chat.UserId">
                             <div class="left">
                                 <div class="avatar-container">
-                                    <div class="avatar">
-                                        @(chat.UserName?.Substring(0, 1).ToUpper())
-                                    </div>
+                                    <div class="avatar">@(chat.UserName?.Substring(0, 1).ToUpper())</div>
                                     <div class="status-dot @(online ? "dot-online" : "dot-offline")"></div>
                                 </div>
-
                                 <div>
-                                    <div class="name">
-                                        @chat.UserName
-                                    </div>
-
-                                    <div class="last-message">
-                                        @chat.LastMessage
-                                    </div>
+                                    <div class="name">@chat.UserName</div>
+                                    <div class="last-message">@chat.LastMessage</div>
                                 </div>
                             </div>
-
                             <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
                                 <div class="right-status @(online ? "online" : "offline")">
                                     <i class="fa-solid fa-circle" style="font-size: 8px;"></i>
@@ -394,16 +354,13 @@
                                     <div class="unread-badge">@chat.UnreadCount</div>
                                 }
                             </div>
-
                         </a>
                     }
                 }
                 else
                 {
                     <div class="empty">
-                        <div class="empty-icon">
-                            <i class="fa-regular fa-paper-plane"></i>
-                        </div>
+                        <div class="empty-icon"><i class="fa-regular fa-paper-plane"></i></div>
                         <h3>No conversations yet</h3>
                         <p>Search for stores or users above to start a conversation.</p>
                     </div>
@@ -459,62 +416,64 @@ else
                 padding-bottom: 100px;
             }
 
-            .bottom-nav {
+            /* ============================================================
+                           BOTTOM NAV — mirrors Customer1's .mobile-bottom-nav exactly,
+                           same class names/structure, so any navbar change on Customer1
+                           can be copy-pasted straight into this file.
+                           ============================================================ */
+            .mobile-bottom-nav {
                 display: flex !important;
                 position: fixed;
-                bottom: 0;
                 left: 0;
                 right: 0;
-                height: 68px;
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(15px);
-                border-top: 1px solid var(--border-color);
-                z-index: 1000;
-                justify-content: space-around;
-                align-items: center;
+                bottom: 0;
+                z-index: 200;
+                background: #ffffff;
+                border-top: 1px solid #ece8f6;
+                justify-content: space-between;
+                gap: 2px;
+                padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+                overflow-x: auto;
                 box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
-                padding-bottom: env(safe-area-inset-bottom);
             }
 
-                .bottom-nav a {
-                    position: relative;
-                    color: var(--text-secondary);
-                    text-decoration: none;
+                .mobile-bottom-nav a {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    justify-content: center;
-                    gap: 4px;
-                    font-size: 10px;
-                    font-weight: 600;
-                    flex: 1;
+                    gap: 2px;
+                    font-size: 10.5px;
+                    color: #6b6478;
+                    text-decoration: none;
+                    padding: 4px 6px;
+                    flex-shrink: 0;
+                    position: relative;
                     border-radius: 12px;
-                    transition: color 0.2s ease, background-color 0.2s ease;
+                    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
                 }
 
-                    .bottom-nav a i {
-                        font-size: 20px;
+                    .mobile-bottom-nav a i {
+                        font-size: 17px;
                         transition: transform 0.2s ease;
                     }
 
-                    .bottom-nav a:hover {
-                        color: var(--accent-color);
+                    .mobile-bottom-nav a:hover {
                         background: var(--accent-light);
-                    }
-
-                    .bottom-nav a:active i {
-                        transform: scale(0.85);
-                    }
-
-                    .bottom-nav a.active {
                         color: var(--accent-color);
-                        font-weight: 700;
                     }
 
-                        .bottom-nav a.active i {
-                            transform: scale(1.1);
+                    .mobile-bottom-nav a.active {
+                        color: var(--accent-color) !important;
+                        background: var(--accent-light) !important;
+                        font-weight: 700;
+                        transform: translateY(-2px);
+                    }
+
+                        .mobile-bottom-nav a.active i {
+                            transform: scale(1.12);
                         }
 
+            /* Cart's badge — _CartCountBadge partial depends on this class. */
             .unread-nav-badge {
                 position: absolute;
                 top: 2px;
@@ -532,6 +491,24 @@ else
                 padding: 0 4px;
                 box-shadow: 0 3px 8px rgba(109, 40, 217, 0.3);
             }
+
+            /* Chat's own dot — separate name/wrapper, never collides with cart badge. */
+            .chat-icon-wrap {
+                position: relative;
+                display: inline-flex;
+            }
+
+                .chat-icon-wrap .chat-nav-dot {
+                    position: absolute;
+                    top: -2px;
+                    right: -4px;
+                    width: 9px;
+                    height: 9px;
+                    background: #ed4956;
+                    border: 2px solid #fff;
+                    border-radius: 50%;
+                    box-sizing: content-box;
+                }
 
             .container {
                 max-width: 650px;
@@ -767,8 +744,7 @@ else
                 box-shadow: 0 3px 8px rgba(109, 40, 217, 0.25);
             }
 
-            .chat-item.unread .name,
-            .chat-item.unread .last-message {
+            .chat-item.unread .name, .chat-item.unread .last-message {
                 font-weight: 800;
                 color: var(--text-primary);
             }
@@ -793,26 +769,51 @@ else
 
         @if (isCustomer)
         {
-            <div class="bottom-nav">
-                <a href="/Customer1"><i class="fa-solid fa-compass"></i><span>Explore</span></a>
-                <a href="/CustomerFeed"><i class="fa-solid fa-house"></i><span>Feed</span></a>
-                <a href="/CustomerProducts"><i class="fa-solid fa-bag-shopping"></i><span>Shop</span></a>
-                <a href="/CustomerCart">
+            <nav class="mobile-bottom-nav" aria-label="Customer navigation">
+
+                <a href="/Customer1">
+                    <i class="fa-solid fa-compass"></i>
+                    <span>Explore</span>
+                </a>
+
+                <a href="/CustomerFeed">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Feed</span>
+                </a>
+
+                <a href="/CustomerCart" style="position:relative;">
                     <i class="fa-solid fa-cart-shopping"></i>
                     <partial name="_CartCountBadge" />
                     <span>Cart</span>
                 </a>
-                <a href="/CustomerOrders"><i class="fa-solid fa-receipt"></i><span>Orders</span></a>
+
+                <a href="/CustomerPromotions">
+                    <i class="fa-solid fa-tags"></i>
+                    <span>Promos</span>
+                </a>
+
+                <a href="/CustomerOrders">
+                    <i class="fa-solid fa-box"></i>
+                    <span>Orders</span>
+                </a>
+
                 <a href="/Chat" class="active">
-                    <i class="fa-solid fa-paper-plane"></i>
-                    @if (hasUnread)
-                    {
-                        <span class="unread-nav-badge">@Model.Inbox.Sum(c => c.UnreadCount)</span>
-                    }
+                    <span class="chat-icon-wrap">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        @if (hasUnread)
+                        {
+                            <span class="chat-nav-dot"></span>
+                        }
+                    </span>
                     <span>Chat</span>
                 </a>
-                <a href="/CustomerProfile"><i class="fa-solid fa-user"></i><span>Profile</span></a>
-            </div>
+
+                <a href="/CustomerProfile">
+                    <i class="fa-solid fa-user"></i>
+                    <span>Profile</span>
+                </a>
+
+            </nav>
         }
         @* Delivery role: no nav for now *@
 
@@ -825,22 +826,14 @@ else
                 </div>
 
                 <form method="get" class="search-box">
-                    <input type="text"
-                           name="SearchText"
-                           value="@Model.SearchText"
-                           placeholder="Search by username or email..." />
-
-                    <button type="submit">
-                        Search
-                    </button>
+                    <input type="text" name="SearchText" value="@Model.SearchText" placeholder="Search by username or email..." />
+                    <button type="submit">Search</button>
                 </form>
             </div>
 
             @if (!string.IsNullOrWhiteSpace(Model.SearchText))
             {
-                <div class="section-title">
-                    Search Results
-                </div>
+                <div class="section-title">Search Results</div>
 
                 @if (Model.SearchUsers.Any())
                 {
@@ -848,43 +841,28 @@ else
                     {
                         var online = await Model.IsOnline(user.Id);
 
-                        <a class="chat-item"
-                           asp-page="/ChatConversation"
-                           asp-route-userId="@user.Id">
-
+                        <a class="chat-item" asp-page="/ChatConversation" asp-route-userId="@user.Id">
                             <div class="left">
                                 <div class="avatar-container">
-                                    <div class="avatar">
-                                        @(user.UserName?.Substring(0, 1).ToUpper())
-                                    </div>
+                                    <div class="avatar">@(user.UserName?.Substring(0, 1).ToUpper())</div>
                                     <div class="status-dot @(online ? "dot-online" : "dot-offline")"></div>
                                 </div>
-
                                 <div>
-                                    <div class="name">
-                                        @user.UserName
-                                    </div>
-
-                                    <div class="last-message">
-                                        @user.Email
-                                    </div>
+                                    <div class="name">@user.UserName</div>
+                                    <div class="last-message">@user.Email</div>
                                 </div>
                             </div>
-
                             <div class="right-status @(online ? "online" : "offline")">
                                 <i class="fa-solid fa-circle" style="font-size: 8px;"></i>
                                 @(online ? "Online" : "Offline")
                             </div>
-
                         </a>
                     }
                 }
                 else
                 {
                     <div class="empty">
-                        <div class="empty-icon">
-                            <i class="fa-regular fa-face-frown"></i>
-                        </div>
+                        <div class="empty-icon"><i class="fa-regular fa-face-frown"></i></div>
                         <h3>No Users Found</h3>
                         <p>Try searching for a different username or email address.</p>
                     </div>
@@ -892,9 +870,7 @@ else
             }
             else
             {
-                <div class="section-title">
-                    Recent Chats
-                </div>
+                <div class="section-title">Recent Chats</div>
 
                 @if (Model.Inbox.Any())
                 {
@@ -902,29 +878,17 @@ else
                     {
                         var online = await Model.IsOnline(chat.UserId);
 
-                        <a class="chat-item @(chat.UnreadCount > 0 ? "unread" : "")"
-                           asp-page="/ChatConversation"
-                           asp-route-userId="@chat.UserId">
-
+                        <a class="chat-item @(chat.UnreadCount > 0 ? "unread" : "")" asp-page="/ChatConversation" asp-route-userId="@chat.UserId">
                             <div class="left">
                                 <div class="avatar-container">
-                                    <div class="avatar">
-                                        @(chat.UserName?.Substring(0, 1).ToUpper())
-                                    </div>
+                                    <div class="avatar">@(chat.UserName?.Substring(0, 1).ToUpper())</div>
                                     <div class="status-dot @(online ? "dot-online" : "dot-offline")"></div>
                                 </div>
-
                                 <div>
-                                    <div class="name">
-                                        @chat.UserName
-                                    </div>
-
-                                    <div class="last-message">
-                                        @chat.LastMessage
-                                    </div>
+                                    <div class="name">@chat.UserName</div>
+                                    <div class="last-message">@chat.LastMessage</div>
                                 </div>
                             </div>
-
                             <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
                                 <div class="right-status @(online ? "online" : "offline")">
                                     <i class="fa-solid fa-circle" style="font-size: 8px;"></i>
@@ -935,16 +899,13 @@ else
                                     <div class="unread-badge">@chat.UnreadCount</div>
                                 }
                             </div>
-
                         </a>
                     }
                 }
                 else
                 {
                     <div class="empty">
-                        <div class="empty-icon">
-                            <i class="fa-regular fa-paper-plane"></i>
-                        </div>
+                        <div class="empty-icon"><i class="fa-regular fa-paper-plane"></i></div>
                         <h3>No conversations yet</h3>
                         <p>Search for stores or users above to start a conversation.</p>
                     </div>
