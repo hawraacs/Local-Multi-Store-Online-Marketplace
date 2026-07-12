@@ -1,105 +1,134 @@
-﻿@if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Delivery"))
+﻿@using System
+@{
+    var currentPath = Context.Request.Path.Value ?? "";
+
+    string NavActiveClass(string path) =>
+        currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase)
+            ? "bottom-link active"
+            : "bottom-link";
+}
+
+@if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Delivery"))
 {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        .delivery-navbar {
-            background: #1e3a5f;
-            padding: 12px 20px;
-            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16);
-            position: sticky;
-            top: 0;
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary: #38bdf8;
+            --nav-bg-1: #0f172a;
+            --nav-bg-2: #1e3a8a;
+            --bg: #f8fafc;
+        }
+
+        body {
+            background: var(--bg);
+        }
+
+        /* ================= FLOATING BOTTOM NAV ================= */
+        .bottom-nav-bar {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            width: min(600px, calc(100% - 48px));
+            background: linear-gradient(135deg, var(--nav-bg-1), var(--nav-bg-2));
+            border-radius: 999px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(56, 189, 248, 0.14);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 14px 20px;
             z-index: 999;
         }
 
-        .delivery-navbar-inner {
-            max-width: 1150px;
-            margin: auto;
+        .bottom-link {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .delivery-brand {
-            color: white;
-            font-weight: 900;
-            font-size: 16px;
+            gap: 5px;
+            color: #94a3b8;
             text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            padding: 12px 26px;
+            border-radius: 999px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all .2s ease;
+            position: relative;
         }
 
-        .delivery-links {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-            .delivery-links a {
-                color: #dbeafe;
-                text-decoration: none;
-                padding: 9px 14px;
-                border-radius: 999px;
-                font-size: 14px;
-                font-weight: 800;
-                transition: .2s;
-                background: rgba(255, 255, 255, 0.06);
+            .bottom-link .bottom-icon {
+                font-size: 22px;
+                line-height: 1;
+                transition: transform .2s ease;
             }
 
-                .delivery-links a:hover {
-                    background: #ff6b35;
-                    color: white;
-                    transform: translateY(-1px);
+            .bottom-link:hover {
+                color: #e2e8f0;
+            }
+
+                .bottom-link:hover .bottom-icon {
+                    transform: translateY(-2px);
                 }
 
-        @@media (max-width: 650px) {
-            .delivery-navbar-inner {
-                justify-content: center;
+            .bottom-link.active {
+                color: #ffffff;
+                background: linear-gradient(135deg, var(--primary), var(--secondary));
+                box-shadow: 0 10px 24px rgba(37, 99, 235, 0.5), 0 0 0 4px rgba(56, 189, 248, 0.15);
             }
 
-            .delivery-brand {
-                width: 100%;
-                justify-content: center;
+                .bottom-link.active .bottom-icon {
+                    transform: translateY(-1px) scale(1.08);
+                }
+
+        /* ================= PAGE OFFSET FOR BOTTOM NAV ================= */
+        .page {
+            margin-left: 0 !important;
+            padding-bottom: 130px !important;
+        }
+
+        @@media (max-width: 560px) {
+            .bottom-nav-bar {
+                bottom: 14px;
+                width: calc(100% - 24px);
+                padding: 10px 10px;
             }
 
-            .delivery-links {
-                justify-content: center;
+            .bottom-link {
+                padding: 9px 14px;
+                font-size: 10px;
             }
 
-                .delivery-links a {
-                    font-size: 12px;
-                    padding: 8px 11px;
+                .bottom-link .bottom-icon {
+                    font-size: 19px;
                 }
         }
     </style>
 
-    <nav class="delivery-navbar">
-        <div class="delivery-navbar-inner">
+    <nav class="bottom-nav-bar">
 
-            <a href="/DeliveryDashboard" class="delivery-brand">
-                🚚 Delivery Panel
-            </a>
+        <a href="/DeliveryDashboard" class="@NavActiveClass("/DeliveryDashboard")">
+            <span class="bottom-icon">🏠</span>
+            <span class="label">Dashboard</span>
+        </a>
 
-            <div class="delivery-links">
-                <a href="/DeliveryDashboard">
-                    🏠 Dashboard
-                </a>
+        <a href="/DeliveryOrders" class="@NavActiveClass("/DeliveryOrders")">
+            <span class="bottom-icon">📦</span>
+            <span class="label">Orders</span>
+        </a>
 
-                <a href="/DeliveryOrders">
-                    📦 Orders
-                </a>
+        <a href="/Chat" class="@NavActiveClass("/Chat")">
+            <span class="bottom-icon">💬</span>
+            <span class="label">Chat</span>
+        </a>
 
-                <a href="/Chat">
-                    💬 Chat
-                </a>
+        <a href="/DeliveryProfile" class="@NavActiveClass("/DeliveryProfile")">
+            <span class="bottom-icon">👤</span>
+            <span class="label">Profile</span>
+        </a>
 
-                <a href="/DeliveryProfile">
-                    👤 Profile
-                </a>
-            </div>
-
-        </div>
     </nav>
 }
