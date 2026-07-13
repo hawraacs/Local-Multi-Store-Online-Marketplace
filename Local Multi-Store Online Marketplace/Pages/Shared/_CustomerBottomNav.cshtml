@@ -1,0 +1,69 @@
+﻿@using System.Security.Claims
+@using Multi_Store.Services.Managers
+@inject Multi_Store.Services.Managers.UserManager UserManagerService
+@inject Multi_Store.Services.Managers.MessagingManager MessagingManagerService
+@{
+    var currentPath = ViewContext.HttpContext.Request.Path.Value ?? string.Empty;
+
+    string ActiveIf(string path) =>
+        currentPath.Equals(path, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+
+    int currentUserId = 0;
+    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    int.TryParse(userIdClaim, out currentUserId);
+
+    bool hasChatUnread = false;
+
+    if (currentUserId > 0)
+    {
+        var myMessages = await MessagingManagerService.GetMessagesForUserAsync(currentUserId);
+        hasChatUnread = myMessages != null &&
+                        myMessages.Any(m => m.ReceiverID == currentUserId && !m.IsRead);
+    }
+}
+
+<nav class="mobile-bottom-nav" aria-label="Customer navigation">
+
+    <a href="/Customer1" class="@ActiveIf("/Customer1")">
+        <i class="fa-solid fa-compass"></i>
+        <span>Explore</span>
+    </a>
+
+    <a href="/CustomerFeed" class="@ActiveIf("/CustomerFeed")">
+        <i class="fa-solid fa-house"></i>
+        <span>Feed</span>
+    </a>
+
+    <a href="/CustomerCart" class="@ActiveIf("/CustomerCart")" style="position:relative;">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <partial name="_CartCountBadge" />
+        <span>Cart</span>
+    </a>
+
+    <a href="/CustomerPromotions" class="@ActiveIf("/CustomerPromotions")">
+        <i class="fa-solid fa-tags"></i>
+        <span>Promos</span>
+    </a>
+
+    <a href="/CustomerOrders" class="@ActiveIf("/CustomerOrders")">
+        <i class="fa-solid fa-box"></i>
+        <span>Orders</span>
+    </a>
+
+    <a href="/Chat" class="@ActiveIf("/Chat")">
+        <span class="chat-icon-wrap">
+            <i class="fa-solid fa-paper-plane"></i>
+            @if (hasChatUnread)
+            {
+                <span class="chat-nav-dot"></span>
+            }
+        </span>
+        <span>Chat</span>
+    </a>
+
+    <a href="/CustomerProfile" class="@ActiveIf("/CustomerProfile")">
+        <i class="fa-solid fa-user"></i>
+        <span>Profile</span>
+    </a>
+
+</nav>
