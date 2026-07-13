@@ -5,6 +5,11 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Managers;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 {
@@ -13,13 +18,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
+        private readonly DeliveryManager _deliveryManager;
 
         public DeliveryDashboardModel(
             ApplicationDbContext context,
-            UserManager<User> userManager)
+            UserManager<User> userManager,
+            DeliveryManager deliveryManager)
         {
             _context = context;
             _userManager = userManager;
+            _deliveryManager = deliveryManager;
         }
 
         public List<DeliveryAssignmentViewModel> Assignments { get; set; }
@@ -52,13 +60,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                 return Page();
             }
 
-            Assignments =
+            var rawAssignments =
                 await _context.DeliveryAssignments
                     .AsNoTracking()
-                    .Include(assignment =>
-                        assignment.Order)
-                    .ThenInclude(order =>
-                        order!.Address)
+                    .Include(assignment => assignment.Order)
+                        .ThenInclude(order => order!.Address)
+                    .Include(assignment => assignment.Order)
+                        .ThenInclude(order => order!.Customer)
+                            .ThenInclude(customer => customer.User)
+                    .Include(assignment => assignment.Order)
+                        .ThenInclude(order => order!.OrderItems)
+                            .ThenInclude(item => item.Store)
                     .Where(assignment =>
                         assignment.DeliveryPersonID ==
                             deliveryPerson.DeliveryPersonID &&
@@ -67,40 +79,66 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                         assignment.Status != "Failed")
                     .OrderByDescending(assignment =>
                         assignment.AssignedAt)
-                    .Select(assignment =>
-                        new DeliveryAssignmentViewModel
-                        {
-                            AssignmentID =
-                                assignment.AssignmentID,
-
-                            OrderID =
-                                assignment.OrderID,
-
-                            OrderNumber =
-                                assignment.Order != null
-                                    ? assignment.Order.OrderNumber
-                                    : string.Empty,
-
-                            OrderStatus =
-                                assignment.Order != null
-                                    ? assignment.Order.Status
-                                    : string.Empty,
-
-                            AssignmentStatus =
-                                assignment.Status,
-
-                            CustomerAddress =
-                                assignment.Order != null &&
-                                assignment.Order.Address != null
-                                    ? $"{assignment.Order.Address.AddressLine1}, " +
-                                      $"{assignment.Order.Address.Area}, " +
-                                      $"{assignment.Order.Address.City}"
-                                    : "No address",
-
-                            AssignedAt =
-                                assignment.AssignedAt
-                        })
                     .ToListAsync();
+
+            Assignments = rawAssignments
+                .Select(assignment => new DeliveryAssignmentViewModel
+                {
+                    AssignmentID = assignment.AssignmentID,
+                    OrderID = assignment.OrderID,
+
+                    OrderNumber =
+                        assignment.Order != null
+                            ? assignment.Order.OrderNumber
+                            : string.Empty,
+
+                    OrderStatus =
+                        assignment.Order != null
+                            ? assignment.Order.Status
+                            : string.Empty,
+
+                    AssignmentStatus = assignment.Status,
+
+                    CustomerName =
+                        assignment.Order?.Customer?.User?.FullName
+                        ?? "N/A",
+
+                    CustomerPhone =
+                        assignment.Order?.Customer?.User?.PhoneNumber
+                        ?? "N/A",
+
+                    CustomerAddress =
+                        assignment.Order != null &&
+                        assignment.Order.Address != null
+                            ? $"{assignment.Order.Address.AddressLine1}, " +
+                              $"{assignment.Order.Address.Area}, " +
+                              $"{assignment.Order.Address.City}"
+                            : "No address",
+
+                    StoreNames =
+                        assignment.Order?.OrderItems != null
+                            ? string.Join(", ",
+                                assignment.Order.OrderItems
+                                    .Where(i => i.Store != null)
+                                    .Select(i => i.Store.StoreName)
+                                    .Distinct())
+                            : string.Empty,
+
+                    ProductSummary =
+                        assignment.Order?.OrderItems != null
+                            ? string.Join(", ",
+                                assignment.Order.OrderItems
+                                    .Select(i => $"{i.ProductName} x{i.Quantity}"))
+                            : string.Empty,
+
+                    TotalAmount = assignment.Order?.TotalAmount ?? 0,
+                    OrderDate = assignment.Order?.OrderDate ?? DateTime.UtcNow,
+                    PaymentMethod = assignment.Order?.PaymentMethod ?? "N/A",
+                    PaymentStatus = assignment.Order?.PaymentStatus ?? "N/A",
+
+                    AssignedAt = assignment.AssignedAt
+                })
+                .ToList();
 
             var assignedOrderIds =
                 Assignments
@@ -301,6 +339,42 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         }
 
         // =====================================================
+        // CONFIRM CASH COLLECTION
+        // =====================================================
+        public async Task<IActionResult>
+            OnPostConfirmCashCollectionAsync(
+                int assignmentId)
+        {
+            var deliveryPerson =
+                await GetCurrentDeliveryPersonAsync();
+
+            if (deliveryPerson == null)
+            {
+                TempData["Error"] =
+                    "Approved delivery profile was not found.";
+
+                return RedirectToPage();
+            }
+
+            try
+            {
+                var collected =
+                    await _deliveryManager.ConfirmCashCollectionAsync(
+                        assignmentId,
+                        deliveryPerson.DeliveryPersonID);
+
+                TempData["Success"] =
+                    $"Cash collection confirmed (${collected:0.00}).";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToPage();
+        }
+
+        // =====================================================
         // MARK ORDER AS DELIVERED
         // =====================================================
         public async Task<IActionResult>
@@ -331,15 +405,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                 return RedirectToPage();
             }
 
-            assignment.Status =
-                "Delivered";
-
-            assignment.DeliveryTime =
-                DateTime.UtcNow;
-
-            assignment.Order.Status =
-                "Delivered";
-
             var paymentMethod =
                 assignment.Order.PaymentMethod?
                     .Trim()
@@ -354,68 +419,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                     "COD",
                     StringComparison.OrdinalIgnoreCase);
 
-            if (isCashOnDelivery)
+            if (isCashOnDelivery &&
+                !string.Equals(
+                    assignment.Order.PaymentStatus,
+                    "Paid",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                assignment.Order.PaymentStatus =
-                    "Paid";
+                TempData["Error"] =
+                    "Please confirm cash collection before marking this order as delivered.";
 
-                var latestPayment =
-                    await _context.Payments
-                        .Where(payment =>
-                            payment.OrderID ==
-                                assignment.Order.OrderID)
-                        .OrderByDescending(payment =>
-                            payment.PaymentDate)
-                        .FirstOrDefaultAsync();
-
-                if (latestPayment != null)
-                {
-                    latestPayment.Status =
-                        "Paid";
-
-                    latestPayment.PaymentDate =
-                        DateTime.UtcNow;
-
-                    latestPayment.PaymentGateway =
-                        string.IsNullOrWhiteSpace(
-                            latestPayment.PaymentGateway)
-                            ? "Cash"
-                            : latestPayment.PaymentGateway;
-                }
-                else
-                {
-                    _context.Payments.Add(
-                        new Payment
-                        {
-                            OrderID =
-                                assignment.Order.OrderID,
-
-                            PaymentMethod =
-                                "Cash On Delivery",
-
-                            PaymentGateway =
-                                "Cash",
-
-                            GatewayTransactionID =
-                                null,
-
-                            Amount =
-                                assignment.Order.TotalAmount,
-
-                            PaymentDate =
-                                DateTime.UtcNow,
-
-                            Status =
-                                "Paid",
-
-                            RefundAmount =
-                                null,
-
-                            RefundDate =
-                                null
-                        });
-                }
+                return RedirectToPage();
             }
+
+            assignment.Status =
+                "Delivered";
+
+            assignment.DeliveryTime =
+                DateTime.UtcNow;
+
+            assignment.Order.Status =
+                "Delivered";
 
             await _context.SaveChangesAsync();
 
@@ -492,10 +515,40 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         public string AssignmentStatus { get; set; }
             = string.Empty;
 
+        public string CustomerName { get; set; }
+            = string.Empty;
+
+        public string CustomerPhone { get; set; }
+            = string.Empty;
+
         public string CustomerAddress { get; set; }
             = string.Empty;
 
+        public string StoreNames { get; set; }
+            = string.Empty;
+
+        public string ProductSummary { get; set; }
+            = string.Empty;
+
+        public decimal TotalAmount { get; set; }
+
+        public DateTime OrderDate { get; set; }
+
+        public string PaymentMethod { get; set; }
+            = string.Empty;
+
+        public string PaymentStatus { get; set; }
+            = string.Empty;
+
         public DateTime AssignedAt { get; set; }
+
+        public bool IsCashOnDelivery =>
+            PaymentMethod.Equals("Cash On Delivery", StringComparison.OrdinalIgnoreCase) ||
+            PaymentMethod.Equals("COD", StringComparison.OrdinalIgnoreCase);
+
+        public bool NeedsCashCollection =>
+            IsCashOnDelivery &&
+            !PaymentStatus.Equals("Paid", StringComparison.OrdinalIgnoreCase);
     }
 
     public class DeliveryNotificationViewModel
@@ -515,4 +568,3 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         public int? ReferenceID { get; set; }
     }
 }
-

@@ -41,6 +41,7 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<Complaint> Complaints { get; set; }
         public DbSet<DeliveryPerson> DeliveryPersons { get; set; }
         public DbSet<DeliveryAssignment> DeliveryAssignments { get; set; }
+        public DbSet<DeliveryPaymentCollection> DeliveryPaymentCollections { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<SystemConfig> SystemConfigs { get; set; }
         public DbSet<Session> Sessions { get; set; }
@@ -83,6 +84,27 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<CustomerAddress>().HasKey(e => e.AddressID);
             modelBuilder.Entity<DeliveryArea>().HasKey(e => e.DeliveryAreaID);
             modelBuilder.Entity<DeliveryAssignment>().HasKey(e => e.AssignmentID);
+            modelBuilder.Entity<DeliveryPaymentCollection>().HasKey(e => e.CollectionID);
+
+            modelBuilder.Entity<DeliveryPaymentCollection>()
+                .Property(e => e.CollectedAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<DeliveryPaymentCollection>()
+                .HasOne(e => e.Order)
+                .WithMany()
+                .HasForeignKey(e => e.OrderID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DeliveryPaymentCollection>()
+                .HasOne(e => e.DeliveryPerson)
+                .WithMany()
+                .HasForeignKey(e => e.DeliveryPersonID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DeliveryPaymentCollection>()
+                .HasIndex(e => e.OrderID)
+                .IsUnique();
             modelBuilder.Entity<DeliveryPerson>().HasKey(e => e.DeliveryPersonID);
             modelBuilder.Entity<Notification>().HasKey(e => e.NotificationID);
             modelBuilder.Entity<Order>().HasKey(e => e.OrderID);
