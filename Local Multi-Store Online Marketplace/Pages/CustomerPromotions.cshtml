@@ -1,61 +1,348 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.CustomerPromotionsModel
 @{
-    ViewData["Title"] = "My Promotions";
+    Layout = null;
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">My Promotions</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>My Promotions | realnest</title>
 
-    @if (Model.Promotions == null || !Model.Promotions.Any())
-    {
-        <div class="alert alert-info">
-            No promotions available.
-        </div>
-    }
-    else
-    {
-        <div class="row">
-            @foreach (var item in Model.Promotions)
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+            :root {
+                --bg-color: #faf9fc;
+                --card-bg: #ffffff;
+                --border-color: #ece8f6;
+                --text-primary: #1e1b2e;
+                --text-secondary: #6b6478;
+                --accent-color: #6d28d9;
+                --accent-hover: #5b21b6;
+                --accent-light: #f3effe;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                --success-color: #10b981;
+                --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
+                --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family: var(--font-family);
+                background-color: var(--bg-color);
+                color: var(--text-primary);
+                line-height: 1.6;
+                -webkit-font-smoothing: antialiased;
+                padding-bottom: 100px;
+            }
+
+            /* ============================================================
+                       BOTTOM NAV — rendered by the shared _CustomerBottomNav partial.
+                       Styles below match every other customer page exactly (same
+                       class names), so the partial renders identically here.
+                       ============================================================ */
+            .mobile-bottom-nav {
+                display: flex !important;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 200;
+                background: #ffffff;
+                border-top: 1px solid #ece8f6;
+                justify-content: space-between;
+                gap: 2px;
+                padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+                overflow-x: auto;
+                box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
+            }
+
+                .mobile-bottom-nav a {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 2px;
+                    font-size: 10.5px;
+                    color: #6b6478;
+                    text-decoration: none;
+                    padding: 4px 6px;
+                    flex-shrink: 0;
+                    position: relative;
+                    border-radius: 12px;
+                    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+                }
+
+                    .mobile-bottom-nav a i {
+                        font-size: 17px;
+                        transition: transform 0.2s ease;
+                    }
+
+                    .mobile-bottom-nav a:hover {
+                        background: var(--accent-light);
+                        color: var(--accent-color);
+                    }
+
+                    .mobile-bottom-nav a.active {
+                        color: var(--accent-color) !important;
+                        background: var(--accent-light) !important;
+                        font-weight: 700;
+                        transform: translateY(-2px);
+                    }
+
+                        .mobile-bottom-nav a.active i {
+                            transform: scale(1.12);
+                        }
+
+            /* Cart badge (used by _CartCountBadge partial inside _CustomerBottomNav) */
+            .unread-nav-badge {
+                position: absolute;
+                top: 2px;
+                right: 18px;
+                background: var(--accent-gradient);
+                color: #fff;
+                font-size: 10px;
+                font-weight: 800;
+                min-width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 4px;
+                box-shadow: 0 3px 8px rgba(109, 40, 217, 0.3);
+            }
+
+            /* Chat unread dot (used inside _CustomerBottomNav) */
+            .chat-icon-wrap {
+                position: relative;
+                display: inline-flex;
+            }
+
+                .chat-icon-wrap .chat-nav-dot {
+                    position: absolute;
+                    top: -2px;
+                    right: -4px;
+                    width: 9px;
+                    height: 9px;
+                    background: #ed4956;
+                    border: 2px solid #fff;
+                    border-radius: 50%;
+                    box-sizing: content-box;
+                }
+
+            /* PAGE CONTENT */
+            .promotions-page {
+                padding: 40px 16px;
+                min-height: 100vh;
+            }
+
+            .promotions-box {
+                max-width: 950px;
+                margin: 0 auto;
+            }
+
+                .promotions-box h2 {
+                    font-family: 'Playfair Display', Georgia, serif;
+                    font-size: 34px;
+                    font-weight: 800;
+                    margin-bottom: 30px;
+                    color: var(--text-primary);
+                    text-align: center;
+                }
+
+            .promotions-empty {
+                max-width: 700px;
+                margin: 20px auto;
+                background: var(--card-bg);
+                text-align: center;
+                color: var(--text-secondary);
+                padding: 60px 40px;
+                border-radius: 20px;
+                border: 2px dashed #ded4f5;
+                box-shadow: var(--shadow-sm);
+            }
+
+                .promotions-empty h3 {
+                    color: var(--text-primary);
+                    font-size: 20px;
+                    font-weight: 800;
+                    margin-bottom: 8px;
+                }
+
+            .promotions-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+
+            .promo-card {
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 20px;
+                padding: 22px;
+                box-shadow: var(--shadow-sm);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+                .promo-card:hover {
+                    transform: translateY(-3px);
+                    box-shadow: var(--shadow-md);
+                }
+
+                .promo-card.unread {
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.08), var(--shadow-sm);
+                }
+
+            .promo-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+
+            .promo-title {
+                font-size: 17px;
+                font-weight: 800;
+                color: var(--text-primary);
+            }
+
+            .promo-new-badge {
+                flex-shrink: 0;
+                background: var(--accent-gradient);
+                color: #fff;
+                font-size: 11px;
+                font-weight: 800;
+                padding: 4px 10px;
+                border-radius: 999px;
+                white-space: nowrap;
+            }
+
+            .promo-message {
+                font-size: 14px;
+                color: var(--text-secondary);
+                line-height: 1.55;
+                margin-bottom: 14px;
+            }
+
+            .promo-coupon {
+                background: #ecfdf5;
+                border: 1px solid #d1fae5;
+                color: var(--success-color);
+                padding: 10px 14px;
+                border-radius: 12px;
+                font-size: 13px;
+                font-weight: 700;
+                margin-bottom: 14px;
+            }
+
+            .promo-date {
+                display: block;
+                font-size: 12px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+
+            .promo-mark-read-btn {
+                margin-top: 14px;
+                border: 1px solid var(--border-color);
+                background: var(--accent-light);
+                color: var(--accent-color);
+                padding: 8px 16px;
+                border-radius: 50px;
+                font-size: 13px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+                .promo-mark-read-btn:hover {
+                    background: var(--accent-color);
+                    color: #ffffff;
+                    border-color: var(--accent-color);
+                }
+
+            @@media (max-width: 700px) {
+                .promotions-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+    </style>
+</head>
+
+<body>
+
+    <partial name="_CustomerBottomNav" />
+
+    <div class="promotions-page">
+        <div class="promotions-box">
+
+            <h2>My Promotions</h2>
+
+            @if (Model.Promotions == null || !Model.Promotions.Any())
             {
-                <div class="col-md-6 mb-3">
-                    <div class="card shadow-sm @(item.IsRead ? "" : "border-primary")">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <h5>@item.Promotion?.Title</h5>
+                <div class="promotions-empty">
+                    <h3>No promotions yet</h3>
+                    <p>Offers and coupons from stores you follow will show up here.</p>
+                </div>
+            }
+            else
+            {
+                <div class="promotions-grid">
+                    @foreach (var item in Model.Promotions)
+                    {
+                        <div class="promo-card @(item.IsRead ? "" : "unread")">
+
+                            <div class="promo-header">
+                                <span class="promo-title">@item.Promotion?.Title</span>
 
                                 @if (!item.IsRead)
                                 {
-                                    <span class="badge bg-primary">New</span>
+                                    <span class="promo-new-badge">New</span>
                                 }
                             </div>
 
-                            <p>@item.Promotion?.Message</p>
+                            <p class="promo-message">@item.Promotion?.Message</p>
 
                             @if (!string.IsNullOrWhiteSpace(item.Promotion?.CouponCode))
                             {
-                                <div class="alert alert-success py-2">
+                                <div class="promo-coupon">
                                     Coupon Code: <strong>@item.Promotion.CouponCode</strong>
                                 </div>
                             }
 
-                            <small class="text-muted">
+                            <small class="promo-date">
                                 Sent: @item.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
                             </small>
 
                             @if (!item.IsRead)
                             {
-                                <form method="post" class="mt-3">
+                                <form method="post">
                                     <input type="hidden" name="promotionRecipientId" value="@item.PromotionRecipientID" />
-                                    <button asp-page-handler="MarkAsRead" class="btn btn-sm btn-outline-primary">
+                                    <button asp-page-handler="MarkAsRead" class="promo-mark-read-btn">
                                         Mark as read
                                     </button>
                                 </form>
                             }
                         </div>
-                    </div>
+                    }
                 </div>
             }
+
         </div>
-    }
-</div>
+    </div>
+
+</body>
+</html>
