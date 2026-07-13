@@ -1,0 +1,604 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.HelpCenterModel
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <title>Help Center | Realnest</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+            :root {
+                --bg-color: #faf9fc;
+                --card-bg: #ffffff;
+                --border-color: #ece8f6;
+                --text-primary: #1e1b2e;
+                --text-secondary: #6b6478;
+                --accent-color: #6d28d9;
+                --accent-light: #f3effe;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: var(--font-family);
+                background: var(--bg-color);
+                color: var(--text-primary);
+                min-height: 100vh;
+                padding-bottom: 100px;
+            }
+
+            .mobile-bottom-nav {
+                display: flex !important;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 200;
+                background: #ffffff;
+                border-top: 1px solid #ece8f6;
+                justify-content: space-between;
+                gap: 2px;
+                padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+                overflow-x: auto;
+                box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
+            }
+
+                .mobile-bottom-nav a {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 2px;
+                    font-size: 10.5px;
+                    color: #6b6478;
+                    text-decoration: none;
+                    padding: 4px 6px;
+                    flex-shrink: 0;
+                    position: relative;
+                    border-radius: 12px;
+                    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+                }
+
+                    .mobile-bottom-nav a i {
+                        font-size: 17px;
+                    }
+
+                    .mobile-bottom-nav a:hover {
+                        background: var(--accent-light);
+                        color: var(--accent-color);
+                    }
+
+                    .mobile-bottom-nav a.active {
+                        color: var(--accent-color) !important;
+                        background: var(--accent-light) !important;
+                        font-weight: 700;
+                        transform: translateY(-2px);
+                    }
+
+            .help-container {
+                max-width: 800px;
+                width: 100%;
+                margin: 30px auto;
+                padding: 0 20px;
+            }
+
+            .help-header {
+                margin-bottom: 24px;
+            }
+
+                .help-header a.back-link {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    color: var(--text-secondary);
+                    text-decoration: none;
+                    margin-bottom: 16px;
+                }
+
+                    .help-header a.back-link:hover {
+                        color: var(--accent-color);
+                    }
+
+                .help-header h1 {
+                    font-family: 'Playfair Display', Georgia, serif;
+                    font-size: 30px;
+                    font-weight: 800;
+                    margin-bottom: 6px;
+                }
+
+                .help-header p {
+                    color: var(--text-secondary);
+                    font-size: 14px;
+                }
+
+            .help-search {
+                margin-top: 20px;
+                position: relative;
+            }
+
+                .help-search input {
+                    width: 100%;
+                    padding: 14px 16px 14px 44px;
+                    border-radius: 50px;
+                    border: 1px solid var(--border-color);
+                    background: var(--card-bg);
+                    font-family: var(--font-family);
+                    font-size: 14px;
+                    outline: none;
+                    box-shadow: var(--shadow-sm);
+                    transition: border-color 0.2s ease;
+                }
+
+                    .help-search input:focus {
+                        border-color: var(--accent-color);
+                    }
+
+                .help-search i {
+                    position: absolute;
+                    left: 18px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: var(--text-secondary);
+                    font-size: 14px;
+                }
+
+            .faq-category {
+                margin-top: 28px;
+            }
+
+                .faq-category-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    letter-spacing: 0.3px;
+                    text-transform: uppercase;
+                    color: var(--text-secondary);
+                    margin-bottom: 8px;
+                    padding: 0 4px;
+                }
+
+                    .faq-category-title i {
+                        color: var(--accent-color);
+                        font-size: 13px;
+                    }
+
+            /* Instagram-style grouped card: one rounded container per category,
+               rows inside are flat and separated by hairlines (no per-row card) */
+            .faq-group {
+                background: var(--card-bg);
+                border-radius: 14px;
+                overflow: hidden;
+                box-shadow: var(--shadow-sm);
+                border: 1px solid var(--border-color);
+            }
+
+            .faq-item {
+                border-bottom: 1px solid var(--border-color);
+            }
+
+                .faq-item:last-child {
+                    border-bottom: none;
+                }
+
+            .faq-question {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 15px 18px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                color: var(--text-primary);
+                background: transparent;
+                border: none;
+                width: 100%;
+                text-align: left;
+                font-family: var(--font-family);
+                transition: background-color 0.15s ease;
+            }
+
+                .faq-question:hover {
+                    background: var(--accent-light);
+                }
+
+                .faq-question i.chevron {
+                    color: var(--text-secondary);
+                    font-size: 12px;
+                    transition: transform 0.2s ease;
+                    flex-shrink: 0;
+                }
+
+            .faq-item.open .faq-question {
+                background: var(--accent-light);
+            }
+
+            .faq-item.open .faq-question i.chevron {
+                transform: rotate(180deg);
+                color: var(--accent-color);
+            }
+
+            .faq-answer {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.25s ease, padding 0.25s ease;
+                padding: 0 18px;
+                font-size: 13.5px;
+                line-height: 1.6;
+                color: var(--text-secondary);
+            }
+
+            .faq-item.open .faq-answer {
+                max-height: 400px;
+                padding: 0 18px 16px;
+            }
+
+            .faq-item.hidden-by-search {
+                display: none;
+            }
+
+            .faq-group.hidden-by-search {
+                display: none;
+            }
+
+            .no-results {
+                text-align: center;
+                padding: 40px 20px;
+                color: var(--text-secondary);
+                display: none;
+            }
+
+                .no-results.visible {
+                    display: block;
+                }
+
+            .contact-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 16px 18px;
+                text-decoration: none;
+                color: var(--text-primary);
+                font-size: 14px;
+                font-weight: 600;
+                transition: background-color 0.15s ease;
+            }
+
+                .contact-row:hover {
+                    background: var(--accent-light);
+                }
+
+                .contact-row .contact-row-left {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .contact-row i.leading {
+                    width: 20px;
+                    text-align: center;
+                    color: var(--accent-color);
+                    font-size: 15px;
+                }
+
+                .contact-row i.chevron {
+                    color: var(--text-secondary);
+                    font-size: 12px;
+                }
+
+                .contact-row .contact-row-sub {
+                    display: block;
+                    font-size: 12px;
+                    font-weight: 400;
+                    color: var(--text-secondary);
+                    margin-top: 2px;
+                }
+
+            footer {
+                text-align: center;
+                padding: 40px 20px;
+                color: var(--text-secondary);
+                font-size: 12px;
+                border-top: 1px solid var(--border-color);
+                margin-top: 40px;
+            }
+    </style>
+</head>
+
+<body>
+
+    <partial name="_CustomerBottomNav" />
+
+    <div class="help-container">
+
+        <div class="help-header">
+            <a href="/CustomerProfile" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Profile
+            </a>
+            <h1>Help Center</h1>
+            <p>Search for a topic, or browse by category below.</p>
+
+            <div class="help-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="faqSearch" placeholder="How can we help?" oninput="filterFaq()" />
+            </div>
+        </div>
+
+        <!-- ORDERS -->
+        <div class="faq-category">
+            <div class="faq-category-title"><i class="fas fa-box"></i> Orders &amp; Tracking</div>
+            <div class="faq-group">
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        How do I track my order?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Go to <strong>Orders</strong> from the bottom navigation. Each order shows its current status
+                        (processing, out for delivery, or delivered) along with an estimated delivery window.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        Can I cancel or change an order after placing it?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        You can cancel an order while it's still marked "Processing." Once a store has confirmed and started
+                        preparing it, changes need to go through the store directly via chat.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        Why hasn't my order status updated?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Status updates depend on the store and delivery staff. If an order hasn't moved in over 24 hours,
+                        message the store directly or reach out using the contact option below.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- PAYMENTS -->
+        <div class="faq-category">
+            <div class="faq-category-title"><i class="fas fa-credit-card"></i> Payments &amp; Billing</div>
+            <div class="faq-group">
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        What payment methods are supported?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Supported payment methods vary by store, but most stores accept Cash on Delivery (COD) as well as
+                        card payments where available.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        Why is my account restricted from Cash on Delivery?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        COD restrictions are usually applied after repeated missed or refused deliveries. If you believe
+                        this was applied in error, contact support below to review your account.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        How do refunds work?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Refunds are issued by the store once a return or cancellation is approved. Processing time depends
+                        on the original payment method and the store's own refund policy.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DELIVERY -->
+        <div class="faq-category">
+            <div class="faq-category-title"><i class="fas fa-motorcycle"></i> Delivery</div>
+            <div class="faq-group">
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        How long does delivery usually take?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Delivery times depend on the store's location and current order volume. Most local deliveries
+                        arrive within the same day or the next business day.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        What if I'm not home when the delivery arrives?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        The delivery staff will attempt to contact you using the phone number on your account. Repeated
+                        missed deliveries may affect your Cash on Delivery eligibility.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RETURNS -->
+        <div class="faq-category">
+            <div class="faq-category-title"><i class="fas fa-rotate-left"></i> Returns &amp; Refunds</div>
+            <div class="faq-group">
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        How do I return an item?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Open the order from your Orders list and select "Request Return" if the option is available.
+                        Return windows and conditions are set individually by each store.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        What items are not eligible for return?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Perishable goods, personal care items, and items marked "Final Sale" are typically not eligible for
+                        return. Check the product page or ask the store directly if you're unsure.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ACCOUNT -->
+        <div class="faq-category">
+            <div class="faq-category-title"><i class="fas fa-user-shield"></i> Account &amp; Security</div>
+            <div class="faq-group">
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        How do I change my password?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Go to your Profile, tap the menu icon, choose <strong>Edit Profile</strong>, then use
+                        "Change Password" under Account Settings.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        How do I request a Store Owner or Delivery Staff account?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        From your Profile, open the menu and go to the Management tab. You'll find options there to
+                        request Store Owner access or apply as Delivery Staff.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                        How do I delete my account?
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="faq-answer">
+                        Account deletion isn't self-service yet. Contact support below and we'll help you close your
+                        account and handle any pending orders first.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="no-results" id="noResults">
+            <i class="fas fa-circle-question" style="font-size: 32px; color: var(--border-color); margin-bottom: 10px; display:block;"></i>
+            No matching questions found. Try a different search term.
+        </div>
+
+        <div class="faq-category">
+            <div class="faq-category-title"><i class="fas fa-headset"></i> Still Need Help?</div>
+            <div class="faq-group">
+                <a href="mailto:support@realnest.example" class="contact-row">
+                    <span class="contact-row-left">
+                        <i class="fas fa-envelope leading"></i>
+                        <span>
+                            Contact Support
+                            <span class="contact-row-sub">Email our team about anything not covered above</span>
+                        </span>
+                    </span>
+                    <i class="fas fa-chevron-right chevron"></i>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <span>✨ Realnest — your local marketplace companion ✨</span>
+    </footer>
+
+    <script>
+            function toggleFaq(button) {
+                const item = button.closest(".faq-item");
+                const wasOpen = item.classList.contains("open");
+
+                document.querySelectorAll(".faq-item.open").forEach(openItem => {
+                    if (openItem !== item) {
+                        openItem.classList.remove("open");
+                    }
+                });
+
+                item.classList.toggle("open", !wasOpen);
+            }
+
+            function filterFaq() {
+                const query = document.getElementById("faqSearch").value.trim().toLowerCase();
+                const items = document.querySelectorAll(".faq-item");
+                let visibleCount = 0;
+
+                items.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    const matches = query === "" || text.includes(query);
+                    item.classList.toggle("hidden-by-search", !matches);
+                    if (matches) {
+                        visibleCount++;
+                    }
+                });
+
+                // The "Still Need Help?" category has no .faq-item rows (just a contact link),
+                // so it should always stay visible regardless of search.
+                document.querySelectorAll(".faq-category").forEach(category => {
+                    const rows = category.querySelectorAll(".faq-item");
+                    if (rows.length === 0) {
+                        category.style.display = "";
+                        return;
+                    }
+                    const visibleItems = category.querySelectorAll(".faq-item:not(.hidden-by-search)");
+                    category.style.display = visibleItems.length === 0 && query !== "" ? "none" : "";
+                });
+
+                document.getElementById("noResults").classList.toggle("visible", visibleCount === 0 && query !== "");
+            }
+    </script>
+
+</body>
+</html>
