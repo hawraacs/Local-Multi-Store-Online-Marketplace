@@ -110,6 +110,7 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<ICustomerAddressRepository, CustomerAddressRepository>();
 builder.Services.AddScoped<IDeliveryAreaRepository, DeliveryAreaRepository>();
 builder.Services.AddScoped<IDeliveryAssignmentRepository, DeliveryAssignmentRepository>();
+builder.Services.AddScoped<IDeliveryPaymentCollectionRepository, DeliveryPaymentCollectionRepository>();
 builder.Services.AddScoped<IDeliveryPersonRepository, DeliveryPersonRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
