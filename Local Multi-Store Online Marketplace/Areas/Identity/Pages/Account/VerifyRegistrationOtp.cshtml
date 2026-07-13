@@ -5,23 +5,253 @@
     Layout = null;
 }
 
-<h2>Verify Your Account</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-<p>Enter the OTP sent to your Email and Phone</p>
+    <title>Verify Account | realnest</title>
 
-<form method="post">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <div>
-        <label>Email OTP</label>
-        <input asp-for="EmailOtp" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap"
+          rel="stylesheet" />
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    <style>
+            :root {
+                --accent-color: #6d28d9;
+                --accent-hover: #5b21b6;
+                --accent-light: #f3effe;
+                --accent-steel: #4f46e5;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                --bg-color: #faf9fc;
+                --text-primary: #1e1b2e;
+                --text-muted: #6b6478;
+                --border-color: #e7e2f2;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html, body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                background: var(--bg-color);
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                color: var(--text-primary);
+            }
+
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 24px;
+            }
+
+            .otp-page-bg {
+                position: fixed;
+                inset: 0;
+                z-index: -1;
+                background: var(--accent-gradient);
+                opacity: 0.06;
+            }
+
+            .otp-card {
+                width: 100%;
+                max-width: 420px;
+                background: #ffffff;
+                border: 1px solid var(--border-color);
+                border-radius: 20px;
+                padding: 40px 36px;
+                box-shadow: 0 20px 45px rgba(67, 46, 110, 0.10);
+                text-align: center;
+                animation: fadeSlideUp 0.5s ease both;
+            }
+
+            @@keyframes fadeSlideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(16px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .otp-brand-mark {
+                width: 56px;
+                height: 56px;
+                margin: 0 auto 20px;
+                border-radius: 16px;
+                background: var(--accent-gradient);
+                color: #ffffff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                box-shadow: 0 10px 22px rgba(109, 40, 217, 0.28);
+            }
+
+            .otp-card h2 {
+                margin: 0 0 8px;
+                font-size: 22px;
+                font-weight: 800;
+                letter-spacing: -0.01em;
+            }
+
+            .otp-card > p {
+                margin: 0 0 28px;
+                font-size: 14px;
+                color: var(--text-muted);
+                line-height: 1.5;
+            }
+
+            .otp-field {
+                text-align: left;
+                margin-bottom: 22px;
+            }
+
+                .otp-field label {
+                    display: block;
+                    margin-bottom: 8px;
+                    font-size: 12px;
+                    font-weight: 800;
+                    color: #5f5870;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                }
+
+                .otp-field input {
+                    width: 100%;
+                    min-height: 52px;
+                    padding: 0 16px;
+                    border: 1px solid #ded8eb;
+                    border-radius: 12px;
+                    background: #fff;
+                    color: var(--text-primary);
+                    font-size: 20px;
+                    font-weight: 700;
+                    letter-spacing: 0.35em;
+                    text-align: center;
+                    outline: none;
+                    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                }
+
+                    .otp-field input::placeholder {
+                        letter-spacing: normal;
+                        font-weight: 500;
+                        font-size: 14px;
+                        color: #b4adc4;
+                    }
+
+                    .otp-field input:focus {
+                        border-color: var(--accent-color);
+                        box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.10);
+                    }
+
+            .otp-submit-button {
+                width: 100%;
+                min-height: 50px;
+                border: none;
+                border-radius: 12px;
+                background: var(--accent-gradient);
+                color: #ffffff;
+                font-size: 15px;
+                font-weight: 800;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                transition: transform 0.15s ease, box-shadow 0.2s ease;
+                box-shadow: 0 10px 22px rgba(109, 40, 217, 0.22);
+            }
+
+                .otp-submit-button:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 14px 28px rgba(109, 40, 217, 0.28);
+                }
+
+                .otp-submit-button:active {
+                    transform: translateY(0);
+                }
+
+            .otp-error-message {
+                margin-top: 18px;
+                padding: 12px 14px;
+                border-radius: 12px;
+                background: #fdecec;
+                border: 1px solid #f7c9c9;
+                color: #b3261e;
+                font-size: 13px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                text-align: left;
+            }
+
+            .otp-resend-row {
+                margin-top: 22px;
+                font-size: 13px;
+                color: var(--text-muted);
+            }
+
+                .otp-resend-row a {
+                    color: var(--accent-color);
+                    font-weight: 700;
+                    text-decoration: none;
+                }
+
+                    .otp-resend-row a:hover {
+                        text-decoration: underline;
+                    }
+    </style>
+</head>
+
+<body>
+    <div class="otp-page-bg"></div>
+
+    <div class="otp-card">
+        <div class="otp-brand-mark">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+
+        <h2>Verify Your Account</h2>
+        <p>Enter the OTP sent to your Email and Phone to finish setting up your realnest account.</p>
+
+        <form method="post">
+            <div class="otp-field">
+                <label for="EmailOtp">Email OTP</label>
+                <input asp-for="EmailOtp" id="EmailOtp" maxlength="6" placeholder="Enter 6-digit code" autocomplete="one-time-code" />
+            </div>
+
+            <button type="submit" class="otp-submit-button">
+                <i class="fa-solid fa-check"></i>
+                Verify
+            </button>
+        </form>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="otp-error-message">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                @Model.ErrorMessage
+            </div>
+        }
+
+        <div class="otp-resend-row">
+            Didn't get a code? <a href="#">Resend OTP</a>
+        </div>
     </div>
-
-
-    <button type="submit">Verify</button>
-
-</form>
-
-@if (!string.IsNullOrEmpty(Model.ErrorMessage))
-{
-    <p style="color:red">@Model.ErrorMessage</p>
-}
+</body>
+</html>
