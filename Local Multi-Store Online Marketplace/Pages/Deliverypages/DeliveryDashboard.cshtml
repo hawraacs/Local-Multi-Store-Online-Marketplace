@@ -768,6 +768,69 @@
             font-size: 16px;
         }
 
+        /* ================= PAYMENT / DETAILS ADDITIONS ================= */
+        .assignment-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0 4px;
+        }
+
+        .meta-chip {
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--ink-600);
+        }
+
+        .badge-paid {
+            background: var(--success-bg);
+            color: #166534;
+        }
+
+        .badge-pending-pay {
+            background: var(--warning-bg);
+            color: #92400e;
+        }
+
+        .collect-btn {
+            background: var(--warning);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 11px 18px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all .15s ease;
+        }
+
+            .collect-btn:hover {
+                filter: brightness(0.95);
+            }
+
+        .details-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all .15s ease;
+        }
+
+            .details-link:hover {
+                border-color: var(--primary);
+                background: var(--primary-light);
+            }
+
         /* ================= DELIVERED MODAL ================= */
         .delivery-modal-overlay {
             display: none;
@@ -1137,8 +1200,38 @@
                                     <div class="assignment-details">
 
                                         <div class="assignment-detail-item">
+                                            <span>Customer</span>
+                                            <strong>@item.CustomerName</strong>
+                                        </div>
+
+                                        <div class="assignment-detail-item">
+                                            <span>Phone</span>
+                                            <strong>@item.CustomerPhone</strong>
+                                        </div>
+
+                                        <div class="assignment-detail-item">
                                             <span>Address</span>
                                             <strong>@item.CustomerAddress</strong>
+                                        </div>
+
+                                        <div class="assignment-detail-item">
+                                            <span>Store</span>
+                                            <strong>@(string.IsNullOrWhiteSpace(item.StoreNames) ? "N/A" : item.StoreNames)</strong>
+                                        </div>
+
+                                        <div class="assignment-detail-item">
+                                            <span>Products</span>
+                                            <strong>@(string.IsNullOrWhiteSpace(item.ProductSummary) ? "N/A" : item.ProductSummary)</strong>
+                                        </div>
+
+                                        <div class="assignment-detail-item">
+                                            <span>Order Date</span>
+                                            <strong>@item.OrderDate.ToString("dd MMM yyyy")</strong>
+                                        </div>
+
+                                        <div class="assignment-detail-item">
+                                            <span>Total Amount</span>
+                                            <strong>$@item.TotalAmount.ToString("0.00")</strong>
                                         </div>
 
                                         <div class="assignment-detail-item">
@@ -1150,7 +1243,19 @@
 
                                     </div>
 
+                                    <div class="assignment-meta-row">
+                                        <span class="meta-chip">@item.PaymentMethod</span>
+                                        <span class="meta-chip @(item.PaymentStatus.Equals("Paid", StringComparison.OrdinalIgnoreCase) ? "badge-paid" : "badge-pending-pay")">
+                                            @item.PaymentStatus
+                                        </span>
+                                    </div>
+
                                     <div class="actions">
+
+                                        <a class="details-link"
+                                           href="/DeliveryOrderDetails?assignmentId=@item.AssignmentID">
+                                            View Details
+                                        </a>
 
                                         @if (item.AssignmentStatus == "Assigned")
                                         {
@@ -1170,23 +1275,42 @@
                                         }
                                         else if (item.AssignmentStatus == "OutForDelivery")
                                         {
-                                            <form method="post"
-                                                  asp-page-handler="MarkDelivered"
-                                                  id="markDeliveredForm_@item.AssignmentID">
+                                            @if (item.NeedsCashCollection)
+                                            {
+                                                <form method="post"
+                                                      asp-page-handler="ConfirmCashCollection">
 
-                                                <input type="hidden"
-                                                       name="assignmentId"
-                                                       value="@item.AssignmentID" />
+                                                    <input type="hidden"
+                                                           name="assignmentId"
+                                                           value="@item.AssignmentID" />
 
-                                                <button type="button"
-                                                        class="done-btn"
-                                                        onclick="openDeliveredModal(
-                                                            'markDeliveredForm_@item.AssignmentID',
-                                                            '@item.OrderNumber')">
-                                                    Mark Delivered
-                                                </button>
+                                                    <button type="submit"
+                                                            class="collect-btn">
+                                                        Confirm Cash Collection ($@item.TotalAmount.ToString("0.00"))
+                                                    </button>
 
-                                            </form>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form method="post"
+                                                      asp-page-handler="MarkDelivered"
+                                                      id="markDeliveredForm_@item.AssignmentID">
+
+                                                    <input type="hidden"
+                                                           name="assignmentId"
+                                                           value="@item.AssignmentID" />
+
+                                                    <button type="button"
+                                                            class="done-btn"
+                                                            onclick="openDeliveredModal(
+                                                                'markDeliveredForm_@item.AssignmentID',
+                                                                '@item.OrderNumber')">
+                                                        Mark Delivered
+                                                    </button>
+
+                                                </form>
+                                            }
                                         }
 
                                     </div>
