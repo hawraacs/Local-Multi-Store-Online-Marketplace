@@ -14,6 +14,8 @@ namespace Multi_Store.Services.Managers
         private readonly IDeliveryPersonRepository _deliveryPersonRepository;
         private readonly IDeliveryAssignmentRepository _assignmentRepository;
         private readonly IOrderRepository _orderRepository;
+        private readonly IPaymentRepository _paymentRepository;
+        private readonly IDeliveryPaymentCollectionRepository _collectionRepository;
         private readonly UserManager<User> _userManager;
 
         private const string DefaultDeliveryPassword = "Delivery@12345";
@@ -22,11 +24,15 @@ namespace Multi_Store.Services.Managers
             IDeliveryPersonRepository deliveryPersonRepository,
             IDeliveryAssignmentRepository assignmentRepository,
             IOrderRepository orderRepository,
+            IPaymentRepository paymentRepository,
+            IDeliveryPaymentCollectionRepository collectionRepository,
             UserManager<User> userManager)
         {
             _deliveryPersonRepository = deliveryPersonRepository;
             _assignmentRepository = assignmentRepository;
             _orderRepository = orderRepository;
+            _paymentRepository = paymentRepository;
+            _collectionRepository = collectionRepository;
             _userManager = userManager;
         }
 
@@ -824,6 +830,117 @@ namespace Multi_Store.Services.Managers
         }
 
         // =====================================================
+        // CONFIRM CASH COLLECTION (Cash On Delivery)
+        //
+        // Reuses the EXISTING Payment record/Order — never creates
+        // a second payment system. Also writes an audit row so we
+        // know which delivery person collected the cash and when.
+        // =====================================================
+        public async Task<decimal> ConfirmCashCollectionAsync(
+            int assignmentId,
+            int deliveryPersonId)
+        {
+            if (assignmentId <= 0)
+            {
+                throw new InvalidOperationException("Invalid assignment.");
+            }
+
+            var assignment =
+                await _assignmentRepository.GetByIdAsync(assignmentId);
+
+            if (assignment == null)
+            {
+                throw new InvalidOperationException("Assignment not found.");
+            }
+
+            if (assignment.DeliveryPersonID != deliveryPersonId)
+            {
+                throw new InvalidOperationException(
+                    "This order is not assigned to you.");
+            }
+
+            var order =
+                await _orderRepository.GetOrderDetailsAsync(assignment.OrderID);
+
+            if (order == null)
+            {
+                throw new InvalidOperationException("Order not found.");
+            }
+
+            var paymentMethod = order.PaymentMethod?.Trim() ?? string.Empty;
+
+            var isCashOnDelivery =
+                paymentMethod.Equals("Cash On Delivery", StringComparison.OrdinalIgnoreCase) ||
+                paymentMethod.Equals("COD", StringComparison.OrdinalIgnoreCase);
+
+            if (!isCashOnDelivery)
+            {
+                throw new InvalidOperationException(
+                    "Cash collection only applies to Cash On Delivery orders.");
+            }
+
+            if (StatusEquals(order.PaymentStatus, "Paid"))
+            {
+                throw new InvalidOperationException(
+                    "This order's payment was already collected.");
+            }
+
+            var existingCollection =
+                await _collectionRepository.GetByOrderAsync(order.OrderID);
+
+            if (existingCollection != null)
+            {
+                throw new InvalidOperationException(
+                    "Cash for this order was already collected.");
+            }
+
+            // Update the existing Payment record (never duplicate it).
+            var payment =
+                await _paymentRepository.GetLatestPaymentAsync(order.OrderID);
+
+            if (payment != null)
+            {
+                payment.Status = "Paid";
+                payment.PaymentDate = DateTime.UtcNow;
+
+                payment.PaymentGateway =
+                    string.IsNullOrWhiteSpace(payment.PaymentGateway)
+                        ? "Cash"
+                        : payment.PaymentGateway;
+
+                await _paymentRepository.UpdateAsync(payment);
+            }
+            else
+            {
+                await _paymentRepository.AddAsync(new Payment
+                {
+                    OrderID = order.OrderID,
+                    PaymentMethod = "Cash On Delivery",
+                    PaymentGateway = "Cash",
+                    GatewayTransactionID = null,
+                    Amount = order.TotalAmount,
+                    PaymentDate = DateTime.UtcNow,
+                    Status = "Paid",
+                    RefundAmount = null,
+                    RefundDate = null
+                });
+            }
+
+            order.PaymentStatus = "Paid";
+            await _orderRepository.UpdateAsync(order);
+
+            await _collectionRepository.AddAsync(new DeliveryPaymentCollection
+            {
+                OrderID = order.OrderID,
+                DeliveryPersonID = deliveryPersonId,
+                CollectedAmount = order.TotalAmount,
+                CollectionDate = DateTime.UtcNow
+            });
+
+            return order.TotalAmount;
+        }
+
+        // =====================================================
         // HELPERS
         // =====================================================
         private async Task<DeliveryPerson>
@@ -892,4 +1009,3 @@ namespace Multi_Store.Services.Managers
         }
     }
 }
-
