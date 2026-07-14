@@ -3,86 +3,134 @@
 @{
     ViewData["Title"] = "Send Promotion";
     Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
-
 }
 
-<style>
-    :root {
-        /* -------- Brand colors (Purple / Indigo) -------- */
-        --accent-color: #6d28d9;
-        --accent-hover: #5b21b6;
-        --accent-light: #f3effe;
-        --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-        /* -------- Neutral palette -------- */
-        --bg-color: #f8f7fc;
-        --card-bg: #ffffff;
-        --text-primary: #1e1b2e;
-        --text-secondary: #6b6478;
-        --text-muted: #9691a4;
-        --border-color: #ece8f6;
-        /* -------- Semantic -------- */
-        --success-color: #10b981;
-        --error-color: #dc2626;
-        --warning-color: #f59e0b;
-        /* -------- Shadows -------- */
-        --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
-        --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
-        --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.18);
-    }
+@section Styles {
+    <style>
+        /* ============================================================
+           ROOT VARIABLES — consistent brand palette
+           ============================================================ */
+        :root {
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            --bg-color: #f8f7fc;
+            --card-bg: #ffffff;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            --text-muted: #9691a4;
+            --border-color: #ece8f6;
+            --success-color: #10b981;
+            --error-color: #dc2626;
+            --warning-color: #f59e0b;
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+            --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.18);
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+        }
 
-    .promotion-page {
-        background: var(--bg-color);
-        min-height: calc(100vh - 120px);
-        padding: 35px 0 60px;
-    }
+        .promotion-page {
+            background: var(--bg-color);
+            padding: 32px 0 60px;
+        }
 
-    .promotion-wrapper {
-        max-width: 1050px;
-        margin: auto;
-    }
+        .promotion-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
 
-    .page-heading {
-        margin-bottom: 24px;
-    }
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .page-heading {
+            margin-bottom: 28px;
+        }
 
         .page-heading h2 {
             font-size: 28px;
             font-weight: 800;
             color: var(--text-primary);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             letter-spacing: -0.4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-heading h2 i {
+            color: var(--accent-color);
         }
 
         .page-heading p {
             color: var(--text-secondary);
             margin: 0;
-            font-size: 14px;
+            font-size: 15px;
         }
 
-    .promotion-grid {
-        display: grid;
-        grid-template-columns: 1.5fr 0.9fr;
-        gap: 24px;
-        align-items: start;
-    }
+        /* ============================================================
+           ALERT
+           ============================================================ */
+        .alert {
+            border-radius: var(--radius-md);
+            padding: 14px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid transparent;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    .promo-card {
-        background: var(--card-bg);
-        border-radius: 22px;
-        border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-md);
-        overflow: hidden;
-    }
+        .alert-danger {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
 
-    .promo-card-header {
-        padding: 24px 26px;
-        background: var(--accent-gradient);
-        color: white;
-    }
+        .alert-danger i {
+            font-size: 18px;
+        }
+
+        /* ============================================================
+           GRID
+           ============================================================ */
+        .promotion-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 0.9fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        /* ============================================================
+           MAIN CARD
+           ============================================================ */
+        .promo-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .promo-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .promo-card-header {
+            padding: 22px 28px;
+            background: var(--accent-gradient);
+            color: white;
+        }
 
         .promo-card-header h3 {
-            margin: 0 0 7px;
-            font-size: 21px;
+            margin: 0 0 4px;
+            font-size: 20px;
             font-weight: 800;
         }
 
@@ -92,149 +140,227 @@
             font-size: 13px;
         }
 
-    .promo-card-body {
-        padding: 26px;
-    }
+        .promo-card-body {
+            padding: 28px;
+        }
 
-    .form-section {
-        margin-bottom: 28px;
-    }
+        /* ============================================================
+           FORM SECTIONS
+           ============================================================ */
+        .form-section {
+            margin-bottom: 30px;
+        }
 
-    .section-title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 16px;
-        font-size: 16px;
-        font-weight: 800;
-        color: var(--text-primary);
-    }
+        .form-section:last-of-type {
+            margin-bottom: 0;
+        }
 
-    .section-badge {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        background: var(--accent-light);
-        color: var(--accent-color);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 800;
-        font-size: 13px;
-    }
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
 
-    .form-label {
-        color: var(--text-primary);
-        font-weight: 700;
-        font-size: 13px;
-        margin-bottom: 7px;
-    }
+        .section-badge {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--accent-light);
+            color: var(--accent-color);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
 
-    .form-control,
-    .form-select {
-        border-radius: 12px;
-        border: 1.5px solid var(--border-color);
-        padding: 12px 15px;
-        font-size: 14px;
-        background: var(--bg-color);
-        color: var(--text-primary);
-        box-shadow: none;
-        transition: all 0.2s ease;
-    }
+        .section-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 28px 0;
+        }
+
+        /* ============================================================
+           FORM FIELDS
+           ============================================================ */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .form-label .required {
+            color: var(--error-color);
+            margin-left: 2px;
+        }
+
+        .form-control,
+        .form-select {
+            width: 100%;
+            border-radius: var(--radius-md);
+            border: 1.5px solid var(--border-color);
+            padding: 11px 15px;
+            font-size: 14px;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            transition: var(--transition);
+            font-family: inherit;
+        }
 
         .form-control:focus,
         .form-select:focus {
+            outline: none;
             border-color: var(--accent-color);
             background: var(--card-bg);
             box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.10);
         }
 
-    textarea.form-control {
-        min-height: 135px;
-        resize: vertical;
-    }
+        .form-control::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
 
-    .help-text {
-        font-size: 12px;
-        color: var(--text-muted);
-        margin-top: 6px;
-    }
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
 
-    .coupon-box {
-        border: 1px solid #e0d4fb;
-        background: var(--accent-light);
-        border-radius: 18px;
-        padding: 18px;
-        margin-top: 8px;
-    }
+        .help-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
 
-    .coupon-toggle {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 18px;
-    }
+        .text-danger {
+            color: var(--error-color);
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 4px;
+            display: block;
+        }
 
-        .coupon-toggle input {
-            margin-top: 5px;
-            transform: scale(1.15);
+        /* ============================================================
+           COUPON BOX
+           ============================================================ */
+        .coupon-box {
+            border: 1.5px solid #e0d4fb;
+            background: var(--accent-light);
+            border-radius: var(--radius-md);
+            padding: 20px 22px;
+            margin-top: 4px;
+            transition: var(--transition);
+        }
+
+        .coupon-box:hover {
+            border-color: var(--accent-color);
+        }
+
+        .coupon-toggle {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(109, 40, 217, 0.12);
+        }
+
+        .coupon-toggle input[type="checkbox"] {
+            margin-top: 3px;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
             accent-color: var(--accent-color);
+            cursor: pointer;
         }
 
         .coupon-toggle label {
             font-weight: 800;
             color: var(--text-primary);
-            margin-bottom: 3px;
+            margin-bottom: 2px;
+            cursor: pointer;
         }
 
         .coupon-toggle small {
             display: block;
             color: var(--text-secondary);
             font-size: 12px;
+            font-weight: 500;
         }
 
-    .coupon-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-    }
+        .coupon-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 4px;
+        }
 
-    .action-row {
-        display: flex;
-        gap: 12px;
-        margin-top: 25px;
-    }
+        /* ============================================================
+           ACTION BUTTONS
+           ============================================================ */
+        .action-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
 
-    .send-btn {
-        background: var(--accent-gradient);
-        color: white;
-        border: none;
-        padding: 13px 24px;
-        border-radius: 30px;
-        font-weight: 700;
-        box-shadow: 0 10px 22px rgba(109, 40, 217, 0.25);
-        transition: 0.25s ease;
-    }
+        .send-btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 13px 32px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 15px;
+            box-shadow: 0 8px 22px rgba(109, 40, 217, 0.25);
+            transition: var(--transition);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
 
         .send-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 14px 28px rgba(109, 40, 217, 0.32);
+            box-shadow: 0 12px 32px rgba(109, 40, 217, 0.35);
             color: white;
         }
 
-    .back-btn {
-        background: var(--card-bg);
-        border: 1.5px solid var(--border-color);
-        color: var(--text-secondary);
-        padding: 13px 22px;
-        border-radius: 30px;
-        font-weight: 700;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.25s ease;
-    }
+        .send-btn:active {
+            transform: translateY(0);
+        }
+
+        .back-btn {
+            background: var(--card-bg);
+            border: 1.5px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 13px 24px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
 
         .back-btn:hover {
             color: var(--accent-color);
@@ -242,126 +368,198 @@
             border-color: var(--accent-color);
         }
 
-    .side-card {
-        background: var(--card-bg);
-        border-radius: 22px;
-        border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-md);
-        padding: 24px;
-        position: sticky;
-        top: 25px;
-    }
+        /* ============================================================
+           SIDE CARD (Preview & Tips)
+           ============================================================ */
+        .side-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            padding: 24px 26px;
+            position: sticky;
+            top: 24px;
+            transition: var(--transition);
+        }
+
+        .side-card:hover {
+            box-shadow: var(--shadow-md);
+        }
 
         .side-card h4 {
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 800;
             color: var(--text-primary);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .side-card h4 i {
+            color: var(--accent-color);
+        }
+
+        .preview-box {
+            border: 1.5px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            background: var(--bg-color);
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .preview-box:hover {
+            border-color: var(--accent-color);
+            background: var(--accent-light);
+        }
+
+        .preview-title {
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+
+        .preview-title .preview-badge {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--accent-gradient);
+            color: white;
+            padding: 1px 10px;
+            border-radius: 20px;
+            margin-left: 8px;
+            display: inline-block;
+        }
+
+        .preview-message {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.6;
             margin-bottom: 12px;
         }
 
-    .preview-box {
-        border: 1px dashed var(--border-color);
-        border-radius: 16px;
-        padding: 16px;
-        background: var(--bg-color);
-        margin-bottom: 18px;
-    }
-
-    .preview-title {
-        font-weight: 800;
-        color: var(--text-primary);
-        margin-bottom: 6px;
-    }
-
-    .preview-message {
-        color: var(--text-secondary);
-        font-size: 13px;
-        line-height: 1.5;
-        margin-bottom: 12px;
-    }
-
-    .preview-coupon {
-        background: #ecfdf5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
-        padding: 9px 12px;
-        border-radius: 12px;
-        font-size: 13px;
-        font-weight: 800;
-    }
-
-    .tips-list {
-        padding-left: 18px;
-        margin: 0;
-        color: var(--text-secondary);
-        font-size: 13px;
-        line-height: 1.7;
-    }
-
-    .alert {
-        border-radius: 14px;
-        font-weight: 600;
-        padding: 13px 18px;
-        font-size: 14px;
-    }
-
-    .alert-danger {
-        background: #fef2f2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-    }
-
-    @@media (max-width: 900px) {
-        .promotion-grid {
-            grid-template-columns: 1fr;
+        .preview-coupon {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 800;
+            display: inline-block;
+            font-family: monospace;
+            letter-spacing: 0.5px;
         }
 
-        .side-card {
-            position: static;
-        }
-    }
-
-    @@media (max-width: 600px) {
-        .promotion-page {
-            padding: 22px 12px;
+        .tips-list {
+            padding-left: 20px;
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.8;
         }
 
-        .promo-card-body {
-            padding: 20px;
+        .tips-list li::marker {
+            color: var(--accent-color);
         }
 
-        .coupon-grid {
-            grid-template-columns: 1fr;
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @@media (max-width: 992px) {
+            .promotion-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .side-card {
+                position: static;
+            }
         }
 
-        .action-row {
-            flex-direction: column;
+        @@media (max-width: 768px) {
+            .promotion-page {
+                padding: 20px 0 40px;
+            }
+
+            .promotion-wrapper {
+                padding: 0 16px;
+            }
+
+            .page-heading h2 {
+                font-size: 24px;
+            }
+
+            .promo-card-header {
+                padding: 18px 20px;
+            }
+
+            .promo-card-body {
+                padding: 20px;
+            }
+
+            .coupon-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .action-row {
+                flex-direction: column;
+            }
+
+            .send-btn,
+            .back-btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
 
-        .send-btn,
-        .back-btn {
-            width: 100%;
+        @@media (max-width: 480px) {
+            .coupon-box {
+                padding: 16px;
+            }
+
+            .coupon-toggle {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .coupon-toggle input {
+                margin-top: 0;
+            }
+
+            .section-title {
+                font-size: 14px;
+            }
         }
-    }
-</style>
+    </style>
+}
 
 <div class="promotion-page">
     <div class="promotion-wrapper">
 
+        <!-- ========== HEADER ========== -->
         <div class="page-heading">
-            <h2>Send Promotion</h2>
-            <p>Create a professional promotional message and optionally generate a usable coupon for customers.</p>
+            <h2><i class="fas fa-bullhorn"></i> Send Promotion</h2>
+            <p>Create a professional promotional message and optionally generate a coupon for your customers.</p>
         </div>
 
+        <!-- ========== ERROR ALERT ========== -->
         @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
         {
             <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
                 @Model.ErrorMessage
             </div>
         }
 
+        <!-- ========== GRID ========== -->
         <div class="promotion-grid">
 
+            <!-- ====== MAIN FORM ====== -->
             <div class="promo-card">
                 <div class="promo-card-header">
                     <h3>Promotion Details</h3>
@@ -371,33 +569,37 @@
                 <div class="promo-card-body">
                     <form method="post">
 
+                        <!-- Section 1: Main Message -->
                         <div class="form-section">
                             <div class="section-title">
                                 <span class="section-badge">1</span>
                                 Main Message
                             </div>
 
-                            <div class="mb-3">
-                                <label asp-for="Promotion.Title" class="form-label">Promotion Title</label>
+                            <div class="form-group">
+                                <label asp-for="Promotion.Title" class="form-label">
+                                    Promotion Title <span class="required">*</span>
+                                </label>
                                 <input asp-for="Promotion.Title"
                                        class="form-control"
-                                       placeholder="Example: Summer Offer, Weekend Deal, Flash Sale" />
+                                       placeholder="e.g. Summer Offer, Weekend Deal, Flash Sale" />
                                 <span asp-validation-for="Promotion.Title" class="text-danger"></span>
                             </div>
 
-                            <div class="mb-3">
-                                <label asp-for="Promotion.Message" class="form-label">Promotion Message</label>
+                            <div class="form-group">
+                                <label asp-for="Promotion.Message" class="form-label">
+                                    Promotion Message <span class="required">*</span>
+                                </label>
                                 <textarea asp-for="Promotion.Message"
                                           class="form-control"
-                                          placeholder="Example: Get 20% off this week. Use your coupon before checkout."></textarea>
+                                          placeholder="e.g. Get 20% off this week. Use your coupon before checkout."></textarea>
                                 <span asp-validation-for="Promotion.Message" class="text-danger"></span>
-                                <div class="help-text">
-                                    Choose who should receive this promotion.
-                                </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label asp-for="Promotion.AudienceType" class="form-label">Audience</label>
+                            <div class="form-group">
+                                <label asp-for="Promotion.AudienceType" class="form-label">
+                                    Audience <span class="required">*</span>
+                                </label>
                                 <select asp-for="Promotion.AudienceType" class="form-select">
                                     <option value="AllCustomers">All Customers</option>
                                     <option value="PreviousCustomers">Customers who ordered from my store</option>
@@ -405,11 +607,14 @@
                                 </select>
                                 <span asp-validation-for="Promotion.AudienceType" class="text-danger"></span>
                                 <div class="help-text">
-                                    This promotion will be sent to all current customers.
+                                    This promotion will be sent to all customers in the selected audience.
                                 </div>
                             </div>
                         </div>
 
+                        <div class="section-divider"></div>
+
+                        <!-- Section 2: Coupon Settings -->
                         <div class="form-section">
                             <div class="section-title">
                                 <span class="section-badge">2</span>
@@ -417,89 +622,97 @@
                             </div>
 
                             <div class="coupon-box">
-
                                 <div class="coupon-toggle">
-                                    <input asp-for="Promotion.CreateCoupon" class="form-check-input" />
+                                    <input asp-for="Promotion.CreateCoupon" class="form-check-input" type="checkbox" />
                                     <div>
                                         <label asp-for="Promotion.CreateCoupon" class="form-check-label">
-                                            Create usable coupon for this promotion
+                                            Create a coupon for this promotion
                                         </label>
                                         <small>
-                                            Check this if customers should use this code in the cart for a real discount.
+                                            When enabled, customers will receive a unique coupon code they can use at checkout.
                                         </small>
                                     </div>
                                 </div>
 
-                                <div class="mb-3">
-                                    <label asp-for="Promotion.CouponCode" class="form-label">Coupon Code Optional</label>
+                                <div class="form-group">
+                                    <label asp-for="Promotion.CouponCode" class="form-label">Coupon Code</label>
                                     <input asp-for="Promotion.CouponCode"
                                            class="form-control"
-                                           placeholder="Example: SUMMER20, WELCOME10" />
+                                           placeholder="e.g. SUMMER20, WELCOME10" />
                                     <span asp-validation-for="Promotion.CouponCode" class="text-danger"></span>
                                     <div class="help-text">
-                                        If coupon creation is checked, this code will be saved in the Coupons table.
+                                        If left blank, a random code will be generated automatically.
                                     </div>
                                 </div>
 
                                 <div class="coupon-grid">
-                                    <div>
-                                        <label asp-for="Promotion.DiscountType" class="form-label">Discount Type</label>
+                                    <div class="form-group">
+                                        <label asp-for="Promotion.DiscountType" class="form-label">
+                                            Discount Type <span class="required">*</span>
+                                        </label>
                                         <select asp-for="Promotion.DiscountType" class="form-select">
-                                            <option value="Percentage">Percentage</option>
-                                            <option value="Fixed">Fixed Amount</option>
+                                            <option value="Percentage">Percentage (%)</option>
+                                            <option value="Fixed">Fixed Amount ($)</option>
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label asp-for="Promotion.DiscountValue" class="form-label">Discount Value</label>
+                                    <div class="form-group">
+                                        <label asp-for="Promotion.DiscountValue" class="form-label">
+                                            Discount Value <span class="required">*</span>
+                                        </label>
                                         <input asp-for="Promotion.DiscountValue"
                                                class="form-control"
-                                               placeholder="Example: 20" />
+                                               placeholder="e.g. 20" />
                                         <span asp-validation-for="Promotion.DiscountValue" class="text-danger"></span>
                                     </div>
 
-                                    <div>
-                                        <label asp-for="Promotion.MinimumOrderAmount" class="form-label">Minimum Order Optional</label>
+                                    <div class="form-group">
+                                        <label asp-for="Promotion.MinimumOrderAmount" class="form-label">Minimum Order</label>
                                         <input asp-for="Promotion.MinimumOrderAmount"
                                                class="form-control"
-                                               placeholder="Example: 50" />
+                                               placeholder="e.g. 50" />
                                         <span asp-validation-for="Promotion.MinimumOrderAmount" class="text-danger"></span>
+                                        <div class="help-text">Optional: Minimum cart total to use this coupon.</div>
                                     </div>
 
-                                    <div>
-                                        <label asp-for="Promotion.MaximumDiscountAmount" class="form-label">Maximum Discount Optional</label>
+                                    <div class="form-group">
+                                        <label asp-for="Promotion.MaximumDiscountAmount" class="form-label">Max Discount</label>
                                         <input asp-for="Promotion.MaximumDiscountAmount"
                                                class="form-control"
-                                               placeholder="Example: 50" />
+                                               placeholder="e.g. 50" />
                                         <span asp-validation-for="Promotion.MaximumDiscountAmount" class="text-danger"></span>
+                                        <div class="help-text">Optional: Maximum discount amount in dollars.</div>
                                     </div>
 
-                                    <div>
+                                    <div class="form-group">
                                         <label asp-for="Promotion.CouponEndDate" class="form-label">Coupon End Date</label>
                                         <input asp-for="Promotion.CouponEndDate"
                                                type="date"
                                                class="form-control" />
                                         <span asp-validation-for="Promotion.CouponEndDate" class="text-danger"></span>
+                                        <div class="help-text">Optional: When the coupon expires.</div>
                                     </div>
 
-                                    <div>
+                                    <div class="form-group">
                                         <label asp-for="Promotion.UsageLimit" class="form-label">Usage Limit</label>
                                         <input asp-for="Promotion.UsageLimit"
                                                class="form-control"
-                                               placeholder="Example: 100" />
+                                               placeholder="e.g. 100" />
                                         <span asp-validation-for="Promotion.UsageLimit" class="text-danger"></span>
+                                        <div class="help-text">Optional: Maximum number of times this coupon can be used.</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- ====== ACTIONS ====== -->
                         <div class="action-row">
                             <button type="submit" class="send-btn">
-                                Send Promotion
+                                <i class="fas fa-paper-plane"></i> Send Promotion
                             </button>
 
                             <a asp-page="/StoreOwner/Promotions/Index" class="back-btn">
-                                Back to Promotions
+                                <i class="fas fa-arrow-left"></i> Back to Promotions
                             </a>
                         </div>
 
@@ -507,30 +720,32 @@
                 </div>
             </div>
 
+            <!-- ====== SIDE CARD (Preview & Tips) ====== -->
             <div class="side-card">
-                <h4>Customer Preview</h4>
+                <h4><i class="fas fa-eye"></i> Customer Preview</h4>
 
-                <div class="preview-box">
+                <div class="preview-box" id="previewBox">
                     <div class="preview-title">
-                        Example: Summer Offer
+                        <span id="previewTitle">Your Promotion Title</span>
+                        <span class="preview-badge">Preview</span>
                     </div>
 
-                    <div class="preview-message">
-                        Get 20% off this week. Use your coupon code before checkout.
+                    <div class="preview-message" id="previewMessage">
+                        Your promotion message will appear here. Fill in the form to see a live preview.
                     </div>
 
-                    <div class="preview-coupon">
-                        Coupon Code: SUMMER20
+                    <div class="preview-coupon" id="previewCoupon">
+                        Coupon Code: YOURCODE
                     </div>
                 </div>
 
-                <h4>Smart Tips</h4>
+                <h4><i class="fas fa-lightbulb"></i> Smart Tips</h4>
                 <ul class="tips-list">
-                    <li>Use short titles like “Weekend Offer”.</li>
-                    <li>Make the discount clear in the message.</li>
-                    <li>Use simple coupon codes like SUMMER20.</li>
-                    <li>Set an end date so the coupon does not stay active forever.</li>
-                    <li>Use maximum discount to protect your store profit.</li>
+                    <li>Use short, catchy titles like "Weekend Offer".</li>
+                    <li>Make the discount value clear in the message.</li>
+                    <li>Use simple, memorable coupon codes.</li>
+                    <li>Set an end date to create urgency.</li>
+                    <li>Use max discount to protect your margins.</li>
                 </ul>
             </div>
 
@@ -540,4 +755,34 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <!-- Live preview update -->
+    <script>
+        (function() {
+            const titleInput = document.querySelector('#Promotion_Title');
+            const messageInput = document.querySelector('#Promotion_Message');
+            const codeInput = document.querySelector('#Promotion_CouponCode');
+
+            const previewTitle = document.getElementById('previewTitle');
+            const previewMessage = document.getElementById('previewMessage');
+            const previewCoupon = document.getElementById('previewCoupon');
+
+            function updatePreview() {
+                const title = titleInput?.value?.trim() || 'Your Promotion Title';
+                const message = messageInput?.value?.trim() || 'Your promotion message will appear here. Fill in the form to see a live preview.';
+                const code = codeInput?.value?.trim() || 'YOURCODE';
+
+                if (previewTitle) previewTitle.textContent = title;
+                if (previewMessage) previewMessage.textContent = message;
+                if (previewCoupon) previewCoupon.textContent = `Coupon Code: ${code}`;
+            }
+
+            if (titleInput) titleInput.addEventListener('input', updatePreview);
+            if (messageInput) messageInput.addEventListener('input', updatePreview);
+            if (codeInput) codeInput.addEventListener('input', updatePreview);
+
+            // Initial update
+            updatePreview();
+        })();
+    </script>
 }
