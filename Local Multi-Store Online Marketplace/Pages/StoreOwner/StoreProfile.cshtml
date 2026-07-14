@@ -7,93 +7,268 @@
 
 @section Styles {
     <style>
+        /* ============================================================
+           ROOT VARIABLES — consistent brand palette
+           ============================================================ */
         :root {
-            /* -------- Brand colors (Purple / Indigo) -------- */
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
             --accent-light: #f3effe;
-            --accent-steel: #4f46e5;
             --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-            /* -------- Neutral palette -------- */
             --bg-color: #f8f7fc;
             --card-bg: #ffffff;
             --text-primary: #1e1b2e;
             --text-secondary: #6b6478;
             --text-muted: #9691a4;
             --border-color: #ece8f6;
-            --input-bg: #f8f7fc;
-            /* -------- Semantic -------- */
             --success-color: #10b981;
             --error-color: #dc2626;
             --warning-color: #f59e0b;
-            /* -------- Shadows -------- */
             --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
             --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
             --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.18);
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .profile-container {
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ============================================================
+           PAGE WRAPPER
+           ============================================================ */
+        .page-wrapper {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 32px 20px 60px;
+        }
+
+        /* ============================================================
+           BREADCRUMB
+           ============================================================ */
+        .breadcrumb-wrap {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 22px;
-            padding: 36px 40px;
-            box-shadow: var(--shadow-md);
-            max-width: 950px;
-            margin: 0 auto;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
         }
 
-            .profile-container h2 {
-                font-size: 24px;
-                font-weight: 800;
-                color: var(--text-primary);
-                letter-spacing: -0.4px;
-            }
+        .breadcrumb {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-size: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            list-style: none;
+        }
 
-        .page-subtitle {
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "/";
+            padding: 0 8px;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb-item a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .breadcrumb-item a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        .breadcrumb-item.active {
             color: var(--text-secondary);
-            margin-bottom: 26px;
-            font-size: 14px;
-            line-height: 1.6;
+            font-weight: 600;
         }
 
-        .message {
-            padding: 14px 18px;
-            border-radius: 14px;
-            margin-bottom: 20px;
-            font-weight: 700;
-            font-size: 14px;
+        /* ============================================================
+           HERO BANNER
+           ============================================================ */
+        .profile-hero {
+            background: var(--accent-gradient);
+            border-radius: var(--radius-lg);
+            color: #fff;
+            padding: 28px 32px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-md), 0 8px 32px rgba(109, 40, 217, 0.20);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-hero::after {
+            content: '';
+            position: absolute;
+            top: -40%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .profile-hero h2 {
+            margin: 0 0 4px;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            position: relative;
+            z-index: 1;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
+        .profile-hero h2 i {
+            font-size: 26px;
+            opacity: 0.9;
+        }
+
+        .profile-hero p {
+            margin: 0;
+            opacity: 0.92;
+            font-size: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-hero .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px 20px;
+            margin-top: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.18);
+            padding: 5px 16px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 13px;
+            backdrop-filter: blur(4px);
+        }
+
+        .hero-badge i {
+            font-size: 13px;
+        }
+
+        .hero-badge .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+
+        .hero-badge .status-dot.active {
+            background: #6ee7b7;
+        }
+
+        .hero-badge .status-dot.inactive {
+            background: #fca5a5;
+        }
+
+        .hero-badge .status-dot.pending {
+            background: #fcd34d;
+        }
+
+        /* ============================================================
+           PROFILE CARD
+           ============================================================ */
+        .profile-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 32px 36px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .profile-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ============================================================
+           ALERTS
+           ============================================================ */
+        .message {
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid transparent;
+        }
+
         .success-message {
             background: #ecfdf5;
             color: #065f46;
-            border: 1px solid #a7f3d0;
+            border-color: #a7f3d0;
+        }
+
+        .success-message i {
+            color: var(--success-color);
         }
 
         .error-message {
             background: #fef2f2;
             color: #991b1b;
-            border: 1px solid #fecaca;
+            border-color: #fecaca;
         }
 
+        .error-message i {
+            color: var(--error-color);
+        }
+
+        /* ============================================================
+           FORM SECTIONS
+           ============================================================ */
         .form-section-title {
             font-size: 12px;
             font-weight: 800;
             color: var(--accent-color);
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            margin: 30px 0 14px;
+            margin: 28px 0 14px;
             padding-bottom: 10px;
             border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-            .form-section-title:first-of-type {
-                margin-top: 8px;
-            }
+        .form-section-title:first-of-type {
+            margin-top: 4px;
+        }
 
+        .form-section-title i {
+            font-size: 14px;
+        }
+
+        /* ============================================================
+           FORM ELEMENTS
+           ============================================================ */
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -104,102 +279,147 @@
             margin-bottom: 20px;
         }
 
-            .form-group label {
-                display: block;
-                margin-bottom: 8px;
-                font-weight: 600;
-                font-size: 13px;
-                color: var(--text-primary);
-                letter-spacing: 0.2px;
-            }
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
 
-            .form-group input:not([type="checkbox"]),
-            .form-group textarea {
-                width: 100%;
-                padding: 12px 15px;
-                border: 1.5px solid var(--border-color);
-                border-radius: 12px;
-                font-size: 14px;
-                font-family: inherit;
-                background: var(--input-bg);
-                color: var(--text-primary);
-                transition: all 0.2s ease;
-            }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text-primary);
+            letter-spacing: 0.2px;
+        }
 
-                .form-group input:not([type="checkbox"])::placeholder,
-                .form-group textarea::placeholder {
-                    color: var(--text-muted);
-                }
+        .form-group input:not([type="checkbox"]),
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 11px 15px;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
 
-                .form-group input:not([type="checkbox"]):focus,
-                .form-group textarea:focus {
-                    outline: none;
-                    border-color: var(--accent-color);
-                    background: var(--card-bg);
-                    box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.10);
-                }
+        .form-group input:not([type="checkbox"])::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
 
-            .form-group input[type="file"] {
-                width: 100%;
-                padding: 10px 0;
-                font-size: 13px;
-                color: var(--text-secondary);
-            }
+        .form-group input:not([type="checkbox"]):focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: var(--card-bg);
+            box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.10);
+        }
+
+        .form-group input[type="file"] {
+            padding: 10px 0;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .form-group input[type="file"]::-webkit-file-upload-button {
+            background: var(--bg-color);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .form-group input[type="file"]::-webkit-file-upload-button:hover {
+            border-color: var(--accent-color);
+            background: var(--accent-light);
+        }
+
+        .form-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
 
         .text-danger {
             color: var(--error-color);
-            font-size: 12px;
-            margin-top: 5px;
-            display: block;
-            font-weight: 500;
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            border-radius: 999px;
-            background: var(--accent-light);
-            color: var(--accent-color);
-            font-weight: 700;
             font-size: 13px;
-            margin-bottom: 24px;
+            font-weight: 600;
+            margin-top: 4px;
+            display: block;
         }
 
+        .help-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* ============================================================
+           LOGO BOX
+           ============================================================ */
         .logo-box {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 24px;
             margin-bottom: 26px;
-            padding: 20px;
+            padding: 20px 24px;
             background: var(--bg-color);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
+            border-radius: var(--radius-md);
+            transition: var(--transition);
         }
 
-            .logo-box img {
-                width: 92px;
-                height: 92px;
-                border-radius: 14px;
-                object-fit: cover;
-                background: var(--card-bg);
-                border: 1px solid var(--border-color);
-                box-shadow: var(--shadow-sm);
-            }
+        .logo-box:hover {
+            border-color: var(--accent-color);
+        }
+
+        .logo-box img {
+            width: 88px;
+            height: 88px;
+            border-radius: var(--radius-md);
+            object-fit: cover;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
 
         .logo-placeholder {
-            width: 92px;
-            height: 92px;
-            border-radius: 14px;
+            width: 88px;
+            height: 88px;
+            border-radius: var(--radius-md);
             background: var(--accent-gradient);
-            color: white;
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
+            font-size: 32px;
             flex-shrink: 0;
             box-shadow: var(--shadow-sm);
+        }
+
+        .logo-box .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .logo-box .form-group label {
+            margin-bottom: 4px;
         }
 
         .checkbox-line {
@@ -212,228 +432,318 @@
             cursor: pointer;
         }
 
-            .checkbox-line input {
-                width: 17px;
-                height: 17px;
-                accent-color: var(--accent-color);
-                cursor: pointer;
-                margin: 0;
-            }
-
-        .form-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 26px;
-            padding-top: 22px;
-            border-top: 1px solid var(--border-color);
+        .checkbox-line input {
+            margin: 0;
         }
 
-        .btn-save {
+        /* ============================================================
+           BUTTONS
+           ============================================================ */
+        .form-actions {
+            display: flex;
+            gap: 14px;
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
             background: var(--accent-gradient);
-            color: white;
+            color: #fff;
             border: none;
-            padding: 14px 26px;
             border-radius: 40px;
             font-weight: 700;
             font-size: 14px;
             cursor: pointer;
+            box-shadow: 0 4px 20px rgba(109, 40, 217, 0.25);
+            transition: var(--transition);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(109, 40, 217, 0.35);
+            color: #fff;
+        }
+
+        .btn-secondary {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 4px 20px rgba(109, 40, 217, 0.25);
-            transition: all 0.25s ease;
-        }
-
-            .btn-save:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 30px rgba(109, 40, 217, 0.35);
-            }
-
-        .btn-cancel {
+            padding: 12px 28px;
             background: var(--card-bg);
             color: var(--text-secondary);
             border: 1.5px solid var(--border-color);
-            padding: 14px 26px;
             border-radius: 40px;
             font-weight: 700;
             font-size: 14px;
             text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            transition: all 0.25s ease;
+            transition: var(--transition);
         }
 
-            .btn-cancel:hover {
-                border-color: var(--accent-color);
-                color: var(--accent-color);
-                background: var(--accent-light);
+        .btn-secondary:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            background: var(--accent-light);
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @@media (max-width: 768px) {
+            .page-wrapper {
+                padding: 20px 16px 40px;
             }
 
-        @@media (max-width: 700px) {
-            .profile-container {
-                padding: 26px 22px;
+            .profile-card {
+                padding: 24px 20px;
             }
 
             .form-row {
                 grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .profile-hero {
+                padding: 22px 20px;
+            }
+
+            .profile-hero h2 {
+                font-size: 20px;
             }
 
             .logo-box {
                 flex-direction: column;
+                align-items: center;
+                text-align: center;
+                padding: 18px 16px;
+            }
+
+            .logo-box .form-group {
+                width: 100%;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .profile-hero .hero-meta {
+                flex-direction: column;
                 align-items: flex-start;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .profile-hero {
+                padding: 18px 16px;
+            }
+
+            .profile-hero h2 {
+                font-size: 18px;
+            }
+
+            .logo-box img,
+            .logo-placeholder {
+                width: 72px;
+                height: 72px;
             }
         }
     </style>
 }
 
-<div class="profile-container">
-    <h2 style="margin: 0 0 6px 0;">Store Profile</h2>
-    <p class="page-subtitle">Update your store information, location, contact details, and logo.</p>
+<div class="page-wrapper">
 
+    <!-- ========== BREADCRUMB ========== -->
+    <div class="breadcrumb-wrap">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/StoreOwner/Dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li class="breadcrumb-item active">Store Profile</li>
+        </ol>
+    </div>
+
+    <!-- ========== HERO BANNER ========== -->
+    <div class="profile-hero">
+        <h2><i class="fas fa-store-alt"></i> Store Profile</h2>
+        <p>Update your store information, location, contact details, and logo.</p>
+
+        <div class="hero-meta">
+            <span class="hero-badge">
+                <span class="status-dot @(Model.StoreVM.Status?.ToLower() == "approved" || Model.StoreVM.Status?.ToLower() == "active" ? "active" : Model.StoreVM.Status?.ToLower() == "pending" ? "pending" : "inactive")"></span>
+                Status: @Model.StoreVM.Status
+            </span>
+            <span class="hero-badge">
+                <i class="fas fa-store"></i> @Model.StoreVM.StoreName
+            </span>
+        </div>
+    </div>
+
+    <!-- ========== ALERTS ========== -->
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="message success-message">
-            <i class="fas fa-circle-check"></i> @TempData["SuccessMessage"]
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
         </div>
     }
 
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="message error-message">
-            <i class="fas fa-circle-exclamation"></i> @TempData["ErrorMessage"]
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
         </div>
     }
 
-    <div class="status-badge">
-        <i class="fas fa-circle-dot"></i> Status: @Model.StoreVM.Status
+    <!-- ========== PROFILE CARD ========== -->
+    <div class="profile-card">
+
+        <form method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="All" class="text-danger" style="margin-bottom:20px;"></div>
+
+            <input type="hidden" asp-for="StoreVM.StoreID" />
+
+            <!-- ===== LOGO ===== -->
+            <div class="logo-box">
+                @if (!string.IsNullOrWhiteSpace(Model.StoreVM.LogoURL))
+                {
+                    <img src="@Model.StoreVM.LogoURL"
+                         alt="Store Logo"
+                         onerror="this.style.display='none';" />
+                }
+                else
+                {
+                    <div class="logo-placeholder">
+                        <i class="fas fa-store"></i>
+                    </div>
+                }
+
+                <div class="form-group">
+                    <label asp-for="StoreVM.LogoFile">Store Logo</label>
+                    <input asp-for="StoreVM.LogoFile" type="file" accept="image/*" />
+                    <span asp-validation-for="StoreVM.LogoFile" class="text-danger"></span>
+                    <span class="help-text">Recommended: Square image, at least 200×200px</span>
+                </div>
+            </div>
+
+            <!-- ===== BASIC INFORMATION ===== -->
+            <div class="form-section-title"><i class="fas fa-info-circle"></i> Basic Information</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="StoreVM.StoreName">Store Name</label>
+                    <input asp-for="StoreVM.StoreName" placeholder="Your store name" />
+                    <span asp-validation-for="StoreVM.StoreName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="StoreVM.Email">Email</label>
+                    <input asp-for="StoreVM.Email" placeholder="store@example.com" />
+                    <span asp-validation-for="StoreVM.Email" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="StoreVM.PhoneNumber">Phone Number</label>
+                    <input asp-for="StoreVM.PhoneNumber" placeholder="Phone number" />
+                    <span asp-validation-for="StoreVM.PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="StoreVM.BusinessLicenseNumber">Business License Number</label>
+                    <input asp-for="StoreVM.BusinessLicenseNumber" placeholder="Business license number" />
+                    <span class="help-text">Your official business license or registration number</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="StoreVM.Description">Description</label>
+                <textarea asp-for="StoreVM.Description"
+                          rows="5"
+                          placeholder="Describe your store, what you sell, and what makes you unique..."></textarea>
+            </div>
+
+            <!-- ===== LOCATION ===== -->
+            <div class="form-section-title"><i class="fas fa-map-pin"></i> Location</div>
+
+            <div class="form-group">
+                <label asp-for="StoreVM.AddressLine1">Address Line 1</label>
+                <input asp-for="StoreVM.AddressLine1" placeholder="Main address" />
+                <span asp-validation-for="StoreVM.AddressLine1" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="StoreVM.AddressLine2">Address Line 2</label>
+                <input asp-for="StoreVM.AddressLine2" placeholder="Optional address details" />
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="StoreVM.City">City</label>
+                    <input asp-for="StoreVM.City" placeholder="City" />
+                    <span asp-validation-for="StoreVM.City" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="StoreVM.Area">Area</label>
+                    <input asp-for="StoreVM.Area" placeholder="Area or district" />
+                    <span asp-validation-for="StoreVM.Area" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="StoreVM.Latitude">Latitude</label>
+                    <input asp-for="StoreVM.Latitude" type="number" step="0.000001" placeholder="e.g. 25.2048" />
+                    <span class="help-text">Used for delivery distance calculation</span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="StoreVM.Longitude">Longitude</label>
+                    <input asp-for="StoreVM.Longitude" type="number" step="0.000001" placeholder="e.g. 55.2708" />
+                    <span class="help-text">Used for delivery distance calculation</span>
+                </div>
+            </div>
+
+            <!-- ===== PAYMENT SETTINGS ===== -->
+            <div class="form-section-title"><i class="fas fa-credit-card"></i> Payment Settings</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="checkbox-line">
+                        <input asp-for="StoreVM.CODSupported" type="checkbox" />
+                        Cash On Delivery Supported
+                    </label>
+                    <span class="help-text">Enable if your store accepts cash payment on delivery</span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="StoreVM.CODMaxLimit">COD Max Limit ($)</label>
+                    <input asp-for="StoreVM.CODMaxLimit" type="number" step="0.01" min="0" placeholder="e.g. 5000" />
+                    <span asp-validation-for="StoreVM.CODMaxLimit" class="text-danger"></span>
+                    <span class="help-text">Maximum order amount allowed for COD</span>
+                </div>
+            </div>
+
+            <!-- ===== ACTIONS ===== -->
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <a href="/StoreOwner/Dashboard" class="btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+
+        </form>
     </div>
 
-    <form method="post" enctype="multipart/form-data">
-        <div asp-validation-summary="All" class="text-danger"></div>
-
-        <input type="hidden" asp-for="StoreVM.StoreID" />
-
-        <div class="logo-box">
-            @if (!string.IsNullOrWhiteSpace(Model.StoreVM.LogoURL))
-            {
-                <img src="@Model.StoreVM.LogoURL"
-                     alt="Store Logo"
-                     onerror="this.style.display='none';" />
-            }
-            else
-            {
-                <div class="logo-placeholder">
-                    <i class="fas fa-store"></i>
-                </div>
-            }
-
-            <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                <label asp-for="StoreVM.LogoFile">Store Logo</label>
-                <input asp-for="StoreVM.LogoFile" type="file" accept="image/*" />
-                <span asp-validation-for="StoreVM.LogoFile" class="text-danger"></span>
-            </div>
-        </div>
-
-        <div class="form-section-title">Basic Information</div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label asp-for="StoreVM.StoreName">Store Name</label>
-                <input asp-for="StoreVM.StoreName" placeholder="Store name" />
-                <span asp-validation-for="StoreVM.StoreName" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="StoreVM.Email">Email</label>
-                <input asp-for="StoreVM.Email" placeholder="store@example.com" />
-                <span asp-validation-for="StoreVM.Email" class="text-danger"></span>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label asp-for="StoreVM.PhoneNumber">Phone Number</label>
-                <input asp-for="StoreVM.PhoneNumber" placeholder="Phone number" />
-                <span asp-validation-for="StoreVM.PhoneNumber" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="StoreVM.BusinessLicenseNumber">Business License Number</label>
-                <input asp-for="StoreVM.BusinessLicenseNumber" placeholder="Business license number" />
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label asp-for="StoreVM.Description">Description</label>
-            <textarea asp-for="StoreVM.Description"
-                      rows="5"
-                      placeholder="Describe your store..."></textarea>
-        </div>
-
-        <div class="form-section-title">Location</div>
-
-        <div class="form-group">
-            <label asp-for="StoreVM.AddressLine1">Address Line 1</label>
-            <input asp-for="StoreVM.AddressLine1" placeholder="Main address" />
-            <span asp-validation-for="StoreVM.AddressLine1" class="text-danger"></span>
-        </div>
-
-        <div class="form-group">
-            <label asp-for="StoreVM.AddressLine2">Address Line 2</label>
-            <input asp-for="StoreVM.AddressLine2" placeholder="Optional address details" />
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label asp-for="StoreVM.City">City</label>
-                <input asp-for="StoreVM.City" placeholder="City" />
-                <span asp-validation-for="StoreVM.City" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="StoreVM.Area">Area</label>
-                <input asp-for="StoreVM.Area" placeholder="Area" />
-                <span asp-validation-for="StoreVM.Area" class="text-danger"></span>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label asp-for="StoreVM.Latitude">Latitude</label>
-                <input asp-for="StoreVM.Latitude" type="number" step="0.000001" />
-            </div>
-
-            <div class="form-group">
-                <label asp-for="StoreVM.Longitude">Longitude</label>
-                <input asp-for="StoreVM.Longitude" type="number" step="0.000001" />
-            </div>
-        </div>
-
-        <div class="form-section-title">Payment Settings</div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label class="checkbox-line">
-                    <input asp-for="StoreVM.CODSupported" type="checkbox" />
-                    COD Supported
-                </label>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="StoreVM.CODMaxLimit">COD Max Limit</label>
-                <input asp-for="StoreVM.CODMaxLimit" type="number" step="0.01" min="0" />
-                <span asp-validation-for="StoreVM.CODMaxLimit" class="text-danger"></span>
-            </div>
-        </div>
-
-        <div class="form-actions">
-            <button type="submit" class="btn-save">
-                <i class="fas fa-save"></i> Save Changes
-            </button>
-
-            <a href="/StoreOwner/Dashboard" class="btn-cancel">
-                Cancel
-            </a>
-        </div>
-    </form>
 </div>

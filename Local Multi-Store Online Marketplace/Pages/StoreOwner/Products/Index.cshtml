@@ -7,45 +7,471 @@
 }
 
 @section Styles {
-    <link rel="stylesheet"
-          href="~/css/store-owner-products.css"
-          asp-append-version="true" />
-
     <style>
-        /* =====================================================
-                   PRODUCT INDEX TOAST (kept semantic — error/warning/success)
-                   ===================================================== */
+        /* ============================================================
+           ROOT VARIABLES — consistent brand palette
+           ============================================================ */
+        :root {
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            --bg-color: #f8f7fc;
+            --card-bg: #ffffff;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            --text-muted: #9691a4;
+            --border-color: #ece8f6;
+            --success-color: #10b981;
+            --error-color: #dc2626;
+            --warning-color: #f59e0b;
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+            --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.18);
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+        }
 
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .products-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .products-header h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            color: var(--text-primary);
+        }
+
+        .products-header p {
+            margin: 4px 0 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background: var(--accent-gradient);
+            color: #fff;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            color: #fff;
+        }
+
+        .btn-primary i {
+            font-size: 14px;
+        }
+
+        /* ============================================================
+           SEARCH / FILTER BAR
+           ============================================================ */
+        .search-filter-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 18px 22px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .filter-input {
+            flex: 1 1 180px;
+            min-width: 140px;
+        }
+
+        .filter-input input,
+        .filter-input select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-color);
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .filter-input input:focus,
+        .filter-input select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.15);
+        }
+
+        .filter-input button {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* ============================================================
+           ALERT (TempData) — kept for compatibility, but we also use toast
+           ============================================================ */
+        .alert {
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+
+        .alert-success {
+            background: #ecfdf5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .alert i {
+            font-size: 18px;
+        }
+
+        /* ============================================================
+           PRODUCT GRID
+           ============================================================ */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--accent-color);
+        }
+
+        /* ----- Image area ----- */
+        .product-image {
+            position: relative;
+            background: var(--bg-color);
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .product-card:hover .product-image img {
+            transform: scale(1.03);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #fff;
+            box-shadow: var(--shadow-sm);
+            z-index: 2;
+        }
+
+        .badge-discount {
+            background: var(--error-color);
+        }
+
+        .badge-outstock {
+            background: #6b7280;
+        }
+
+        /* ----- Info area ----- */
+        .product-info {
+            padding: 18px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .product-category {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--accent-color);
+            background: var(--accent-light);
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 20px;
+            align-self: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .product-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0 0 6px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin: 0 0 12px;
+            flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .price-section {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .current-price {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--accent-color);
+        }
+
+        .original-price {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .profit-line {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .profit-line i {
+            color: var(--success-color);
+        }
+
+        .stock-status {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .stock-instock {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        .stock-lowstock {
+            background: #fffbeb;
+            color: #92400e;
+        }
+
+        .stock-outofstock {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        /* ----- Actions ----- */
+        .product-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: auto;
+            border-top: 1px solid var(--border-color);
+            padding-top: 14px;
+        }
+
+        .product-actions .btn-edit,
+        .product-actions .btn-delete,
+        .product-actions .btn-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-edit {
+            background: var(--accent-light);
+            color: var(--accent-color);
+        }
+
+        .btn-edit:hover {
+            background: var(--accent-color);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .btn-delete {
+            background: #fef2f2;
+            color: var(--error-color);
+        }
+
+        .btn-delete:hover {
+            background: var(--error-color);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .btn-toggle {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+
+        .btn-toggle.active {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .btn-toggle:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-toggle:disabled {
+            cursor: wait;
+            opacity: 0.65;
+            transform: none;
+        }
+
+        /* ============================================================
+           EMPTY STATE
+           ============================================================ */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 2px dashed var(--border-color);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: var(--accent-color);
+            opacity: 0.3;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0 0 6px;
+            color: var(--text-primary);
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin: 0 0 16px;
+        }
+
+        /* ============================================================
+           TOAST NOTIFICATIONS (refined)
+           ============================================================ */
         .products-toast-container {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 24px;
+            right: 24px;
             z-index: 999999;
             display: flex;
             flex-direction: column;
             gap: 12px;
             pointer-events: none;
+            max-width: 400px;
+            width: 100%;
         }
 
         .products-toast {
-            width: min(390px, calc(100vw - 40px));
-            padding: 15px 16px;
-            border-radius: 14px;
+            padding: 16px 18px;
+            border-radius: var(--radius-md);
             color: #ffffff;
             display: flex;
             align-items: flex-start;
             gap: 12px;
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.28);
+            box-shadow: var(--shadow-lg);
             opacity: 0;
-            transform: translateX(45px);
-            transition: opacity 0.28s ease, transform 0.28s ease;
+            transform: translateX(40px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
             pointer-events: auto;
         }
 
-            .products-toast.show {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        .products-toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
 
         .products-toast-error {
             background: linear-gradient(135deg, #b91c1c, #dc2626);
@@ -60,15 +486,15 @@
         }
 
         .products-toast-icon {
-            width: 34px;
-            height: 34px;
-            flex: 0 0 34px;
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 900;
         }
 
@@ -79,589 +505,326 @@
 
         .products-toast-title {
             display: block;
-            margin-bottom: 3px;
             font-size: 14px;
-            font-weight: 900;
+            font-weight: 800;
+            margin-bottom: 2px;
         }
 
         .products-toast-message {
             display: block;
             font-size: 13px;
-            font-weight: 600;
-            line-height: 1.5;
-            overflow-wrap: anywhere;
+            font-weight: 500;
+            line-height: 1.4;
         }
 
         .products-toast-close {
             border: none;
             background: transparent;
-            color: #ffffff;
+            color: #fff;
             padding: 0;
-            font-size: 23px;
+            font-size: 24px;
             line-height: 1;
             cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
         }
 
-        .btn-toggle:disabled {
-            cursor: wait;
-            opacity: 0.65;
+        .products-toast-close:hover {
+            opacity: 1;
         }
 
-        .profit-line {
-            font-size: 12px;
-            color: var(--text-primary, #1e1b2e);
-            margin-top: 5px;
-        }
-
-            .profit-line i {
-                color: var(--accent-color, #6d28d9);
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @@media (max-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 16px;
             }
 
-        @@media (max-width: 600px) {
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-input {
+                flex: 1 1 auto;
+                min-width: unset;
+            }
+
+            .products-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
             .products-toast-container {
                 top: 12px;
                 right: 12px;
                 left: 12px;
+                max-width: none;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .products-grid {
+                grid-template-columns: 1fr;
             }
 
-            .products-toast {
-                width: 100%;
+            .product-actions {
+                flex-direction: column;
+            }
+
+            .product-actions .btn-edit,
+            .product-actions .btn-delete,
+            .product-actions .btn-toggle {
+                justify-content: center;
             }
         }
     </style>
 }
 
-<div id="productsToastContainer"
-     class="products-toast-container"
-     aria-live="polite"
-     aria-atomic="true">
-</div>
+<!-- ========== TOAST CONTAINER ========== -->
+<div id="productsToastContainer" class="products-toast-container" aria-live="polite" aria-atomic="true"></div>
 
+<!-- ========== HEADER ========== -->
 <div class="products-header">
-
     <div>
-        <h1 style="margin: 0; font-size: 24px;">
-            Products
-        </h1>
-
-        <p style="margin: 5px 0 0;">
-            Manage your store's product inventory
-        </p>
+        <h1><i class="fas fa-cube" style="color:var(--accent-color); margin-right:8px;"></i> Products</h1>
+        <p>Manage your store's inventory and product details</p>
     </div>
-
-    <a href="/StoreOwner/Products/Create"
-       class="btn-primary">
-
-        <i class="fas fa-plus"></i>
-        Add New Product
+    <a href="/StoreOwner/Products/Create" class="btn-primary">
+        <i class="fas fa-plus"></i> Add New Product
     </a>
-
 </div>
 
-<!-- Search and Filter Bar -->
+<!-- ========== SEARCH & FILTER ========== -->
 <div class="search-filter-bar">
-
-    <form method="get"
-          id="filterForm">
-
+    <form method="get" id="filterForm">
         <div class="filter-group">
-
             <div class="filter-input">
-
-                <input type="text"
-                       name="SearchTerm"
-                       id="SearchTerm"
-                       placeholder="Search products by name or description..."
+                <input type="text" name="SearchTerm" id="SearchTerm"
+                       placeholder="Search by name or description..."
                        value="@Model.SearchTerm" />
-
             </div>
-
             <div class="filter-input">
-
-                <select name="CategoryFilter"
-                        id="CategoryFilter">
-
-                    <option value="">
-                        All Categories
-                    </option>
-
+                <select name="CategoryFilter" id="CategoryFilter">
+                    <option value="">All Categories</option>
                     @foreach (var category in Model.Categories)
                     {
-                        <option value="@category.CategoryID"
-                                selected="@(Model.CategoryFilter == category.CategoryID)">
+                        <option value="@category.CategoryID" selected="@(Model.CategoryFilter == category.CategoryID)">
                             @category.CategoryName
                         </option>
                     }
-
                 </select>
-
             </div>
-
             <div class="filter-input">
-
-                <select name="StatusFilter"
-                        id="StatusFilter">
-
-                    <option value="">
-                        All Status
-                    </option>
-
-                    <option value="active"
-                            selected="@(Model.StatusFilter == "active")">
-                        Active
-                    </option>
-
-                    <option value="inactive"
-                            selected="@(Model.StatusFilter == "inactive")">
-                        Inactive
-                    </option>
-
-                    <option value="outofstock"
-                            selected="@(Model.StatusFilter == "outofstock")">
-                        Out of Stock
-                    </option>
-
+                <select name="StatusFilter" id="StatusFilter">
+                    <option value="">All Status</option>
+                    <option value="active" selected="@(Model.StatusFilter == "active")">Active</option>
+                    <option value="inactive" selected="@(Model.StatusFilter == "inactive")">Inactive</option>
+                    <option value="outofstock" selected="@(Model.StatusFilter == "outofstock")">Out of Stock</option>
                 </select>
-
             </div>
-
-            <div class="filter-input"
-                 style="flex: 0 0 auto;">
-
-                <button type="submit"
-                        class="btn-primary">
-
-                    <i class="fas fa-search"></i>
-                    Search
+            <div class="filter-input" style="flex:0 0 auto;">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-search"></i> Search
                 </button>
-
             </div>
-
         </div>
-
     </form>
-
 </div>
 
+<!-- ========== TEMPDATA ALERTS (fallback) ========== -->
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success">
-
-        <i class="fas fa-check-circle"></i>
-
-        @TempData["SuccessMessage"]
+        <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
     </div>
 }
 
 @if (TempData["ErrorMessage"] != null)
 {
     <div class="alert alert-danger">
-
-        <i class="fas fa-exclamation-circle"></i>
-
-        @TempData["ErrorMessage"]
+        <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
     </div>
 }
 
+<!-- ========== PRODUCT GRID ========== -->
 @if (Model.Products.Any())
 {
     <div class="products-grid">
-
         @foreach (var product in Model.Products)
         {
             <div class="product-card">
-
+                <!-- Image -->
                 <div class="product-image">
-
-                    @if (!string.IsNullOrEmpty(
-                        product.PrimaryImageUrl))
-                    {
-                        <img src="@product.PrimaryImageUrl"
-                             alt="@product.ProductName"
-                             onerror="this.onerror=null;this.src='/images/no-image.png';" />
-                    }
-                    else
-                    {
-                        <img src="/images/no-image.png"
-                             alt="No image" />
-                    }
-
+                    <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "/images/no-image.png" : product.PrimaryImageUrl)"
+                         alt="@product.ProductName"
+                         onerror="this.onerror=null; this.src='/images/no-image.png';" />
                     @if (product.DiscountPercentage.HasValue)
                     {
-                        <span class="product-badge badge-discount">
-                            -@product.DiscountPercentage%
-                        </span>
+                        <span class="product-badge badge-discount">-@product.DiscountPercentage%</span>
                     }
-
                     @if (product.IsOutOfStock)
                     {
-                        <span class="product-badge badge-outstock">
-                            Out of Stock
-                        </span>
+                        <span class="product-badge badge-outstock">Out of Stock</span>
                     }
-
                 </div>
 
+                <!-- Info -->
                 <div class="product-info">
-
-                    <div class="product-category">
-                        @product.CategoryName
-                    </div>
-
-                    <h3 class="product-title">
-                        @product.ProductName
-                    </h3>
-
+                    <span class="product-category">@product.CategoryName</span>
+                    <h3 class="product-title">@product.ProductName</h3>
                     <p class="product-description">
-                        @(product.Description.Length > 100
-                            ? product.Description.Substring(0, 100) + "..."
-                            : product.Description)
+                        @(product.Description.Length > 100 ? product.Description.Substring(0, 100) + "..." : product.Description)
                     </p>
 
                     <div class="price-section">
-
-                        <span class="current-price">
-                            $@product.Price.ToString("N2")
-                        </span>
-
-                        @if (product.CompareAtPrice.HasValue &&
-                             product.CompareAtPrice > product.Price)
+                        <span class="current-price">$@product.Price.ToString("N2")</span>
+                        @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
                         {
-                            <span class="original-price">
-                                $@product.CompareAtPrice.Value.ToString("N2")
-                            </span>
+                            <span class="original-price">$@product.CompareAtPrice.Value.ToString("N2")</span>
                         }
-
                     </div>
 
-                    @if (product.ProfitPerUnit.HasValue &&
-                         product.ProfitPerUnit > 0)
+                    @if (product.ProfitPerUnit.HasValue && product.ProfitPerUnit > 0)
                     {
                         <div class="profit-line">
-
                             <i class="fas fa-chart-line"></i>
-
-                            Profit:
-                            $@product.ProfitPerUnit.Value.ToString("N2")/unit
-
+                            Profit: $@product.ProfitPerUnit.Value.ToString("N2")/unit
                             @if (product.MarginPercent.HasValue)
                             {
-                                <span>
-                                    (@product.MarginPercent.Value.ToString("F0")% margin)
-                                </span>
+                                <span>(@product.MarginPercent.Value.ToString("F0")% margin)</span>
                             }
-
                         </div>
                     }
 
-                    <div>
-
-                        <span class="stock-status stock-@product.StockStatusClass">
-                            @product.StockStatus
-                            (@product.Quantity left)
-                        </span>
-
-                    </div>
+                    <span class="stock-status stock-@product.StockStatusClass">
+                        @product.StockStatus (@product.Quantity left)
+                    </span>
 
                     <div class="product-actions">
-
-                        <a href="/StoreOwner/Products/Edit?id=@product.ProductID"
-                           class="btn-edit">
-
-                            <i class="fas fa-edit"></i>
-                            Edit
+                        <a href="/StoreOwner/Products/Edit?id=@product.ProductID" class="btn-edit">
+                            <i class="fas fa-edit"></i> Edit
                         </a>
-
-                        <button type="button"
-                                onclick="deleteProduct(@product.ProductID)"
-                                class="btn-delete">
-
-                            <i class="fas fa-trash"></i>
-                            Delete
+                        <button type="button" onclick="deleteProduct(@product.ProductID)" class="btn-delete">
+                            <i class="fas fa-trash"></i> Delete
                         </button>
-
-                        <button type="button"
-                                onclick="toggleStatus(@product.ProductID, this)"
-                                class="btn-toggle @(product.IsActive ? "active" : "")">
-
+                        <button type="button" onclick="toggleStatus(@product.ProductID, this)" class="btn-toggle @(product.IsActive ? "active" : "")">
                             <i class="fas @(product.IsActive ? "fa-eye" : "fa-eye-slash")"></i>
-
                             @(product.IsActive ? "Active" : "Inactive")
                         </button>
-
                     </div>
-
                 </div>
-
             </div>
         }
-
     </div>
 }
 else
 {
     <div class="empty-state">
-
         <i class="fas fa-box-open"></i>
-
-        <h3>
-            No Products Found
-        </h3>
-
-        <p>
-            You haven't added any products yet.
-        </p>
-
-        <a href="/StoreOwner/Products/Create"
-           class="btn-primary"
-           style="display: inline-block; margin-top: 15px;">
-
-            <i class="fas fa-plus"></i>
-            Add Your First Product
+        <h3>No Products Found</h3>
+        <p>You haven't added any products yet. Start building your inventory!</p>
+        <a href="/StoreOwner/Products/Create" class="btn-primary" style="display:inline-block;">
+            <i class="fas fa-plus"></i> Add Your First Product
         </a>
-
     </div>
 }
 
+<!-- ========== SCRIPTS ========== -->
 @section Scripts {
     <script>
-        function showProductsToast(
-            message,
-            type = "error",
-            title = "Unable to continue") {
+        // ----- Toast Notification -----
+        function showProductsToast(message, type = "error", title = "Unable to continue") {
+            const container = document.getElementById("productsToastContainer");
+            if (!container || !message) return;
 
-            const container =
-                document.getElementById(
-                    "productsToastContainer");
+            // Remove existing toasts
+            const existing = container.querySelector(".products-toast");
+            if (existing) existing.remove();
 
-            if (!container ||
-                !message) {
+            const validTypes = ["error", "warning", "success"];
+            const safeType = validTypes.includes(type) ? type : "error";
 
-                return;
-            }
+            const toast = document.createElement("div");
+            toast.className = `products-toast products-toast-${safeType}`;
+            toast.setAttribute("role", safeType === "error" ? "alert" : "status");
 
-            const existingToast =
-                container.querySelector(
-                    ".products-toast");
+            const icon = document.createElement("span");
+            icon.className = "products-toast-icon";
+            icon.textContent = safeType === "success" ? "✓" : safeType === "warning" ? "!" : "×";
 
-            if (existingToast) {
-                existingToast.remove();
-            }
+            const content = document.createElement("div");
+            content.className = "products-toast-content";
 
-            const validTypes = [
-                "error",
-                "warning",
-                "success"
-            ];
+            const titleEl = document.createElement("span");
+            titleEl.className = "products-toast-title";
+            titleEl.textContent = title;
 
-            const safeType =
-                validTypes.includes(type)
-                    ? type
-                    : "error";
+            const msgEl = document.createElement("span");
+            msgEl.className = "products-toast-message";
+            msgEl.textContent = message;
 
-            const toast =
-                document.createElement(
-                    "div");
+            const closeBtn = document.createElement("button");
+            closeBtn.type = "button";
+            closeBtn.className = "products-toast-close";
+            closeBtn.setAttribute("aria-label", "Close notification");
+            closeBtn.innerHTML = "&times;";
 
-            toast.className =
-                `products-toast products-toast-${safeType}`;
+            content.appendChild(titleEl);
+            content.appendChild(msgEl);
+            toast.appendChild(icon);
+            toast.appendChild(content);
+            toast.appendChild(closeBtn);
+            container.appendChild(toast);
 
-            toast.setAttribute(
-                "role",
-                safeType === "error"
-                    ? "alert"
-                    : "status");
+            requestAnimationFrame(() => toast.classList.add("show"));
 
-            const icon =
-                document.createElement(
-                    "span");
-
-            icon.className =
-                "products-toast-icon";
-
-            icon.textContent =
-                safeType === "success"
-                    ? "✓"
-                    : safeType === "warning"
-                        ? "!"
-                        : "×";
-
-            const content =
-                document.createElement(
-                    "div");
-
-            content.className =
-                "products-toast-content";
-
-            const titleElement =
-                document.createElement(
-                    "span");
-
-            titleElement.className =
-                "products-toast-title";
-
-            titleElement.textContent =
-                title;
-
-            const messageElement =
-                document.createElement(
-                    "span");
-
-            messageElement.className =
-                "products-toast-message";
-
-            messageElement.textContent =
-                message;
-
-            const closeButton =
-                document.createElement(
-                    "button");
-
-            closeButton.type =
-                "button";
-
-            closeButton.className =
-                "products-toast-close";
-
-            closeButton.setAttribute(
-                "aria-label",
-                "Close notification");
-
-            closeButton.innerHTML =
-                "&times;";
-
-            content.appendChild(
-                titleElement);
-
-            content.appendChild(
-                messageElement);
-
-            toast.appendChild(
-                icon);
-
-            toast.appendChild(
-                content);
-
-            toast.appendChild(
-                closeButton);
-
-            container.appendChild(
-                toast);
-
-            window.requestAnimationFrame(
-                function () {
-                    toast.classList.add(
-                        "show");
-                });
-
-            const closeTimer =
-                window.setTimeout(
-                    removeToast,
-                    5000);
+            let timer = setTimeout(removeToast, 5000);
 
             function removeToast() {
-                if (!toast.isConnected) {
-                    return;
-                }
-
-                window.clearTimeout(
-                    closeTimer);
-
-                toast.classList.remove(
-                    "show");
-
-                window.setTimeout(
-                    function () {
-                        toast.remove();
-                    },
-                    280);
+                if (!toast.isConnected) return;
+                clearTimeout(timer);
+                toast.classList.remove("show");
+                setTimeout(() => toast.remove(), 280);
             }
 
-            closeButton.addEventListener(
-                "click",
-                removeToast);
+            closeBtn.addEventListener("click", removeToast);
         }
 
-        document
-            .getElementById("CategoryFilter")
-            ?.addEventListener(
-                "change",
-                function () {
-                    document
-                        .getElementById("filterForm")
-                        ?.submit();
-                });
+        // ----- Auto-submit on filter change -----
+        document.getElementById("CategoryFilter")?.addEventListener("change", function () {
+            document.getElementById("filterForm")?.submit();
+        });
+        document.getElementById("StatusFilter")?.addEventListener("change", function () {
+            document.getElementById("filterForm")?.submit();
+        });
 
-        document
-            .getElementById("StatusFilter")
-            ?.addEventListener(
-                "change",
-                function () {
-                    document
-                        .getElementById("filterForm")
-                        ?.submit();
-                });
-
-        async function toggleStatus(
-            productId,
-            button) {
-
+        // ----- Toggle Status (AJAX) -----
+        async function toggleStatus(productId, button) {
             if (!productId) {
-                showProductsToast(
-                    "The product ID is invalid.",
-                    "error",
-                    "Status update failed");
-
+                showProductsToast("Invalid product ID.", "error", "Status update failed");
                 return;
             }
-
-            if (button) {
-                button.disabled = true;
-            }
+            if (button) button.disabled = true;
 
             try {
-                const verificationToken =
-                    document.querySelector(
-                        'input[name="__RequestVerificationToken"]'
-                    )?.value || "";
-
-                const response =
-                    await fetch(
-                        "/StoreOwner/Products/Index?handler=ToggleStatus",
-                        {
-                            method: "POST",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json",
-
-                                "RequestVerificationToken":
-                                    verificationToken
-                            },
-
-                            body:
-                                JSON.stringify({
-                                    productId: productId
-                                })
-                        });
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || "";
+                const response = await fetch("/StoreOwner/Products/Index?handler=ToggleStatus", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "RequestVerificationToken": token
+                    },
+                    body: JSON.stringify({ productId: productId })
+                });
 
                 let data = null;
-
-                try {
-                    data =
-                        await response.json();
-                }
-                catch {
-                    data = null;
-                }
+                try { data = await response.json(); } catch { data = null; }
 
                 if (!response.ok) {
-                    showProductsToast(
-                        data?.message ||
-                        "The server could not update the product status.",
-                        "error",
-                        "Status update failed");
-
+                    showProductsToast(data?.message || "Server error.", "error", "Status update failed");
                     return;
                 }
 
@@ -670,37 +833,19 @@ else
                     return;
                 }
 
-                showProductsToast(
-                    data?.message ||
-                    "The product status could not be updated.",
-                    "error",
-                    "Status update failed");
-            }
-            catch (error) {
-                console.error(
-                    "Toggle product status failed:",
-                    error);
-
-                showProductsToast(
-                    "An unexpected error occurred while updating the product status.",
-                    "error",
-                    "Status update failed");
-            }
-            finally {
-                if (button) {
-                    button.disabled = false;
-                }
+                showProductsToast(data?.message || "Could not update status.", "error", "Status update failed");
+            } catch (error) {
+                console.error("Toggle status error:", error);
+                showProductsToast("An unexpected error occurred.", "error", "Status update failed");
+            } finally {
+                if (button) button.disabled = false;
             }
         }
 
-        function deleteProduct(
-            productId) {
-
-            if (confirm(
-                "Are you sure you want to delete this product?")) {
-
-                window.location.href =
-                    `/StoreOwner/Products/Delete?id=${productId}`;
+        // ----- Delete (redirect) -----
+        function deleteProduct(productId) {
+            if (confirm("Are you sure you want to delete this product?")) {
+                window.location.href = `/StoreOwner/Products/Delete?id=${productId}`;
             }
         }
     </script>
