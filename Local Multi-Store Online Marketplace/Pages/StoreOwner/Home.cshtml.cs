@@ -21,7 +21,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             _customerManager = customerManager;
             _userManager = userManager;
         }
-
+        [BindProperty(SupportsGet = true)]
+        public int? ProductId { get; set; }
         public Store Store { get; set; }
         public List<Product> Products { get; set; } = new();
 

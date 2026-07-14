@@ -680,7 +680,7 @@
             {
                 var img = p.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
 
-                <div class="product-grid-item" onclick="openProductModal(@p.ProductID)">
+                <div class="product-grid-item" data-product-id="@p.ProductID" onclick="openProductModal(@p.ProductID)">
                     <img src="@img" alt="@p.ProductName" />
                     <div class="product-details">
                         <h4>@p.ProductName</h4>
@@ -882,20 +882,20 @@
         }
     }, { passive: true });
 
-    window.onload = function () {
+       window.onload = function () {
         hideNavArrows();
 
         const params = new URLSearchParams(window.location.search);
         const productId = params.get('productId');
 
         if (productId) {
-            const productCard = document.getElementById('modal-' + productId)
-                ? document.querySelector('[onclick*="openProductModal(' + productId + ')"]')
-                : null;
+            const productCard = document.querySelector(
+                `[data-product-id="${productId}"]`
+            );
 
             if (productCard) {
                 productCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                setTimeout(() => openProductModal(productId), 800);
+                setTimeout(() => openProductModal(Number(productId)), 800);
             }
         }
     };

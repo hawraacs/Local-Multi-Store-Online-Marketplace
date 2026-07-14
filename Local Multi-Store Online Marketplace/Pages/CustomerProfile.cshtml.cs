@@ -39,6 +39,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         [BindProperty]
         public string CustomerPhone { get; set; } = string.Empty;
 
+        [BindProperty]
+        public string CustomerBio { get; set; } = string.Empty;
+
         public int OrdersCount { get; set; }
 
         public int WishlistCount { get; set; }
@@ -184,6 +187,50 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
 
             TempData["Success"] = "Profile updated successfully.";
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEditBioAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+            {
+                TempData["Success"] = "Could not find your customer record to save the bio.";
+                return RedirectToPage();
+            }
+
+            var trimmedBio = CustomerBio?.Trim() ?? string.Empty;
+
+            // NOTE: this assumes the Customer entity has (or will have) a
+            // string "Bio" property/column. It's set through reflection here
+            // so this file keeps compiling even before that column exists;
+            // once you add a `Bio` (or similarly named) column to Customer
+            // and run a migration, this will start persisting real values.
+            var bioProperty = customer.GetType().GetProperty(
+                "Bio",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
+
+            if (bioProperty != null && bioProperty.CanWrite)
+            {
+                bioProperty.SetValue(customer, trimmedBio);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Bio updated successfully.";
+            }
+            else
+            {
+                TempData["Success"] =
+                    "Bio saving isn't wired up yet — add a 'Bio' column to the Customer table to persist this.";
+            }
 
             return RedirectToPage();
         }
@@ -418,7 +465,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 storeOwnerUser,
                 isPersistent: false);
 
-           
+
             return LocalRedirect(
                 "/StoreOwner/Dashboard");
         }
@@ -469,7 +516,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 : user.UserName ?? "Customer";
 
             CustomerEmail = user.Email ?? string.Empty;
-            CustomerPhone = user.PhoneNumber ?? "No phone number";
+
+            // FIX: "?? " only replaces null. ASP.NET Identity's PhoneNumber
+            // is often an empty string ("") rather than null when unset, so
+            // the old `user.PhoneNumber ?? "No phone number"` silently
+            // rendered a blank value instead of the fallback text.
+            CustomerPhone = string.IsNullOrWhiteSpace(user.PhoneNumber)
+                ? "No phone number"
+                : user.PhoneNumber;
 
             await LoadDeliveryAccessStatusAsync(user);
             await LoadStoreAccessStatusAsync(user);
@@ -518,6 +572,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             DateOfBirth = customer.DateOfBirth;
             CODBlocked = customer.CODBlocked;
             CreatedAt = customer.CreatedAt;
+
+            // Bio is read defensively via reflection in case the Customer
+            // entity doesn't have this column yet (see OnPostEditBioAsync).
+            CustomerBio = GetSafeString(customer, new[] { "Bio", "AboutMe", "Description" }, string.Empty);
 
             FollowedStoresList = customer.FollowedStores?.ToList() ?? new List<StoreFollow>();
             WishlistList = customer.Wishlists?.ToList() ?? new List<Wishlist>();

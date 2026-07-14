@@ -37,10 +37,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public Store Store { get; set; } = null!;
         public List<Product> Products { get; set; } = new();
+
         public int FollowersCount { get; set; }
         public bool IsFollowing { get; set; }
         public bool IsBlocked { get; set; }
-
+        [BindProperty(SupportsGet = true)]
+        public int? ProductId { get; set; }
         public async Task<IActionResult> OnGetAsync(int id)
         {
             var store = await _storeManager.GetStoreByIdAsync(id);

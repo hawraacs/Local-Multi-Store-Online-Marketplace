@@ -28,10 +28,10 @@
             --text-primary: #1c1917; /* Slate dark brown/black */
             --text-secondary: #78716c; /* Elegant muted stone gray */
             /* White & Orange Sunset Palette */
-            --accent-color: #ff6b35; /* Radiant bright orange */
-            --accent-hover: #f05a22; /* Rich dark orange */
-            --accent-light: #fff1eb; /* Pastel orange tint */
-            --accent-gradient: linear-gradient(135deg, #ff9f43 0%, #ff6b35 50%, #f05a22 100%); /* Orange-to-coral punch */
+            --accent-color: #6d28d9; /* Radiant bright orange */
+            --accent-hover: #5b21b6; /* Rich dark orange */
+            --accent-light: #f3effe; /* Pastel orange tint */
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%); /* Orange-to-coral punch */
             --error-color: #dc2626;
             --online-color: #10b981; /* Active green */
             --offline-color: #78716c; /* Offline grey */
@@ -647,7 +647,7 @@
 
             .send:hover,
             .icon-btn:hover {
-                background: #1d4ed8;
+                background: var(--accent-gradient);
             }
 
         .icon-btn {
@@ -951,19 +951,23 @@
                                         <div class="product-desc">
                                             @msg.Product.Description
                                         </div>
-
-                                        @if (User.IsInRole("StoreOwner"))
-                                        {
-                                            <a href="/Dashboard/Products/Edit/@msg.Product.ProductID" class="product-link">
-                                                View Product
-                                            </a>
-                                        }
-                                        else
-                                        {
-                                            <a href="/ProductDetails?id=@msg.Product.ProductID" class="product-link">
-                                                View Product
-                                            </a>
-                                        }
+@if (User.IsInRole("StoreOwner"))
+{
+    <a asp-page="/StoreOwner/Home"
+       asp-route-productId="@msg.Product.ProductID"
+       class="product-link">
+        View Product
+    </a>
+}
+else
+{
+    <a asp-page="/StoreCustomerProfile"
+       asp-route-id="@msg.Product.StoreID"
+       asp-route-productId="@msg.Product.ProductID"
+       class="product-link">
+        View Product
+    </a>
+}
 
                                     </div>
 
