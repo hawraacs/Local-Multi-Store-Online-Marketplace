@@ -22,8 +22,17 @@
             --border-color: #ece8f6;
             /* -------- Semantic -------- */
             --error-color: #dc2626;
+            --star-color: #f59e0b;
             /* -------- Shadows -------- */
             --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+        }
+
+        .reviews-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
         }
 
         .reviews-heading {
@@ -31,7 +40,16 @@
             font-weight: 800;
             color: var(--text-primary);
             letter-spacing: -0.4px;
-            margin-bottom: 20px;
+            margin: 0;
+        }
+
+        .reviews-count-pill {
+            background: var(--accent-light);
+            color: var(--accent-color);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 20px;
         }
 
         .empty-reviews {
@@ -44,37 +62,98 @@
             font-weight: 500;
         }
 
+            .empty-reviews i {
+                display: block;
+                font-size: 32px;
+                color: var(--accent-color);
+                opacity: 0.5;
+                margin-bottom: 10px;
+            }
+
         .review-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 18px 20px;
-            margin-bottom: 14px;
+            border-radius: 18px;
+            padding: 20px 22px;
+            margin-bottom: 16px;
             box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s ease;
         }
 
-        .review-customer {
+            .review-card:hover {
+                box-shadow: var(--shadow-md);
+            }
+
+        .review-top-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .review-customer-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .review-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .review-customer-meta {
+            min-width: 0;
+        }
+
+        .review-customer-link {
             font-size: 15px;
             font-weight: 700;
             color: var(--text-primary);
+            text-decoration: none;
+            display: block;
+        }
+
+            .review-customer-link:hover {
+                color: var(--accent-color);
+                text-decoration: underline;
+            }
+
+        .review-date {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .review-stars {
-            display: inline-block;
-            margin: 6px 0 10px;
+            color: var(--star-color);
             font-size: 14px;
+            white-space: nowrap;
         }
 
         .review-comment {
             color: var(--text-secondary);
             font-size: 14px;
             line-height: 1.6;
-            margin-bottom: 10px;
+            margin: 0 0 14px;
         }
 
-        .review-date {
-            color: var(--text-muted);
-            font-size: 12px;
+        .review-card-footer {
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
         }
 
         .review-delete-btn {
@@ -89,7 +168,6 @@
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
-            margin-top: 12px;
             transition: all 0.2s ease;
         }
 
@@ -100,43 +178,64 @@
     </style>
 }
 
-<h2 class="reviews-heading">Store Reviews</h2>
+<div class="reviews-page-header">
+    <h2 class="reviews-heading">Store Reviews</h2>
+    <span class="reviews-count-pill">@Model.Reviews.Count total</span>
+</div>
 
 @if (!Model.Reviews.Any())
 {
-    <div class="empty-reviews">No reviews yet.</div>
+    <div class="empty-reviews">
+        <i class="fa-regular fa-comment-dots"></i>
+        No reviews yet.
+    </div>
 }
 else
 {
     @foreach (var r in Model.Reviews)
     {
+        var customerName = r.CustomerName ?? "Unknown Customer";
+        var initial = customerName.Length > 0 ? customerName.Substring(0, 1).ToUpper() : "?";
+
         <div class="review-card">
 
-            <!-- Customer Name -->
-            <div class="review-customer">
-                @(r.CustomerName ?? "Unknown Customer")
-            </div>
+            <div class="review-top-row">
+                <div class="review-customer-block">
+                    <div class="review-avatar">@initial</div>
+                    <div class="review-customer-meta">
+                        <a asp-page="/StoreViewCustomer"
+                           asp-route-customerId="@r.CustomerID"
+                           class="review-customer-link">
+                            @customerName
+                        </a>
+                        <span class="review-date">@r.CreatedAt.ToString("MMM d, yyyy")</span>
+                    </div>
+                </div>
 
-            <!-- Rating -->
-            <div class="review-stars">
-                @for (int i = 0; i < r.Rating; i++)
-                {
-                    <span>⭐</span>
-                }
+                <div class="review-stars">
+                    @for (int i = 0; i < r.Rating; i++)
+                    {
+                        <i class="fa-solid fa-star"></i>
+                    }
+                    @for (int i = r.Rating; i < 5; i++)
+                    {
+                        <i class="fa-regular fa-star"></i>
+                    }
+                </div>
             </div>
 
             <p class="review-comment">@r.Comment</p>
 
-            <small class="review-date">@r.CreatedAt.ToString("yyyy-MM-dd")</small>
+            <div class="review-card-footer">
+                <form method="post" asp-page-handler="Delete">
+                    <input type="hidden" name="reviewId" value="@r.ReviewID" />
 
-            <form method="post" asp-page-handler="Delete">
-                <input type="hidden" name="reviewId" value="@r.ReviewID" />
-
-                <button type="submit" class="review-delete-btn">
-                    <i class="fa-solid fa-trash-can"></i>
-                    Delete
-                </button>
-            </form>
+                    <button type="submit" class="review-delete-btn">
+                        <i class="fa-solid fa-trash-can"></i>
+                        Delete
+                    </button>
+                </form>
+            </div>
 
         </div>
     }

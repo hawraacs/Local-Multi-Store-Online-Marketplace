@@ -41,6 +41,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             Reviews = await _context.Reviews
                 .Include(r => r.Customer)
+                    .ThenInclude(c => c.User)
                 .Where(r => r.StoreID == storeId)
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();

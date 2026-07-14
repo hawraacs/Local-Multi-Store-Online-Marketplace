@@ -1,0 +1,455 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.CustomerComplaintModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File a Complaint | realnest</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    <style>
+            :root {
+                --accent-color: #6d28d9;
+                --accent-hover: #5b21b6;
+                --accent-light: #f3effe;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                --bg-color: #faf9fc;
+                --card-bg: #ffffff;
+                --text-primary: #1e1b2e;
+                --text-secondary: #6b6478;
+                --text-muted: #9691a4;
+                --border-color: #ece8f6;
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                background: var(--bg-color);
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                color: var(--text-primary);
+                min-height: 100vh;
+            }
+
+            .topbar {
+                background: #ffffff;
+                border-bottom: 1px solid var(--border-color);
+                padding: 12px 40px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+
+                .topbar > div:first-child {
+                    font-size: 24px;
+                    font-weight: 800;
+                    letter-spacing: -0.5px;
+                    color: var(--text-primary);
+                    font-style: italic;
+                }
+
+            .back-link {
+                color: var(--text-primary);
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+                .back-link:hover {
+                    color: var(--accent-color);
+                }
+
+            .complaint-page {
+                max-width: 640px;
+                margin: 40px auto 60px;
+                padding: 0 20px;
+            }
+
+            .complaint-hero {
+                position: relative;
+                overflow: hidden;
+                border-radius: 20px;
+                padding: 30px 28px;
+                margin-bottom: 20px;
+                background: var(--accent-gradient);
+                color: #fff;
+                box-shadow: var(--shadow-md);
+            }
+
+                .complaint-hero .eyebrow {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: rgba(255,255,255,0.18);
+                    border: 1px solid rgba(255,255,255,0.28);
+                    padding: 5px 12px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 700;
+                    letter-spacing: 0.3px;
+                    margin-bottom: 14px;
+                }
+
+                .complaint-hero h1 {
+                    font-size: 24px;
+                    font-weight: 800;
+                    letter-spacing: -0.3px;
+                    margin-bottom: 6px;
+                }
+
+                .complaint-hero p {
+                    font-size: 13.5px;
+                    color: rgba(255,255,255,0.88);
+                    max-width: 460px;
+                    line-height: 1.5;
+                }
+
+            .complaint-form-card {
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 20px;
+                padding: 26px 26px 30px;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .form-step-label {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 13px;
+                font-weight: 800;
+                color: var(--text-primary);
+                margin: 0 0 14px;
+            }
+
+                .form-step-label:not(:first-child) {
+                    margin-top: 26px;
+                }
+
+                .form-step-label .step-num {
+                    width: 22px;
+                    height: 22px;
+                    flex-shrink: 0;
+                    border-radius: 50%;
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                    font-size: 11.5px;
+                    font-weight: 800;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+            .category-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .category-card {
+                position: relative;
+                border: 1.5px solid var(--border-color);
+                border-radius: 14px;
+                padding: 14px 14px 14px 44px;
+                cursor: pointer;
+                transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+                background: #fff;
+                display: block;
+            }
+
+                .category-card input {
+                    position: absolute;
+                    opacity: 0;
+                    pointer-events: none;
+                }
+
+                .category-card i.cat-icon {
+                    position: absolute;
+                    left: 14px;
+                    top: 15px;
+                    color: var(--accent-color);
+                    font-size: 15px;
+                }
+
+                .category-card .cat-title {
+                    display: block;
+                    font-size: 13.5px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                    margin-bottom: 2px;
+                }
+
+                .category-card .cat-sub {
+                    display: block;
+                    font-size: 11.5px;
+                    color: var(--text-muted);
+                    line-height: 1.4;
+                }
+
+                .category-card:hover {
+                    border-color: var(--accent-color);
+                }
+
+                .category-card.selected {
+                    border-color: var(--accent-color);
+                    background: var(--accent-light);
+                    box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.08);
+                }
+
+                    .category-card.selected i.cat-icon {
+                        color: var(--accent-hover);
+                    }
+
+            @@media (max-width: 480px) {
+                .category-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            #orderGroup {
+                display: none;
+                margin-top: 22px;
+            }
+
+            .field-hint {
+                font-size: 12px;
+                color: var(--text-muted);
+                margin: -8px 0 10px;
+            }
+
+            select, textarea {
+                width: 100%;
+                border: 1.5px solid var(--border-color);
+                border-radius: 12px;
+                padding: 11px 14px;
+                font-size: 14px;
+                font-family: inherit;
+                color: var(--text-primary);
+                background: #fff;
+                outline: none;
+                transition: border-color 0.18s ease, box-shadow 0.18s ease;
+            }
+
+                select:focus, textarea:focus {
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.10);
+                }
+
+            textarea {
+                min-height: 130px;
+                resize: vertical;
+            }
+
+            .char-count {
+                text-align: right;
+                font-size: 11px;
+                color: var(--text-muted);
+                margin-top: 6px;
+            }
+
+            .submit-btn {
+                width: 100%;
+                border: none;
+                background: var(--accent-gradient);
+                color: #fff;
+                padding: 14px;
+                border-radius: 12px;
+                font-weight: 800;
+                font-size: 14.5px;
+                cursor: pointer;
+                margin-top: 26px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                box-shadow: var(--shadow-sm);
+                transition: opacity 0.18s ease, transform 0.18s ease;
+            }
+
+                .submit-btn:hover {
+                    opacity: 0.94;
+                    transform: translateY(-1px);
+                }
+
+            .alert {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 13px 16px;
+                border-radius: 12px;
+                font-size: 13.5px;
+                font-weight: 700;
+                margin-bottom: 18px;
+            }
+
+            .alert-success {
+                background: #dcfce7;
+                color: #166534;
+            }
+
+            .alert-error {
+                background: #fee2e2;
+                color: #b91c1c;
+            }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div>realnest</div>
+        <a class="back-link" asp-page="/CustomerProfile">
+            <i class="fas fa-arrow-left"></i> Back to Profile
+        </a>
+    </div>
+
+    <div class="complaint-page">
+
+        <div class="complaint-hero">
+            <span class="eyebrow"><i class="fa-solid fa-headset"></i> Support</span>
+            <h1>File a Complaint</h1>
+            <p>Tell us what went wrong — with a store, a delivery, or the site itself — and our team will look into it.</p>
+        </div>
+
+        <div class="complaint-form-card">
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                    @TempData["Success"]
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    @TempData["Error"]
+                </div>
+            }
+
+            <form method="post">
+
+                <div class="form-step-label">
+                    <span class="step-num">1</span> What is this about?
+                </div>
+
+                <div class="category-grid" id="categoryGrid">
+                    <label class="category-card" data-value="Store service">
+                        <input type="radio" name="category" value="Store service" required />
+                        <i class="fa-solid fa-store cat-icon"></i>
+                        <span class="cat-title">Store service</span>
+                        <span class="cat-sub">Rude staff, bad experience</span>
+                    </label>
+
+                    <label class="category-card" data-value="Delivery issue">
+                        <input type="radio" name="category" value="Delivery issue" />
+                        <i class="fa-solid fa-truck-fast cat-icon"></i>
+                        <span class="cat-title">Delivery issue</span>
+                        <span class="cat-sub">Late, missing, damaged</span>
+                    </label>
+
+                    <label class="category-card" data-value="Order problem">
+                        <input type="radio" name="category" value="Order problem" />
+                        <i class="fa-solid fa-box-open cat-icon"></i>
+                        <span class="cat-title">Order problem</span>
+                        <span class="cat-sub">Issue with a specific order</span>
+                    </label>
+
+                    <label class="category-card" data-value="Website or app issue">
+                        <input type="radio" name="category" value="Website or app issue" />
+                        <i class="fa-solid fa-laptop cat-icon"></i>
+                        <span class="cat-title">Website or app</span>
+                        <span class="cat-sub">Bugs, glitches, errors</span>
+                    </label>
+
+                    <label class="category-card" data-value="Other" style="grid-column: 1 / -1;">
+                        <input type="radio" name="category" value="Other" />
+                        <i class="fa-solid fa-ellipsis cat-icon"></i>
+                        <span class="cat-title">Something else</span>
+                        <span class="cat-sub">Doesn't fit the categories above</span>
+                    </label>
+                </div>
+
+                <div id="orderGroup">
+                    <div class="form-step-label">
+                        <span class="step-num">2</span> Which order is this about?
+                    </div>
+                    <div class="field-hint">Optional — helps us investigate faster.</div>
+
+                    <select name="orderId" id="orderId">
+                        <option value="">Not related to a specific order</option>
+                        @foreach (var o in Model.RecentOrders)
+                        {
+                            <option value="@o.Id">@o.Label</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-step-label">
+                    <span class="step-num" id="descStepNum">2</span> Describe the issue
+                </div>
+
+                <textarea name="description" id="description" maxlength="2000" required
+                          placeholder="Tell us what happened, as clearly as you can..."></textarea>
+                <div class="char-count"><span id="charCounter">0</span>/2000</div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fa-solid fa-paper-plane"></i> Submit Complaint
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+            const orderGroup = document.getElementById('orderGroup');
+            const descStepNum = document.getElementById('descStepNum');
+            const cards = document.querySelectorAll('.category-card');
+            const textarea = document.getElementById('description');
+            const charCounter = document.getElementById('charCounter');
+
+            function updateSelectedCard() {
+                const checked = document.querySelector('input[name="category"]:checked');
+                cards.forEach(c => c.classList.toggle('selected', c.querySelector('input').checked));
+
+                if (!checked) return;
+                const needsOrder = ['Delivery issue', 'Order problem', 'Store service'];
+                const showOrder = needsOrder.includes(checked.value);
+                orderGroup.style.display = showOrder ? 'block' : 'none';
+                descStepNum.textContent = showOrder ? '3' : '2';
+            }
+
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    card.querySelector('input').checked = true;
+                    updateSelectedCard();
+                });
+            });
+
+            textarea.addEventListener('input', () => {
+                charCounter.textContent = textarea.value.length;
+            });
+
+            updateSelectedCard();
+    </script>
+</body>
+</html>
