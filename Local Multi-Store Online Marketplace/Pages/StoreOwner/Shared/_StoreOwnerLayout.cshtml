@@ -2,10 +2,10 @@
 @using Multi_Store.Core.Entities
 @using Multi_Store.Services.Dtos
 @using Multi_Store.Services.Managers
-@inject UserManager<User> IdentityUserManager   
+@inject UserManager<User> IdentityUserManager
 @inject NotificationManager NotificationManager
-@inject UserManager<User> UserManager           
-@inject StoreManager StoreManager              
+@inject UserManager<User> UserManager
+@inject StoreManager StoreManager
 
 @{
     var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
@@ -63,549 +63,559 @@
     @await RenderSectionAsync("Styles", required: false)
 
     <style>
-        /* Your existing CSS (unchanged) – keep it as is */
-        :root {
-            --accent-color: #6d28d9;
-            --accent-hover: #5b21b6;
-            --accent-light: #f3effe;
-            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-            --bg-color: #f8f7fc;
-            --card-bg: #ffffff;
-            --text-primary: #1e1b2e;
-            --text-secondary: #6b6478;
-            --text-muted: #9691a4;
-            --border-color: #ece8f6;
-            --rail-icon: #7A73A0;
-            --success-color: #10b981;
-            --error-color: #dc2626;
-            --warning-color: #f59e0b;
-            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.08);
-            --shadow-md: 0 10px 28px rgba(109, 40, 217, 0.12);
-            --shadow-lg: 0 20px 46px rgba(30, 27, 46, 0.16);
-            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --topbar-height: 68px;
-            --rail-height: 76px;
-            --ease: cubic-bezier(.4, 0, .2, 1);
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body.store-owner-body {
-            font-family: var(--font-family);
-            background: var(--bg-color);
-            color: var(--text-primary);
-            margin: 0;
-            padding-top: var(--topbar-height);
-            padding-bottom: var(--rail-height);
-        }
-
-        .pro-topbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: var(--topbar-height);
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 32px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .topbar-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-width: 0;
-        }
-
-        .topbar-title h1 {
-            font-size: 18px;
-            font-weight: 700;
-            margin: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .store-pulse {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--success-color);
-            background: rgba(16, 185, 129, 0.1);
-            padding: 4px 12px;
-            border-radius: 999px;
-            flex-shrink: 0;
-        }
-
-        .pulse-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--success-color);
-            position: relative;
-        }
-
-        .pulse-dot::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            background: var(--success-color);
-            animation: pulse-ring 1.8s ease-out infinite;
-        }
-
-        @@keyframes pulse-ring {
-            0% {
-                transform: scale(1);
-                opacity: 0.6;
+            /* Your existing CSS (unchanged) – keep it as is */
+            :root {
+                --accent-color: #6d28d9;
+                --accent-hover: #5b21b6;
+                --accent-light: #f3effe;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                --bg-color: #f8f7fc;
+                --card-bg: #ffffff;
+                --text-primary: #1e1b2e;
+                --text-secondary: #6b6478;
+                --text-muted: #9691a4;
+                --border-color: #ece8f6;
+                --rail-icon: #7A73A0;
+                --success-color: #10b981;
+                --error-color: #dc2626;
+                --warning-color: #f59e0b;
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.08);
+                --shadow-md: 0 10px 28px rgba(109, 40, 217, 0.12);
+                --shadow-lg: 0 20px 46px rgba(30, 27, 46, 0.16);
+                --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                --topbar-height: 68px;
+                --rail-height: 68px;
+                --ease: cubic-bezier(.4, 0, .2, 1);
             }
-            100% {
-                transform: scale(2.6);
-                opacity: 0;
+
+            * {
+                box-sizing: border-box;
             }
-        }
 
-        .topbar-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-
-        .topbar-search {
-            display: flex;
-            align-items: center;
-            height: 40px;
-            border-radius: 999px;
-            background: var(--bg-color);
-            border: 1.5px solid transparent;
-            width: 40px;
-            overflow: hidden;
-            transition: width 0.35s var(--ease), border-color 0.2s ease;
-        }
-
-        .topbar-search i {
-            width: 40px;
-            height: 40px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .topbar-search input {
-            border: none;
-            background: transparent;
-            outline: none;
-            font-size: 13.5px;
-            font-family: inherit;
-            color: var(--text-primary);
-            width: 0;
-            padding: 0;
-            opacity: 0;
-            transition: opacity 0.2s var(--ease);
-        }
-
-        .topbar-search.expanded {
-            width: 240px;
-            border-color: var(--accent-color);
-            background: var(--card-bg);
-        }
-
-        .topbar-search.expanded input {
-            width: 100%;
-            opacity: 1;
-            padding-right: 12px;
-        }
-
-        .topbar-icon-btn {
-            position: relative;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: none;
-            background: transparent;
-            color: var(--rail-icon);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background 0.2s ease, color 0.2s ease;
-        }
-
-        .topbar-icon-btn:hover {
-            background: var(--accent-light);
-            color: var(--accent-color);
-        }
-
-        .topbar-icon-btn .icon-badge {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            background: var(--error-color);
-            color: #fff;
-            border-radius: 999px;
-            min-width: 16px;
-            height: 16px;
-            padding: 0 4px;
-            font-size: 10px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid var(--card-bg);
-        }
-
-        .topbar-avatar-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            padding: 0;
-            border: 1.5px solid var(--border-color);
-            cursor: pointer;
-            overflow: hidden;
-            background: none;
-            transition: border-color 0.2s ease;
-        }
-
-        .topbar-avatar-btn:hover {
-            border-color: var(--accent-color);
-        }
-
-        .topbar-avatar-btn img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* glass popovers */
-        .glass-popover {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-color);
-            border-radius: 18px;
-            box-shadow: var(--shadow-lg);
-            z-index: 950;
-            opacity: 0;
-            transform: translateY(-6px) scale(0.98);
-            transform-origin: top right;
-            pointer-events: none;
-            transition: opacity 0.18s var(--ease), transform 0.18s var(--ease);
-        }
-
-        .glass-popover.show {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            pointer-events: auto;
-        }
-
-        .popover-anchor {
-            position: relative;
-        }
-
-        #notificationPopover {
-            width: 340px;
-            max-height: 420px;
-            overflow-y: auto;
-        }
-
-        .notification-header {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border-color);
-            font-weight: 800;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .notification-count-text {
-            background: var(--accent-light);
-            color: var(--accent-color);
-            padding: 3px 9px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        .notification-item {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .notification-item:last-child {
-            border-bottom: none;
-        }
-
-        .notification-title {
-            font-weight: 700;
-            font-size: 13.5px;
-            margin-bottom: 3px;
-        }
-
-        .notification-message {
-            color: var(--text-secondary);
-            font-size: 12.5px;
-            line-height: 1.5;
-            margin-bottom: 4px;
-        }
-
-        .notification-date {
-            color: var(--text-muted);
-            font-size: 11px;
-        }
-
-        .empty-notification {
-            padding: 24px 16px;
-            text-align: center;
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 13px;
-        }
-
-        #userPopover {
-            width: 220px;
-            padding: 8px;
-        }
-
-        .user-popover-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 8px 12px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 6px;
-        }
-
-        .user-popover-header img {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .user-popover-header .u-name {
-            font-weight: 700;
-            font-size: 13.5px;
-        }
-
-        .user-popover-header .u-store {
-            font-size: 11.5px;
-            color: var(--text-muted);
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 9px 10px;
-            color: var(--text-primary);
-            font-size: 13.5px;
-            font-weight: 500;
-            text-decoration: none;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            cursor: pointer;
-            font-family: inherit;
-            border-radius: 10px;
-            transition: background 0.15s ease, color 0.15s ease;
-        }
-
-        .dropdown-item i {
-            color: var(--rail-icon);
-            width: 16px;
-            text-align: center;
-        }
-
-        .dropdown-item:hover {
-            background: var(--accent-light);
-            color: var(--accent-color);
-        }
-
-        .dropdown-item:hover i {
-            color: var(--accent-color);
-        }
-
-        .dropdown-item.danger {
-            color: var(--error-color);
-        }
-
-        .dropdown-item.danger i {
-            color: var(--error-color);
-        }
-
-        .dropdown-item.danger:hover {
-            background: #fef2f2;
-        }
-
-        .pro-rail {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            height: var(--rail-height);
-            background: var(--card-bg);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            padding: 0 24px;
-            z-index: 1000;
-            box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
-        }
-
-        .rail-brand {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            background: var(--accent-gradient);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
-            text-decoration: none;
-            box-shadow: var(--shadow-sm);
-            transition: transform 0.3s var(--ease);
-        }
-
-        .rail-brand:hover {
-            transform: scale(1.06) rotate(-4deg);
-        }
-
-        .rail-nav {
-            display: flex;
-            flex-direction: row;
-            gap: 4px;
-            flex: 1;
-            overflow-x: auto;
-            height: 100%;
-            align-items: center;
-            justify-content: center;
-            scrollbar-width: none;
-        }
-
-        .rail-nav::-webkit-scrollbar {
-            display: none;
-        }
-
-        .rail-item {
-            position: relative;
-            width: 46px;
-            height: 46px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--rail-icon);
-            text-decoration: none;
-            flex-shrink: 0;
-            transition: background 0.25s var(--ease), color 0.25s var(--ease), transform 0.25s var(--ease);
-        }
-
-        .rail-item i {
-            font-size: 17px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .rail-item:hover {
-            background: var(--accent-light);
-            color: var(--accent-color);
-            transform: translateY(-2px);
-        }
-
-        .rail-item.active {
-            background: var(--accent-gradient);
-            color: #fff;
-            box-shadow: 0 6px 16px rgba(109, 40, 217, 0.32);
-        }
-
-        .rail-tooltip {
-            position: absolute;
-            bottom: calc(100% + 12px);
-            left: 50%;
-            transform: translateX(-50%) translateY(6px);
-            background: var(--text-primary);
-            color: #fff;
-            font-size: 12.5px;
-            font-weight: 600;
-            padding: 6px 14px;
-            border-radius: 8px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
-            z-index: 1100;
-            box-shadow: var(--shadow-md);
-        }
-
-        .rail-item:hover .rail-tooltip {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .rail-divider {
-            width: 1px;
-            height: 28px;
-            background: var(--border-color);
-            margin: 0 6px;
-            flex-shrink: 0;
-        }
-
-        .store-main-content {
-            padding: 28px 40px 60px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .content-body {
-            animation: content-enter 0.45s var(--ease) both;
-        }
-
-        @@keyframes content-enter {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
+            body.store-owner-body {
+                font-family: var(--font-family);
+                background: var(--bg-color);
+                color: var(--text-primary);
+                margin: 0;
+                padding-top: var(--topbar-height);
+                padding-bottom: var(--rail-height);
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
 
-        @@media (max-width: 768px) {
             .pro-topbar {
-                padding: 0 16px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: var(--topbar-height);
+                z-index: 1000;
+                background: rgba(255, 255, 255, 0.85);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border-bottom: 1px solid var(--border-color);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 32px;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .topbar-title {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                min-width: 0;
+            }
+
+                .topbar-title h1 {
+                    font-size: 18px;
+                    font-weight: 700;
+                    margin: 0;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+            .store-pulse {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--success-color);
+                background: rgba(16, 185, 129, 0.1);
+                padding: 4px 12px;
+                border-radius: 999px;
+                flex-shrink: 0;
+            }
+
+            .pulse-dot {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: var(--success-color);
+                position: relative;
+            }
+
+                .pulse-dot::after {
+                    content: "";
+                    position: absolute;
+                    inset: 0;
+                    border-radius: 50%;
+                    background: var(--success-color);
+                    animation: pulse-ring 1.8s ease-out infinite;
+                }
+
+            @@keyframes pulse-ring {
+                0% {
+                    transform: scale(1);
+                    opacity: 0.6;
+                }
+
+                100% {
+                    transform: scale(2.6);
+                    opacity: 0;
+                }
+            }
+
+            .topbar-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-shrink: 0;
+            }
+
+            .topbar-search {
+                display: flex;
+                align-items: center;
+                height: 40px;
+                border-radius: 999px;
+                background: var(--bg-color);
+                border: 1.5px solid transparent;
+                width: 40px;
+                overflow: hidden;
+                transition: width 0.35s var(--ease), border-color 0.2s ease;
+            }
+
+                .topbar-search i {
+                    width: 40px;
+                    height: 40px;
+                    flex-shrink: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: var(--text-muted);
+                    cursor: pointer;
+                    font-size: 14px;
+                }
+
+                .topbar-search input {
+                    border: none;
+                    background: transparent;
+                    outline: none;
+                    font-size: 13.5px;
+                    font-family: inherit;
+                    color: var(--text-primary);
+                    width: 0;
+                    padding: 0;
+                    opacity: 0;
+                    transition: opacity 0.2s var(--ease);
+                }
+
+                .topbar-search.expanded {
+                    width: 240px;
+                    border-color: var(--accent-color);
+                    background: var(--card-bg);
+                }
+
+                    .topbar-search.expanded input {
+                        width: 100%;
+                        opacity: 1;
+                        padding-right: 12px;
+                    }
+
+            .topbar-icon-btn {
+                position: relative;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                border: none;
+                background: transparent;
+                color: var(--rail-icon);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: background 0.2s ease, color 0.2s ease;
+            }
+
+                .topbar-icon-btn:hover {
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                }
+
+                .topbar-icon-btn .icon-badge {
+                    position: absolute;
+                    top: 2px;
+                    right: 2px;
+                    background: var(--error-color);
+                    color: #fff;
+                    border-radius: 999px;
+                    min-width: 16px;
+                    height: 16px;
+                    padding: 0 4px;
+                    font-size: 10px;
+                    font-weight: 800;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 2px solid var(--card-bg);
+                }
+
+            .topbar-avatar-btn {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                padding: 0;
+                border: 1.5px solid var(--border-color);
+                cursor: pointer;
+                overflow: hidden;
+                background: none;
+                transition: border-color 0.2s ease;
+            }
+
+                .topbar-avatar-btn:hover {
+                    border-color: var(--accent-color);
+                }
+
+                .topbar-avatar-btn img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+
+            /* glass popovers */
+            .glass-popover {
+                position: absolute;
+                top: calc(100% + 10px);
+                right: 0;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border: 1px solid var(--border-color);
+                border-radius: 18px;
+                box-shadow: var(--shadow-lg);
+                z-index: 950;
+                opacity: 0;
+                transform: translateY(-6px) scale(0.98);
+                transform-origin: top right;
+                pointer-events: none;
+                transition: opacity 0.18s var(--ease), transform 0.18s var(--ease);
+            }
+
+                .glass-popover.show {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                    pointer-events: auto;
+                }
+
+            .popover-anchor {
+                position: relative;
+            }
+
+            #notificationPopover {
+                width: 340px;
+                max-height: 420px;
+                overflow-y: auto;
+            }
+
+            .notification-header {
+                padding: 14px 16px;
+                border-bottom: 1px solid var(--border-color);
+                font-weight: 800;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .notification-count-text {
+                background: var(--accent-light);
+                color: var(--accent-color);
+                padding: 3px 9px;
+                border-radius: 999px;
+                font-size: 11px;
+                font-weight: 700;
+            }
+
+            .notification-item {
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+                .notification-item:last-child {
+                    border-bottom: none;
+                }
+
+            .notification-title {
+                font-weight: 700;
+                font-size: 13.5px;
+                margin-bottom: 3px;
+            }
+
+            .notification-message {
+                color: var(--text-secondary);
+                font-size: 12.5px;
+                line-height: 1.5;
+                margin-bottom: 4px;
+            }
+
+            .notification-date {
+                color: var(--text-muted);
+                font-size: 11px;
+            }
+
+            .empty-notification {
+                padding: 24px 16px;
+                text-align: center;
+                color: var(--text-muted);
+                font-weight: 600;
+                font-size: 13px;
+            }
+
+            #userPopover {
+                width: 220px;
+                padding: 8px;
+            }
+
+            .user-popover-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 8px 12px;
+                border-bottom: 1px solid var(--border-color);
+                margin-bottom: 6px;
+            }
+
+                .user-popover-header img {
+                    width: 34px;
+                    height: 34px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+
+                .user-popover-header .u-name {
+                    font-weight: 700;
+                    font-size: 13.5px;
+                }
+
+                .user-popover-header .u-store {
+                    font-size: 11.5px;
+                    color: var(--text-muted);
+                }
+
+            .dropdown-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 9px 10px;
+                color: var(--text-primary);
+                font-size: 13.5px;
+                font-weight: 500;
+                text-decoration: none;
+                border: none;
+                background: none;
+                width: 100%;
+                text-align: left;
+                cursor: pointer;
+                font-family: inherit;
+                border-radius: 10px;
+                transition: background 0.15s ease, color 0.15s ease;
+            }
+
+                .dropdown-item i {
+                    color: var(--rail-icon);
+                    width: 16px;
+                    text-align: center;
+                }
+
+                .dropdown-item:hover {
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                }
+
+                    .dropdown-item:hover i {
+                        color: var(--accent-color);
+                    }
+
+                .dropdown-item.danger {
+                    color: var(--error-color);
+                }
+
+                    .dropdown-item.danger i {
+                        color: var(--error-color);
+                    }
+
+                    .dropdown-item.danger:hover {
+                        background: #fef2f2;
+                    }
+
+            .pro-rail {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: var(--rail-height);
+                background: var(--card-bg);
+                border-top: 1px solid var(--border-color);
+                display: flex;
+                align-items: center;
+                padding: 0 20px;
+                z-index: 1000;
+                box-shadow: 0 -1px 8px rgba(0,0,0,0.03);
+            }
+
+            .rail-brand {
+                width: 40px;
+                height: 40px;
+                border-radius: 12px;
+                background: var(--accent-gradient);
+                color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                flex-shrink: 0;
+                text-decoration: none;
+                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.18);
+                transition: transform 0.3s var(--ease);
+            }
+
+                .rail-brand:hover {
+                    transform: scale(1.06) rotate(-4deg);
+                }
+
+            .rail-nav {
+                display: flex;
+                flex-direction: row;
+                gap: 2px;
+                flex: 1;
+                overflow-x: auto;
+                height: 100%;
+                align-items: center;
+                justify-content: center;
+                scrollbar-width: none;
+            }
+
+                .rail-nav::-webkit-scrollbar {
+                    display: none;
+                }
+
+            /* ----- Nav items now show a permanent label under the icon,
+                       instead of relying on a hover-only tooltip, so the owner
+                       always knows what each control is (and what they just
+                       clicked), including on touch devices where hover doesn't
+                       exist. ----- */
+            .rail-item {
+                position: relative;
+                width: 58px;
+                height: 52px;
+                border-radius: 12px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 3px;
+                color: var(--rail-icon);
+                text-decoration: none;
+                flex-shrink: 0;
+                padding: 5px 2px;
+                transition: background 0.25s var(--ease), color 0.25s var(--ease), transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
+            }
+
+                .rail-item i {
+                    font-size: 14.5px;
+                    line-height: 1;
+                }
+
+            .rail-label {
+                font-size: 9px;
+                font-weight: 600;
+                line-height: 1;
+                letter-spacing: 0.1px;
+                white-space: nowrap;
+                max-width: 56px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .rail-item:hover {
+                background: var(--accent-light);
+                color: var(--accent-color);
+                transform: translateY(-1px);
+            }
+
+            .rail-item.active {
+                background: var(--accent-gradient);
+                color: #fff;
+                box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
+            }
+
+            .rail-divider {
+                width: 1px;
+                height: 26px;
+                background: var(--border-color);
+                margin: 0 5px;
+                flex-shrink: 0;
             }
 
             .store-main-content {
-                padding: 20px 16px 40px;
+                padding: 28px 40px 60px;
+                max-width: 1200px;
+                margin: 0 auto;
             }
 
-            .topbar-search.expanded {
-                width: 140px;
+            .content-body {
+                animation: content-enter 0.45s var(--ease) both;
             }
-        }
+
+            @@keyframes content-enter {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            @@media (max-width: 768px) {
+                .pro-topbar {
+                    padding: 0 16px;
+                }
+
+                .store-main-content {
+                    padding: 20px 16px 40px;
+                }
+
+                .topbar-search.expanded {
+                    width: 140px;
+                }
+
+                .rail-item {
+                    width: 50px;
+                    height: 48px;
+                }
+
+                    .rail-item i {
+                        font-size: 13.5px;
+                    }
+
+                .rail-label {
+                    font-size: 8.5px;
+                    max-width: 46px;
+                }
+            }
     </style>
 </head>
 
@@ -712,47 +722,47 @@
 
             <nav class="rail-nav" aria-label="Main navigation">
 
-                <a href="/StoreOwner/Home" class="rail-item @ActiveIf("Home")">
+                <a href="/StoreOwner/Home" class="rail-item @ActiveIf("Home")" aria-current="@(ActiveIf("Home") == "active" ? "page" : null)" title="Home">
                     <i class="fas fa-home"></i>
-                    <span class="rail-tooltip">Home</span>
+                    <span class="rail-label">Home</span>
                 </a>
-                <a href="/StoreOwner/Dashboard" class="rail-item @ActiveIf("Dashboard")">
+                <a href="/StoreOwner/Dashboard" class="rail-item @ActiveIf("Dashboard")" aria-current="@(ActiveIf("Dashboard") == "active" ? "page" : null)" title="Dashboard">
                     <i class="fas fa-tachometer-alt"></i>
-                    <span class="rail-tooltip">Dashboard</span>
+                    <span class="rail-label">Dashboard</span>
                 </a>
 
                 <div class="rail-divider"></div>
 
-                <a href="/StoreOwner/Products/Index" class="rail-item @ActiveIf("Products")">
+                <a href="/StoreOwner/Products/Index" class="rail-item @ActiveIf("Products")" aria-current="@(ActiveIf("Products") == "active" ? "page" : null)" title="Products">
                     <i class="fas fa-box"></i>
-                    <span class="rail-tooltip">Products</span>
+                    <span class="rail-label">Products</span>
                 </a>
-                <a href="/StoreOwner/Order/Index" class="rail-item @ActiveIf("Order")">
+                <a href="/StoreOwner/Order/Index" class="rail-item @ActiveIf("Order")" aria-current="@(ActiveIf("Order") == "active" ? "page" : null)" title="Orders">
                     <i class="fas fa-shopping-cart"></i>
-                    <span class="rail-tooltip">Orders</span>
+                    <span class="rail-label">Orders</span>
                 </a>
-                <a href="/StoreOwner/Promotions/Index" class="rail-item @ActiveIf("Promotions")">
+                <a href="/StoreOwner/Promotions/Index" class="rail-item @ActiveIf("Promotions")" aria-current="@(ActiveIf("Promotions") == "active" ? "page" : null)" title="Promotions">
                     <i class="fas fa-tags"></i>
-                    <span class="rail-tooltip">Promotions</span>
+                    <span class="rail-label">Promotions</span>
                 </a>
-                <a href="@reviewsHref" class="rail-item @ActiveIf("Reviews")">
+                <a href="@reviewsHref" class="rail-item @ActiveIf("Reviews")" aria-current="@(ActiveIf("Reviews") == "active" ? "page" : null)" title="Reviews">
                     <i class="fas fa-star"></i>
-                    <span class="rail-tooltip">Reviews</span>
+                    <span class="rail-label">Reviews</span>
                 </a>
-                <a href="/StoreOwner/Analytics" class="rail-item @ActiveIf("Analytics")">
+                <a href="/StoreOwner/Analytics" class="rail-item @ActiveIf("Analytics")" aria-current="@(ActiveIf("Analytics") == "active" ? "page" : null)" title="Analytics">
                     <i class="fas fa-chart-line"></i>
-                    <span class="rail-tooltip">Analytics</span>
+                    <span class="rail-label">Analytics</span>
                 </a>
-                <a href="/StoreOwner/AccountStatement" class="rail-item @ActiveIf("AccountStatement")">
+                <a href="/StoreOwner/AccountStatement" class="rail-item @ActiveIf("AccountStatement")" aria-current="@(ActiveIf("AccountStatement") == "active" ? "page" : null)" title="Account Statement">
                     <i class="fas fa-file-invoice-dollar"></i>
-                    <span class="rail-tooltip">Account Statement</span>
+                    <span class="rail-label">Statement</span>
                 </a>
 
                 <div class="rail-divider"></div>
 
-                <a href="/Chat" class="rail-item @ActiveIf("Chat")">
+                <a href="/Chat" class="rail-item @ActiveIf("Chat")" aria-current="@(ActiveIf("Chat") == "active" ? "page" : null)" title="Chat">
                     <i class="fas fa-comment-dots"></i>
-                    <span class="rail-tooltip">Chat</span>
+                    <span class="rail-label">Chat</span>
                 </a>
 
             </nav>
@@ -773,83 +783,83 @@
 
     <script>
         (function() {
-            // Expanding search
-            const topbarSearch = document.getElementById("topbarSearch");
-            const searchToggle = document.getElementById("searchToggle");
-            const globalSearch = document.getElementById("globalSearch");
+        // Expanding search
+        const topbarSearch = document.getElementById("topbarSearch");
+        const searchToggle = document.getElementById("searchToggle");
+        const globalSearch = document.getElementById("globalSearch");
 
-            if (topbarSearch && searchToggle && globalSearch) {
-                searchToggle.addEventListener("click", function(e) {
-                    e.stopPropagation();
-                    topbarSearch.classList.add("expanded");
-                    globalSearch.focus();
-                });
+        if (topbarSearch && searchToggle && globalSearch) {
+        searchToggle.addEventListener("click", function(e) {
+        e.stopPropagation();
+        topbarSearch.classList.add("expanded");
+        globalSearch.focus();
+        });
 
-                document.addEventListener("click", function(e) {
-                    if (!topbarSearch.contains(e.target)) {
-                        if (!globalSearch.value) {
-                            topbarSearch.classList.remove("expanded");
-                        }
-                    }
-                });
+        document.addEventListener("click", function(e) {
+        if (!topbarSearch.contains(e.target)) {
+        if (!globalSearch.value) {
+        topbarSearch.classList.remove("expanded");
+        }
+        }
+        });
 
-                globalSearch.addEventListener("keydown", function(e) {
-                    if (e.key === "Escape") {
-                        topbarSearch.classList.remove("expanded");
-                        globalSearch.blur();
-                    }
-                });
-            }
+        globalSearch.addEventListener("keydown", function(e) {
+        if (e.key === "Escape") {
+        topbarSearch.classList.remove("expanded");
+        globalSearch.blur();
+        }
+        });
+        }
 
-            // Glass popovers
-            function setupPopover(btnId, popoverId) {
-                const btn = document.getElementById(btnId);
-                const popover = document.getElementById(popoverId);
-                if (!btn || !popover) return;
+        // Glass popovers
+        function setupPopover(btnId, popoverId) {
+        const btn = document.getElementById(btnId);
+        const popover = document.getElementById(popoverId);
+        if (!btn || !popover) return;
 
-                btn.addEventListener("click", function(e) {
-                    e.stopPropagation();
-                    const isOpen = popover.classList.contains("show");
-                    document.querySelectorAll(".glass-popover.show").forEach(p => p.classList.remove("show"));
-                    if (!isOpen) {
-                        popover.classList.add("show");
-                    }
-                });
+        btn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        const isOpen = popover.classList.contains("show");
+        document.querySelectorAll(".glass-popover.show").forEach(p => p.classList.remove("show"));
+        if (!isOpen) {
+        popover.classList.add("show");
+        }
+        });
 
-                popover.addEventListener("click", function(e) {
-                    e.stopPropagation();
-                });
-            }
+        popover.addEventListener("click", function(e) {
+        e.stopPropagation();
+        });
+        }
 
-            setupPopover("notificationBtn", "notificationPopover");
-            setupPopover("userBtn", "userPopover");
+        setupPopover("notificationBtn", "notificationPopover");
+        setupPopover("userBtn", "userPopover");
 
-            document.addEventListener("click", function() {
-                document.querySelectorAll(".glass-popover.show").forEach(p => p.classList.remove("show"));
-            });
+        document.addEventListener("click", function() {
+        document.querySelectorAll(".glass-popover.show").forEach(p => p.classList.remove("show"));
+        });
 
-            document.addEventListener("keydown", function(e) {
-                if (e.key === "Escape") {
-                    document.querySelectorAll(".glass-popover.show").forEach(p => p.classList.remove("show"));
-                }
-            });
+        document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape") {
+        document.querySelectorAll(".glass-popover.show").forEach(p => p.classList.remove("show"));
+        }
+        });
 
-            // Mark all as read
-            const markAllBtn = document.getElementById("markAllReadBtn");
-            if (markAllBtn) {
-                markAllBtn.addEventListener("click", function(e) {
-                    e.stopPropagation();
-                    fetch('/Notification/MarkAllAsRead', { method: 'POST' })
-                        .then(response => {
-                            if (response.ok) {
-                                window.location.reload();
-                            } else {
-                                console.error('Failed to mark all as read');
-                            }
-                        })
-                        .catch(err => console.error(err));
-                });
-            }
+        // Mark all as read
+        const markAllBtn = document.getElementById("markAllReadBtn");
+        if (markAllBtn) {
+        markAllBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        fetch('/Notification/MarkAllAsRead', { method: 'POST' })
+        .then(response => {
+        if (response.ok) {
+        window.location.reload();
+        } else {
+        console.error('Failed to mark all as read');
+        }
+        })
+        .catch(err => console.error(err));
+        });
+        }
         })();
     </script>
 

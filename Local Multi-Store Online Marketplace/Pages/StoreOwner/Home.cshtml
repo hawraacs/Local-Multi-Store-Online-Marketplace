@@ -1,17 +1,17 @@
 ﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.HomeModel
 @{
+    ViewData["Title"] = "Home";
     Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
     var totalReviews = Model.Products.Sum(p => p.Reviews?.Count ?? 0);
     var totalRatingSum = Model.Products.Sum(p => p.Reviews?.Sum(r => r.Rating) ?? 0);
     var avgRating = totalReviews > 0 ? (double)totalRatingSum / totalReviews : 0;
 }
-
 @section Styles {
     <style>
         /* ============================================================
-                   ROOT VARIABLES — original brand palette (unchanged)
-                   ============================================================ */
+                           ROOT VARIABLES — original brand palette (unchanged)
+                           ============================================================ */
         :root {
             /* Brand colors */
             --accent: #6d28d9;
@@ -54,10 +54,9 @@
             --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
-
         /* ============================================================
-                   BASE
-                   ============================================================ */
+                           BASE
+                           ============================================================ */
         body {
             font-family: var(--font-body);
             background: var(--bg);
@@ -71,10 +70,9 @@
             margin: 28px auto;
             padding: 0 24px;
         }
-
         /* ============================================================
-                   PROFILE HEADER
-                   ============================================================ */
+                           PROFILE HEADER
+                           ============================================================ */
         .profile-header {
             display: flex;
             align-items: center;
@@ -87,7 +85,6 @@
             border: 1px solid var(--border);
             margin-bottom: 28px;
         }
-
             /* thin brass rule along the top edge instead of a gradient border-glow */
             .profile-header::before {
                 content: '';
@@ -99,7 +96,6 @@
                 background: var(--accent);
                 border-radius: 0 0 3px 3px;
             }
-
         /* ----- Avatar ----- */
         .profile-avatar-container {
             flex-shrink: 0;
@@ -138,7 +134,6 @@
             border-radius: 50%;
             border: 3px solid var(--surface);
         }
-
         /* ----- Details ----- */
         .profile-details {
             flex: 1;
@@ -187,7 +182,6 @@
             .edit-profile-btn i {
                 font-size: 11px;
             }
-
         /* ----- Stats Row ----- */
         .profile-stats-row {
             display: flex;
@@ -218,7 +212,6 @@
             font-size: 13px;
             margin-right: 2px;
         }
-
         /* ----- Message Button ----- */
         .stats-message-btn {
             display: inline-flex;
@@ -245,7 +238,6 @@
             .stats-message-btn i {
                 font-size: 14px;
             }
-
         /* ----- Bio ----- */
         .profile-bio {
             font-size: 14px;
@@ -301,10 +293,9 @@
                 font-size: 10px;
                 color: var(--accent);
             }
-
         /* ============================================================
-                   TABS
-                   ============================================================ */
+                           TABS
+                           ============================================================ */
         .profile-tabs {
             display: flex;
             gap: 28px;
@@ -346,10 +337,9 @@
             .tab-btn i {
                 font-size: 13px;
             }
-
         /* ============================================================
-                   PRODUCT GRID
-                   ============================================================ */
+                           PRODUCT GRID
+                           ============================================================ */
         .instagram-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -392,7 +382,6 @@
             .product-grid-item:hover .image-wrap img {
                 transform: scale(1.04);
             }
-
         /* Badge — small brass tag rather than a gradient pill */
         .product-badge {
             position: absolute;
@@ -407,6 +396,26 @@
             padding: 4px 12px;
             border-radius: 3px;
         }
+        /* Small photo-count pill so the owner knows a product has more than one image */
+        .image-count-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(23, 24, 29, 0.65);
+            color: #fff;
+            font-size: 10.5px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(3px);
+        }
+
+            .image-count-badge i {
+                font-size: 10px;
+            }
 
         .product-quick-actions {
             position: absolute;
@@ -493,10 +502,9 @@
                 .product-details .review-count i {
                     color: var(--accent);
                 }
-
         /* ============================================================
-                   EMPTY STATE
-                   ============================================================ */
+                           EMPTY STATE
+                           ============================================================ */
         .empty-state {
             text-align: center;
             padding: 72px 24px;
@@ -549,13 +557,12 @@
                 background: var(--accent-hover);
                 color: #fff;
             }
-
         /* ============================================================
-                   MODAL — fixed to actually show everything:
-                   the whole info column scrolls as ONE panel (header excluded),
-                   instead of clipping the description while only reviews scroll.
-                   Signature detail: a ticket-stub seam between media and info.
-                   ============================================================ */
+                           MODAL — fixed to actually show everything:
+                           the whole info column scrolls as ONE panel (header excluded),
+                           instead of clipping the description while only reviews scroll.
+                           Signature detail: a ticket-stub seam between media and info.
+                           ============================================================ */
         .modal {
             display: none;
             position: fixed;
@@ -605,8 +612,7 @@
                 flex-direction: row;
             }
         }
-
-        /* ----- Modal Media ----- */
+        /* ----- Modal Media / Gallery ----- */
         .product-modal-media {
             background: var(--surface-alt);
             display: flex;
@@ -615,9 +621,10 @@
             flex-shrink: 0;
             position: relative;
             height: 300px;
+            overflow: hidden;
         }
 
-            .product-modal-media img {
+            .product-modal-media .modal-gallery-img {
                 width: 100%;
                 height: 100%;
                 object-fit: contain;
@@ -641,8 +648,68 @@
             font-weight: 600;
             padding: 4px 13px;
             border-radius: 20px;
+            z-index: 3;
+        }
+        /* Gallery prev/next chevrons — separate from the outer product nav arrows,
+                   these switch between a single product's own images */
+        .gallery-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(23, 24, 29, 0.45);
+            color: #fff;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 3;
+            transition: background 0.2s var(--ease);
         }
 
+            .gallery-nav:hover {
+                background: rgba(23, 24, 29, 0.7);
+            }
+
+            .gallery-nav.prev {
+                left: 12px;
+            }
+
+            .gallery-nav.next {
+                right: 12px;
+            }
+
+        .gallery-dots {
+            position: absolute;
+            bottom: 16px;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            z-index: 3;
+        }
+
+        .gallery-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(23, 24, 29, 0.25);
+            cursor: pointer;
+            transition: all 0.2s var(--ease);
+        }
+
+            .gallery-dot.active {
+                background: #fff;
+                width: 16px;
+                border-radius: 4px;
+                box-shadow: 0 1px 4px rgba(23, 24, 29, 0.4);
+            }
         /* ----- Ticket-stub seam (signature detail) ----- */
         .product-modal-info {
             flex: 1;
@@ -671,7 +738,6 @@
             box-shadow: inset 0 1px 3px rgba(23, 24, 29, 0.12);
             z-index: 2;
         }
-
             /* positioned for the horizontal seam (mobile, stacked layout) */
             .seam-dot.top {
                 top: -8px;
@@ -697,7 +763,6 @@
                 right: auto;
             }
         }
-
         /* ----- Header (stays put; only the body below scrolls) ----- */
         .product-modal-header {
             padding: 18px 24px;
@@ -762,9 +827,8 @@
                 background: var(--accent-dark);
                 color: #fff;
             }
-
         /* ----- Body: everything below the header scrolls together,
-                   so long descriptions are never clipped ----- */
+                           so long descriptions are never clipped ----- */
         .product-modal-body {
             flex: 1;
             min-height: 0;
@@ -955,10 +1019,9 @@
                 font-size: 13px;
                 margin: 0;
             }
-
         /* ============================================================
-                   MODAL NAV ARROWS
-                   ============================================================ */
+                           MODAL NAV ARROWS
+                           ============================================================ */
         .modal-nav-arrow {
             position: fixed;
             top: 50%;
@@ -1012,10 +1075,9 @@
                     right: 8px;
                 }
         }
-
         /* ============================================================
-                   RESPONSIVE
-                   ============================================================ */
+                           RESPONSIVE
+                           ============================================================ */
         @@media (max-width: 900px) {
             .instagram-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -1130,10 +1192,9 @@
                 font-size: 12px;
             }
         }
-
         /* ============================================================
-                   FOOTER
-                   ============================================================ */
+                           FOOTER
+                           ============================================================ */
         footer {
             text-align: center;
             padding: 36px 20px 20px;
@@ -1142,10 +1203,9 @@
             border-top: 1px solid var(--border);
             margin-top: 40px;
         }
-
         /* ============================================================
-                   SCROLLBAR STYLING
-                   ============================================================ */
+                           SCROLLBAR STYLING
+                           ============================================================ */
         .product-modal-body::-webkit-scrollbar {
             width: 4px;
         }
@@ -1162,7 +1222,6 @@
             .product-modal-body::-webkit-scrollbar-thumb:hover {
                 background: var(--text-muted);
             }
-
         /* Respect reduced motion preference */
         @@media (prefers-reduced-motion: reduce) {
             * {
@@ -1172,9 +1231,7 @@
         }
     </style>
 }
-
 <div class="profile-container">
-
     <!-- ========== PROFILE HEADER ========== -->
     <div class="profile-header">
         <div class="profile-avatar-container">
@@ -1190,7 +1247,6 @@
             }
             <div class="avatar-status"></div>
         </div>
-
         <div class="profile-details">
             <div class="profile-username-row">
                 <h2 class="profile-username">@Model.Store?.StoreName</h2>
@@ -1198,7 +1254,6 @@
                     <i class="fas fa-pen"></i> Edit Profile
                 </a>
             </div>
-
             <div class="profile-stats-row">
                 <div class="stat-item">
                     <span class="stat-icon"><i class="fas fa-box"></i></span>
@@ -1220,11 +1275,9 @@
                     </div>
                 }
             </div>
-
             <a href="/Chat" class="stats-message-btn">
                 <i class="fas fa-comment-dots"></i> Messages
             </a>
-
             <div class="profile-bio">
                 <span class="bio-label">Official Store</span>
                 <p>@Model.Store?.Description</p>
@@ -1235,27 +1288,30 @@
             </div>
         </div>
     </div>
-
     <!-- ========== TABS ========== -->
     <div class="profile-tabs">
         <button class="tab-btn active">
             <i class="fas fa-table-cells"></i> Products
         </button>
     </div>
-
     <!-- ========== PRODUCT GRID ========== -->
     @if (Model.Products.Any())
     {
         <div class="instagram-grid">
             @foreach (var p in Model.Products)
             {
-                var img = p.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+                var orderedImages = (p.Images?.OrderByDescending(im => im.IsPrimary).ThenBy(im => im.DisplayOrder).ToList()) ?? new();
+                var img = orderedImages.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+                var imageCount = orderedImages.Count;
                 var reviewCount = p.Reviews?.Count ?? 0;
-
                 <div class="product-grid-item" data-product-id="@p.ProductID" onclick="openProductModal(@p.ProductID)">
                     <div class="image-wrap">
                         <img src="@img" alt="@p.ProductName" loading="lazy" />
                         <span class="product-badge">For Sale</span>
+                        @if (imageCount > 1)
+                        {
+                            <span class="image-count-badge"><i class="fas fa-images"></i> @imageCount</span>
+                        }
                         <div class="product-quick-actions">
                             <button onclick="event.stopPropagation(); openProductModal(@p.ProductID)" title="Quick view">
                                 <i class="fas fa-eye"></i>
@@ -1286,37 +1342,58 @@
             </a>
         </div>
     }
-
 </div>
-
-<!-- ========== MODAL NAV ARROWS ========== -->
+<!-- ========== MODAL NAV ARROWS (switch between products) ========== -->
 <button id="navPrev" class="modal-nav-arrow prev" onclick="goToAdjacentProduct(-1)" aria-label="Previous product">
     <i class="fas fa-chevron-left"></i>
 </button>
 <button id="navNext" class="modal-nav-arrow next" onclick="goToAdjacentProduct(1)" aria-label="Next product">
     <i class="fas fa-chevron-right"></i>
 </button>
-
 <!-- ========== PRODUCT MODALS ========== -->
 @foreach (var p in Model.Products)
 {
-    var img = p.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+    var orderedImages = (p.Images?.OrderByDescending(im => im.IsPrimary).ThenBy(im => im.DisplayOrder).ToList()) ?? new();
     var reviewCount = p.Reviews?.Count ?? 0;
-
     <div id="modal-@p.ProductID" class="modal" data-product-id="@p.ProductID" onclick="handleOutsideClick(event, @p.ProductID)">
         <div class="product-modal-content" onclick="event.stopPropagation()">
+            <!-- Media / Gallery: shows every uploaded image for this product -->
+            <div class="product-modal-media" data-current-image="0">
+                @if (orderedImages.Any())
+                {
+                    for (int idx = 0; idx < orderedImages.Count; idx++)
+                    {
+                        var im = orderedImages[idx];
+                        <img class="modal-gallery-img" src="@im.ImageUrl" alt="@p.ProductName" style="display:@(idx == 0 ? "block" : "none")" />
+                    }
+                }
+                else
+                {
+                    <img class="modal-gallery-img" src="/images/no-image.png" alt="@p.ProductName" />
+                }
 
-            <!-- Media -->
-            <div class="product-modal-media">
-                <img src="@img" alt="@p.ProductName" />
-                <span class="image-counter">1 / 1</span>
+                @if (orderedImages.Count > 1)
+                {
+                    <button type="button" class="gallery-nav prev" onclick="event.stopPropagation(); changeModalImage(@p.ProductID, -1)" aria-label="Previous image">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button type="button" class="gallery-nav next" onclick="event.stopPropagation(); changeModalImage(@p.ProductID, 1)" aria-label="Next image">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="gallery-dots">
+                        @for (int idx = 0; idx < orderedImages.Count; idx++)
+                        {
+                            <span class="gallery-dot @(idx == 0 ? "active" : "")" onclick="event.stopPropagation(); setModalImage(@p.ProductID, @idx)"></span>
+                        }
+                    </div>
+                }
+
+                <span class="image-counter">1 / @(orderedImages.Count == 0 ? 1 : orderedImages.Count)</span>
             </div>
-
             <!-- Info: header stays fixed, body scrolls as one piece -->
             <div class="product-modal-info">
                 <span class="seam-dot top"></span>
                 <span class="seam-dot bottom"></span>
-
                 <div class="product-modal-header">
                     <div class="product-modal-store">
                         @if (!string.IsNullOrWhiteSpace(Model.Store?.LogoURL))
@@ -1334,7 +1411,6 @@
                     </div>
                     <button class="close-modal" onclick="closeProductModal(@p.ProductID)" aria-label="Close">&times;</button>
                 </div>
-
                 <div class="product-modal-body">
                     <div class="product-modal-meta">
                         <h3>@p.ProductName</h3>
@@ -1344,13 +1420,11 @@
                         </div>
                         <p class="description">@p.Description</p>
                     </div>
-
                     <div class="product-modal-reviews">
                         <div class="reviews-header">
                             <span><i class="fas fa-comment"></i> Feedback</span>
                             <span class="review-count-badge">@reviewCount review@(reviewCount != 1 ? "s" : "")</span>
                         </div>
-
                         @if (p.Reviews != null && p.Reviews.Any())
                         {
                             @foreach (var review in p.Reviews.OrderByDescending(r => r.CreatedAt))
@@ -1398,7 +1472,6 @@
         </div>
     </div>
 }
-
 <!-- ========== SCRIPTS ========== -->
 <script>
     // Ordered list of product IDs (same order as grid)
@@ -1419,6 +1492,7 @@
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
         currentProductId = id;
+        setModalImage(id, 0); // always start the gallery on the first / primary image
         updateNavArrows();
     }
 
@@ -1438,7 +1512,35 @@
         }
     }
 
-    // ----- Navigation arrows -----
+    // ----- Per-product image gallery (all uploaded images) -----
+    function setModalImage(productId, index) {
+        const modal = document.getElementById('modal-' + productId);
+        if (!modal) return;
+        const imgs = modal.querySelectorAll('.modal-gallery-img');
+        if (!imgs.length) return;
+        index = ((index % imgs.length) + imgs.length) % imgs.length;
+
+        imgs.forEach((imgEl, i) => { imgEl.style.display = i === index ? 'block' : 'none'; });
+
+        const media = modal.querySelector('.product-modal-media');
+        if (media) media.dataset.currentImage = String(index);
+
+        const counter = modal.querySelector('.image-counter');
+        if (counter) counter.textContent = (index + 1) + ' / ' + imgs.length;
+
+        const dots = modal.querySelectorAll('.gallery-dot');
+        dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+    }
+
+    function changeModalImage(productId, direction) {
+        const modal = document.getElementById('modal-' + productId);
+        if (!modal) return;
+        const media = modal.querySelector('.product-modal-media');
+        const current = parseInt(media?.dataset.currentImage || '0', 10);
+        setModalImage(productId, current + direction);
+    }
+
+    // ----- Navigation arrows (switch between products) -----
     function updateNavArrows() {
         const prev = document.getElementById('navPrev');
         const next = document.getElementById('navNext');
@@ -1468,7 +1570,8 @@
         openProductModal(newId);
     }
 
-    // ----- Keyboard -----
+    // ----- Keyboard: left/right switches PRODUCTS (unchanged); use the on-image
+    // chevrons or dots to browse a single product's photos -----
     document.addEventListener('keydown', function (e) {
         if (currentProductId === null) return;
         if (e.key === 'ArrowRight') { e.preventDefault(); goToAdjacentProduct(1); }
@@ -1476,7 +1579,7 @@
         else if (e.key === 'Escape') { closeProductModal(currentProductId); }
     });
 
-    // ----- Touch swipe -----
+    // ----- Touch swipe (switches products, same as before) -----
     let touchStartX = 0;
     const SWIPE_THRESHOLD = 50;
 
