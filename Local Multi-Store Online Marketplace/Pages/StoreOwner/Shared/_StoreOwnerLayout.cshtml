@@ -2,15 +2,15 @@
 @using Multi_Store.Core.Entities
 @using Multi_Store.Services.Dtos
 @using Multi_Store.Services.Managers
-@inject UserManager<User> IdentityUserManager
+@inject UserManager<User> IdentityUserManager   
 @inject NotificationManager NotificationManager
+@inject UserManager<User> UserManager           
+@inject StoreManager StoreManager              
 
 @{
-    Layout = "/Pages/Shared/_Layout.cshtml";
-
     var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
 
-    var currentUser = await IdentityUserManager.GetUserAsync(User);
+    var currentUser = await UserManager.GetUserAsync(User);
 
     List<NotificationDTO> unreadNotifications = new();
 
@@ -20,6 +20,32 @@
     }
 
     var unreadCount = unreadNotifications.Count;
+
+    string ActiveIf(string pageName) =>
+        string.Equals(currentPage, pageName, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+
+    var storeId = ViewData["StoreId"]?.ToString();
+    var reviewsHref = !string.IsNullOrEmpty(storeId)
+        ? Url.Page("/StoreReviews", new { storeId })
+        : "/StoreReviews";
+
+    // ----- Fetch store logo and name from the database, with fallbacks -----
+    string storeLogoUrl = null;
+    string storeName = null;
+
+    if (currentUser != null)
+    {
+        var store = await StoreManager.GetByUserIdAsync(currentUser.Id);
+        if (store != null)
+        {
+            storeLogoUrl = store.LogoURL;
+            storeName = store.StoreName;
+        }
+    }
+
+    // Fallback to ViewData if not found (for pages that still set it) or default
+    storeLogoUrl ??= ViewData["StoreLogoUrl"]?.ToString() ?? "~/images/default-avatar.png";
+    storeName ??= ViewData["StoreName"]?.ToString() ?? "My Store";
 }
 
 <!DOCTYPE html>
@@ -37,364 +63,274 @@
     @await RenderSectionAsync("Styles", required: false)
 
     <style>
+        /* Your existing CSS (unchanged) – keep it as is */
         :root {
-            /* -------- Brand colors (Purple / Indigo) -------- */
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
             --accent-light: #f3effe;
-            --accent-steel: #4f46e5;
             --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-            /* -------- Neutral palette -------- */
             --bg-color: #f8f7fc;
             --card-bg: #ffffff;
             --text-primary: #1e1b2e;
             --text-secondary: #6b6478;
             --text-muted: #9691a4;
             --border-color: #ece8f6;
-            /* -------- Sidebar / Navbar palette — "Premium Silver" -------- */
-            --sidebar-bg: linear-gradient(180deg, #E8EDF2 0%, #D5DCE3 100%);
-            --sidebar-bg-alt: #D5DCE3;
-            --sidebar-active-bg: #4C1D95;
-            --sidebar-hover-bg: #D5DCE3;
-            --sidebar-text: #1E1B4B;
-            --sidebar-text-dim: #5B527A;
-            --sidebar-border: #C8D0D8;
-            --sidebar-icon: #7A73A0;
-            --sidebar-icon-active: #FFFFFF;
-            --sidebar-accent: #4C1D95;
-            --sidebar-active-accent-bar: #FFFFFF;
-            --sidebar-shadow: rgba(30, 27, 75, 0.10);
-            /* -------- Navbar (matches sidebar exactly) -------- */
-            --navbar-bg: var(--sidebar-bg);
-            --navbar-bg-alt: var(--sidebar-bg-alt);
-            --navbar-border: var(--sidebar-border);
-            --navbar-text-dim: var(--sidebar-text-dim);
-            /* -------- Semantic -------- */
+            --rail-icon: #7A73A0;
             --success-color: #10b981;
             --error-color: #dc2626;
             --warning-color: #f59e0b;
-            /* -------- Shadows -------- */
-            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
-            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
-            --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.18);
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.08);
+            --shadow-md: 0 10px 28px rgba(109, 40, 217, 0.12);
+            --shadow-lg: 0 20px 46px rgba(30, 27, 46, 0.16);
             --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --topbar-height: 68px;
+            --rail-height: 76px;
+            --ease: cubic-bezier(.4, 0, .2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body.store-owner-body {
             font-family: var(--font-family);
             background: var(--bg-color);
             color: var(--text-primary);
+            margin: 0;
+            padding-top: var(--topbar-height);
+            padding-bottom: var(--rail-height);
         }
 
-        /* ============================================================
-           ANIMATED COLLAPSIBLE SIDEBAR (Admin-style, purple brand)
-           ============================================================ */
-        .store-sidebar {
-            width: 260px !important;
-            background: var(--sidebar-bg) !important;
-            border-right: 1px solid var(--sidebar-border) !important;
-            padding: 18px 14px !important;
+        .pro-topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--topbar-height);
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
-            flex-direction: column;
-            gap: 6px;
-            transition: width 0.3s ease;
-            box-shadow: 4px 0 20px var(--sidebar-shadow);
-            overflow-x: hidden;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            box-shadow: var(--shadow-sm);
         }
 
-        .sidebar-toggle {
-            width: 42px;
-            height: 42px;
-            border: 1px solid var(--sidebar-border);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.6);
-            color: var(--sidebar-text);
-            cursor: pointer;
-            margin-bottom: 14px;
-            transition: all 0.3s ease;
+        .topbar-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .topbar-title h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .store-pulse {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--success-color);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 4px 12px;
+            border-radius: 999px;
             flex-shrink: 0;
         }
 
-            .sidebar-toggle:hover {
-                background: var(--sidebar-active-bg);
-                color: #ffffff;
-                transform: rotate(90deg) scale(1.05);
-            }
+        .pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--success-color);
+            position: relative;
+        }
 
-            .sidebar-toggle i {
-                font-size: 17px;
-            }
+        .pulse-dot::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: var(--success-color);
+            animation: pulse-ring 1.8s ease-out infinite;
+        }
 
-        .sidebar-title {
-            color: var(--sidebar-text);
-            font-size: 18px;
-            font-weight: 800;
-            margin-bottom: 14px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid var(--sidebar-border);
-            letter-spacing: 0.3px;
+        @@keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+            100% {
+                transform: scale(2.6);
+                opacity: 0;
+            }
+        }
+
+        .topbar-actions {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            flex-shrink: 0;
         }
 
-            .sidebar-title i {
-                color: var(--sidebar-accent);
-            }
-
-        .sidebar-section-title {
-            color: var(--sidebar-text-dim);
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 16px;
-            margin-bottom: 6px;
-            padding-left: 10px;
+        .topbar-search {
+            display: flex;
+            align-items: center;
+            height: 40px;
+            border-radius: 999px;
+            background: var(--bg-color);
+            border: 1.5px solid transparent;
+            width: 40px;
+            overflow: hidden;
+            transition: width 0.35s var(--ease), border-color 0.2s ease;
         }
 
-            .sidebar-section-title:first-of-type {
-                margin-top: 0;
-            }
-
-        .sidebar-menu {
-            padding: 0 !important;
-        }
-
-        .menu-item {
-            margin: 0 !important;
-        }
-
-            .menu-item a {
-                position: relative;
-                color: var(--sidebar-text) !important;
-                padding: 11px 14px !important;
-                border-radius: 12px !important;
-                font-weight: 500 !important;
-                font-size: 0.92rem !important;
-                transition: all 0.25s ease !important;
-                overflow: hidden;
-            }
-
-                .menu-item a i {
-                    color: var(--sidebar-icon) !important;
-                    transition: color 0.2s ease;
-                }
-
-            .menu-item:hover a {
-                background: var(--sidebar-hover-bg) !important;
-                color: var(--sidebar-text) !important;
-                transform: translateX(6px);
-                box-shadow: 0 4px 14px rgba(30, 27, 75, 0.10);
-            }
-
-                .menu-item:hover a i {
-                    color: var(--sidebar-accent) !important;
-                }
-
-            .menu-item.active a {
-                background: var(--sidebar-active-bg) !important;
-                color: var(--sidebar-icon-active) !important;
-                box-shadow: 0 6px 16px rgba(76, 29, 149, 0.35) !important;
-            }
-
-                .menu-item.active a i {
-                    color: var(--sidebar-icon-active) !important;
-                }
-
-                .menu-item.active a::before {
-                    content: "";
-                    position: absolute;
-                    left: 0;
-                    top: 15%;
-                    height: 70%;
-                    width: 4px;
-                    background: var(--sidebar-active-accent-bar);
-                    border-radius: 10px;
-                }
-
-        /* collapsed mode */
-        .store-sidebar.collapsed {
-            width: 80px !important;
-        }
-
-            .store-sidebar.collapsed .sidebar-title span,
-            .store-sidebar.collapsed .sidebar-section-title,
-            .store-sidebar.collapsed .menu-item a span,
-            .store-sidebar.collapsed .store-details {
-                display: none;
-            }
-
-            .store-sidebar.collapsed .menu-item a {
-                justify-content: center;
-            }
-
-            .store-sidebar.collapsed .store-info-card {
-                justify-content: center;
-            }
-
-        /* main content grows to fill the space the sidebar gives up */
-        .store-main-content.sidebar-collapsed-content {
-            margin-left: 80px !important;
-        }
-
-        @@media (max-width: 768px) {
-            .store-main-content.sidebar-collapsed-content {
-                margin-left: 64px !important;
-            }
-        }
-
-        /* store info footer (bottom of sidebar) */
-        .store-info-card-link {
-            margin-top: auto;
-        }
-
-        .store-info-card {
-            background: var(--sidebar-bg-alt) !important;
-            border: 1px solid var(--sidebar-border) !important;
-        }
-
-            .store-info-card .store-logo {
-                background: rgba(255, 255, 255, 0.6) !important;
-                box-shadow: none !important;
-            }
-
-                .store-info-card .store-logo i {
-                    color: var(--sidebar-accent) !important;
-                }
-
-            .store-info-card h4 {
-                color: var(--sidebar-text) !important;
-            }
-
-        /* scrollbar */
-        .store-sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .store-sidebar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .store-sidebar::-webkit-scrollbar-thumb {
-            background: rgba(30, 27, 75, 0.18);
-            border-radius: 20px;
-        }
-
-            .store-sidebar::-webkit-scrollbar-thumb:hover {
-                background: rgba(30, 27, 75, 0.32);
-            }
-
-        /* page content shift, animated like admin panel */
-        .store-main-content {
-            transition: margin-left 0.35s cubic-bezier(.4, 0, .2, 1);
-        }
-
-        @@media (max-width: 768px) {
-            .store-sidebar {
-                width: 220px !important;
-            }
-
-            .store-sidebar.collapsed {
-                width: 64px !important;
-            }
-        }
-
-        /* ============================================================
-           TOP NAV — Premium Silver, matches sidebar exactly
-           ============================================================ */
-        .store-top-nav {
-            background: var(--navbar-bg) !important;
-            border-bottom: 1px solid var(--navbar-border) !important;
-        }
-
-            .store-top-nav .nav-brand a {
-                color: var(--sidebar-text) !important;
-            }
-
-            .store-top-nav .nav-search i {
-                color: var(--navbar-text-dim) !important;
-            }
-
-            .store-top-nav .nav-search input {
-                background: rgba(255, 255, 255, 0.6) !important;
-                border: 1.5px solid var(--navbar-border) !important;
-                color: var(--sidebar-text) !important;
-            }
-
-                .store-top-nav .nav-search input::placeholder {
-                    color: var(--navbar-text-dim) !important;
-                }
-
-                .store-top-nav .nav-search input:focus {
-                    border-color: var(--sidebar-accent) !important;
-                    background: var(--card-bg) !important;
-                }
-
-        .notification-wrapper {
-            position: relative;
-            display: inline-block;
-        }
-
-        .notification-bell {
-            position: relative;
-            cursor: pointer;
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
+        .topbar-search i {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--sidebar-icon) !important;
-            transition: 0.2s ease;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 14px;
         }
 
-            .notification-bell:hover {
-                background: var(--sidebar-hover-bg) !important;
-                color: var(--sidebar-accent) !important;
-            }
+        .topbar-search input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 13.5px;
+            font-family: inherit;
+            color: var(--text-primary);
+            width: 0;
+            padding: 0;
+            opacity: 0;
+            transition: opacity 0.2s var(--ease);
+        }
 
-            .notification-bell .badge {
-                position: absolute;
-                top: 2px;
-                right: 2px;
-                background: var(--error-color);
-                color: white;
-                border-radius: 999px;
-                min-width: 18px;
-                height: 18px;
-                padding: 0 5px;
-                font-size: 11px;
-                font-weight: 800;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-        .notification-dropdown {
-            display: none;
-            position: absolute;
-            top: 50px;
-            right: 0;
-            width: 360px;
-            max-height: 420px;
-            overflow-y: auto;
+        .topbar-search.expanded {
+            width: 240px;
+            border-color: var(--accent-color);
             background: var(--card-bg);
+        }
+
+        .topbar-search.expanded input {
+            width: 100%;
+            opacity: 1;
+            padding-right: 12px;
+        }
+
+        .topbar-icon-btn {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--rail-icon);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .topbar-icon-btn:hover {
+            background: var(--accent-light);
+            color: var(--accent-color);
+        }
+
+        .topbar-icon-btn .icon-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: var(--error-color);
+            color: #fff;
+            border-radius: 999px;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 4px;
+            font-size: 10px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--card-bg);
+        }
+
+        .topbar-avatar-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            padding: 0;
+            border: 1.5px solid var(--border-color);
+            cursor: pointer;
+            overflow: hidden;
+            background: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .topbar-avatar-btn:hover {
+            border-color: var(--accent-color);
+        }
+
+        .topbar-avatar-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* glass popovers */
+        .glass-popover {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--border-color);
             border-radius: 18px;
             box-shadow: var(--shadow-lg);
-            z-index: 9999;
+            z-index: 950;
+            opacity: 0;
+            transform: translateY(-6px) scale(0.98);
+            transform-origin: top right;
+            pointer-events: none;
+            transition: opacity 0.18s var(--ease), transform 0.18s var(--ease);
         }
 
-            .notification-dropdown.show {
-                display: block;
-            }
+        .glass-popover.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .popover-anchor {
+            position: relative;
+        }
+
+        #notificationPopover {
+            width: 340px;
+            max-height: 420px;
+            overflow-y: auto;
+        }
 
         .notification-header {
-            padding: 16px 18px;
+            padding: 14px 16px;
             border-bottom: 1px solid var(--border-color);
             font-weight: 800;
-            color: var(--text-primary);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -403,152 +339,272 @@
         .notification-count-text {
             background: var(--accent-light);
             color: var(--accent-color);
-            padding: 4px 10px;
+            padding: 3px 9px;
             border-radius: 999px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
         }
 
         .notification-item {
-            padding: 14px 18px;
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border-color);
-            transition: background 0.15s ease;
         }
 
-            .notification-item:hover {
-                background: var(--bg-color);
-            }
-
-            .notification-item:last-child {
-                border-bottom: none;
-            }
+        .notification-item:last-child {
+            border-bottom: none;
+        }
 
         .notification-title {
             font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 5px;
-            font-size: 14px;
+            font-size: 13.5px;
+            margin-bottom: 3px;
         }
 
         .notification-message {
             color: var(--text-secondary);
-            font-size: 13px;
+            font-size: 12.5px;
             line-height: 1.5;
-            margin-bottom: 7px;
+            margin-bottom: 4px;
         }
 
         .notification-date {
             color: var(--text-muted);
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .empty-notification {
-            padding: 28px 18px;
+            padding: 24px 16px;
             text-align: center;
             color: var(--text-muted);
             font-weight: 600;
+            font-size: 13px;
         }
 
-        .user-dropdown {
-            position: relative;
+        #userPopover {
+            width: 220px;
+            padding: 8px;
+        }
+
+        .user-popover-header {
             display: flex;
             align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            padding: 6px 14px 6px 6px;
-            border-radius: 40px;
-            transition: background 0.2s ease;
+            gap: 10px;
+            padding: 8px 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 6px;
         }
 
-            .user-dropdown:hover {
-                background: var(--sidebar-hover-bg);
-            }
+        .user-popover-header img {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
 
-            .user-dropdown .user-avatar {
-                width: 32px;
-                height: 32px;
-                border-radius: 50%;
-                object-fit: cover;
-                border: 1.5px solid var(--navbar-border);
-            }
+        .user-popover-header .u-name {
+            font-weight: 700;
+            font-size: 13.5px;
+        }
 
-            .user-dropdown .user-name {
-                font-weight: 600;
-                font-size: 14px;
-                color: var(--sidebar-text);
-            }
+        .user-popover-header .u-store {
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
 
-            .user-dropdown > i.fa-chevron-down {
-                color: var(--navbar-text-dim);
-            }
-
-            .user-dropdown .dropdown-menu {
-                display: none;
-                position: absolute;
-                top: 48px;
-                right: 0;
-                background: var(--card-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 16px;
-                box-shadow: var(--shadow-lg);
-                min-width: 190px;
-                z-index: 9999;
-                padding: 8px;
-            }
-
-                .user-dropdown .dropdown-menu.show {
-                    display: block;
-                }
-
-            .user-dropdown .dropdown-item {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 10px 14px;
-                color: var(--text-primary);
-                font-size: 14px;
-                font-weight: 500;
-                text-decoration: none;
-                transition: background 0.15s, color 0.15s;
-                border: none;
-                background: none;
-                width: 100%;
-                text-align: left;
-                cursor: pointer;
-                font-family: inherit;
-                border-radius: 10px;
-            }
-
-                .user-dropdown .dropdown-item:hover {
-                    background: var(--accent-light);
-                    color: var(--accent-color);
-                }
-
-                .user-dropdown .dropdown-item.danger {
-                    color: var(--error-color);
-                }
-
-                    .user-dropdown .dropdown-item.danger:hover {
-                        background: #fef2f2;
-                        color: var(--error-color);
-                    }
-
-        .store-info-card-link {
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            color: var(--text-primary);
+            font-size: 13.5px;
+            font-weight: 500;
             text-decoration: none;
-            color: inherit;
-            display: block;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-family: inherit;
+            border-radius: 10px;
+            transition: background 0.15s ease, color 0.15s ease;
         }
 
-            .store-info-card-link:hover {
-                text-decoration: none;
-                color: inherit;
-                opacity: 0.95;
-            }
+        .dropdown-item i {
+            color: var(--rail-icon);
+            width: 16px;
+            text-align: center;
+        }
 
-        .nav-actions {
+        .dropdown-item:hover {
+            background: var(--accent-light);
+            color: var(--accent-color);
+        }
+
+        .dropdown-item:hover i {
+            color: var(--accent-color);
+        }
+
+        .dropdown-item.danger {
+            color: var(--error-color);
+        }
+
+        .dropdown-item.danger i {
+            color: var(--error-color);
+        }
+
+        .dropdown-item.danger:hover {
+            background: #fef2f2;
+        }
+
+        .pro-rail {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: var(--rail-height);
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            gap: 12px;
+            padding: 0 24px;
+            z-index: 1000;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
+        }
+
+        .rail-brand {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: var(--accent-gradient);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            text-decoration: none;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.3s var(--ease);
+        }
+
+        .rail-brand:hover {
+            transform: scale(1.06) rotate(-4deg);
+        }
+
+        .rail-nav {
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            flex: 1;
+            overflow-x: auto;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            scrollbar-width: none;
+        }
+
+        .rail-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .rail-item {
+            position: relative;
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--rail-icon);
+            text-decoration: none;
+            flex-shrink: 0;
+            transition: background 0.25s var(--ease), color 0.25s var(--ease), transform 0.25s var(--ease);
+        }
+
+        .rail-item i {
+            font-size: 17px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .rail-item:hover {
+            background: var(--accent-light);
+            color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .rail-item.active {
+            background: var(--accent-gradient);
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(109, 40, 217, 0.32);
+        }
+
+        .rail-tooltip {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%) translateY(6px);
+            background: var(--text-primary);
+            color: #fff;
+            font-size: 12.5px;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 8px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+            z-index: 1100;
+            box-shadow: var(--shadow-md);
+        }
+
+        .rail-item:hover .rail-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .rail-divider {
+            width: 1px;
+            height: 28px;
+            background: var(--border-color);
+            margin: 0 6px;
+            flex-shrink: 0;
+        }
+
+        .store-main-content {
+            padding: 28px 40px 60px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .content-body {
+            animation: content-enter 0.45s var(--ease) both;
+        }
+
+        @@keyframes content-enter {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .pro-topbar {
+                padding: 0 16px;
+            }
+
+            .store-main-content {
+                padding: 20px 16px 40px;
+            }
+
+            .topbar-search.expanded {
+                width: 140px;
+            }
         }
     </style>
 </head>
@@ -556,344 +612,245 @@
 <body class="store-owner-body">
     <div class="store-owner-wrapper">
 
-        <!--
-            TOP NAVIGATION BAR – Conditionally hidden if ViewData["HideNavbar"] is true
-        -->
-        @if (ViewData["HideNavbar"] == null || !(bool)ViewData["HideNavbar"])
-        {
-            <nav class="store-top-nav">
-                <div class="nav-container">
+        <!-- Fixed Top Bar -->
+        <header class="pro-topbar" role="banner">
 
-                    <div class="nav-brand">
-                        <a href="/StoreOwner/Dashboard">
-                            <i class="fas fa-store"></i>
-                            <span>Store Owner Panel</span>
-                        </a>
-                    </div>
+            <div class="topbar-title">
+                <h1>@ViewData["Title"]</h1>
+                <span class="store-pulse">
+                    <span class="pulse-dot"></span>
+                    @storeName
+                </span>
+            </div>
 
-                    <div class="nav-search">
-                        <i class="fas fa-search"></i>
-                        <input type="text"
-                               placeholder="Search orders, products..."
-                               id="globalSearch" />
-                    </div>
+            <div class="topbar-actions">
 
-                    <div class="nav-actions">
+                <div class="topbar-search" id="topbarSearch" role="search">
+                    <i class="fas fa-search" id="searchToggle" aria-label="Search" role="button" tabindex="0"></i>
+                    <input type="text" placeholder="Search orders, products..." id="globalSearch" aria-label="Global search" />
+                </div>
 
-                        <!-- Dynamic Notifications -->
-                        <div class="notification-wrapper">
-                            <div class="notification-bell" id="notificationBell">
-                                <i class="fas fa-bell"></i>
+                <div class="popover-anchor">
+                    <button class="topbar-icon-btn" id="notificationBtn" type="button" aria-label="Notifications">
+                        <i class="fas fa-bell"></i>
+                        @if (unreadCount > 0)
+                        {
+                            <span class="icon-badge">@unreadCount</span>
+                        }
+                    </button>
 
-                                @if (unreadCount > 0)
-                                {
-                                    <span class="badge">@unreadCount</span>
-                                }
-                            </div>
-
-                            <div class="notification-dropdown" id="notificationDropdown">
-                                <div class="notification-header">
-                                    <span>Notifications</span>
-
-                                    @if (unreadCount > 0)
-                                    {
-                                        <span class="notification-count-text">
-                                            @unreadCount unread
-                                        </span>
-                                    }
+                    <div class="glass-popover" id="notificationPopover" role="dialog" aria-label="Notifications">
+                        <div class="notification-header">
+                            <span>Notifications</span>
+                            @if (unreadCount > 0)
+                            {
+                                <span class="notification-count-text">@unreadCount unread</span>
+                                <button class="dropdown-item" style="font-size:12px; padding:4px 8px;" id="markAllReadBtn">Mark all read</button>
+                            }
+                        </div>
+                        @if (unreadNotifications.Any())
+                        {
+                            foreach (var notification in unreadNotifications.Take(10))
+                            {
+                                <div class="notification-item">
+                                    <div class="notification-title">@notification.Title</div>
+                                    <div class="notification-message">@notification.Message</div>
+                                    <div class="notification-date">@notification.SentAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
                                 </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="empty-notification">No new notifications</div>
+                        }
+                    </div>
+                </div>
 
-                                @if (unreadNotifications.Any())
-                                {
-                                    foreach (var notification in unreadNotifications.Take(10))
-                                    {
-                                        <div class="notification-item">
-                                            <div class="notification-title">
-                                                @notification.Title
-                                            </div>
+                <div class="popover-anchor">
+                    <button class="topbar-avatar-btn" id="userBtn" type="button" aria-label="Account">
+                        <!-- Use the fetched store logo -->
+                        <img src="@storeLogoUrl" alt="Store logo" />
+                    </button>
 
-                                            <div class="notification-message">
-                                                @notification.Message
-                                            </div>
-
-                                            <div class="notification-date">
-                                                @notification.SentAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                                            </div>
-                                        </div>
-                                    }
-                                }
-                                else
-                                {
-                                    <div class="empty-notification">
-                                        No new notifications
-                                    </div>
-                                }
+                    <div class="glass-popover" id="userPopover" role="dialog" aria-label="User menu">
+                        <div class="user-popover-header">
+                            <img src="@storeLogoUrl" alt="Store logo" />
+                            <div>
+                                <div class="u-name">@(User.Identity?.Name ?? "User")</div>
+                                <div class="u-store">@storeName</div>
                             </div>
                         </div>
-
-                        <!-- User Dropdown with Logout -->
-                        <div class="user-dropdown" id="userDropdown">
-                            <img src="~/images/default-avatar.png"
-                                 alt="Avatar"
-                                 class="user-avatar" />
-
-                            <span class="user-name">@User.Identity?.Name</span>
-
-                            <i class="fas fa-chevron-down"></i>
-
-                            <div class="dropdown-menu" id="userDropdownMenu">
-                                <a href="/StoreOwner/StoreProfile" class="dropdown-item">
-                                    <i class="fas fa-user"></i> Profile
-                                </a>
-                                <a href="/StoreOwner/Settings/Index" class="dropdown-item">
-                                    <i class="fas fa-cog"></i> Settings
-                                </a>
-                                <hr style="margin: 6px 0; border-color: var(--border-color);" />
-                                <form method="post"
-                                      asp-area="Identity"
-                                      asp-page="/Account/Logout"
-                                      asp-route-returnUrl="/"
-                                      class="store-logout-form">
-                                    <button type="submit" class="dropdown-item danger">
-                                        <i class="fas fa-sign-out-alt"></i> Logout
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
+                        <a href="/StoreOwner/StoreProfile" class="dropdown-item">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                        <a href="/StoreOwner/Settings/Index" class="dropdown-item">
+                            <i class="fas fa-cog"></i> Settings
+                        </a>
+                        <hr style="margin: 6px 0; border-color: var(--border-color);" />
+                        <form method="post"
+                              asp-area="Identity"
+                              asp-page="/Account/Logout"
+                              asp-route-returnUrl="/"
+                              class="store-logout-form">
+                            <button type="submit" class="dropdown-item danger">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </form>
                     </div>
                 </div>
-            </nav>
-        }
 
-        <div class="store-main-container">
+            </div>
 
-            <!-- Sidebar (collapsible, animated — same behavior as Admin panel) -->
-            <aside class="store-sidebar" id="storeSidebar">
+        </header>
 
-                <button class="sidebar-toggle"
-                        type="button"
-                        onclick="toggleStoreSidebar()"
-                        aria-expanded="true"
-                        aria-controls="storeSidebar">
-                    <i class="fas fa-bars"></i>
-                </button>
+        <!-- Persistent bottom rail (reorganized, removed StoreProfile & Settings from bottom) -->
+        <aside class="pro-rail" aria-label="Store owner navigation">
 
-                <div class="sidebar-title">
-                    <i class="fas fa-store"></i>
-                    <span>Store Panel</span>
-                </div>
+            <a href="/StoreOwner/Dashboard" class="rail-brand" aria-label="Store Owner Panel">
+                <i class="fas fa-store"></i>
+            </a>
 
-                <div class="sidebar-menu">
+            <nav class="rail-nav" aria-label="Main navigation">
 
-                    <div class="sidebar-section-title">Main</div>
-
-                    <div class="menu-item @(currentPage.Contains("Home") ? "active" : "")">
-                        <a href="/StoreOwner/Home">
-                            <i class="fas fa-home"></i>
-                            <span>Home</span>
-                        </a>
-                    </div>
-
-                    <div class="menu-item @(currentPage.Contains("Dashboard") ? "active" : "")">
-                        <a href="/StoreOwner/Dashboard">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </div>
-
-                    <div class="sidebar-section-title">Management</div>
-
-                    <div class="menu-item @(currentPage.Contains("StoreProfile") ? "active" : "")">
-                        <a href="/StoreOwner/StoreProfile">
-                            <i class="fas fa-store"></i>
-                            <span>Store Profile</span>
-                        </a>
-                    </div>
-
-                    <div class="menu-item @(currentPage.Contains("Products") ? "active" : "")">
-                        <a href="/StoreOwner/Products/Index">
-                            <i class="fas fa-box"></i>
-                            <span>Products</span>
-                        </a>
-                    </div>
-
-                    <div class="menu-item @(currentPage.Contains("Order") ? "active" : "")">
-                        <a href="/StoreOwner/Order/Index">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span>Orders</span>
-                        </a>
-                    </div>
-
-                    <div class="menu-item @(currentPage.Contains("Analytics") ? "active" : "")">
-                        <a href="/StoreOwner/Analytics">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Analytics</span>
-                        </a>
-                    </div>
-
-                    <div class="menu-item @(currentPage.Contains("Promotions") ? "active" : "")">
-                        <a href="/StoreOwner/Promotions/Index">
-                            <i class="fas fa-tags"></i>
-                            <span>Promotions</span>
-                        </a>
-                    </div>
-
-                    <div class="menu-item @(currentPage.Contains("Reviews") ? "active" : "")">
-                        <a asp-page="/StoreReviews" asp-route-storeId="@ViewData["StoreId"]">
-                            <i class="fas fa-star"></i>
-                            <span>Reviews</span>
-                        </a>
-                    </div>
-
-                    <div class="menu-item @(currentPage.Contains("AccountStatement") ? "active" : "")">
-                        <a href="/StoreOwner/AccountStatement">
-                            <i class="fas fa-file-invoice-dollar"></i>
-                            <span>Account Statement</span>
-                        </a>
-                    </div>
-
-                    <div class="sidebar-section-title">Communication</div>
-
-                    <div class="menu-item @(currentPage.Contains("Chat") ? "active" : "")">
-                        <a href="/Chat">
-                            <i class="fas fa-comment-dots"></i>
-                            <span>Chat</span>
-                        </a>
-                    </div>
-
-                    <div class="sidebar-section-title">System</div>
-
-                    <div class="menu-item @(currentPage.Contains("Settings") ? "active" : "")">
-                        <a href="/StoreOwner/Settings/Index">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                        </a>
-                    </div>
-
-                </div>
-
-                <!-- Store Info Card -->
-                <a href="/StoreOwner/StoreProfile" class="store-info-card-link">
-                    <div class="store-info-card">
-                        <div class="store-logo">
-                            <i class="fas fa-store"></i>
-                        </div>
-
-                        <div class="store-details">
-                            <h4>@(ViewData["StoreName"] ?? "My Store")</h4>
-
-                            <span class="store-status active">Active</span>
-                        </div>
-                    </div>
+                <a href="/StoreOwner/Home" class="rail-item @ActiveIf("Home")">
+                    <i class="fas fa-home"></i>
+                    <span class="rail-tooltip">Home</span>
+                </a>
+                <a href="/StoreOwner/Dashboard" class="rail-item @ActiveIf("Dashboard")">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span class="rail-tooltip">Dashboard</span>
                 </a>
 
-            </aside>
+                <div class="rail-divider"></div>
 
-            <!-- Main Content -->
-            <main class="store-main-content">
+                <a href="/StoreOwner/Products/Index" class="rail-item @ActiveIf("Products")">
+                    <i class="fas fa-box"></i>
+                    <span class="rail-tooltip">Products</span>
+                </a>
+                <a href="/StoreOwner/Order/Index" class="rail-item @ActiveIf("Order")">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="rail-tooltip">Orders</span>
+                </a>
+                <a href="/StoreOwner/Promotions/Index" class="rail-item @ActiveIf("Promotions")">
+                    <i class="fas fa-tags"></i>
+                    <span class="rail-tooltip">Promotions</span>
+                </a>
+                <a href="@reviewsHref" class="rail-item @ActiveIf("Reviews")">
+                    <i class="fas fa-star"></i>
+                    <span class="rail-tooltip">Reviews</span>
+                </a>
+                <a href="/StoreOwner/Analytics" class="rail-item @ActiveIf("Analytics")">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="rail-tooltip">Analytics</span>
+                </a>
+                <a href="/StoreOwner/AccountStatement" class="rail-item @ActiveIf("AccountStatement")">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span class="rail-tooltip">Account Statement</span>
+                </a>
 
-                <div class="content-header">
-                    <h1>@ViewData["Title"]</h1>
+                <div class="rail-divider"></div>
 
-                    <div class="breadcrumb">
-                        <a href="/StoreOwner/Dashboard">Dashboard</a>
-                        <i class="fas fa-chevron-right"></i>
-                        <span>@ViewData["Title"]</span>
-                    </div>
-                </div>
+                <a href="/Chat" class="rail-item @ActiveIf("Chat")">
+                    <i class="fas fa-comment-dots"></i>
+                    <span class="rail-tooltip">Chat</span>
+                </a>
 
-                <div class="content-body">
-                    @RenderBody()
-                </div>
+            </nav>
 
-            </main>
+        </aside>
 
-        </div>
+        <!-- Main Content -->
+        <main class="store-main-content">
+            <div class="content-body">
+                @RenderBody()
+            </div>
+        </main>
+
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="~/js/store-owner.js" asp-append-version="true"></script>
 
     <script>
-        // Notification dropdown toggle
-        const notificationBell = document.getElementById("notificationBell");
-        const notificationDropdown = document.getElementById("notificationDropdown");
+        (function() {
+            // Expanding search
+            const topbarSearch = document.getElementById("topbarSearch");
+            const searchToggle = document.getElementById("searchToggle");
+            const globalSearch = document.getElementById("globalSearch");
 
-        if (notificationBell && notificationDropdown) {
-        notificationBell.addEventListener("click", function (event) {
-        event.stopPropagation();
-        notificationDropdown.classList.toggle("show");
-        });
+            if (topbarSearch && searchToggle && globalSearch) {
+                searchToggle.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    topbarSearch.classList.add("expanded");
+                    globalSearch.focus();
+                });
 
-        document.addEventListener("click", function () {
-        notificationDropdown.classList.remove("show");
-        });
+                document.addEventListener("click", function(e) {
+                    if (!topbarSearch.contains(e.target)) {
+                        if (!globalSearch.value) {
+                            topbarSearch.classList.remove("expanded");
+                        }
+                    }
+                });
 
-        notificationDropdown.addEventListener("click", function (event) {
-        event.stopPropagation();
-        });
-        }
-
-        // User dropdown toggle
-        const userDropdown = document.getElementById("userDropdown");
-        const userDropdownMenu = document.getElementById("userDropdownMenu");
-
-        if (userDropdown && userDropdownMenu) {
-        userDropdown.addEventListener("click", function (event) {
-        event.stopPropagation();
-        userDropdownMenu.classList.toggle("show");
-        });
-
-        document.addEventListener("click", function () {
-        userDropdownMenu.classList.remove("show");
-        });
-
-        userDropdownMenu.addEventListener("click", function (event) {
-        event.stopPropagation();
-        });
-        }
-
-        // ------------------------------------------------------------
-        // Collapsible sidebar (same animation/behavior as the Admin panel)
-        // ------------------------------------------------------------
-        function applyStoreSidebarState() {
-            const sidebar = document.getElementById("storeSidebar");
-            const content = document.querySelector(".store-main-content");
-            if (!sidebar) return;
-
-            const isCollapsed = localStorage.getItem("storeSidebarCollapsed") === "true";
-
-            if (isCollapsed) {
-                sidebar.classList.add("collapsed");
-                if (content) content.classList.add("sidebar-collapsed-content");
-            } else {
-                sidebar.classList.remove("collapsed");
-                if (content) content.classList.remove("sidebar-collapsed-content");
-            }
-        }
-
-        function toggleStoreSidebar() {
-            const sidebar = document.getElementById("storeSidebar");
-            const content = document.querySelector(".store-main-content");
-            if (!sidebar) return;
-
-            const isCollapsed = sidebar.classList.toggle("collapsed");
-            const expanded = !isCollapsed;
-
-            if (content) {
-                content.classList.toggle("sidebar-collapsed-content", isCollapsed);
+                globalSearch.addEventListener("keydown", function(e) {
+                    if (e.key === "Escape") {
+                        topbarSearch.classList.remove("expanded");
+                        globalSearch.blur();
+                    }
+                });
             }
 
-            const toggleBtn = sidebar.querySelector(".sidebar-toggle");
-            if (toggleBtn) {
-                toggleBtn.setAttribute("aria-expanded", expanded);
+            // Glass popovers
+            function setupPopover(btnId, popoverId) {
+                const btn = document.getElementById(btnId);
+                const popover = document.getElementById(popoverId);
+                if (!btn || !popover) return;
+
+                btn.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    const isOpen = popover.classList.contains("show");
+                    document.querySelectorAll(".glass-popover.show").forEach(p => p.classList.remove("show"));
+                    if (!isOpen) {
+                        popover.classList.add("show");
+                    }
+                });
+
+                popover.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                });
             }
 
-            localStorage.setItem("storeSidebarCollapsed", isCollapsed ? "true" : "false");
-        }
+            setupPopover("notificationBtn", "notificationPopover");
+            setupPopover("userBtn", "userPopover");
 
-        document.addEventListener("DOMContentLoaded", applyStoreSidebarState);
+            document.addEventListener("click", function() {
+                document.querySelectorAll(".glass-popover.show").forEach(p => p.classList.remove("show"));
+            });
+
+            document.addEventListener("keydown", function(e) {
+                if (e.key === "Escape") {
+                    document.querySelectorAll(".glass-popover.show").forEach(p => p.classList.remove("show"));
+                }
+            });
+
+            // Mark all as read
+            const markAllBtn = document.getElementById("markAllReadBtn");
+            if (markAllBtn) {
+                markAllBtn.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    fetch('/Notification/MarkAllAsRead', { method: 'POST' })
+                        .then(response => {
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                console.error('Failed to mark all as read');
+                            }
+                        })
+                        .catch(err => console.error(err));
+                });
+            }
+        })();
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)

@@ -3,65 +3,162 @@
 @{
     ViewData["Title"] = "Promotions";
     Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
-
 }
 
 @section Styles {
     <style>
+        /* ============================================================
+           ROOT VARIABLES — consistent brand palette
+           ============================================================ */
         :root {
-            /* -------- Brand colors (Purple / Indigo) -------- */
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
             --accent-light: #f3effe;
             --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-            /* -------- Neutral palette -------- */
             --bg-color: #f8f7fc;
             --card-bg: #ffffff;
             --text-primary: #1e1b2e;
             --text-secondary: #6b6478;
             --text-muted: #9691a4;
             --border-color: #ece8f6;
-            /* -------- Semantic -------- */
             --success-color: #10b981;
             --error-color: #dc2626;
             --warning-color: #f59e0b;
-            /* -------- Shadows -------- */
             --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .container h2 {
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .promotions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .promotions-header h2 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .promotions-header h2 i {
+            color: var(--accent-color);
+        }
+
+        .promotions-header p {
+            margin: 4px 0 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background: var(--accent-gradient);
+            color: #fff;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            box-shadow: 0 4px 20px rgba(109, 40, 217, 0.25);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(109, 40, 217, 0.35);
+            color: #fff;
+        }
+
+        .btn-primary i {
+            font-size: 14px;
+        }
+
+        /* ============================================================
+           STATS ROW
+           ============================================================ */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-mini {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .stat-mini:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-mini .number {
             font-size: 24px;
             font-weight: 800;
             color: var(--text-primary);
-            letter-spacing: -0.4px;
+            line-height: 1.2;
         }
 
-        /* -------- Buttons -------- */
-        .btn-primary {
-            background: var(--accent-gradient);
-            border: none;
-            color: white;
-            font-weight: 700;
-            padding: 11px 22px;
-            border-radius: 30px;
-            box-shadow: 0 4px 20px rgba(109, 40, 217, 0.25);
-            transition: all 0.25s ease;
+        .stat-mini .label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
 
-            .btn-primary:hover,
-            .btn-primary:focus {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 30px rgba(109, 40, 217, 0.35);
-                color: white;
-            }
+        .stat-mini .icon {
+            color: var(--accent-color);
+            opacity: 0.5;
+            font-size: 18px;
+            margin-right: 4px;
+        }
 
-        /* -------- Alerts -------- */
+        /* ============================================================
+           ALERTS
+           ============================================================ */
         .alert {
-            border-radius: 14px;
-            padding: 13px 18px;
+            border-radius: var(--radius-md);
+            padding: 14px 20px;
+            font-weight: 600;
             font-size: 14px;
-            font-weight: 500;
             border: 1px solid transparent;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .alert-success {
@@ -70,32 +167,68 @@
             border-color: #a7f3d0;
         }
 
+        .alert-success i {
+            color: var(--success-color);
+        }
+
         .alert-info {
             background: var(--accent-light);
             color: var(--accent-hover);
             border-color: #e0d4fb;
         }
 
-        /* -------- Table -------- */
-        .table {
+        .alert-info i {
+            color: var(--accent-color);
+        }
+
+        /* ============================================================
+           CARD (table wrapper)
+           ============================================================ */
+        .table-card {
             background: var(--card-bg);
-            border-radius: 18px;
-            overflow: hidden;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
             box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .table-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .table-card .card-header {
+            background: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 22px;
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-card .card-header i {
+            color: var(--accent-color);
+            font-size: 18px;
+        }
+
+        .table-card .card-body {
+            padding: 0;
+            overflow-x: auto;
+        }
+
+        /* ============================================================
+           TABLE
+           ============================================================ */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 14px;
             color: var(--text-primary);
+            min-width: 700px;
         }
-
-        .table-bordered {
-            border: 1px solid var(--border-color);
-        }
-
-            .table-bordered th,
-            .table-bordered td {
-                border: 1px solid var(--border-color);
-                padding: 12px 14px;
-                vertical-align: middle;
-            }
 
         .table thead th {
             background: var(--accent-light);
@@ -103,104 +236,259 @@
             font-weight: 700;
             font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
-            border-bottom: none;
+            letter-spacing: 0.5px;
+            padding: 14px 18px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
         }
 
-        .table-striped > tbody > tr:nth-of-type(odd) > td {
-            background-color: var(--bg-color);
+        .table td {
+            padding: 14px 18px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            transition: background-color 0.2s;
         }
 
         .table tbody tr:hover td {
             background-color: var(--accent-light);
         }
 
-        .text-muted {
-            color: var(--text-muted) !important;
+        .table tbody tr:last-child td {
+            border-bottom: none;
         }
 
-        /* -------- Badges -------- */
-        .badge {
+        /* ----- Status badge ----- */
+        .badge-status {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 12px;
             font-weight: 700;
-            font-size: 11px;
-            padding: 6px 12px;
-            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
-            .badge.bg-success {
-                background-color: #ecfdf5 !important;
-                color: #065f46;
+        .badge-status.sent {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        .badge-status.scheduled {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-status.draft {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .badge-status.cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* ----- Coupon code badge ----- */
+        .coupon-badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            background: var(--accent-light);
+            color: var(--accent-color);
+            border: 1px solid #e0d4fb;
+        }
+
+        .no-coupon {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* ----- Empty state inside table ----- */
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 36px;
+            color: var(--accent-color);
+            opacity: 0.3;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .empty-state h4 {
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0 0 4px;
+        }
+
+        .empty-state p {
+            margin: 0 0 16px;
+            font-size: 14px;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @@media (max-width: 768px) {
+            .promotions-header {
+                flex-direction: column;
+                align-items: flex-start;
             }
 
-            .badge.bg-primary {
-                background: var(--accent-light) !important;
-                color: var(--accent-color);
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
             }
+
+            .stat-mini .number {
+                font-size: 20px;
+            }
+
+            .table thead th,
+            .table td {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
     </style>
 }
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Promotions</h2>
-        <a asp-page="/StoreOwner/Promotions/Create" class="btn btn-primary">
-            Send New Promotion
+
+    <!-- ========== HEADER ========== -->
+    <div class="promotions-header">
+        <div>
+            <h2><i class="fas fa-bullhorn"></i> Promotions</h2>
+            <p>View and manage all promotions you've sent to customers</p>
+        </div>
+        <a asp-page="/StoreOwner/Promotions/Create" class="btn-primary">
+            <i class="fas fa-plus"></i> Send New Promotion
         </a>
     </div>
 
+    <!-- ========== STATS ROW ========== -->
+    @{
+        var total = Model.Promotions?.Count() ?? 0;
+        var withCoupon = Model.Promotions?.Count(p => !string.IsNullOrWhiteSpace(p.CouponCode)) ?? 0;
+        var sent = Model.Promotions?.Count(p => p.Status == "Sent" || p.Status == "Completed" || p.Status == "Active") ?? 0;
+        var scheduled = Model.Promotions?.Count(p => p.Status == "Scheduled") ?? 0;
+    }
+
+    <div class="stats-row">
+        <div class="stat-mini">
+            <span class="icon"><i class="fas fa-envelope"></i></span>
+            <div class="number">@total</div>
+            <div class="label">Total Promotions</div>
+        </div>
+        <div class="stat-mini">
+            <span class="icon"><i class="fas fa-tag"></i></span>
+            <div class="number">@withCoupon</div>
+            <div class="label">With Coupon</div>
+        </div>
+        <div class="stat-mini">
+            <span class="icon"><i class="fas fa-check-circle"></i></span>
+            <div class="number">@sent</div>
+            <div class="label">Sent</div>
+        </div>
+        <div class="stat-mini">
+            <span class="icon"><i class="fas fa-clock"></i></span>
+            <div class="number">@scheduled</div>
+            <div class="label">Scheduled</div>
+        </div>
+    </div>
+
+    <!-- ========== TEMPDATA ALERTS ========== -->
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success">
-            @TempData["SuccessMessage"]
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
         </div>
     }
 
-    @if (Model.Promotions == null || !Model.Promotions.Any())
-    {
-        <div class="alert alert-info">
-            No promotions sent yet.
+    <!-- ========== TABLE CARD ========== -->
+    <div class="table-card">
+        <div class="card-header">
+            <i class="fas fa-table"></i> Promotion List
         </div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Message</th>
-                        <th>Coupon</th>
-                        <th>Recipients</th>
-                        <th>Status</th>
-                        <th>Sent At</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var promotion in Model.Promotions)
-                    {
-                        <tr>
-                            <td>@promotion.Title</td>
-                            <td>@promotion.Message</td>
-                            <td>
-                                @if (string.IsNullOrWhiteSpace(promotion.CouponCode))
-                                {
-                                    <span class="text-muted">No coupon</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success">@promotion.CouponCode</span>
-                                }
-                            </td>
-                            <td>@promotion.RecipientCount</td>
-                            <td>
-                                <span class="badge bg-primary">@promotion.Status</span>
-                            </td>
-                            <td>
-                                @(promotion.SentAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-")
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="card-body">
+            @if (Model.Promotions == null || !Model.Promotions.Any())
+            {
+                <div class="empty-state">
+                    <i class="fas fa-bullhorn"></i>
+                    <h4>No Promotions Yet</h4>
+                    <p>You haven't sent any promotions. Start engaging your customers!</p>
+                    <a asp-page="/StoreOwner/Promotions/Create" class="btn-primary" style="display:inline-block;">
+                        <i class="fas fa-plus"></i> Send Your First Promotion
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Message</th>
+                                <th>Coupon</th>
+                                <th>Recipients</th>
+                                <th>Status</th>
+                                <th>Sent At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var promotion in Model.Promotions)
+                            {
+                                <tr>
+                                    <td><strong>@promotion.Title</strong></td>
+                                    <td>@(promotion.Message.Length > 60 ? promotion.Message.Substring(0, 60) + "…" : promotion.Message)</td>
+                                    <td>
+                                        @if (string.IsNullOrWhiteSpace(promotion.CouponCode))
+                                        {
+                                            <span class="no-coupon">No coupon</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="coupon-badge">@promotion.CouponCode</span>
+                                        }
+                                    </td>
+                                    <td>@promotion.RecipientCount</td>
+                                    <td>
+                                        @{
+                                            var statusClass = promotion.Status?.ToLower() switch
+                                            {
+                                                "sent" or "completed" or "active" => "sent",
+                                                "scheduled" => "scheduled",
+                                                "draft" => "draft",
+                                                "cancelled" => "cancelled",
+                                                _ => "sent"
+                                            };
+                                        }
+                                        <span class="badge-status @statusClass">@promotion.Status</span>
+                                    </td>
+                                    <td>
+                                        @(promotion.SentAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </div>
-    }
+    </div>
+
 </div>
