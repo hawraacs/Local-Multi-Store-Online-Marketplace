@@ -1,0 +1,190 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.PaymentSuccessModel
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Successful</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #F8F9FA;
+            font-family: Arial, sans-serif;
+            color: #111827;
+        }
+
+        .page {
+            min-height: 100vh;
+            padding: 45px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 460px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 55px rgba(15, 23, 42, 0.10);
+            border: 1px solid #e5e7eb;
+            padding: 36px 32px;
+            text-align: center;
+        }
+
+        .icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: #dcfce7;
+            color: #16a34a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 24px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        p.subtitle {
+            margin: 0 0 26px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .details {
+            background: #F8F9FA;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+            .row:last-child {
+                border-bottom: none;
+            }
+
+            .row span:last-child {
+                color: #111827;
+                text-align: right;
+            }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .primary-btn {
+            background: #FF6B35;
+            color: white;
+        }
+
+        .secondary-btn {
+            background: #111827;
+            color: white;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            padding: 13px 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        <div class="card">
+
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <div class="error">@Model.ErrorMessage</div>
+            }
+            else if (Model.Order != null)
+            {
+                <div class="icon">✓</div>
+
+                <h1>Payment Successful</h1>
+                <p class="subtitle">Your order has been confirmed.</p>
+
+                <div class="details">
+                    <div class="row">
+                        <span>Transaction ID</span>
+                        <span>@(Model.TransactionId ?? "-")</span>
+                    </div>
+                    <div class="row">
+                        <span>Order Number</span>
+                        <span>@Model.Order.OrderNumber</span>
+                    </div>
+                    <div class="row">
+                        <span>Amount Paid</span>
+                        <span>$@Model.Order.TotalAmount.ToString("N2")</span>
+                    </div>
+                    <div class="row">
+                        <span>Date</span>
+                        <span>@DateTime.UtcNow.ToString("dd MMM yyyy, HH:mm")</span>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <a href="/Invoice?orderId=@Model.Order.OrderID" class="btn primary-btn">
+                        Download Receipt
+                    </a>
+                    <a href="/CustomerOrders" class="btn secondary-btn">
+                        Back to Orders
+                    </a>
+                </div>
+            }
+
+        </div>
+    </div>
+
+</body>
+</html>
