@@ -17,304 +17,428 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #fafafa;
-            color: #262626;
-            min-height: 100vh;
-        }
-
-        .topbar {
-            background: #ffffff;
-            border-bottom: 1px solid #dbdbdb;
-            padding: 12px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-            .topbar > div:first-child {
-                font-size: 24px;
-                font-weight: 700;
-                letter-spacing: -0.5px;
-                color: #262626;
-                font-style: italic;
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
             }
 
-        .back-link {
-            color: #262626;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-            .back-link:hover {
-                color: #FF6B35;
+            :root {
+                --accent-color: #6d28d9;
+                --accent-hover: #5b21b6;
+                --accent-light: #f3effe;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                --bg-color: #faf9fc;
+                --card-bg: #ffffff;
+                --text-primary: #1e1b2e;
+                --text-secondary: #6b6478;
+                --text-muted: #9691a4;
+                --border-color: #ece8f6;
+                --danger-color: #dc2626;
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+                --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.14);
             }
 
-        .profile-container {
-            max-width: 935px;
-            width: 100%;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-
-        .profile-header {
-            display: flex;
-            align-items: center;
-            gap: 60px;
-            padding-bottom: 44px;
-            border-bottom: 1px solid #dbdbdb;
-            margin-bottom: 20px;
-        }
-
-        .profile-avatar {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #f5f7fa 0%, #cbd5e1 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 70px;
-            color: #475569;
-            border: 2px solid #dbdbdb;
-            flex-shrink: 0;
-        }
-
-        .profile-details {
-            flex-grow: 1;
-        }
-
-        .profile-username-row {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .profile-username {
-            font-size: 28px;
-            font-weight: 300;
-            color: #262626;
-            display: flex;
-            align-items: center;
-        }
-
-        .follow-status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 12px;
-            border-radius: 4px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .following-yes {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .following-no {
-            background: #f1f5f9;
-            color: #64748b;
-        }
-
-        .profile-stats-row {
-            display: flex;
-            gap: 40px;
-            margin-bottom: 20px;
-        }
-
-        .stat-item {
-            font-size: 16px;
-            color: #262626;
-        }
-
-        .stat-count {
-            font-weight: 600;
-        }
-
-        .profile-bio {
-            font-size: 14px;
-            line-height: 1.5;
-            color: #262626;
-        }
-
-        .bio-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .bio-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: #f1f5f9;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #475569;
-        }
-
-        .loyalty-badge {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin: 32px 0 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .orders-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #fff;
-            border: 1px solid #dbdbdb;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-            .orders-table th,
-            .orders-table td {
-                text-align: left;
-                padding: 12px 16px;
-                font-size: 14px;
-                border-bottom: 1px solid #f1f5f9;
+            body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                background: var(--bg-color);
+                color: var(--text-primary);
+                min-height: 100vh;
             }
 
-            .orders-table th {
-                background: #fafafa;
-                color: #64748b;
+            .topbar {
+                background: #ffffff;
+                border-bottom: 1px solid var(--border-color);
+                padding: 12px 40px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+
+                .topbar > div:first-child {
+                    font-size: 24px;
+                    font-weight: 800;
+                    letter-spacing: -0.5px;
+                    color: var(--text-primary);
+                    font-style: italic;
+                }
+
+            .back-link {
+                color: var(--text-primary);
+                text-decoration: none;
                 font-weight: 600;
-                font-size: 12px;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
             }
 
-            .orders-table tr:last-child td {
-                border-bottom: none;
+                .back-link:hover {
+                    color: var(--accent-color);
+                }
+
+            .profile-container {
+                max-width: 935px;
+                width: 100%;
+                margin: 30px auto;
+                padding: 0 20px;
             }
 
-        .reviews-container {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .review-row {
-            background: #ffffff;
-            border: 1px solid #dbdbdb;
-            border-radius: 8px;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 16px;
-        }
-
-        .review-main h4 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #262626;
-            margin-bottom: 6px;
-        }
-
-        .review-main p {
-            font-size: 14px;
-            color: #4b5563;
-            line-height: 1.5;
-            font-style: italic;
-        }
-
-        .stars-row {
-            display: flex;
-            gap: 2px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #8e8e8e;
-            background: #fff;
-            border: 1px solid #dbdbdb;
-            border-radius: 8px;
-        }
-
-        .empty-icon {
-            font-size: 40px;
-            margin-bottom: 12px;
-            color: #dbdbdb;
-        }
-
-        .empty-state h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #262626;
-            margin-bottom: 6px;
-        }
-
-        .empty-state p {
-            font-size: 13px;
-            max-width: 350px;
-            margin: 0 auto;
-            line-height: 1.5;
-        }
-
-        .warning-banner {
-            background: #fff7ed;
-            color: #9a3412;
-            border: 1px solid #fed7aa;
-            padding: 14px 18px;
-            border-radius: 8px;
-            font-weight: 600;
-            margin-top: 40px;
-            text-align: center;
-        }
-
-        footer {
-            text-align: center;
-            padding: 40px 20px;
-            color: #8e8e8e;
-            font-size: 12px;
-            border-top: 1px solid #dbdbdb;
-            margin-top: 40px;
-        }
-
-        @@media (max-width: 768px) {
             .profile-header {
-                flex-direction: column;
-                text-align: center;
-                gap: 24px;
-                padding-bottom: 24px;
+                display: flex;
+                align-items: center;
+                gap: 60px;
+                padding: 30px 32px 44px;
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 24px;
+                box-shadow: var(--shadow-md);
+                margin-bottom: 20px;
+                position: relative;
+            }
+
+            .profile-avatar {
+                width: 150px;
+                height: 150px;
+                border-radius: 50%;
+                background: var(--accent-gradient);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 70px;
+                color: #ffffff;
+                border: 4px solid var(--accent-light);
+                flex-shrink: 0;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .profile-details {
+                flex-grow: 1;
+            }
+
+            .profile-username-row {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                flex-wrap: wrap;
+                margin-bottom: 20px;
+            }
+
+            .profile-username {
+                font-size: 28px;
+                font-weight: 800;
+                letter-spacing: -0.5px;
+                color: var(--text-primary);
+                display: flex;
+                align-items: center;
+            }
+
+            .follow-status-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            .following-yes {
+                background: #dcfce7;
+                color: #166534;
+            }
+
+            .following-no {
+                background: var(--accent-light);
+                color: var(--accent-color);
             }
 
             .profile-stats-row {
-                justify-content: center;
+                display: flex;
+                gap: 40px;
+                margin-bottom: 20px;
             }
-        }
+
+            .stat-item {
+                font-size: 16px;
+                color: var(--text-primary);
+            }
+
+            .stat-count {
+                font-weight: 800;
+                color: var(--accent-color);
+            }
+
+            .profile-bio {
+                font-size: 14px;
+                line-height: 1.5;
+                color: var(--text-secondary);
+            }
+
+            .bio-badges {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-top: 8px;
+            }
+
+            .bio-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                background: var(--accent-light);
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--accent-color);
+            }
+
+            .loyalty-badge {
+                background: #fef3c7;
+                color: #d97706;
+            }
+
+            .post-menu {
+                position: absolute;
+                top: 24px;
+                right: 24px;
+                display: inline-block;
+            }
+
+            .post-menu-btn {
+                width: 42px;
+                height: 42px;
+                border-radius: 50%;
+                border: 1px solid var(--border-color);
+                background: #ffffff;
+                cursor: pointer;
+                font-size: 18px;
+                color: var(--text-secondary);
+                display: grid;
+                place-items: center;
+                transition: all 0.2s ease;
+            }
+
+                .post-menu-btn:hover {
+                    border-color: var(--accent-color);
+                    color: var(--accent-color);
+                }
+
+            .post-menu-dropdown {
+                display: none;
+                position: absolute;
+                right: 0;
+                top: 50px;
+                background: white;
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                box-shadow: var(--shadow-md);
+                min-width: 190px;
+                z-index: 999;
+                overflow: hidden;
+            }
+
+                .post-menu-dropdown form {
+                    margin: 0;
+                }
+
+                .post-menu-dropdown button {
+                    width: 100%;
+                    padding: 12px 14px;
+                    background: none;
+                    border: none;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                    .post-menu-dropdown button:hover {
+                        background: var(--accent-light);
+                    }
+
+                    .post-menu-dropdown button.danger-option {
+                        color: var(--danger-color);
+                    }
+
+                        .post-menu-dropdown button.danger-option:hover {
+                            background: #fef2f2;
+                        }
+
+            .section-title {
+                font-size: 18px;
+                font-weight: 800;
+                margin: 32px 0 16px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: var(--text-primary);
+            }
+
+            .orders-table {
+                width: 100%;
+                border-collapse: collapse;
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+                overflow: hidden;
+                box-shadow: var(--shadow-sm);
+            }
+
+                .orders-table th,
+                .orders-table td {
+                    text-align: left;
+                    padding: 12px 16px;
+                    font-size: 14px;
+                    border-bottom: 1px solid var(--border-color);
+                }
+
+                .orders-table th {
+                    background: var(--bg-color);
+                    color: var(--text-secondary);
+                    font-weight: 700;
+                    font-size: 12px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .orders-table tr:last-child td {
+                    border-bottom: none;
+                }
+
+            .reviews-container {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .review-row {
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+                padding: 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 16px;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .review-main h4 {
+                font-size: 16px;
+                font-weight: 800;
+                color: var(--text-primary);
+                margin-bottom: 6px;
+            }
+
+            .review-main p {
+                font-size: 14px;
+                color: var(--text-secondary);
+                line-height: 1.5;
+                font-style: italic;
+            }
+
+            .stars-row {
+                display: flex;
+                gap: 2px;
+            }
+
+            .empty-state {
+                text-align: center;
+                padding: 40px 20px;
+                color: var(--text-muted);
+                background: var(--card-bg);
+                border: 1px dashed var(--border-color);
+                border-radius: 16px;
+            }
+
+            .empty-icon {
+                font-size: 40px;
+                margin-bottom: 12px;
+                color: var(--accent-color);
+                opacity: 0.5;
+            }
+
+            .empty-state h3 {
+                font-size: 16px;
+                font-weight: 800;
+                color: var(--text-primary);
+                margin-bottom: 6px;
+            }
+
+            .empty-state p {
+                font-size: 13px;
+                max-width: 350px;
+                margin: 0 auto;
+                line-height: 1.5;
+            }
+
+            .warning-banner {
+                background: #fff7ed;
+                color: #9a3412;
+                border: 1px solid #fed7aa;
+                padding: 14px 18px;
+                border-radius: 12px;
+                font-weight: 700;
+                margin-top: 40px;
+                text-align: center;
+            }
+
+            .server-message {
+                padding: 14px 18px;
+                border-radius: 12px;
+                font-weight: 700;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+                .server-message.success {
+                    background: #dcfce7;
+                    color: #166534;
+                }
+
+                .server-message.error {
+                    background: #fee2e2;
+                    color: #b91c1c;
+                }
+
+            footer {
+                text-align: center;
+                padding: 40px 20px;
+                color: var(--text-muted);
+                font-size: 12px;
+                border-top: 1px solid var(--border-color);
+                margin-top: 40px;
+            }
+
+            @@media (max-width: 768px) {
+                .profile-header {
+                    flex-direction: column;
+                    text-align: center;
+                    gap: 24px;
+                    padding: 24px 20px 24px;
+                }
+
+                .profile-stats-row {
+                    justify-content: center;
+                }
+
+                .post-menu {
+                    top: 16px;
+                    right: 16px;
+                }
+            }
     </style>
 </head>
 
@@ -328,6 +452,22 @@
     </div>
 
     <div class="profile-container">
+
+        @if (TempData["Success"] is string successMessage && !string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="server-message success">
+                <i class="fa-solid fa-circle-check"></i>
+                @successMessage
+            </div>
+        }
+
+        @if (TempData["Error"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="server-message error">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                @errorMessage
+            </div>
+        }
 
         @if (Model.StoreOwnerHasNoStore)
         {
@@ -347,6 +487,34 @@
         {
             <!-- Profile Header -->
             <div class="profile-header">
+
+                <div class="post-menu">
+                    <button type="button" class="post-menu-btn" onclick="toggleMenu(this)">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+
+                    <div class="post-menu-dropdown">
+                        <button type="button" onclick="openReportModal('reportCustomerModal', @Model.CustomerId)">
+                            <i class="fa-regular fa-flag"></i> Report Customer
+                        </button>
+
+                        @if (!Model.IsBlocked)
+                        {
+                            <form method="post" asp-page-handler="BlockCustomer" asp-route-customerId="@Model.CustomerId">
+                                <button type="submit" class="danger-option" onclick="return confirm('Block this customer? They will no longer be able to message you or view your store.');">
+                                    <i class="fa-solid fa-ban"></i> Block Customer
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <button type="button" disabled>
+                                <i class="fa-solid fa-ban"></i> Already Blocked
+                            </button>
+                        }
+                    </div>
+                </div>
+
                 <div class="profile-avatar">
                     <i class="fas fa-user-astronaut"></i>
                 </div>
@@ -358,7 +526,7 @@
                             @if (Model.IsVerified)
                             {
                                 <span title="Verified Customer">
-                                    <i class="fas fa-check-circle" style="color: #0095f6; font-size: 18px; margin-left: 8px;"></i>
+                                    <i class="fas fa-check-circle" style="color: #6d28d9; font-size: 18px; margin-left: 8px;"></i>
                                 </span>
                             }
                         </h2>
@@ -387,8 +555,8 @@
                     </div>
 
                     <div class="profile-bio">
-                        <p><i class="fas fa-envelope" style="color:#8e8e8e; margin-right:4px;"></i> @Model.CustomerEmail</p>
-                        <p><i class="fas fa-phone" style="color:#8e8e8e; margin-right:4px;"></i> @Model.CustomerPhone</p>
+                        <p><i class="fas fa-envelope" style="color:var(--text-muted); margin-right:4px;"></i> @Model.CustomerEmail</p>
+                        <p><i class="fas fa-phone" style="color:var(--text-muted); margin-right:4px;"></i> @Model.CustomerPhone</p>
 
                         <div class="bio-badges">
                             <span class="bio-badge loyalty-badge">
@@ -413,7 +581,7 @@
 
             <!-- Orders with this store -->
             <div class="section-title">
-                <i class="fas fa-receipt" style="color:#FF6B35;"></i> Orders With Your Store
+                <i class="fas fa-receipt" style="color:var(--accent-color);"></i> Orders With Your Store
             </div>
 
             @if (Model.OrdersWithThisStore.Any())
@@ -456,7 +624,7 @@
 
             <!-- Reviews for this store's products -->
             <div class="section-title">
-                <i class="far fa-star" style="color:#FF6B35;"></i> Reviews on Your Products
+                <i class="far fa-star" style="color:var(--accent-color);"></i> Reviews on Your Products
             </div>
 
             @if (Model.ReviewsForThisStore.Any())
@@ -478,11 +646,11 @@
                                 {
                                     if (i <= rating)
                                     {
-                                        <i class="fas fa-star" style="color: #FFC107;"></i>
+                                        <i class="fas fa-star" style="color: #f59e0b;"></i>
                                     }
                                     else
                                     {
-                                        <i class="far fa-star" style="color: #dbdbdb;"></i>
+                                        <i class="far fa-star" style="color: var(--border-color);"></i>
                                     }
                                 }
                             </div>
@@ -505,6 +673,37 @@
     <footer>
         <span>✨ Realnest — your local marketplace companion ✨</span>
     </footer>
+    @{
+        var reportCustomerModalModel = new
+        {
+            ModalId = "reportCustomerModal",
+            PageHandler = "ReportCustomer",
+            TargetIdFieldName = "customerId",
+            TargetId = Model.CustomerId,
+            Title = $"Report {Model.CustomerFullName}"
+        };
+    }
+
+    <partial name="_ReportModal" model="reportCustomerModalModel" />
+
+    <script>
+            function toggleMenu(btn) {
+                const menu = btn.nextElementSibling;
+
+                document.querySelectorAll('.post-menu-dropdown').forEach(m => {
+                    if (m !== menu) m.style.display = 'none';
+                });
+
+                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            }
+
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.post-menu')) {
+                    document.querySelectorAll('.post-menu-dropdown')
+                        .forEach(m => m.style.display = 'none');
+                }
+            });
+    </script>
 
 </body>
 </html>

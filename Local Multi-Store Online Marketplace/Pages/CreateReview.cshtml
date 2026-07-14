@@ -3,113 +3,455 @@
 
 @{
     Layout = null;
+
+    var reviewCount = Model.Reviews.Count;
+    var averageRating = reviewCount > 0
+        ? Model.Reviews.Average(r => r.Rating)
+        : 0;
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Store Reviews</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
     <style>
-        body {
-            font-family: Arial;
-            background: #f5f5f5;
-            margin: 0;
-        }
+            :root {
+                --accent-color: #6d28d9;
+                --accent-hover: #5b21b6;
+                --accent-light: #f3effe;
+                --accent-steel: #4f46e5;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                --bg-color: #faf9fc;
+                --card-bg: #ffffff;
+                --text-primary: #1e1b2e;
+                --text-secondary: #6b6478;
+                --text-muted: #9691a4;
+                --border-color: #ece8f6;
+                --star-color: #f59e0b;
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+                --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.14);
+            }
 
-        .container {
-            max-width: 600px;
-            margin: 40px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-        }
+            * {
+                box-sizing: border-box;
+            }
 
-        h2 {
-            text-align: center;
-        }
+            html, body {
+                margin: 0;
+                min-height: 100%;
+                font-family: 'Inter', Arial, sans-serif;
+                background: var(--bg-color);
+                color: var(--text-primary);
+            }
 
-        .review-box {
-            border: 1px solid #eee;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-        }
+            button, input, textarea, select {
+                font: inherit;
+            }
 
-        .stars {
-            color: gold;
-        }
+            .page-shell {
+                width: min(100%, 640px);
+                margin: 0 auto;
+                padding: 40px 18px 70px;
+            }
 
-        textarea, input {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            margin-bottom: 10px;
-        }
+            .topbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 24px;
+            }
 
-        button {
-            width: 100%;
-            padding: 10px;
-            background: green;
-            color: white;
-            border: none;
-            border-radius: 8px;
-        }
+            .back-link {
+                width: 42px;
+                height: 42px;
+                display: grid;
+                place-items: center;
+                border: 1px solid var(--border-color);
+                border-radius: 50%;
+                background: #fff;
+                color: var(--text-primary);
+                text-decoration: none;
+                box-shadow: var(--shadow-sm);
+                transition: all 0.2s ease;
+            }
 
-        .section-title {
-            margin-top: 20px;
-            font-weight: bold;
-        }
+                .back-link:hover {
+                    border-color: var(--accent-color);
+                    color: var(--accent-color);
+                }
+
+            .page-title {
+                font-size: 18px;
+                font-weight: 800;
+                letter-spacing: -0.3px;
+            }
+
+            /* -------- Summary header -------- */
+            .summary-card {
+                background: var(--accent-gradient);
+                border-radius: 24px;
+                padding: 28px 30px;
+                color: #ffffff;
+                display: flex;
+                align-items: center;
+                gap: 24px;
+                box-shadow: var(--shadow-lg);
+                margin-bottom: 24px;
+            }
+
+            .summary-score {
+                font-size: 42px;
+                font-weight: 800;
+                line-height: 1;
+            }
+
+            .summary-details {
+                flex: 1;
+            }
+
+            .summary-stars {
+                color: #ffe9a8;
+                font-size: 15px;
+                margin: 6px 0 4px;
+            }
+
+            .summary-count {
+                font-size: 13px;
+                opacity: 0.85;
+                font-weight: 600;
+            }
+
+            /* -------- Form card -------- */
+            .form-card {
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 24px;
+                padding: 28px;
+                box-shadow: var(--shadow-md);
+                margin-bottom: 30px;
+            }
+
+                .form-card h3 {
+                    margin: 0 0 4px;
+                    font-size: 17px;
+                    font-weight: 800;
+                }
+
+                .form-card .subtitle {
+                    margin: 0 0 20px;
+                    font-size: 13px;
+                    color: var(--text-secondary);
+                }
+
+            .field-label {
+                display: block;
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+            }
+
+            .star-rating-input {
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: flex-end;
+                gap: 6px;
+                margin-bottom: 22px;
+            }
+
+                .star-rating-input input {
+                    display: none;
+                }
+
+                .star-rating-input label {
+                    font-size: 30px;
+                    color: #e3ddef;
+                    cursor: pointer;
+                    transition: color 0.15s ease, transform 0.15s ease;
+                }
+
+                    .star-rating-input label:hover,
+                    .star-rating-input label:hover ~ label {
+                        color: var(--star-color);
+                    }
+
+                /* checked + preceding siblings (rendered right-to-left in DOM order) */
+                .star-rating-input input:checked ~ label {
+                    color: var(--star-color);
+                }
+
+            textarea.review-textarea {
+                width: 100%;
+                min-height: 110px;
+                padding: 14px 16px;
+                border-radius: 14px;
+                border: 1px solid var(--border-color);
+                background: var(--bg-color);
+                resize: vertical;
+                font-size: 14px;
+                line-height: 1.6;
+                outline: none;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                margin-bottom: 20px;
+            }
+
+                textarea.review-textarea:focus {
+                    border-color: var(--accent-color);
+                    background: #fff;
+                    box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.10);
+                }
+
+            .submit-button {
+                width: 100%;
+                border: none;
+                border-radius: 14px;
+                padding: 14px;
+                font-size: 14px;
+                font-weight: 800;
+                color: #ffffff;
+                background: var(--accent-gradient);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                box-shadow: var(--shadow-sm);
+                transition: transform 0.15s ease, box-shadow 0.2s ease;
+            }
+
+                .submit-button:hover {
+                    transform: translateY(-1px);
+                    box-shadow: var(--shadow-md);
+                }
+
+            /* -------- Reviews list -------- */
+            .list-heading {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 14px;
+            }
+
+                .list-heading h3 {
+                    margin: 0;
+                    font-size: 16px;
+                    font-weight: 800;
+                }
+
+                .list-heading span {
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: var(--text-muted);
+                }
+
+            .review-card {
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 18px;
+                padding: 18px 20px;
+                margin-bottom: 14px;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .review-top {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 10px;
+            }
+
+            .reviewer-avatar {
+                width: 38px;
+                height: 38px;
+                border-radius: 50%;
+                background: var(--accent-gradient);
+                color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 800;
+                font-size: 14px;
+                flex-shrink: 0;
+            }
+
+            .reviewer-meta {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .reviewer-name {
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--text-primary);
+            }
+
+            .review-date {
+                font-size: 11.5px;
+                color: var(--text-muted);
+                font-weight: 600;
+            }
+
+            .review-stars {
+                color: var(--star-color);
+                font-size: 13px;
+                white-space: nowrap;
+            }
+
+            .review-comment {
+                font-size: 13.5px;
+                line-height: 1.6;
+                color: #4b4551;
+                margin: 0;
+            }
+
+            .empty-reviews {
+                background: var(--card-bg);
+                border: 1px dashed var(--border-color);
+                border-radius: 20px;
+                text-align: center;
+                padding: 44px 20px;
+                color: var(--text-secondary);
+            }
+
+                .empty-reviews i {
+                    font-size: 34px;
+                    color: var(--accent-color);
+                    opacity: 0.5;
+                    margin-bottom: 12px;
+                    display: block;
+                }
+
+                .empty-reviews p {
+                    margin: 0;
+                    font-size: 13.5px;
+                }
+
+            @@media (max-width: 480px) {
+                .summary-card {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 10px;
+                }
+
+                .star-rating-input label {
+                    font-size: 26px;
+                }
+            }
     </style>
 </head>
-
 <body>
 
-    <div class="container">
+    <div class="page-shell">
 
-        <h2>⭐ Store Reviews</h2>
+        <div class="topbar">
+            <a class="back-link" href="javascript:history.back()" aria-label="Back">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <span class="page-title">Store Reviews</span>
+            <div style="width:42px"></div>
+        </div>
 
-        <!-- ✅ ADD REVIEW FORM -->
-        <form method="post">
+        <div class="summary-card">
+            <div class="summary-score">@averageRating.ToString("0.0")</div>
+            <div class="summary-details">
+                <div class="summary-stars">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <i class="@(i <= Math.Round(averageRating) ? "fa-solid" : "fa-regular") fa-star"></i>
+                    }
+                </div>
+                <div class="summary-count">
+                    Based on @reviewCount @(reviewCount == 1 ? "review" : "reviews")
+                </div>
+            </div>
+        </div>
 
-            <input type="hidden" asp-for="StoreId" />
+        <div class="form-card">
+            <h3>Leave a review</h3>
+            <p class="subtitle">Share your experience with this store.</p>
 
-            <label>Rating (1-5)</label>
-            <input asp-for="Rating" type="number" min="1" max="5" />
+            <form method="post">
+                <input type="hidden" asp-for="StoreId" />
 
-            <label>Comment</label>
-            <textarea asp-for="Comment" placeholder="Write your review..."></textarea>
+                <span class="field-label">Your rating</span>
+                <div class="star-rating-input">
+                    <input type="radio" id="star5" asp-for="Rating" value="5" />
+                    <label for="star5" title="5 stars"><i class="fa-solid fa-star"></i></label>
 
-            <button type="submit">Submit Review</button>
+                    <input type="radio" id="star4" asp-for="Rating" value="4" />
+                    <label for="star4" title="4 stars"><i class="fa-solid fa-star"></i></label>
 
-        </form>
+                    <input type="radio" id="star3" asp-for="Rating" value="3" />
+                    <label for="star3" title="3 stars"><i class="fa-solid fa-star"></i></label>
 
-        <!-- ✅ EXISTING REVIEWS -->
-        <div class="section-title">Other Reviews</div>
+                    <input type="radio" id="star2" asp-for="Rating" value="2" />
+                    <label for="star2" title="2 stars"><i class="fa-solid fa-star"></i></label>
+
+                    <input type="radio" id="star1" asp-for="Rating" value="1" />
+                    <label for="star1" title="1 star"><i class="fa-solid fa-star"></i></label>
+                </div>
+
+                <span class="field-label">Your comment</span>
+                <textarea asp-for="Comment" class="review-textarea" placeholder="What did you think?" maxlength="1000"></textarea>
+
+                <button type="submit" class="submit-button">
+                    <i class="fa-solid fa-paper-plane"></i> Submit Review
+                </button>
+            </form>
+        </div>
+
+        <div class="list-heading">
+            <h3>Other Reviews</h3>
+            <span>@reviewCount total</span>
+        </div>
 
         @if (!Model.Reviews.Any())
         {
-            <p>No reviews yet.</p>
+            <div class="empty-reviews">
+                <i class="fa-regular fa-comment-dots"></i>
+                <p>No reviews yet. Be the first to share your experience.</p>
+            </div>
         }
         else
         {
             @foreach (var r in Model.Reviews)
             {
-                <div class="review-box">
-                    <strong>@(r.Customer?.CustomerID.ToString() ?? "Unknown Customer")</strong>
+                var reviewerLabel = r.Customer?.User?.FullName
+                    ?? r.Customer?.User?.UserName
+                    ?? "Unknown Customer";
 
-                    <div class="stars">
-                        @for (int i = 0; i < r.Rating; i++)
-                        {
-                            <span>⭐</span>
-                        }
+                var initial = reviewerLabel.Length > 0 ? reviewerLabel.Substring(0, 1).ToUpper() : "?";
+
+                <div class="review-card">
+                    <div class="review-top">
+                        <div class="reviewer-avatar">@initial</div>
+                        <div class="reviewer-meta">
+                            <div class="reviewer-name">@reviewerLabel</div>
+                            <div class="review-date">@r.CreatedAt.ToString("MMM d, yyyy")</div>
+                        </div>
+                        <div class="review-stars">
+                            @for (int i = 0; i < r.Rating; i++)
+                            {
+                                <i class="fa-solid fa-star"></i>
+                            }
+                            @for (int i = r.Rating; i < 5; i++)
+                            {
+                                <i class="fa-regular fa-star"></i>
+                            }
+                        </div>
                     </div>
-
-                    <p>@r.Comment</p>
-
-                    <small>@r.CreatedAt.ToString("yyyy-MM-dd")</small>
-
+                    <p class="review-comment">@r.Comment</p>
                 </div>
             }
         }

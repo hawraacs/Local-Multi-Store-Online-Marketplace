@@ -23,7 +23,6 @@
 
     <title>My Profile | Realnest</title>
 
-    <!-- Google Fonts & FontAwesome Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -34,7 +33,6 @@
                 --border-color: #ece8f6;
                 --text-primary: #1e1b2e;
                 --text-secondary: #6b6478;
-                /* Purple / Indigo palette */
                 --accent-color: #6d28d9;
                 --accent-hover: #5b21b6;
                 --accent-light: #f3effe;
@@ -255,9 +253,6 @@
                 border: 1px solid #fef3c7;
             }
 
-            /* ===================== */
-            /* Sidebar menu trigger   */
-            /* ===================== */
             .menu-trigger-btn {
                 width: 38px;
                 height: 38px;
@@ -280,9 +275,6 @@
                     color: #ffffff;
                 }
 
-            /* ===================== */
-            /* Instagram-style slide-in sidebar */
-            /* ===================== */
             .sidebar-overlay {
                 display: none;
                 position: fixed;
@@ -398,9 +390,6 @@
                 width: 100%;
             }
 
-            /* ===================== */
-            /* Bio next to avatar     */
-            /* ===================== */
             .profile-user-bio {
                 cursor: pointer;
                 border-radius: 10px;
@@ -996,7 +985,6 @@
             </div>
         }
 
-        <!-- Profile Header -->
         <div class="profile-header">
             <div class="profile-avatar-container">
                 <div class="profile-avatar">
@@ -1035,7 +1023,6 @@
                     <div class="stat-item">
                         <span class="stat-count">@Model.OrdersCount</span> orders
                     </div>
-                    <!-- Clicking Following opens the Following List Modal popup, styled like Instagram -->
                     <div class="stat-item stat-item-clickable" onclick="openFollowingModal()" style="cursor: pointer;">
                         <span class="stat-count">@Model.FollowedStoresList.Count</span> following
                     </div>
@@ -1069,10 +1056,8 @@
             </div>
         </div>
 
-        <!-- Sidebar overlay backdrop -->
         <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
 
-        <!-- Instagram-style slide-in sidebar -->
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-panel-header">
                 <h3>Menu</h3>
@@ -1100,10 +1085,12 @@
             <a href="/HelpCenter" class="sidebar-link">
                 <i class="fas fa-circle-question"></i> Help Center
             </a>
+            <a href="/CustomerComplaint" class="sidebar-link">
+                <i class="fas fa-flag"></i> File a Complaint
+            </a>
 
             <div class="sidebar-divider"></div>
 
-            <!-- Adjust asp-page to match your Identity logout route if different -->
             <form method="post" asp-page="/Identity/Account/Logout" asp-route-returnUrl="/" class="logout-form">
                 <button type="submit" class="sidebar-link logout">
                     <i class="fas fa-right-from-bracket"></i> Logout
@@ -1111,11 +1098,9 @@
             </form>
         </aside>
 
-        <!-- Main Content -->
         <div class="page-layout">
             <main class="content-area">
 
-                <!-- TAB CONTENT: WISHLIST -->
                 <div id="wishlist-tab" class="tab-content active">
                     @if (Model.WishlistList.Any())
                     {
@@ -1148,7 +1133,6 @@
                     }
                 </div>
 
-                <!-- TAB CONTENT: YOUR ACTIVITY (Reviews + Blocked Shops + Language Preference) -->
                 <div id="activity-tab" class="tab-content">
 
                     <div class="activity-section">
@@ -1200,10 +1184,6 @@
                     <div class="activity-section">
                         <h3 class="activity-section-title"><i class="fas fa-ban"></i> Blocked Shops</h3>
 
-                        <!--
-                            Placeholder UI only — wire this up to a Model.BlockedStoresList
-                            (and an "Unblock" POST handler) once that feature exists on the backend.
-                        -->
                         <div class="empty-state" style="padding: 40px 20px;">
                             <div class="empty-icon" style="font-size: 40px;"><i class="fas fa-store-slash"></i></div>
                             <h3 style="font-size: 17px;">No Blocked Shops</h3>
@@ -1214,7 +1194,6 @@
                     <div class="activity-section">
                         <h3 class="activity-section-title"><i class="fas fa-globe"></i> Language Preference</h3>
 
-                        <!-- Placeholder UI only — connect languageSelect's value to the customer's saved language preference -->
                         <div class="settings-card" style="box-shadow: none; padding: 22px; margin-bottom: 0;">
                             <div class="form-group" style="max-width: 280px; margin-bottom: 16px;">
                                 <label for="languageSelect">App Language</label>
@@ -1232,7 +1211,6 @@
 
                 </div>
 
-                <!-- TAB CONTENT: ACCOUNT MANAGEMENT & SETTINGS -->
                 <div id="settings-tab" class="tab-content">
 
                     <div class="settings-card">
@@ -1247,6 +1225,9 @@
                         </a>
                         <a class="settings-btn" href="/CustomerAddresses">
                             <i class="fas fa-location-dot"></i> My Addresses
+                        </a>
+                        <a class="settings-btn" href="/CustomerComplaint">
+                            <i class="fas fa-flag"></i> File a Complaint
                         </a>
                     </div>
 
@@ -1490,7 +1471,6 @@
 
     </div>
 
-    <!-- Edit Profile Modal -->
     <div id="editProfileModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeEditModal()">&times;</span>
@@ -1509,7 +1489,6 @@
         </div>
     </div>
 
-    <!-- Edit Bio Modal -->
     <div id="editBioModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeEditBioModal()">&times;</span>
@@ -1524,7 +1503,6 @@
         </div>
     </div>
 
-    <!-- Following List Modal Popup -->
     <div id="followingModal" class="modal">
         <div class="modal-content" style="max-width: 400px; padding: 0; overflow: hidden; border-radius: 12px;">
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color);">
@@ -1569,7 +1547,6 @@
     </footer>
 
     <script>
-            // Modal Handlers (Profile Edit)
             function openEditModal() {
                 document.getElementById("editProfileModal").style.display = "block";
             }
@@ -1578,7 +1555,6 @@
                 document.getElementById("editProfileModal").style.display = "none";
             }
 
-            // Modal Handlers (Edit Bio)
             function openEditBioModal() {
                 document.getElementById("editBioModal").style.display = "block";
             }
@@ -1587,7 +1563,6 @@
                 document.getElementById("editBioModal").style.display = "none";
             }
 
-            // Modal Handlers (Following List)
             function openFollowingModal() {
                 document.getElementById("followingModal").style.display = "block";
             }
@@ -1596,14 +1571,12 @@
                 document.getElementById("followingModal").style.display = "none";
             }
 
-            // Language preference (placeholder — persist this via an API/handler call once available)
             function saveLanguagePreference() {
                 const select = document.getElementById("languageSelect");
                 const label = select.options[select.selectedIndex].text;
                 alert("Language set to " + label + " (placeholder — connect this to your backend to persist it).");
             }
 
-            // Close modals on external overlay click
             window.onclick = function(event) {
                 const modalsToCheck = [
                     "editProfileModal",
@@ -1619,7 +1592,6 @@
                 });
             }
 
-            // Instagram-style slide-in sidebar
             function openSidebar() {
                 document.getElementById("sidebar").classList.add("open");
                 document.getElementById("sidebarOverlay").classList.add("open");
@@ -1632,7 +1604,6 @@
                 document.body.style.overflow = "";
             }
 
-            // Tab switcher (Wishlist / Your Activity / Management)
             function switchTab(tabId) {
                 document.querySelectorAll(".tab-content").forEach(tab => {
                     tab.classList.remove("active");
@@ -1649,13 +1620,11 @@
                 }
             }
 
-            // Called from the sidebar: switch tab, then close the sidebar
             function selectTab(tabId) {
                 switchTab(tabId);
                 closeSidebar();
             }
 
-            // Delivery form login expander
             function toggleDeliveryLogin() {
                 const loginBox = document.getElementById("deliveryLoginBox");
 
@@ -1688,7 +1657,6 @@
                 }
             }
 
-            // Store Owner form login expander
             function toggleStoreOwnerLogin() {
                 const loginBox =
                     document.getElementById("storeOwnerLoginBox");

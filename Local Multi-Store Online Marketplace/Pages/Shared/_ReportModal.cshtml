@@ -1,0 +1,226 @@
+﻿@model dynamic
+
+<div class="report-modal-backdrop" id="@Model.ModalId-backdrop" onclick="closeReportModal('@Model.ModalId', event)">
+    <div class="report-modal" onclick="event.stopPropagation()">
+        <button type="button" class="report-modal-close" onclick="closeReportModal('@Model.ModalId')">&times;</button>
+
+        <h3>@Model.Title</h3>
+        <p class="report-modal-subtitle">Why are you reporting this? Your report is confidential and will be reviewed by our team.</p>
+
+        <form method="post" asp-page-handler="@Model.PageHandler" id="@Model.ModalId-form">
+            <input type="hidden" name="@Model.TargetIdFieldName" id="@Model.ModalId-targetId" value="@Model.TargetId" />
+            <input type="hidden" name="reason" id="@Model.ModalId-reasonInput" />
+
+            <div class="report-reason-list" id="@Model.ModalId-reasonList">
+                <button type="button" class="reason-option" data-reason="Nudity or sexual content">Nudity or sexual content</button>
+                <button type="button" class="reason-option" data-reason="Hate speech or symbols">Hate speech or symbols</button>
+                <button type="button" class="reason-option" data-reason="Harassment or bullying">Harassment or bullying</button>
+                <button type="button" class="reason-option" data-reason="Violence or dangerous behavior">Violence or dangerous behavior</button>
+                <button type="button" class="reason-option" data-reason="Scam or fraud">Scam or fraud</button>
+                <button type="button" class="reason-option" data-reason="Counterfeit or prohibited item">Counterfeit or prohibited item</button>
+                <button type="button" class="reason-option" data-reason="Spam">Spam</button>
+                <button type="button" class="reason-option" data-reason="False information">False information</button>
+                <button type="button" class="reason-option" data-reason="Intellectual property violation">Intellectual property violation</button>
+                <button type="button" class="reason-option" data-reason="Something else">Something else</button>
+            </div>
+
+            <div class="report-details-step" id="@Model.ModalId-detailsStep" style="display:none;">
+                <label class="report-field-label">Additional details</label>
+                <textarea name="description" class="report-textarea" placeholder="Tell us more..." maxlength="2000"></textarea>
+
+                <div class="report-modal-actions">
+                    <button type="button" class="report-cancel-btn" onclick="backToReasonList('@Model.ModalId')">Back</button>
+                    <button type="submit" class="report-submit-btn">Submit Report</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!ViewData.ContainsKey("ReportModalAssetsLoaded"))
+{
+    ViewData["ReportModalAssetsLoaded"] = true;
+
+    <style>
+        .report-modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(30, 27, 46, 0.55);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+            .report-modal-backdrop.open {
+                display: flex;
+            }
+
+        .report-modal {
+            width: min(440px, 100%);
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 26px;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(30, 27, 46, 0.18);
+        }
+
+            .report-modal h3 {
+                margin: 0 0 8px;
+                font-size: 18px;
+                font-weight: 800;
+                color: #1e1b2e;
+            }
+
+        .report-modal-subtitle {
+            font-size: 13px;
+            color: #6b6478;
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        .report-modal-close {
+            position: absolute;
+            right: 16px;
+            top: 14px;
+            border: none;
+            background: transparent;
+            font-size: 22px;
+            color: #9691a4;
+            cursor: pointer;
+        }
+
+        .report-reason-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .reason-option {
+            text-align: left;
+            background: none;
+            border: none;
+            border-bottom: 1px solid #ece8f6;
+            padding: 14px 4px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e1b2e;
+            cursor: pointer;
+        }
+
+            .reason-option:last-child {
+                border-bottom: none;
+            }
+
+            .reason-option:hover {
+                color: #6d28d9;
+            }
+
+        .report-field-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #6b6478;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 8px;
+        }
+
+        .report-textarea {
+            width: 100%;
+            min-height: 100px;
+            border: 1px solid #ece8f6;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #faf9fc;
+            outline: none;
+            resize: vertical;
+            margin-bottom: 18px;
+        }
+
+            .report-textarea:focus {
+                border-color: #6d28d9;
+                background: #ffffff;
+                box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.10);
+            }
+
+        .report-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .report-cancel-btn {
+            border: 1px solid #ece8f6;
+            background: #ffffff;
+            color: #6b6478;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+            .report-cancel-btn:hover {
+                border-color: #6d28d9;
+                color: #6d28d9;
+            }
+
+        .report-submit-btn {
+            border: none;
+            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+            .report-submit-btn:hover {
+                opacity: 0.95;
+            }
+    </style>
+
+    <script>
+        function openReportModal(modalId, targetId) {
+            document.querySelectorAll('.post-menu-dropdown').forEach(m => m.style.display = 'none');
+
+            if (targetId !== undefined && targetId !== null) {
+                const idField = document.getElementById(modalId + '-targetId');
+                if (idField) idField.value = targetId;
+            }
+
+            const list = document.getElementById(modalId + '-reasonList');
+            const details = document.getElementById(modalId + '-detailsStep');
+            if (list) list.style.display = 'flex';
+            if (details) details.style.display = 'none';
+
+            const reasonInput = document.getElementById(modalId + '-reasonInput');
+            if (reasonInput) reasonInput.value = '';
+
+            document.getElementById(modalId + '-backdrop').classList.add('open');
+        }
+
+        function closeReportModal(modalId, event) {
+            if (event && event.target.id !== (modalId + '-backdrop')) return;
+            document.getElementById(modalId + '-backdrop').classList.remove('open');
+        }
+
+        function backToReasonList(modalId) {
+            document.getElementById(modalId + '-reasonList').style.display = 'flex';
+            document.getElementById(modalId + '-detailsStep').style.display = 'none';
+        }
+
+              document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('reason-option')) {
+                const modalId = e.target.closest('.report-modal').querySelector('.report-reason-list').id.replace('-reasonList', '');
+                document.getElementById(modalId + '-reasonInput').value = e.target.dataset.reason;
+                document.getElementById(modalId + '-reasonList').style.display = 'none';
+                document.getElementById(modalId + '-detailsStep').style.display = 'block';
+            }
+        }, true);
+    </script>
+}
