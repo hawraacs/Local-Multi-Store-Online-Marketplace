@@ -3,122 +3,208 @@
 @{
     ViewData["Title"] = "Settings";
     Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
-
 }
 
-<style>
-    :root {
-        /* -------- Brand colors (Purple / Indigo) -------- */
-        --accent-color: #6d28d9;
-        --accent-hover: #5b21b6;
-        --accent-light: #f3effe;
-        --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-        /* -------- Neutral palette -------- */
-        --bg-color: #f8f7fc;
-        --card-bg: #ffffff;
-        --text-primary: #1e1b2e;
-        --text-secondary: #6b6478;
-        --text-muted: #9691a4;
-        --border-color: #ece8f6;
-        /* -------- Semantic -------- */
-        --success-color: #10b981;
-        --error-color: #dc2626;
-        --warning-color: #f59e0b;
-        /* -------- Shadows -------- */
-        --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
-        --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
-        --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.18);
-    }
+@section Styles {
+    <style>
+        /* ============================================================
+           ROOT VARIABLES — consistent brand palette
+           ============================================================ */
+        :root {
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            --bg-color: #f8f7fc;
+            --card-bg: #ffffff;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            --text-muted: #9691a4;
+            --border-color: #ece8f6;
+            --success-color: #10b981;
+            --error-color: #dc2626;
+            --warning-color: #f59e0b;
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+            --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.18);
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+        }
 
-    .settings-page {
-        background: var(--bg-color);
-        min-height: calc(100vh - 120px);
-        padding: 35px 0 60px;
-    }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
 
-    .settings-wrapper {
-        max-width: 1120px;
-        margin: auto;
-    }
+        /* ============================================================
+           PAGE WRAPPER
+           ============================================================ */
+        .settings-wrapper {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 32px 20px 60px;
+        }
 
-    .settings-hero {
-        background: var(--accent-gradient);
-        border-radius: 24px;
-        color: white;
-        padding: 30px;
-        margin-bottom: 24px;
-        box-shadow: var(--shadow-lg);
-        position: relative;
-        overflow: hidden;
-    }
+        /* ============================================================
+           HERO BANNER — matches analytics/dashboard style
+           ============================================================ */
+        .settings-hero {
+            background: var(--accent-gradient);
+            border-radius: var(--radius-lg);
+            color: #fff;
+            padding: 32px 36px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-md), 0 8px 32px rgba(109, 40, 217, 0.20);
+            position: relative;
+            overflow: hidden;
+        }
 
         .settings-hero::after {
-            content: "";
+            content: '';
             position: absolute;
-            width: 220px;
-            height: 220px;
+            top: -40%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.06);
             border-radius: 50%;
-            background: rgba(255,255,255,0.12);
-            right: -70px;
-            top: -80px;
+            pointer-events: none;
         }
 
         .settings-hero h2 {
-            margin: 0 0 8px;
-            font-size: 28px;
+            margin: 0 0 6px;
+            font-size: 26px;
             font-weight: 800;
             letter-spacing: -0.4px;
             position: relative;
             z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-hero h2 i {
+            font-size: 28px;
+            opacity: 0.9;
         }
 
         .settings-hero p {
             margin: 0;
             opacity: 0.92;
-            font-size: 14px;
+            font-size: 15px;
             position: relative;
             z-index: 1;
         }
 
-    .status-pill {
-        display: inline-block;
-        margin-top: 14px;
-        background: rgba(255,255,255,0.18);
-        border-radius: 999px;
-        padding: 8px 14px;
-        font-size: 12px;
-        font-weight: 700;
-        position: relative;
-        z-index: 1;
-    }
+        .settings-hero .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px 20px;
+            margin-top: 16px;
+            position: relative;
+            z-index: 1;
+        }
 
-    .settings-grid {
-        display: grid;
-        grid-template-columns: 1.35fr 0.85fr;
-        gap: 24px;
-        align-items: start;
-    }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.18);
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 13px;
+            backdrop-filter: blur(4px);
+        }
 
-    .settings-card {
-        background: var(--card-bg);
-        border-radius: 22px;
-        border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-sm);
-        overflow: hidden;
-        margin-bottom: 22px;
-    }
+        .hero-badge i {
+            font-size: 14px;
+        }
 
-    .card-header {
-        padding: 20px 24px;
-        border-bottom: 1px solid var(--border-color);
-        background: var(--bg-color);
-    }
+        /* ============================================================
+           ALERTS
+           ============================================================ */
+        .alert {
+            border-radius: var(--radius-md);
+            padding: 14px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid transparent;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: #ecfdf5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        .alert-success i {
+            color: var(--success-color);
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .alert-danger i {
+            color: var(--error-color);
+        }
+
+        /* ============================================================
+           GRID
+           ============================================================ */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 0.8fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* ============================================================
+           CARDS — consistent with dashboard
+           ============================================================ */
+        .settings-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            margin-bottom: 24px;
+        }
+
+        .settings-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-color);
+        }
 
         .card-header h3 {
-            margin: 0 0 5px;
-            color: var(--text-primary);
-            font-size: 18px;
+            margin: 0 0 4px;
+            font-size: 17px;
             font-weight: 800;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-header h3 i {
+            color: var(--accent-color);
         }
 
         .card-header p {
@@ -128,28 +214,39 @@
             font-weight: 500;
         }
 
-    .card-body {
-        padding: 24px;
-    }
+        .card-body {
+            padding: 22px 24px 24px;
+        }
 
-    .setting-option {
-        background: var(--bg-color);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 16px;
-        margin-bottom: 16px;
-    }
+        /* ============================================================
+           SETTING OPTION (toggle row)
+           ============================================================ */
+        .setting-option {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            margin-bottom: 18px;
+            transition: var(--transition);
+        }
 
-    .switch-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-    }
+        .setting-option:hover {
+            border-color: var(--accent-color);
+        }
 
-        .switch-row input {
-            margin-top: 4px;
-            transform: scale(1.15);
+        .switch-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .switch-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            flex-shrink: 0;
             accent-color: var(--accent-color);
+            cursor: pointer;
         }
 
         .switch-row label {
@@ -157,6 +254,7 @@
             font-weight: 700;
             color: var(--text-primary);
             font-size: 14px;
+            cursor: pointer;
         }
 
         .switch-row small {
@@ -168,36 +266,39 @@
             font-weight: 400;
         }
 
-    .form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-    }
+        /* ============================================================
+           FORM ELEMENTS
+           ============================================================ */
+        .form-group {
+            margin-bottom: 18px;
+        }
 
-    .form-group {
-        margin-bottom: 16px;
-    }
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
 
         .form-group label {
             display: block;
             font-size: 13px;
             font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 7px;
+            margin-bottom: 6px;
         }
 
-    .form-control,
-    .form-select {
-        width: 100%;
-        border: 1.5px solid var(--border-color);
-        border-radius: 12px;
-        padding: 11px 15px;
-        font-weight: 500;
-        color: var(--text-primary);
-        outline: none;
-        background: var(--bg-color);
-        transition: all 0.2s ease;
-    }
+        .form-control,
+        .form-select {
+            width: 100%;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 11px 15px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            background: var(--bg-color);
+            transition: var(--transition);
+            font-family: inherit;
+        }
 
         .form-control:focus,
         .form-select:focus {
@@ -206,393 +307,475 @@
             box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.10);
         }
 
-    .help-text {
-        color: var(--text-muted);
-        font-size: 12px;
-        margin-top: 6px;
-        font-weight: 400;
-        line-height: 1.5;
-    }
-
-    .save-btn {
-        border: none;
-        border-radius: 30px;
-        background: var(--accent-gradient);
-        color: white;
-        padding: 14px 26px;
-        font-weight: 700;
-        cursor: pointer;
-        box-shadow: 0 10px 22px rgba(109, 40, 217, 0.25);
-        transition: all 0.25s ease;
-    }
-
-        .save-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 14px 28px rgba(109, 40, 217, 0.32);
+        .form-control::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
         }
 
-    .profile-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        border-radius: 30px;
-        background: var(--card-bg);
-        border: 1.5px solid var(--border-color);
-        color: var(--text-secondary);
-        padding: 13px 20px;
-        font-weight: 700;
-        margin-left: 10px;
-        transition: all 0.25s ease;
-    }
+        .help-text {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 5px;
+            font-weight: 400;
+            line-height: 1.5;
+        }
 
-        .profile-link:hover {
+        .text-danger {
+            color: var(--error-color);
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* ============================================================
+           NOTE BOX
+           ============================================================ */
+        .note-box {
+            background: var(--accent-light);
+            border: 1px solid #e0d4fb;
+            color: var(--accent-hover);
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.6;
+            margin-top: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .note-box i {
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
+           BUTTONS
+           ============================================================ */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: var(--accent-gradient);
+            color: #fff;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(109, 40, 217, 0.25);
+            transition: var(--transition);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(109, 40, 217, 0.35);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border-color);
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-color);
             color: var(--accent-color);
             background: var(--accent-light);
-            border-color: var(--accent-color);
         }
 
-    .side-card {
-        background: var(--card-bg);
-        border-radius: 22px;
-        border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-sm);
-        padding: 22px;
-        margin-bottom: 22px;
-    }
+        .actions-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        /* ============================================================
+           SIDE CARDS
+           ============================================================ */
+        .side-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 22px 24px 24px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            margin-bottom: 24px;
+        }
+
+        .side-card:hover {
+            box-shadow: var(--shadow-md);
+        }
 
         .side-card h4 {
             margin: 0 0 14px;
-            color: var(--text-primary);
             font-size: 16px;
             font-weight: 800;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 12px 0;
-        border-bottom: 1px solid var(--border-color);
-        font-size: 13px;
-    }
+        .side-card h4 i {
+            color: var(--accent-color);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
 
         .info-row:last-child {
             border-bottom: none;
         }
 
-    .info-label {
-        color: var(--text-secondary);
-        font-weight: 600;
-    }
-
-    .info-value {
-        color: var(--text-primary);
-        font-weight: 700;
-        text-align: right;
-    }
-
-    .note-box {
-        background: var(--accent-light);
-        border: 1px solid #e0d4fb;
-        color: var(--accent-hover);
-        padding: 14px;
-        border-radius: 14px;
-        font-size: 12px;
-        font-weight: 600;
-        line-height: 1.55;
-        margin-top: 14px;
-    }
-
-    .alert {
-        border-radius: 14px;
-        padding: 14px 18px;
-        margin-bottom: 18px;
-        font-weight: 600;
-        font-size: 14px;
-    }
-
-    .alert-success {
-        background: #ecfdf5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
-    }
-
-    .alert-danger {
-        background: #fef2f2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-    }
-
-    .text-danger {
-        color: var(--error-color);
-        font-size: 12px;
-        font-weight: 600;
-        margin-top: 5px;
-        display: block;
-    }
-
-    @@media (max-width: 950px) {
-        .settings-grid {
-            grid-template-columns: 1fr;
+        .info-label {
+            color: var(--text-secondary);
+            font-weight: 600;
         }
 
-        .form-grid {
-            grid-template-columns: 1fr;
+        .info-value {
+            color: var(--text-primary);
+            font-weight: 700;
+            text-align: right;
         }
 
-        .profile-link {
-            margin-left: 0;
-            margin-top: 10px;
-        }
-    }
-
-    @@media (max-width: 600px) {
-        .settings-page {
-            padding: 20px 12px;
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @@media (max-width: 992px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .settings-hero {
-            padding: 24px;
+        @@media (max-width: 768px) {
+            .settings-wrapper {
+                padding: 20px 16px 40px;
+            }
+
+            .settings-hero {
+                padding: 24px 20px;
+            }
+
+            .settings-hero h2 {
+                font-size: 22px;
+            }
+
+            .card-body {
+                padding: 18px 16px 20px;
+            }
+
+            .card-header {
+                padding: 16px 18px;
+            }
+
+            .side-card {
+                padding: 18px 18px 20px;
+            }
+
+            .actions-row {
+                flex-direction: column;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+                justify-content: center;
+            }
         }
-    }
-</style>
 
-<div class="settings-page">
-    <div class="settings-wrapper">
+        @@media (max-width: 480px) {
+            .settings-hero .hero-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
 
-        <div class="settings-hero">
-            <h2>Operational Settings</h2>
-            <p>Manage delivery rules, payment rules, and store availability without duplicating the Store Profile page.</p>
+            .hero-badge {
+                font-size: 12px;
+                padding: 4px 14px;
+            }
 
-            <span class="status-pill">
-                Store: @Model.StoreName
+            .switch-row {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .switch-row input[type="checkbox"] {
+                margin-top: 0;
+            }
+        }
+    </style>
+}
+
+<div class="settings-wrapper">
+
+    <!-- ========== HERO BANNER ========== -->
+    <div class="settings-hero">
+        <h2><i class="fas fa-sliders-h"></i> Operational Settings</h2>
+        <p>Manage delivery rules, payment rules, and store availability without duplicating the Store Profile page.</p>
+
+        <div class="hero-meta">
+            <span class="hero-badge">
+                <i class="fas fa-store"></i> @Model.StoreName
+            </span>
+            <span class="hero-badge">
+                <i class="fas fa-circle" style="color:#6ee7b7;"></i> @Model.CurrentStatus
             </span>
         </div>
+    </div>
 
-        @if (TempData["Success"] != null)
-        {
-            <div class="alert alert-success">
-                @TempData["Success"]
-            </div>
-        }
+    <!-- ========== ALERTS ========== -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> @TempData["Success"]
+        </div>
+    }
 
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger">
-                @TempData["Error"]
-            </div>
-        }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+        </div>
+    }
 
-        <form method="post">
-            <div class="settings-grid">
+    <!-- ========== GRID ========== -->
+    <form method="post">
+        <div class="settings-grid">
 
-                <div>
+            <!-- ===== LEFT COLUMN: SETTINGS CARDS ===== -->
+            <div>
 
-                    <div class="settings-card">
-                        <div class="card-header">
-                            <h3>Delivery Settings</h3>
-                            <p>Control how delivery fees are calculated for your store.</p>
-                        </div>
-
-                        <div class="card-body">
-
-                            <div class="setting-option">
-                                <div class="switch-row">
-                                    <input asp-for="StoreSettings.HasFixedDeliveryFee" />
-                                    <div>
-                                        <label asp-for="StoreSettings.HasFixedDeliveryFee">
-                                            Use Fixed Delivery Fee
-                                        </label>
-                                        <small>
-                                            If enabled, customers pay one fixed delivery fee. If disabled, delivery fee is calculated based on store/customer distance.
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="StoreSettings.FixedDeliveryFee">Fixed Delivery Fee</label>
-                                <input asp-for="StoreSettings.FixedDeliveryFee"
-                                       class="form-control"
-                                       placeholder="Example: 3.00" />
-                                <span asp-validation-for="StoreSettings.FixedDeliveryFee" class="text-danger"></span>
-                                <div class="help-text">
-                                    Required only when fixed delivery fee is enabled.
-                                </div>
-                            </div>
-
-                            <div class="note-box">
-                                Store location coordinates are managed from Store Profile because they are part of the store identity and delivery location.
-                            </div>
-
-                        </div>
+                <!-- Delivery Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-truck"></i> Delivery Settings</h3>
+                        <p>Control how delivery fees are calculated for your store.</p>
                     </div>
 
-                    <div class="settings-card">
-                        <div class="card-header">
-                            <h3>Payment Settings</h3>
-                            <p>Control Cash on Delivery availability and limits.</p>
+                    <div class="card-body">
+                        <div class="setting-option">
+                            <div class="switch-row">
+                                <input asp-for="StoreSettings.HasFixedDeliveryFee" />
+                                <div>
+                                    <label asp-for="StoreSettings.HasFixedDeliveryFee">
+                                        Use Fixed Delivery Fee
+                                    </label>
+                                    <small>
+                                        If enabled, customers pay one fixed delivery fee. If disabled, delivery fee is calculated based on store/customer distance.
+                                    </small>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="card-body">
-
-                            <div class="setting-option">
-                                <div class="switch-row">
-                                    <input asp-for="StoreSettings.CODSupported" />
-                                    <div>
-                                        <label asp-for="StoreSettings.CODSupported">
-                                            Cash On Delivery Supported
-                                        </label>
-                                        <small>
-                                            Enable this if your store accepts cash payment when the order is delivered.
-                                        </small>
-                                    </div>
-                                </div>
+                        <div class="form-group">
+                            <label asp-for="StoreSettings.FixedDeliveryFee">Fixed Delivery Fee ($)</label>
+                            <input asp-for="StoreSettings.FixedDeliveryFee"
+                                   class="form-control"
+                                   placeholder="e.g. 3.00" />
+                            <span asp-validation-for="StoreSettings.FixedDeliveryFee" class="text-danger"></span>
+                            <div class="help-text">
+                                Required only when fixed delivery fee is enabled.
                             </div>
+                        </div>
 
-                            <div class="form-group">
-                                <label asp-for="StoreSettings.CODMaxLimit">COD Max Limit</label>
-                                <input asp-for="StoreSettings.CODMaxLimit"
-                                       class="form-control"
-                                       placeholder="Example: 5000.00" />
-                                <span asp-validation-for="StoreSettings.CODMaxLimit" class="text-danger"></span>
-                                <div class="help-text">
-                                    Customers cannot use COD above this order amount.
-                                </div>
-                            </div>
-
+                        <div class="note-box">
+                            <i class="fas fa-info-circle"></i>
+                            Store location coordinates are managed from <strong>Store Profile</strong> because they are part of the store identity and delivery location.
                         </div>
                     </div>
-
-                    <div class="settings-card">
-                        <div class="card-header">
-                            <h3>Store Availability</h3>
-                            <p>Use this for temporary opening or closure control.</p>
-                        </div>
-
-                        <div class="card-body">
-
-                            <div class="form-group">
-                                <label asp-for="StoreSettings.AvailabilityStatus">Availability Status</label>
-                                <select asp-for="StoreSettings.AvailabilityStatus" class="form-select">
-                                    <option value="Open">Open for Orders</option>
-                                    <option value="Inactive">Temporarily Closed</option>
-                                </select>
-                                <span asp-validation-for="StoreSettings.AvailabilityStatus" class="text-danger"></span>
-                                <div class="help-text">
-                                    Temporary closure prevents new orders without deleting or rejecting the store.
-                                </div>
-                            </div>
-
-                            <div class="note-box">
-                                Admin-controlled statuses such as Pending, Approved, or Rejected are not edited here. This setting only controls operational availability.
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <button type="submit" class="save-btn">
-                        Save Operational Settings
-                    </button>
-
-                    <a href="/StoreOwner/StoreProfile" class="profile-link">
-                        Edit Store Profile
-                    </a>
-
                 </div>
 
-                <aside>
-
-                    <div class="side-card">
-                        <h4>Store Snapshot</h4>
-
-                        <div class="info-row">
-                            <span class="info-label">Store Name</span>
-                            <span class="info-value">@Model.StoreName</span>
-                        </div>
-
-                        <div class="info-row">
-                            <span class="info-label">Store Code</span>
-                            <span class="info-value">
-                                @(string.IsNullOrWhiteSpace(Model.StoreCode) ? "Not assigned" : Model.StoreCode)
-                            </span>
-                        </div>
-
-                        <div class="info-row">
-                            <span class="info-label">Current Status</span>
-                            <span class="info-value">@Model.CurrentStatus</span>
-                        </div>
-
-                        <div class="info-row">
-                            <span class="info-label">Location</span>
-                            <span class="info-value">@Model.StoreLocationSummary</span>
-                        </div>
+                <!-- Payment Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-credit-card"></i> Payment Settings</h3>
+                        <p>Control Cash on Delivery availability and limits.</p>
                     </div>
 
-                    <div class="side-card">
-                        <h4>Business Rules</h4>
-
-                        <div class="info-row">
-                            <span class="info-label">Commission</span>
-                            <span class="info-value">@Model.CommissionRate.ToString("N2")%</span>
+                    <div class="card-body">
+                        <div class="setting-option">
+                            <div class="switch-row">
+                                <input asp-for="StoreSettings.CODSupported" />
+                                <div>
+                                    <label asp-for="StoreSettings.CODSupported">
+                                        Cash On Delivery Supported
+                                    </label>
+                                    <small>
+                                        Enable this if your store accepts cash payment when the order is delivered.
+                                    </small>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="info-row">
-                            <span class="info-label">Rating</span>
-                            <span class="info-value">@Model.Rating.ToString("N1") / 5</span>
+                        <div class="form-group">
+                            <label asp-for="StoreSettings.CODMaxLimit">COD Max Limit ($)</label>
+                            <input asp-for="StoreSettings.CODMaxLimit"
+                                   class="form-control"
+                                   placeholder="e.g. 5000.00" />
+                            <span asp-validation-for="StoreSettings.CODMaxLimit" class="text-danger"></span>
+                            <div class="help-text">
+                                Customers cannot use COD above this order amount.
+                            </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="info-row">
-                            <span class="info-label">Total Ratings</span>
-                            <span class="info-value">@Model.TotalRatings</span>
+                <!-- Store Availability -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-clock"></i> Store Availability</h3>
+                        <p>Use this for temporary opening or closure control.</p>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="StoreSettings.AvailabilityStatus">Availability Status</label>
+                            <select asp-for="StoreSettings.AvailabilityStatus" class="form-select">
+                                <option value="Open">Open for Orders</option>
+                                <option value="Inactive">Temporarily Closed</option>
+                            </select>
+                            <span asp-validation-for="StoreSettings.AvailabilityStatus" class="text-danger"></span>
+                            <div class="help-text">
+                                Temporary closure prevents new orders without deleting or rejecting the store.
+                            </div>
                         </div>
 
                         <div class="note-box">
-                            Commission and rating are system-controlled values and cannot be edited by the store owner.
+                            <i class="fas fa-shield-alt"></i>
+                            Admin-controlled statuses such as Pending, Approved, or Rejected are not edited here. This setting only controls operational availability.
                         </div>
                     </div>
+                </div>
 
-                    <div class="side-card">
-                        <h4>Verification</h4>
-
-                        <div class="info-row">
-                            <span class="info-label">License No.</span>
-                            <span class="info-value">
-                                @(string.IsNullOrWhiteSpace(Model.BusinessLicenseNumber) ? "Not provided" : Model.BusinessLicenseNumber)
-                            </span>
-                        </div>
-
-                        <div class="info-row">
-                            <span class="info-label">License File</span>
-                            <span class="info-value">
-                                @(string.IsNullOrWhiteSpace(Model.BusinessLicenseURL) ? "Not uploaded" : "Uploaded")
-                            </span>
-                        </div>
-
-                        <div class="info-row">
-                            <span class="info-label">Created At</span>
-                            <span class="info-value">@Model.CreatedAt.ToString("yyyy-MM-dd")</span>
-                        </div>
-
-                        <div class="info-row">
-                            <span class="info-label">Approved At</span>
-                            <span class="info-value">
-                                @(Model.ApprovedAt.HasValue ? Model.ApprovedAt.Value.ToString("yyyy-MM-dd") : "Not approved yet")
-                            </span>
-                        </div>
-
-                        <div class="note-box">
-                            Business verification is controlled by the admin review process.
-                        </div>
-                    </div>
-
-                </aside>
+                <!-- Actions -->
+                <div class="actions-row">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Save Operational Settings
+                    </button>
+                    <a href="/StoreOwner/StoreProfile" class="btn-secondary">
+                        <i class="fas fa-user-edit"></i> Edit Store Profile
+                    </a>
+                </div>
 
             </div>
-        </form>
 
-    </div>
+            <!-- ===== RIGHT COLUMN: SIDE CARDS ===== -->
+            <aside>
+
+                <!-- Store Snapshot -->
+                <div class="side-card">
+                    <h4><i class="fas fa-store-alt"></i> Store Snapshot</h4>
+
+                    <div class="info-row">
+                        <span class="info-label">Store Name</span>
+                        <span class="info-value">@Model.StoreName</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Store Code</span>
+                        <span class="info-value">
+                            @(string.IsNullOrWhiteSpace(Model.StoreCode) ? "Not assigned" : Model.StoreCode)
+                        </span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Current Status</span>
+                        <span class="info-value">@Model.CurrentStatus</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Location</span>
+                        <span class="info-value">@Model.StoreLocationSummary</span>
+                    </div>
+                </div>
+
+                <!-- Business Rules -->
+                <div class="side-card">
+                    <h4><i class="fas fa-gavel"></i> Business Rules</h4>
+
+                    <div class="info-row">
+                        <span class="info-label">Commission</span>
+                        <span class="info-value">@Model.CommissionRate.ToString("N2")%</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Rating</span>
+                        <span class="info-value">@Model.Rating.ToString("N1") / 5</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Total Ratings</span>
+                        <span class="info-value">@Model.TotalRatings</span>
+                    </div>
+
+                    <div class="note-box">
+                        <i class="fas fa-info-circle"></i>
+                        Commission and rating are system-controlled values and cannot be edited by the store owner.
+                    </div>
+                </div>
+
+                <!-- Verification -->
+                <div class="side-card" style="margin-bottom:0;">
+                    <h4><i class="fas fa-id-card"></i> Verification</h4>
+
+                    <div class="info-row">
+                        <span class="info-label">License No.</span>
+                        <span class="info-value">
+                            @(string.IsNullOrWhiteSpace(Model.BusinessLicenseNumber) ? "Not provided" : Model.BusinessLicenseNumber)
+                        </span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">License File</span>
+                        <span class="info-value">
+                            @(string.IsNullOrWhiteSpace(Model.BusinessLicenseURL) ? "Not uploaded" : "Uploaded")
+                        </span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Created At</span>
+                        <span class="info-value">@Model.CreatedAt.ToString("yyyy-MM-dd")</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Approved At</span>
+                        <span class="info-value">
+                            @(Model.ApprovedAt.HasValue ? Model.ApprovedAt.Value.ToString("yyyy-MM-dd") : "Not approved yet")
+                        </span>
+                    </div>
+
+                    <div class="note-box">
+                        <i class="fas fa-info-circle"></i>
+                        Business verification is controlled by the admin review process.
+                    </div>
+                </div>
+
+            </aside>
+
+        </div>
+    </form>
+
 </div>
 
 @section Scripts {
