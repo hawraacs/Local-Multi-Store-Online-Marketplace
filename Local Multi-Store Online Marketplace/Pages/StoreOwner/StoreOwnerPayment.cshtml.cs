@@ -40,20 +40,25 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public string? ErrorMessage { get; set; }
         public decimal CurrentBalance { get; set; } = -1;
 
+        // Sent to the browser so Stripe.js can tokenize the card client-side.
+        // Safe to expose publicly.
+        public string? StripePublishableKey { get; set; }
+
+        // Client secret for the SetupIntent used to verify the card with the
+        // issuer via Stripe.js. Single-use and scoped to this SetupIntent only.
+        public string? ClientSecret { get; set; }
+
         [BindProperty]
         public int PaymentId { get; set; }
 
         [BindProperty]
         public string CardholderName { get; set; } = string.Empty;
 
+        // The ONLY card-related value that ever reaches our server. It is a
+        // reference to a Stripe SetupIntent that Stripe.js already confirmed
+        // in the browser — the raw card number never touches this server.
         [BindProperty]
-        public string CardNumber { get; set; } = string.Empty;
-
-        [BindProperty]
-        public string ExpiryDate { get; set; } = string.Empty;
-
-        [BindProperty]
-        public string Cvv { get; set; } = string.Empty;
+        public string SetupIntentId { get; set; } = string.Empty;
 
         [BindProperty(SupportsGet = true)]
         public string? ReturnUrl { get; set; }
@@ -78,14 +83,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 return RedirectToLocalOrDashboard();
             }
 
-            if (string.IsNullOrWhiteSpace(payment.Store.StripeAccountId))
+            var store = payment.Store;
+
+            if (string.IsNullOrWhiteSpace(store.StripeAccountId))
             {
                 CurrentBalance = 9999; // dummy for demo
             }
             else
             {
-                await FetchStripeBalance(payment.Store.StripeAccountId);
+                await FetchStripeBalance(store.StripeAccountId);
             }
+
+            // Prepare Stripe.js: a customer + SetupIntent so the browser can
+            // verify the card directly with Stripe/the issuing bank without
+            // ever sending the card number to this server.
+            await PrepareStripeSetupAsync(store);
 
             return Page();
         }
@@ -107,23 +119,36 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 return RedirectToLocalOrDashboard();
             }
 
-            NormalizePaymentInput();
+            var store = payment.Store;
 
-            var cardValidationError = ValidateCardInput();
-            if (!string.IsNullOrWhiteSpace(cardValidationError))
+            CardholderName = CardholderName?.Trim() ?? string.Empty;
+            SetupIntentId = SetupIntentId?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(CardholderName) || CardholderName.Length < 3)
             {
-                ErrorMessage = cardValidationError;
+                ErrorMessage = "Cardholder name is required (min 3 characters).";
+                await PrepareStripeSetupAsync(store);
                 return Page();
             }
 
-            var store = payment.Store;
-
-            // Save payment method if not already stored
-            if (string.IsNullOrEmpty(store.StripeCustomerId) || string.IsNullOrEmpty(store.StripePaymentMethodId))
+            if (string.IsNullOrWhiteSpace(SetupIntentId))
             {
-                await SavePaymentMethodAsync(store, CardNumber, ExpiryDate, Cvv, CardholderName);
-                await _context.SaveChangesAsync();
+                ErrorMessage = "Card verification is required before continuing.";
+                await PrepareStripeSetupAsync(store);
+                return Page();
             }
+
+            // Confirm — server-side — that Stripe actually verified this card
+            // with the issuer. Never trust the client's word alone.
+            var attachResult = await ConfirmAndAttachPaymentMethodAsync(store, SetupIntentId);
+            if (!attachResult.Success)
+            {
+                ErrorMessage = attachResult.ErrorMessage ?? "Your card could not be verified. Please try again.";
+                await PrepareStripeSetupAsync(store);
+                return Page();
+            }
+
+            await _context.SaveChangesAsync();
 
             // Check balance (if Stripe account linked)
             bool balanceSufficient = true;
@@ -135,6 +160,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             if (!balanceSufficient)
             {
                 ErrorMessage = "Insufficient funds in your Stripe account. Please add funds or use a card payment.";
+                await PrepareStripeSetupAsync(store);
                 return Page();
             }
 
@@ -182,80 +208,140 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 await transaction.RollbackAsync();
                 _logger.LogError(ex, "Store owner payment failed for payment {PaymentId}.", PaymentId);
                 ErrorMessage = "An error occurred while processing your payment. Please try again.";
+                await PrepareStripeSetupAsync(store);
                 return Page();
             }
         }
 
         // -------------------------------------------------------------
-        // Stripe Payment Method Saving (uses aliases)
+        // Stripe.js bootstrap: create/reuse a Customer and issue a fresh
+        // SetupIntent so the browser can verify a card without ever
+        // exposing the raw PAN to our server.
         // -------------------------------------------------------------
-        private async Task SavePaymentMethodAsync(Store store, string cardNumber, string expiry, string cvv, string cardholderName)
+        private async Task PrepareStripeSetupAsync(Store store)
         {
-            StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
-
-            var expParts = expiry.Split('/');
-            var expMonth = int.Parse(expParts[0]);
-            var expYear = int.Parse(expParts[1]);
-
-            var paymentMethodOptions = new PaymentMethodCreateOptions
+            try
             {
-                Type = "card",
-                Card = new PaymentMethodCardOptions
+                StripePublishableKey = _configuration["Stripe:PublishableKey"];
+                if (string.IsNullOrWhiteSpace(StripePublishableKey))
                 {
-                    Number = cardNumber,
-                    ExpMonth = expMonth,
-                    ExpYear = expYear,
-                    Cvc = cvv,
-                },
-                BillingDetails = new PaymentMethodBillingDetailsOptions
-                {
-                    Name = cardholderName,
+                    _logger.LogWarning("Stripe:PublishableKey is not configured.");
+                    return;
                 }
-            };
-            var paymentMethodService = new PaymentMethodService();
-            var paymentMethod = await paymentMethodService.CreateAsync(paymentMethodOptions);
 
-            var customerService = new CustomerService();
-            StripeCustomer customer;
+                StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
 
-            if (!string.IsNullOrEmpty(store.StripeCustomerId))
-            {
-                customer = await customerService.GetAsync(store.StripeCustomerId);
-            }
-            else
-            {
-                var customerOptions = new CustomerCreateOptions
+                var customer = await GetOrCreateCustomerAsync(store);
+
+                var setupIntentService = new SetupIntentService();
+                var setupIntent = await setupIntentService.CreateAsync(new SetupIntentCreateOptions
                 {
-                    Email = store.Email,
-                    Name = store.StoreName,
-                    PaymentMethod = paymentMethod.Id,
+                    Customer = customer.Id,
+                    PaymentMethodTypes = new System.Collections.Generic.List<string> { "card" },
+                    Usage = "off_session"
+                });
+
+                ClientSecret = setupIntent.ClientSecret;
+            }
+            catch (StripeException ex)
+            {
+                _logger.LogError(ex, "Failed to prepare Stripe SetupIntent for store {StoreId}.", store.StoreID);
+                ClientSecret = null;
+                // Surfacing the actual Stripe error (not just a generic message) makes this
+                // debuggable during setup. Stripe's own error messages don't leak secrets.
+                ErrorMessage = $"Card verification is temporarily unavailable ({ex.StripeError?.Message ?? ex.Message}).";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error preparing Stripe SetupIntent for store {StoreId}.", store.StoreID);
+                ClientSecret = null;
+                ErrorMessage = $"Card verification is temporarily unavailable ({ex.Message}).";
+            }
+        }
+
+        private async Task<StripeCustomer> GetOrCreateCustomerAsync(Store store)
+        {
+            var customerService = new CustomerService();
+
+            if (!string.IsNullOrWhiteSpace(store.StripeCustomerId))
+            {
+                try
+                {
+                    return await customerService.GetAsync(store.StripeCustomerId);
+                }
+                catch (StripeException)
+                {
+                    // Fall through and create a new customer if the stored ID is no longer valid.
+                }
+            }
+
+            var customer = await customerService.CreateAsync(new CustomerCreateOptions
+            {
+                Email = store.Email,
+                Name = store.StoreName
+            });
+
+            store.StripeCustomerId = customer.Id;
+            await _context.SaveChangesAsync();
+
+            return customer;
+        }
+
+        // -------------------------------------------------------------
+        // Verifies — server-side — that the SetupIntent the client claims
+        // to have completed really did succeed with Stripe, then attaches
+        // the resulting PaymentMethod (a token) as the customer's default.
+        // At no point does this server see or store the card number.
+        // -------------------------------------------------------------
+        private async Task<(bool Success, string? ErrorMessage)> ConfirmAndAttachPaymentMethodAsync(Store store, string setupIntentId)
+        {
+            try
+            {
+                StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
+
+                var setupIntentService = new SetupIntentService();
+                var setupIntent = await setupIntentService.GetAsync(setupIntentId);
+
+                if (setupIntent.Status != "succeeded")
+                {
+                    return (false, "Card verification was not completed. Please try again.");
+                }
+
+                if (string.IsNullOrWhiteSpace(setupIntent.PaymentMethodId))
+                {
+                    return (false, "No verified card was found. Please try again.");
+                }
+
+                var customer = await GetOrCreateCustomerAsync(store);
+
+                // Defense in depth: confirm the SetupIntent actually belongs
+                // to this store's customer, not one supplied by a tampered request.
+                if (!string.Equals(setupIntent.CustomerId, customer.Id, StringComparison.Ordinal))
+                {
+                    _logger.LogWarning(
+                        "SetupIntent {SetupIntentId} customer mismatch for store {StoreId}.",
+                        setupIntentId, store.StoreID);
+                    return (false, "Card verification could not be matched to your account. Please try again.");
+                }
+
+                var customerService = new CustomerService();
+                await customerService.UpdateAsync(customer.Id, new CustomerUpdateOptions
+                {
                     InvoiceSettings = new CustomerInvoiceSettingsOptions
                     {
-                        DefaultPaymentMethod = paymentMethod.Id,
-                    },
-                };
-                customer = await customerService.CreateAsync(customerOptions);
-                store.StripeCustomerId = customer.Id;
+                        DefaultPaymentMethod = setupIntent.PaymentMethodId
+                    }
+                });
+
+                store.StripePaymentMethodId = setupIntent.PaymentMethodId;
+
+                return (true, null);
             }
-
-            // Attach payment method to customer
-            var attachOptions = new PaymentMethodAttachOptions
+            catch (StripeException ex)
             {
-                Customer = customer.Id,
-            };
-            await paymentMethodService.AttachAsync(paymentMethod.Id, attachOptions);
-
-            // Set as default
-            var updateOptions = new CustomerUpdateOptions
-            {
-                InvoiceSettings = new CustomerInvoiceSettingsOptions
-                {
-                    DefaultPaymentMethod = paymentMethod.Id,
-                }
-            };
-            await customerService.UpdateAsync(customer.Id, updateOptions);
-
-            store.StripePaymentMethodId = paymentMethod.Id;
+                _logger.LogError(ex, "Stripe error confirming SetupIntent {SetupIntentId} for store {StoreId}.", setupIntentId, store.StoreID);
+                return (false, ex.StripeError?.Message ?? "Your card could not be verified.");
+            }
         }
 
         // -------------------------------------------------------------
@@ -286,58 +372,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             return await _context.StorePayments
                 .Include(sp => sp.Store)
                 .FirstOrDefaultAsync(sp => sp.StorePaymentId == paymentId && sp.StoreId == store.StoreID);
-        }
-
-        private void NormalizePaymentInput()
-        {
-            CardholderName = CardholderName?.Trim() ?? string.Empty;
-            CardNumber = CardNumber?.Replace(" ", "").Replace("-", "").Trim() ?? string.Empty;
-            ExpiryDate = ExpiryDate?.Trim() ?? string.Empty;
-            Cvv = Cvv?.Trim() ?? string.Empty;
-        }
-
-        private string? ValidateCardInput()
-        {
-            if (string.IsNullOrWhiteSpace(CardholderName) || CardholderName.Length < 3)
-                return "Cardholder name is required (min 3 characters).";
-            if (string.IsNullOrWhiteSpace(CardNumber) || CardNumber.Length != 16 || !CardNumber.All(char.IsDigit))
-                return "Card number must be exactly 16 digits.";
-            if (!IsValidLuhn(CardNumber))
-                return "Invalid card number. Please check the digits.";
-            if (!IsValidExpiry(ExpiryDate))
-                return "Invalid expiry date (MM/YY) or card has expired.";
-            if (string.IsNullOrWhiteSpace(Cvv) || Cvv.Length != 3 || !Cvv.All(char.IsDigit))
-                return "CVV must be exactly 3 digits.";
-            return null;
-        }
-
-        private static bool IsValidLuhn(string cardNumber)
-        {
-            int sum = 0;
-            bool doubleDigit = false;
-            for (int i = cardNumber.Length - 1; i >= 0; i--)
-            {
-                int digit = cardNumber[i] - '0';
-                if (doubleDigit)
-                {
-                    digit *= 2;
-                    if (digit > 9) digit -= 9;
-                }
-                sum += digit;
-                doubleDigit = !doubleDigit;
-            }
-            return sum % 10 == 0;
-        }
-
-        private static bool IsValidExpiry(string expiry)
-        {
-            if (!System.Text.RegularExpressions.Regex.IsMatch(expiry, @"^\d{2}/\d{2}$")) return false;
-            var parts = expiry.Split('/');
-            if (!int.TryParse(parts[0], out int month) || !int.TryParse(parts[1], out int year)) return false;
-            if (month < 1 || month > 12) return false;
-            int currentYear = DateTime.UtcNow.Year % 100;
-            int currentMonth = DateTime.UtcNow.Month;
-            return year > currentYear || (year == currentYear && month >= currentMonth);
         }
 
         private async Task FetchStripeBalance(string stripeAccountId)
