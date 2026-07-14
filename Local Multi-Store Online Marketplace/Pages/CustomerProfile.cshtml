@@ -150,7 +150,7 @@
                 }
 
             .profile-container {
-                max-width: 935px;
+                max-width: 1180px;
                 width: 100%;
                 margin: 30px auto;
                 padding: 0 20px;
@@ -162,7 +162,7 @@
                 gap: 60px;
                 padding-bottom: 44px;
                 border-bottom: 1px solid var(--border-color);
-                margin-bottom: 20px;
+                margin-bottom: 28px;
             }
 
             .profile-avatar-container {
@@ -204,34 +204,6 @@
                 align-items: center;
             }
 
-            .edit-profile-btn {
-                background-color: var(--accent-light);
-                border: 1px solid var(--border-color);
-                border-radius: 50px;
-                color: var(--accent-color);
-                padding: 6px 16px;
-                font-size: 13px;
-                font-weight: 700;
-                cursor: pointer;
-                text-decoration: none;
-                transition: all 0.2s ease;
-            }
-
-                .edit-profile-btn:hover {
-                    background-color: var(--accent-color);
-                    border-color: var(--accent-color);
-                    color: #ffffff;
-                }
-
-            .menu-trigger-btn {
-                width: 38px;
-                height: 38px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 15px;
-            }
-
             .profile-stats-row {
                 display: flex;
                 gap: 40px;
@@ -258,14 +230,6 @@
                 color: var(--text-secondary);
             }
 
-                .profile-bio h1 {
-                    font-family: 'Playfair Display', Georgia, serif;
-                    font-size: 18px;
-                    font-weight: 800;
-                    margin-bottom: 4px;
-                    color: var(--text-primary);
-                }
-
             .bio-badges {
                 display: flex;
                 flex-wrap: wrap;
@@ -291,40 +255,179 @@
                 border: 1px solid #fef3c7;
             }
 
-            .profile-tabs {
-                display: flex;
-                justify-content: center;
-                border-top: 1px solid var(--border-color);
-                gap: 60px;
-                margin-bottom: 20px;
-            }
-
-            .tab-btn {
-                background: transparent;
-                border: none;
-                border-top: 2px solid transparent;
-                color: var(--text-secondary);
-                cursor: pointer;
-                display: flex;
+            /* ===================== */
+            /* Sidebar menu trigger   */
+            /* ===================== */
+            .menu-trigger-btn {
+                width: 38px;
+                height: 38px;
+                display: inline-flex;
                 align-items: center;
-                gap: 6px;
-                font-size: 12px;
-                font-weight: 700;
-                letter-spacing: 1px;
-                padding: 16px 0;
-                text-transform: uppercase;
-                margin-top: -1px;
+                justify-content: center;
+                font-size: 15px;
+                background-color: var(--accent-light);
+                border: 1px solid var(--border-color);
+                border-radius: 50px;
+                color: var(--accent-color);
+                cursor: pointer;
+                flex-shrink: 0;
                 transition: all 0.2s ease;
             }
 
-                .tab-btn:hover {
-                    color: var(--accent-color);
+                .menu-trigger-btn:hover {
+                    background-color: var(--accent-color);
+                    border-color: var(--accent-color);
+                    color: #ffffff;
                 }
 
-                .tab-btn.active {
-                    color: var(--accent-color);
-                    border-top: 2px solid var(--accent-color);
+            /* ===================== */
+            /* Instagram-style slide-in sidebar */
+            /* ===================== */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(30, 27, 46, 0.5);
+                z-index: 9998;
+                opacity: 0;
+                transition: opacity 0.25s ease;
+            }
+
+                .sidebar-overlay.open {
+                    display: block;
+                    opacity: 1;
                 }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: -300px;
+                width: 280px;
+                max-width: 82vw;
+                height: 100%;
+                background: var(--card-bg);
+                box-shadow: var(--shadow-lg);
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+                transition: right 0.3s ease;
+            }
+
+                .sidebar.open {
+                    right: 0;
+                }
+
+            .sidebar-panel-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 16px 20px;
+                border-bottom: 1px solid var(--border-color);
+                flex-shrink: 0;
+            }
+
+                .sidebar-panel-header h3 {
+                    font-size: 16px;
+                    font-weight: 800;
+                    color: var(--text-primary);
+                }
+
+            .sidebar-divider {
+                height: 1px;
+                background: var(--border-color);
+                margin: 6px 0;
+            }
+
+            .sidebar-link {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                width: 100%;
+                padding: 14px 20px;
+                font-size: 14.5px;
+                font-weight: 600;
+                font-family: var(--font-family);
+                color: var(--text-primary);
+                text-decoration: none;
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                text-align: left;
+                transition: background-color 0.15s ease, color 0.15s ease;
+            }
+
+                .sidebar-link i {
+                    width: 18px;
+                    text-align: center;
+                    color: var(--accent-color);
+                    font-size: 16px;
+                }
+
+                .sidebar-link:hover {
+                    background: var(--accent-light);
+                }
+
+                .sidebar-link.active {
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                    font-weight: 800;
+                }
+
+                    .sidebar-link.active i {
+                        color: var(--accent-color);
+                    }
+
+                .sidebar-link.logout {
+                    color: var(--error-color);
+                }
+
+                    .sidebar-link.logout i {
+                        color: var(--error-color);
+                    }
+
+                    .sidebar-link.logout:hover {
+                        background: #fef2f2;
+                    }
+
+            .logout-form {
+                margin: 0;
+            }
+
+            .content-area {
+                width: 100%;
+            }
+
+            /* ===================== */
+            /* Bio next to avatar     */
+            /* ===================== */
+            .profile-user-bio {
+                cursor: pointer;
+                border-radius: 10px;
+                padding: 6px 0;
+                margin-bottom: 4px;
+                transition: opacity 0.15s ease;
+            }
+
+                .profile-user-bio:hover {
+                    opacity: 0.75;
+                }
+
+                .profile-user-bio p {
+                    font-size: 14px;
+                    line-height: 1.5;
+                    color: var(--text-primary);
+                }
+
+                .profile-user-bio .bio-placeholder {
+                    color: var(--text-secondary);
+                    font-style: italic;
+                }
+
+                    .profile-user-bio .bio-placeholder i {
+                        margin-right: 6px;
+                        color: var(--accent-color);
+                    }
 
             .tab-content {
                 display: none;
@@ -337,9 +440,8 @@
 
             .instagram-grid {
                 display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 28px;
-                margin-top: 20px;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 24px;
             }
 
             .product-grid-item {
@@ -360,7 +462,7 @@
 
                 .product-grid-item img {
                     width: 100%;
-                    height: 200px;
+                    height: 180px;
                     object-fit: cover;
                     border-bottom: 1px solid var(--border-color);
                 }
@@ -509,71 +611,6 @@
                 display: flex;
                 gap: 2px;
             }
-
-            .review-date {
-                font-size: 12px;
-                color: var(--text-secondary);
-            }
-
-            .blocked-shop-row {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 12px;
-                background: var(--card-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 14px;
-                padding: 12px 16px;
-                margin-bottom: 10px;
-            }
-
-                .blocked-shop-row:last-child {
-                    margin-bottom: 0;
-                }
-
-            .blocked-shop-info {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                min-width: 0;
-            }
-
-                .blocked-shop-info img {
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 50%;
-                    object-fit: cover;
-                    border: 1px solid var(--border-color);
-                    flex-shrink: 0;
-                }
-
-                .blocked-shop-info span {
-                    font-size: 14px;
-                    font-weight: 700;
-                    color: var(--text-primary);
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-
-            .unblock-btn {
-                background: transparent;
-                border: 1px solid var(--border-color);
-                color: var(--text-secondary);
-                font-weight: 700;
-                font-size: 12px;
-                padding: 6px 14px;
-                border-radius: 50px;
-                cursor: pointer;
-                flex-shrink: 0;
-                transition: all 0.15s ease;
-            }
-
-                .unblock-btn:hover {
-                    background: var(--accent-color);
-                    border-color: var(--accent-color);
-                    color: #fff;
-                }
 
             .settings-card {
                 background: var(--card-bg);
@@ -847,52 +884,6 @@
                     color: #ffffff;
                 }
 
-            .menu-list-item {
-                display: flex;
-                align-items: center;
-                gap: 14px;
-                width: 100%;
-                padding: 16px 22px;
-                font-size: 15px;
-                font-weight: 600;
-                font-family: var(--font-family);
-                color: var(--text-primary);
-                text-decoration: none;
-                background: transparent;
-                border: none;
-                border-bottom: 1px solid var(--border-color);
-                cursor: pointer;
-                text-align: left;
-                transition: background-color 0.15s ease;
-            }
-
-                .menu-list-item:last-child {
-                    border-bottom: none;
-                }
-
-                .menu-list-item:hover {
-                    background: var(--accent-light);
-                }
-
-                .menu-list-item i {
-                    width: 20px;
-                    text-align: center;
-                    color: var(--accent-color);
-                    font-size: 16px;
-                }
-
-                .menu-list-item.logout {
-                    color: var(--error-color);
-                }
-
-                    .menu-list-item.logout i {
-                        color: var(--error-color);
-                    }
-
-            .logout-form {
-                margin: 0;
-            }
-
             .delivery-login-card {
                 display: none;
                 margin-top: 18px;
@@ -968,10 +959,6 @@
                     grid-template-columns: repeat(1, 1fr);
                     gap: 16px;
                 }
-
-                .profile-tabs {
-                    gap: 20px;
-                }
             }
 
             footer {
@@ -1028,10 +1015,20 @@
                             </span>
                         }
                     </h2>
-                    <!-- Single hamburger trigger opens the stacked Options menu (Edit Profile / Edit Bio / Help Center / Logout) -->
-                    <button class="edit-profile-btn menu-trigger-btn" onclick="openOptionsMenu()" title="Options">
+                    <button class="menu-trigger-btn" onclick="openSidebar()" title="Menu">
                         <i class="fas fa-bars"></i>
                     </button>
+                </div>
+
+                <div class="profile-user-bio" onclick="openEditBioModal()" title="Click to edit your bio">
+                    @if (!string.IsNullOrWhiteSpace(Model.CustomerBio))
+                    {
+                        <p>@Model.CustomerBio</p>
+                    }
+                    else
+                    {
+                        <p class="bio-placeholder"><i class="fas fa-pen"></i>Add a bio</p>
+                    }
                 </div>
 
                 <div class="profile-stats-row">
@@ -1048,7 +1045,6 @@
                 </div>
 
                 <div class="profile-bio">
-                    <h1>@Model.CustomerFullName</h1>
                     <p class="bio-text"><i class="fas fa-envelope" style="color:#6b6478; margin-right:4px;"></i> @Model.CustomerEmail</p>
                     <p class="bio-text"><i class="fas fa-phone" style="color:#6b6478; margin-right:4px;"></i> @Model.CustomerPhone</p>
 
@@ -1073,420 +1069,425 @@
             </div>
         </div>
 
-        <!-- Profile Tabs Navigation (Shops panel removed; Reviews now lives inside Your Activity) -->
-        <div class="profile-tabs">
-            <button id="btn-wishlist-tab" class="tab-btn active" onclick="switchTab('wishlist-tab')">
+        <!-- Sidebar overlay backdrop -->
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+        <!-- Instagram-style slide-in sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-panel-header">
+                <h3>Menu</h3>
+                <span class="close-modal" onclick="closeSidebar()" style="position: static; font-size: 20px; color: #aaa; cursor: pointer;">&times;</span>
+            </div>
+
+            <button id="link-wishlist-tab" class="sidebar-link active" data-tab="wishlist-tab" onclick="selectTab('wishlist-tab')">
                 <i class="far fa-bookmark"></i> Wishlist
             </button>
-            <button id="btn-activity-tab" class="tab-btn" onclick="switchTab('activity-tab')">
+            <button id="link-activity-tab" class="sidebar-link" data-tab="activity-tab" onclick="selectTab('activity-tab')">
                 <i class="fas fa-clock-rotate-left"></i> Your Activity
             </button>
-            <button id="btn-settings-tab" class="tab-btn" onclick="switchTab('settings-tab')">
+            <button id="link-settings-tab" class="sidebar-link" data-tab="settings-tab" onclick="selectTab('settings-tab')">
                 <i class="fas fa-cog"></i> Management
             </button>
-        </div>
 
-        <!-- TAB CONTENT: WISHLIST -->
-        <div id="wishlist-tab" class="tab-content active">
-            @if (Model.WishlistList.Any())
-            {
-                <div class="instagram-grid">
-                    @foreach (var wish in Model.WishlistList)
+            <div class="sidebar-divider"></div>
+
+            <button type="button" class="sidebar-link" onclick="closeSidebar(); openEditModal();">
+                <i class="fas fa-user-pen"></i> Edit Profile
+            </button>
+            <button type="button" class="sidebar-link" onclick="closeSidebar(); openEditBioModal();">
+                <i class="fas fa-pen"></i> Edit Bio
+            </button>
+            <a href="/HelpCenter" class="sidebar-link">
+                <i class="fas fa-circle-question"></i> Help Center
+            </a>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- Adjust asp-page to match your Identity logout route if different -->
+            <form method="post" asp-page="/Identity/Account/Logout" asp-route-returnUrl="/" class="logout-form">
+                <button type="submit" class="sidebar-link logout">
+                    <i class="fas fa-right-from-bracket"></i> Logout
+                </button>
+            </form>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="page-layout">
+            <main class="content-area">
+
+                <!-- TAB CONTENT: WISHLIST -->
+                <div id="wishlist-tab" class="tab-content active">
+                    @if (Model.WishlistList.Any())
                     {
-                        var productName = CustomerProfileModel.GetSafeString(wish.Product, new[] { "ProductName", "Name", "Title" }, "Marketplace Product");
-                        var productPrice = CustomerProfileModel.GetSafeDecimal(wish.Product, new[] { "Price" }, 0.00m);
-                        var productImage = CustomerProfileModel.GetSafeString(wish.Product, new[] { "ProductImageUrl", "ImageUrl", "ImagePath", "Image" }, "https://cdn-icons-png.flaticon.com/512/1170/1170576.png");
-                        var productId = CustomerProfileModel.GetSafeInt(wish.Product, new[] { "ProductID", "Id" }, 0);
+                        <div class="instagram-grid">
+                            @foreach (var wish in Model.WishlistList)
+                            {
+                                var productName = CustomerProfileModel.GetSafeString(wish.Product, new[] { "ProductName", "Name", "Title" }, "Marketplace Product");
+                                var productPrice = CustomerProfileModel.GetSafeDecimal(wish.Product, new[] { "Price" }, 0.00m);
+                                var productImage = CustomerProfileModel.GetSafeString(wish.Product, new[] { "ProductImageUrl", "ImageUrl", "ImagePath", "Image" }, "https://cdn-icons-png.flaticon.com/512/1170/1170576.png");
+                                var productId = CustomerProfileModel.GetSafeInt(wish.Product, new[] { "ProductID", "Id" }, 0);
 
-                        <div class="product-grid-item">
-                            <img src="@productImage" alt="@productName" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1170/1170576.png'" />
-                            <div class="product-details">
-                                <h4>@productName</h4>
-                                <span class="price">$@productPrice.ToString("F2")</span>
-                                <a href="/ProductDetails?id=@productId" class="view-btn">View Details</a>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="empty-state">
-                    <div class="empty-icon"><i class="far fa-bookmark"></i></div>
-                    <h3>Wishlist is Empty</h3>
-                    <p>Save items you like to monitor price changes and purchase them easily.</p>
-                </div>
-            }
-        </div>
-
-        <!-- TAB CONTENT: YOUR ACTIVITY (Reviews + Blocked Shops + Language Preference) -->
-        <div id="activity-tab" class="tab-content">
-
-            <div class="activity-section">
-                <h3 class="activity-section-title"><i class="far fa-star"></i> Your Reviews</h3>
-
-                @if (Model.ReviewsList.Any())
-                {
-                    <div class="reviews-container">
-                        @foreach (var r in Model.ReviewsList)
-                        {
-                            var productName = CustomerProfileModel.GetSafeString(r.Product, new[] { "ProductName", "Name" }, "Product");
-                            var rating = CustomerProfileModel.GetSafeInt(r, new[] { "Rating", "Stars", "Score" }, 5);
-                            var comment = CustomerProfileModel.GetSafeString(r, new[] { "Comment", "Text", "ReviewText", "Description" }, "No feedback left.");
-
-                            <div class="review-row">
-                                <div class="review-main">
-                                    <h4>@productName</h4>
-                                    <p>"@comment"</p>
-                                </div>
-                                <div class="review-meta">
-                                    <div class="stars-row">
-                                        @for (int i = 1; i <= 5; i++)
-                                        {
-                                            if (i <= rating)
-                                            {
-                                                <i class="fas fa-star" style="color: #FFC107;"></i>
-                                            }
-                                            else
-                                            {
-                                                <i class="far fa-star" style="color: #dbdbdb;"></i>
-                                            }
-                                        }
+                                <div class="product-grid-item">
+                                    <img src="@productImage" alt="@productName" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1170/1170576.png'" />
+                                    <div class="product-details">
+                                        <h4>@productName</h4>
+                                        <span class="price">$@productPrice.ToString("F2")</span>
+                                        <a href="/ProductDetails?id=@productId" class="view-btn">View Details</a>
                                     </div>
                                 </div>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="empty-state" style="padding: 40px 20px;">
-                        <div class="empty-icon" style="font-size: 40px;"><i class="far fa-star"></i></div>
-                        <h3 style="font-size: 17px;">No Reviews Found</h3>
-                        <p style="font-size: 13px;">You have not published any reviews for purchased products yet.</p>
-                    </div>
-                }
-            </div>
-
-            <div class="activity-section">
-                <h3 class="activity-section-title"><i class="fas fa-ban"></i> Blocked Shops</h3>
-
-                <!--
-                    Placeholder UI only — wire this up to a Model.BlockedStoresList
-                    (and an "Unblock" POST handler) once that feature exists on the backend.
-                -->
-                <div class="empty-state" style="padding: 40px 20px;">
-                    <div class="empty-icon" style="font-size: 40px;"><i class="fas fa-store-slash"></i></div>
-                    <h3 style="font-size: 17px;">No Blocked Shops</h3>
-                    <p style="font-size: 13px;">Shops you block will stop appearing in your feed, search, and recommendations.</p>
-                </div>
-            </div>
-
-            <div class="activity-section">
-                <h3 class="activity-section-title"><i class="fas fa-globe"></i> Language Preference</h3>
-
-                <!-- Placeholder UI only — connect languageSelect's value to the customer's saved language preference -->
-                <div class="settings-card" style="box-shadow: none; padding: 22px;">
-                    <div class="form-group" style="max-width: 280px; margin-bottom: 16px;">
-                        <label for="languageSelect">App Language</label>
-                        <select id="languageSelect">
-                            <option value="en">English</option>
-                            <option value="ar">العربية (Arabic)</option>
-                            <option value="fr">Français</option>
-                        </select>
-                    </div>
-                    <button type="button" class="settings-btn" onclick="saveLanguagePreference()">
-                        <i class="fas fa-check"></i> Save Language
-                    </button>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- TAB CONTENT: ACCOUNT MANAGEMENT & SETTINGS -->
-        <div id="settings-tab" class="tab-content">
-
-            <div class="settings-card">
-                <h3>
-                    <i class="fas fa-sliders-h" style="color: var(--accent-color);"></i>
-                    Account Settings
-                </h3>
-                <p>Modify basic information, manage physical addresses, or update login credentials.</p>
-
-                <button class="settings-btn" onclick="openEditModal()">
-                    <i class="fas fa-user-edit"></i> Edit Profile
-                </button>
-                <a class="settings-btn" href="/Identity/Account/Manage/ChangePassword">
-                    <i class="fas fa-key"></i> Change Password
-                </a>
-                <a class="settings-btn" href="/CustomerAddresses">
-                    <i class="fas fa-location-dot"></i> My Addresses
-                </a>
-            </div>
-
-            <div class="settings-card">
-                <h3>
-                    <i class="fas fa-store" style="color: var(--accent-color);"></i>
-                    Store Owner Access
-                </h3>
-
-                @if (!string.IsNullOrWhiteSpace(Model.StoreAccessMessage))
-                {
-                    if (Model.HasPendingStoreRequest)
-                    {
-                        <div class="warning-message">
-                            <i class="fas fa-clock"></i>
-                            @Model.StoreAccessMessage
-                        </div>
-                    }
-                    else if (Model.HasApprovedStoreOwnerAccount)
-                    {
-                        <div class="info-message">
-                            <i class="fas fa-info-circle"></i>
-                            @Model.StoreAccessMessage
-                        </div>
-                    }
-                    else if (Model.HasRejectedStoreRequest)
-                    {
-                        <div class="error-message"
-                             style="padding:10px; border-radius:8px; font-size:14px; margin-bottom:12px;">
-                            <i class="fas fa-times-circle"></i>
-                            @Model.StoreAccessMessage
-                        </div>
-                    }
-                    else if (Model.HasStoreRequest)
-                    {
-                        <div class="warning-message">
-                            <i class="fas fa-triangle-exclamation"></i>
-                            @Model.StoreAccessMessage
+                            }
                         </div>
                     }
                     else
                     {
-                        <p>@Model.StoreAccessMessage</p>
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="far fa-bookmark"></i></div>
+                            <h3>Wishlist is Empty</h3>
+                            <p>Save items you like to monitor price changes and purchase them easily.</p>
+                        </div>
                     }
-                }
+                </div>
 
-                @if (Model.HasApprovedStoreOwnerAccount)
-                {
-                    <button type="button"
-                            id="showStoreOwnerLoginButton"
-                            class="settings-btn"
-                            onclick="toggleStoreOwnerLogin()">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Login as Store Owner
-                    </button>
+                <!-- TAB CONTENT: YOUR ACTIVITY (Reviews + Blocked Shops + Language Preference) -->
+                <div id="activity-tab" class="tab-content">
 
-                    <div id="storeOwnerLoginBox"
-                         class="delivery-login-card @(string.IsNullOrWhiteSpace(storeOwnerLoginError) ? "" : "open")">
+                    <div class="activity-section">
+                        <h3 class="activity-section-title"><i class="far fa-star"></i> Your Reviews</h3>
 
-                        <h4 style="font-weight:600; margin-bottom:6px;">
-                            Store Owner Log In
-                        </h4>
-
-                        <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
-                            This Store Owner account is linked securely to your customer account.
-                            Enter the Store Owner password provided by the administrator.
-                        </p>
-
-                        @if (!string.IsNullOrWhiteSpace(storeOwnerLoginError))
+                        @if (Model.ReviewsList.Any())
                         {
-                            <div class="error-message"
-                                 style="padding:10px; border-radius:8px; font-size:13px; margin-bottom:12px;">
-                                @storeOwnerLoginError
+                            <div class="reviews-container">
+                                @foreach (var r in Model.ReviewsList)
+                                {
+                                    var productName = CustomerProfileModel.GetSafeString(r.Product, new[] { "ProductName", "Name" }, "Product");
+                                    var rating = CustomerProfileModel.GetSafeInt(r, new[] { "Rating", "Stars", "Score" }, 5);
+                                    var comment = CustomerProfileModel.GetSafeString(r, new[] { "Comment", "Text", "ReviewText", "Description" }, "No feedback left.");
+
+                                    <div class="review-row">
+                                        <div class="review-main">
+                                            <h4>@productName</h4>
+                                            <p>"@comment"</p>
+                                        </div>
+                                        <div class="review-meta">
+                                            <div class="stars-row">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    if (i <= rating)
+                                                    {
+                                                        <i class="fas fa-star" style="color: #FFC107;"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="far fa-star" style="color: #dbdbdb;"></i>
+                                                    }
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         }
-
-                        <form method="post"
-                              asp-page-handler="StoreOwnerLogin"
-                              class="delivery-login-form"
-                              autocomplete="off">
-
-                            <div class="form-group">
-                                <label for="StoreOwnerAccountEmail">
-                                    Your Store Owner Email
-                                </label>
-
-                                <input id="StoreOwnerAccountEmail"
-                                       type="email"
-                                       value="@Model.StoreOwnerAccountEmail"
-                                       readonly
-                                       aria-readonly="true"
-                                       tabindex="-1" />
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="StoreOwnerPassword">
-                                    Store Owner Password
-                                </label>
-
-                                <input asp-for="StoreOwnerPassword"
-                                       type="password"
-                                       placeholder="Enter Store Owner password"
-                                       autocomplete="current-password"
-                                       required />
-                            </div>
-
-                            <button type="submit"
-                                    class="delivery-login-btn">
-                                Open Store Owner Dashboard
-                            </button>
-                        </form>
-                    </div>
-                }
-                else if (Model.HasPendingStoreRequest)
-                {
-                    <button type="button"
-                            class="settings-btn"
-                            style="opacity:0.6; cursor:not-allowed;"
-                            disabled>
-                        <i class="fas fa-clock"></i>
-                        Waiting for Admin Approval
-                    </button>
-                }
-                else if (Model.HasRejectedStoreRequest)
-                {
-                    <a href="/StoreRequest"
-                       class="settings-btn">
-                        <i class="fas fa-rotate-right"></i>
-                        Update and Resubmit Store Request
-                    </a>
-                }
-                else if (!Model.HasStoreRequest)
-                {
-                    <a href="/StoreRequest"
-                       class="settings-btn">
-                        <i class="fas fa-chalkboard-user"></i>
-                        Request Store Owner Account
-                    </a>
-                }
-                else
-                {
-                    <button type="button"
-                            class="settings-btn"
-                            style="opacity:0.6; cursor:not-allowed;"
-                            disabled>
-                        <i class="fas fa-ban"></i>
-                        Store Owner Access Unavailable
-                    </button>
-                }
-            </div>
-
-            <div class="settings-card">
-                <h3>
-                    <i class="fas fa-motorcycle" style="color: var(--accent-color);"></i>
-                    Delivery Staff Access
-                </h3>
-
-                @if (!string.IsNullOrWhiteSpace(Model.DeliveryAccessMessage))
-                {
-                    if (Model.HasPendingDeliveryRequest)
-                    {
-                        <div class="warning-message"><i class="fas fa-clock"></i> @Model.DeliveryAccessMessage</div>
-                    }
-                    else if (Model.HasApprovedDeliveryAccount)
-                    {
-                        <div class="info-message"><i class="fas fa-info-circle"></i> @Model.DeliveryAccessMessage</div>
-                    }
-                    else if (Model.HasRejectedDeliveryRequest)
-                    {
-                        <div class="error-message" style="padding:10px; border-radius:8px; font-size:14px; margin-bottom:12px;"><i class="fas fa-times-circle"></i> @Model.DeliveryAccessMessage</div>
-                    }
-                    else
-                    {
-                        <p>@Model.DeliveryAccessMessage</p>
-                    }
-                }
-
-                @if (Model.HasApprovedDeliveryAccount)
-                {
-                    <button type="button" id="showDeliveryLoginButton" class="settings-btn" onclick="toggleDeliveryLogin()">
-                        <i class="fas fa-sign-in-alt"></i> Login as Delivery Staff
-                    </button>
-
-                    <div id="deliveryLoginBox" class="delivery-login-card @(string.IsNullOrWhiteSpace(deliveryLoginError) ? "" : "open")">
-                        <h4 style="font-weight:600; margin-bottom:6px;">Delivery Log In</h4>
-                        <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
-                            This delivery account is linked securely to your customer account. Enter only the delivery password provided by the administrator.
-                        </p>
-
-                        @if (!string.IsNullOrWhiteSpace(deliveryLoginError))
+                        else
                         {
-                            <div class="error-message" style="padding:10px; border-radius:8px; font-size:13px; margin-bottom:12px;">
-                                @deliveryLoginError
+                            <div class="empty-state" style="padding: 40px 20px;">
+                                <div class="empty-icon" style="font-size: 40px;"><i class="far fa-star"></i></div>
+                                <h3 style="font-size: 17px;">No Reviews Found</h3>
+                                <p style="font-size: 13px;">You have not published any reviews for purchased products yet.</p>
                             </div>
                         }
-
-                        <form method="post" asp-page-handler="DeliveryLogin" class="delivery-login-form" autocomplete="off">
-                            <div class="form-group">
-                                <label for="DeliveryAccountEmail">Your Delivery Email</label>
-                                <input id="DeliveryAccountEmail"
-                                       type="email"
-                                       value="@Model.DeliveryAccountEmail"
-                                       readonly
-                                       aria-readonly="true"
-                                       tabindex="-1" />
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="DeliveryPassword">Delivery Password</label>
-                                <input asp-for="DeliveryPassword"
-                                       type="password"
-                                       placeholder="Enter delivery password"
-                                       autocomplete="current-password"
-                                       required />
-                            </div>
-
-                            <button type="submit" class="delivery-login-btn">
-                                Open Delivery Dashboard
-                            </button>
-                        </form>
                     </div>
-                }
-                else if (Model.HasPendingDeliveryRequest)
-                {
-                    <button type="button" class="settings-btn" style="opacity:0.6; cursor:not-allowed;" disabled>
-                        <i class="fas fa-clock"></i> Waiting for Admin Approval
-                    </button>
-                }
-                else
-                {
-                    <a href="/DeliveryRequest" class="settings-btn">
-                        <i class="fas fa-id-card"></i> Request Delivery Account
-                    </a>
-                }
-            </div>
 
+                    <div class="activity-section">
+                        <h3 class="activity-section-title"><i class="fas fa-ban"></i> Blocked Shops</h3>
+
+                        <!--
+                            Placeholder UI only — wire this up to a Model.BlockedStoresList
+                            (and an "Unblock" POST handler) once that feature exists on the backend.
+                        -->
+                        <div class="empty-state" style="padding: 40px 20px;">
+                            <div class="empty-icon" style="font-size: 40px;"><i class="fas fa-store-slash"></i></div>
+                            <h3 style="font-size: 17px;">No Blocked Shops</h3>
+                            <p style="font-size: 13px;">Shops you block will stop appearing in your feed, search, and recommendations.</p>
+                        </div>
+                    </div>
+
+                    <div class="activity-section">
+                        <h3 class="activity-section-title"><i class="fas fa-globe"></i> Language Preference</h3>
+
+                        <!-- Placeholder UI only — connect languageSelect's value to the customer's saved language preference -->
+                        <div class="settings-card" style="box-shadow: none; padding: 22px; margin-bottom: 0;">
+                            <div class="form-group" style="max-width: 280px; margin-bottom: 16px;">
+                                <label for="languageSelect">App Language</label>
+                                <select id="languageSelect">
+                                    <option value="en">English</option>
+                                    <option value="ar">العربية (Arabic)</option>
+                                    <option value="fr">Français</option>
+                                </select>
+                            </div>
+                            <button type="button" class="settings-btn" onclick="saveLanguagePreference()">
+                                <i class="fas fa-check"></i> Save Language
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- TAB CONTENT: ACCOUNT MANAGEMENT & SETTINGS -->
+                <div id="settings-tab" class="tab-content">
+
+                    <div class="settings-card">
+                        <h3>
+                            <i class="fas fa-sliders-h" style="color: var(--accent-color);"></i>
+                            Account Settings
+                        </h3>
+                        <p>Manage your physical addresses or update your login credentials. Use "Edit Profile" in the sidebar to change your name or phone number.</p>
+
+                        <a class="settings-btn" href="/Identity/Account/Manage/ChangePassword">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a class="settings-btn" href="/CustomerAddresses">
+                            <i class="fas fa-location-dot"></i> My Addresses
+                        </a>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>
+                            <i class="fas fa-store" style="color: var(--accent-color);"></i>
+                            Store Owner Access
+                        </h3>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.StoreAccessMessage))
+                        {
+                            if (Model.HasPendingStoreRequest)
+                            {
+                                <div class="warning-message">
+                                    <i class="fas fa-clock"></i>
+                                    @Model.StoreAccessMessage
+                                </div>
+                            }
+                            else if (Model.HasApprovedStoreOwnerAccount)
+                            {
+                                <div class="info-message">
+                                    <i class="fas fa-info-circle"></i>
+                                    @Model.StoreAccessMessage
+                                </div>
+                            }
+                            else if (Model.HasRejectedStoreRequest)
+                            {
+                                <div class="error-message"
+                                     style="padding:10px; border-radius:8px; font-size:14px; margin-bottom:12px;">
+                                    <i class="fas fa-times-circle"></i>
+                                    @Model.StoreAccessMessage
+                                </div>
+                            }
+                            else if (Model.HasStoreRequest)
+                            {
+                                <div class="warning-message">
+                                    <i class="fas fa-triangle-exclamation"></i>
+                                    @Model.StoreAccessMessage
+                                </div>
+                            }
+                            else
+                            {
+                                <p>@Model.StoreAccessMessage</p>
+                            }
+                        }
+
+                        @if (Model.HasApprovedStoreOwnerAccount)
+                        {
+                            <button type="button"
+                                    id="showStoreOwnerLoginButton"
+                                    class="settings-btn"
+                                    onclick="toggleStoreOwnerLogin()">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Login as Store Owner
+                            </button>
+
+                            <div id="storeOwnerLoginBox"
+                                 class="delivery-login-card @(string.IsNullOrWhiteSpace(storeOwnerLoginError) ? "" : "open")">
+
+                                <h4 style="font-weight:600; margin-bottom:6px;">
+                                    Store Owner Log In
+                                </h4>
+
+                                <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
+                                    This Store Owner account is linked securely to your customer account.
+                                    Enter the Store Owner password provided by the administrator.
+                                </p>
+
+                                @if (!string.IsNullOrWhiteSpace(storeOwnerLoginError))
+                                {
+                                    <div class="error-message"
+                                         style="padding:10px; border-radius:8px; font-size:13px; margin-bottom:12px;">
+                                        @storeOwnerLoginError
+                                    </div>
+                                }
+
+                                <form method="post"
+                                      asp-page-handler="StoreOwnerLogin"
+                                      class="delivery-login-form"
+                                      autocomplete="off">
+
+                                    <div class="form-group">
+                                        <label for="StoreOwnerAccountEmail">
+                                            Your Store Owner Email
+                                        </label>
+
+                                        <input id="StoreOwnerAccountEmail"
+                                               type="email"
+                                               value="@Model.StoreOwnerAccountEmail"
+                                               readonly
+                                               aria-readonly="true"
+                                               tabindex="-1" />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label asp-for="StoreOwnerPassword">
+                                            Store Owner Password
+                                        </label>
+
+                                        <input asp-for="StoreOwnerPassword"
+                                               type="password"
+                                               placeholder="Enter Store Owner password"
+                                               autocomplete="current-password"
+                                               required />
+                                    </div>
+
+                                    <button type="submit"
+                                            class="delivery-login-btn">
+                                        Open Store Owner Dashboard
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                        else if (Model.HasPendingStoreRequest)
+                        {
+                            <button type="button"
+                                    class="settings-btn"
+                                    style="opacity:0.6; cursor:not-allowed;"
+                                    disabled>
+                                <i class="fas fa-clock"></i>
+                                Waiting for Admin Approval
+                            </button>
+                        }
+                        else if (Model.HasRejectedStoreRequest)
+                        {
+                            <a href="/StoreRequest"
+                               class="settings-btn">
+                                <i class="fas fa-rotate-right"></i>
+                                Update and Resubmit Store Request
+                            </a>
+                        }
+                        else if (!Model.HasStoreRequest)
+                        {
+                            <a href="/StoreRequest"
+                               class="settings-btn">
+                                <i class="fas fa-chalkboard-user"></i>
+                                Request Store Owner Account
+                            </a>
+                        }
+                        else
+                        {
+                            <button type="button"
+                                    class="settings-btn"
+                                    style="opacity:0.6; cursor:not-allowed;"
+                                    disabled>
+                                <i class="fas fa-ban"></i>
+                                Store Owner Access Unavailable
+                            </button>
+                        }
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>
+                            <i class="fas fa-motorcycle" style="color: var(--accent-color);"></i>
+                            Delivery Staff Access
+                        </h3>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.DeliveryAccessMessage))
+                        {
+                            if (Model.HasPendingDeliveryRequest)
+                            {
+                                <div class="warning-message"><i class="fas fa-clock"></i> @Model.DeliveryAccessMessage</div>
+                            }
+                            else if (Model.HasApprovedDeliveryAccount)
+                            {
+                                <div class="info-message"><i class="fas fa-info-circle"></i> @Model.DeliveryAccessMessage</div>
+                            }
+                            else if (Model.HasRejectedDeliveryRequest)
+                            {
+                                <div class="error-message" style="padding:10px; border-radius:8px; font-size:14px; margin-bottom:12px;"><i class="fas fa-times-circle"></i> @Model.DeliveryAccessMessage</div>
+                            }
+                            else
+                            {
+                                <p>@Model.DeliveryAccessMessage</p>
+                            }
+                        }
+
+                        @if (Model.HasApprovedDeliveryAccount)
+                        {
+                            <button type="button" id="showDeliveryLoginButton" class="settings-btn" onclick="toggleDeliveryLogin()">
+                                <i class="fas fa-sign-in-alt"></i> Login as Delivery Staff
+                            </button>
+
+                            <div id="deliveryLoginBox" class="delivery-login-card @(string.IsNullOrWhiteSpace(deliveryLoginError) ? "" : "open")">
+                                <h4 style="font-weight:600; margin-bottom:6px;">Delivery Log In</h4>
+                                <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
+                                    This delivery account is linked securely to your customer account. Enter only the delivery password provided by the administrator.
+                                </p>
+
+                                @if (!string.IsNullOrWhiteSpace(deliveryLoginError))
+                                {
+                                    <div class="error-message" style="padding:10px; border-radius:8px; font-size:13px; margin-bottom:12px;">
+                                        @deliveryLoginError
+                                    </div>
+                                }
+
+                                <form method="post" asp-page-handler="DeliveryLogin" class="delivery-login-form" autocomplete="off">
+                                    <div class="form-group">
+                                        <label for="DeliveryAccountEmail">Your Delivery Email</label>
+                                        <input id="DeliveryAccountEmail"
+                                               type="email"
+                                               value="@Model.DeliveryAccountEmail"
+                                               readonly
+                                               aria-readonly="true"
+                                               tabindex="-1" />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label asp-for="DeliveryPassword">Delivery Password</label>
+                                        <input asp-for="DeliveryPassword"
+                                               type="password"
+                                               placeholder="Enter delivery password"
+                                               autocomplete="current-password"
+                                               required />
+                                    </div>
+
+                                    <button type="submit" class="delivery-login-btn">
+                                        Open Delivery Dashboard
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                        else if (Model.HasPendingDeliveryRequest)
+                        {
+                            <button type="button" class="settings-btn" style="opacity:0.6; cursor:not-allowed;" disabled>
+                                <i class="fas fa-clock"></i> Waiting for Admin Approval
+                            </button>
+                        }
+                        else
+                        {
+                            <a href="/DeliveryRequest" class="settings-btn">
+                                <i class="fas fa-id-card"></i> Request Delivery Account
+                            </a>
+                        }
+                    </div>
+
+                </div>
+
+            </main>
         </div>
 
-    </div>
-
-    <!-- Options Menu Modal: Instagram-style stacked list (Edit Profile / Edit Bio / Help Center / Logout) -->
-    <div id="optionsMenu" class="modal">
-        <div class="modal-content" style="max-width: 380px; padding: 0; overflow: hidden; border-radius: 16px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border-color);">
-                <div style="width: 24px;"></div>
-                <h3 style="margin: 0; font-size: 16px; font-weight: 800; text-align: center;">Options</h3>
-                <span class="close-modal" onclick="closeOptionsMenu()" style="font-size: 20px; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
-            </div>
-            <div>
-                <button type="button" class="menu-list-item" onclick="closeOptionsMenu(); openEditModal();">
-                    <i class="fas fa-user-pen"></i> Edit Profile
-                </button>
-                <button type="button" class="menu-list-item" onclick="closeOptionsMenu(); openEditBioModal();">
-                    <i class="fas fa-pen"></i> Edit Bio
-                </button>
-                <a href="/HelpCenter" class="menu-list-item">
-                    <i class="fas fa-circle-question"></i> Help Center
-                </a>
-                <!-- Adjust asp-page to match your Identity logout route if different -->
-                <form method="post" asp-page="/Identity/Account/Logout" asp-route-returnUrl="/" class="logout-form">
-                    <button type="submit" class="menu-list-item logout">
-                        <i class="fas fa-right-from-bracket"></i> Logout
-                    </button>
-                </form>
-            </div>
-        </div>
     </div>
 
     <!-- Edit Profile Modal -->
@@ -1508,7 +1509,7 @@
         </div>
     </div>
 
-    <!-- Edit Bio Modal (placeholder — wire the textarea to a Model.CustomerBio property + handler once that exists) -->
+    <!-- Edit Bio Modal -->
     <div id="editBioModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeEditBioModal()">&times;</span>
@@ -1516,7 +1517,7 @@
             <form method="post" class="modal-form" asp-page-handler="EditBio">
                 <div class="form-group">
                     <label for="CustomerBio">Bio</label>
-                    <textarea id="CustomerBio" name="CustomerBio" placeholder="Tell other shoppers a little about yourself..."></textarea>
+                    <textarea id="CustomerBio" name="CustomerBio" placeholder="Tell other shoppers a little about yourself...">@Model.CustomerBio</textarea>
                 </div>
                 <button type="submit" class="save-btn">Save Bio</button>
             </form>
@@ -1586,15 +1587,6 @@
                 document.getElementById("editBioModal").style.display = "none";
             }
 
-            // Modal Handlers (Options Menu)
-            function openOptionsMenu() {
-                document.getElementById("optionsMenu").style.display = "block";
-            }
-
-            function closeOptionsMenu() {
-                document.getElementById("optionsMenu").style.display = "none";
-            }
-
             // Modal Handlers (Following List)
             function openFollowingModal() {
                 document.getElementById("followingModal").style.display = "block";
@@ -1616,7 +1608,6 @@
                 const modalsToCheck = [
                     "editProfileModal",
                     "editBioModal",
-                    "optionsMenu",
                     "followingModal"
                 ];
 
@@ -1628,17 +1619,40 @@
                 });
             }
 
-            // Instagram-style Tab Switcher
+            // Instagram-style slide-in sidebar
+            function openSidebar() {
+                document.getElementById("sidebar").classList.add("open");
+                document.getElementById("sidebarOverlay").classList.add("open");
+                document.body.style.overflow = "hidden";
+            }
+
+            function closeSidebar() {
+                document.getElementById("sidebar").classList.remove("open");
+                document.getElementById("sidebarOverlay").classList.remove("open");
+                document.body.style.overflow = "";
+            }
+
+            // Tab switcher (Wishlist / Your Activity / Management)
             function switchTab(tabId) {
                 document.querySelectorAll(".tab-content").forEach(tab => {
                     tab.classList.remove("active");
                 });
-                document.querySelectorAll(".tab-btn").forEach(btn => {
-                    btn.classList.remove("active");
+                document.querySelectorAll(".sidebar-link[data-tab]").forEach(link => {
+                    link.classList.remove("active");
                 });
 
                 document.getElementById(tabId).classList.add("active");
-                document.getElementById("btn-" + tabId).classList.add("active");
+
+                const activeLink = document.getElementById("link-" + tabId);
+                if (activeLink) {
+                    activeLink.classList.add("active");
+                }
+            }
+
+            // Called from the sidebar: switch tab, then close the sidebar
+            function selectTab(tabId) {
+                switchTab(tabId);
+                closeSidebar();
             }
 
             // Delivery form login expander

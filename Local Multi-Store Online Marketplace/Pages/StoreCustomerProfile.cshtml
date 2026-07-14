@@ -1135,20 +1135,23 @@
         {
             <text>toast(@Html.Raw(JsonSerializer.Serialize(TempData["Error"]?.ToString())), false);</text>
         }
-                window.addEventListener('DOMContentLoaded', function () {
-            const match = window.location.hash.match(/^#product-(\d+)$/);
+        window.addEventListener('DOMContentLoaded', function () {
+        const params = new URLSearchParams(window.location.search);
+        const queryProductId = params.get('productId');
 
-            if (!match)
-                return;
+        const hashMatch = window.location.hash.match(/^#product-(\d+)$/);
+        const productId = queryProductId || (hashMatch ? hashMatch[1] : null);
 
-            const productId = match[1];
+        if (!productId)
+        return;
 
-            const productTile = document.querySelector(
-                `.tile[data-product-id="${productId}"]`
-            );
+        const productTile = document.querySelector(
+        `.tile[data-product-id="${productId}"]`
+        );
 
-            if (productTile)
-                openProduct(productTile);
+        if (productTile)
+        openProduct(productTile);
+        });    openProduct(productTile);
         });
     </script>
 </body>

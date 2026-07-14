@@ -26,6 +26,7 @@ namespace Multi_Store.Infrastructure.Repositories
                 .Include(m => m.Sender)
                 .Include(m => m.Receiver)
                 .Include(m => m.Product)
+                  .ThenInclude(p => p.Images)
                 .Where(m =>
                     (m.SenderID == userId1 && m.ReceiverID == userId2) ||
                     (m.SenderID == userId2 && m.ReceiverID == userId1))
