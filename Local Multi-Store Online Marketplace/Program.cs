@@ -123,6 +123,9 @@ builder.Services.AddScoped<IRefundRequestRepository, RefundRequestRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<IStoreRepository, StoreRepository>();
+builder.Services.AddScoped<IStoryRepository, StoryRepository>();
+builder.Services.AddScoped<IStoryViewRepository, StoryViewRepository>();
+builder.Services.AddScoped<IStoryLikeRepository, StoryLikeRepository>();
 builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
@@ -145,6 +148,7 @@ builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 // ===============================
 builder.Services.AddScoped<Multi_Store.Services.Managers.UserManager>();
 builder.Services.AddScoped<StoreManager>();
+builder.Services.AddScoped<StoryManager>();
 builder.Services.AddScoped<ProductManager>();
 builder.Services.AddScoped<CategoryManager>();
 builder.Services.AddScoped<CartManager>();

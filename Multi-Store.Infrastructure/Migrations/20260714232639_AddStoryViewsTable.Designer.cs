@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Multi_Store.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Multi_Store.Infrastructure.Data;
 namespace Multi_Store.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260714232639_AddStoryViewsTable")]
+    partial class AddStoryViewsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -373,9 +376,6 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("StoryID")
-                        .HasColumnType("int");
-
                     b.HasKey("MessageID");
 
                     b.HasIndex("OrderID");
@@ -385,8 +385,6 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("ReceiverID");
 
                     b.HasIndex("SenderID");
-
-                    b.HasIndex("StoryID");
 
                     b.ToTable("ChatMessages");
                 });
@@ -1971,65 +1969,25 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("DurationSeconds")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ImageUrl")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("MediaType")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasDefaultValue("Image");
-
                     b.Property<int>("StoreID")
                         .HasColumnType("int");
-
-                    b.Property<string>("VideoUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
 
                     b.HasKey("StoryID");
 
                     b.HasIndex("StoreID", "ExpiresAt", "IsActive");
 
                     b.ToTable("Stories");
-                });
-
-            modelBuilder.Entity("Multi_Store.Core.Entities.StoryLike", b =>
-                {
-                    b.Property<int>("StoryLikeID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StoryLikeID"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CustomerID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StoryID")
-                        .HasColumnType("int");
-
-                    b.HasKey("StoryLikeID");
-
-                    b.HasIndex("CustomerID");
-
-                    b.HasIndex("StoryID", "CustomerID")
-                        .IsUnique();
-
-                    b.ToTable("StoryLikes");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.StoryView", b =>
@@ -2369,11 +2327,6 @@ namespace Multi_Store.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Multi_Store.Core.Entities.Story", "Story")
-                        .WithMany()
-                        .HasForeignKey("StoryID")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Order");
 
                     b.Navigation("Product");
@@ -2381,8 +2334,6 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Navigation("Receiver");
 
                     b.Navigation("Sender");
-
-                    b.Navigation("Story");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Complaint", b =>
@@ -2898,25 +2849,6 @@ namespace Multi_Store.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Store");
-                });
-
-            modelBuilder.Entity("Multi_Store.Core.Entities.StoryLike", b =>
-                {
-                    b.HasOne("Multi_Store.Core.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerID")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Multi_Store.Core.Entities.Story", "Story")
-                        .WithMany()
-                        .HasForeignKey("StoryID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Story");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.StoryView", b =>

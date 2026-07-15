@@ -73,6 +73,16 @@ namespace Multi_Store.Infrastructure.Repositories
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
         }
+
+        // NEW - additive, mirrors GetMessagesByProductAsync above
+        public async Task<IReadOnlyList<ChatMessage>> GetMessagesByStoryAsync(int storyId)
+        {
+            return await _context.ChatMessages
+                .Include(m => m.Sender)
+                .Where(m => m.StoryID == storyId)
+                .OrderBy(m => m.SentAt)
+                .ToListAsync();
+        }
         public async Task<List<ChatMessage>> GetMessagesByUserAsync(int userId)
         {
             return await _context.ChatMessages

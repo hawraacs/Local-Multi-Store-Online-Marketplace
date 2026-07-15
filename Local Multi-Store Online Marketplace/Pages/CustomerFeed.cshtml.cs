@@ -19,6 +19,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly MessagingManager _messagingManager;
         private readonly WishlistManager _wishlistManager;
         private readonly ApplicationDbContext _context;
+        private readonly StoryManager _storyManager;
 
         public CustomerFeedModel(
             StoreManager storeManager,
@@ -26,7 +27,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             CustomerManager customerManager,
             MessagingManager messagingManager,
             WishlistManager wishlistManager,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            StoryManager storyManager)
         {
             _storeManager = storeManager;
             _userManager = userManager;
@@ -34,6 +36,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _messagingManager = messagingManager;
             _wishlistManager = wishlistManager;
             _context = context;
+            _storyManager = storyManager;
         }
 
         public List<string> NavbarCategories { get; set; } = new()
@@ -48,6 +51,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public List<FeedCategoryFilterViewModel> FilterCategories { get; set; } = new();
         public List<FeedStoreFilterViewModel> FilterStores { get; set; } = new();
         public List<string> FilterAreas { get; set; } = new();
+
+        // New: story circles for the top of the Feed - only from stores this customer follows
+        public List<StoryGroupDTO> FollowedStoryGroups { get; set; } = new();
 
         [BindProperty(SupportsGet = true)] public string ViewMode { get; set; } = "Following";
         [BindProperty(SupportsGet = true)] public string? SearchTerm { get; set; }
@@ -66,6 +72,48 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
             if (customer == null) return;
+
+            var followedStories = await _storyManager.GetFollowedStoriesAsync(customer.CustomerID);
+            var viewedStoryIds = await _storyManager.GetViewedStoryIdsAsync(customer.CustomerID);
+
+            var likedStoryIds = new List<int>();
+            foreach (var s in followedStories)
+            {
+                if (await _storyManager.IsLikedByCustomerAsync(s.StoryID, customer.CustomerID))
+                    likedStoryIds.Add(s.StoryID);
+            }
+
+            FollowedStoryGroups = followedStories
+                .GroupBy(s => s.StoreID)
+                .Select(g => new StoryGroupDTO
+                {
+                    StoreID = g.Key,
+                    StoreName = g.First().Store.StoreName,
+                    StoreLogoUrl = g.First().Store.LogoURL,
+                    // g is already ordered oldest -> newest by the repository - keep that order for correct playback
+                    Stories = g.Select(s => new StoryDTO
+                    {
+                        StoryID = s.StoryID,
+                        StoreID = s.StoreID,
+                        MediaType = s.MediaType,
+                        ImageUrl = s.ImageUrl,
+                        VideoUrl = s.VideoUrl,
+                        DurationSeconds = s.DurationSeconds,
+                        Caption = s.Caption,
+                        CreatedAt = s.CreatedAt,
+                        IsViewed = viewedStoryIds.Contains(s.StoryID),
+                        IsLikedByCurrentCustomer = likedStoryIds.Contains(s.StoryID)
+                    })
+                        .ToList()
+                })
+                .Select(group =>
+                {
+                    group.HasUnviewedStories = group.Stories.Any(s => !s.IsViewed);
+                    return group;
+                })
+                // Which STORE's circle shows first: newest story per store, descending
+                .OrderByDescending(g => g.Stories.Max(s => s.CreatedAt))
+                .ToList();
 
             ViewMode = ShowingAllProducts ? "All" : "Following";
             SelectedCategory = category;
@@ -325,6 +373,66 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         {
             TempData["Success"] = "Report submitted. Our team will review it.";
             return RedirectToPage();
+        }
+
+        // ================= STORY VIEWED (NEW) =================
+        public async Task<IActionResult> OnPostMarkStoryViewedAsync(int storyId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return new JsonResult(new { success = false });
+
+            var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
+            if (customer == null) return new JsonResult(new { success = false });
+
+            await _storyManager.MarkStoryViewedAsync(storyId, customer.CustomerID);
+            return new JsonResult(new { success = true });
+        }
+
+        // ================= STORY LIKE / UNLIKE (NEW) =================
+        public async Task<IActionResult> OnPostToggleStoryLikeAsync(int storyId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return new JsonResult(new { success = false });
+
+            var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
+            if (customer == null) return new JsonResult(new { success = false });
+
+            var alreadyLiked = await _storyManager.IsLikedByCustomerAsync(storyId, customer.CustomerID);
+
+            if (alreadyLiked)
+                await _storyManager.UnlikeStoryAsync(storyId, customer.CustomerID);
+            else
+                await _storyManager.LikeStoryAsync(storyId, customer.CustomerID);
+
+            var likeCount = await _storyManager.GetLikeCountAsync(storyId);
+
+            return new JsonResult(new { success = true, liked = !alreadyLiked, likeCount });
+        }
+
+        // ================= STORY REPLY (NEW) - reuses the existing chat system =================
+        public async Task<IActionResult> OnPostReplyToStoryAsync(int storyId, string replyText)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return new JsonResult(new { success = false, error = "Please log in to reply." });
+
+            var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
+            if (customer == null) return new JsonResult(new { success = false, error = "Customer account required." });
+
+            if (string.IsNullOrWhiteSpace(replyText))
+                return new JsonResult(new { success = false, error = "Reply cannot be empty." });
+
+            var story = await _storyManager.GetByIdWithStoreAsync(storyId);
+            if (story == null)
+                return new JsonResult(new { success = false, error = "Story not found." });
+
+            // A customer replying to their own store's story would be a Store Owner
+            // replying to themselves - not a valid customer action.
+            if (story.Store.OwnerUserID == user.Id)
+                return new JsonResult(new { success = false, error = "You cannot reply to your own story." });
+
+            await _messagingManager.SendStoryReplyAsync(user.Id, story.Store.OwnerUserID, storyId, replyText);
+
+            return new JsonResult(new { success = true });
         }
     }
 
