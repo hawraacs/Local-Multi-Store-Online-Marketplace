@@ -100,29 +100,9 @@
     max-width: 76px;
 }
 
-/* Store Customer Profile: the existing .avatar-ring gets a gradient/gray ring
-   only when the store has (unviewed/all-viewed) active stories */
-/* Small story indicator badge, added because this page's .avatar-ring already has a
-   permanent decorative gradient unrelated to Stories - recoloring the whole ring made
-   "viewed" (gray) look like "no story" instead of adding a clear separate signal. */
-.story-badge-dot {
-    position: absolute;
-    bottom: 6px;
-    right: 6px;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    border: 3px solid #fff;
-    z-index: 2;
-}
-
-.story-badge-dot--unviewed {
-    background: linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7);
-}
-
-.story-badge-dot--viewed {
-    background: #c7c7c7;
-}
+/* Store Customer Profile: .avatar-ring now reuses the exact same .story-ring--active /
+   .story-ring--viewed classes the Feed page uses (background-only rules, so they layer
+   cleanly on top of .avatar-ring's own width/height/padding without conflict). */
 
 /* ================================================================
    MODAL SYSTEM - matches this project's own existing convention
@@ -143,6 +123,15 @@
         display: flex;
         animation: story-backdrop-fade-in 0.2s ease;
     }
+
+/* Add Story modal only - #uploadStoryBackdrop shares .story-modal-backdrop with the
+   fullscreen story viewer, so this is scoped by ID to avoid moving the viewer too.
+   Positions the dialog near the top (Instagram/Facebook-style) instead of vertical
+   center, while staying horizontally centered via the inherited justify-content:center. */
+#uploadStoryBackdrop {
+    align-items: flex-start;
+    padding-top: 50px;
+}
 
 @keyframes story-backdrop-fade-in {
     from {
