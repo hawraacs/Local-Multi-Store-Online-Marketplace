@@ -287,7 +287,12 @@
 
         var stillUnviewed = group.stories.some(function (s) { return !s.isViewed; });
         group.hasUnviewedStories = stillUnviewed;
-        var circle = document.querySelector('.story-circle[data-group-index="' + groupIndex + '"] .story-ring');
+
+        // Works for both the Feed's circle bar (.story-circle > .story-ring) and
+        // StoreCustomerProfile's single avatar (.avatar-ring itself carries the classes) -
+        // same shared function, just two possible ring locations depending on the page.
+        var circle = document.querySelector('.story-circle[data-group-index="' + groupIndex + '"] .story-ring') ||
+                     document.querySelector('.avatar-ring[data-group-index="' + groupIndex + '"]');
         if (circle) {
             circle.classList.toggle('story-ring--active', stillUnviewed);
             circle.classList.toggle('story-ring--viewed', !stillUnviewed);

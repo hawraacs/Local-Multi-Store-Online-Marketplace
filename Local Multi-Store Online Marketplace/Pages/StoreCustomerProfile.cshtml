@@ -18,6 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <link rel="stylesheet" href="~/css/stories.css" />
     <style>
         :root {
             --accent: #6d28d9;
@@ -110,7 +111,7 @@
             height: 142px;
             border-radius: 50%;
             padding: 4px;
-            background: linear-gradient(135deg,#f97316,#e11d48,#7c3aed);
+            background: #e9e5ee;
         }
 
         .avatar {
@@ -745,6 +746,7 @@
     </style>
 </head>
 <body>
+    <partial name="_StoryViewer" />
     <div class="page-shell">
         <div class="topbar">
             <a class="back-link" asp-page="/Customer1" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></a>
@@ -754,7 +756,23 @@
 
         <section class="profile-card">
             <div class="profile-head">
-                <div class="avatar-ring"><img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" /></div>
+                @{
+                    var hasActiveStories = Model.StoreStories.Any();
+                    var hasUnviewed = Model.StoreStories.Any(s => !s.IsViewed);
+                    var ringClass = !hasActiveStories ? "" : (hasUnviewed ? "story-ring--active" : "story-ring--viewed");
+                }
+                @if (hasActiveStories)
+                {
+                    <div class="avatar-ring @ringClass" data-group-index="0" onclick="RealNestStories.open(0,0)" role="button" style="cursor:pointer;">
+                        <img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" />
+                    </div>
+                }
+                else
+                {
+                    <div class="avatar-ring" data-group-index="0">
+                        <img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" />
+                    </div>
+                }
                 <div>
                     <div class="name-row"><h1>@Model.Store.StoreName</h1><i class="fa-solid fa-circle-check verified" title="Approved store"></i></div>
                     <div class="stats">
@@ -925,10 +943,34 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="~/js/stories.js"></script>
     <script>
         const storeName = @Html.Raw(JsonSerializer.Serialize(Model.Store.StoreName));
         const storeId = @Model.Store.StoreID;
         let currentProduct = null;
+
+        // Single-store page: one story group only, same shape RealNestStories expects on the Feed -
+        // reuses the exact same JSON keys _StoryBarCustomer.cshtml embeds, so RealNestStories.open()
+        // (the same function the Feed calls) works identically here without any duplicate JS.
+        window.realnestStoryGroups = [@Html.Raw(JsonSerializer.Serialize(new
+        {
+            storeId = Model.Store.StoreID,
+            storeName = Model.Store.StoreName,
+            storeLogoUrl = storeLogo,
+            hasUnviewedStories = Model.StoreStories.Any(s => !s.IsViewed),
+            stories = Model.StoreStories.Select(s => new
+            {
+                storyId = s.StoryID,
+                mediaType = s.MediaType,
+                imageUrl = s.ImageUrl,
+                videoUrl = s.VideoUrl,
+                durationSeconds = s.DurationSeconds,
+                caption = s.Caption,
+                createdAt = s.CreatedAt,
+                isViewed = s.IsViewed,
+                isLiked = s.IsLikedByCurrentCustomer
+            })
+        }))];
 
         const reviewsByProduct = {
         @foreach (var p in Model.Products)
