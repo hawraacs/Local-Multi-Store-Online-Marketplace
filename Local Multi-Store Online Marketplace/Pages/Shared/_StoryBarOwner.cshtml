@@ -1,0 +1,155 @@
+﻿@model List<Multi_Store.Services.Dtos.StoryDTO>
+@using System.Text.Json
+@{
+    // Included from Home.cshtml as: <partial name="_StoryBarOwner" model="Model.OwnStoriesWithStats" />
+    var hasStories = Model != null && Model.Any();
+    var ownerLogo = ViewData["OwnerStoreLogo"] as string;
+    var ownerLogoOrDefault = string.IsNullOrWhiteSpace(ownerLogo) ? "/images/store.png" : ownerLogo;
+
+    string RelativeTimeLabel(DateTime createdAt)
+    {
+        var diff = DateTime.UtcNow - createdAt;
+        if (diff.TotalMinutes < 1) return "Just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        return diff.TotalDays < 2 ? "Yesterday" : $"{(int)diff.TotalDays}d ago";
+    }
+}
+<div class="story-dashboard-card">
+    <div class="story-dashboard-header">
+        <div>
+            <h5 class="story-dashboard-title">My Stories</h5>
+            <p class="story-dashboard-subtitle">Share updates with your followers</p>
+        </div>
+        <button type="button" class="story-view-all-btn" onclick="RealNestStories.openUploadStoryModal()">
+            <i class="fa-solid fa-plus"></i> Add Story
+        </button>
+    </div>
+
+    <div class="story-bar story-bar--dashboard" id="ownerStoryBar">
+        <!-- Add Story circle - ALWAYS present, even if stories already exist -->
+        <div class="story-owner-slot">
+            <div class="story-circle story-circle--add" onclick="RealNestStories.openUploadStoryModal()" role="button" tabindex="0">
+                <div class="story-ring story-ring--dashed">
+                    <div class="story-add-plus-icon"><i class="fa-solid fa-plus"></i></div>
+                </div>
+                <div class="story-label">Add Story</div>
+            </div>
+        </div>
+
+        @if (hasStories)
+        {
+            for (int i = 0; i < Model.Count; i++)
+            {
+                var story = Model[i];
+                <div class="story-owner-slot">
+                    <div class="story-circle" onclick="RealNestStories.openOwn(@i)" role="button" tabindex="0">
+                        <div class="story-ring story-ring--active">
+                            <img src="@(story.MediaType == "Video" ? ownerLogoOrDefault : story.ImageUrl)" class="story-img" alt="Story" />
+                        </div>
+                        <div class="story-label">@RelativeTimeLabel(story.CreatedAt)</div>
+                        <div class="story-mini-stats">
+                            <span><i class="fa-solid fa-eye"></i> @story.ViewCount</span>
+                            <span><i class="fa-solid fa-heart"></i> @story.LikeCount</span>
+                            <span><i class="fa-solid fa-comment"></i> @story.ReplyCount</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Upload dialog - hand-rolled modal (this project's own .modal-backdrop convention),
+     redesigned per reference: dropzone + live caption/preview, Bootstrap 5 grid -->
+<div class="story-modal-backdrop" id="uploadStoryBackdrop"
+     onclick="if (event.target === this) RealNestStories.closeUploadStoryModal();">
+    <div class="story-upload-dialog-v2">
+        <div class="story-upload-dialog-v2__header">
+            <h5>Add to Story</h5>
+            <button type="button" class="story-upload-close" onclick="RealNestStories.closeUploadStoryModal()" aria-label="Close">&times;</button>
+        </div>
+
+        <form method="post" asp-page-handler="UploadStory" enctype="multipart/form-data"
+              id="storyUploadFormV2" onsubmit="return RealNestStories.onUploadSubmit(event)">
+            <div class="story-upload-dialog-v2__body">
+                <div class="story-upload-columns">
+                    <!-- LEFT: dropzone -->
+                    <div class="story-upload-col">
+                        <div class="story-dropzone" id="storyDropzone" onclick="document.getElementById('storyMediaInput').click()">
+                            <input type="file" name="StoryMedia" id="storyMediaInput" style="display:none;"
+                                   accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
+                                   onchange="RealNestStories.onStoryFileSelected(this.files[0])" />
+
+                            <div class="story-dropzone__placeholder" id="storyDropzonePlaceholder">
+                                <div class="story-dropzone__icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                                <div class="story-dropzone__title">Drag &amp; drop your image here</div>
+                                <div class="story-dropzone__or">or</div>
+                                <button type="button" class="story-choose-btn"
+                                        onclick="event.stopPropagation(); document.getElementById('storyMediaInput').click();">
+                                    Choose Image
+                                </button>
+                                <div class="story-dropzone__hint">Recommended: 1080 &times; 1920 (9:16)</div>
+                                <div class="story-dropzone__hint">Max size: 25MB &bull; JPG, PNG, WEBP, MP4</div>
+                            </div>
+
+                            <div class="story-dropzone__preview" id="storyDropzonePreview" style="display:none;"></div>
+                        </div>
+                        <div class="story-upload-alert" id="storyUploadErrorV2" style="display:none;">
+                            <i class="fa-solid fa-circle-exclamation"></i> <span id="storyUploadErrorTextV2"></span>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: caption -->
+                    <div class="story-upload-col">
+                        <label class="story-caption-label" for="storyCaptionInputV2">Caption <span>(optional)</span></label>
+                        <textarea name="StoryCaption" id="storyCaptionInputV2" class="story-caption-textarea"
+                                  rows="4" maxlength="150" placeholder="Write something..."
+                                  oninput="RealNestStories.onCaptionInput(this.value)"></textarea>
+                        <div class="story-caption-counter"><span id="storyCaptionCount">0</span>/150</div>
+                    </div>
+                </div>
+            </div>
+
+            <input type="hidden" name="StoryDurationSeconds" id="storyDurationSecondsInput" />
+
+            <div class="story-upload-dialog-v2__footer">
+                <button type="button" class="story-cancel-btn-v2" onclick="RealNestStories.closeUploadStoryModal()">Cancel</button>
+                <button type="submit" class="story-share-btn-v2" id="storyShareBtnV2" disabled>
+                    <span id="storyShareBtnSpinner" class="story-spinner" style="display:none;" aria-hidden="true"></span>
+                    <i class="fa-solid fa-paper-plane" id="storyShareBtnIcon"></i>
+                    <span id="storyShareBtnLabel">Share Story</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Hidden delete form - submitted via JS (RealNestStories.deleteCurrent) -->
+<form method="post" asp-page-handler="DeleteStory" id="deleteStoryForm" style="display:none;">
+    <input type="hidden" name="storyId" id="deleteStoryIdInput" />
+</form>
+
+<script>
+    // Feeds the viewer for this Store Owner's OWN story bar preview + Insights panel.
+    window.realnestOwnStories = @Html.Raw(JsonSerializer.Serialize(
+        (Model ?? new List<Multi_Store.Services.Dtos.StoryDTO>())
+            .Select(s => new
+            {
+                storyId = s.StoryID,
+                mediaType = s.MediaType,
+                imageUrl = s.ImageUrl,
+                videoUrl = s.VideoUrl,
+                durationSeconds = s.DurationSeconds,
+                caption = s.Caption,
+                createdAt = s.CreatedAt,
+                viewCount = s.ViewCount,
+                likeCount = s.LikeCount,
+                replyCount = s.ReplyCount
+            })
+    ));
+
+    // Endpoint the JS Insights panel fetches from (this exact page's OnGetStoryInsightsAsync).
+    // Base URL only - stories.js appends "?handler=StoryInsights&storyId=..." itself.
+    window.realnestInsightsUrl = '@Url.Page("/StoreOwner/Home")';
+</script>

@@ -15,7 +15,26 @@
 
     <title>Secure Online Payment</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
     <style>
+        :root {
+            --color-primary: #2563EB;
+            --color-secondary: #3B82F6;
+            --color-light-blue: #DBEAFE;
+            --color-extra-light-blue: #EFF6FF;
+            --color-bg: #F8FAFC;
+            --color-white: #FFFFFF;
+            --color-border: #E2E8F0;
+            --color-text-primary: #0F172A;
+            --color-text-secondary: #64748B;
+            --color-success: #10B981;
+            --color-error: #EF4444;
+        }
+
         * {
             box-sizing: border-box;
         }
@@ -23,59 +42,73 @@
         body {
             margin: 0;
             min-height: 100vh;
-            background: radial-gradient( circle at top left, rgba(255, 107, 53, 0.16), transparent 32%), radial-gradient( circle at bottom right, rgba(17, 24, 39, 0.08), transparent 35%), linear-gradient( 135deg, #f8fafc 0%, #eef2f7 100%);
-            font-family: Arial, sans-serif;
-            color: #111827;
+            background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-extra-light-blue) 100%);
+            font-family: "Inter", Arial, sans-serif;
+            color: var(--color-text-primary);
         }
 
         .payment-page {
             min-height: 100vh;
-            padding: 45px 22px;
+            padding: 56px 22px;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .payment-shell {
-            width: 100%;
-            max-width: 980px;
-            display: grid;
-            grid-template-columns: 1fr 1.05fr;
-            gap: 24px;
-            align-items: stretch;
-        }
-
-        .payment-info {
-            background: #111827;
-            color: white;
-            border-radius: 30px;
-            padding: 34px;
-            box-shadow: 0 26px 70px rgba(15, 23, 42, 0.18);
             position: relative;
             overflow: hidden;
         }
 
-            .payment-info::before {
+            .payment-page::before,
+            .payment-page::after {
                 content: "";
                 position: absolute;
-                width: 230px;
-                height: 230px;
                 border-radius: 50%;
-                background: rgba(255, 107, 53, 0.22);
-                right: -80px;
-                top: -80px;
+                filter: blur(60px);
+                opacity: 0.35;
+                pointer-events: none;
+                z-index: 0;
             }
 
-            .payment-info::after {
-                content: "";
-                position: absolute;
-                width: 160px;
-                height: 160px;
-                border-radius: 50%;
-                background: rgba(255, 255, 255, 0.08);
-                left: -60px;
-                bottom: -60px;
+            .payment-page::before {
+                width: 420px;
+                height: 420px;
+                background: var(--color-light-blue);
+                top: -140px;
+                left: -120px;
             }
+
+            .payment-page::after {
+                width: 380px;
+                height: 380px;
+                background: var(--color-extra-light-blue);
+                bottom: -160px;
+                right: -100px;
+            }
+
+        .payment-shell {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 2fr 3fr;
+            gap: 32px;
+            align-items: stretch;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===================== LEFT PANEL ===================== */
+
+        .payment-info {
+            background: linear-gradient(160deg, #FFFFFF, var(--color-bg));
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.06);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
 
         .payment-info-content {
             position: relative;
@@ -86,48 +119,58 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(255, 255, 255, 0.10);
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            padding: 9px 12px;
+            background: var(--color-light-blue);
+            padding: 9px 16px;
             border-radius: 999px;
-            font-size: 12px;
-            font-weight: 900;
-            color: #fed7aa;
-            margin-bottom: 22px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 24px;
         }
+
+            .secure-badge i {
+                font-size: 14px;
+            }
 
         .payment-info h1 {
             margin: 0;
-            font-size: 38px;
-            line-height: 1.1;
-            letter-spacing: -1px;
-            font-weight: 900;
+            font-size: 40px;
+            line-height: 1.15;
+            letter-spacing: -0.5px;
+            font-weight: 800;
+            color: var(--color-text-primary);
         }
 
         .payment-info p {
-            color: #cbd5e1;
+            color: var(--color-text-secondary);
             line-height: 1.6;
-            font-weight: 700;
-            margin: 16px 0 26px 0;
-            font-size: 14px;
+            font-weight: 500;
+            margin: 16px 0 28px 0;
+            font-size: 16px;
         }
 
         .mini-card {
-            background: linear-gradient( 135deg, #ff6b35, #ff9f70);
-            border-radius: 22px;
-            padding: 22px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            border-radius: 20px;
+            padding: 24px;
             min-height: 170px;
-            box-shadow: 0 16px 35px rgba(255, 107, 53, 0.22);
-            margin-top: 25px;
+            box-shadow: 0 16px 35px rgba(37, 99, 235, 0.28);
+            margin-top: 4px;
+            transition: transform 0.25s ease;
         }
+
+            .mini-card:hover {
+                transform: translateY(-3px);
+            }
 
         .mini-card-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
             color: white;
-            font-weight: 900;
+            font-weight: 800;
             font-size: 14px;
+            letter-spacing: 0.5px;
         }
 
         .chip {
@@ -142,8 +185,8 @@
             margin-top: 28px;
             color: white;
             font-size: 20px;
-            font-weight: 900;
-            letter-spacing: 2px;
+            font-weight: 700;
+            letter-spacing: 3px;
         }
 
         .card-bottom {
@@ -152,47 +195,132 @@
             justify-content: space-between;
             color: white;
             font-size: 12px;
-            font-weight: 900;
+            font-weight: 700;
+            letter-spacing: 0.5px;
             opacity: 0.95;
         }
 
+        .feature-list {
+            margin-top: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .feature-icon {
+            flex: 0 0 44px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--color-light-blue);
+            color: var(--color-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .feature-text-title {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+        }
+
+        .feature-text-sub {
+            margin: 2px 0 0 0;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+        }
+
+        /* ===================== RIGHT PANEL ===================== */
+
         .payment-card {
-            background: white;
-            border-radius: 30px;
-            box-shadow: 0 26px 70px rgba(15, 23, 42, 0.12);
+            background: var(--color-white);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
             overflow: hidden;
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
         }
 
         .payment-card-header {
-            padding: 28px 30px 18px 30px;
-            border-bottom: 1px solid #eef2f7;
+            padding: 40px 40px 20px 40px;
         }
 
             .payment-card-header h2 {
                 margin: 0;
-                font-size: 28px;
-                color: #0f172a;
-                font-weight: 900;
+                font-size: 30px;
+                color: var(--color-primary);
+                font-weight: 800;
                 letter-spacing: -0.5px;
             }
 
             .payment-card-header p {
                 margin: 8px 0 0 0;
-                color: #64748b;
+                color: var(--color-text-secondary);
                 font-size: 14px;
-                font-weight: 700;
+                font-weight: 500;
             }
 
         .payment-body {
-            padding: 26px 30px 30px 30px;
+            padding: 8px 40px 40px 40px;
+            flex: 1;
         }
 
+        /* ===================== STATUS MESSAGES ===================== */
+
+        .status-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: var(--color-extra-light-blue);
+            border: 1px solid var(--color-light-blue);
+            color: var(--color-primary);
+            padding: 16px 18px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.55;
+            margin-bottom: 20px;
+        }
+
+            .status-banner i {
+                font-size: 18px;
+                margin-top: 1px;
+            }
+
+        .message {
+            padding: 16px 18px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.5;
+            font-size: 13px;
+        }
+
+        .error {
+            background: #FEF2F2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+
+        /* ===================== ORDER SUMMARY ===================== */
+
         .summary {
-            background: #f8fafc;
-            border: 1px solid #e5e7eb;
-            border-radius: 20px;
-            padding: 16px;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 18px;
+            padding: 18px 20px;
             margin-bottom: 20px;
         }
 
@@ -200,144 +328,163 @@
             display: flex;
             justify-content: space-between;
             gap: 12px;
-            padding: 9px 0;
-            border-bottom: 1px solid #e5e7eb;
-            font-weight: 800;
-            color: #334155;
+            padding: 11px 0;
+            border-bottom: 1px solid var(--color-border);
+            font-weight: 600;
+            color: var(--color-text-secondary);
             font-size: 14px;
         }
 
             .summary-row:last-child {
                 border-bottom: none;
+                padding-bottom: 2px;
             }
 
             .summary-row span:last-child {
-                color: #111827;
+                color: var(--color-text-primary);
                 text-align: right;
+                font-weight: 700;
             }
 
-        .summary-total {
-            font-size: 20px;
-            color: #111827;
-            font-weight: 900;
+        .summary-total span:first-child {
+            color: var(--color-text-primary);
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .summary-total span:last-child {
+            font-size: 22px;
+            color: var(--color-primary);
+            font-weight: 800;
         }
 
         .hint {
-            background: #fff7ed;
-            border: 1px solid #fed7aa;
-            color: #9a3412;
-            padding: 13px 14px;
-            border-radius: 16px;
-            font-size: 12px;
-            font-weight: 800;
-            line-height: 1.55;
-            margin-bottom: 18px;
-        }
-
-        .message {
-            padding: 13px 14px;
-            border-radius: 16px;
-            margin-bottom: 15px;
-            font-weight: 900;
-            text-align: center;
-            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--color-text-secondary);
             font-size: 13px;
+            font-weight: 500;
+            line-height: 1.5;
+            margin-bottom: 22px;
         }
 
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fca5a5;
-        }
+            .hint i {
+                color: var(--color-primary);
+                font-size: 16px;
+                flex: 0 0 auto;
+            }
+
+        /* ===================== FORM ===================== */
 
         .field {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
             .field label {
                 display: block;
-                margin-bottom: 7px;
+                margin-bottom: 8px;
                 font-size: 13px;
-                font-weight: 900;
-                color: #111827;
+                font-weight: 600;
+                color: #334155;
             }
 
             .field input {
                 width: 100%;
-                padding: 14px 15px;
-                border: 1px solid #d1d5db;
-                border-radius: 15px;
-                font-weight: 800;
-                color: #111827;
+                height: 54px;
+                padding: 0 16px;
+                border: 1px solid var(--color-border);
+                border-radius: 14px;
+                font-weight: 600;
+                font-family: "Inter", Arial, sans-serif;
+                font-size: 15px;
+                color: var(--color-text-primary);
                 outline: none;
-                background: white;
-                transition: 0.2s ease;
+                background: var(--color-white);
+                transition: border-color 0.2s ease, box-shadow 0.2s ease;
             }
 
+                .field input::placeholder {
+                    color: #94A3B8;
+                    font-weight: 500;
+                }
+
                 .field input:focus {
-                    border-color: #ff6b35;
-                    box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.13);
+                    border-color: var(--color-primary);
+                    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
                 }
 
                 .field input.input-error {
-                    border-color: #dc2626;
-                    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.10);
+                    border-color: var(--color-error);
+                    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.10);
                 }
 
         #card-element {
-            padding: 14px 15px;
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
-            background: white;
+            padding: 17px 16px;
+            border: 1px solid var(--color-border);
+            border-radius: 14px;
+            background: var(--color-white);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
             #card-element.StripeElement--focus {
-                border-color: #ff6b35;
-                box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.13);
+                border-color: var(--color-primary);
+                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
             }
 
             #card-element.StripeElement--invalid {
-                border-color: #dc2626;
+                border-color: var(--color-error);
             }
 
         .card-errors {
             margin-top: 8px;
-            color: #dc2626;
+            color: var(--color-error);
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 600;
             min-height: 16px;
         }
 
         .row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 14px;
         }
 
         .actions {
             display: flex;
             gap: 12px;
-            margin-top: 18px;
+            margin-top: 22px;
         }
 
         .btn {
             flex: 1;
             border: none;
-            border-radius: 16px;
-            padding: 14px;
-            font-weight: 900;
+            border-radius: 14px;
+            padding: 0 16px;
+            height: 56px;
+            font-weight: 700;
+            font-size: 15px;
             cursor: pointer;
             text-decoration: none;
             text-align: center;
-            font-size: 14px;
-            transition: 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+            font-family: "Inter", Arial, sans-serif;
         }
 
         .pay-btn {
-            background: #ff6b35;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             color: white;
-            box-shadow: 0 12px 25px rgba(255, 107, 53, 0.28);
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.30);
         }
+
+            .pay-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 18px 36px rgba(37, 99, 235, 0.36);
+            }
 
             .pay-btn:disabled {
                 cursor: wait;
@@ -346,23 +493,30 @@
             }
 
         .back-btn {
-            background: #111827;
-            color: white;
-            box-shadow: 0 12px 25px rgba(17, 24, 39, 0.18);
+            background: var(--color-white);
+            color: var(--color-primary);
+            border: 1.5px solid var(--color-primary);
+            box-shadow: none;
         }
 
-        .btn:hover {
-            opacity: 0.94;
-            transform: translateY(-1px);
-        }
+            .back-btn:hover {
+                background: var(--color-extra-light-blue);
+                transform: translateY(-2px);
+            }
 
         .locked {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             font-size: 12px;
-            color: #64748b;
+            color: var(--color-text-secondary);
             text-align: center;
-            margin-top: 16px;
-            font-weight: 800;
+            margin-top: 20px;
+            font-weight: 600;
         }
+
+        /* ===================== TOAST ===================== */
 
         .payment-toast-container {
             position: fixed;
@@ -374,13 +528,13 @@
 
         .payment-toast {
             width: min(400px, calc(100vw - 40px));
-            padding: 15px 16px;
-            border-radius: 15px;
+            padding: 16px 18px;
+            border-radius: 16px;
             color: white;
             display: flex;
             align-items: flex-start;
             gap: 12px;
-            background: linear-gradient( 135deg, #b91c1c, #dc2626);
+            background: linear-gradient(135deg, #DC2626, var(--color-error));
             box-shadow: 0 18px 45px rgba(15, 23, 42, 0.28);
             opacity: 0;
             transform: translateX(45px);
@@ -403,7 +557,7 @@
             align-items: center;
             justify-content: center;
             font-size: 18px;
-            font-weight: 900;
+            font-weight: 700;
         }
 
         .payment-toast-content {
@@ -415,13 +569,13 @@
             display: block;
             margin-bottom: 3px;
             font-size: 14px;
-            font-weight: 900;
+            font-weight: 700;
         }
 
         .payment-toast-message {
             display: block;
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 500;
             line-height: 1.5;
         }
 
@@ -435,12 +589,14 @@
             cursor: pointer;
         }
 
+        /* ===================== MODAL ===================== */
+
         .payment-modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
             padding: 20px;
-            background: rgba(15, 23, 42, 0.70);
+            background: rgba(15, 23, 42, 0.55);
             backdrop-filter: blur(5px);
             align-items: center;
             justify-content: center;
@@ -473,28 +629,28 @@
         }
 
         .payment-modal-header {
-            padding: 26px 26px 14px;
+            padding: 30px 26px 14px;
             text-align: center;
         }
 
         .payment-modal-icon {
             width: 60px;
             height: 60px;
-            margin: 0 auto 14px;
+            margin: 0 auto 16px;
             border-radius: 50%;
-            background: #fff7ed;
-            color: #ea580c;
+            background: var(--color-extra-light-blue);
+            color: var(--color-primary);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 27px;
+            font-size: 26px;
         }
 
         .payment-modal-title {
             margin: 0;
-            color: #111827;
+            color: var(--color-text-primary);
             font-size: 21px;
-            font-weight: 900;
+            font-weight: 800;
         }
 
         .payment-modal-body {
@@ -504,7 +660,7 @@
 
         .payment-modal-message {
             margin: 0;
-            color: #64748b;
+            color: var(--color-text-secondary);
             font-size: 14px;
             line-height: 1.6;
         }
@@ -512,17 +668,17 @@
         .payment-modal-total {
             display: block;
             margin-top: 12px;
-            color: #111827;
-            font-size: 20px;
-            font-weight: 900;
+            color: var(--color-primary);
+            font-size: 22px;
+            font-weight: 800;
         }
 
         .payment-modal-note {
             display: block;
             margin-top: 8px;
-            color: #9a3412;
+            color: var(--color-text-secondary);
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 600;
         }
 
         .payment-modal-actions {
@@ -534,27 +690,37 @@
         .payment-modal-button {
             flex: 1;
             border: none;
-            border-radius: 13px;
-            padding: 13px 16px;
+            border-radius: 14px;
+            padding: 14px 16px;
             cursor: pointer;
             font-size: 14px;
-            font-weight: 900;
+            font-weight: 700;
+            font-family: "Inter", Arial, sans-serif;
+            transition: transform 0.2s ease, opacity 0.2s ease;
         }
 
+            .payment-modal-button:hover {
+                transform: translateY(-1px);
+            }
+
         .payment-modal-cancel {
-            background: #e5e7eb;
-            color: #374151;
+            background: var(--color-bg);
+            color: #334155;
+            border: 1px solid var(--color-border);
         }
 
         .payment-modal-confirm {
-            background: #ff6b35;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             color: white;
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
         }
 
             .payment-modal-confirm:disabled {
                 cursor: wait;
                 opacity: 0.70;
             }
+
+        /* ===================== RESPONSIVE ===================== */
 
         @@media (max-width: 900px) {
             .payment-shell {
@@ -565,17 +731,27 @@
             .payment-info {
                 display: none;
             }
+
+            .payment-card-header,
+            .payment-body {
+                padding-left: 32px;
+                padding-right: 32px;
+            }
         }
 
         @@media (max-width: 520px) {
             .payment-page {
-                padding: 22px 14px;
+                padding: 24px 14px;
             }
 
             .payment-card-header,
             .payment-body {
-                padding-left: 20px;
-                padding-right: 20px;
+                padding-left: 22px;
+                padding-right: 22px;
+            }
+
+            .payment-card-header {
+                padding-top: 28px;
             }
 
             .row {
@@ -617,16 +793,17 @@
                 <div class="payment-info-content">
 
                     <div class="secure-badge">
-                        🔒 Secure Payment Gateway
+                        <i class="bi bi-shield-lock-fill"></i>
+                        Secure Payment Gateway
                     </div>
 
                     <h1>
-                        Complete your online payment safely.
+                        Complete your payment securely
                     </h1>
 
                     <p>
-                        Enter your card details below to complete
-                        this order securely.
+                        Your payment is encrypted and processed securely
+                        using industry-standard technologies.
                     </p>
 
                     <div class="mini-card">
@@ -660,6 +837,40 @@
 
                     </div>
 
+                    <div class="feature-list">
+
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="bi bi-lock-fill"></i>
+                            </div>
+                            <div>
+                                <p class="feature-text-title">100% Secure</p>
+                                <p class="feature-text-sub">Your payment is encrypted.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="bi bi-lightning-charge-fill"></i>
+                            </div>
+                            <div>
+                                <p class="feature-text-title">Instant Confirmation</p>
+                                <p class="feature-text-sub">Receive payment confirmation immediately.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div>
+                                <p class="feature-text-title">Trusted Protection</p>
+                                <p class="feature-text-sub">Protected using secure payment infrastructure.</p>
+                            </div>
+                        </div>
+
+                    </div>
+
                 </div>
             </div>
 
@@ -672,7 +883,7 @@
                     </h2>
 
                     <p>
-                        Enter your card details to confirm this order.
+                        Enter your payment details to complete your purchase.
                     </p>
 
                 </div>
@@ -682,10 +893,11 @@
                     @if (!string.IsNullOrWhiteSpace(
                     Model.ErrorMessage))
                     {
-                        <div class="message error"
+                        <div class="status-banner"
                              id="serverPaymentError"
                              data-message="@Model.ErrorMessage">
-                            @Model.ErrorMessage
+                            <i class="bi bi-info-circle-fill"></i>
+                            <span>@Model.ErrorMessage</span>
                         </div>
                     }
 
@@ -736,7 +948,7 @@
                             <div class="summary-row summary-total">
 
                                 <span>
-                                    Total
+                                    Total Amount
                                 </span>
 
                                 <span>
@@ -748,8 +960,11 @@
                         </div>
 
                         <div class="hint">
-                            Your card is processed securely by Stripe.
-                            This site never sees or stores your card number or CVC.
+                            <i class="bi bi-shield-lock-fill"></i>
+                            <span>
+                                Your card is processed securely by Stripe.
+                                This site never sees or stores your card number or CVC.
+                            </span>
                         </div>
 
                         <form method="post"
@@ -800,13 +1015,15 @@
                                 <button type="button"
                                         id="payNowButton"
                                         class="btn pay-btn">
+                                    <i class="bi bi-lock-fill"></i>
                                     Pay Now
                                 </button>
 
                             </div>
 
                             <div class="locked">
-                                🔒 Your payment is processed securely.
+                                <i class="bi bi-shield-check"></i>
+                                Your payment is processed securely.
                             </div>
 
                         </form>
@@ -831,7 +1048,7 @@
                 <div class="payment-modal-header">
 
                     <div class="payment-modal-icon">
-                        🔒
+                        <i class="bi bi-lock-fill"></i>
                     </div>
 
                     <h3 id="paymentModalTitle"

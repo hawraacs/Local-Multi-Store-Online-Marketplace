@@ -90,6 +90,7 @@ namespace Multi_Store.Services.Managers
                     ? string.Empty
                     : dto.MessageText.Trim(),
                 ProductID = dto.ProductID,
+                StoryID = dto.StoryID,
                 ImageUrl = dto.ImageUrl,
                 IsRead = false,
                 SentAt = DateTime.UtcNow
@@ -151,6 +152,66 @@ namespace Multi_Store.Services.Managers
             };
 
             return await SendMessageAsync(dto, string.Empty, string.Empty);
+        }
+
+        // =====================
+        // STORY REPLIES (NEW) - reuses SendMessageAsync, no parallel messaging logic.
+        // The reply becomes a normal chat message tagged with StoryID, so it shows up
+        // in the Store Owner's existing inbox/ChatConversation exactly like any other
+        // message, and can also be queried back out for the Story Insights panel.
+        // =====================
+
+        public async Task<int> SendStoryReplyAsync(
+            int senderUserId,
+            int receiverUserId,
+            int storyId,
+            string replyText)
+        {
+            if (senderUserId <= 0)
+            {
+                throw new ArgumentException("Sender ID is required.", nameof(senderUserId));
+            }
+
+            if (receiverUserId <= 0)
+            {
+                throw new ArgumentException("Receiver ID is required.", nameof(receiverUserId));
+            }
+
+            if (storyId <= 0)
+            {
+                throw new ArgumentException("Story ID is required.", nameof(storyId));
+            }
+
+            var cleanReply = replyText?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(cleanReply))
+            {
+                throw new ArgumentException("Reply text cannot be empty.", nameof(replyText));
+            }
+
+            var dto = new ChatMessageDTO
+            {
+                SenderID = senderUserId,
+                ReceiverID = receiverUserId,
+                StoryID = storyId,
+                // First line marks it as a Story reply, exactly like Instagram ("📷 Replied to
+                // your Story"), followed by the customer's actual message on the next line.
+                MessageText = $"📷 Replied to your Story\n{cleanReply}"
+            };
+
+            return await SendMessageAsync(dto, string.Empty, string.Empty);
+        }
+
+        public async Task<List<ChatMessageDTO>> GetStoryRepliesAsync(int storyId)
+        {
+            if (storyId <= 0)
+            {
+                return new List<ChatMessageDTO>();
+            }
+
+            var messages = await _chatRepo.GetMessagesByStoryAsync(storyId);
+
+            return _mapper.Map<List<ChatMessageDTO>>(messages);
         }
 
         public async Task DeleteMessageAsync(
