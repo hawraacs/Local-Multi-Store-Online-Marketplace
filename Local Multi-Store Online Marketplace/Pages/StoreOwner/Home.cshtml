@@ -10,8 +10,8 @@
 @section Styles {
     <style>
         /* ============================================================
-                           ROOT VARIABLES — original brand palette (unchanged)
-                           ============================================================ */
+                                   ROOT VARIABLES — original brand palette (unchanged)
+                                   ============================================================ */
         :root {
             /* Brand colors */
             --accent: #6d28d9;
@@ -55,8 +55,8 @@
             --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
         /* ============================================================
-                           BASE
-                           ============================================================ */
+                                   BASE
+                                   ============================================================ */
         body {
             font-family: var(--font-body);
             background: var(--bg);
@@ -71,8 +71,8 @@
             padding: 0 24px;
         }
         /* ============================================================
-                           PROFILE HEADER
-                           ============================================================ */
+                                   PROFILE HEADER
+                                   ============================================================ */
         .profile-header {
             display: flex;
             align-items: center;
@@ -294,8 +294,8 @@
                 color: var(--accent);
             }
         /* ============================================================
-                           TABS
-                           ============================================================ */
+                                   TABS
+                                   ============================================================ */
         .profile-tabs {
             display: flex;
             gap: 28px;
@@ -338,8 +338,8 @@
                 font-size: 13px;
             }
         /* ============================================================
-                           PRODUCT GRID
-                           ============================================================ */
+                                   PRODUCT GRID
+                                   ============================================================ */
         .instagram-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -503,8 +503,8 @@
                     color: var(--accent);
                 }
         /* ============================================================
-                           EMPTY STATE
-                           ============================================================ */
+                                   EMPTY STATE
+                                   ============================================================ */
         .empty-state {
             text-align: center;
             padding: 72px 24px;
@@ -558,11 +558,11 @@
                 color: #fff;
             }
         /* ============================================================
-                           MODAL — fixed to actually show everything:
-                           the whole info column scrolls as ONE panel (header excluded),
-                           instead of clipping the description while only reviews scroll.
-                           Signature detail: a ticket-stub seam between media and info.
-                           ============================================================ */
+                                   MODAL — fixed to actually show everything:
+                                   the whole info column scrolls as ONE panel (header excluded),
+                                   instead of clipping the description while only reviews scroll.
+                                   Signature detail: a ticket-stub seam between media and info.
+                                   ============================================================ */
         .modal {
             display: none;
             position: fixed;
@@ -651,7 +651,7 @@
             z-index: 3;
         }
         /* Gallery prev/next chevrons — separate from the outer product nav arrows,
-                   these switch between a single product's own images */
+                           these switch between a single product's own images */
         .gallery-nav {
             position: absolute;
             top: 50%;
@@ -828,7 +828,7 @@
                 color: #fff;
             }
         /* ----- Body: everything below the header scrolls together,
-                           so long descriptions are never clipped ----- */
+                                   so long descriptions are never clipped ----- */
         .product-modal-body {
             flex: 1;
             min-height: 0;
@@ -1020,8 +1020,8 @@
                 margin: 0;
             }
         /* ============================================================
-                           MODAL NAV ARROWS
-                           ============================================================ */
+                                   MODAL NAV ARROWS
+                                   ============================================================ */
         .modal-nav-arrow {
             position: fixed;
             top: 50%;
@@ -1076,8 +1076,8 @@
                 }
         }
         /* ============================================================
-                           RESPONSIVE
-                           ============================================================ */
+                                   RESPONSIVE
+                                   ============================================================ */
         @@media (max-width: 900px) {
             .instagram-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -1193,8 +1193,8 @@
             }
         }
         /* ============================================================
-                           FOOTER
-                           ============================================================ */
+                                   FOOTER
+                                   ============================================================ */
         footer {
             text-align: center;
             padding: 36px 20px 20px;
@@ -1204,8 +1204,8 @@
             margin-top: 40px;
         }
         /* ============================================================
-                           SCROLLBAR STYLING
-                           ============================================================ */
+                                   SCROLLBAR STYLING
+                                   ============================================================ */
         .product-modal-body::-webkit-scrollbar {
             width: 4px;
         }
@@ -1231,6 +1231,17 @@
         }
     </style>
 }
+<link rel="stylesheet" href="~/css/stories.css" />
+@{
+    ViewData["OwnerStoreLogo"] = Model.Store?.LogoURL;
+    ViewData["OwnerStoreName"] = Model.Store?.StoreName;
+}
+@if (!string.IsNullOrEmpty(Model.StoryUploadError))
+{
+    <div class="alert alert-danger" style="max-width:980px;margin:12px auto;">@Model.StoryUploadError</div>
+}
+<partial name="_StoryBarOwner" model="Model.OwnStoriesWithStats" />
+<partial name="_StoryViewer" />
 <div class="profile-container">
     <!-- ========== PROFILE HEADER ========== -->
     <div class="profile-header">
@@ -1613,3 +1624,4 @@
         }
     };
 </script>
+<script src="~/js/stories.js"></script>

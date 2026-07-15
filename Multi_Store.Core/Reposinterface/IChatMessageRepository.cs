@@ -24,6 +24,11 @@ namespace Multi_Store.Core.Reposinterface
 
         // Get messages related to a product
         Task<IReadOnlyList<ChatMessage>> GetMessagesByProductAsync(int productId);
+
+        // Get messages that are replies to a specific Story (NEW - additive, same pattern
+        // as GetMessagesByOrderAsync/GetMessagesByProductAsync above)
+        Task<IReadOnlyList<ChatMessage>> GetMessagesByStoryAsync(int storyId);
+
         Task<List<ChatMessage>> GetMessagesByUserAsync(int userId);
         Task DeleteRangeAsync(IEnumerable<ChatMessage> messages);
     }

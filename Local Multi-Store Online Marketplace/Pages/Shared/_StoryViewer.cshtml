@@ -1,0 +1,81 @@
+﻿<!-- Story Viewer - hand-rolled fullscreen modal (this project's own .modal-backdrop
+     convention). Two modes: 'feed' (customer - like + reply) and 'own' (Store Owner -
+     Insights panel with Viewers/Likes/Replies). -->
+<div class="story-modal-backdrop story-viewer-backdrop" id="storyViewerBackdrop">
+    <div class="story-viewer-content">
+
+        <div class="story-progress-row" id="storyProgressRow"></div>
+
+        <div class="story-viewer-header">
+            <img id="storyViewerAvatar" class="story-viewer-avatar" src="" alt="" />
+            <div class="story-viewer-meta">
+                <div id="storyViewerStoreName" class="story-viewer-storename"></div>
+                <div id="storyViewerTime" class="story-viewer-time"></div>
+            </div>
+            <!-- Only shown when viewing the Store Owner's OWN stories -->
+            <button type="button" id="storyViewerDeleteBtn" class="story-viewer-delete" style="display:none;"
+                    onclick="RealNestStories.deleteCurrent()" aria-label="Delete this story">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+            <button type="button" class="story-viewer-close" onclick="RealNestStories.closeViewer()" aria-label="Close">&times;</button>
+        </div>
+
+        <button type="button" class="story-nav story-nav--prev" onclick="RealNestStories.prev()" aria-label="Previous story">&#10094;</button>
+
+        <div class="story-viewer-stage" id="storyViewerStage">
+            <div class="story-tap-zone story-tap-zone--left" aria-hidden="true"></div>
+            <div class="story-tap-zone story-tap-zone--right" aria-hidden="true"></div>
+            <img id="storyViewerImage" class="story-viewer-image" src="" alt="Story" />
+            <video id="storyViewerVideo" class="story-viewer-video" style="display:none;" playsinline></video>
+            <div id="storyViewerCaption" class="story-viewer-caption"></div>
+        </div>
+
+        <button type="button" class="story-nav story-nav--next" onclick="RealNestStories.next()" aria-label="Next story">&#10095;</button>
+
+        <!-- CUSTOMER mode only: like + reply -->
+        <div class="story-action-bar" id="storyActionBar" style="display:none;">
+            <button type="button" class="story-like-btn" id="storyLikeBtn" onclick="RealNestStories.toggleLike()" aria-label="Like">
+                <i class="fa-regular fa-heart" id="storyLikeIcon"></i>
+            </button>
+            <form class="story-reply-form" id="storyReplyForm" onsubmit="return RealNestStories.submitReply(event)">
+                <input type="text" id="storyReplyInput" class="story-reply-input" placeholder="Reply to story..." maxlength="500" autocomplete="off" />
+                <button type="submit" class="story-reply-send" id="storyReplySendBtn">Send</button>
+            </form>
+        </div>
+        <div class="story-reply-error" id="storyReplyError" style="display:none;"></div>
+
+        <!-- OWNER mode only: tap to expand full Insights panel -->
+        <div class="story-insights-bar" id="storyInsightsBar" style="display:none;" onclick="RealNestStories.openInsightsPanel()" role="button" tabindex="0">
+            <span><i class="fa-solid fa-eye"></i> <span id="insightsViewCount">0</span></span>
+            <span><i class="fa-solid fa-heart"></i> <span id="insightsLikeCount">0</span></span>
+            <span><i class="fa-solid fa-comment"></i> <span id="insightsReplyCount">0</span></span>
+            <span class="story-insights-chevron"><i class="fa-solid fa-chevron-up"></i> Insights</span>
+        </div>
+    </div>
+
+    <!-- Story Insights full panel (Store Owner only) - slides up over the viewer -->
+    <div class="story-insights-panel" id="storyInsightsPanel">
+        <div class="story-insights-panel-handle" onclick="RealNestStories.closeInsightsPanel()"></div>
+        <div class="story-insights-summary">
+            <div><i class="fa-solid fa-eye"></i><strong id="insightsSummaryViews">0</strong><span>Views</span></div>
+            <div><i class="fa-solid fa-user"></i><strong id="insightsSummaryUnique">0</strong><span>Unique Viewers</span></div>
+            <div><i class="fa-solid fa-heart"></i><strong id="insightsSummaryLikes">0</strong><span>Likes</span></div>
+            <div><i class="fa-solid fa-comment"></i><strong id="insightsSummaryReplies">0</strong><span>Replies</span></div>
+        </div>
+        <div class="story-insights-tabs">
+            <button type="button" class="story-insights-tab active" data-tab="viewers" onclick="RealNestStories.switchInsightsTab('viewers')">Viewers</button>
+            <button type="button" class="story-insights-tab" data-tab="likes" onclick="RealNestStories.switchInsightsTab('likes')">Likes</button>
+            <button type="button" class="story-insights-tab" data-tab="replies" onclick="RealNestStories.switchInsightsTab('replies')">Replies</button>
+        </div>
+        <div class="story-insights-list" id="storyInsightsViewersList"></div>
+        <div class="story-insights-list" id="storyInsightsLikesList" style="display:none;"></div>
+        <div class="story-insights-list" id="storyInsightsRepliesList" style="display:none;"></div>
+    </div>
+</div>
+
+<!-- Antiforgery token holder shared by mark-viewed / like / reply fetch calls. The viewer
+     plays several stories inside one JS-controlled overlay without page reloads, so normal
+     <form method="post"> submissions here would close it mid-playback - these are the only
+     places small fetch calls are genuinely necessary, and they still go through the same
+     antiforgery pipeline as every other POST in this project. -->
+<form id="storyAntiForgeryForm" style="display:none;">@Html.AntiForgeryToken()</form>
