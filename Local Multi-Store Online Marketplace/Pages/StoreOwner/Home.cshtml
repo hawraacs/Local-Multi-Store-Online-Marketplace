@@ -2,6 +2,7 @@
 @model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.HomeModel
 @{
     ViewData["Title"] = "Home";
+    ViewData["HideTopbar"] = true;
     Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
     var totalReviews = Model.Products.Sum(p => p.Reviews?.Count ?? 0);
     var totalRatingSum = Model.Products.Sum(p => p.Reviews?.Sum(r => r.Rating) ?? 0);
@@ -13,42 +14,36 @@
             --accent: #6d28d9;
             --accent-hover: #5b21b6;
             --accent-light: #f3effe;
-            --accent-dark: #4c1d95;
-            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-            --accent-glow: 0 8px 32px rgba(109, 40, 217, 0.25);
-            --bg: #f6f5fa;
+            --accent-dark: #4f46e5;
+            --accent-gradient: linear-gradient( 135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100% );
+            --accent-glow: 0 8px 32px rgba(109, 40, 217, 0.20);
+            --bg: #f8f7fc;
             --surface: #ffffff;
             --surface-hover: #faf9fe;
             --surface-alt: #f6f5fa;
-            --text-primary: #1a1625;
+            --text-primary: #1e1b2e;
             --text-secondary: #6b6478;
-            --text-muted: #a5a0b4;
-            --border: #edeaf5;
+            --text-muted: #9691a4;
+            --border: #ece8f6;
             --border-strong: #d4cee8;
             --border-focus: #d4cee8;
             --success: #10b981;
-            --success-bg: #ecfdf5;
-            --error: #ef4444;
-            --error-bg: #fef2f2;
+            --error: #dc2626;
             --warning: #f59e0b;
-            --info: #3b82f6;
-            --shadow-xs: 0 1px 3px rgba(30, 27, 46, 0.04);
-            --shadow-sm: 0 4px 16px rgba(109, 40, 217, 0.07);
-            --shadow-md: 0 12px 40px rgba(109, 40, 217, 0.10);
-            --shadow-lg: 0 24px 60px rgba(30, 27, 46, 0.15);
-            --shadow-xl: 0 32px 80px rgba(30, 27, 46, 0.20);
+            --shadow-xs: 0 1px 3px rgba(30,27,46,.04);
+            --shadow-sm: 0 4px 12px rgba(109,40,217,.06);
+            --shadow-md: 0 10px 30px rgba(109,40,217,.10);
+            --shadow-lg: 0 20px 50px rgba(30,27,46,.18);
+            --shadow-xl: 0 32px 80px rgba(30,27,46,.20);
             --radius-sm: 10px;
             --radius-md: 16px;
             --radius-lg: 24px;
-            --radius-xl: 32px;
-            --ease: cubic-bezier(0.22, 1, 0.36, 1);
-            --duration: 0.35s;
-            --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --ease: cubic-bezier(0.22,1,0.36,1);
+            --duration: .35s;
         }
 
         body {
-            font-family: var(--font-body);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: var(--bg);
             color: var(--text-primary);
             -webkit-font-smoothing: antialiased;
@@ -158,6 +153,31 @@
             border-radius: 50%;
             border: 3px solid var(--surface);
         }
+
+        .logout-btn {
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 8px 18px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all .25s ease;
+        }
+
+            .logout-btn:hover {
+                background: #dc2626;
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-sm);
+            }
+
+            .logout-btn i {
+                font-size: 13px;
+            }
 
         .profile-details {
             flex: 1;
@@ -478,8 +498,8 @@
         }
 
         /* ============================================================
-                   INSTAGRAM-STYLE FEED — store header on top, image, details below
-                   ============================================================ */
+                           INSTAGRAM-STYLE FEED — store header on top, image, details below
+                           ============================================================ */
         .feed-overlay {
             display: none;
             position: fixed;
@@ -849,6 +869,17 @@
                 <a asp-page="/StoreOwner/StoreProfile" class="edit-profile-btn">
                     <i class="fas fa-pen"></i> Edit Profile
                 </a>
+
+                <form asp-area="Identity"
+                      asp-page="/Account/Logout"
+                      asp-route-returnUrl="/"
+                      method="post"
+                      style="display:inline;">
+                    <button type="submit" class="logout-btn">
+                        <i class="fas fa-right-from-bracket"></i>
+                        Logout
+                    </button>
+                </form>
             </div>
             <div class="profile-stats-row">
                 <div class="stat-item">

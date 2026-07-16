@@ -8,235 +8,345 @@
 
 @section Styles {
     <style>
+        /* ============================================================
+                   ROOT VARIABLES — Exactly matching your Dashboard
+                   ============================================================ */
         :root {
-            /* -------- Brand colors (Purple / Indigo) -------- */
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
             --accent-light: #f3effe;
-            /* -------- Neutral palette -------- */
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
             --bg-color: #f8f7fc;
             --card-bg: #ffffff;
             --text-primary: #1e1b2e;
             --text-secondary: #6b6478;
             --text-muted: #9691a4;
             --border-color: #ece8f6;
-            /* -------- Semantic -------- */
-            --error-color: #dc2626;
             --star-color: #f59e0b;
-            /* -------- Shadows -------- */
+            --error-color: #dc2626;
             --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
             --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .reviews-page-header {
+        /* ============================================================
+                   HEADER BANNER
+                   ============================================================ */
+        .reviews-hero {
+            background: var(--accent-gradient);
+            color: #ffffff;
+            padding: 32px 40px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-md), 0 8px 32px rgba(109, 40, 217, 0.20);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 22px;
         }
 
-        .reviews-heading {
+        .hero-text h2 {
             font-size: 24px;
             font-weight: 800;
-            color: var(--text-primary);
+            margin-bottom: 4px;
             letter-spacing: -0.4px;
+        }
+
+        .hero-text p {
+            font-size: 15px;
+            opacity: 0.9;
             margin: 0;
         }
 
-        .reviews-count-pill {
-            background: var(--accent-light);
-            color: var(--accent-color);
-            font-size: 13px;
-            font-weight: 700;
-            padding: 6px 14px;
-            border-radius: 20px;
+        .reviews-stats-summary {
+            display: flex;
+            gap: 20px;
         }
 
-        .empty-reviews {
-            background: var(--card-bg);
-            border: 1px dashed var(--border-color);
-            border-radius: 18px;
-            padding: 40px 20px;
+        .summary-pill {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            padding: 10px 20px;
+            border-radius: 14px;
             text-align: center;
-            color: var(--text-muted);
-            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-            .empty-reviews i {
+            .summary-pill span {
                 display: block;
-                font-size: 32px;
-                color: var(--accent-color);
-                opacity: 0.5;
-                margin-bottom: 10px;
+                font-size: 11px;
+                text-transform: uppercase;
+                font-weight: 700;
+                opacity: 0.8;
             }
+
+            .summary-pill strong {
+                font-size: 20px;
+                font-weight: 800;
+            }
+
+        /* ============================================================
+                   REVIEW CARDS
+                   ============================================================ */
+        .reviews-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
         .review-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 20px 22px;
-            margin-bottom: 16px;
+            border-radius: var(--radius-md);
+            padding: 24px;
             box-shadow: var(--shadow-sm);
-            transition: box-shadow 0.2s ease;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
 
-            .review-card:hover {
-                box-shadow: var(--shadow-md);
+            .review-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: var(--accent-gradient);
+                opacity: 0;
+                transition: var(--transition);
             }
 
-        .review-top-row {
+            .review-card:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+                border-color: var(--accent-color);
+            }
+
+                .review-card:hover::before {
+                    opacity: 1;
+                }
+
+        .review-header {
             display: flex;
-            align-items: flex-start;
             justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 12px;
+            align-items: flex-start;
+            margin-bottom: 16px;
         }
 
-        .review-customer-block {
+        .customer-info {
             display: flex;
             align-items: center;
-            gap: 12px;
-            min-width: 0;
+            gap: 14px;
         }
 
-        .review-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-            color: #ffffff;
+        .customer-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: var(--accent-gradient);
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
-            font-size: 15px;
-            flex-shrink: 0;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 10px rgba(109, 40, 217, 0.2);
         }
 
-        .review-customer-meta {
-            min-width: 0;
+        .customer-name-meta {
+            display: flex;
+            flex-direction: column;
         }
 
-        .review-customer-link {
-            font-size: 15px;
+        .customer-name {
             font-weight: 700;
             color: var(--text-primary);
             text-decoration: none;
-            display: block;
+            font-size: 16px;
+            transition: var(--transition);
         }
 
-            .review-customer-link:hover {
+            .customer-name:hover {
                 color: var(--accent-color);
-                text-decoration: underline;
             }
 
         .review-date {
-            color: var(--text-muted);
             font-size: 12px;
-            font-weight: 600;
+            color: var(--text-muted);
+            font-weight: 500;
         }
 
-        .review-stars {
+        /* Star Rating Styling */
+        .stars-container {
+            display: flex;
+            gap: 2px;
             color: var(--star-color);
             font-size: 14px;
-            white-space: nowrap;
         }
 
-        .review-comment {
+        .review-body {
             color: var(--text-secondary);
-            font-size: 14px;
             line-height: 1.6;
-            margin: 0 0 14px;
+            font-size: 15px;
+            margin-bottom: 20px;
+            padding-left: 62px; /* aligns with the text next to avatar */
         }
 
-        .review-card-footer {
+        /* ============================================================
+                   FOOTER / ACTIONS
+                   ============================================================ */
+        .review-footer {
             display: flex;
             justify-content: flex-end;
+            padding-top: 16px;
             border-top: 1px solid var(--border-color);
-            padding-top: 12px;
         }
 
-        .review-delete-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #fef2f2;
+        .btn-delete-review {
+            background: #fff1f2;
             color: var(--error-color);
-            border: none;
+            border: 1px solid #fee2e2;
             padding: 8px 16px;
-            border-radius: 30px;
+            border-radius: 10px;
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-            .review-delete-btn:hover {
+            .btn-delete-review:hover {
                 background: var(--error-color);
                 color: white;
+                border-color: var(--error-color);
             }
+
+        /* ============================================================
+                   EMPTY STATE
+                   ============================================================ */
+        .empty-state {
+            background: var(--card-bg);
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+            .empty-state i {
+                font-size: 48px;
+                color: var(--accent-light);
+                margin-bottom: 16px;
+                display: block;
+            }
+
+            .empty-state h3 {
+                color: var(--text-primary);
+                font-weight: 700;
+                margin-bottom: 8px;
+            }
+
+            .empty-state p {
+                color: var(--text-muted);
+            }
+
+        @@media (max-width: 768px) {
+            .reviews-hero {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+                padding: 24px;
+            }
+
+            .review-body {
+                padding-left: 0;
+            }
+        }
     </style>
 }
 
-<div class="reviews-page-header">
-    <h2 class="reviews-heading">Store Reviews</h2>
-    <span class="reviews-count-pill">@Model.Reviews.Count total</span>
+<!-- ========== HERO BANNER ========== -->
+<div class="reviews-hero">
+    <div class="hero-text">
+        <h2>Customer Feedback</h2>
+        <p>Monitor and manage your store's reputation.</p>
+    </div>
+    <div class="reviews-stats-summary">
+        <div class="summary-pill">
+            <span>Total Reviews</span>
+            <strong>@Model.Reviews.Count</strong>
+        </div>
+        @if (Model.Reviews.Any())
+        {
+            <div class="summary-pill">
+                <span>Avg. Rating</span>
+                <strong>@(Model.Reviews.Average(r => r.Rating).ToString("F1")) <i class="fas fa-star" style="font-size: 14px; color: var(--star-color);"></i></strong>
+            </div>
+        }
+    </div>
 </div>
 
-@if (!Model.Reviews.Any())
-{
-    <div class="empty-reviews">
-        <i class="fa-regular fa-comment-dots"></i>
-        No reviews yet.
-    </div>
-}
-else
-{
-    @foreach (var r in Model.Reviews)
+<!-- ========== REVIEWS LIST ========== -->
+<div class="reviews-container">
+    @if (!Model.Reviews.Any())
     {
-        var customerName = r.CustomerName ?? "Unknown Customer";
-        var initial = customerName.Length > 0 ? customerName.Substring(0, 1).ToUpper() : "?";
+        <div class="empty-state">
+            <i class="fas fa-comment-slash"></i>
+            <h3>No Reviews Yet</h3>
+            <p>Customer feedback will appear here once orders are completed.</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var r in Model.Reviews)
+        {
+            var customerName = r.CustomerName ?? "Verified Customer";
+            var initial = customerName.Length > 0 ? customerName.Substring(0, 1).ToUpper() : "?";
 
-        <div class="review-card">
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="customer-info">
+                        <div class="customer-avatar">@initial</div>
+                        <div class="customer-name-meta">
+                            <a asp-page="/StoreViewCustomer" asp-route-customerId="@r.CustomerID" class="customer-name">
+                                @customerName
+                            </a>
+                            <span class="review-date">@r.CreatedAt.ToString("MMMM dd, yyyy")</span>
+                        </div>
+                    </div>
 
-            <div class="review-top-row">
-                <div class="review-customer-block">
-                    <div class="review-avatar">@initial</div>
-                    <div class="review-customer-meta">
-                        <a asp-page="/StoreViewCustomer"
-                           asp-route-customerId="@r.CustomerID"
-                           class="review-customer-link">
-                            @customerName
-                        </a>
-                        <span class="review-date">@r.CreatedAt.ToString("MMM d, yyyy")</span>
+                    <div class="stars-container">
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            if (i < r.Rating)
+                            {
+                                <i class="fa-solid fa-star"></i>
+                            }
+                            else
+                            {
+                                <i class="fa-regular fa-star" style="opacity: 0.3;"></i>
+                            }
+                        }
                     </div>
                 </div>
 
-                <div class="review-stars">
-                    @for (int i = 0; i < r.Rating; i++)
-                    {
-                        <i class="fa-solid fa-star"></i>
-                    }
-                    @for (int i = r.Rating; i < 5; i++)
-                    {
-                        <i class="fa-regular fa-star"></i>
-                    }
+                <div class="review-body">
+                    @r.Comment
+                </div>
+
+                <div class="review-footer">
+                    <form method="post" asp-page-handler="Delete" onsubmit="return confirm('Are you sure you want to delete this review?');">
+                        <input type="hidden" name="reviewId" value="@r.ReviewID" />
+                        <button type="submit" class="btn-delete-review">
+                            <i class="fa-solid fa-trash-can"></i>
+                            Delete Review
+                        </button>
+                    </form>
                 </div>
             </div>
-
-            <p class="review-comment">@r.Comment</p>
-
-            <div class="review-card-footer">
-                <form method="post" asp-page-handler="Delete">
-                    <input type="hidden" name="reviewId" value="@r.ReviewID" />
-
-                    <button type="submit" class="review-delete-btn">
-                        <i class="fa-solid fa-trash-can"></i>
-                        Delete
-                    </button>
-                </form>
-            </div>
-
-        </div>
+        }
     }
-}
+</div>
