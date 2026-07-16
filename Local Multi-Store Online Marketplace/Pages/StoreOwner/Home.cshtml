@@ -10,17 +10,15 @@
 @section Styles {
     <style>
         /* ============================================================
-                                   ROOT VARIABLES — original brand palette (unchanged)
-                                   ============================================================ */
+           ROOT VARIABLES
+           ============================================================ */
         :root {
-            /* Brand colors */
             --accent: #6d28d9;
             --accent-hover: #5b21b6;
             --accent-light: #f3effe;
             --accent-dark: #4c1d95;
             --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
             --accent-glow: 0 8px 32px rgba(109, 40, 217, 0.25);
-            /* Neutrals */
             --bg: #f6f5fa;
             --surface: #ffffff;
             --surface-hover: #faf9fe;
@@ -31,20 +29,17 @@
             --border: #edeaf5;
             --border-strong: #d4cee8;
             --border-focus: #d4cee8;
-            /* Semantic */
             --success: #10b981;
             --success-bg: #ecfdf5;
             --error: #ef4444;
             --error-bg: #fef2f2;
             --warning: #f59e0b;
             --info: #3b82f6;
-            /* Shadows */
             --shadow-xs: 0 1px 3px rgba(30, 27, 46, 0.04);
             --shadow-sm: 0 4px 16px rgba(109, 40, 217, 0.07);
             --shadow-md: 0 12px 40px rgba(109, 40, 217, 0.10);
             --shadow-lg: 0 24px 60px rgba(30, 27, 46, 0.15);
             --shadow-xl: 0 32px 80px rgba(30, 27, 46, 0.20);
-            /* Radius */
             --radius-sm: 10px;
             --radius-md: 16px;
             --radius-lg: 24px;
@@ -54,9 +49,7 @@
             --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
-        /* ============================================================
-                                   BASE
-                                   ============================================================ */
+
         body {
             font-family: var(--font-body);
             background: var(--bg);
@@ -70,9 +63,10 @@
             margin: 28px auto;
             padding: 0 24px;
         }
+
         /* ============================================================
-                                   PROFILE HEADER
-                                   ============================================================ */
+           PROFILE HEADER & STORY INTEGRATION
+           ============================================================ */
         .profile-header {
             display: flex;
             align-items: center;
@@ -85,43 +79,79 @@
             border: 1px solid var(--border);
             margin-bottom: 28px;
         }
-            /* thin brass rule along the top edge instead of a gradient border-glow */
-            .profile-header::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 40px;
-                right: 40px;
-                height: 3px;
-                background: var(--accent);
-                border-radius: 0 0 3px 3px;
-            }
-        /* ----- Avatar ----- */
-        .profile-avatar-container {
-            flex-shrink: 0;
-            position: relative;
+
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 40px; right: 40px;
+            height: 3px;
+            background: var(--accent);
+            border-radius: 0 0 3px 3px;
         }
 
-        .profile-avatar {
+        /* Avatar Story Wrapper */
+        .profile-avatar-container {
+            position: relative;
+            display: inline-block;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .story-ring-wrapper {
+            padding: 4px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform var(--duration) var(--ease);
+        }
+
+        .story-ring-wrapper.active-story {
+            background: var(--accent-gradient);
+        }
+
+        .profile-avatar, .profile-avatar-fallback {
             width: 126px;
             height: 126px;
             border-radius: 50%;
             object-fit: cover;
-            border: 4px solid var(--surface);
-            box-shadow: var(--shadow-sm), 0 0 0 2px var(--border-focus);
+            border: 4px solid var(--surface) !important;
+            box-shadow: var(--shadow-sm);
+            margin: 0 !important;
         }
 
         .profile-avatar-fallback {
-            width: 126px;
-            height: 126px;
-            border-radius: 50%;
             background: var(--accent-dark);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 46px;
             color: var(--accent-light);
-            box-shadow: var(--shadow-sm), 0 0 0 2px var(--border-focus);
+        }
+
+        /* Floating Add Story Button */
+        .avatar-add-story-btn {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            width: 34px;
+            height: 34px;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            border: 3px solid var(--surface);
+            box-shadow: var(--shadow-md);
+            z-index: 10;
+            transition: all 0.2s ease;
+        }
+
+        .avatar-add-story-btn:hover {
+            background: var(--accent-hover);
+            transform: scale(1.1);
         }
 
         .avatar-status {
@@ -134,29 +164,12 @@
             border-radius: 50%;
             border: 3px solid var(--surface);
         }
+
         /* ----- Details ----- */
-        .profile-details {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .profile-username-row {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin-bottom: 6px;
-        }
-
-        .profile-username {
-            font-family: var(--font-display);
-            font-size: 32px;
-            font-weight: 600;
-            letter-spacing: -0.3px;
-            color: var(--text-primary);
-            margin: 0;
-        }
-
+        .profile-details { flex: 1; min-width: 0; }
+        .profile-username-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 6px; }
+        .profile-username { font-family: var(--font-display); font-size: 32px; font-weight: 600; color: var(--text-primary); margin: 0; }
+        
         .edit-profile-btn {
             background: transparent;
             border: 1.5px solid var(--border-strong);
@@ -169,1095 +182,153 @@
             text-decoration: none;
             transition: all var(--duration) var(--ease);
             display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            align-items: center; gap: 6px;
         }
+        .edit-profile-btn:hover { background: var(--accent-dark); border-color: var(--accent-dark); color: #fff; }
 
-            .edit-profile-btn:hover {
-                background: var(--accent-dark);
-                border-color: var(--accent-dark);
-                color: #fff;
-            }
+        .profile-stats-row { display: flex; gap: 32px; margin: 14px 0 18px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--border); }
+        .stat-item { display: flex; align-items: baseline; gap: 6px; font-size: 13.5px; color: var(--text-secondary); }
+        .stat-count { font-family: var(--font-display); font-weight: 600; font-size: 19px; color: var(--text-primary); }
+        .stat-item .stat-icon { color: var(--accent); font-size: 13px; }
 
-            .edit-profile-btn i {
-                font-size: 11px;
-            }
-        /* ----- Stats Row ----- */
-        .profile-stats-row {
-            display: flex;
-            gap: 32px;
-            margin: 14px 0 18px;
-            flex-wrap: wrap;
-            padding-top: 14px;
-            border-top: 1px solid var(--border);
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: baseline;
-            gap: 6px;
-            font-size: 13.5px;
-            color: var(--text-secondary);
-        }
-
-        .stat-count {
-            font-family: var(--font-display);
-            font-weight: 600;
-            font-size: 19px;
-            color: var(--text-primary);
-        }
-
-        .stat-item .stat-icon {
-            color: var(--accent);
-            font-size: 13px;
-            margin-right: 2px;
-        }
-        /* ----- Message Button ----- */
         .stats-message-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--accent-dark);
-            color: #fff;
-            padding: 10px 22px;
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-            margin-bottom: 18px;
-            transition: all var(--duration) var(--ease);
-            border: none;
-            cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--accent-dark); color: #fff; padding: 10px 22px;
+            border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+            text-decoration: none; margin-bottom: 18px; transition: all var(--duration) var(--ease);
         }
+        .stats-message-btn:hover { background: var(--accent-hover); color: #fff; }
 
-            .stats-message-btn:hover {
-                background: var(--accent-hover);
-                color: #fff;
-            }
+        .profile-bio { font-size: 14px; line-height: 1.7; color: var(--text-secondary); max-width: 520px; }
+        .bio-label { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-hover); margin-bottom: 8px; }
+        .bio-label::after { content: ''; width: 22px; height: 1px; background: var(--border-focus); }
+        .bio-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .bio-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--surface-alt); border: 1px solid var(--border); padding: 4px 13px; border-radius: 20px; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); }
+        .bio-badge i { color: var(--accent); font-size: 10px; }
 
-            .stats-message-btn i {
-                font-size: 14px;
-            }
-        /* ----- Bio ----- */
-        .profile-bio {
-            font-size: 14px;
-            line-height: 1.7;
-            color: var(--text-secondary);
-            max-width: 520px;
-        }
-
-            .profile-bio .bio-label {
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                font-size: 10.5px;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                color: var(--accent-hover);
-                margin-bottom: 8px;
-            }
-
-                .profile-bio .bio-label::after {
-                    content: '';
-                    width: 22px;
-                    height: 1px;
-                    background: var(--border-focus);
-                }
-
-            .profile-bio p {
-                margin: 0;
-            }
-
-        .bio-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .bio-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: var(--surface-alt);
-            border: 1px solid var(--border);
-            padding: 4px 13px;
-            border-radius: 20px;
-            font-size: 11.5px;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-            .bio-badge i {
-                font-size: 10px;
-                color: var(--accent);
-            }
         /* ============================================================
-                                   TABS
-                                   ============================================================ */
-        .profile-tabs {
-            display: flex;
-            gap: 28px;
-            margin-bottom: 24px;
-            border-bottom: 1px solid var(--border);
-        }
+           TABS & PRODUCT GRID
+           ============================================================ */
+        .profile-tabs { display: flex; gap: 28px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+        .tab-btn { background: transparent; border: none; color: var(--text-muted); display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.6px; padding: 12px 2px; text-transform: uppercase; position: relative; }
+        .tab-btn.active { color: var(--text-primary); }
+        .tab-btn.active::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); }
 
-        .tab-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            cursor: default;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.6px;
-            padding: 12px 2px;
-            text-transform: uppercase;
-            position: relative;
-            transition: color var(--duration) var(--ease);
-        }
+        .instagram-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 4px; }
+        .product-grid-item { background: var(--surface); border-radius: var(--radius-md); overflow: hidden; display: flex; flex-direction: column; cursor: pointer; border: 1px solid var(--border); transition: all var(--duration) var(--ease); position: relative; }
+        .product-grid-item:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+        .image-wrap { position: relative; overflow: hidden; background: var(--surface-alt); aspect-ratio: 1 / 1; }
+        .image-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease); }
+        .product-grid-item:hover .image-wrap img { transform: scale(1.04); }
+        .product-badge { position: absolute; top: 12px; left: 12px; background: var(--accent-dark); color: #fff; font-size: 9.5px; font-weight: 700; padding: 4px 12px; border-radius: 3px; }
+        .image-count-badge { position: absolute; top: 12px; right: 12px; background: rgba(23, 24, 29, 0.65); color: #fff; font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 20px; backdrop-filter: blur(3px); }
+        
+        .product-quick-actions { position: absolute; inset: 0; background: rgba(23, 24, 29, 0.35); display: flex; align-items: center; justify-content: center; gap: 16px; opacity: 0; transition: opacity var(--duration) var(--ease); }
+        .product-grid-item:hover .product-quick-actions { opacity: 1; }
+        .product-quick-actions button { background: var(--surface); border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); }
+        .product-quick-actions button:hover { background: var(--accent); color: #fff; }
 
-            .tab-btn.active {
-                color: var(--text-primary);
-            }
+        .product-details { padding: 15px 17px 17px; flex: 1; display: flex; flex-direction: column; }
+        .product-name { font-size: 15.5px; font-weight: 600; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .product-meta { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+        .price { font-size: 17px; font-weight: 600; }
+        .review-count { font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
 
-                .tab-btn.active::after {
-                    content: '';
-                    position: absolute;
-                    left: 0;
-                    right: 0;
-                    bottom: -1px;
-                    height: 2px;
-                    background: var(--accent);
-                }
-
-            .tab-btn i {
-                font-size: 13px;
-            }
         /* ============================================================
-                                   PRODUCT GRID
-                                   ============================================================ */
-        .instagram-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 22px;
-            margin-top: 4px;
-        }
-
-        .product-grid-item {
-            background: var(--surface);
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            cursor: pointer;
-            border: 1px solid var(--border);
-            transition: all var(--duration) var(--ease);
-            position: relative;
-        }
-
-            .product-grid-item:hover {
-                transform: translateY(-4px);
-                box-shadow: var(--shadow-md);
-                border-color: var(--border-strong);
-            }
-
-            .product-grid-item .image-wrap {
-                position: relative;
-                overflow: hidden;
-                background: var(--surface-alt);
-                aspect-ratio: 1 / 1;
-            }
-
-                .product-grid-item .image-wrap img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                    transition: transform 0.6s var(--ease);
-                }
-
-            .product-grid-item:hover .image-wrap img {
-                transform: scale(1.04);
-            }
-        /* Badge — small brass tag rather than a gradient pill */
-        .product-badge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background: var(--accent-dark);
-            color: var(--accent-light);
-            font-size: 9.5px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            padding: 4px 12px;
-            border-radius: 3px;
-        }
-        /* Small photo-count pill so the owner knows a product has more than one image */
-        .image-count-badge {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: rgba(23, 24, 29, 0.65);
-            color: #fff;
-            font-size: 10.5px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            backdrop-filter: blur(3px);
-        }
-
-            .image-count-badge i {
-                font-size: 10px;
-            }
-
-        .product-quick-actions {
-            position: absolute;
-            inset: 0;
-            background: rgba(23, 24, 29, 0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            opacity: 0;
-            transition: opacity var(--duration) var(--ease);
-        }
-
-        .product-grid-item:hover .product-quick-actions {
-            opacity: 1;
-        }
-
-        .product-quick-actions button {
-            background: var(--surface);
-            border: none;
-            border-radius: 50%;
-            width: 42px;
-            height: 42px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.2s var(--ease);
-            box-shadow: var(--shadow-md);
-        }
-
-            .product-quick-actions button:hover {
-                background: var(--accent);
-                color: #fff;
-            }
-
-        .product-details {
-            padding: 15px 17px 17px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-
-            .product-details .product-name {
-                font-family: var(--font-display);
-                font-size: 15.5px;
-                font-weight: 600;
-                color: var(--text-primary);
-                margin-bottom: 4px;
-                line-height: 1.4;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
-            }
-
-            .product-details .product-meta {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-top: auto;
-                padding-top: 10px;
-                border-top: 1px solid var(--border);
-            }
-
-            .product-details .price {
-                font-family: var(--font-display);
-                font-size: 17px;
-                font-weight: 600;
-                color: var(--text-primary);
-            }
-
-            .product-details .review-count {
-                font-size: 11.5px;
-                color: var(--text-muted);
-                font-weight: 500;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-            }
-
-                .product-details .review-count i {
-                    color: var(--accent);
-                }
-        /* ============================================================
-                                   EMPTY STATE
-                                   ============================================================ */
-        .empty-state {
-            text-align: center;
-            padding: 72px 24px;
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            border: 1.5px dashed var(--border-strong);
-        }
-
-        .empty-icon {
-            font-size: 46px;
-            margin-bottom: 20px;
-            color: var(--accent);
-            opacity: 0.5;
-            display: inline-block;
-        }
-
-        .empty-state h3 {
-            font-family: var(--font-display);
-            font-size: 23px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-        }
-
-        .empty-state p {
-            font-size: 14.5px;
-            color: var(--text-secondary);
-            max-width: 380px;
-            margin: 0 auto 24px;
-            line-height: 1.7;
-        }
-
-        .empty-state .empty-action-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--accent-dark);
-            color: #fff;
-            padding: 12px 30px;
-            border-radius: var(--radius-sm);
-            font-weight: 600;
-            font-size: 13.5px;
-            text-decoration: none;
-            transition: all var(--duration) var(--ease);
-            border: none;
-            cursor: pointer;
-        }
-
-            .empty-state .empty-action-btn:hover {
-                background: var(--accent-hover);
-                color: #fff;
-            }
-        /* ============================================================
-                                   MODAL — fixed to actually show everything:
-                                   the whole info column scrolls as ONE panel (header excluded),
-                                   instead of clipping the description while only reviews scroll.
-                                   Signature detail: a ticket-stub seam between media and info.
-                                   ============================================================ */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 100000;
-            inset: 0;
-            background: rgba(23, 24, 29, 0.55);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-        }
-
-            .modal.flex {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 20px;
-            }
-
-        @@keyframes modalContentIn {
-            from {
-                opacity: 0;
-                transform: translateY(16px) scale(0.98);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .product-modal-content {
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            width: 100%;
-            max-width: 900px;
-            height: 88vh;
-            max-height: 720px;
-            box-shadow: var(--shadow-xl);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            animation: modalContentIn 0.3s var(--ease);
-            position: relative;
-        }
-
-        @@media (min-width: 768px) {
-            .product-modal-content {
-                flex-direction: row;
-            }
-        }
-        /* ----- Modal Media / Gallery ----- */
-        .product-modal-media {
-            background: var(--surface-alt);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            position: relative;
-            height: 300px;
-            overflow: hidden;
-        }
-
-            .product-modal-media .modal-gallery-img {
-                width: 100%;
-                height: 100%;
-                object-fit: contain;
-                padding: 20px;
-            }
-
-        @@media (min-width: 768px) {
-            .product-modal-media {
-                width: 46%;
-                height: 100%;
-            }
-        }
-
-        .product-modal-media .image-counter {
-            position: absolute;
-            bottom: 16px;
-            right: 16px;
-            background: rgba(23, 24, 29, 0.65);
-            color: #fff;
-            font-size: 10.5px;
-            font-weight: 600;
-            padding: 4px 13px;
-            border-radius: 20px;
-            z-index: 3;
-        }
-        /* Gallery prev/next chevrons — separate from the outer product nav arrows,
-                           these switch between a single product's own images */
-        .gallery-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            border: none;
-            background: rgba(23, 24, 29, 0.45);
-            color: #fff;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 3;
-            transition: background 0.2s var(--ease);
-        }
-
-            .gallery-nav:hover {
-                background: rgba(23, 24, 29, 0.7);
-            }
-
-            .gallery-nav.prev {
-                left: 12px;
-            }
-
-            .gallery-nav.next {
-                right: 12px;
-            }
-
-        .gallery-dots {
-            position: absolute;
-            bottom: 16px;
-            left: 0;
-            right: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            z-index: 3;
-        }
-
-        .gallery-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: rgba(23, 24, 29, 0.25);
-            cursor: pointer;
-            transition: all 0.2s var(--ease);
-        }
-
-            .gallery-dot.active {
-                background: #fff;
-                width: 16px;
-                border-radius: 4px;
-                box-shadow: 0 1px 4px rgba(23, 24, 29, 0.4);
-            }
-        /* ----- Ticket-stub seam (signature detail) ----- */
-        .product-modal-info {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-            min-width: 0;
-            background: var(--surface);
-            position: relative;
-            border-top: 1px dashed var(--border-strong);
-        }
-
-        @@media (min-width: 768px) {
-            .product-modal-info {
-                border-top: none;
-                border-left: 1px dashed var(--border-strong);
-            }
-        }
-
-        .seam-dot {
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background: var(--bg);
-            box-shadow: inset 0 1px 3px rgba(23, 24, 29, 0.12);
-            z-index: 2;
-        }
-            /* positioned for the horizontal seam (mobile, stacked layout) */
-            .seam-dot.top {
-                top: -8px;
-                left: -8px;
-            }
-
-            .seam-dot.bottom {
-                top: -8px;
-                right: -8px;
-            }
-
-        @@media (min-width: 768px) {
-            /* positioned for the vertical seam (desktop, side-by-side layout) */
-            .seam-dot.top {
-                top: -8px;
-                left: -8px;
-            }
-
-            .seam-dot.bottom {
-                bottom: -8px;
-                top: auto;
-                left: -8px;
-                right: auto;
-            }
-        }
-        /* ----- Header (stays put; only the body below scrolls) ----- */
-        .product-modal-header {
-            padding: 18px 24px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-        }
-
-        .product-modal-store {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-            .product-modal-store img {
-                width: 32px;
-                height: 32px;
-                border-radius: 50%;
-                object-fit: cover;
-                border: 1.5px solid var(--border);
-            }
-
-            .product-modal-store .store-name {
-                font-family: var(--font-display);
-                font-size: 14.5px;
-                font-weight: 600;
-                color: var(--text-primary);
-            }
-
-            .product-modal-store .store-badge {
-                font-size: 9.5px;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                color: var(--accent-hover);
-                background: var(--accent-light);
-                padding: 2px 10px;
-                border-radius: 10px;
-                margin-left: 4px;
-            }
-
-        .close-modal {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: var(--surface-alt);
-            border: none;
-            font-size: 19px;
-            font-weight: 300;
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s var(--ease);
-            flex-shrink: 0;
-        }
-
-            .close-modal:hover {
-                background: var(--accent-dark);
-                color: #fff;
-            }
-        /* ----- Body: everything below the header scrolls together,
-                                   so long descriptions are never clipped ----- */
-        .product-modal-body {
-            flex: 1;
-            min-height: 0;
-            overflow-y: auto;
-        }
-
-        .product-modal-meta {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border);
-        }
-
-            .product-modal-meta h3 {
-                font-family: var(--font-display);
-                font-size: 20px;
-                font-weight: 600;
-                color: var(--text-primary);
-                margin-bottom: 6px;
-            }
-
-            .product-modal-meta .price-row {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                margin-bottom: 12px;
-            }
-
-            .product-modal-meta .price {
-                font-family: var(--font-display);
-                font-size: 23px;
-                font-weight: 600;
-                color: var(--text-primary);
-            }
-
-            .product-modal-meta .price-badge {
-                font-size: 11px;
-                font-weight: 600;
-                color: var(--success);
-                background: var(--success-bg);
-                padding: 2px 13px;
-                border-radius: 20px;
-            }
-
-            .product-modal-meta .description {
-                font-size: 14px;
-                color: var(--text-secondary);
-                line-height: 1.75;
-                margin: 0;
-                white-space: pre-line;
-            }
-
-        .product-modal-reviews {
-            padding: 20px 24px 24px;
-        }
-
-            .product-modal-reviews .reviews-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 14px;
-            }
-
-                .product-modal-reviews .reviews-header span {
-                    font-size: 11.5px;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: 0.8px;
-                    color: var(--text-muted);
-                }
-
-                .product-modal-reviews .reviews-header .review-count-badge {
-                    font-size: 11.5px;
-                    font-weight: 600;
-                    color: var(--text-secondary);
-                    background: var(--surface-alt);
-                    padding: 2px 13px;
-                    border-radius: 20px;
-                }
-
-        .review-row {
-            background: var(--surface-alt);
-            border-radius: var(--radius-sm);
-            padding: 14px 16px;
-            margin-bottom: 10px;
-            border: 1px solid transparent;
-            transition: border-color 0.2s var(--ease);
-        }
-
-            .review-row:hover {
-                border-color: var(--border);
-            }
-
-        .review-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .reviewer-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .reviewer-avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: var(--accent-dark);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent-light);
-            font-size: 12px;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
-        .reviewer-link {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-primary);
-            text-decoration: none;
-        }
-
-            .reviewer-link:hover {
-                color: var(--accent-hover);
-            }
-
-        .review-date {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        .stars-row {
-            display: flex;
-            gap: 2px;
-            font-size: 11.5px;
-            color: var(--accent);
-        }
-
-        .review-row .review-comment {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin: 6px 0 10px;
-            padding-left: 38px;
-        }
-
-        .delete-review-btn {
-            width: 100%;
-            background: var(--error-bg);
-            color: var(--error);
-            border: none;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 8px 0;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            transition: all 0.2s var(--ease);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-            .delete-review-btn:hover {
-                background: #f6d9d6;
-            }
-
-        .empty-reviews {
-            text-align: center;
-            padding: 28px 12px;
-            color: var(--text-muted);
-        }
-
-            .empty-reviews i {
-                font-size: 28px;
-                opacity: 0.4;
-                margin-bottom: 8px;
-                display: block;
-            }
-
-            .empty-reviews p {
-                font-size: 13px;
-                margin: 0;
-            }
-        /* ============================================================
-                                   MODAL NAV ARROWS
-                                   ============================================================ */
-        .modal-nav-arrow {
-            position: fixed;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 100001;
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            font-size: 17px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: var(--shadow-md);
-            transition: all 0.2s var(--ease);
-        }
-
-            .modal-nav-arrow:hover {
-                background: var(--accent-dark);
-                color: #fff;
-            }
-
-            .modal-nav-arrow.prev {
-                left: 20px;
-            }
-
-            .modal-nav-arrow.next {
-                right: 20px;
-            }
-
-            .modal-nav-arrow.disabled {
-                opacity: 0.25;
-                pointer-events: none;
-            }
-
-        @@media (max-width: 640px) {
-            .modal-nav-arrow {
-                width: 38px;
-                height: 38px;
-                font-size: 14px;
-            }
-
-                .modal-nav-arrow.prev {
-                    left: 8px;
-                }
-
-                .modal-nav-arrow.next {
-                    right: 8px;
-                }
-        }
-        /* ============================================================
-                                   RESPONSIVE
-                                   ============================================================ */
-        @@media (max-width: 900px) {
-            .instagram-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 16px;
-            }
-        }
+           MODALS & REVIEWS
+           ============================================================ */
+        .modal { display: none; position: fixed; z-index: 100000; inset: 0; background: rgba(23, 24, 29, 0.55); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 20px; }
+        .modal.flex { display: flex; }
+        .product-modal-content { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 900px; height: 88vh; max-height: 720px; box-shadow: var(--shadow-xl); display: flex; overflow: hidden; animation: modalContentIn 0.3s var(--ease); position: relative; }
+        @@keyframes modalContentIn { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .product-modal-media { background: var(--surface-alt); width: 46%; position: relative; }
+        .modal-gallery-img { width: 100%; height: 100%; object-fit: contain; padding: 20px; }
+        .gallery-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; background: rgba(23, 24, 29, 0.45); color: #fff; border: none; cursor: pointer; z-index: 3; }
+        .gallery-nav.prev { left: 12px; } .gallery-nav.next { right: 12px; }
+
+        .product-modal-info { flex: 1; display: flex; flex-direction: column; border-left: 1px dashed var(--border-strong); position: relative; }
+        .seam-dot { position: absolute; width: 15px; height: 15px; border-radius: 50%; background: var(--bg); left: -8px; }
+        .seam-dot.top { top: -8px; } .seam-dot.bottom { bottom: -8px; }
+
+        .product-modal-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .product-modal-store { display: flex; align-items: center; gap: 12px; }
+        .product-modal-store img { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); }
+        .close-modal { width: 34px; height: 34px; border-radius: 50%; background: var(--surface-alt); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        .product-modal-body { flex: 1; overflow-y: auto; }
+        .product-modal-meta { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+        .product-modal-meta h3 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+        .price-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .price-badge { font-size: 11px; font-weight: 600; color: var(--success); background: var(--success-bg); padding: 2px 13px; border-radius: 20px; }
+        .description { font-size: 14px; color: var(--text-secondary); line-height: 1.75; white-space: pre-line; }
+
+        .product-modal-reviews { padding: 20px 24px 24px; }
+        .review-row { background: var(--surface-alt); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; border: 1px solid transparent; }
+        .reviewer-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-dark); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+        .delete-review-btn { width: 100%; background: var(--error-bg); color: var(--error); border: none; padding: 8px 0; border-radius: var(--radius-sm); cursor: pointer; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+        .modal-nav-arrow { position: fixed; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); cursor: pointer; box-shadow: var(--shadow-md); display: none; align-items: center; justify-content: center; z-index: 100001; }
+        .modal-nav-arrow.prev { left: 20px; } .modal-nav-arrow.next { right: 20px; }
+        .modal-nav-arrow.disabled { opacity: 0.25; pointer-events: none; }
 
         @@media (max-width: 768px) {
-            .profile-container {
-                padding: 0 16px;
-                margin: 16px auto;
-            }
-
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
-                gap: 18px;
-                padding: 30px 22px;
-            }
-
-            .profile-stats-row {
-                justify-content: center;
-                gap: 22px;
-            }
-
-            .profile-username-row {
-                justify-content: center;
-            }
-
-            .profile-bio {
-                max-width: 100%;
-                text-align: center;
-            }
-
-                .profile-bio .bio-label::after {
-                    display: none;
-                }
-
-            .bio-badges {
-                justify-content: center;
-            }
-
-            .profile-tabs {
-                justify-content: center;
-                gap: 20px;
-            }
-
-            .product-modal-content {
-                height: 92vh;
-                max-height: none;
-                border-radius: var(--radius-md);
-            }
-
-            .product-modal-media {
-                height: 220px;
-            }
-
-            .product-modal-header {
-                padding: 14px 18px;
-            }
-
-            .product-modal-meta {
-                padding: 16px 18px;
-            }
-
-                .product-modal-meta h3 {
-                    font-size: 17px;
-                }
-
-                .product-modal-meta .price {
-                    font-size: 19px;
-                }
-
-            .product-modal-reviews {
-                padding: 16px 18px 18px;
-            }
-
-            .review-row .review-comment {
-                padding-left: 0;
-            }
-        }
-
-        @@media (max-width: 480px) {
-            .instagram-grid {
-                grid-template-columns: 1fr;
-                gap: 14px;
-            }
-
-            .profile-avatar, .profile-avatar-fallback {
-                width: 96px;
-                height: 96px;
-            }
-
-            .profile-avatar-fallback {
-                font-size: 38px;
-            }
-
-            .profile-username {
-                font-size: 24px;
-            }
-
-            .stat-item {
-                font-size: 12px;
-            }
-
-            .stat-count {
-                font-size: 15px;
-            }
-
-            .stats-message-btn {
-                padding: 8px 18px;
-                font-size: 12px;
-            }
-        }
-        /* ============================================================
-                                   FOOTER
-                                   ============================================================ */
-        footer {
-            text-align: center;
-            padding: 36px 20px 20px;
-            color: var(--text-muted);
-            font-size: 12px;
-            border-top: 1px solid var(--border);
-            margin-top: 40px;
-        }
-        /* ============================================================
-                                   SCROLLBAR STYLING
-                                   ============================================================ */
-        .product-modal-body::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .product-modal-body::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .product-modal-body::-webkit-scrollbar-thumb {
-            background: var(--border-strong);
-            border-radius: 10px;
-        }
-
-            .product-modal-body::-webkit-scrollbar-thumb:hover {
-                background: var(--text-muted);
-            }
-        /* Respect reduced motion preference */
-        @@media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                transition-duration: 0.01ms !important;
-            }
+            .profile-header { flex-direction: column; text-align: center; padding: 30px 22px; }
+            .instagram-grid { grid-template-columns: repeat(2, 1fr); }
+            .product-modal-content { flex-direction: column; height: 92vh; }
+            .product-modal-media { width: 100%; height: 220px; }
         }
     </style>
 }
+
 <link rel="stylesheet" href="~/css/stories.css" />
 @{
     ViewData["OwnerStoreLogo"] = Model.Store?.LogoURL;
     ViewData["OwnerStoreName"] = Model.Store?.StoreName;
 }
+
 @if (!string.IsNullOrEmpty(Model.StoryUploadError))
 {
     <div class="alert alert-danger" style="max-width:980px;margin:12px auto;">@Model.StoryUploadError</div>
 }
+
 <partial name="_StoryBarOwner" model="Model.OwnStoriesWithStats" />
 <partial name="_StoryViewer" />
+
 <div class="profile-container">
     <!-- ========== PROFILE HEADER ========== -->
     <div class="profile-header">
         <div class="profile-avatar-container">
-            @if (!string.IsNullOrWhiteSpace(Model.Store?.LogoURL))
-            {
-                <img class="profile-avatar" src="@Model.Store.LogoURL" alt="@Model.Store.StoreName Logo" />
+            @{
+                var hasActiveStories = Model.OwnStoriesWithStats != null && Model.OwnStoriesWithStats.Any();
             }
-            else
+            <!-- Clicking the avatar views stories if they exist, otherwise opens upload -->
+            <div class="story-ring-wrapper @(hasActiveStories ? "active-story" : "")" 
+                 onclick="@(hasActiveStories ? "RealNestStories.openOwn(0)" : "RealNestStories.openUploadStoryModal()")">
+                
+                @if (!string.IsNullOrWhiteSpace(Model.Store?.LogoURL))
+                {
+                    <img class="profile-avatar" src="@Model.Store.LogoURL" alt="@Model.Store.StoreName Logo" />
+                }
+                else
+                {
+                    <div class="profile-avatar-fallback">
+                        <i class="fas fa-store"></i>
+                    </div>
+                }
+            </div>
+
+            <!-- The Plus Button Overlay -->
+            <div class="avatar-add-story-btn" onclick="event.stopPropagation(); RealNestStories.openUploadStoryModal()" title="Add Story">
+                <i class="fas fa-plus"></i>
+            </div>
+
+            @if (!hasActiveStories)
             {
-                <div class="profile-avatar-fallback">
-                    <i class="fas fa-store"></i>
-                </div>
+                <div class="avatar-status"></div>
             }
-            <div class="avatar-status"></div>
         </div>
+
         <div class="profile-details">
             <div class="profile-username-row">
                 <h2 class="profile-username">@Model.Store?.StoreName</h2>
@@ -1299,12 +370,14 @@
             </div>
         </div>
     </div>
+
     <!-- ========== TABS ========== -->
     <div class="profile-tabs">
         <button class="tab-btn active">
             <i class="fas fa-table-cells"></i> Products
         </button>
     </div>
+
     <!-- ========== PRODUCT GRID ========== -->
     @if (Model.Products.Any())
     {
@@ -1319,10 +392,7 @@
                     <div class="image-wrap">
                         <img src="@img" alt="@p.ProductName" loading="lazy" />
                         <span class="product-badge">For Sale</span>
-                        @if (imageCount > 1)
-                        {
-                            <span class="image-count-badge"><i class="fas fa-images"></i> @imageCount</span>
-                        }
+                        @if (imageCount > 1) { <span class="image-count-badge"><i class="fas fa-images"></i> @imageCount</span> }
                         <div class="product-quick-actions">
                             <button onclick="event.stopPropagation(); openProductModal(@p.ProductID)" title="Quick view">
                                 <i class="fas fa-eye"></i>
@@ -1333,9 +403,7 @@
                         <span class="product-name">@p.ProductName</span>
                         <div class="product-meta">
                             <span class="price">$@p.Price</span>
-                            <span class="review-count">
-                                <i class="fas fa-star"></i> @reviewCount review@(reviewCount != 1 ? "s" : "")
-                            </span>
+                            <span class="review-count"><i class="fas fa-star"></i> @reviewCount review@(reviewCount != 1 ? "s" : "")</span>
                         </div>
                     </div>
                 </div>
@@ -1347,20 +415,18 @@
         <div class="empty-state">
             <div class="empty-icon"><i class="fas fa-store"></i></div>
             <h3>Your store is empty</h3>
-            <p>Start adding products to your store and they'll appear here in a beautiful grid for your customers to browse.</p>
+            <p>Start adding products to your store and they'll appear here.</p>
             <a asp-page="/StoreOwner/AddProduct" class="empty-action-btn">
                 <i class="fas fa-plus-circle"></i> Add Your First Product
             </a>
         </div>
     }
 </div>
-<!-- ========== MODAL NAV ARROWS (switch between products) ========== -->
-<button id="navPrev" class="modal-nav-arrow prev" onclick="goToAdjacentProduct(-1)" aria-label="Previous product">
-    <i class="fas fa-chevron-left"></i>
-</button>
-<button id="navNext" class="modal-nav-arrow next" onclick="goToAdjacentProduct(1)" aria-label="Next product">
-    <i class="fas fa-chevron-right"></i>
-</button>
+
+<!-- ========== MODAL NAV ARROWS ========== -->
+<button id="navPrev" class="modal-nav-arrow prev" onclick="goToAdjacentProduct(-1)"><i class="fas fa-chevron-left"></i></button>
+<button id="navNext" class="modal-nav-arrow next" onclick="goToAdjacentProduct(1)"><i class="fas fa-chevron-right"></i></button>
+
 <!-- ========== PRODUCT MODALS ========== -->
 @foreach (var p in Model.Products)
 {
@@ -1368,114 +434,51 @@
     var reviewCount = p.Reviews?.Count ?? 0;
     <div id="modal-@p.ProductID" class="modal" data-product-id="@p.ProductID" onclick="handleOutsideClick(event, @p.ProductID)">
         <div class="product-modal-content" onclick="event.stopPropagation()">
-            <!-- Media / Gallery: shows every uploaded image for this product -->
             <div class="product-modal-media" data-current-image="0">
                 @if (orderedImages.Any())
                 {
                     for (int idx = 0; idx < orderedImages.Count; idx++)
                     {
-                        var im = orderedImages[idx];
-                        <img class="modal-gallery-img" src="@im.ImageUrl" alt="@p.ProductName" style="display:@(idx == 0 ? "block" : "none")" />
+                        <img class="modal-gallery-img" src="@orderedImages[idx].ImageUrl" style="display:@(idx == 0 ? "block" : "none")" />
                     }
                 }
-                else
-                {
-                    <img class="modal-gallery-img" src="/images/no-image.png" alt="@p.ProductName" />
-                }
-
                 @if (orderedImages.Count > 1)
                 {
-                    <button type="button" class="gallery-nav prev" onclick="event.stopPropagation(); changeModalImage(@p.ProductID, -1)" aria-label="Previous image">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <button type="button" class="gallery-nav next" onclick="event.stopPropagation(); changeModalImage(@p.ProductID, 1)" aria-label="Next image">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                    <div class="gallery-dots">
-                        @for (int idx = 0; idx < orderedImages.Count; idx++)
-                        {
-                            <span class="gallery-dot @(idx == 0 ? "active" : "")" onclick="event.stopPropagation(); setModalImage(@p.ProductID, @idx)"></span>
-                        }
-                    </div>
+                    <button class="gallery-nav prev" onclick="changeModalImage(@p.ProductID, -1)"><i class="fas fa-chevron-left"></i></button>
+                    <button class="gallery-nav next" onclick="changeModalImage(@p.ProductID, 1)"><i class="fas fa-chevron-right"></i></button>
                 }
-
-                <span class="image-counter">1 / @(orderedImages.Count == 0 ? 1 : orderedImages.Count)</span>
             </div>
-            <!-- Info: header stays fixed, body scrolls as one piece -->
             <div class="product-modal-info">
-                <span class="seam-dot top"></span>
-                <span class="seam-dot bottom"></span>
+                <span class="seam-dot top"></span><span class="seam-dot bottom"></span>
                 <div class="product-modal-header">
                     <div class="product-modal-store">
-                        @if (!string.IsNullOrWhiteSpace(Model.Store?.LogoURL))
-                        {
-                            <img src="@Model.Store.LogoURL" alt="@Model.Store.StoreName" />
-                        }
-                        else
-                        {
-                            <div style="width:32px;height:32px;border-radius:50%;background:var(--accent-dark);display:flex;align-items:center;justify-content:center;color:var(--accent-light);font-size:13px;">
-                                <i class="fas fa-store"></i>
-                            </div>
-                        }
+                        <img src="@(Model.Store?.LogoURL ?? "/images/store.png")" />
                         <span class="store-name">@Model.Store?.StoreName</span>
-                        <span class="store-badge">Store</span>
                     </div>
-                    <button class="close-modal" onclick="closeProductModal(@p.ProductID)" aria-label="Close">&times;</button>
+                    <button class="close-modal" onclick="closeProductModal(@p.ProductID)">&times;</button>
                 </div>
                 <div class="product-modal-body">
                     <div class="product-modal-meta">
                         <h3>@p.ProductName</h3>
-                        <div class="price-row">
-                            <span class="price">$@p.Price</span>
-                            <span class="price-badge"><i class="fas fa-check-circle"></i> In Stock</span>
-                        </div>
+                        <div class="price-row"><span class="price">$@p.Price</span><span class="price-badge">In Stock</span></div>
                         <p class="description">@p.Description</p>
                     </div>
                     <div class="product-modal-reviews">
-                        <div class="reviews-header">
-                            <span><i class="fas fa-comment"></i> Feedback</span>
-                            <span class="review-count-badge">@reviewCount review@(reviewCount != 1 ? "s" : "")</span>
-                        </div>
                         @if (p.Reviews != null && p.Reviews.Any())
                         {
                             @foreach (var review in p.Reviews.OrderByDescending(r => r.CreatedAt))
                             {
-                                var initial = review.Customer?.User?.FullName?.FirstOrDefault().ToString()?.ToUpper() ?? "?";
                                 <div class="review-row">
-                                    <div class="review-top">
-                                        <div class="reviewer-info">
-                                            <div class="reviewer-avatar">@initial</div>
-                                            <a href="/StoreViewCustomer/@review.CustomerID" class="reviewer-link">
-                                                @review.Customer?.User?.FullName
-                                            </a>
-                                            <span class="review-date">· @review.CreatedAt.ToString("MMM d, yyyy")</span>
-                                        </div>
-                                        <div class="stars-row">
-                                            @for (int i = 0; i < review.Rating; i++)
-                                            {
-                                                <i class="fas fa-star"></i>
-                                            }
-                                            @for (int i = review.Rating; i < 5; i++)
-                                            {
-                                                <i class="far fa-star" style="color:var(--border-strong);"></i>
-                                            }
-                                        </div>
+                                    <div class="reviewer-info">
+                                        <div class="reviewer-avatar">@review.Customer?.User?.FullName?.FirstOrDefault()</div>
+                                        <strong>@review.Customer?.User?.FullName</strong>
                                     </div>
-                                    <p class="review-comment">@review.Comment</p>
+                                    <p>@review.Comment</p>
                                     <form method="post" asp-page-handler="DeleteReview" asp-route-reviewId="@review.ReviewID">
-                                        <button type="submit" class="delete-review-btn">
-                                            <i class="fa-solid fa-trash-can"></i> Remove Review
-                                        </button>
+                                        <button type="submit" class="delete-review-btn"><i class="fa-solid fa-trash-can"></i> Remove</button>
                                     </form>
                                 </div>
                             }
-                        }
-                        else
-                        {
-                            <div class="empty-reviews">
-                                <i class="far fa-comment-dots"></i>
-                                <p>No reviews yet for this product.</p>
-                            </div>
                         }
                     </div>
                 </div>
@@ -1483,27 +486,18 @@
         </div>
     </div>
 }
-<!-- ========== SCRIPTS ========== -->
+
 <script>
-    // Ordered list of product IDs (same order as grid)
     const productOrder = [@Html.Raw(string.Join(",", Model.Products.Select(p => p.ProductID)))];
     let currentProductId = null;
 
-    // ----- Open / Close -----
     function openProductModal(id) {
         const modal = document.getElementById('modal-' + id);
         if (!modal) return;
-        // Re-parent to <body>. If any ancestor in the layout has a transform/filter,
-        // it creates a containing block that traps position:fixed elements inside
-        // it instead of the real viewport — moving the modal to <body> guarantees
-        // it always covers the full screen and sits above the app chrome.
-        if (modal.parentElement !== document.body) {
-            document.body.appendChild(modal);
-        }
+        if (modal.parentElement !== document.body) document.body.appendChild(modal);
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
         currentProductId = id;
-        setModalImage(id, 0); // always start the gallery on the first / primary image
         updateNavArrows();
     }
 
@@ -1516,52 +510,14 @@
         hideNavArrows();
     }
 
-    function handleOutsideClick(event, id) {
-        const modal = document.getElementById('modal-' + id);
-        if (event.target === modal) {
-            closeProductModal(id);
-        }
-    }
+    function handleOutsideClick(event, id) { if (event.target.classList.contains('modal')) closeProductModal(id); }
 
-    // ----- Per-product image gallery (all uploaded images) -----
-    function setModalImage(productId, index) {
-        const modal = document.getElementById('modal-' + productId);
-        if (!modal) return;
-        const imgs = modal.querySelectorAll('.modal-gallery-img');
-        if (!imgs.length) return;
-        index = ((index % imgs.length) + imgs.length) % imgs.length;
-
-        imgs.forEach((imgEl, i) => { imgEl.style.display = i === index ? 'block' : 'none'; });
-
-        const media = modal.querySelector('.product-modal-media');
-        if (media) media.dataset.currentImage = String(index);
-
-        const counter = modal.querySelector('.image-counter');
-        if (counter) counter.textContent = (index + 1) + ' / ' + imgs.length;
-
-        const dots = modal.querySelectorAll('.gallery-dot');
-        dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
-    }
-
-    function changeModalImage(productId, direction) {
-        const modal = document.getElementById('modal-' + productId);
-        if (!modal) return;
-        const media = modal.querySelector('.product-modal-media');
-        const current = parseInt(media?.dataset.currentImage || '0', 10);
-        setModalImage(productId, current + direction);
-    }
-
-    // ----- Navigation arrows (switch between products) -----
     function updateNavArrows() {
         const prev = document.getElementById('navPrev');
         const next = document.getElementById('navNext');
-        if (currentProductId === null) {
-            hideNavArrows();
-            return;
-        }
+        if (currentProductId === null) return hideNavArrows();
         const idx = productOrder.indexOf(currentProductId);
-        prev.style.display = 'flex';
-        next.style.display = 'flex';
+        prev.style.display = next.style.display = 'flex';
         prev.classList.toggle('disabled', idx <= 0);
         next.classList.toggle('disabled', idx >= productOrder.length - 1);
     }
@@ -1572,56 +528,27 @@
     }
 
     function goToAdjacentProduct(direction) {
-        if (currentProductId === null) return;
         const idx = productOrder.indexOf(currentProductId);
-        const newIdx = idx + direction;
-        if (newIdx < 0 || newIdx >= productOrder.length) return;
-        const newId = productOrder[newIdx];
-        closeProductModal(currentProductId);
-        openProductModal(newId);
+        const newId = productOrder[idx + direction];
+        if (newId) { closeProductModal(currentProductId); openProductModal(newId); }
     }
 
-    // ----- Keyboard: left/right switches PRODUCTS (unchanged); use the on-image
-    // chevrons or dots to browse a single product's photos -----
-    document.addEventListener('keydown', function (e) {
-        if (currentProductId === null) return;
-        if (e.key === 'ArrowRight') { e.preventDefault(); goToAdjacentProduct(1); }
-        else if (e.key === 'ArrowLeft') { e.preventDefault(); goToAdjacentProduct(-1); }
-        else if (e.key === 'Escape') { closeProductModal(currentProductId); }
-    });
+    function changeModalImage(productId, direction) {
+        const modal = document.getElementById('modal-' + productId);
+        const imgs = modal.querySelectorAll('.modal-gallery-img');
+        const media = modal.querySelector('.product-modal-media');
+        let current = parseInt(media.dataset.currentImage);
+        imgs[current].style.display = 'none';
+        current = (current + direction + imgs.length) % imgs.length;
+        imgs[current].style.display = 'block';
+        media.dataset.currentImage = current;
+    }
 
-    // ----- Touch swipe (switches products, same as before) -----
-    let touchStartX = 0;
-    const SWIPE_THRESHOLD = 50;
-
-    document.addEventListener('touchstart', function (e) {
-        if (currentProductId === null) return;
-        touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
-
-    document.addEventListener('touchend', function (e) {
-        if (currentProductId === null) return;
-        const diff = e.changedTouches[0].screenX - touchStartX;
-        if (Math.abs(diff) < SWIPE_THRESHOLD) return;
-        goToAdjacentProduct(diff < 0 ? 1 : -1);
-    }, { passive: true });
-
-    // ----- Auto-open from URL param -----
     window.onload = function () {
-        const navPrev = document.getElementById('navPrev');
-        const navNext = document.getElementById('navNext');
-        if (navPrev && navPrev.parentElement !== document.body) document.body.appendChild(navPrev);
-        if (navNext && navNext.parentElement !== document.body) document.body.appendChild(navNext);
         hideNavArrows();
         const params = new URLSearchParams(window.location.search);
         const productId = params.get('productId');
-        if (productId) {
-            const card = document.querySelector(`[data-product-id="${productId}"]`);
-            if (card) {
-                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                setTimeout(() => openProductModal(Number(productId)), 700);
-            }
-        }
+        if (productId) openProductModal(Number(productId));
     };
 </script>
 <script src="~/js/stories.js"></script>
