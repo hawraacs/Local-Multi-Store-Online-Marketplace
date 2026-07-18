@@ -1,0 +1,45 @@
+﻿@model List<Multi_Store.Services.Dtos.StoryGroupDTO>
+@using System.Text.Json
+@{
+    // Included from CustomerFeed.cshtml as: <partial name="_StoryBarCustomer" model="Model.FollowedStoryGroups" />
+    var groups = Model ?? new List<Multi_Store.Services.Dtos.StoryGroupDTO>();
+}
+<div class="story-bar" id="customerStoryBar">
+    @for (int i = 0; i < groups.Count; i++)
+    {
+        var group = groups[i];
+        var ringClass = group.HasUnviewedStories ? "story-ring--active" : "story-ring--viewed";
+        <div class="story-circle" data-group-index="@i" onclick="RealNestStories.open(@i, 0)" role="button" tabindex="0">
+            <div class="story-ring @ringClass">
+                <img src="@(group.StoreLogoUrl ?? "/images/store.png")" class="story-img" alt="@group.StoreName" />
+            </div>
+            <div class="story-label">@group.StoreName</div>
+        </div>
+    }
+</div>
+
+<script>
+    // Projected to plain camelCase objects (same technique StoreCustomerProfile.cshtml
+    // already uses for reviewsByProduct) so stories.js can read them directly.
+    window.realnestStoryGroups = @Html.Raw(JsonSerializer.Serialize(
+        groups.Select(g => new
+        {
+            storeId = g.StoreID,
+            storeName = g.StoreName,
+            storeLogoUrl = g.StoreLogoUrl,
+            hasUnviewedStories = g.HasUnviewedStories,
+            stories = g.Stories.Select(s => new
+            {
+                storyId = s.StoryID,
+                mediaType = s.MediaType,
+                imageUrl = s.ImageUrl,
+                videoUrl = s.VideoUrl,
+                durationSeconds = s.DurationSeconds,
+                caption = s.Caption,
+                createdAt = s.CreatedAt,
+                isViewed = s.IsViewed,
+                isLiked = s.IsLikedByCurrentCustomer
+            })
+        })
+    ));
+</script>

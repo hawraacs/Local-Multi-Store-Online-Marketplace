@@ -59,10 +59,82 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; }
         public DbSet<OtpCode> OtpCodes { get; set; }
         public DbSet<StorePayment> StorePayments { get; set; }
+        public DbSet<Story> Stories { get; set; }
+        public DbSet<StoryView> StoryViews { get; set; }
+        public DbSet<StoryLike> StoryLikes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // ================= STORIES ================= 
+            // New, additive block - same style as the StorePayment block below it.
+            // One-directional relationship: Store.cs is left untouched (no ICollection<Story>
+            // navigation added back on Store), so WithMany() has no back-reference argument.
+            modelBuilder.Entity<Story>(entity =>
+            {
+                entity.HasKey(e => e.StoryID);
+
+                entity.Property(e => e.ImageUrl)
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.MediaType)
+                      .IsRequired()
+                      .HasMaxLength(10)
+                      .HasDefaultValue("Image");
+
+                entity.Property(e => e.VideoUrl)
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.Caption)
+                      .HasMaxLength(300);
+
+                entity.HasOne(e => e.Store)
+                      .WithMany()
+                      .HasForeignKey(e => e.StoreID)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => new { e.StoreID, e.ExpiresAt, e.IsActive });
+            });
+
+            // ================= STORY VIEWS ================= 
+            // New, additive block. Tracks which customer has seen which story
+            // (DB-backed viewed state, not JavaScript-only).
+            modelBuilder.Entity<StoryView>(entity =>
+            {
+                entity.HasKey(e => e.StoryViewID);
+
+                entity.HasOne(e => e.Story)
+                      .WithMany()
+                      .HasForeignKey(e => e.StoryID)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Customer)
+                      .WithMany()
+                      .HasForeignKey(e => e.CustomerID)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.StoryID, e.CustomerID }).IsUnique();
+            });
+
+            // ================= STORY LIKES ================= 
+            // New, additive block. Same shape/pattern as STORY VIEWS above.
+            modelBuilder.Entity<StoryLike>(entity =>
+            {
+                entity.HasKey(e => e.StoryLikeID);
+
+                entity.HasOne(e => e.Story)
+                      .WithMany()
+                      .HasForeignKey(e => e.StoryID)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Customer)
+                      .WithMany()
+                      .HasForeignKey(e => e.CustomerID)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.StoryID, e.CustomerID }).IsUnique();
+            });
 
             modelBuilder.Entity<StorePayment>(entity =>
             {
@@ -142,7 +214,7 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<ExplorePost>().HasIndex(e => new { e.IsActive, e.CreatedAt });
             modelBuilder.Entity<ExplorePost>().HasIndex(e => new { e.StoreID, e.CreatedAt });
             modelBuilder.Entity<ExploreMedia>().HasIndex(e => new { e.ExplorePostID, e.DisplayOrder });
-            modelBuilder.Entity<ExploreLike>() .HasIndex(e => new { e.ExplorePostID, e.CustomerID }).IsUnique();
+            modelBuilder.Entity<ExploreLike>().HasIndex(e => new { e.ExplorePostID, e.CustomerID }).IsUnique();
             modelBuilder.Entity<ExploreComment>().HasIndex(e => new { e.ExplorePostID, e.CreatedAt });
 
             // ================= RELATIONSHIPS =================
@@ -305,6 +377,15 @@ namespace Multi_Store.Infrastructure.Data
                 .WithMany(u => u.ReceivedMessages)
                 .HasForeignKey(cm => cm.ReceiverID)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // NEW - additive. Nullable FK, SetNull on delete so existing chat history is
+            // never affected even in the hypothetical case a Story row were removed.
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(cm => cm.Story)
+                .WithMany()
+                .HasForeignKey(cm => cm.StoryID)
+                .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<PasswordResetOtp>(entity =>
             {
                 entity.HasKey(x => x.PasswordResetOtpID);

@@ -1,0 +1,980 @@
+﻿/* ================= Story bar (circles row) ================= */
+.story-bar {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 12px 4px 16px;
+    margin: 0 auto 8px;
+    max-width: 980px;
+    scrollbar-width: thin;
+    scroll-behavior: smooth;
+}
+
+.story-circle {
+    flex: 0 0 auto;
+    width: 76px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s ease;
+    position: relative;
+}
+
+    .story-circle:hover {
+        transform: translateY(-2px);
+    }
+
+        .story-circle:hover .story-ring {
+            box-shadow: 0 4px 14px rgba(109, 40, 217, 0.25);
+        }
+
+.story-ring {
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    padding: 3px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #dbdbdb;
+}
+
+.story-ring--active {
+    background: linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7);
+}
+
+.story-ring--viewed {
+    background: #c7c7c7;
+}
+
+.story-ring--add {
+    background: #f0f0f0;
+}
+
+.story-add-badge {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(18px);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #6d28d9;
+    color: #fff;
+    border: 2px solid #fff;
+    font-size: 14px;
+    line-height: 1;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+.story-add-badge--standalone {
+    position: static;
+    transform: none;
+    margin: -14px auto 0;
+    cursor: default;
+    pointer-events: none;
+}
+
+.story-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: #fff;
+}
+
+.story-label {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 76px;
+}
+
+/* Store Customer Profile: .avatar-ring now reuses the exact same .story-ring--active /
+   .story-ring--viewed classes the Feed page uses (background-only rules, so they layer
+   cleanly on top of .avatar-ring's own width/height/padding without conflict). */
+
+/* ================================================================
+   MODAL SYSTEM - matches this project's own existing convention
+   (.modal-backdrop + classList.add('open')), NOT Bootstrap's JS.
+   ================================================================ */
+.story-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 7, 13, 0.68);
+    padding: 20px;
+}
+
+    .story-modal-backdrop.open {
+        display: flex;
+        animation: story-backdrop-fade-in 0.2s ease;
+    }
+
+/* Add Story modal only - #uploadStoryBackdrop shares .story-modal-backdrop with the
+   fullscreen story viewer, so this is scoped by ID to avoid moving the viewer too.
+   Positions the dialog near the top (Instagram/Facebook-style) instead of vertical
+   center, while staying horizontally centered via the inherited justify-content:center. */
+#uploadStoryBackdrop {
+    align-items: flex-start;
+    padding-top: 50px;
+}
+
+@keyframes story-backdrop-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ================================================================
+   ADD TO STORY - redesigned upload dialog (Store Owner)
+   ================================================================ */
+.story-upload-dialog-v2 {
+    background: #fff;
+    border-radius: 24px;
+    width: min(880px, 96vw);
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 30px 80px rgba(30, 27, 46, 0.25);
+    animation: story-dialog-pop-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: hidden;
+}
+
+@keyframes story-dialog-pop-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.story-upload-dialog-v2__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 26px;
+    border-bottom: 1px solid #ece8f6;
+    flex-shrink: 0;
+}
+
+    .story-upload-dialog-v2__header h5 {
+        margin: 0;
+        font-weight: 800;
+        font-size: 19px;
+        color: #1a1625;
+    }
+
+.story-upload-close {
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: #9691a4;
+    transition: color 0.15s ease;
+}
+
+    .story-upload-close:hover {
+        color: #1a1625;
+    }
+
+.story-upload-dialog-v2__body {
+    padding: 26px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.story-upload-columns {
+    display: flex;
+    gap: 26px;
+    flex-wrap: wrap;
+}
+
+.story-upload-col {
+    flex: 1 1 320px;
+    min-width: 0;
+}
+
+.story-upload-dialog-v2__footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 26px;
+    border-top: 1px solid #ece8f6;
+    flex-shrink: 0;
+}
+
+/* ---- Dropzone ---- */
+.story-dropzone {
+    position: relative;
+    height: 460px;
+    border: 2px dashed #d4cee8;
+    border-radius: 18px;
+    background: #faf9fe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    overflow: hidden;
+}
+
+    .story-dropzone:hover {
+        border-color: #a78bfa;
+        background: #f6f3ff;
+    }
+
+.story-dropzone--dragging {
+    border-color: #6d28d9;
+    background: #f0eaff;
+    box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.12);
+}
+
+.story-dropzone__placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+    gap: 4px;
+}
+
+.story-dropzone__icon {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: #efe9fd;
+    color: #6d28d9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+.story-dropzone__title {
+    font-weight: 700;
+    color: #1e1b2e;
+    font-size: 15px;
+}
+
+.story-dropzone__or {
+    color: #9691a4;
+    font-size: 12.5px;
+    margin: 6px 0;
+}
+
+.story-choose-btn {
+    background: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 22px;
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(109, 40, 217, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    margin-bottom: 14px;
+}
+
+    .story-choose-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(109, 40, 217, 0.32);
+    }
+
+.story-dropzone__hint {
+    color: #9691a4;
+    font-size: 11.5px;
+    line-height: 1.6;
+}
+
+.story-dropzone__preview {
+    position: absolute;
+    inset: 0;
+    animation: story-media-fade-in 0.25s ease;
+}
+
+@keyframes story-media-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.story-dropzone__preview-media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ---- Alert (validation messages, no browser alert()) ---- */
+.story-upload-alert {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+/* ---- Caption ---- */
+.story-caption-label {
+    display: block;
+    font-weight: 700;
+    font-size: 13.5px;
+    color: #1e1b2e;
+    margin-bottom: 8px;
+}
+
+    .story-caption-label span {
+        font-weight: 400;
+        color: #9691a4;
+    }
+
+.story-caption-textarea {
+    width: 100%;
+    border: 1.5px solid #e9e5ee;
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 14px;
+    resize: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    background: #faf9fe;
+}
+
+    .story-caption-textarea:focus {
+        outline: none;
+        border-color: #a78bfa;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.1);
+    }
+
+.story-caption-counter {
+    text-align: right;
+    font-size: 11.5px;
+    color: #9691a4;
+    margin-top: 4px;
+    margin-bottom: 18px;
+}
+
+/* ---- Footer buttons ---- */
+.story-cancel-btn-v2 {
+    background: #f1eef5;
+    color: #1e1b2e;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 26px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+    .story-cancel-btn-v2:hover {
+        background: #e7e1f5;
+    }
+
+.story-share-btn-v2 {
+    flex: 1;
+    max-width: 260px;
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 26px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(109, 40, 217, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+    .story-share-btn-v2:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(109, 40, 217, 0.32);
+    }
+
+    .story-share-btn-v2:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .story-share-btn-v2.story-share-btn--loading {
+        opacity: 0.85;
+        cursor: wait;
+    }
+
+@media (max-width: 640px) {
+    .story-dropzone {
+        height: 260px;
+    }
+}
+
+/* Self-contained spinner - Bootstrap's spinner-border is CSS-only and isn't
+   available on this page, so this is a small custom equivalent. */
+.story-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: story-spin 0.7s linear infinite;
+}
+
+@keyframes story-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ---- Fullscreen story viewer ---- */
+.story-viewer-backdrop {
+    background: #000;
+    padding: 0;
+}
+
+.story-viewer-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 460px;
+    max-height: 100vh;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.story-progress-row {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    gap: 4px;
+    z-index: 3;
+}
+
+.story-progress-bar {
+    flex: 1;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.story-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #fff;
+}
+
+.story-viewer-header {
+    position: absolute;
+    top: 22px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 3;
+    color: #fff;
+}
+
+.story-viewer-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: #333;
+}
+
+.story-viewer-meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.story-viewer-storename {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.story-viewer-time {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.story-viewer-delete,
+.story-viewer-close {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #fff;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.story-tap-zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    cursor: pointer;
+}
+
+.story-tap-zone--left {
+    left: 0;
+    width: 30%;
+}
+
+.story-tap-zone--right {
+    right: 0;
+    width: 70%;
+}
+
+.story-viewer-image,
+.story-viewer-video {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+    .story-viewer-image.story-media--loaded,
+    .story-viewer-video.story-media--loaded {
+        opacity: 1;
+    }
+
+.story-viewer-caption {
+    position: absolute;
+    bottom: 24px;
+    left: 16px;
+    right: 16px;
+    color: #fff;
+    font-size: 14px;
+    text-align: center;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    z-index: 1;
+}
+
+.story-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 3;
+}
+
+.story-nav--prev {
+    left: 12px;
+}
+
+.story-nav--next {
+    right: 12px;
+}
+
+@media (max-width: 480px) {
+    .story-nav {
+        display: none;
+    }
+}
+
+/* ================================================================
+   MY STORIES DASHBOARD CARD (Store Owner Home)
+   ================================================================ */
+.story-dashboard-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 24px 24px 8px;
+    max-width: 980px;
+    margin: 0 auto 24px;
+    box-shadow: 0 4px 24px rgba(30, 27, 46, 0.06);
+}
+
+.story-dashboard-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.story-dashboard-title {
+    margin: 0;
+    font-weight: 800;
+    font-size: 18px;
+    color: #1a1625;
+}
+
+.story-dashboard-subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #746d7f;
+}
+
+.story-view-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(109, 40, 217, 0.25);
+    flex-shrink: 0;
+}
+
+.story-bar--dashboard {
+    max-width: none;
+    margin: 8px 0 0;
+    padding-bottom: 14px;
+}
+
+.story-owner-slot {
+    flex: 0 0 auto;
+}
+
+.story-ring--dashed {
+    background: none;
+    border: 2px dashed #a78bfa;
+}
+
+.story-circle--add .story-add-plus-icon {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #6d28d9;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+}
+
+.story-mini-stats {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 10.5px;
+    color: #9691a4;
+    white-space: nowrap;
+}
+
+    .story-mini-stats i {
+        margin-right: 2px;
+    }
+
+/* ================================================================
+   CUSTOMER ACTION BAR (like + reply) - bottom of viewer
+   ================================================================ */
+.story-action-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
+}
+
+.story-like-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 4px;
+}
+
+    .story-like-btn .story-liked {
+        color: #ed4956;
+    }
+
+.story-reply-form {
+    flex: 1;
+    display: flex;
+    gap: 8px;
+}
+
+.story-reply-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 24px;
+    padding: 10px 16px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+}
+
+    .story-reply-input::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+.story-reply-send {
+    background: #6d28d9;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 0 18px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+    .story-reply-send:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+.story-reply-error {
+    position: absolute;
+    bottom: 62px;
+    left: 16px;
+    right: 16px;
+    z-index: 4;
+    color: #ffb4b4;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* ================================================================
+   OWNER INSIGHTS BAR + PANEL
+   ================================================================ */
+.story-insights-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+    .story-insights-bar span i {
+        margin-right: 5px;
+        opacity: 0.85;
+    }
+
+.story-insights-chevron {
+    margin-left: 8px;
+    opacity: 0.8;
+    font-weight: 700;
+}
+
+.story-insights-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 460px;
+    margin: 0 auto;
+    height: 0;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    z-index: 20;
+    transition: height 0.28s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+    .story-insights-panel.open {
+        height: 72vh;
+    }
+
+.story-insights-panel-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: #e0dbe8;
+    margin: 10px auto 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.story-insights-summary {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 16px 14px;
+    border-bottom: 1px solid #ece8f6;
+    flex-shrink: 0;
+}
+
+    .story-insights-summary div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        color: #4b4551;
+    }
+
+    .story-insights-summary i {
+        color: #6d28d9;
+        font-size: 14px;
+    }
+
+    .story-insights-summary strong {
+        font-size: 16px;
+        color: #1a1625;
+    }
+
+    .story-insights-summary span {
+        font-size: 10.5px;
+        color: #9691a4;
+    }
+
+.story-insights-tabs {
+    display: flex;
+    border-bottom: 1px solid #ece8f6;
+    flex-shrink: 0;
+}
+
+.story-insights-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 10px 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #9691a4;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+}
+
+    .story-insights-tab.active {
+        color: #1a1625;
+        border-bottom-color: #6d28d9;
+    }
+
+.story-insights-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 16px 20px;
+}
+
+.story-insight-row {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f7f5fb;
+}
+
+.story-insight-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.story-insight-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.story-insight-name {
+    font-weight: 700;
+    font-size: 13.5px;
+    color: #1e1b2e;
+}
+
+.story-insight-username {
+    font-weight: 400;
+    color: #9691a4;
+    font-size: 12px;
+}
+
+.story-insight-time {
+    font-size: 11.5px;
+    color: #9691a4;
+    margin-top: 2px;
+}
+
+.story-insight-reply-text {
+    font-size: 13px;
+    color: #4b4551;
+    margin-top: 3px;
+    word-break: break-word;
+}
+
+.story-insight-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #9691a4;
+    font-size: 13.5px;
+}

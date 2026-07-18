@@ -17,6 +17,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly MessagingManager _messagingManager;
         private readonly WishlistManager _wishlistManager;
         private readonly ApplicationDbContext _context;
+        private readonly StoryManager _storyManager;
 
         public StoreCustomerProfileModel(
             StoreManager storeManager,
@@ -25,7 +26,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             MessagingManager messagingManager,
             WishlistManager wishlistManager,
             CartManager cartManager,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            StoryManager storyManager)
         {
             _storeManager = storeManager;
             _userManager = userManager;
@@ -33,10 +35,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _messagingManager = messagingManager;
             _wishlistManager = wishlistManager;
             _context = context;
+            _storyManager = storyManager;
         }
 
         public Store Store { get; set; } = null!;
         public List<Product> Products { get; set; } = new();
+
+        // New: this store's own active stories, for the ring around its avatar
+        public List<StoryDTO> StoreStories { get; set; } = new();
 
         public int FollowersCount { get; set; }
         public bool IsFollowing { get; set; }
@@ -61,6 +67,41 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .ToListAsync();
 
             FollowersCount = await _storeManager.GetFollowersCountAsync(id);
+
+            var storeStories = await _storyManager.GetStoreStoriesAsync(id);
+            List<int> viewedStoryIds = new();
+            List<int> likedStoryIds = new();
+            var currentUserForStories = await _userManager.GetUserAsync(User);
+            if (currentUserForStories != null)
+            {
+                var currentCustomerForStories = await _customerManager.GetCustomerByUserIdAsync(currentUserForStories.Id);
+                if (currentCustomerForStories != null)
+                {
+                    viewedStoryIds = await _storyManager.GetViewedStoryIdsAsync(currentCustomerForStories.CustomerID);
+                    foreach (var s in storeStories)
+                    {
+                        if (await _storyManager.IsLikedByCustomerAsync(s.StoryID, currentCustomerForStories.CustomerID))
+                            likedStoryIds.Add(s.StoryID);
+                    }
+                }
+            }
+
+            // storeStories is already ordered oldest -> newest by the repository - correct playback order, keep it
+            StoreStories = storeStories
+                .Select(s => new StoryDTO
+                {
+                    StoryID = s.StoryID,
+                    StoreID = s.StoreID,
+                    MediaType = s.MediaType,
+                    ImageUrl = s.ImageUrl,
+                    VideoUrl = s.VideoUrl,
+                    DurationSeconds = s.DurationSeconds,
+                    Caption = s.Caption,
+                    CreatedAt = s.CreatedAt,
+                    IsViewed = viewedStoryIds.Contains(s.StoryID),
+                    IsLikedByCurrentCustomer = likedStoryIds.Contains(s.StoryID)
+                })
+                .ToList();
 
             var user = await _userManager.GetUserAsync(User);
             if (user != null)
@@ -385,6 +426,58 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             TempData["Success"] = "Added to cart.";
             return RedirectToPage(new { id = product.StoreID });
+        }
+
+        // ================= STORY VIEWED (NEW) =================
+        public async Task<IActionResult> OnPostMarkStoryViewedAsync(int storyId)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null) return new JsonResult(new { success = false });
+
+            await _storyManager.MarkStoryViewedAsync(storyId, customer.CustomerID);
+            return new JsonResult(new { success = true });
+        }
+
+        // ================= STORY LIKE / UNLIKE (NEW) =================
+        public async Task<IActionResult> OnPostToggleStoryLikeAsync(int storyId)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null) return new JsonResult(new { success = false });
+
+            var alreadyLiked = await _storyManager.IsLikedByCustomerAsync(storyId, customer.CustomerID);
+
+            if (alreadyLiked)
+                await _storyManager.UnlikeStoryAsync(storyId, customer.CustomerID);
+            else
+                await _storyManager.LikeStoryAsync(storyId, customer.CustomerID);
+
+            var likeCount = await _storyManager.GetLikeCountAsync(storyId);
+
+            return new JsonResult(new { success = true, liked = !alreadyLiked, likeCount });
+        }
+
+        // ================= STORY REPLY (NEW) - reuses the existing chat system =================
+        public async Task<IActionResult> OnPostReplyToStoryAsync(int storyId, string replyText)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return new JsonResult(new { success = false, error = "Please log in to reply." });
+
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null) return new JsonResult(new { success = false, error = "Customer account required." });
+
+            if (string.IsNullOrWhiteSpace(replyText))
+                return new JsonResult(new { success = false, error = "Reply cannot be empty." });
+
+            var story = await _storyManager.GetByIdWithStoreAsync(storyId);
+            if (story == null)
+                return new JsonResult(new { success = false, error = "Story not found." });
+
+            if (story.Store.OwnerUserID == user.Id)
+                return new JsonResult(new { success = false, error = "You cannot reply to your own story." });
+
+            await _messagingManager.SendStoryReplyAsync(user.Id, story.Store.OwnerUserID, storyId, replyText);
+
+            return new JsonResult(new { success = true });
         }
 
         private async Task<CustomerDTO?> GetCurrentCustomerAsync()
