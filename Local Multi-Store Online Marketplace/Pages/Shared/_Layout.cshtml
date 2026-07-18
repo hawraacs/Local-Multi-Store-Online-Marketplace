@@ -13,592 +13,1157 @@
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 
     @await RenderSectionAsync("Styles", required: false)
 
     <style>
-    .role-nav {
-    background: #1e293b;
-    padding: 8px 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,.1);
-    position: sticky;
-    top: 0;
-    z-index: 99;
-}
+            :root {
+                --admin-bg: #F8FAFC;
+                --admin-sidebar-bg: linear-gradient(170deg, #4F46E5 0%, #3730A3 100%);
+                --admin-sidebar-bg-hover: rgba(255, 255, 255, 0.10);
+                --admin-sidebar-active: rgba(255, 255, 255, 0.16);
+                --admin-accent: #6366F1;
+                --admin-accent-soft: rgba(99, 102, 241, 0.12);
+                --admin-accent-hover: #4F46E5;
+                --admin-border: #E2E8F0;
+                --admin-text: #0F172A;
+                --admin-text-muted: #64748B;
+                --sidebar-w: 264px;
+                --sidebar-w-collapsed: 80px;
+                --topbar-h: 68px;
+                --radius: 12px;
+                --shadow-topbar: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.06);
+            }
 
-.role-nav .nav-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-}
+            body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                background: var(--admin-bg);
+            }
 
-.role-nav a {
-    color: #e2e8f0;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 40px;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all .2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
+            /* =========================
+                       ROLE NAV (non-admin roles)
+                       ========================= */
+            .role-nav {
+                background: #1E293B;
+                padding: 8px 0;
+                box-shadow: 0 2px 8px rgba(0,0,0,.1);
+                position: sticky;
+                top: 0;
+                z-index: 99;
+            }
 
-.role-nav a:hover {
-    background: rgba(255,255,255,.1);
-    color: white;
-    transform: translateY(-1px);
-}
+                .role-nav .nav-links {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                    align-items: center;
+                }
 
-.role-nav a.active {
-    background: #4f46e5;
-    color: white;
-}
+                .role-nav a {
+                    color: #E2E8F0;
+                    text-decoration: none;
+                    padding: 8px 16px;
+                    border-radius: 40px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    transition: all .2s;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                }
 
-/* =========================
-   ROLE COLORS
-   ========================= */
-.admin-nav { background: #0f172a; }
-.store-nav { background: #2d3e2b; }
-.delivery-nav { background: #1e3a5f; }
-.customer-nav { background: #2d3748; }
+                    .role-nav a:hover {
+                        background: rgba(255,255,255,.1);
+                        color: white;
+                        transform: translateY(-1px);
+                    }
 
-/* =========================
-   ADMIN SIDEBAR
-   ========================= */
+                    .role-nav a.active {
+                        background: #4F46E5;
+                        color: white;
+                    }
 
-.admin-sidebar {
-    width: 260px;
-    height: 100vh;
-    position: fixed;
-    left: 0;
-    top: 0;
-    background: #0f172a;
-    padding: 20px 15px;
-    overflow-y: auto;
-    overflow-x: hidden;
+            .delivery-nav {
+                background: #1E3A5F;
+            }
 
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+            .customer-nav {
+                background: #2D3748;
+            }
 
-    transition: width .3s ease;
-    z-index: 1000;
+            /* =========================
+                       ADMIN SHELL
+                       ========================= */
+            .admin-shell {
+                display: grid;
+                grid-template-columns: var(--sidebar-w) 1fr;
+                grid-template-rows: var(--topbar-h) 1fr;
+                grid-template-areas:
+                    "sidebar topbar"
+                    "sidebar main";
+                min-height: 100vh;
+                transition: grid-template-columns .3s ease;
+            }
 
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
-}
+                .admin-shell.collapsed {
+                    grid-template-columns: var(--sidebar-w-collapsed) 1fr;
+                }
 
-/* =========================
-   SIDEBAR TITLE
-   ========================= */
+                /* Prevent grid items from overflowing */
+                .admin-shell > * {
+                    min-width: 0;
+                }
 
-.admin-sidebar .sidebar-title {
-    color: white;
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 15px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255,255,255,.1);
+            /* =========================
+                       ADMIN SIDEBAR
+                       ========================= */
+            .admin-sidebar {
+                grid-area: sidebar;
+                width: var(--sidebar-w);
+                position: sticky;
+                top: 0;
+                height: 100vh;
+                background: var(--admin-sidebar-bg);
+                padding: 20px 14px 16px;
+                overflow-y: auto;
+                overflow-x: hidden;
+                display: flex;
+                flex-direction: column;
+                gap: 1px;
+                transition: width .3s ease, transform .3s ease;
+                z-index: 1000;
+                scrollbar-width: thin;
+                scrollbar-color: rgba(255,255,255,0.2) transparent;
+            }
 
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+            .admin-shell.collapsed .admin-sidebar {
+                width: var(--sidebar-w-collapsed);
+            }
 
-/* =========================
-   LINKS
-   ========================= */
+            .admin-sidebar::-webkit-scrollbar {
+                width: 4px;
+            }
 
-.admin-sidebar a {
-    color: #e2e8f0;
-    text-decoration: none;
-    padding: 12px 16px;
-    border-radius: 12px;
+            .admin-sidebar::-webkit-scrollbar-track {
+                background: transparent;
+            }
 
-    display: flex;
-    align-items: center;
-    gap: 12px;
+            .admin-sidebar::-webkit-scrollbar-thumb {
+                background: rgba(255,255,255,0.2);
+                border-radius: 20px;
+            }
 
-    transition: all .25s ease;
-    margin-bottom: 4px;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-    position: relative;
-    overflow: hidden;
-}
+            /* Sidebar Title */
+            .admin-sidebar .sidebar-title {
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 800;
+                margin-bottom: 18px;
+                padding: 4px 10px 16px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+                letter-spacing: -0.3px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
 
-/* hover */
-.admin-sidebar a:hover {
-    background: rgba(255, 255, 255, 0.08);
-    transform: translateX(6px);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-    color: white;
-}
+                .admin-sidebar .sidebar-title i {
+                    color: rgba(255, 255, 255, 0.8);
+                    font-size: 20px;
+                }
 
-/* active */
-.admin-sidebar a.active {
-    background: #1d4ed8; /* deep blue */
-    color: white;
-    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
-    border-left: 4px solid #c7d2fe;
-}
-.admin-sidebar a:hover {
-    background: rgba(29, 78, 216, 0.10); /* change to match chosen color */
-    transform: translateX(6px);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-    color: white;
-}
-/* active indicator glow line */
-.admin-sidebar a.active::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 15%;
-    height: 70%;
-    width: 4px;
-    background: #c7d2fe;
-    border-radius: 10px;
-}
+                .admin-sidebar .sidebar-title span {
+                    letter-spacing: -0.2px;
+                }
 
-/* icons */
-.admin-sidebar a i {
-    min-width: 24px;
-    text-align: center;
-    font-size: 18px;
-}
+            /* Section Titles */
+            .sidebar-section-title {
+                color: rgba(255, 255, 255, 0.40);
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 1.2px;
+                margin-top: 18px;
+                margin-bottom: 6px;
+                padding: 0 14px;
+            }
 
-/* text */
-.admin-sidebar a span {
-    white-space: nowrap;
-    transition: all .2s ease;
-}
+            /* Sidebar Links */
+            .admin-sidebar a {
+                color: rgba(255, 255, 255, 0.65);
+                text-decoration: none;
+                padding: 10px 14px;
+                border-radius: var(--radius);
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                transition: all .2s ease;
+                margin-bottom: 1px;
+                font-weight: 500;
+                font-size: 14px;
+                position: relative;
+            }
 
-/* =========================
-   TOGGLE BUTTON
-   ========================= */
+                .admin-sidebar a:hover {
+                    background: var(--admin-sidebar-bg-hover);
+                    color: #ffffff;
+                    transform: translateX(2px);
+                }
 
-.sidebar-toggle {
-    width: 42px;
-    height: 42px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+                .admin-sidebar a.active {
+                    background: var(--admin-sidebar-active);
+                    color: #ffffff;
+                    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+                }
 
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
-    cursor: pointer;
+                    .admin-sidebar a.active i {
+                        color: #ffffff;
+                    }
 
-    margin-bottom: 15px;
+                .admin-sidebar a i {
+                    min-width: 20px;
+                    text-align: center;
+                    font-size: 15px;
+                    flex-shrink: 0;
+                    transition: color .2s ease;
+                    color: rgba(255, 255, 255, 0.50);
+                }
 
-    transition: all 0.3s ease;
-}
+                .admin-sidebar a:hover i {
+                    color: #ffffff;
+                }
 
-.sidebar-toggle:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: rotate(90deg) scale(1.05);
-}
+                .admin-sidebar a span {
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
 
-.sidebar-toggle i {
-    font-size: 18px;
-}
+            /* Collapsed state */
+            .admin-shell.collapsed .admin-sidebar .sidebar-title span,
+            .admin-shell.collapsed .admin-sidebar a span,
+            .admin-shell.collapsed .admin-sidebar .sidebar-section-title {
+                display: none;
+            }
 
-/* =========================
-   COLLAPSED MODE
-   ========================= */
+            .admin-shell.collapsed .admin-sidebar a {
+                justify-content: center;
+                padding: 10px 0;
+            }
 
-.admin-sidebar.collapsed {
-    width: 80px;
-}
+                .admin-shell.collapsed .admin-sidebar a i {
+                    font-size: 18px;
+                }
 
-.admin-sidebar.collapsed .sidebar-title,
-.admin-sidebar.collapsed a span {
-    opacity: 0;
-    width: 0;
-    overflow: hidden;
-    display: none;
-}
+            .admin-shell.collapsed .admin-sidebar .sidebar-title {
+                justify-content: center;
+                padding: 4px 0 16px;
+            }
 
-.admin-sidebar.collapsed a {
-    justify-content: center;
-}
+                .admin-shell.collapsed .admin-sidebar .sidebar-title i {
+                    font-size: 24px;
+                }
 
-/* =========================
-   SECTION TITLES
-   ========================= */
+            /* Logout link */
+            .logout-link {
+                color: rgba(255, 255, 255, 0.55) !important;
+            }
 
-.sidebar-section-title {
-    color: #94a3b8;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 18px;
-    margin-bottom: 8px;
-    padding-left: 10px;
-}
+                .logout-link:hover {
+                    color: #FCA5A5 !important;
+                }
 
-.admin-sidebar.collapsed .sidebar-section-title {
-    display: none;
-}
+                .logout-link i {
+                    color: rgba(255, 255, 255, 0.45) !important;
+                }
 
-/* =========================
-   PAGE SHIFT
-   ========================= */
+                .logout-link:hover i {
+                    color: #FCA5A5 !important;
+                }
 
-.page-content {
-        min-height: 100vh;
-    transition: margin-left .35s cubic-bezier(.4,0,.2,1);
-}
+            /* Sidebar Footer */
+            .sidebar-footer {
+                margin-top: auto;
+                padding-top: 14px;
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+            }
 
-.page-content.admin-shift {
-    margin-left: 260px;
-}
+                .sidebar-footer form {
+                    margin-bottom: 6px;
+                }
 
-.page-content.admin-shift-collapsed {
-    margin-left: 80px;
-}
+                .sidebar-footer .user-info {
+                    padding: 4px 8px;
+                }
 
-/* =========================
-   SCROLLBAR
-   ========================= */
+                    .sidebar-footer .user-info div:first-child {
+                        font-weight: 600;
+                        font-size: 13px;
+                        color: #ffffff;
+                    }
 
-.admin-sidebar::-webkit-scrollbar {
-    width: 6px;
-}
+                    .sidebar-footer .user-info div:last-child {
+                        font-size: 11px;
+                        color: rgba(255, 255, 255, 0.50);
+                    }
 
-.admin-sidebar::-webkit-scrollbar-track {
-    background: transparent;
-}
+            .admin-shell.collapsed .sidebar-footer .user-info {
+                display: none;
+            }
 
-.admin-sidebar::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,.2);
-    border-radius: 20px;
-}
+            .admin-shell.collapsed .sidebar-footer > div:last-child {
+                justify-content: center;
+            }
 
-.admin-sidebar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255,255,255,.4);
-}
+            /* =========================
+                       ADMIN TOP BAR
+                       ========================= */
+            .admin-topbar {
+                grid-area: topbar;
+                position: sticky;
+                top: 0;
+                z-index: 900;
+                height: var(--topbar-h);
+                background: #ffffff;
+                border-bottom: 1px solid var(--admin-border);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 28px;
+                gap: 16px;
+                box-shadow: var(--shadow-topbar);
+            }
 
+                .admin-topbar .topbar-left {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    min-width: 0;
+                }
 
-.page-content {
-    padding: 0 24px;
-}
+            /* Toggle Buttons */
+            .mobile-sidebar-toggle,
+            .desktop-sidebar-toggle {
+                width: 38px;
+                height: 38px;
+                border: 1px solid var(--admin-border);
+                border-radius: var(--radius);
+                background: var(--admin-bg);
+                color: var(--admin-text);
+                cursor: pointer;
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 15px;
+                transition: all .2s ease;
+            }
 
+            .mobile-sidebar-toggle {
+                display: none;
+            }
 
-/* =========================
-   MOBILE
-   ========================= */
+                .desktop-sidebar-toggle:hover,
+                .mobile-sidebar-toggle:hover {
+                    background: var(--admin-accent-soft);
+                    color: var(--admin-accent);
+                    border-color: var(--admin-accent);
+                }
 
-@@media (max-width: 768px) {
+            /* Topbar Title */
+            .topbar-title-group {
+                display: flex;
+                flex-direction: column;
+                line-height: 1.2;
+                min-width: 0;
+            }
 
-    .role-nav .nav-links {
-        justify-content: center;
-    }
+            .topbar-title {
+                font-size: 17px;
+                font-weight: 700;
+                color: var(--admin-text);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                letter-spacing: -0.3px;
+            }
 
-    .role-nav a {
-        padding: 6px 12px;
-        font-size: 12px;
-    }
+            /* Topbar Right */
+            .admin-topbar .topbar-right {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-shrink: 0;
+            }
 
-    .admin-sidebar {
-        width: 220px;
-    }
+            .topbar-icon-btn {
+                position: relative;
+                width: 38px;
+                height: 38px;
+                border-radius: var(--radius);
+                border: 1px solid var(--admin-border);
+                background: var(--admin-bg);
+                color: var(--admin-text-muted);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 15px;
+                transition: all .2s ease;
+            }
 
-    .admin-sidebar.collapsed {
-        width: 60px;
-    }
+                .topbar-icon-btn:hover {
+                    background: var(--admin-accent-soft);
+                    color: var(--admin-accent);
+                    border-color: var(--admin-accent);
+                }
 
-    .admin-sidebar a {
-        padding: 10px 8px;
-        font-size: 13px;
-    }
+            .topbar-badge {
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background: #DC2626;
+                color: white;
+                font-size: 9px;
+                font-weight: 700;
+                min-width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 4px;
+                border: 2px solid #ffffff;
+                box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+                animation: pulse-badge 2s ease-in-out infinite;
+            }
 
-    .admin-sidebar .sidebar-title {
-        font-size: 15px;
-    }
+            @@keyframes pulse-badge {
+                0%, 100% {
+                    transform: scale(1);
+                }
 
-    .page-content.admin-shift {
-        margin-left: 220px;
-    }
+                50% {
+                    transform: scale(1.05);
+                }
+            }
 
-    .page-content.admin-shift-collapsed {
-        margin-left: 60px;
-    }
-}
+            .topbar-divider {
+                width: 1px;
+                height: 28px;
+                background: var(--admin-border);
+                margin: 0 4px;
+            }
 
-/* =========================
-   FOOTER
-   ========================= */
+            /* =========================
+                       SEARCH
+                       ========================= */
+            .topbar-search {
+                position: relative;
+                display: flex;
+                align-items: center;
+            }
 
-.admin-sidebar.collapsed .sidebar-footer {
-    justify-content: center;
-}
+            .topbar-search-form {
+                position: absolute;
+                right: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                width: 0;
+                padding: 0;
+                overflow: hidden;
+                background: var(--admin-bg);
+                border: 1px solid var(--admin-border);
+                border-radius: var(--radius);
+                opacity: 0;
+                pointer-events: none;
+                transition: width .25s ease, opacity .2s ease, padding .25s ease;
+                box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+            }
 
-.admin-sidebar.collapsed .sidebar-footer .user-info {
-    display: none;
-}
+            .topbar-search.open .topbar-search-form {
+                width: 340px;
+                padding: 0 14px;
+                opacity: 1;
+                pointer-events: auto;
+            }
 
-/* =========================
-   LOGOUT
-   ========================= */
+            .topbar-search.open #searchToggleBtn {
+                visibility: hidden;
+            }
 
-.logout-link {
-    margin-top: 10px;
-    color: #f87171 !important;
-}
+            .topbar-search-form-icon {
+                color: var(--admin-text-muted);
+                font-size: 14px;
+                flex-shrink: 0;
+            }
 
-.sidebar-footer {
-    margin-top: auto;
-    padding-top: 20px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-}
-</style>
+            .topbar-search-input {
+                border: none;
+                background: transparent;
+                outline: none;
+                font-size: 13.5px;
+                font-family: inherit;
+                color: var(--admin-text);
+                padding: 10px 0;
+                flex: 1;
+                min-width: 0;
+            }
+
+                .topbar-search-input::placeholder {
+                    color: var(--admin-text-muted);
+                }
+
+            .topbar-search-close {
+                border: none;
+                background: transparent;
+                color: var(--admin-text-muted);
+                cursor: pointer;
+                flex-shrink: 0;
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 6px;
+                transition: all .2s ease;
+            }
+
+                .topbar-search-close:hover {
+                    color: var(--admin-accent);
+                    background: var(--admin-accent-soft);
+                }
+
+            @@media (max-width: 768px) {
+                .topbar-search.open .topbar-search-form {
+                    width: 220px;
+                }
+            }
+
+            /* =========================
+                       NOTIFICATION PANEL
+                       ========================= */
+            .topbar-notif-wrap {
+                position: relative;
+            }
+
+            .notif-panel {
+                position: absolute;
+                top: calc(100% + 12px);
+                right: -8px;
+                width: 360px;
+                max-width: calc(100vw - 24px);
+                background: #ffffff;
+                border: 1px solid var(--admin-border);
+                border-radius: var(--radius);
+                box-shadow: 0 12px 40px rgba(15, 23, 42, 0.16);
+                opacity: 0;
+                transform: translateY(-6px);
+                pointer-events: none;
+                transition: opacity .2s ease, transform .2s ease;
+                z-index: 950;
+                overflow: hidden;
+            }
+
+                .notif-panel.open {
+                    opacity: 1;
+                    transform: translateY(0);
+                    pointer-events: auto;
+                }
+
+            .notif-panel-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 18px;
+                border-bottom: 1px solid var(--admin-border);
+                font-size: 13.5px;
+                font-weight: 700;
+                color: var(--admin-text);
+            }
+
+            .notif-mark-read {
+                border: none;
+                background: none;
+                color: var(--admin-accent);
+                font-size: 11.5px;
+                font-weight: 600;
+                cursor: pointer;
+                padding: 4px 8px;
+                border-radius: 6px;
+                transition: all .2s ease;
+            }
+
+                .notif-mark-read:hover {
+                    background: var(--admin-accent-soft);
+                    text-decoration: none;
+                }
+
+            .notif-panel-list {
+                max-height: 340px;
+                overflow-y: auto;
+            }
+
+                .notif-panel-list::-webkit-scrollbar {
+                    width: 4px;
+                }
+
+                .notif-panel-list::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+
+                .notif-panel-list::-webkit-scrollbar-thumb {
+                    background: var(--admin-border);
+                    border-radius: 20px;
+                }
+
+            .notif-item {
+                display: flex;
+                align-items: flex-start;
+                gap: 14px;
+                padding: 12px 18px;
+                text-decoration: none;
+                border-bottom: 1px solid var(--admin-border);
+                transition: background .15s ease;
+            }
+
+                .notif-item:hover {
+                    background: var(--admin-bg);
+                }
+
+                .notif-item.unread {
+                    background: #F5F8FF;
+                }
+
+                    .notif-item.unread:hover {
+                        background: #EDF2FF;
+                    }
+
+            .notif-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: var(--radius);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 13px;
+                flex-shrink: 0;
+            }
+
+                .notif-icon.warn {
+                    background: rgba(220, 38, 38, 0.12);
+                    color: #DC2626;
+                }
+
+                .notif-icon.info {
+                    background: rgba(99, 102, 241, 0.12);
+                    color: var(--admin-accent);
+                }
+
+                .notif-icon.accent {
+                    background: rgba(16, 185, 129, 0.12);
+                    color: #10B981;
+                }
+
+            .notif-text {
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--admin-text);
+                line-height: 1.3;
+            }
+
+            .notif-time {
+                font-size: 11px;
+                color: var(--admin-text-muted);
+                margin-top: 3px;
+            }
+
+            .notif-empty {
+                padding: 32px 16px;
+                text-align: center;
+                font-size: 13px;
+                color: var(--admin-text-muted);
+            }
+
+            .notif-panel-footer {
+                display: block;
+                text-align: center;
+                padding: 12px;
+                font-size: 12.5px;
+                font-weight: 600;
+                color: var(--admin-accent);
+                text-decoration: none;
+                background: var(--admin-bg);
+                border-top: 1px solid var(--admin-border);
+                transition: all .2s ease;
+            }
+
+                .notif-panel-footer:hover {
+                    background: var(--admin-accent-soft);
+                    color: var(--admin-accent-hover);
+                }
+
+            /* =========================
+                       USER PROFILE (topbar)
+                       ========================= */
+            .topbar-user {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 4px 14px 4px 4px;
+                border-radius: 40px;
+                border: 1px solid var(--admin-border);
+                background: var(--admin-bg);
+                cursor: pointer;
+                transition: all .2s ease;
+            }
+
+                .topbar-user:hover {
+                    border-color: var(--admin-accent);
+                    box-shadow: 0 0 0 3px var(--admin-accent-soft);
+                }
+
+                .topbar-user .avatar-circle {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    background: var(--admin-accent);
+                    color: #fff;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 13px;
+                    font-weight: 700;
+                    flex-shrink: 0;
+                }
+
+                .topbar-user .user-meta {
+                    line-height: 1.15;
+                }
+
+                    .topbar-user .user-meta .name {
+                        font-size: 12.5px;
+                        font-weight: 700;
+                        color: var(--admin-text);
+                    }
+
+                    .topbar-user .user-meta .role {
+                        font-size: 10.5px;
+                        color: var(--admin-text-muted);
+                    }
+
+            /* =========================
+                       MAIN CONTENT
+                       ========================= */
+            .admin-main {
+                grid-area: main;
+                padding: 28px 32px;
+                background: var(--admin-bg);
+                min-height: calc(100vh - var(--topbar-h));
+                min-width: 0; /* Prevents overflow from child content */
+                overflow-x: hidden; /* No horizontal scroll on main area */
+            }
+
+            /* =========================
+                       MOBILE OVERLAY
+                       ========================= */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.50);
+                z-index: 999;
+                backdrop-filter: blur(2px);
+                opacity: 0;
+                transition: opacity .3s ease;
+            }
+
+                .sidebar-overlay.show {
+                    display: block;
+                    opacity: 1;
+                }
+
+            /* =========================
+                       MOBILE RESPONSIVE
+                       ========================= */
+            @@media (max-width: 992px) {
+                .admin-main {
+                    padding: 20px;
+                }
+            }
+
+            @@media (max-width: 768px) {
+                .role-nav .nav-links {
+                    justify-content: center;
+                }
+
+                .role-nav a {
+                    padding: 6px 12px;
+                    font-size: 12px;
+                }
+
+                .admin-shell {
+                    grid-template-columns: 1fr;
+                    grid-template-areas:
+                        "topbar"
+                        "main";
+                }
+
+                .admin-sidebar {
+                    position: fixed;
+                    left: 0;
+                    top: 0;
+                    width: var(--sidebar-w);
+                    transform: translateX(-100%);
+                    box-shadow: none;
+                    border-radius: 0 16px 16px 0;
+                }
+
+                    .admin-sidebar.mobile-open {
+                        transform: translateX(0);
+                        box-shadow: 4px 0 32px rgba(0,0,0,0.35);
+                    }
+
+                .desktop-sidebar-toggle {
+                    display: none;
+                }
+
+                .mobile-sidebar-toggle {
+                    display: flex;
+                }
+
+                .admin-main {
+                    padding: 16px;
+                    overflow-x: hidden;
+                }
+
+                .admin-topbar {
+                    padding: 0 16px;
+                }
+
+                .topbar-user .user-meta {
+                    display: none;
+                }
+
+                .topbar-divider {
+                    display: none;
+                }
+
+                .notif-panel {
+                    right: -12px;
+                    width: calc(100vw - 24px);
+                    max-width: 360px;
+                }
+            }
+
+            @@media (max-width: 480px) {
+                .admin-topbar .topbar-left {
+                    gap: 8px;
+                }
+
+                .topbar-title {
+                    font-size: 14px;
+                }
+
+                .topbar-icon-btn {
+                    width: 34px;
+                    height: 34px;
+                    font-size: 13px;
+                }
+
+                .topbar-user {
+                    padding: 3px 8px 3px 3px;
+                }
+
+                    .topbar-user .avatar-circle {
+                        width: 28px;
+                        height: 28px;
+                        font-size: 11px;
+                    }
+            }
+    </style>
 </head>
 
 <body>
 
-    <header>
-       
-        <!-- Role-based navigation -->
-        @if (SignInManager.IsSignedIn(User))
+    @{
+        var showAdminShell = false;
+        var bodyRendered = false;
+        string adminUserInitial = "A";
+    }
+
+    @if (SignInManager.IsSignedIn(User))
+    {
+        var user = await UserManager.GetUserAsync(User);
+
+        if (user != null)
         {
-            var user = await UserManager.GetUserAsync(User);
+            var roles = await UserManager.GetRolesAsync(user);
 
-            if (user != null)
+            if (roles.Contains("Admin"))
             {
-                var roles = await UserManager.GetRolesAsync(user);
+                showAdminShell = true;
+                bodyRendered = true;
+                var displayName = User.Identity?.Name ?? "Admin";
+                adminUserInitial = displayName.Substring(0, 1).ToUpper();
+                var currentPage = Context.Request.Path.Value ?? "";
 
-                if (roles.Contains("Admin"))
-                {
-                    <div class="admin-layout">
-    <aside class="admin-sidebar" id="adminSidebar">
+                Func<string, bool> isActive = prefix =>
+                    currentPage.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
 
-<button class="sidebar-toggle"
-        type="button"
-        onclick="toggleSidebar()"
-        aria-expanded="true"
-        aria-controls="adminSidebar">        <i class="fas fa-bars"></i>
-    </button>
+                <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
 
-    <div class="sidebar-title">
-    <i class="fas fa-shield-alt"></i>
-    <span>Admin Panel</span>
-</div>
+                <div class="admin-shell" id="adminShell">
 
+                    <nav class="admin-sidebar" id="adminSidebar" aria-label="Admin navigation">
 
-@{
-    var currentPage = Context.Request.Path.Value ?? "";
-}
+                        <div class="sidebar-title">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Admin Panel</span>
+                        </div>
 
-<!-- MAIN -->
-<div class="sidebar-section-title">Main</div>
+                        <div class="sidebar-section-title">Main</div>
 
-<a href="/Admin1"
-   data-title="Dashboard"
-   class="@(currentPage.StartsWith("/Admin1", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-    <i class="fas fa-tachometer-alt"></i>
-    <span>Dashboard</span>
-</a>
+                        <a href="/Admin1" data-title="Dashboard"
+                           class="@(isActive("/Admin1") ? "active" : "")"
+                           aria-current="@(isActive("/Admin1") ? "page" : null)">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
 
-<a href="/AdminAnalytics"
-   data-title="Analytics"
-   class="@(currentPage.StartsWith("/AdminAnalytics", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-    <i class="fas fa-chart-line"></i>
-    <span>Analytics</span>
-</a>
+                        <a href="/AdminAnalytics" data-title="Analytics"
+                           class="@(isActive("/AdminAnalytics") ? "active" : "")"
+                           aria-current="@(isActive("/AdminAnalytics") ? "page" : null)">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
 
-<!-- MANAGEMENT -->
-<div class="sidebar-section-title">Management</div>
+                        <div class="sidebar-section-title">Management</div>
 
-<a href="/AdminStores"
-   data-title="Stores"
-   class="@(currentPage.StartsWith("/AdminStores", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-    <i class="fas fa-store"></i>
-    <span>Stores</span>
-</a>
+                        <a href="/AdminStores" data-title="Stores"
+                           class="@(isActive("/AdminStores") ? "active" : "")"
+                           aria-current="@(isActive("/AdminStores") ? "page" : null)">
+                            <i class="fas fa-store"></i>
+                            <span>Stores</span>
+                        </a>
 
-<a href="/AdminUsers"
-   data-title="Users"
-   class="@(currentPage.StartsWith("/AdminUsers", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-    <i class="fas fa-users"></i>
-    <span>Users</span>
-</a>
+                        <a href="/AdminUsers" data-title="Users"
+                           class="@(isActive("/AdminUsers") ? "active" : "")"
+                           aria-current="@(isActive("/AdminUsers") ? "page" : null)">
+                            <i class="fas fa-users"></i>
+                            <span>Users</span>
+                        </a>
 
-<a href="/AdminOrders"
-   data-title="Orders"
-   class="@(currentPage.StartsWith("/AdminOrders", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-    <i class="fas fa-shopping-cart"></i>
-    <span>Orders</span>
-</a>
-<li class="nav-item">
-    <a class="nav-link" asp-page="/AdminRevenue">
-        <i class="fas fa-file-invoice-dollar"></i> Revenue Report
-    </a>
-</li>
-<a href="/AdminCategories"
-   data-title="Categories"
-   class="@(currentPage.StartsWith("/AdminCategories", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-    <i class="fas fa-tags"></i>
-    <span>Categories</span>
-</a>
+                        <a href="/AdminOrders" data-title="Orders"
+                           class="@(isActive("/AdminOrders") ? "active" : "")"
+                           aria-current="@(isActive("/AdminOrders") ? "page" : null)">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Orders</span>
+                        </a>
 
-<a href="/AdminComplaints"
-   data-title="Complaints"
-   class="@(currentPage.StartsWith("/AdminComplaints", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-    <i class="fas fa-flag"></i>
-    <span>Complaints</span>
-</a>
-<a href="/AdminReports"
-   data-title="Reports"
-   class="@(currentPage.StartsWith("/AdminReports", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-    <i class="fas fa-flag"></i>
-    <span>Reports</span>
-</a>
+                        <a href="/AdminRevenue" data-title="Revenue Report"
+                           class="@(isActive("/AdminRevenue") ? "active" : "")"
+                           aria-current="@(isActive("/AdminRevenue") ? "page" : null)">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>Revenue Report</span>
+                        </a>
 
-<!-- DELIVERY -->
-<div class="sidebar-section-title">Delivery</div>
+                        <a href="/AdminCategories" data-title="Categories"
+                           class="@(isActive("/AdminCategories") ? "active" : "")"
+                           aria-current="@(isActive("/AdminCategories") ? "page" : null)">
+                            <i class="fas fa-tags"></i>
+                            <span>Categories</span>
+                        </a>
 
-<a href="/AdminDelivery"
-   data-title="Delivery Requests"
-   class="@(currentPage.StartsWith("/AdminDelivery", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-    <i class="fas fa-truck"></i>
-    <span>Delivery Requests</span>
-</a>
+                        <a href="/AdminComplaints" data-title="Complaints"
+                           class="@(isActive("/AdminComplaints") ? "active" : "")"
+                           aria-current="@(isActive("/AdminComplaints") ? "page" : null)">
+                            <i class="fas fa-flag"></i>
+                            <span>Complaints</span>
+                        </a>
 
-<a href="/AdminAssignDelivery"
-   data-title="Assign Delivery"
-   class="@(currentPage.StartsWith("/AdminAssignDelivery", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-    <i class="fas fa-route"></i>
-    <span>Assign Delivery</span>
-</a>
+                        <a href="/AdminReports" data-title="Reports"
+                           class="@(isActive("/AdminReports") ? "active" : "")"
+                           aria-current="@(isActive("/AdminReports") ? "page" : null)">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Reports</span>
+                        </a>
 
-<!-- SYSTEM -->
-<div class="sidebar-section-title">System</div>
+                        <div class="sidebar-section-title">Delivery</div>
 
-<a href="/AdminAuditLogs"
-   data-title="Audit Logs"
-   class="@(currentPage.StartsWith("/AdminAuditLogs", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-    <i class="fas fa-history"></i>
-    <span>Audit Logs</span>
-</a>
+                        <a href="/AdminDelivery" data-title="Delivery Requests"
+                           class="@(isActive("/AdminDelivery") ? "active" : "")"
+                           aria-current="@(isActive("/AdminDelivery") ? "page" : null)">
+                            <i class="fas fa-truck"></i>
+                            <span>Delivery Requests</span>
+                        </a>
 
-<a href="/AdminSettings"
-   data-title="Settings"
-   class="@(currentPage.StartsWith("/AdminSettings", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-    <i class="fas fa-cog"></i>
-    <span>Settings</span>
-</a>
+                        <a href="/AdminAssignDelivery" data-title="Assign Delivery"
+                           class="@(isActive("/AdminAssignDelivery") ? "active" : "")"
+                           aria-current="@(isActive("/AdminAssignDelivery") ? "page" : null)">
+                            <i class="fas fa-route"></i>
+                            <span>Assign Delivery</span>
+                        </a>
 
-<!-- LOGOUT -->
-<div class="sidebar-section-title">Account</div>
+                        <div class="sidebar-section-title">System</div>
 
-<form asp-area="Identity"
-      asp-page="/Account/Logout"
-      asp-route-returnUrl="/"
-      method="post">
-    <button type="submit"
-            class="logout-link"
-            style="background:none;border:none;width:100%;text-align:left;">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
-    </button>
-</form>
+                        <a href="/AdminAuditLogs" data-title="Audit Logs"
+                           class="@(isActive("/AdminAuditLogs") ? "active" : "")"
+                           aria-current="@(isActive("/AdminAuditLogs") ? "page" : null)">
+                            <i class="fas fa-history"></i>
+                            <span>Audit Logs</span>
+                        </a>
 
-<div class="sidebar-footer">
-    <div style="display: flex; align-items: center; gap: 12px; color: #e2e8f0;">
-        <i class="fas fa-user-circle" style="font-size: 32px;"></i>
-        <div>
-            <div style="font-weight: 600;">@User.Identity?.Name</div>
-            <div style="font-size: 12px; opacity: 0.7;">Administrator</div>
-        </div>
-    </div>
-</div>
+                        <a href="/AdminSettings" data-title="Settings"
+                           class="@(isActive("/AdminSettings") ? "active" : "")"
+                           aria-current="@(isActive("/AdminSettings") ? "page" : null)">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
 
-</aside>
+                        <div class="sidebar-footer">
+                            <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post" style="margin-bottom: 8px;">
+                                <button type="submit" class="logout-link" style="background:none; border:none; width:100%; text-align:left; display:flex; align-items:center; gap:12px; padding:10px 14px; font-weight:500; font-size:14px;">
+                                    <i class="fas fa-sign-out-alt" style="min-width:20px; text-align:center;"></i>
+                                    <span>Logout</span>
+                                </button>
+                            </form>
+                            <div style="display: flex; align-items: center; gap: 10px; color: #ffffff; padding: 6px 8px;">
+                                <i class="fas fa-user-circle" style="font-size: 30px; color:rgba(255,255,255,0.6);"></i>
+                                <div class="user-info">
+                                    <div style="font-weight: 600; font-size: 13px; color:#ffffff;">@User.Identity?.Name</div>
+                                    <div style="font-size: 11px; color:rgba(255,255,255,0.65);">Administrator</div>
+                                </div>
+                            </div>
+                        </div>
 
-</div>
-                }
-                else if (roles.Contains("StoreOwner"))
-                {
-                    // ------------------------------------------------------------
-                    // GREEN NAVBAR REMOVED – StoreOwner now uses its own layout
-                    // with a sidebar.  No navigation bar is rendered here.
-                    // ------------------------------------------------------------
-                    <!-- StoreOwner navigation has been removed -->
-                }
-                else if (roles.Contains("Delivery"))
-                {
+                    </nav>
+
+                    <div class="admin-topbar" id="adminTopbar">
+                        <div class="topbar-left">
+                            <button class="mobile-sidebar-toggle" type="button" onclick="openMobileSidebar()" aria-label="Open menu">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                            <button class="desktop-sidebar-toggle" type="button" onclick="toggleSidebar()" aria-expanded="true" aria-controls="adminSidebar" aria-label="Collapse sidebar">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                            <div class="topbar-title-group">
+                                <span class="topbar-title">@(ViewData["Title"] ?? "Dashboard")</span>
+                            </div>
+                        </div>
+                        <div class="topbar-right">
+
+                            <div class="topbar-search" id="topbarSearch">
+                                <button class="topbar-icon-btn" type="button" id="searchToggleBtn" aria-label="Open search" onclick="toggleSearch()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                <form class="topbar-search-form" id="topbarSearchForm" action="/AdminSearch" method="get" onsubmit="return handleSearchSubmit(event)">
+                                    <i class="fas fa-search topbar-search-form-icon"></i>
+                                    <input type="text" name="q" id="topbarSearchInput" class="topbar-search-input"
+                                           placeholder="Search stores, users, orders…" autocomplete="off" />
+                                    <button type="button" class="topbar-search-close" aria-label="Close search" onclick="toggleSearch(false)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="topbar-notif-wrap">
+                                <button class="topbar-icon-btn" type="button" id="notifToggleBtn" aria-haspopup="true" aria-expanded="false" aria-label="Notifications" onclick="toggleNotifications()">
+                                    <i class="fas fa-bell"></i>
+                                    <span class="topbar-badge" id="notifBadge" style="display:none;">0</span>
+                                </button>
+
+                                <div class="notif-panel" id="notifPanel" role="menu" aria-label="Notifications">
+                                    <div class="notif-panel-header">
+                                        <span>Notifications</span>
+                                        <button type="button" class="notif-mark-read" onclick="markAllNotificationsRead()">Mark all as read</button>
+                                    </div>
+                                    <div class="notif-panel-list" id="notifList">
+                                        <div class="notif-empty" id="notifEmpty">Loading notifications…</div>
+                                    </div>
+                                    <a href="/AdminReports" class="notif-panel-footer">View all notifications</a>
+                                </div>
+                            </div>
+
+                            @Html.AntiForgeryToken()
+
+                            <div class="topbar-divider"></div>
+                            <div class="topbar-user">
+                                <div class="avatar-circle">@adminUserInitial</div>
+                                <div class="user-meta">
+                                    <div class="name">@User.Identity?.Name</div>
+                                    <div class="role">Administrator</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <main class="admin-main" role="main">
+                        @RenderBody()
+                    </main>
+
+                </div>
+            }
+            else if (roles.Contains("StoreOwner"))
+            {
+                // StoreOwner uses its own layout with a sidebar; no nav rendered here.
+                // bodyRendered stays false so the fallback block below renders @RenderBody() once, unwrapped.
+            }
+            else if (roles.Contains("Delivery"))
+            {
+                bodyRendered = true;
+                <header>
                     <nav class="role-nav delivery-nav">
                         <div class="container">
                             <div class="nav-links">
-
-                                <a href="/DeliveryDashboard">
-                                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                                </a>
-
-                                <a href="/DeliveryDashboard">
-                                    <i class="fas fa-box"></i> Orders
-                                </a>
-
-                                <a href="/Chat">
-                                    <i class="fas fa-comments"></i> Chat
-                                </a>
-
-                                <a href="/DeliveryProfile">
-                                    <i class="fas fa-user-circle"></i> Profile
-                                </a>
-
+                                <a href="/DeliveryDashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                                <a href="/DeliveryDashboard"><i class="fas fa-box"></i> Orders</a>
+                                <a href="/Chat"><i class="fas fa-comments"></i> Chat</a>
+                                <a href="/DeliveryProfile"><i class="fas fa-user-circle"></i> Profile</a>
                             </div>
                         </div>
                     </nav>
-                }
-                else if (roles.Contains("Customer"))
-                {
+                </header>
+                <main role="main" class="pb-3 container">
+                    @RenderBody()
+                </main>
+            }
+            else if (roles.Contains("Customer"))
+            {
+                bodyRendered = true;
+                <header>
                     <nav class="role-nav customer-nav">
                         <div class="container">
                             <div class="nav-links">
-                                <a href="/Customer1">
-                                    <i class="fas fa-home"></i> Dashboard
-                                </a>
-
-                                <a href="/CustomerProducts">
-                                    <i class="fas fa-search"></i> Products
-                                </a>
-
-                                <a href="/CustomerWishlist">
-                                    <i class="fas fa-heart"></i> Wishlist
-                                </a>
-                                <a href="/CustomerPromotions">
-                                    <i class="fas fa-bullhorn"></i> Promotions
-                                </a>
-
-                                <a href="/CustomerCart">
-                                    <i class="fas fa-shopping-cart"></i> Cart
-                                </a>
-
-                                <a href="/CustomerOrders">
-                                    <i class="fas fa-truck-fast"></i> Orders
-                                </a>
-
-                                <a href="/CustomerProfile">
-                                    <i class="fas fa-user-circle"></i> Profile
-                                </a>
+                                <a href="/Customer1"><i class="fas fa-home"></i> Dashboard</a>
+                                <a href="/CustomerProducts"><i class="fas fa-search"></i> Products</a>
+                                <a href="/CustomerWishlist"><i class="fas fa-heart"></i> Wishlist</a>
+                                <a href="/CustomerPromotions"><i class="fas fa-bullhorn"></i> Promotions</a>
+                                <a href="/CustomerCart"><i class="fas fa-shopping-cart"></i> Cart</a>
+                                <a href="/CustomerOrders"><i class="fas fa-truck-fast"></i> Orders</a>
+                                <a href="/CustomerProfile"><i class="fas fa-user-circle"></i> Profile</a>
                             </div>
                         </div>
                     </nav>
-                }
+                </header>
+                <main role="main" class="pb-3 container">
+                    @RenderBody()
+                </main>
             }
         }
-    </header>
+    }
 
-<div class="page-content">    
-    <main role="main" class="pb-3">
-        @RenderBody()
-    </main>
-</div>
+    @if (!bodyRendered)
+    {
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    }
 
     <footer class="border-top footer text-muted">
         <div class="container">
@@ -610,59 +1175,240 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- FontAwesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">            crossorigin="anonymous"></script>
-
     <!-- Shared toast and confirmation HTML -->
     <partial name="_AppFeedback" />
 
     <!-- Shared toast and confirmation JavaScript -->
-    <script src="~/js/site.js"
-            asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
-  <script>
-function applySidebarState() {
-    const sidebar = document.getElementById("adminSidebar");
-    const content = document.querySelector(".page-content");
 
-    if (!sidebar || !content) return;
+    <script>
+        // Applies persisted collapsed/expanded state as early as possible
+        // (before the rest of the page paints) to avoid a flash of the wrong layout.
+        (function applySidebarState() {
+        var shell = document.getElementById("adminShell");
+        if (!shell) return;
 
-    const isCollapsed = localStorage.getItem("adminSidebarCollapsed") === "true";
+        var isCollapsed = localStorage.getItem("adminSidebarCollapsedV2") === "true";
+        if (isCollapsed) {
+        shell.classList.add("collapsed");
+        }
+        })();
 
-    if (isCollapsed) {
-        sidebar.classList.add("collapsed");
-        content.classList.remove("admin-shift");
-        content.classList.add("admin-shift-collapsed");
-    } else {
-        sidebar.classList.remove("collapsed");
-        content.classList.remove("admin-shift-collapsed");
-        content.classList.add("admin-shift");
-    }
-}
+        function toggleSidebar() {
+        var shell = document.getElementById("adminShell");
+        if (!shell) return;
 
-function toggleSidebar() {
-    const sidebar = document.getElementById("adminSidebar");
-    const content = document.querySelector(".page-content");
+        var isCollapsed = shell.classList.toggle("collapsed");
 
-    const isCollapsed = sidebar.classList.toggle("collapsed");
-    const expanded = !isCollapsed;
-document.querySelector(".sidebar-toggle")
-    .setAttribute("aria-expanded", expanded);
+        document.querySelector(".desktop-sidebar-toggle")
+        .setAttribute("aria-expanded", !isCollapsed);
 
-    if (isCollapsed) {
-        content.classList.remove("admin-shift");
-        content.classList.add("admin-shift-collapsed");
-        localStorage.setItem("adminSidebarCollapsed", "true");
-    } else {
-        content.classList.remove("admin-shift-collapsed");
-        content.classList.add("admin-shift");
-        localStorage.setItem("adminSidebarCollapsed", "false");
-    }
-}
+        localStorage.setItem("adminSidebarCollapsedV2", isCollapsed ? "true" : "false");
+        }
 
-document.addEventListener("DOMContentLoaded", applySidebarState);
-</script>       
+        function toggleSearch(forceOpen) {
+        var wrap = document.getElementById("topbarSearch");
+        var input = document.getElementById("topbarSearchInput");
+        if (!wrap || !input) return;
+
+        var shouldOpen = typeof forceOpen === "boolean" ? forceOpen : !wrap.classList.contains("open");
+
+        if (shouldOpen) {
+        closeNotifications();
+        wrap.classList.add("open");
+        setTimeout(function () { input.focus(); }, 150);
+        } else {
+        wrap.classList.remove("open");
+        input.value = "";
+        }
+        }
+
+        function handleSearchSubmit(e) {
+        var input = document.getElementById("topbarSearchInput");
+        var query = input ? input.value.trim() : "";
+        if (!query) {
+        e.preventDefault();
+        return false;
+        }
+        // Submits a normal GET to /AdminSearch?q=... — wire that page up
+        // (or change the form's action) to actually return results.
+        return true;
+        }
+
+        function toggleNotifications() {
+        var panel = document.getElementById("notifPanel");
+        var btn = document.getElementById("notifToggleBtn");
+        if (!panel || !btn) return;
+
+        var isOpen = panel.classList.contains("open");
+        if (isOpen) {
+        closeNotifications();
+        } else {
+        toggleSearch(false);
+        panel.classList.add("open");
+        btn.setAttribute("aria-expanded", "true");
+        }
+        }
+
+        function closeNotifications() {
+        var panel = document.getElementById("notifPanel");
+        var btn = document.getElementById("notifToggleBtn");
+        if (!panel || !btn) return;
+        panel.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+        }
+
+        var notificationsLoaded = false;
+
+        function notifTypeMeta(type) {
+        switch ((type || "").toLowerCase()) {
+        case "complaint":
+        return { icon: "fa-flag", cls: "warn" };
+        case "delivery":
+        return { icon: "fa-truck", cls: "accent" };
+        case "store":
+        case "user":
+        return { icon: "fa-user-plus", cls: "info" };
+        default:
+        return { icon: "fa-bell", cls: "info" };
+        }
+        }
+
+        function notifLinkFor(type, referenceId) {
+        switch ((type || "").toLowerCase()) {
+        case "complaint": return "/AdminComplaints" + (referenceId ? ("?id=" + referenceId) : "");
+        case "delivery": return "/AdminDelivery" + (referenceId ? ("?id=" + referenceId) : "");
+        case "store": return "/AdminStores" + (referenceId ? ("?id=" + referenceId) : "");
+        case "user": return "/AdminUsers" + (referenceId ? ("?id=" + referenceId) : "");
+        case "order": return "/AdminOrders" + (referenceId ? ("?id=" + referenceId) : "");
+        default: return "/AdminReports";
+        }
+        }
+
+        function timeAgo(dateStr) {
+        var then = new Date(dateStr);
+        var diffMs = Date.now() - then.getTime();
+        var mins = Math.floor(diffMs / 60000);
+        if (mins < 1) return "just now";
+        if (mins < 60) return mins + (mins === 1 ? " minute ago" : " minutes ago");
+        var hrs = Math.floor(mins / 60);
+        if (hrs < 24) return hrs + (hrs === 1 ? " hour ago" : " hours ago");
+        var days = Math.floor(hrs / 24);
+        return days + (days === 1 ? " day ago" : " days ago");
+        }
+
+        function renderNotifications(items, unreadCount) {
+        var list = document.getElementById("notifList");
+        var badge = document.getElementById("notifBadge");
+        if (!list || !badge) return;
+
+        if (unreadCount > 0) {
+        badge.textContent = unreadCount > 9 ? "9+" : String(unreadCount);
+        badge.style.display = "flex";
+        } else {
+        badge.style.display = "none";
+        }
+
+        if (!items || items.length === 0) {
+        list.innerHTML = '<div class="notif-empty">You\'re all caught up.</div>';
+        return;
+        }
+
+        list.innerHTML = items.map(function (n) {
+        var meta = notifTypeMeta(n.type);
+        var href = notifLinkFor(n.type, n.referenceID);
+        var unreadClass = n.isRead ? "" : " unread";
+        var title = (n.title || n.message || "Notification").replace(/</g, "&lt;");
+        return '' +
+        '<a href="' + href + '" class="notif-item' + unreadClass + '">' +
+        '<i class="fas ' + meta.icon + ' notif-icon ' + meta.cls + '"></i>' +
+        '<div>' +
+        '<div class="notif-text">' + title + '</div>' +
+        '<div class="notif-time">' + timeAgo(n.sentAt) + '</div>' +
+        '</div>' +
+        '</a>';
+        }).join("");
+        }
+
+        function loadNotifications() {
+        var list = document.getElementById("notifList");
+        fetch("/AdminNotifications?handler=List", { credentials: "same-origin" })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+        renderNotifications(data.items, data.unreadCount);
+        notificationsLoaded = true;
+        })
+        .catch(function () {
+        if (list) list.innerHTML = '<div class="notif-empty">Couldn\'t load notifications.</div>';
+        });
+        }
+
+        function markAllNotificationsRead() {
+        var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+        var token = tokenInput ? tokenInput.value : "";
+
+        fetch("/AdminNotifications?handler=MarkAllRead", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+        "RequestVerificationToken": token,
+        "Content-Type": "application/x-www-form-urlencoded"
+        }
+        })
+        .then(function (res) { return res.json(); })
+        .then(function () {
+        loadNotifications();
+        });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+        if (document.getElementById("notifPanel")) {
+        loadNotifications();
+        // Refresh periodically so new complaints/orders/delivery events show up
+        // without the admin needing to reload the page.
+        setInterval(loadNotifications, 60000);
+        }
+        });
+
+
+        // Close search / notifications when clicking outside, or pressing Escape
+        document.addEventListener("click", function (e) {
+        var searchWrap = document.getElementById("topbarSearch");
+        var notifWrap = document.querySelector(".topbar-notif-wrap");
+
+        if (searchWrap && !searchWrap.contains(e.target)) {
+        toggleSearch(false);
+        }
+        if (notifWrap && !notifWrap.contains(e.target)) {
+        closeNotifications();
+        }
+        });
+
+        document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+        toggleSearch(false);
+        closeNotifications();
+        }
+        });
+
+        function openMobileSidebar() {
+        var sidebar = document.getElementById("adminSidebar");
+        var overlay = document.getElementById("sidebarOverlay");
+        if (!sidebar || !overlay) return;
+        sidebar.classList.add("mobile-open");
+        overlay.classList.add("show");
+        }
+
+        function closeMobileSidebar() {
+        var sidebar = document.getElementById("adminSidebar");
+        var overlay = document.getElementById("sidebarOverlay");
+        if (!sidebar || !overlay) return;
+        sidebar.classList.remove("mobile-open");
+        overlay.classList.remove("show");
+        }
+    </script>
 
 </body>
 </html>
