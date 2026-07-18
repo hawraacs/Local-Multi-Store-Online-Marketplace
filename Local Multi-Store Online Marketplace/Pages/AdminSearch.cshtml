@@ -1,0 +1,59 @@
+﻿@page "/AdminSearch"
+@model Local_Multi_Store_Online_Marketplace.Pages.AdminSearchModel
+@{
+    ViewData["Title"] = "Search Results";
+}
+
+<div style="max-width: 900px; margin: 0 auto;">
+
+    <h4 style="font-weight:700; margin-bottom: 4px;">
+        Search results for "<span style="color:#6366f1;">@Model.Q</span>"
+    </h4>
+    <p style="color:#64748b; margin-bottom: 28px;">
+        @(Model.UserResults.Count + Model.OrderResults.Count) result(s) found
+    </p>
+
+    @if (string.IsNullOrWhiteSpace(Model.Q))
+    {
+        <div style="padding: 24px; background:#f8fafc; border-radius: 12px; color:#64748b;">
+            Type something in the search box above to look up users or orders.
+        </div>
+    }
+    else if (Model.UserResults.Count == 0 && Model.OrderResults.Count == 0)
+    {
+        <div style="padding: 24px; background:#f8fafc; border-radius: 12px; color:#64748b;">
+            No matches found for "@Model.Q".
+        </div>
+    }
+    else
+    {
+        @if (Model.UserResults.Any())
+        {
+            <h6 style="text-transform:uppercase; font-size:11.5px; font-weight:700; color:#94a3b8; letter-spacing:1px; margin-bottom:10px;">Users</h6>
+            <div style="border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; margin-bottom:28px;">
+                @foreach (var u in Model.UserResults)
+                {
+                    <a href="/AdminUsers?id=@u.Id" style="display:flex; justify-content:space-between; padding:14px 18px; text-decoration:none; color:#0f172a; border-bottom:1px solid #f1f3f8;">
+                        <span style="font-weight:600;">@u.UserName</span>
+                        <span style="color:#64748b;">@u.Email</span>
+                    </a>
+                }
+            </div>
+        }
+
+        @if (Model.OrderResults.Any())
+        {
+            <h6 style="text-transform:uppercase; font-size:11.5px; font-weight:700; color:#94a3b8; letter-spacing:1px; margin-bottom:10px;">Orders</h6>
+            <div style="border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
+                @foreach (var o in Model.OrderResults)
+                {
+                    <a href="/AdminOrders?id=@o.OrderID" style="display:flex; justify-content:space-between; padding:14px 18px; text-decoration:none; color:#0f172a; border-bottom:1px solid #f1f3f8;">
+                        <span style="font-weight:600;">#@o.OrderNumber</span>
+                        <span style="color:#64748b;">@o.OrderDate.ToString("MMM d, yyyy")</span>
+                    </a>
+                }
+            </div>
+        }
+    }
+
+</div>
