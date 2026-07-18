@@ -11,904 +11,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>My Feed | realnest</title>
 
-    <!-- Google Fonts & FontAwesome Icons -->
+    <!-- Fonts & icon library -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        :root {
-            --bg-color: #faf9fc;
-            --card-bg: #ffffff;
-            --border-color: #ece8f6;
-            --text-primary: #1e1b2e;
-            --text-secondary: #6b6478;
-            --accent-color: #6d28d9;
-            --accent-hover: #5b21b6;
-            --accent-light: #f3effe;
-            --accent-steel: #4f46e5;
-            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-            --like-color: #ef4444;
-            --success-color: #10b981;
-            --error-color: #dc2626;
-            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
-            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
-            --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: var(--font-family);
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-            padding-bottom: 84px;
-        }
-
-        /* ============================================================
-                               BOTTOM NAV — now the shared _CustomerBottomNav partial.
-                               Styles below match Customer1/Chat exactly (same class names),
-                               so the partial renders identically everywhere.
-                               ============================================================ */
-        .mobile-bottom-nav {
-            display: flex !important;
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 200;
-            background: #ffffff;
-            border-top: 1px solid #ece8f6;
-            justify-content: space-between;
-            gap: 2px;
-            padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
-            overflow-x: auto;
-            box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
-        }
-
-            .mobile-bottom-nav a {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 2px;
-                font-size: 10.5px;
-                color: #6b6478;
-                text-decoration: none;
-                padding: 4px 6px;
-                flex-shrink: 0;
-                position: relative;
-                border-radius: 12px;
-                transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
-            }
-
-                .mobile-bottom-nav a i {
-                    font-size: 17px;
-                    transition: transform 0.2s ease;
-                }
-
-                .mobile-bottom-nav a:hover {
-                    background: var(--accent-light);
-                    color: var(--accent-color);
-                }
-
-                .mobile-bottom-nav a.active {
-                    color: var(--accent-color) !important;
-                    background: var(--accent-light) !important;
-                    font-weight: 700;
-                    transform: translateY(-2px);
-                }
-
-                    .mobile-bottom-nav a.active i {
-                        transform: scale(1.12);
-                    }
-
-        /* Cart badge (used by _CartCountBadge partial inside _CustomerBottomNav) */
-        .unread-nav-badge {
-            position: absolute;
-            top: 2px;
-            right: 18px;
-            background: var(--accent-gradient);
-            color: #fff;
-            font-size: 10px;
-            font-weight: 800;
-            min-width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 4px;
-            box-shadow: 0 3px 8px rgba(109, 40, 217, 0.3);
-        }
-
-        /* Chat unread dot (used inside _CustomerBottomNav) */
-        .chat-icon-wrap {
-            position: relative;
-            display: inline-flex;
-        }
-
-            .chat-icon-wrap .chat-nav-dot {
-                position: absolute;
-                top: -2px;
-                right: -4px;
-                width: 9px;
-                height: 9px;
-                background: #ed4956;
-                border: 2px solid #fff;
-                border-radius: 50%;
-                box-sizing: content-box;
-            }
-
-        /* CATEGORIES NAVBAR - identical style to Customer1's category chips */
-        .category-navbar {
-            display: flex;
-            gap: 12px;
-            overflow-x: auto;
-            padding: 20px 24px;
-            margin: 15px auto;
-            max-width: 980px;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
-        }
-
-            .category-navbar::-webkit-scrollbar {
-                display: none;
-            }
-
-            .category-navbar a {
-                text-decoration: none;
-                padding: 10px 20px;
-                border-radius: 50px;
-                background: var(--card-bg);
-                color: var(--text-primary);
-                border: 1px solid var(--border-color);
-                font-size: 13px;
-                font-weight: 700;
-                white-space: nowrap;
-                transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                box-shadow: var(--shadow-sm);
-            }
-
-                .category-navbar a:hover {
-                    border-color: var(--accent-color);
-                    color: var(--accent-color);
-                    transform: translateY(-2px);
-                }
-
-        .active-category {
-            background: var(--accent-gradient) !important;
-            color: #ffffff !important;
-            border-color: transparent !important;
-            box-shadow: 0 4px 15px rgba(109, 40, 217, 0.35) !important;
-        }
-
-        /* FEED CONTAINER - same width as the filter panel, so posts are as large as it */
-        .feed-container {
-            max-width: 980px;
-            margin: 0 auto 60px auto;
-            padding: 0 16px;
-        }
-
-        /* FEED POST CARD */
-        .post {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            overflow: hidden;
-            margin-bottom: 32px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: var(--shadow-md);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-            .post:hover {
-                transform: translateY(-3px);
-                box-shadow: var(--shadow-lg);
-            }
-
-        .post-body {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* POST HEADER */
-        .post-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-color);
-            background: var(--card-bg);
-        }
-
-        .post-header-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .store-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .store-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--accent-gradient);
-            padding: 2.5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 3px 10px rgba(109, 40, 217, 0.2);
-        }
-
-            .store-avatar span {
-                width: 100%;
-                height: 100%;
-                border-radius: 50%;
-                background: var(--card-bg);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 14px;
-                font-weight: 800;
-                color: var(--accent-color);
-            }
-
-        .store-name {
-            font-weight: 700;
-            color: var(--text-primary);
-            text-decoration: none;
-            font-size: 14px;
-            transition: color 0.2s ease;
-        }
-
-            .store-name:hover {
-                color: var(--accent-color);
-            }
-
-        .btn-follow-action {
-            font-size: 13px;
-            font-weight: 700;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            padding: 8px 16px;
-            border-radius: 50px;
-            transition: all 0.25s ease;
-        }
-
-        .btn-follow {
-            color: #ffffff;
-            background: var(--accent-gradient);
-            box-shadow: 0 4px 10px rgba(109, 40, 217, 0.2);
-        }
-
-            .btn-follow:hover {
-                opacity: 0.9;
-                transform: scale(1.03);
-            }
-
-        .btn-unfollow {
-            color: var(--text-secondary);
-            background-color: #f1eef8;
-            border: 1px solid var(--border-color);
-        }
-
-            .btn-unfollow:hover {
-                background-color: #e7e1f5;
-                color: var(--text-primary);
-            }
-
-        /* IMAGE WRAPPER */
-        .post-image-container {
-            width: 100%;
-            aspect-ratio: 1.8 / 1;
-            overflow: hidden;
-            background-color: #f3f0fa;
-            position: relative;
-        }
-
-        .post-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .post:hover .post-image {
-            transform: scale(1.04);
-        }
-
-        /* PRODUCT INFORMATION */
-        .product-meta {
-            margin-top: 4px;
-        }
-
-        .product-title-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-
-        .product-name {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--text-primary);
-            line-height: 1.3;
-        }
-
-        .product-price {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--accent-color);
-            background: var(--accent-light);
-            padding: 4px 12px;
-            border-radius: 30px;
-            white-space: nowrap;
-        }
-
-        .product-description {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin-bottom: 16px;
-        }
-
-        /* ACTIONS BAR */
-        .actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 8px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-
-        .post-menu {
-            position: relative;
-            display: inline-block;
-        }
-
-        .post-menu-btn {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            color: var(--text-secondary);
-        }
-
-        .post-menu-dropdown {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 28px;
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: var(--shadow-md);
-            min-width: 160px;
-            z-index: 999;
-            overflow: hidden;
-        }
-
-            .post-menu-dropdown form {
-                margin: 0;
-            }
-
-            .post-menu-dropdown button {
-                width: 100%;
-                padding: 10px;
-                background: none;
-                border: none;
-                text-align: left;
-                cursor: pointer;
-                font-size: 13px;
-            }
-
-                .post-menu-dropdown button:hover {
-                    background: var(--accent-light);
-                }
-
-        .btn-action {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 18px;
-            border-radius: 50px;
-            border: 1px solid var(--border-color);
-            background: var(--card-bg);
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-primary);
-            transition: all 0.25s ease;
-            box-shadow: var(--shadow-sm);
-        }
-
-            .btn-action i {
-                font-size: 14px;
-            }
-
-            .btn-action:hover {
-                background: #fdfcff;
-                border-color: var(--accent-color);
-                color: var(--accent-color);
-                transform: translateY(-1px);
-            }
-
-        .btn-feed-wishlist {
-            color: var(--like-color);
-            border-color: #ffd1cc;
-            background: #fff5f5;
-        }
-
-            .btn-feed-wishlist:hover {
-                background: #ffe3e1;
-                border-color: var(--like-color);
-                color: var(--like-color);
-            }
-
-        .btn-feed-cart {
-            background: var(--accent-gradient);
-            color: #ffffff;
-            border: none;
-            box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
-        }
-
-            .btn-feed-cart:hover {
-                color: #ffffff;
-                opacity: 0.95;
-                box-shadow: 0 6px 15px rgba(109, 40, 217, 0.35);
-            }
-
-        .btn-feed-share {
-            color: var(--text-secondary);
-        }
-
-            .btn-feed-share:hover {
-                color: var(--accent-color);
-                border-color: var(--accent-color);
-                background: var(--accent-light);
-            }
-
-        /* COMMENT INPUT METAPHOR (AddReview Form) */
-        .comment-form {
-            border-top: 1px solid var(--border-color);
-            padding-top: 16px;
-            margin-top: 12px;
-        }
-
-        .comment-inputs {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .rating-input {
-            width: 84px;
-            border: 1px solid var(--border-color);
-            border-radius: 50px;
-            padding: 10px 12px;
-            font-size: 13px;
-            text-align: center;
-            outline: none;
-            background: var(--bg-color);
-            font-family: var(--font-family);
-            font-weight: 700;
-            color: var(--accent-color);
-            transition: all 0.2s ease;
-        }
-
-            .rating-input:focus {
-                border-color: var(--accent-color);
-                background: #ffffff;
-            }
-
-        .comment-text-input {
-            flex-grow: 1;
-            border: 1px solid var(--border-color);
-            border-radius: 50px;
-            padding: 10px 20px;
-            font-size: 13px;
-            outline: none;
-            font-family: var(--font-family);
-            transition: all 0.2s ease;
-            background: var(--bg-color);
-        }
-
-            .comment-text-input:focus {
-                border-color: var(--accent-color);
-                background: #ffffff;
-            }
-
-        .btn-post-comment {
-            background: transparent;
-            border: none;
-            color: var(--accent-color);
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            padding: 0 12px;
-            transition: all 0.2s ease;
-        }
-
-            .btn-post-comment:hover {
-                color: var(--accent-hover);
-                transform: scale(1.05);
-            }
-
-        /* COMMENTS DISPLAY SECTION */
-        .comments-section {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px dashed var(--border-color);
-        }
-
-        .comments-header-label {
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-            .comments-header-label::after {
-                content: '';
-                flex-grow: 1;
-                height: 1px;
-                background: var(--border-color);
-            }
-
-        .comment {
-            padding: 10px 0;
-            border-bottom: 1px solid #f7f5fb;
-            font-size: 13px;
-        }
-
-            .comment:last-child {
-                border-bottom: none;
-            }
-
-        .comment-author-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-
-        .comment-author {
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .comment-stars {
-            color: #f59e0b;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
-        .comment-text {
-            color: #44403c;
-            line-height: 1.5;
-        }
-
-        /* EMPTY STATE */
-        .empty-message {
-            text-align: center;
-            padding: 80px 30px;
-            background: var(--card-bg);
-            border-radius: 20px;
-            border: 2px dashed #ded4f5;
-            color: var(--text-secondary);
-            margin-top: 30px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .empty-icon {
-            font-size: 54px;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-        }
-
-        .empty-message h3 {
-            margin-bottom: 10px;
-            color: var(--text-primary);
-            font-size: 20px;
-            font-weight: 800;
-        }
-
-        .empty-message p {
-            font-size: 14px;
-            max-width: 320px;
-            margin: 0 auto;
-        }
-
-        /* TOAST NOTIFICATIONS */
-        .toast-container {
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            z-index: 10001;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-width: 380px;
-            width: calc(100% - 48px);
-        }
-
-        .toast {
-            background: var(--card-bg);
-            border-radius: 14px;
-            padding: 16px 20px;
-            box-shadow: 0 15px 35px rgba(30, 27, 46, 0.12);
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
-            border-left: 5px solid var(--border-color);
-        }
-
-            .toast.toast-success {
-                border-left-color: var(--success-color);
-            }
-
-                .toast.toast-success i {
-                    color: var(--success-color);
-                    font-size: 18px;
-                }
-
-            .toast.toast-error {
-                border-left-color: var(--error-color);
-            }
-
-                .toast.toast-error i {
-                    color: var(--error-color);
-                    font-size: 18px;
-                }
-
-        .toast-message {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-            flex-grow: 1;
-        }
-
-        .toast-close {
-            background: transparent;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            color: var(--text-secondary);
-            line-height: 1;
-            transition: color 0.15s ease;
-        }
-
-            .toast-close:hover {
-                color: var(--text-primary);
-            }
-
-        @@keyframes slideIn {
-            from {
-                transform: translateX(120%);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        /* RESPONSIVE DESIGN */
-        @@media (max-width: 768px) {
-            .feed-container {
-                padding: 0 12px;
-            }
-
-            .post {
-                border-radius: 16px;
-                margin-bottom: 20px;
-            }
-
-            .post-body {
-                padding: 16px;
-            }
-        }
-
-        /* FILTER / SEARCH PANEL - bigger, one line, purple accent used site-wide */
-        .feed-tools {
-            max-width: 980px;
-            margin: 24px auto 18px;
-            padding: 0 16px;
-        }
-
-        .feed-mode-switch {
-            display: inline-flex;
-            gap: 6px;
-            padding: 6px;
-            margin-bottom: 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            background: #ffffff;
-            box-shadow: var(--shadow-sm);
-        }
-
-            .feed-mode-switch a {
-                min-height: 46px;
-                padding: 0 22px;
-                border-radius: 12px;
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                color: var(--text-secondary);
-                text-decoration: none;
-                font-size: 14px;
-                font-weight: 800;
-            }
-
-                .feed-mode-switch a.active {
-                    color: #fff;
-                    background: var(--accent-gradient);
-                }
-
-        .feed-filter-panel {
-            padding: 24px 26px;
-            border: 1px solid var(--border-color);
-            border-top: 5px solid var(--accent-color);
-            border-radius: 22px;
-            background: #fff;
-            box-shadow: 0 14px 36px rgba(109, 40, 217, 0.12);
-        }
-
-        .feed-filter-grid {
-            display: grid;
-            grid-template-columns: minmax(200px, 2fr) repeat(3, minmax(110px, 1fr)) repeat(2, minmax(92px, .75fr));
-            gap: 14px;
-            align-items: end;
-        }
-
-        .feed-filter-field {
-            min-width: 0;
-        }
-
-            .feed-filter-field label {
-                display: block;
-                margin-bottom: 8px;
-                color: var(--accent-color);
-                font-size: 11px;
-                font-weight: 800;
-                text-transform: uppercase;
-                letter-spacing: 0.4px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .feed-filter-field input,
-            .feed-filter-field select {
-                width: 100%;
-                min-height: 48px;
-                padding: 0 14px;
-                border: 1.5px solid var(--border-color);
-                border-radius: 12px;
-                background: var(--bg-color);
-                color: var(--text-primary);
-                font-size: 13px;
-                outline: none;
-                transition: all 0.2s ease;
-            }
-
-                .feed-filter-field input:focus,
-                .feed-filter-field select:focus {
-                    border-color: var(--accent-color);
-                    background: #ffffff;
-                    box-shadow: 0 0 0 4px rgba(109, 40, 217, .12);
-                }
-
-        .feed-filter-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 18px;
-        }
-
-        .feed-filter-submit,
-        .feed-filter-clear {
-            min-height: 46px;
-            padding: 0 22px;
-            border-radius: 12px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 800;
-            text-decoration: none;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .feed-filter-submit {
-            border: none;
-            color: #fff;
-            background: var(--accent-gradient);
-            box-shadow: 0 6px 18px rgba(109, 40, 217, 0.3);
-        }
-
-            .feed-filter-submit:hover {
-                opacity: 0.95;
-                transform: translateY(-1px);
-            }
-
-        .feed-filter-clear {
-            border: 1.5px solid var(--border-color);
-            color: var(--text-secondary);
-            background: #fff;
-        }
-
-            .feed-filter-clear:hover {
-                border-color: var(--accent-color);
-                color: var(--accent-color);
-            }
-
-        .feed-result-note {
-            margin: 14px 2px 0;
-            color: var(--accent-color);
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        @@media (max-width: 1100px) {
-            .feed-filter-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-        }
-
-        @@media (max-width: 700px) {
-            .feed-filter-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .feed-filter-field:first-child {
-                grid-column: 1 / -1;
-            }
-
-            .feed-filter-actions {
-                justify-content: stretch;
-            }
-
-            .feed-filter-submit, .feed-filter-clear {
-                flex: 1;
-            }
-        }
-    </style>
+    <!-- Page styles -->
+    <link rel="stylesheet" href="~/css/stories.css" />
+    <link rel="stylesheet" href="~/css/customer-feed.css" />
 </head>
-
 <body>
 
-    <!-- TOAST NOTIFICATIONS (Success/Error Message Area) -->
+    <!-- =========================================================
+         TOAST NOTIFICATIONS (server-side success/error messages)
+         ========================================================= -->
     <div class="toast-container">
         @if (TempData["Success"] != null)
         {
@@ -931,39 +46,46 @@
 
     <partial name="_CustomerBottomNav" />
 
-    <link rel="stylesheet" href="~/css/stories.css" />
+    <!-- =========================================================
+         STORY BAR (only shown if the customer follows stores
+         that currently have active stories)
+         ========================================================= -->
     @if (Model.FollowedStoryGroups.Any())
     {
         <partial name="_StoryBarCustomer" model="Model.FollowedStoryGroups" />
         <partial name="_StoryViewer" />
     }
 
-    <section class="feed-tools">
-        <div class="feed-mode-switch" aria-label="Feed mode">
-            <a asp-page="/CustomerFeed"
-               asp-route-viewMode="Following"
-               class="@(!Model.ShowingAllProducts ? "active" : "")">
-                <i class="fa-solid fa-user-group"></i> Following
-            </a>
-            <a asp-page="/CustomerFeed"
-               asp-route-viewMode="All"
-               class="@(Model.ShowingAllProducts ? "active" : "")">
-                <i class="fa-solid fa-store"></i> All Products
-            </a>
-        </div>
-
-        <form method="get" asp-page="/CustomerFeed" class="feed-filter-panel">
+    <!-- =========================================================
+         DISCOVERY BAR — one-line search, filters tucked behind
+         a "Filters" toggle so the page opens uncluttered
+         ========================================================= -->
+    @{
+        var hasActiveFilters = Model.CategoryId.HasValue || Model.StoreId.HasValue
+            || !string.IsNullOrEmpty(Model.Area) || Model.MinPrice.HasValue || Model.MaxPrice.HasValue;
+    }
+    <section class="discovery-bar">
+        <form method="get" asp-page="/CustomerFeed">
             <input type="hidden" name="ViewMode" value="@Model.ViewMode" />
             <input type="hidden" name="category" value="@Model.SelectedCategory" />
 
-            <div class="feed-filter-grid">
-                <div class="feed-filter-field">
-                    <label for="feedSearch">Search products or stores</label>
-                    <input id="feedSearch" name="SearchTerm" value="@Model.SearchTerm"
-                           placeholder="What are you looking for?" />
-                </div>
+            <div class="discovery-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="feedSearch" name="SearchTerm" value="@Model.SearchTerm"
+                       placeholder="Search products or stores" />
+                <button type="button" class="discovery-toggle" id="filtersToggle"
+                        aria-expanded="@(hasActiveFilters ? "true" : "false")"
+                        aria-controls="advancedFilters">
+                    Filters <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <button type="submit" class="discovery-submit" aria-label="Search">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
 
-                <div class="feed-filter-field">
+            <div class="discovery-filters @(hasActiveFilters ? "" : "is-collapsed")" id="advancedFilters">
+
+                <div class="discovery-field">
                     <label for="feedCategory">Category</label>
                     <select id="feedCategory" name="CategoryId">
                         <option value="">All categories</option>
@@ -977,7 +99,7 @@
                     </select>
                 </div>
 
-                <div class="feed-filter-field">
+                <div class="discovery-field">
                     <label for="feedStore">Store</label>
                     <select id="feedStore" name="StoreId">
                         <option value="">All stores</option>
@@ -991,7 +113,7 @@
                     </select>
                 </div>
 
-                <div class="feed-filter-field">
+                <div class="discovery-field">
                     <label for="feedArea">Area</label>
                     <select id="feedArea" name="Area">
                         <option value="">All areas</option>
@@ -1002,38 +124,36 @@
                     </select>
                 </div>
 
-                <div class="feed-filter-field">
-                    <label for="feedMinPrice">Min price</label>
-                    <input id="feedMinPrice" type="number" min="0" step="0.01"
-                           name="MinPrice" value="@Model.MinPrice" placeholder="$0" />
+                <div class="discovery-field">
+                    <label for="feedMinPrice">Price range</label>
+                    <div style="display:flex; gap:6px;">
+                        <input id="feedMinPrice" type="number" min="0" step="0.01"
+                               name="MinPrice" value="@Model.MinPrice" placeholder="Min" />
+                        <input id="feedMaxPrice" type="number" min="0" step="0.01"
+                               name="MaxPrice" value="@Model.MaxPrice" placeholder="Max" />
+                    </div>
                 </div>
 
-                <div class="feed-filter-field">
-                    <label for="feedMaxPrice">Max price</label>
-                    <input id="feedMaxPrice" type="number" min="0" step="0.01"
-                           name="MaxPrice" value="@Model.MaxPrice" placeholder="Any" />
+                <div class="discovery-actions">
+                    <span class="discovery-result-note">
+                        @(Model.ShowingAllProducts
+                            ? "Showing products from all approved stores, including stores you do not follow."
+                            : "Showing products from stores you follow.")
+                    </span>
+                    <a asp-page="/CustomerFeed" asp-route-viewMode="@Model.ViewMode" class="discovery-clear">
+                        <i class="fa-solid fa-rotate-left"></i> Clear filters
+                    </a>
                 </div>
-            </div>
 
-            <div class="feed-filter-actions">
-                <a asp-page="/CustomerFeed" asp-route-viewMode="@Model.ViewMode" class="feed-filter-clear">
-                    <i class="fa-solid fa-rotate-left"></i> Clear
-                </a>
-                <button type="submit" class="feed-filter-submit">
-                    <i class="fa-solid fa-magnifying-glass"></i> Search / Filter
-                </button>
             </div>
-
-            <p class="feed-result-note">
-                @(Model.ShowingAllProducts
-                    ? "Showing products from all approved stores, including stores you do not follow."
-                    : "Showing products from stores you follow.")
-            </p>
         </form>
     </section>
 
-    <!-- STORIES / CATEGORY NAVIGATION -->
-    <div class="category-navbar">
+    <!-- =========================================================
+         CATEGORY CHIPS (driven by admin-managed categories)
+         ========================================================= -->
+    <section class="category-section" aria-label="Product categories">
+
         <a asp-page="/CustomerFeed"
            asp-route-viewMode="@Model.ViewMode"
            asp-route-searchTerm="@Model.SearchTerm"
@@ -1041,15 +161,13 @@
            asp-route-area="@Model.Area"
            asp-route-minPrice="@Model.MinPrice"
            asp-route-maxPrice="@Model.MaxPrice"
-           class="@(string.IsNullOrEmpty(Model.SelectedCategory) ? "active-category" : "")">
+           class="category-chip @(string.IsNullOrEmpty(Model.SelectedCategory) ? "active" : "")">
             All
         </a>
 
         @foreach (var category in Model.NavbarCategories.Where(c => c != "All"))
         {
-            var isActive =
-            (category == "All" && string.IsNullOrEmpty(Model.SelectedCategory))
-            || Model.SelectedCategory == category;
+            var isActive = Model.SelectedCategory == category;
 
             <a asp-page="/CustomerFeed"
                asp-route-category="@category"
@@ -1059,13 +177,16 @@
                asp-route-area="@Model.Area"
                asp-route-minPrice="@Model.MinPrice"
                asp-route-maxPrice="@Model.MaxPrice"
-               class="@(isActive ? "active-category" : "")">
+               class="category-chip @(isActive ? "active" : "")">
                 @category
             </a>
         }
-    </div>
 
-    <!-- FEED CONTAINER -->
+    </section>
+
+    <!-- =========================================================
+         PRODUCT FEED
+         ========================================================= -->
     <div class="feed-container">
 
         @if (Model.Products != null && Model.Products.Any())
@@ -1075,10 +196,11 @@
                 var img = product.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
                 var isFollowing = Model.FollowingStoreIds.Contains(product.StoreID);
 
-                <div class="post">
+                <article class="post">
 
-                    <!-- POST HEADER -->
+                    <!-- Post header: store identity + follow / overflow menu -->
                     <div class="post-header">
+
                         <div class="store-profile">
                             <div class="store-avatar">
                                 <span>
@@ -1099,7 +221,6 @@
                             </a>
                         </div>
 
-                        <!-- Follow button grouped right next to the three-dot menu -->
                         <div class="post-header-actions">
 
                             @if (isFollowing)
@@ -1122,12 +243,11 @@
                             }
 
                             <div class="post-menu">
-                                <button type="button" class="post-menu-btn" onclick="toggleMenu(this)">
+                                <button type="button" class="post-menu-btn" onclick="toggleMenu(this)" aria-label="More options">
                                     <i class="fa-solid fa-ellipsis-vertical"></i>
                                 </button>
 
                                 <div class="post-menu-dropdown">
-
                                     <form method="post" asp-page-handler="BlockPost">
                                         <input type="hidden" name="storeId" value="@product.StoreID" />
                                         <button type="submit">Block Store</button>
@@ -1142,22 +262,20 @@
                                         <input type="hidden" name="productId" value="@product.ProductID" />
                                         <button type="submit">Not Interested</button>
                                     </form>
-
                                 </div>
                             </div>
 
                         </div>
                     </div>
 
-                    <!-- POST IMAGE -->
+                    <!-- Post image -->
                     <div class="post-image-container">
                         <img class="post-image" src="@img" alt="@product.ProductName" loading="lazy" />
                     </div>
 
-                    <!-- POST BODY -->
                     <div class="post-body">
 
-                        <!-- PRODUCT DETAILS -->
+                        <!-- Product details -->
                         <div class="product-meta">
                             <div class="product-title-row">
                                 <span class="product-name">@product.ProductName</span>
@@ -1166,10 +284,9 @@
                             <p class="product-description">@product.Description</p>
                         </div>
 
-                        <!-- ACTIONS FOOTER -->
+                        <!-- Actions: add to cart / wishlist / share -->
                         <div class="actions">
 
-                            <!-- ADD TO CART -->
                             <form method="post"
                                   asp-page="/Customer1"
                                   asp-page-handler="AddToCart"
@@ -1180,7 +297,6 @@
                                 </button>
                             </form>
 
-                            <!-- WISHLIST (LIKE) -->
                             <form method="post"
                                   asp-page-handler="AddWishlist"
                                   asp-route-productId="@product.ProductID"
@@ -1190,7 +306,6 @@
                                 </button>
                             </form>
 
-                            <!-- SHARE HANDLER -->
                             <form method="post"
                                   asp-page-handler="ShareToStore"
                                   asp-route-productId="@product.ProductID"
@@ -1203,7 +318,7 @@
 
                         </div>
 
-                        <!-- INSTAGRAM-STYLE COMMENT COMPOSER -->
+                        <!-- Review composer -->
                         <form method="post" asp-page-handler="AddReview" class="comment-form">
                             <input type="hidden" name="productId" value="@product.ProductID" />
                             <div class="comment-inputs">
@@ -1225,14 +340,15 @@
                             </div>
                         </form>
 
-                        <!-- COMMENTS LIST -->
+                        <!-- Approved reviews -->
                         <div class="comments-section">
                             @if (product.Reviews != null && product.Reviews.Any())
                             {
                                 <div class="comments-header-label">Comments</div>
+
                                 @foreach (var review in product.Reviews
-                               .Where(r => r.Status == "Approved")
-                               .OrderByDescending(r => r.CreatedAt))
+                                    .Where(r => r.Status == "Approved")
+                                    .OrderByDescending(r => r.CreatedAt))
                                 {
                                     <div class="comment">
                                         <div class="comment-author-row">
@@ -1244,16 +360,14 @@
                                                 }
                                             </span>
                                         </div>
-                                        <div class="comment-text">
-                                            @review.Comment
-                                        </div>
+                                        <div class="comment-text">@review.Comment</div>
                                     </div>
                                 }
                             }
                         </div>
 
                     </div>
-                </div>
+                </article>
             }
         }
         else
@@ -1272,41 +386,10 @@
         }
 
     </div>
-    <script>
-        function toggleMenu(btn) {
-            const menu = btn.nextElementSibling;
 
-            // close all other menus
-            document.querySelectorAll('.post-menu-dropdown').forEach(m => {
-                if (m !== menu) m.style.display = 'none';
-            });
-
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-
-        document.addEventListener('click', function (e) {
-            if (!e.target.closest('.post-menu')) {
-                document.querySelectorAll('.post-menu-dropdown')
-                    .forEach(m => m.style.display = 'none');
-            }
-        });
-    </script>
-
-    <!-- Toast Alert Auto-Dismiss Logic -->
-    <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                const toasts = document.querySelectorAll('.toast');
-                toasts.forEach(toast => {
-                    toast.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                    toast.style.opacity = '0';
-                    toast.style.transform = 'translateY(-10px)';
-                    setTimeout(() => toast.remove(), 500);
-                });
-            }, 4000);
-        });
-    </script>
-
+    <!-- Page scripts -->
     <script src="~/js/stories.js"></script>
+    <script src="~/js/customer-feed.js"></script>
+
 </body>
 </html>
