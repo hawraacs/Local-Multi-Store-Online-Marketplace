@@ -18,733 +18,735 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <link rel="stylesheet" href="~/css/stories.css" />
     <style>
-        :root {
-            --accent: #6d28d9;
-            --accent2: #7c3aed;
-            --text: #17131f;
-            --muted: #746d7f;
-            --line: #e9e5ee;
-            --bg: #faf9fc;
-            --danger: #dc2626;
-        }
+            :root {
+                --accent: #6d28d9;
+                --accent2: #7c3aed;
+                --text: #17131f;
+                --muted: #746d7f;
+                --line: #e9e5ee;
+                --bg: #faf9fc;
+                --danger: #dc2626;
+            }
 
-        * {
-            box-sizing: border-box;
-        }
+            * {
+                box-sizing: border-box;
+            }
 
-        html, body {
-            margin: 0;
-            min-height: 100%;
-            font-family: Inter,Arial,sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        button, input, textarea, select {
-            font: inherit;
-        }
-
-        button {
-            cursor: pointer;
-        }
-
-        .page-shell {
-            width: min(100%,1040px);
-            margin: 0 auto;
-            padding: 24px 18px 80px;
-        }
-
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 22px;
-        }
-
-        .back-link {
-            width: 42px;
-            height: 42px;
-            display: grid;
-            place-items: center;
-            border: 1px solid var(--line);
-            border-radius: 50%;
-            background: #fff;
-            color: var(--text);
-            text-decoration: none;
-        }
-
-        .brand {
-            font-weight: 800;
-            letter-spacing: -.5px;
-        }
-
-        .icon-btn {
-            width: 42px;
-            height: 42px;
-            display: grid;
-            place-items: center;
-            border: 0;
-            border-radius: 50%;
-            background: transparent;
-            color: var(--text);
-            font-size: 20px;
-        }
-
-        .profile-card {
-            background: #fff;
-            border: 1px solid var(--line);
-            border-radius: 24px;
-            padding: 30px;
-        }
-
-        .profile-head {
-            display: grid;
-            grid-template-columns: 150px 1fr auto;
-            gap: 28px;
-            align-items: center;
-        }
-
-        .avatar-ring {
-            width: 142px;
-            height: 142px;
-            border-radius: 50%;
-            padding: 4px;
-            background: linear-gradient(135deg,#f97316,#e11d48,#7c3aed);
-        }
-
-        .avatar {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 5px solid #fff;
-            background: #f4f1f7;
-        }
-
-        .name-row {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-            .name-row h1 {
+            html, body {
                 margin: 0;
-                font-size: 25px;
-                letter-spacing: -.7px;
-            }
-
-        .verified {
-            color: #3b82f6;
-        }
-
-        .stats {
-            display: flex;
-            gap: 30px;
-            margin: 20px 0 14px;
-        }
-
-        .stat strong {
-            display: block;
-            font-size: 16px;
-        }
-
-        .stat span {
-            color: var(--muted);
-            font-size: 13px;
-        }
-
-        .bio {
-            max-width: 620px;
-            color: #45404c;
-            font-size: 14px;
-            line-height: 1.6;
-            margin: 0;
-            white-space: pre-line;
-        }
-
-        .profile-actions {
-            display: flex;
-            gap: 9px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-
-            .profile-actions form {
-                margin: 0;
-            }
-
-        .btn {
-            height: 40px;
-            border-radius: 10px;
-            border: 1px solid var(--line);
-            padding: 0 17px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: #fff;
-        }
-
-        .btn-soft {
-            background: #f1eef5;
-            color: var(--text);
-        }
-
-        .btn-green {
-            background: #16a34a;
-            border-color: #16a34a;
-            color: #fff;
-        }
-
-        .more-wrap {
-            position: relative;
-            align-self: start;
-        }
-
-        .menu {
-            position: absolute;
-            right: 0;
-            top: 48px;
-            width: 240px;
-            background: #fff;
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            box-shadow: 0 18px 50px rgba(24,16,32,.14);
-            overflow: hidden;
-            z-index: 50;
-            display: none;
-        }
-
-            .menu.open {
-                display: block;
-            }
-
-            .menu button {
-                width: 100%;
-                border: 0;
-                background: #fff;
-                padding: 14px 16px;
-                text-align: left;
-                display: flex;
-                align-items: center;
-                gap: 12px;
+                min-height: 100%;
+                font-family: Inter,Arial,sans-serif;
+                background: var(--bg);
                 color: var(--text);
             }
 
-                .menu button:hover {
-                    background: #f8f6fa;
-                }
-
-            .menu .danger {
-                color: var(--danger);
+            button, input, textarea, select {
+                font: inherit;
             }
 
-        .tabs {
-            display: flex;
-            justify-content: center;
-            gap: 54px;
-            margin-top: 22px;
-            border-top: 1px solid var(--line);
-        }
-
-        .tab {
-            border: 0;
-            background: transparent;
-            padding: 16px 4px 13px;
-            border-top: 2px solid transparent;
-            margin-top: -1px;
-            font-weight: 700;
-            color: var(--muted);
-        }
-
-            .tab.active {
-                color: var(--text);
-                border-top-color: var(--text);
+            button {
+                cursor: pointer;
             }
 
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(3,1fr);
-            gap: 4px;
-            margin-top: 4px;
-        }
-
-        .tile {
-            position: relative;
-            aspect-ratio: 1/1;
-            border: 0;
-            padding: 0;
-            overflow: hidden;
-            background: #eee;
-        }
-
-            .tile img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-                transition: transform .25s ease;
-            }
-
-            .tile:hover img {
-                transform: scale(1.03);
-            }
-
-        .tile-overlay {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 22px;
-            background: rgba(0,0,0,.35);
-            color: #fff;
-            opacity: 0;
-            transition: .2s;
-            font-weight: 700;
-        }
-
-        .tile:hover .tile-overlay {
-            opacity: 1;
-        }
-
-        .stock-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            border-radius: 999px;
-            padding: 6px 9px;
-            background: rgba(255,255,255,.93);
-            font-size: 11px;
-            font-weight: 800;
-        }
-
-        .repost-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 32px;
-            height: 32px;
-            display: none;
-            place-items: center;
-            border-radius: 50%;
-            background: rgba(22,163,74,.95);
-            color: #fff;
-            font-size: 14px;
-            box-shadow: 0 6px 18px rgba(0,0,0,.18);
-            z-index: 2;
-        }
-
-            .repost-badge.show {
-                display: grid;
-            }
-
-        .action.reposted {
-            color: #16a34a;
-            border-color: #bbf7d0;
-            background: #f0fdf4;
-        }
-
-        .empty {
-            background: #fff;
-            border: 1px solid var(--line);
-            border-radius: 20px;
-            text-align: center;
-            padding: 70px 20px;
-            margin-top: 12px;
-            color: var(--muted);
-        }
-
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(10,7,13,.68);
-            z-index: 100;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-            .modal-backdrop.open {
-                display: flex;
-            }
-
-        .product-modal {
-            width: min(1100px,96vw);
-            height: min(720px,92vh);
-            background: #fff;
-            border-radius: 18px;
-            overflow: hidden;
-            display: grid;
-            grid-template-columns: minmax(0,1.25fr) minmax(350px,.75fr);
-            position: relative;
-        }
-
-        .media-pane {
-            background: #0f0f10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 0;
-        }
-
-            .media-pane img {
-                width: 100%;
-                height: 100%;
-                object-fit: contain;
-            }
-
-        .details-pane {
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-
-        .modal-head {
-            display: flex;
-            align-items: center;
-            gap: 11px;
-            padding: 15px;
-            border-bottom: 1px solid var(--line);
-        }
-
-        .mini-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .modal-head strong {
-            flex: 1;
-        }
-
-        .close-btn {
-            border: 0;
-            background: transparent;
-            font-size: 22px;
-        }
-
-        .modal-scroll {
-            overflow: auto;
-            padding: 18px;
-        }
-
-        .product-title {
-            margin: 0;
-            font-size: 21px;
-        }
-
-        .price {
-            color: #ea580c;
-            font-size: 22px;
-            font-weight: 800;
-            margin: 8px 0;
-        }
-
-        .description {
-            color: #514b58;
-            line-height: 1.6;
-            font-size: 14px;
-        }
-
-        .action-row {
-            display: grid;
-            grid-template-columns: repeat(4,1fr);
-            gap: 8px;
-            margin: 18px 0;
-        }
-
-            .action-row form {
-                margin: 0;
-            }
-
-        .action {
-            width: 100%;
-            min-height: 48px;
-            border: 1px solid var(--line);
-            background: #fff;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            font-size: 11px;
-            color: var(--text);
-        }
-
-            .action i {
-                font-size: 18px;
-            }
-
-            .action:disabled {
-                opacity: .48;
-                cursor: not-allowed;
-            }
-
-        .review-box {
-            border-top: 1px solid var(--line);
-            padding-top: 16px;
-        }
-
-        .review-form {
-            display: grid;
-            grid-template-columns: 90px 1fr auto;
-            gap: 8px;
-        }
-
-            .review-form input, .review-form select, .report-form textarea, .report-form select {
-                border: 1px solid var(--line);
-                border-radius: 10px;
-                padding: 10px;
-                background: #fff;
-            }
-
-            .review-form button {
-                border: 0;
-                border-radius: 10px;
-                padding: 0 15px;
-                background: var(--accent);
-                color: #fff;
-                font-weight: 700;
-            }
-
-        .reviews {
-            margin-top: 15px;
-            display: grid;
-            gap: 12px;
-        }
-
-        .review {
-            background: #faf9fc;
-            border-radius: 12px;
-            padding: 12px;
-            font-size: 13px;
-        }
-
-        .review-top {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .stars {
-            color: #f59e0b;
-        }
-
-        .review p {
-            margin: 8px 0 0;
-            color: #4b4551;
-        }
-
-        .dialog {
-            width: min(460px,94vw);
-            background: #fff;
-            border-radius: 20px;
-            padding: 24px;
-            position: relative;
-        }
-
-            .dialog h3 {
-                margin: 0 0 8px;
-            }
-
-            .dialog p {
-                color: var(--muted);
-                font-size: 14px;
-            }
-
-        .report-form {
-            display: grid;
-            gap: 12px;
-        }
-
-            .report-form textarea {
-                min-height: 120px;
-                resize: vertical;
-            }
-
-        .dialog-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 9px;
-        }
-
-        .danger-submit {
-            background: var(--danger);
-            color: #fff;
-            border: 0;
-            border-radius: 10px;
-            padding: 11px 16px;
-            font-weight: 700;
-        }
-
-        .block-confirm-toast {
-            position: fixed;
-            top: 22px;
-            right: 22px;
-            width: min(390px, calc(100vw - 32px));
-            background: #fff;
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            box-shadow: 0 18px 55px rgba(24,16,32,.20);
-            padding: 16px;
-            z-index: 9999;
-            display: none;
-            animation: toastSlideIn .22s ease;
-        }
-
-            .block-confirm-toast.open {
-                display: block;
-            }
-
-        .block-confirm-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 800;
-            margin-bottom: 7px;
-        }
-
-            .block-confirm-title i {
-                color: var(--danger);
-            }
-
-        .block-confirm-toast p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        .block-confirm-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            margin-top: 14px;
-        }
-
-            .block-confirm-actions button {
-                border: 0;
-                border-radius: 9px;
-                padding: 9px 14px;
-                font-weight: 700;
-            }
-
-        .block-confirm-cancel {
-            background: #f1eef5;
-            color: var(--text);
-        }
-
-        .block-confirm-submit {
-            background: var(--danger);
-            color: #fff;
-        }
-
-        @@keyframes toastSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @@media(max-width:760px) {
             .page-shell {
-                padding: 12px 0 70px;
+                width: min(100%,1040px);
+                margin: 0 auto;
+                padding: 24px 18px 80px;
             }
 
             .topbar {
-                padding: 0 14px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 22px;
+            }
+
+            .back-link {
+                width: 42px;
+                height: 42px;
+                display: grid;
+                place-items: center;
+                border: 1px solid var(--line);
+                border-radius: 50%;
+                background: #fff;
+                color: var(--text);
+                text-decoration: none;
+            }
+
+            .brand {
+                font-weight: 800;
+                letter-spacing: -.5px;
+            }
+
+            .icon-btn {
+                width: 42px;
+                height: 42px;
+                display: grid;
+                place-items: center;
+                border: 0;
+                border-radius: 50%;
+                background: transparent;
+                color: var(--text);
+                font-size: 20px;
             }
 
             .profile-card {
-                border-radius: 0;
-                border-left: 0;
-                border-right: 0;
-                padding: 22px 16px 0;
+                background: #fff;
+                border: 1px solid var(--line);
+                border-radius: 24px;
+                padding: 30px;
             }
 
             .profile-head {
-                grid-template-columns: 88px 1fr auto;
-                gap: 14px;
-                align-items: start;
+                display: grid;
+                grid-template-columns: 150px 1fr auto;
+                gap: 28px;
+                align-items: center;
             }
 
             .avatar-ring {
-                width: 84px;
-                height: 84px;
+                width: 142px;
+                height: 142px;
+                border-radius: 50%;
+                padding: 4px;
+                background: #e9e5ee;
             }
 
-            .name-row h1 {
-                font-size: 19px;
+            .avatar {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 50%;
+                border: 5px solid #fff;
+                background: #f4f1f7;
+            }
+
+            .name-row {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+                .name-row h1 {
+                    margin: 0;
+                    font-size: 25px;
+                    letter-spacing: -.7px;
+                }
+
+            .verified {
+                color: #3b82f6;
             }
 
             .stats {
-                gap: 18px;
-                margin: 14px 0 10px;
+                display: flex;
+                gap: 30px;
+                margin: 20px 0 14px;
+            }
+
+            .stat strong {
+                display: block;
+                font-size: 16px;
+            }
+
+            .stat span {
+                color: var(--muted);
+                font-size: 13px;
             }
 
             .bio {
-                grid-column: 1/-1;
+                max-width: 620px;
+                color: #45404c;
+                font-size: 14px;
+                line-height: 1.6;
+                margin: 0;
+                white-space: pre-line;
             }
 
             .profile-actions {
-                grid-column: 1/-1;
-                display: grid;
-                grid-template-columns: repeat(3,1fr);
+                display: flex;
+                gap: 9px;
+                flex-wrap: wrap;
+                margin-top: 20px;
             }
 
-                .profile-actions .btn {
+                .profile-actions form {
+                    margin: 0;
+                }
+
+            .btn {
+                height: 40px;
+                border-radius: 10px;
+                border: 1px solid var(--line);
+                padding: 0 17px;
+                font-weight: 700;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                text-decoration: none;
+            }
+
+            .btn-primary {
+                background: var(--accent);
+                border-color: var(--accent);
+                color: #fff;
+            }
+
+            .btn-soft {
+                background: #f1eef5;
+                color: var(--text);
+            }
+
+            .btn-green {
+                background: #16a34a;
+                border-color: #16a34a;
+                color: #fff;
+            }
+
+            .more-wrap {
+                position: relative;
+                align-self: start;
+            }
+
+            .menu {
+                position: absolute;
+                right: 0;
+                top: 48px;
+                width: 240px;
+                background: #fff;
+                border: 1px solid var(--line);
+                border-radius: 16px;
+                box-shadow: 0 18px 50px rgba(24,16,32,.14);
+                overflow: hidden;
+                z-index: 50;
+                display: none;
+            }
+
+                .menu.open {
+                    display: block;
+                }
+
+                .menu button {
                     width: 100%;
-                    padding: 0 8px;
+                    border: 0;
+                    background: #fff;
+                    padding: 14px 16px;
+                    text-align: left;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    color: var(--text);
+                }
+
+                    .menu button:hover {
+                        background: #f8f6fa;
+                    }
+
+                .menu .danger {
+                    color: var(--danger);
                 }
 
             .tabs {
-                margin-top: 18px;
+                display: flex;
+                justify-content: center;
+                gap: 54px;
+                margin-top: 22px;
+                border-top: 1px solid var(--line);
             }
+
+            .tab {
+                border: 0;
+                background: transparent;
+                padding: 16px 4px 13px;
+                border-top: 2px solid transparent;
+                margin-top: -1px;
+                font-weight: 700;
+                color: var(--muted);
+            }
+
+                .tab.active {
+                    color: var(--text);
+                    border-top-color: var(--text);
+                }
 
             .product-grid {
-                gap: 2px;
+                display: grid;
+                grid-template-columns: repeat(3,1fr);
+                gap: 4px;
+                margin-top: 4px;
             }
 
+            .tile {
+                position: relative;
+                aspect-ratio: 1/1;
+                border: 0;
+                padding: 0;
+                overflow: hidden;
+                background: #eee;
+            }
+
+                .tile img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    display: block;
+                    transition: transform .25s ease;
+                }
+
+                .tile:hover img {
+                    transform: scale(1.03);
+                }
+
+            .tile-overlay {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 22px;
+                background: rgba(0,0,0,.35);
+                color: #fff;
+                opacity: 0;
+                transition: .2s;
+                font-weight: 700;
+            }
+
+            .tile:hover .tile-overlay {
+                opacity: 1;
+            }
+
+            .stock-badge {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                border-radius: 999px;
+                padding: 6px 9px;
+                background: rgba(255,255,255,.93);
+                font-size: 11px;
+                font-weight: 800;
+            }
+
+            .repost-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                width: 32px;
+                height: 32px;
+                display: none;
+                place-items: center;
+                border-radius: 50%;
+                background: rgba(22,163,74,.95);
+                color: #fff;
+                font-size: 14px;
+                box-shadow: 0 6px 18px rgba(0,0,0,.18);
+                z-index: 2;
+            }
+
+                .repost-badge.show {
+                    display: grid;
+                }
+
+            .action.reposted {
+                color: #16a34a;
+                border-color: #bbf7d0;
+                background: #f0fdf4;
+            }
+
+            .empty {
+                background: #fff;
+                border: 1px solid var(--line);
+                border-radius: 20px;
+                text-align: center;
+                padding: 70px 20px;
+                margin-top: 12px;
+                color: var(--muted);
+            }
+
+            .modal-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(10,7,13,.68);
+                z-index: 100;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+
+                .modal-backdrop.open {
+                    display: flex;
+                }
+
             .product-modal {
-                height: 94vh;
-                grid-template-columns: 1fr;
-                grid-template-rows: 46% 54%;
-                border-radius: 14px;
+                width: min(1100px,96vw);
+                height: min(720px,92vh);
+                background: #fff;
+                border-radius: 18px;
+                overflow: hidden;
+                display: grid;
+                grid-template-columns: minmax(0,1.25fr) minmax(350px,.75fr);
+                position: relative;
+            }
+
+            .media-pane {
+                background: #0f0f10;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 0;
+            }
+
+                .media-pane img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                }
+
+            .details-pane {
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+
+            .modal-head {
+                display: flex;
+                align-items: center;
+                gap: 11px;
+                padding: 15px;
+                border-bottom: 1px solid var(--line);
+            }
+
+            .mini-avatar {
+                width: 38px;
+                height: 38px;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+
+            .modal-head strong {
+                flex: 1;
+            }
+
+            .close-btn {
+                border: 0;
+                background: transparent;
+                font-size: 22px;
+            }
+
+            .modal-scroll {
+                overflow: auto;
+                padding: 18px;
+            }
+
+            .product-title {
+                margin: 0;
+                font-size: 21px;
+            }
+
+            .price {
+                color: #ea580c;
+                font-size: 22px;
+                font-weight: 800;
+                margin: 8px 0;
+            }
+
+            .description {
+                color: #514b58;
+                line-height: 1.6;
+                font-size: 14px;
             }
 
             .action-row {
+                display: grid;
                 grid-template-columns: repeat(4,1fr);
+                gap: 8px;
+                margin: 18px 0;
+            }
+
+                .action-row form {
+                    margin: 0;
+                }
+
+            .action {
+                width: 100%;
+                min-height: 48px;
+                border: 1px solid var(--line);
+                background: #fff;
+                border-radius: 12px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                font-size: 11px;
+                color: var(--text);
+            }
+
+                .action i {
+                    font-size: 18px;
+                }
+
+                .action:disabled {
+                    opacity: .48;
+                    cursor: not-allowed;
+                }
+
+            .review-box {
+                border-top: 1px solid var(--line);
+                padding-top: 16px;
             }
 
             .review-form {
-                grid-template-columns: 1fr;
+                display: grid;
+                grid-template-columns: 90px 1fr auto;
+                gap: 8px;
             }
 
-                .review-form button {
-                    min-height: 42px;
+                .review-form input, .review-form select, .report-form textarea, .report-form select {
+                    border: 1px solid var(--line);
+                    border-radius: 10px;
+                    padding: 10px;
+                    background: #fff;
                 }
-        }
+
+                .review-form button {
+                    border: 0;
+                    border-radius: 10px;
+                    padding: 0 15px;
+                    background: var(--accent);
+                    color: #fff;
+                    font-weight: 700;
+                }
+
+            .reviews {
+                margin-top: 15px;
+                display: grid;
+                gap: 12px;
+            }
+
+            .review {
+                background: #faf9fc;
+                border-radius: 12px;
+                padding: 12px;
+                font-size: 13px;
+            }
+
+            .review-top {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+            }
+
+            .stars {
+                color: #f59e0b;
+            }
+
+            .review p {
+                margin: 8px 0 0;
+                color: #4b4551;
+            }
+
+            .dialog {
+                width: min(460px,94vw);
+                background: #fff;
+                border-radius: 20px;
+                padding: 24px;
+                position: relative;
+            }
+
+                .dialog h3 {
+                    margin: 0 0 8px;
+                }
+
+                .dialog p {
+                    color: var(--muted);
+                    font-size: 14px;
+                }
+
+            .report-form {
+                display: grid;
+                gap: 12px;
+            }
+
+                .report-form textarea {
+                    min-height: 120px;
+                    resize: vertical;
+                }
+
+            .dialog-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 9px;
+            }
+
+            .danger-submit {
+                background: var(--danger);
+                color: #fff;
+                border: 0;
+                border-radius: 10px;
+                padding: 11px 16px;
+                font-weight: 700;
+            }
+
+            .block-confirm-toast {
+                position: fixed;
+                top: 22px;
+                right: 22px;
+                width: min(390px, calc(100vw - 32px));
+                background: #fff;
+                border: 1px solid var(--line);
+                border-radius: 16px;
+                box-shadow: 0 18px 55px rgba(24,16,32,.20);
+                padding: 16px;
+                z-index: 9999;
+                display: none;
+                animation: toastSlideIn .22s ease;
+            }
+
+                .block-confirm-toast.open {
+                    display: block;
+                }
+
+            .block-confirm-title {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 800;
+                margin-bottom: 7px;
+            }
+
+                .block-confirm-title i {
+                    color: var(--danger);
+                }
+
+            .block-confirm-toast p {
+                margin: 0;
+                color: var(--muted);
+                font-size: 13px;
+                line-height: 1.5;
+            }
+
+            .block-confirm-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                margin-top: 14px;
+            }
+
+                .block-confirm-actions button {
+                    border: 0;
+                    border-radius: 9px;
+                    padding: 9px 14px;
+                    font-weight: 700;
+                }
+
+            .block-confirm-cancel {
+                background: #f1eef5;
+                color: var(--text);
+            }
+
+            .block-confirm-submit {
+                background: var(--danger);
+                color: #fff;
+            }
+
+            @@keyframes toastSlideIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            @@media(max-width:760px) {
+                .page-shell {
+                    padding: 12px 0 70px;
+                }
+
+                .topbar {
+                    padding: 0 14px;
+                }
+
+                .profile-card {
+                    border-radius: 0;
+                    border-left: 0;
+                    border-right: 0;
+                    padding: 22px 16px 0;
+                }
+
+                .profile-head {
+                    grid-template-columns: 88px 1fr auto;
+                    gap: 14px;
+                    align-items: start;
+                }
+
+                .avatar-ring {
+                    width: 84px;
+                    height: 84px;
+                }
+
+                .name-row h1 {
+                    font-size: 19px;
+                }
+
+                .stats {
+                    gap: 18px;
+                    margin: 14px 0 10px;
+                }
+
+                .bio {
+                    grid-column: 1/-1;
+                }
+
+                .profile-actions {
+                    grid-column: 1/-1;
+                    display: grid;
+                    grid-template-columns: repeat(3,1fr);
+                }
+
+                    .profile-actions .btn {
+                        width: 100%;
+                        padding: 0 8px;
+                    }
+
+                .tabs {
+                    margin-top: 18px;
+                }
+
+                .product-grid {
+                    gap: 2px;
+                }
+
+                .product-modal {
+                    height: 94vh;
+                    grid-template-columns: 1fr;
+                    grid-template-rows: 46% 54%;
+                    border-radius: 14px;
+                }
+
+                .action-row {
+                    grid-template-columns: repeat(4,1fr);
+                }
+
+                .review-form {
+                    grid-template-columns: 1fr;
+                }
+
+                    .review-form button {
+                        min-height: 42px;
+                    }
+            }
     </style>
 </head>
 <body>
+    <partial name="_StoryViewer" />
     <div class="page-shell">
         <div class="topbar">
             <a class="back-link" asp-page="/Customer1" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></a>
@@ -754,7 +756,23 @@
 
         <section class="profile-card">
             <div class="profile-head">
-                <div class="avatar-ring"><img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" /></div>
+                @{
+                    var hasActiveStories = Model.StoreStories.Any();
+                    var hasUnviewed = Model.StoreStories.Any(s => !s.IsViewed);
+                    var ringClass = !hasActiveStories ? "" : (hasUnviewed ? "story-ring--active" : "story-ring--viewed");
+                }
+                @if (hasActiveStories)
+                {
+                    <div class="avatar-ring @ringClass" data-group-index="0" onclick="RealNestStories.open(0,0)" role="button" style="cursor:pointer;">
+                        <img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" />
+                    </div>
+                }
+                else
+                {
+                    <div class="avatar-ring" data-group-index="0">
+                        <img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" />
+                    </div>
+                }
                 <div>
                     <div class="name-row"><h1>@Model.Store.StoreName</h1><i class="fa-solid fa-circle-check verified" title="Approved store"></i></div>
                     <div class="stats">
@@ -925,9 +943,40 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <!-- Story data MUST be set before stories.js loads, exactly like _StoryBarCustomer.cshtml
+         does on the Feed page (its inline <script> block runs before CustomerFeed's own
+         <script src="~/js/stories.js"> tag further down the page). -->
     <script>
         const storeName = @Html.Raw(JsonSerializer.Serialize(Model.Store.StoreName));
         const storeId = @Model.Store.StoreID;
+
+        // Single-store page: one story group only, same shape RealNestStories expects on the Feed -
+        // reuses the exact same JSON keys _StoryBarCustomer.cshtml embeds, so RealNestStories.open()
+        // (the same function the Feed calls) works identically here without any duplicate JS.
+        window.realnestStoryGroups = [@Html.Raw(JsonSerializer.Serialize(new
+        {
+            storeId = Model.Store.StoreID,
+            storeName = Model.Store.StoreName,
+            storeLogoUrl = storeLogo,
+            hasUnviewedStories = Model.StoreStories.Any(s => !s.IsViewed),
+            stories = Model.StoreStories.Select(s => new
+            {
+                storyId = s.StoryID,
+                mediaType = s.MediaType,
+                imageUrl = s.ImageUrl,
+                videoUrl = s.VideoUrl,
+                durationSeconds = s.DurationSeconds,
+                caption = s.Caption,
+                createdAt = s.CreatedAt,
+                isViewed = s.IsViewed,
+                isLiked = s.IsLikedByCurrentCustomer
+            })
+        }))];
+    </script>
+    <script src="~/js/stories.js"></script>
+
+    <script>
         let currentProduct = null;
 
         const reviewsByProduct = {
@@ -950,179 +999,179 @@
         profileMenu.addEventListener('click', e => e.stopPropagation());
 
         function toast(message, ok = true) {
-            Toastify({ text: message, duration: 2800, gravity: 'top', position: 'right', style: { background: ok ? '#16a34a' : '#dc2626' } }).showToast();
+        Toastify({ text: message, duration: 2800, gravity: 'top', position: 'right', style: { background: ok ? '#16a34a' : '#dc2626' } }).showToast();
         }
 
         function showBlockConfirmation() {
-            profileMenu.classList.remove('open');
-            document.getElementById('blockConfirmToast').classList.add('open');
+        profileMenu.classList.remove('open');
+        document.getElementById('blockConfirmToast').classList.add('open');
         }
 
         function hideBlockConfirmation() {
-            document.getElementById('blockConfirmToast').classList.remove('open');
+        document.getElementById('blockConfirmToast').classList.remove('open');
         }
 
         function submitBlockStore() {
-            const form = document.getElementById('blockStoreForm');
-            const button = document.getElementById('confirmBlockButton');
+        const form = document.getElementById('blockStoreForm');
+        const button = document.getElementById('confirmBlockButton');
 
-            if (!form || !button)
-                return;
+        if (!form || !button)
+        return;
 
-            button.disabled = true;
-            button.textContent = 'Blocking...';
-            form.submit();
+        button.disabled = true;
+        button.textContent = 'Blocking...';
+        form.submit();
         }
-               function profileUrl() {
-            return `${window.location.origin}/StoreCustomerProfile?id=${storeId}`;
+        function profileUrl() {
+        return `${window.location.origin}/StoreCustomerProfile?id=${storeId}`;
         }
 
         function productUrl(id) {
-            return `${window.location.origin}/StoreCustomerProfile?id=${storeId}#product-${id}`;
+        return `${window.location.origin}/StoreCustomerProfile?id=${storeId}#product-${id}`;
         }
         async function copyText(value, message) { try { await navigator.clipboard.writeText(value); toast(message); } catch { toast('Could not copy the link.', false); } }
-                function copyCurrentUrl() {
-            copyText(profileUrl(), 'Profile link copied.');
+        function copyCurrentUrl() {
+        copyText(profileUrl(), 'Profile link copied.');
         }
         function shareProfileWhatsApp() {
-            const message =
-                `🏪 ${storeName}\n` +
-                `Store profile on realnest\n` +
-                profileUrl();
+        const message =
+        `🏪 ${storeName}\n` +
+        `Store profile on realnest\n` +
+        profileUrl();
 
-            window.open(
-                'https://wa.me/?text=' + encodeURIComponent(message),
-                '_blank',
-                'noopener,noreferrer'
-            );
+        window.open(
+        'https://wa.me/?text=' + encodeURIComponent(message),
+        '_blank',
+        'noopener,noreferrer'
+        );
         }
         function shareProfile() {
-            shareProfileWhatsApp();
+        shareProfileWhatsApp();
         }
 
         function openProduct(el) {
-            currentProduct = { id: Number(el.dataset.productId), name: el.dataset.productName, description: el.dataset.description, price: el.dataset.price, quantity: Number(el.dataset.quantity), image: el.dataset.image };
-            document.getElementById('modalImage').src = currentProduct.image;
-            document.getElementById('modalName').textContent = currentProduct.name;
-            document.getElementById('modalPrice').textContent = '$' + currentProduct.price;
-            document.getElementById('modalDescription').textContent = currentProduct.description || 'No description.';
-            ['cartProductId','wishlistProductId','chatProductId','reviewProductId','reportProductId'].forEach(id => document.getElementById(id).value = currentProduct.id);
-            const cartButton = document.getElementById('cartButton');
-            cartButton.disabled = currentProduct.quantity <= 0;
-            cartButton.querySelector('span').textContent = currentProduct.quantity <= 0 ? 'Out of stock' : 'Add';
-            renderReviews(currentProduct.id);
-            updateRepostUi(currentProduct.id);
-            document.getElementById('productBackdrop').classList.add('open');
-            document.body.style.overflow = 'hidden';
-            history.replaceState(null, '', productUrl(currentProduct.id));
+        currentProduct = { id: Number(el.dataset.productId), name: el.dataset.productName, description: el.dataset.description, price: el.dataset.price, quantity: Number(el.dataset.quantity), image: el.dataset.image };
+        document.getElementById('modalImage').src = currentProduct.image;
+        document.getElementById('modalName').textContent = currentProduct.name;
+        document.getElementById('modalPrice').textContent = '$' + currentProduct.price;
+        document.getElementById('modalDescription').textContent = currentProduct.description || 'No description.';
+        ['cartProductId','wishlistProductId','chatProductId','reviewProductId','reportProductId'].forEach(id => document.getElementById(id).value = currentProduct.id);
+        const cartButton = document.getElementById('cartButton');
+        cartButton.disabled = currentProduct.quantity <= 0;
+        cartButton.querySelector('span').textContent = currentProduct.quantity <= 0 ? 'Out of stock' : 'Add';
+        renderReviews(currentProduct.id);
+        updateRepostUi(currentProduct.id);
+        document.getElementById('productBackdrop').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        history.replaceState(null, '', productUrl(currentProduct.id));
         }
         function renderReviews(id) {
-            const target = document.getElementById('modalReviews');
-            const reviews = reviewsByProduct[id] || [];
-            if (!reviews.length) { target.innerHTML = '<p style="color:#746d7f">No reviews yet.</p>'; return; }
-            target.innerHTML = reviews.map(r => `<div class="review"><div class="review-top"><strong>${escapeHtml(r.customer)}</strong><span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span></div><p>${escapeHtml(r.comment || '')}</p><small style="color:#8a8390">${escapeHtml(r.createdAt)}</small></div>`).join('');
+        const target = document.getElementById('modalReviews');
+        const reviews = reviewsByProduct[id] || [];
+        if (!reviews.length) { target.innerHTML = '<p style="color:#746d7f">No reviews yet.</p>'; return; }
+        target.innerHTML = reviews.map(r => `<div class="review"><div class="review-top"><strong>${escapeHtml(r.customer)}</strong><span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span></div><p>${escapeHtml(r.comment || '')}</p><small style="color:#8a8390">${escapeHtml(r.createdAt)}</small></div>`).join('');
         }
         function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
         function closeProduct() { document.getElementById('productBackdrop').classList.remove('open'); document.body.style.overflow = ''; history.replaceState(null, '', window.location.pathname + '?id=' + storeId); }
         function backdropClose(e,id) { if(e.target.id===id){ if(id==='productBackdrop') closeProduct(); else document.getElementById(id).classList.remove('open'); } }
-                function currentShareData() {
-            return {
-                title: currentProduct.name,
-                text:
-                    `🛍️ ${currentProduct.name}\n` +
-                    `$${currentProduct.price}\n` +
-                    `From ${storeName}`,
-                url: productUrl(currentProduct.id)
-            };
+        function currentShareData() {
+        return {
+        title: currentProduct.name,
+        text:
+        `🛍️ ${currentProduct.name}\n` +
+        `$${currentProduct.price}\n` +
+        `From ${storeName}`,
+        url: productUrl(currentProduct.id)
+        };
         }
         function shareCurrentProduct() {
-            shareCurrentProductWhatsApp();
+        shareCurrentProductWhatsApp();
         }
         function shareCurrentProductWhatsApp() {
-            if (!currentProduct)
-                return;
+        if (!currentProduct)
+        return;
 
-            const message =
-                `🛍️ ${currentProduct.name}\n` +
-                `Price: $${currentProduct.price}\n` +
-                `Store: ${storeName}\n` +
-                productUrl(currentProduct.id);
+        const message =
+        `🛍️ ${currentProduct.name}\n` +
+        `Price: $${currentProduct.price}\n` +
+        `Store: ${storeName}\n` +
+        productUrl(currentProduct.id);
 
-            window.open(
-                'https://wa.me/?text=' + encodeURIComponent(message),
-                '_blank',
-                'noopener,noreferrer'
-            );
+        window.open(
+        'https://wa.me/?text=' + encodeURIComponent(message),
+        '_blank',
+        'noopener,noreferrer'
+        );
         }
         function copyCurrentProductLink() { if(currentProduct) copyText(productUrl(currentProduct.id),'Product link copied.'); }
         const repostStorageKey = 'realnest_reposted_products';
 
         function getRepostedProductIds() {
-            try {
-                const value = JSON.parse(localStorage.getItem(repostStorageKey) || '[]');
-                return Array.isArray(value) ? value.map(Number) : [];
-            } catch {
-                return [];
-            }
+        try {
+        const value = JSON.parse(localStorage.getItem(repostStorageKey) || '[]');
+        return Array.isArray(value) ? value.map(Number) : [];
+        } catch {
+        return [];
+        }
         }
 
         function saveRepostedProductIds(ids) {
-            localStorage.setItem(repostStorageKey, JSON.stringify([...new Set(ids.map(Number))]));
+        localStorage.setItem(repostStorageKey, JSON.stringify([...new Set(ids.map(Number))]));
         }
 
         function isProductReposted(productId) {
-            return getRepostedProductIds().includes(Number(productId));
+        return getRepostedProductIds().includes(Number(productId));
         }
 
         function updateRepostUi(productId) {
-            const reposted = isProductReposted(productId);
-            const badge = document.getElementById('repostBadge-' + productId);
-            if (badge) badge.classList.toggle('show', reposted);
+        const reposted = isProductReposted(productId);
+        const badge = document.getElementById('repostBadge-' + productId);
+        if (badge) badge.classList.toggle('show', reposted);
 
-            if (currentProduct && Number(currentProduct.id) === Number(productId)) {
-                const button = document.getElementById('repostButton');
-                const text = document.getElementById('repostButtonText');
-                if (button) button.classList.toggle('reposted', reposted);
-                if (text) text.textContent = reposted ? 'Reposted' : 'Repost';
-            }
+        if (currentProduct && Number(currentProduct.id) === Number(productId)) {
+        const button = document.getElementById('repostButton');
+        const text = document.getElementById('repostButtonText');
+        if (button) button.classList.toggle('reposted', reposted);
+        if (text) text.textContent = reposted ? 'Reposted' : 'Repost';
+        }
         }
 
         function refreshAllRepostBadges() {
-            document.querySelectorAll('[id^="repostBadge-"]').forEach(badge => {
-                const productId = Number(badge.id.replace('repostBadge-', ''));
-                updateRepostUi(productId);
-            });
+        document.querySelectorAll('[id^="repostBadge-"]').forEach(badge => {
+        const productId = Number(badge.id.replace('repostBadge-', ''));
+        updateRepostUi(productId);
+        });
         }
 
         function repostCurrentProduct() {
-            if (!currentProduct) return;
+        if (!currentProduct) return;
 
-            const productId = Number(currentProduct.id);
-            const ids = getRepostedProductIds();
-            const alreadyReposted = ids.includes(productId);
+        const productId = Number(currentProduct.id);
+        const ids = getRepostedProductIds();
+        const alreadyReposted = ids.includes(productId);
 
-            if (alreadyReposted) {
-                saveRepostedProductIds(ids.filter(id => id !== productId));
-                toast('Repost removed.');
-            } else {
-                ids.push(productId);
-                saveRepostedProductIds(ids);
-                toast('Product reposted.');
-            }
+        if (alreadyReposted) {
+        saveRepostedProductIds(ids.filter(id => id !== productId));
+        toast('Repost removed.');
+        } else {
+        ids.push(productId);
+        saveRepostedProductIds(ids);
+        toast('Product reposted.');
+        }
 
-            updateRepostUi(productId);
+        updateRepostUi(productId);
         }
         function openReportDialog(){ profileMenu.classList.remove('open'); document.getElementById('reportBackdrop').classList.add('open'); }
         function closeReportDialog(){ document.getElementById('reportBackdrop').classList.remove('open'); }
         function openProductReportDialog(){ if(!currentProduct)return; document.getElementById('reportProductId').value=currentProduct.id; document.getElementById('productReportBackdrop').classList.add('open'); }
         function closeProductReportDialog(){ document.getElementById('productReportBackdrop').classList.remove('open'); }
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') {
-                closeProduct();
-                closeReportDialog();
-                closeProductReportDialog();
-                hideBlockConfirmation();
-            }
+        if (e.key === 'Escape') {
+        closeProduct();
+        closeReportDialog();
+        closeProductReportDialog();
+        hideBlockConfirmation();
+        }
         });
 
         refreshAllRepostBadges();
@@ -1151,7 +1200,6 @@
 
         if (productTile)
         openProduct(productTile);
-        });    openProduct(productTile);
         });
     </script>
 </body>
