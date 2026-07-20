@@ -281,6 +281,11 @@ namespace Multi_Store.Infrastructure.Data
                 .WithMany(c => c.Reviews)
                 .HasForeignKey(r => r.CustomerID)
                 .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Product)
+                .WithMany(p => p.Reviews)
+                .HasForeignKey(r => r.ProductID)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Complaint>()
                 .HasOne(c => c.Customer)
@@ -377,6 +382,11 @@ namespace Multi_Store.Infrastructure.Data
                 .WithMany(u => u.ReceivedMessages)
                 .HasForeignKey(cm => cm.ReceiverID)
                 .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(cm => cm.Product)
+                .WithMany()
+                .HasForeignKey(cm => cm.ProductID)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // NEW - additive. Nullable FK, SetNull on delete so existing chat history is
             // never affected even in the hypothetical case a Story row were removed.
@@ -451,6 +461,11 @@ namespace Multi_Store.Infrastructure.Data
                 entity.HasIndex(rv => new { rv.CustomerID, rv.ProductID })
                     .IsUnique();
             });
+            modelBuilder.Entity<RecentlyViewedProduct>()
+                .HasOne<Product>()
+                .WithMany(p => p.RecentlyViewedProducts)
+                .HasForeignKey(rv => rv.ProductID)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // ================= CONFIG =================
             modelBuilder.Entity<Product>().Ignore(p => p.IsOutOfStock);
