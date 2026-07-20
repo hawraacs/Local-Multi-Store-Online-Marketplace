@@ -49,12 +49,316 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        @@keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .profile-header,
+        .side-panel-card {
+            animation: fadeSlideUp .5s var(--ease) both;
+        }
+
+        .instagram-grid .product-grid-item {
+            animation: fadeSlideUp .45s var(--ease) both;
+        }
+
+            .instagram-grid .product-grid-item:nth-child(1) {
+                animation-delay: .02s;
+            }
+
+            .instagram-grid .product-grid-item:nth-child(2) {
+                animation-delay: .06s;
+            }
+
+            .instagram-grid .product-grid-item:nth-child(3) {
+                animation-delay: .10s;
+            }
+
+            .instagram-grid .product-grid-item:nth-child(4) {
+                animation-delay: .14s;
+            }
+
+            .instagram-grid .product-grid-item:nth-child(5) {
+                animation-delay: .18s;
+            }
+
+            .instagram-grid .product-grid-item:nth-child(6) {
+                animation-delay: .22s;
+            }
+
+        .add-hero {
+            animation: fadeSlideUp .5s var(--ease) both;
+        }
+
         .profile-container {
             max-width: 1010px;
             width: 100%;
             margin: 28px auto;
             padding: 0 24px;
         }
+
+        /* ============================================================
+                   PAGE SHELL — main content + toggleable slide-in side panel
+                   ============================================================ */
+        .page-shell {
+            max-width: 1010px;
+            margin: 0 auto;
+        }
+
+        .main-content {
+            width: 100%;
+        }
+
+        /* ---- Floating handle that opens/closes the side panel ---- */
+        .side-panel-toggle {
+            position: fixed;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 64px;
+            border: none;
+            border-radius: var(--radius-md) 0 0 var(--radius-md);
+            background: var(--accent-gradient);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            z-index: 501;
+            transition: right var(--duration) var(--ease), transform var(--duration) var(--ease);
+        }
+
+            .side-panel-toggle:hover {
+                transform: translateY(-50%) scale(1.05);
+            }
+
+            .side-panel-toggle.panel-open {
+                right: 260px;
+            }
+
+        /* ---- Backdrop shown while the panel is open ---- */
+        .side-panel-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 24, 29, 0.35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--duration) var(--ease);
+            z-index: 499;
+        }
+
+            .side-panel-backdrop.panel-open {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+        .side-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: 260px;
+            transform: translateX(100%);
+            transition: transform var(--duration) var(--ease);
+            z-index: 500;
+            padding: 26px 18px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+            .side-panel.panel-open {
+                transform: translateX(0);
+            }
+
+        .side-panel-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            padding: 22px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .side-panel-store {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .side-panel-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 2px solid var(--surface);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .side-panel-avatar-fallback {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--accent-dark);
+            color: var(--accent-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .side-panel-name {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .side-panel-role {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .side-panel-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .side-panel-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all var(--duration) var(--ease);
+        }
+
+            .side-panel-link i {
+                width: 16px;
+                text-align: center;
+                color: var(--accent);
+            }
+
+            .side-panel-link:hover {
+                background: var(--accent-light);
+                color: var(--accent-hover);
+                transform: translateX(2px);
+            }
+
+        .side-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            padding: 11px 0;
+            border-radius: var(--radius-sm);
+            border: 1px solid #fecaca;
+            background: #fff5f5;
+            color: #dc2626;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--duration) var(--ease);
+        }
+
+            .side-logout-btn:hover {
+                background: #dc2626;
+                color: #fff;
+                border-color: #dc2626;
+                transform: translateY(-1px);
+                box-shadow: var(--shadow-sm);
+            }
+
+        /* ---- Add-product "+" button (single, large) ---- */
+        .add-hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 36px 20px 40px;
+            text-align: center;
+        }
+
+        .empty-add-btn {
+            width: 116px;
+            height: 116px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            text-decoration: none;
+            box-shadow: var(--accent-glow);
+            transition: all var(--duration) var(--ease);
+            border: 4px dashed rgba(255,255,255,0.55);
+        }
+
+            .empty-add-btn:hover {
+                transform: scale(1.05);
+                color: #fff;
+                box-shadow: 0 12px 40px rgba(109, 40, 217, 0.32);
+            }
+
+        .empty-add-label {
+            margin-top: 18px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            letter-spacing: 0.2px;
+        }
+
+        /* ---- Per-product Boost button ---- */
+        .product-boost-btn {
+            width: 100%;
+            margin-top: 10px;
+            background: var(--accent-light);
+            color: var(--accent-hover);
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 8px 0;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all var(--duration) var(--ease);
+        }
+
+            .product-boost-btn:hover {
+                background: var(--accent-gradient);
+                color: #fff;
+            }
 
         .profile-header {
             display: flex;
@@ -200,28 +504,6 @@
             margin: 0;
         }
 
-        .edit-profile-btn {
-            background: transparent;
-            border: 1.5px solid var(--border-strong);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
-            padding: 7px 18px;
-            font-size: 12.5px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all var(--duration) var(--ease);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-            .edit-profile-btn:hover {
-                background: var(--accent-dark);
-                border-color: var(--accent-dark);
-                color: #fff;
-            }
-
         .profile-stats-row {
             display: flex;
             gap: 32px;
@@ -250,26 +532,6 @@
             color: var(--accent);
             font-size: 13px;
         }
-
-        .stats-message-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--accent-dark);
-            color: #fff;
-            padding: 10px 22px;
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-            margin-bottom: 18px;
-            transition: all var(--duration) var(--ease);
-        }
-
-            .stats-message-btn:hover {
-                background: var(--accent-hover);
-                color: #fff;
-            }
 
         .profile-bio {
             font-size: 14px;
@@ -324,6 +586,7 @@
 
         .profile-tabs {
             display: flex;
+            justify-content: center;
             gap: 28px;
             margin-bottom: 24px;
             border-bottom: 1px solid var(--border);
@@ -498,8 +761,8 @@
         }
 
         /* ============================================================
-                           INSTAGRAM-STYLE FEED — store header on top, image, details below
-                           ============================================================ */
+                                   INSTAGRAM-STYLE FEED — store header on top, image, details below
+                                   ============================================================ */
         .feed-overlay {
             display: none;
             position: fixed;
@@ -792,6 +1055,16 @@
             gap: 6px;
         }
 
+        @@media (max-width: 480px) {
+            .side-panel {
+                width: 82vw;
+            }
+
+            .side-panel-toggle.panel-open {
+                right: 82vw;
+            }
+        }
+
         @@media (max-width: 768px) {
             .profile-header {
                 flex-direction: column;
@@ -831,144 +1104,180 @@
 <partial name="_StoryBarOwner" model="Model.OwnStoriesWithStats" />
 <partial name="_StoryViewer" />
 
-<div class="profile-container">
-    <!-- ========== PROFILE HEADER ========== -->
-    <div class="profile-header">
-        <div class="profile-avatar-container">
-            @{
-                var hasActiveStories = Model.OwnStoriesWithStats != null && Model.OwnStoriesWithStats.Any();
-            }
-            <div class="story-ring-wrapper @(hasActiveStories ? "active-story" : "")"
-                 onclick="@(hasActiveStories ? "RealNestStories.openOwn(0)" : "RealNestStories.openUploadStoryModal()")">
+<div class="page-shell">
+    <div class="main-content">
+        <div class="profile-container">
+            <!-- ========== PROFILE HEADER ========== -->
+            <div class="profile-header">
+                <div class="profile-avatar-container">
+                    @{
+                        var hasActiveStories = Model.OwnStoriesWithStats != null && Model.OwnStoriesWithStats.Any();
+                    }
+                    <div class="story-ring-wrapper @(hasActiveStories ? "active-story" : "")"
+                         onclick="@(hasActiveStories ? "RealNestStories.openOwn(0)" : "RealNestStories.openUploadStoryModal()")">
 
+                        @if (!string.IsNullOrWhiteSpace(Model.Store?.LogoURL))
+                        {
+                            <img class="profile-avatar" src="@Model.Store.LogoURL" alt="@Model.Store.StoreName Logo" />
+                        }
+                        else
+                        {
+                            <div class="profile-avatar-fallback">
+                                <i class="fas fa-store"></i>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="avatar-add-story-btn" onclick="event.stopPropagation(); RealNestStories.openUploadStoryModal()" title="Add Story">
+                        <i class="fas fa-plus"></i>
+                    </div>
+
+                    @if (!hasActiveStories)
+                    {
+                        <div class="avatar-status"></div>
+                    }
+                </div>
+
+                <div class="profile-details">
+                    <div class="profile-username-row">
+                        <h2 class="profile-username">@Model.Store?.StoreName</h2>
+                    </div>
+                    <div class="profile-stats-row">
+                        <div class="stat-item">
+                            <span class="stat-icon"><i class="fas fa-box"></i></span>
+                            <span class="stat-count">@Model.Products.Count</span> products
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon"><i class="fas fa-user-friends"></i></span>
+                            <span class="stat-count">@Model.FollowersCount</span> followers
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon"><i class="fas fa-star"></i></span>
+                            <span class="stat-count">@totalReviews</span> reviews
+                        </div>
+                        @if (totalReviews > 0)
+                        {
+                            <div class="stat-item">
+                                <span class="stat-icon"><i class="fas fa-medal"></i></span>
+                                <span class="stat-count">@avgRating.ToString("0.0")</span> avg rating
+                            </div>
+                        }
+                    </div>
+                    <div class="profile-bio">
+                        <span class="bio-label">Official Store</span>
+                        <p>@Model.Store?.Description</p>
+                        <div class="bio-badges">
+                            <span class="bio-badge"><i class="fas fa-check-circle"></i> Verified</span>
+                            <span class="bio-badge"><i class="fas fa-clock"></i> Active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== TABS ========== -->
+            <div class="profile-tabs">
+                <button class="tab-btn active">
+                    <i class="fas fa-table-cells"></i> Products
+                </button>
+            </div>
+
+            <!-- ========== ADD PRODUCT (only shown when store is empty) ========== -->
+            @if (!Model.Products.Any())
+            {
+                <div class="add-hero">
+                    <a asp-page="/StoreOwner/Products/Create" class="empty-add-btn" title="Add Product">
+                        <i class="fas fa-plus"></i>
+                    </a>
+                    <span class="empty-add-label">Add Product</span>
+                </div>
+            }
+
+            <!-- ========== PRODUCT GRID ========== -->
+            @if (Model.Products.Any())
+            {
+                <div class="instagram-grid">
+                    @foreach (var p in Model.Products)
+                    {
+                        var orderedImages = (p.Images?.OrderByDescending(im => im.IsPrimary).ThenBy(im => im.DisplayOrder).ToList()) ?? new();
+                        var img = orderedImages.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+                        var imageCount = orderedImages.Count;
+                        var reviewCount = p.Reviews?.Count ?? 0;
+                        <div class="product-grid-item" data-product-id="@p.ProductID">
+                            <div class="image-wrap" onclick="openProductModal(@p.ProductID)">
+                                <img src="@img" alt="@p.ProductName" loading="lazy" />
+                                <span class="product-badge">For Sale</span>
+                                @if (imageCount > 1)
+                                {
+                                    <span class="image-count-badge"><i class="fas fa-images"></i> @imageCount</span>
+                                }
+                                <div class="product-quick-actions">
+                                    <button onclick="event.stopPropagation(); openProductModal(@p.ProductID)" title="Quick view">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="product-details">
+                                <span class="product-name">@p.ProductName</span>
+                                <div class="product-meta">
+                                    <span class="price">$@p.Price</span>
+                                    <span class="review-count"><i class="fas fa-star"></i> @reviewCount review@(reviewCount != 1 ? "s" : "")</span>
+                                </div>
+                                <button type="button" class="product-boost-btn" onclick="event.stopPropagation(); alert('Boost campaign for &quot;@p.ProductName&quot; would start here.')">
+                                    <i class="fas fa-bolt"></i> Boost
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ========== SIDE PANEL TOGGLE + BACKDROP ========== -->
+    <button type="button" class="side-panel-toggle" id="sidePanelToggle" onclick="toggleSidePanel()" title="Menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="side-panel-backdrop" id="sidePanelBackdrop" onclick="closeSidePanel()"></div>
+
+    <aside class="side-panel" id="sidePanel">
+        <div class="side-panel-card">
+            <div class="side-panel-store">
                 @if (!string.IsNullOrWhiteSpace(Model.Store?.LogoURL))
                 {
-                    <img class="profile-avatar" src="@Model.Store.LogoURL" alt="@Model.Store.StoreName Logo" />
+                    <img class="side-panel-avatar" src="@Model.Store.LogoURL" alt="@Model.Store.StoreName" />
                 }
                 else
                 {
-                    <div class="profile-avatar-fallback">
-                        <i class="fas fa-store"></i>
-                    </div>
+                    <div class="side-panel-avatar-fallback"><i class="fas fa-store"></i></div>
                 }
+                <div>
+                    <div class="side-panel-name">@Model.Store?.StoreName</div>
+                    <div class="side-panel-role">Store Owner</div>
+                </div>
             </div>
 
-            <div class="avatar-add-story-btn" onclick="event.stopPropagation(); RealNestStories.openUploadStoryModal()" title="Add Story">
-                <i class="fas fa-plus"></i>
-            </div>
-
-            @if (!hasActiveStories)
-            {
-                <div class="avatar-status"></div>
-            }
-        </div>
-
-        <div class="profile-details">
-            <div class="profile-username-row">
-                <h2 class="profile-username">@Model.Store?.StoreName</h2>
-                <a asp-page="/StoreOwner/StoreProfile" class="edit-profile-btn">
-                    <i class="fas fa-pen"></i> Edit Profile
+            <div class="side-panel-nav">
+                <a asp-page="/StoreOwner/StoreProfile" class="side-panel-link">
+                    <i class="fas fa-pen"></i> <span>Edit Profile</span>
                 </a>
-
-                <form asp-area="Identity"
-                      asp-page="/Account/Logout"
-                      asp-route-returnUrl="/"
-                      method="post"
-                      style="display:inline;">
-                    <button type="submit" class="logout-btn">
-                        <i class="fas fa-right-from-bracket"></i>
-                        Logout
-                    </button>
-                </form>
+                <a asp-page="/StoreOwner/Products/Create" class="side-panel-link">
+                    <i class="fas fa-plus"></i> <span>Add Product</span>
+                </a>
+                <a href="/Chat" class="side-panel-link">
+                    <i class="fas fa-comment-dots"></i> <span>Messages</span>
+                </a>
             </div>
-            <div class="profile-stats-row">
-                <div class="stat-item">
-                    <span class="stat-icon"><i class="fas fa-box"></i></span>
-                    <span class="stat-count">@Model.Products.Count</span> products
-                </div>
-                <div class="stat-item">
-                    <span class="stat-icon"><i class="fas fa-user-friends"></i></span>
-                    <span class="stat-count">@Model.FollowersCount</span> followers
-                </div>
-                <div class="stat-item">
-                    <span class="stat-icon"><i class="fas fa-star"></i></span>
-                    <span class="stat-count">@totalReviews</span> reviews
-                </div>
-                @if (totalReviews > 0)
-                {
-                    <div class="stat-item">
-                        <span class="stat-icon"><i class="fas fa-medal"></i></span>
-                        <span class="stat-count">@avgRating.ToString("0.0")</span> avg rating
-                    </div>
-                }
-            </div>
-            <a href="/Chat" class="stats-message-btn">
-                <i class="fas fa-comment-dots"></i> Messages
-            </a>
-            <div class="profile-bio">
-                <span class="bio-label">Official Store</span>
-                <p>@Model.Store?.Description</p>
-                <div class="bio-badges">
-                    <span class="bio-badge"><i class="fas fa-check-circle"></i> Verified</span>
-                    <span class="bio-badge"><i class="fas fa-clock"></i> Active</span>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- ========== TABS ========== -->
-    <div class="profile-tabs">
-        <button class="tab-btn active">
-            <i class="fas fa-table-cells"></i> Products
-        </button>
-    </div>
-
-    <!-- ========== PRODUCT GRID ========== -->
-    @if (Model.Products.Any())
-    {
-        <div class="instagram-grid">
-            @foreach (var p in Model.Products)
-            {
-                var orderedImages = (p.Images?.OrderByDescending(im => im.IsPrimary).ThenBy(im => im.DisplayOrder).ToList()) ?? new();
-                var img = orderedImages.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
-                var imageCount = orderedImages.Count;
-                var reviewCount = p.Reviews?.Count ?? 0;
-                <div class="product-grid-item" data-product-id="@p.ProductID" onclick="openProductModal(@p.ProductID)">
-                    <div class="image-wrap">
-                        <img src="@img" alt="@p.ProductName" loading="lazy" />
-                        <span class="product-badge">For Sale</span>
-                        @if (imageCount > 1)
-                        {
-                            <span class="image-count-badge"><i class="fas fa-images"></i> @imageCount</span>
-                        }
-                        <div class="product-quick-actions">
-                            <button onclick="event.stopPropagation(); openProductModal(@p.ProductID)" title="Quick view">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="product-details">
-                        <span class="product-name">@p.ProductName</span>
-                        <div class="product-meta">
-                            <span class="price">$@p.Price</span>
-                            <span class="review-count"><i class="fas fa-star"></i> @reviewCount review@(reviewCount != 1 ? "s" : "")</span>
-                        </div>
-                    </div>
-                </div>
-            }
+            <form asp-area="Identity"
+                  asp-page="/Account/Logout"
+                  asp-route-returnUrl="/"
+                  method="post">
+                <button type="submit" class="side-logout-btn">
+                    <i class="fas fa-right-from-bracket"></i> Logout
+                </button>
+            </form>
         </div>
-    }
-    else
-    {
-        <div class="empty-state">
-            <div class="empty-icon"><i class="fas fa-store"></i></div>
-            <h3>Your store is empty</h3>
-            <p>Start adding products to your store and they'll appear here.</p>
-            <a asp-page="/StoreOwner/AddProduct" class="empty-action-btn">
-                <i class="fas fa-plus-circle"></i> Add Your First Product
-            </a>
-        </div>
-    }
+    </aside>
 </div>
 
 <!-- ========== INSTAGRAM-STYLE FEED OVERLAY ========== -->
@@ -1051,6 +1360,29 @@
 </div>
 
 <script>
+    // ---- Side panel (open/close) ----
+    const sidePanel = document.getElementById('sidePanel');
+    const sidePanelToggle = document.getElementById('sidePanelToggle');
+    const sidePanelBackdrop = document.getElementById('sidePanelBackdrop');
+
+    function toggleSidePanel() {
+        if (!sidePanel) return;
+        const isOpen = sidePanel.classList.toggle('panel-open');
+        sidePanelToggle.classList.toggle('panel-open', isOpen);
+        sidePanelBackdrop.classList.toggle('panel-open', isOpen);
+        sidePanelToggle.querySelector('i').className = isOpen ? 'fas fa-xmark' : 'fas fa-bars';
+    }
+
+    function closeSidePanel() {
+        if (!sidePanel) return;
+        sidePanel.classList.remove('panel-open');
+        sidePanelToggle.classList.remove('panel-open');
+        sidePanelBackdrop.classList.remove('panel-open');
+        sidePanelToggle.querySelector('i').className = 'fas fa-bars';
+    }
+</script>
+
+<script>
     const productOrder = [@Html.Raw(string.Join(",", Model.Products.Select(p => p.ProductID)))];
     let currentProductId = null;
     const feedOverlay = document.getElementById('feedOverlay');
@@ -1119,6 +1451,7 @@
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && currentProductId !== null) closeProductModal();
+        if (e.key === 'Escape') closeSidePanel();
     });
 
     window.onload = function () {

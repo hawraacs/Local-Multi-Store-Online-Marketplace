@@ -9,10 +9,6 @@
 
     var storeOwnerLoginError =
         TempData["StoreOwnerLoginError"]?.ToString();
-
-    var shouldOpenManagementTab =
-        !string.IsNullOrWhiteSpace(deliveryLoginError) ||
-        !string.IsNullOrWhiteSpace(storeOwnerLoginError);
 }
 
 <!DOCTYPE html>
@@ -37,13 +33,15 @@
                 --accent-hover: #5b21b6;
                 --accent-light: #f3effe;
                 --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-                --like-color: #ef4444;
                 --success-color: #10b981;
                 --error-color: #dc2626;
                 --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+                --font-display: 'Playfair Display', Georgia, serif;
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.05);
                 --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
-                --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
+                --shadow-lg: 0 20px 44px rgba(30, 27, 46, 0.16);
+                --radius-lg: 20px;
+                --radius-md: 14px;
             }
 
             * {
@@ -60,6 +58,7 @@
                 padding-bottom: 100px;
             }
 
+            /* ============ Mobile bottom nav (site-wide) ============ */
             .mobile-bottom-nav {
                 display: flex !important;
                 position: fixed;
@@ -147,102 +146,153 @@
                     box-sizing: content-box;
                 }
 
+            /* ============ Page shell ============ */
             .profile-container {
-                max-width: 1180px;
+                max-width: 1240px;
                 width: 100%;
-                margin: 30px auto;
+                margin: 28px auto;
                 padding: 0 20px;
             }
 
-            .profile-header {
+            .dashboard-shell {
                 display: flex;
-                align-items: center;
-                gap: 60px;
-                padding-bottom: 44px;
-                border-bottom: 1px solid var(--border-color);
-                margin-bottom: 28px;
+                align-items: flex-start;
+                gap: 28px;
             }
 
-            .profile-avatar-container {
+            /* ============ Sidebar ============ */
+            .profile-sidebar {
+                width: 272px;
                 flex-shrink: 0;
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-sm);
+                position: sticky;
+                top: 24px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
             }
 
-            .profile-avatar {
-                width: 150px;
-                height: 150px;
+            .sidebar-identity {
+                padding: 26px 22px 20px;
+                text-align: center;
+                border-bottom: 1px solid var(--border-color);
+                background: linear-gradient(180deg, var(--accent-light) 0%, rgba(243, 239, 254, 0) 100%);
+            }
+
+            .sidebar-avatar {
+                width: 76px;
+                height: 76px;
+                margin: 0 auto 14px;
                 border-radius: 50%;
                 background: var(--accent-gradient);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 70px;
+                font-size: 34px;
                 color: #ffffff;
-                border: 2px solid #ffffff;
+                border: 3px solid #ffffff;
                 box-shadow: var(--shadow-md);
             }
 
-            .profile-details {
-                flex-grow: 1;
-            }
-
-            .profile-username-row {
+            .sidebar-name {
+                font-family: var(--font-display);
+                font-size: 18px;
+                font-weight: 700;
+                color: var(--text-primary);
                 display: flex;
                 align-items: center;
-                gap: 20px;
-                flex-wrap: wrap;
-                margin-bottom: 20px;
+                justify-content: center;
+                gap: 6px;
+                line-height: 1.3;
             }
 
-            .profile-username {
-                font-family: 'Playfair Display', Georgia, serif;
-                font-size: 28px;
+            .sidebar-joined {
+                font-size: 12px;
+                color: var(--text-secondary);
+                margin-top: 4px;
+            }
+
+            .sidebar-edit-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                margin-top: 14px;
+                background: #ffffff;
+                border: 1px solid var(--border-color);
+                color: var(--accent-color);
+                font-weight: 700;
+                font-size: 12.5px;
+                padding: 7px 16px;
+                border-radius: 50px;
+                cursor: pointer;
+                transition: all 0.15s ease;
+            }
+
+                .sidebar-edit-btn:hover {
+                    background: var(--accent-color);
+                    border-color: var(--accent-color);
+                    color: #ffffff;
+                }
+
+            .sidebar-stats {
+                display: flex;
+                justify-content: space-between;
+                padding: 16px 18px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .sidebar-stat {
+                flex: 1;
+                text-align: center;
+                cursor: default;
+                border-radius: 10px;
+                padding: 4px 2px;
+                transition: background-color 0.15s ease;
+            }
+
+                .sidebar-stat.clickable {
+                    cursor: pointer;
+                }
+
+                    .sidebar-stat.clickable:hover {
+                        background: var(--accent-light);
+                    }
+
+            .sidebar-stat-count {
+                display: block;
+                font-size: 16px;
                 font-weight: 800;
                 color: var(--text-primary);
-                display: flex;
-                align-items: center;
             }
 
-            .profile-stats-row {
-                display: flex;
-                gap: 40px;
-                margin-bottom: 20px;
-            }
-
-            .stat-item {
-                font-size: 16px;
-                color: var(--text-primary);
-                transition: opacity 0.15s ease;
-            }
-
-            .stat-item-clickable:hover {
-                color: var(--accent-color);
-            }
-
-            .stat-count {
-                font-weight: 700;
-            }
-
-            .profile-bio {
-                font-size: 14px;
-                line-height: 1.5;
+            .sidebar-stat-label {
+                display: block;
+                font-size: 11px;
                 color: var(--text-secondary);
+                margin-top: 2px;
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
             }
 
-            .bio-badges {
+            .sidebar-badges {
                 display: flex;
                 flex-wrap: wrap;
-                gap: 8px;
-                margin-top: 12px;
+                gap: 6px;
+                padding: 14px 18px;
+                border-bottom: 1px solid var(--border-color);
             }
 
-            .bio-badge {
+            .sidebar-badge {
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
                 background: var(--accent-light);
-                padding: 4px 10px;
-                border-radius: 12px;
-                font-size: 12px;
+                padding: 4px 9px;
+                border-radius: 10px;
+                font-size: 11px;
                 font-weight: 700;
                 color: var(--accent-color);
             }
@@ -253,28 +303,93 @@
                 border: 1px solid #fef3c7;
             }
 
-            .menu-trigger-btn {
-                width: 38px;
-                height: 38px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 15px;
-                background-color: var(--accent-light);
-                border: 1px solid var(--border-color);
-                border-radius: 50px;
-                color: var(--accent-color);
-                cursor: pointer;
-                flex-shrink: 0;
-                transition: all 0.2s ease;
+            .restricted-badge {
+                background: #fee2e2;
+                color: #b91c1c;
             }
 
-                .menu-trigger-btn:hover {
-                    background-color: var(--accent-color);
-                    border-color: var(--accent-color);
-                    color: #ffffff;
+            .sidebar-nav {
+                padding: 10px 12px;
+            }
+
+            .sidebar-nav-label,
+            .sidebar-section-label {
+                font-size: 10.5px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: var(--text-secondary);
+                padding: 12px 12px 6px;
+            }
+
+            .sidebar-link {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                width: 100%;
+                padding: 11px 12px;
+                font-size: 14px;
+                font-weight: 600;
+                font-family: var(--font-family);
+                color: var(--text-primary);
+                text-decoration: none;
+                background: transparent;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                text-align: left;
+                transition: background-color 0.15s ease, color 0.15s ease;
+            }
+
+                .sidebar-link i {
+                    width: 18px;
+                    text-align: center;
+                    color: var(--accent-color);
+                    font-size: 15px;
                 }
 
+                .sidebar-link:hover {
+                    background: var(--accent-light);
+                }
+
+                .sidebar-link.active {
+                    background: var(--accent-color);
+                    color: #ffffff;
+                    font-weight: 800;
+                    box-shadow: 0 6px 14px rgba(109, 40, 217, 0.25);
+                }
+
+                    .sidebar-link.active i {
+                        color: #ffffff;
+                    }
+
+                .sidebar-link.logout {
+                    color: var(--error-color);
+                }
+
+                    .sidebar-link.logout i {
+                        color: var(--error-color);
+                    }
+
+                    .sidebar-link.logout:hover {
+                        background: #fef2f2;
+                    }
+
+            .sidebar-divider {
+                height: 1px;
+                background: var(--border-color);
+                margin: 8px 12px;
+            }
+
+            .logout-form {
+                margin: 0;
+            }
+
+            .sidebar-close-btn {
+                display: none;
+            }
+
+            /* ============ Mobile drawer mechanics ============ */
             .sidebar-overlay {
                 display: none;
                 position: fixed;
@@ -290,153 +405,261 @@
                     opacity: 1;
                 }
 
-            .sidebar {
-                position: fixed;
-                top: 0;
-                right: -300px;
-                width: 280px;
-                max-width: 82vw;
-                height: 100%;
-                background: var(--card-bg);
-                box-shadow: var(--shadow-lg);
-                z-index: 9999;
-                display: flex;
-                flex-direction: column;
-                overflow-y: auto;
-                transition: right 0.3s ease;
+            /* ============ Main content ============ */
+            .main-content {
+                flex-grow: 1;
+                min-width: 0;
             }
 
-                .sidebar.open {
-                    right: 0;
-                }
-
-            .sidebar-panel-header {
+            .content-topbar {
                 display: flex;
-                align-items: center;
+                align-items: flex-start;
                 justify-content: space-between;
-                padding: 16px 20px;
-                border-bottom: 1px solid var(--border-color);
-                flex-shrink: 0;
+                gap: 16px;
+                margin-bottom: 22px;
             }
 
-                .sidebar-panel-header h3 {
-                    font-size: 16px;
-                    font-weight: 800;
-                    color: var(--text-primary);
-                }
-
-            .sidebar-divider {
-                height: 1px;
-                background: var(--border-color);
-                margin: 6px 0;
-            }
-
-            .sidebar-link {
-                display: flex;
-                align-items: center;
-                gap: 14px;
-                width: 100%;
-                padding: 14px 20px;
-                font-size: 14.5px;
-                font-weight: 600;
-                font-family: var(--font-family);
+            .page-heading h1 {
+                font-family: var(--font-display);
+                font-size: 26px;
+                font-weight: 700;
                 color: var(--text-primary);
-                text-decoration: none;
-                background: transparent;
-                border: none;
+            }
+
+            .page-heading p {
+                font-size: 13.5px;
+                color: var(--text-secondary);
+                margin-top: 4px;
+            }
+
+            .mobile-menu-btn {
+                display: none;
+                align-items: center;
+                gap: 8px;
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                color: var(--text-primary);
+                font-weight: 700;
+                font-size: 13px;
+                padding: 9px 14px;
+                border-radius: 50px;
                 cursor: pointer;
-                text-align: left;
-                transition: background-color 0.15s ease, color 0.15s ease;
+                box-shadow: var(--shadow-sm);
+                margin-bottom: 14px;
             }
 
-                .sidebar-link i {
-                    width: 18px;
-                    text-align: center;
+                .mobile-menu-btn i.fa-bars {
                     color: var(--accent-color);
-                    font-size: 16px;
                 }
-
-                .sidebar-link:hover {
-                    background: var(--accent-light);
-                }
-
-                .sidebar-link.active {
-                    background: var(--accent-light);
-                    color: var(--accent-color);
-                    font-weight: 800;
-                }
-
-                    .sidebar-link.active i {
-                        color: var(--accent-color);
-                    }
-
-                .sidebar-link.logout {
-                    color: var(--error-color);
-                }
-
-                    .sidebar-link.logout i {
-                        color: var(--error-color);
-                    }
-
-                    .sidebar-link.logout:hover {
-                        background: #fef2f2;
-                    }
-
-            .logout-form {
-                margin: 0;
-            }
-
-            .content-area {
-                width: 100%;
-            }
-
-            .profile-user-bio {
-                cursor: pointer;
-                border-radius: 10px;
-                padding: 6px 0;
-                margin-bottom: 4px;
-                transition: opacity 0.15s ease;
-            }
-
-                .profile-user-bio:hover {
-                    opacity: 0.75;
-                }
-
-                .profile-user-bio p {
-                    font-size: 14px;
-                    line-height: 1.5;
-                    color: var(--text-primary);
-                }
-
-                .profile-user-bio .bio-placeholder {
-                    color: var(--text-secondary);
-                    font-style: italic;
-                }
-
-                    .profile-user-bio .bio-placeholder i {
-                        margin-right: 6px;
-                        color: var(--accent-color);
-                    }
 
             .tab-content {
                 display: none;
-                animation: fadeUp 0.4s ease forwards;
+                animation: fadeUp 0.35s ease forwards;
             }
 
                 .tab-content.active {
                     display: block;
                 }
 
+            /* ============ Management / settings ============ */
+            .settings-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+                align-items: start;
+            }
+
+            .settings-card {
+                background: var(--card-bg);
+                padding: 24px 26px;
+                border-radius: var(--radius-lg);
+                border: 1px solid var(--border-color);
+                box-shadow: var(--shadow-sm);
+            }
+
+                .settings-card h3 {
+                    font-size: 16.5px;
+                    font-weight: 800;
+                    margin-bottom: 14px;
+                    color: var(--text-primary);
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    border-bottom: 1px solid var(--border-color);
+                    padding-bottom: 12px;
+                }
+
+                    .settings-card h3 i {
+                        width: 34px;
+                        height: 34px;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        background: var(--accent-light);
+                        border-radius: 10px;
+                        color: var(--accent-color);
+                        font-size: 15px;
+                    }
+
+                .settings-card p {
+                    color: var(--text-secondary);
+                    font-size: 13.5px;
+                    line-height: 1.55;
+                    margin-bottom: 18px;
+                }
+
+            .settings-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 9px;
+                background: var(--accent-gradient);
+                color: white;
+                padding: 10px 18px;
+                text-decoration: none;
+                border-radius: 50px;
+                font-weight: 700;
+                font-size: 13px;
+                transition: all 0.2s ease;
+                border: none;
+                cursor: pointer;
+                margin-right: 10px;
+                margin-bottom: 8px;
+                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.18);
+            }
+
+                .settings-btn:hover {
+                    opacity: 0.94;
+                }
+
+                .settings-btn.subtle {
+                    background: var(--card-bg);
+                    color: var(--accent-color);
+                    border: 1px solid var(--border-color);
+                    box-shadow: none;
+                }
+
+                    .settings-btn.subtle:hover {
+                        background: var(--accent-light);
+                    }
+
+            .message {
+                padding: 14px 18px;
+                border-radius: 12px;
+                font-weight: 700;
+                margin-bottom: 20px;
+            }
+
+            .success-message {
+                background: #ecfdf5;
+                color: var(--success-color);
+                border: 1px solid #d1fae5;
+            }
+
+            .error-message {
+                background: #fef2f2;
+                color: var(--error-color);
+                border: 1px solid #fee2e2;
+            }
+
+            .warning-message {
+                background: #fff5f5;
+                color: var(--error-color);
+                border: 1px solid #ffd1cc;
+                padding: 12px;
+                border-radius: 10px;
+                font-size: 13.5px;
+                margin-bottom: 16px;
+            }
+
+            .info-message {
+                background: var(--accent-light);
+                color: var(--accent-color);
+                border: 1px solid var(--border-color);
+                padding: 12px;
+                border-radius: 10px;
+                font-size: 13.5px;
+                margin-bottom: 16px;
+            }
+
+            .delivery-login-card {
+                display: none;
+                margin-top: 16px;
+                background: var(--bg-color);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-md);
+                padding: 18px;
+            }
+
+                .delivery-login-card.open {
+                    display: block;
+                }
+
+            .delivery-login-form {
+                display: grid;
+                gap: 12px;
+                margin-top: 12px;
+            }
+
+            .delivery-login-btn {
+                border: none;
+                background: var(--accent-gradient);
+                color: white;
+                padding: 11px;
+                border-radius: 50px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: opacity 0.15s;
+                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25);
+            }
+
+                .delivery-login-btn:hover {
+                    opacity: 0.95;
+                }
+
+            .form-group {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+                .form-group label {
+                    font-size: 12.5px;
+                    font-weight: 700;
+                    color: var(--text-secondary);
+                }
+
+                .form-group input,
+                .form-group select,
+                .form-group textarea {
+                    padding: 10px 12px;
+                    border: 1px solid var(--border-color);
+                    border-radius: 8px;
+                    outline: none;
+                    font-size: 14px;
+                    color: var(--text-primary);
+                    width: 100%;
+                    background: var(--card-bg);
+                    font-family: var(--font-family);
+                    transition: all 0.2s ease;
+                }
+
+                    .form-group input:focus,
+                    .form-group select:focus,
+                    .form-group textarea:focus {
+                        border-color: var(--accent-color);
+                    }
+
+            /* ============ Wishlist ============ */
             .instagram-grid {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
-                gap: 24px;
+                gap: 22px;
             }
 
             .product-grid-item {
                 background: var(--card-bg);
                 border: 1px solid var(--border-color);
-                border-radius: 20px;
+                border-radius: var(--radius-lg);
                 overflow: hidden;
                 display: flex;
                 flex-direction: column;
@@ -451,7 +674,7 @@
 
                 .product-grid-item img {
                     width: 100%;
-                    height: 180px;
+                    height: 170px;
                     object-fit: cover;
                     border-bottom: 1px solid var(--border-color);
                 }
@@ -464,16 +687,16 @@
             }
 
                 .product-details h4 {
-                    font-size: 15px;
+                    font-size: 14.5px;
                     font-weight: 700;
                     color: var(--text-primary);
                     margin-bottom: 6px;
-                    height: 40px;
+                    height: 38px;
                     overflow: hidden;
                 }
 
                 .product-details .price {
-                    font-size: 16px;
+                    font-size: 15.5px;
                     font-weight: 800;
                     color: var(--accent-color);
                     margin-bottom: 12px;
@@ -501,32 +724,33 @@
 
             .empty-state {
                 text-align: center;
-                padding: 60px 20px;
+                padding: 54px 20px;
                 color: var(--text-secondary);
             }
 
             .empty-icon {
-                font-size: 50px;
-                margin-bottom: 16px;
+                font-size: 46px;
+                margin-bottom: 14px;
                 color: var(--border-color);
             }
 
             .empty-state h3 {
-                font-size: 20px;
+                font-size: 18px;
                 font-weight: 800;
                 color: var(--text-primary);
                 margin-bottom: 8px;
             }
 
             .empty-state p {
-                font-size: 14px;
+                font-size: 13.5px;
                 max-width: 350px;
-                margin: 0 auto 20px;
+                margin: 0 auto;
                 line-height: 1.5;
             }
 
+            /* ============ Activity ============ */
             .activity-section {
-                margin-bottom: 32px;
+                margin-bottom: 30px;
             }
 
                 .activity-section:last-child {
@@ -534,9 +758,9 @@
                 }
 
             .activity-section-title {
-                font-family: 'Playfair Display', Georgia, serif;
-                font-size: 17px;
-                font-weight: 800;
+                font-family: var(--font-display);
+                font-size: 16.5px;
+                font-weight: 700;
                 color: var(--text-primary);
                 display: flex;
                 align-items: center;
@@ -548,20 +772,20 @@
 
                 .activity-section-title i {
                     color: var(--accent-color);
-                    font-size: 15px;
+                    font-size: 14px;
                 }
 
             .reviews-container {
                 display: flex;
                 flex-direction: column;
-                gap: 16px;
+                gap: 14px;
             }
 
             .review-row {
                 background: var(--card-bg);
                 border: 1px solid var(--border-color);
-                border-radius: 16px;
-                padding: 20px;
+                border-radius: var(--radius-md);
+                padding: 18px 20px;
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-start;
@@ -574,14 +798,14 @@
             }
 
                 .review-main h4 {
-                    font-size: 16px;
+                    font-size: 15px;
                     font-weight: 700;
                     color: var(--text-primary);
                     margin-bottom: 6px;
                 }
 
                 .review-main p {
-                    font-size: 14px;
+                    font-size: 13.5px;
                     color: var(--text-secondary);
                     line-height: 1.5;
                     font-style: italic;
@@ -593,7 +817,7 @@
                 flex-direction: column;
                 align-items: flex-end;
                 gap: 6px;
-                min-width: 120px;
+                min-width: 110px;
             }
 
             .stars-row {
@@ -601,96 +825,7 @@
                 gap: 2px;
             }
 
-            .settings-card {
-                background: var(--card-bg);
-                padding: 28px 32px;
-                border-radius: 20px;
-                margin-bottom: 24px;
-                border: 1px solid var(--border-color);
-                box-shadow: var(--shadow-sm);
-            }
-
-                .settings-card h3 {
-                    font-size: 18px;
-                    font-weight: 800;
-                    margin-bottom: 16px;
-                    color: var(--text-primary);
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    border-bottom: 1px solid var(--border-color);
-                    padding-bottom: 12px;
-                }
-
-                .settings-card p {
-                    color: var(--text-secondary);
-                    font-size: 14px;
-                    line-height: 1.5;
-                    margin-bottom: 20px;
-                }
-
-            .settings-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 10px;
-                background: var(--accent-gradient);
-                color: white;
-                padding: 10px 20px;
-                text-decoration: none;
-                border-radius: 50px;
-                font-weight: 700;
-                font-size: 13px;
-                transition: all 0.2s ease;
-                border: none;
-                cursor: pointer;
-                margin-right: 12px;
-                margin-bottom: 8px;
-                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.15);
-            }
-
-                .settings-btn:hover {
-                    opacity: 0.95;
-                }
-
-            .message {
-                padding: 14px 18px;
-                border-radius: 8px;
-                font-weight: 700;
-                margin-bottom: 20px;
-            }
-
-            .success-message {
-                background: #ecfdf5;
-                color: var(--success-color);
-                border: 1px solid #d1fae5;
-            }
-
-            .error-message {
-                background: #fef2f2;
-                color: var(--error-color);
-                border: 1px solid #fee2e2;
-            }
-
-            .warning-message {
-                background: #fff5f5;
-                color: var(--error-color);
-                border: 1px solid #ffd1cc;
-                padding: 12px;
-                border-radius: 8px;
-                font-size: 14px;
-                margin-bottom: 16px;
-            }
-
-            .info-message {
-                background: var(--accent-light);
-                color: var(--accent-color);
-                border: 1px solid var(--border-color);
-                padding: 12px;
-                border-radius: 8px;
-                font-size: 14px;
-                margin-bottom: 16px;
-            }
-
+            /* ============ Modals ============ */
             .modal {
                 display: none;
                 position: fixed;
@@ -707,9 +842,9 @@
                 background-color: var(--card-bg);
                 margin: 10% auto;
                 padding: 30px;
-                border-radius: 20px;
+                border-radius: var(--radius-lg);
                 width: 90%;
-                max-width: 450px;
+                max-width: 440px;
                 box-shadow: var(--shadow-lg);
                 border: 1px solid var(--border-color);
                 position: relative;
@@ -732,7 +867,7 @@
 
             .modal h3 {
                 margin-bottom: 20px;
-                font-size: 20px;
+                font-size: 19px;
                 color: var(--text-primary);
                 font-weight: 800;
             }
@@ -742,45 +877,6 @@
                 flex-direction: column;
                 gap: 16px;
             }
-
-            .form-group {
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-            }
-
-                .form-group label {
-                    font-size: 13px;
-                    font-weight: 700;
-                    color: var(--text-secondary);
-                }
-
-                .form-group input,
-                .form-group select,
-                .form-group textarea {
-                    padding: 10px 12px;
-                    border: 1px solid var(--border-color);
-                    border-radius: 8px;
-                    outline: none;
-                    font-size: 14px;
-                    color: var(--text-primary);
-                    width: 100%;
-                    background: var(--bg-color);
-                    font-family: var(--font-family);
-                    transition: all 0.2s ease;
-                }
-
-                .form-group textarea {
-                    resize: vertical;
-                    min-height: 90px;
-                }
-
-                    .form-group input:focus,
-                    .form-group select:focus,
-                    .form-group textarea:focus {
-                        border-color: var(--accent-color);
-                        background: #ffffff;
-                    }
 
             .save-btn {
                 background: var(--accent-gradient);
@@ -873,45 +969,10 @@
                     color: #ffffff;
                 }
 
-            .delivery-login-card {
-                display: none;
-                margin-top: 18px;
-                background: var(--bg-color);
-                border: 1px solid var(--border-color);
-                border-radius: 16px;
-                padding: 18px;
-            }
-
-                .delivery-login-card.open {
-                    display: block;
-                }
-
-            .delivery-login-form {
-                display: grid;
-                gap: 12px;
-                margin-top: 12px;
-            }
-
-            .delivery-login-btn {
-                border: none;
-                background: var(--accent-gradient);
-                color: white;
-                padding: 11px;
-                border-radius: 50px;
-                font-weight: 700;
-                cursor: pointer;
-                transition: opacity 0.15s;
-                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25);
-            }
-
-                .delivery-login-btn:hover {
-                    opacity: 0.95;
-                }
-
             @@keyframes fadeUp {
                 from {
                     opacity: 0;
-                    transform: translateY(12px);
+                    transform: translateY(10px);
                 }
 
                 to {
@@ -932,16 +993,47 @@
                 }
             }
 
-            @@media (max-width: 768px) {
-                .profile-header {
-                    flex-direction: column;
-                    text-align: center;
-                    gap: 24px;
-                    padding-bottom: 24px;
+            /* ============ Responsive ============ */
+            @@media (max-width: 992px) {
+                .profile-sidebar {
+                    position: fixed;
+                    top: 0;
+                    right: -300px;
+                    width: 280px;
+                    max-width: 82vw;
+                    height: 100%;
+                    border-radius: 0;
+                    z-index: 9999;
+                    transition: right 0.3s ease;
                 }
 
-                .profile-stats-row {
+                    .profile-sidebar.open {
+                        right: 0;
+                    }
+
+                .sidebar-close-btn {
+                    display: inline-flex;
+                    align-items: center;
                     justify-content: center;
+                    position: absolute;
+                    top: 14px;
+                    right: 14px;
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    background: #ffffff;
+                    border: 1px solid var(--border-color);
+                    color: var(--text-secondary);
+                    font-size: 15px;
+                    cursor: pointer;
+                }
+
+                .sidebar-identity {
+                    padding-top: 20px;
+                }
+
+                .mobile-menu-btn {
+                    display: inline-flex;
                 }
 
                 .instagram-grid {
@@ -965,172 +1057,376 @@
 
     <partial name="_CustomerBottomNav" />
 
-    <div class="profile-container" style="position: relative;">
+    <div class="profile-container">
 
-        <div style="position: absolute; top: 0; right: 20px; z-index: 10;">
-            <partial name="_MessageBell" />
-        </div>
+        <div class="dashboard-shell">
 
-        @if (TempData["Success"] != null)
-        {
-            <div class="message success-message">
-                @TempData["Success"]
-            </div>
-        }
+            <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
 
-        @if (!ViewData.ModelState.IsValid)
-        {
-            <div class="message error-message">
-                Please check your information and try again.
-            </div>
-        }
+            <aside id="sidebar" class="profile-sidebar">
 
-        <div class="profile-header">
-            <div class="profile-avatar-container">
-                <div class="profile-avatar">
-                    <i class="fas fa-user-astronaut"></i>
-                </div>
-            </div>
+                <button type="button" class="sidebar-close-btn" onclick="closeSidebar()" aria-label="Close menu">
+                    <i class="fas fa-xmark"></i>
+                </button>
 
-            <div class="profile-details">
-                <div class="profile-username-row">
-                    <h2 class="profile-username">
+                <div class="sidebar-identity">
+                    <div class="sidebar-avatar">
+                        <i class="fas fa-user-astronaut"></i>
+                    </div>
+                    <div class="sidebar-name">
                         @Model.CustomerFullName
                         @if (Model.IsVerified)
                         {
                             <span title="Verified Customer">
-                                <i class="fas fa-check-circle" style="color: #6d28d9; font-size: 18px; margin-left: 8px;"></i>
+                                <i class="fas fa-check-circle" style="color: #6d28d9; font-size: 15px;"></i>
                             </span>
                         }
-                    </h2>
-                    <button class="menu-trigger-btn" onclick="openSidebar()" title="Menu">
-                        <i class="fas fa-bars"></i>
+                    </div>
+                    <div class="sidebar-joined">Customer since @Model.CreatedAt.ToString("MMM yyyy")</div>
+
+                    <button type="button" class="sidebar-edit-btn" onclick="openEditModal()">
+                        <i class="fas fa-user-pen"></i> Edit Profile
                     </button>
                 </div>
 
-                <div class="profile-user-bio" onclick="openEditBioModal()" title="Click to edit your bio">
-                    @if (!string.IsNullOrWhiteSpace(Model.CustomerBio))
+                <div class="sidebar-stats">
+                    <div class="sidebar-stat">
+                        <span class="sidebar-stat-count">@Model.OrdersCount</span>
+                        <span class="sidebar-stat-label">Orders</span>
+                    </div>
+                    <div class="sidebar-stat clickable" onclick="openFollowingModal()">
+                        <span class="sidebar-stat-count">@Model.FollowedStoresList.Count</span>
+                        <span class="sidebar-stat-label">Following</span>
+                    </div>
+                    <div class="sidebar-stat">
+                        <span class="sidebar-stat-count">@Model.WishlistCount</span>
+                        <span class="sidebar-stat-label">Wishlist</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-badges">
+                    <span class="sidebar-badge loyalty-badge">
+                        <i class="fas fa-star"></i> @Model.LoyaltyPoints pts
+                    </span>
+                    <span class="sidebar-badge">
+                        <i class="fas fa-venus-mars"></i> @Model.Gender
+                    </span>
+                    @if (Model.CODBlocked)
                     {
-                        <p>@Model.CustomerBio</p>
-                    }
-                    else
-                    {
-                        <p class="bio-placeholder"><i class="fas fa-pen"></i>Add a bio</p>
+                        <span class="sidebar-badge restricted-badge">
+                            <i class="fas fa-ban"></i> COD Restricted
+                        </span>
                     }
                 </div>
 
-                <div class="profile-stats-row">
-                    <div class="stat-item">
-                        <span class="stat-count">@Model.OrdersCount</span> orders
-                    </div>
-                    <div class="stat-item stat-item-clickable" onclick="openFollowingModal()" style="cursor: pointer;">
-                        <span class="stat-count">@Model.FollowedStoresList.Count</span> following
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-count">@Model.WishlistCount</span> wishlisted
-                    </div>
-                </div>
+                <nav class="sidebar-nav">
+                    <div class="sidebar-nav-label">Dashboard</div>
 
-                <div class="profile-bio">
-                    <p class="bio-text"><i class="fas fa-envelope" style="color:#6b6478; margin-right:4px;"></i> @Model.CustomerEmail</p>
-                    <p class="bio-text"><i class="fas fa-phone" style="color:#6b6478; margin-right:4px;"></i> @Model.CustomerPhone</p>
+                    <button id="link-settings-tab" class="sidebar-link active" data-tab="settings-tab" onclick="selectTab('settings-tab')">
+                        <i class="fas fa-sliders-h"></i> Management
+                    </button>
+                    <button id="link-activity-tab" class="sidebar-link" data-tab="activity-tab" onclick="selectTab('activity-tab')">
+                        <i class="fas fa-clock-rotate-left"></i> Your Activity
+                    </button>
+                    <button id="link-wishlist-tab" class="sidebar-link" data-tab="wishlist-tab" onclick="selectTab('wishlist-tab')">
+                        <i class="far fa-bookmark"></i> Wishlist
+                    </button>
 
-                    <div class="bio-badges">
-                        <span class="bio-badge loyalty-badge">
-                            <i class="fas fa-star"></i> @Model.LoyaltyPoints Loyalty Pts
-                        </span>
-                        <span class="bio-badge">
-                            <i class="fas fa-venus-mars"></i> @Model.Gender
-                        </span>
-                        <span class="bio-badge">
-                            <i class="fas fa-calendar-alt"></i> Joined @Model.CreatedAt.ToString("MMM yyyy")
-                        </span>
-                        @if (Model.CODBlocked)
-                        {
-                            <span class="bio-badge" style="background:#fee2e2; color:#b91c1c;">
-                                <i class="fas fa-ban"></i> COD Restricted
-                            </span>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
+                    <div class="sidebar-divider"></div>
+                    <div class="sidebar-nav-label">Support</div>
 
-        <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+                    <a href="/HelpCenter" class="sidebar-link">
+                        <i class="fas fa-circle-question"></i> Help Center
+                    </a>
+                    <a href="/CustomerComplaint" class="sidebar-link">
+                        <i class="fas fa-flag"></i> File a Complaint
+                    </a>
 
-        <aside id="sidebar" class="sidebar">
-            <div class="sidebar-panel-header">
-                <h3>Menu</h3>
-                <span class="close-modal" onclick="closeSidebar()" style="position: static; font-size: 20px; color: #aaa; cursor: pointer;">&times;</span>
-            </div>
+                    <div class="sidebar-divider"></div>
 
-            <button id="link-wishlist-tab" class="sidebar-link active" data-tab="wishlist-tab" onclick="selectTab('wishlist-tab')">
-                <i class="far fa-bookmark"></i> Wishlist
-            </button>
-            <button id="link-activity-tab" class="sidebar-link" data-tab="activity-tab" onclick="selectTab('activity-tab')">
-                <i class="fas fa-clock-rotate-left"></i> Your Activity
-            </button>
-            <button id="link-settings-tab" class="sidebar-link" data-tab="settings-tab" onclick="selectTab('settings-tab')">
-                <i class="fas fa-cog"></i> Management
-            </button>
+                    <form method="post" asp-page="/Identity/Account/Logout" asp-route-returnUrl="/" class="logout-form">
+                        <button type="submit" class="sidebar-link logout">
+                            <i class="fas fa-right-from-bracket"></i> Logout
+                        </button>
+                    </form>
+                </nav>
+            </aside>
 
-            <div class="sidebar-divider"></div>
+            <main class="main-content">
 
-            <button type="button" class="sidebar-link" onclick="closeSidebar(); openEditModal();">
-                <i class="fas fa-user-pen"></i> Edit Profile
-            </button>
-            <button type="button" class="sidebar-link" onclick="closeSidebar(); openEditBioModal();">
-                <i class="fas fa-pen"></i> Edit Bio
-            </button>
-            <a href="/HelpCenter" class="sidebar-link">
-                <i class="fas fa-circle-question"></i> Help Center
-            </a>
-            <a href="/CustomerComplaint" class="sidebar-link">
-                <i class="fas fa-flag"></i> File a Complaint
-            </a>
-
-            <div class="sidebar-divider"></div>
-
-            <form method="post" asp-page="/Identity/Account/Logout" asp-route-returnUrl="/" class="logout-form">
-                <button type="submit" class="sidebar-link logout">
-                    <i class="fas fa-right-from-bracket"></i> Logout
+                <button type="button" class="mobile-menu-btn" onclick="openSidebar()">
+                    <i class="fas fa-bars"></i> <span id="mobileTabLabel">Management</span>
                 </button>
-            </form>
-        </aside>
 
-        <div class="page-layout">
-            <main class="content-area">
+                <div class="content-topbar">
+                    <div class="page-heading">
+                        <h1 id="pageTitle">Management</h1>
+                        <p id="pageSubtitle">Manage your account security, store access, and delivery access.</p>
+                    </div>
+                    <partial name="_MessageBell" />
+                </div>
 
-                <div id="wishlist-tab" class="tab-content active">
-                    @if (Model.WishlistList.Any())
-                    {
-                        <div class="instagram-grid">
-                            @foreach (var wish in Model.WishlistList)
+                @if (TempData["Success"] != null)
+                {
+                    <div class="message success-message">
+                        @TempData["Success"]
+                    </div>
+                }
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="message error-message">
+                        Please check your information and try again.
+                    </div>
+                }
+
+                <div id="settings-tab" class="tab-content active">
+
+                    <div class="settings-grid">
+
+                        <div class="settings-card">
+                            <h3><i class="fas fa-sliders-h"></i> Account Settings</h3>
+                            <p>Manage your physical addresses or update your login credentials. Use "Edit Profile" in the sidebar to change your name or phone number.</p>
+
+                            <a class="settings-btn" href="/Identity/Account/Manage/ChangePassword">
+                                <i class="fas fa-key"></i> Change Password
+                            </a>
+                            <a class="settings-btn subtle" href="/CustomerAddresses">
+                                <i class="fas fa-location-dot"></i> My Addresses
+                            </a>
+                            <a class="settings-btn subtle" href="/CustomerComplaint">
+                                <i class="fas fa-flag"></i> File a Complaint
+                            </a>
+                        </div>
+
+                        <div class="settings-card">
+                            <h3><i class="fas fa-store"></i> Store Owner Access</h3>
+
+                            @if (!string.IsNullOrWhiteSpace(Model.StoreAccessMessage))
                             {
-                                var productName = CustomerProfileModel.GetSafeString(wish.Product, new[] { "ProductName", "Name", "Title" }, "Marketplace Product");
-                                var productPrice = CustomerProfileModel.GetSafeDecimal(wish.Product, new[] { "Price" }, 0.00m);
-                                var productImage = CustomerProfileModel.GetSafeString(wish.Product, new[] { "ProductImageUrl", "ImageUrl", "ImagePath", "Image" }, "https://cdn-icons-png.flaticon.com/512/1170/1170576.png");
-                                var productId = CustomerProfileModel.GetSafeInt(wish.Product, new[] { "ProductID", "Id" }, 0);
-
-                                <div class="product-grid-item">
-                                    <img src="@productImage" alt="@productName" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1170/1170576.png'" />
-                                    <div class="product-details">
-                                        <h4>@productName</h4>
-                                        <span class="price">$@productPrice.ToString("F2")</span>
-                                        <a href="/ProductDetails?id=@productId" class="view-btn">View Details</a>
+                                if (Model.HasPendingStoreRequest)
+                                {
+                                    <div class="warning-message">
+                                        <i class="fas fa-clock"></i>
+                                        @Model.StoreAccessMessage
                                     </div>
+                                }
+                                else if (Model.HasApprovedStoreOwnerAccount)
+                                {
+                                    <div class="info-message">
+                                        <i class="fas fa-info-circle"></i>
+                                        @Model.StoreAccessMessage
+                                    </div>
+                                }
+                                else if (Model.HasRejectedStoreRequest)
+                                {
+                                    <div class="error-message"
+                                         style="padding:10px; border-radius:10px; font-size:13.5px; margin-bottom:12px;">
+                                        <i class="fas fa-times-circle"></i>
+                                        @Model.StoreAccessMessage
+                                    </div>
+                                }
+                                else if (Model.HasStoreRequest)
+                                {
+                                    <div class="warning-message">
+                                        <i class="fas fa-triangle-exclamation"></i>
+                                        @Model.StoreAccessMessage
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p>@Model.StoreAccessMessage</p>
+                                }
+                            }
+
+                            @if (Model.HasApprovedStoreOwnerAccount)
+                            {
+                                <button type="button"
+                                        id="showStoreOwnerLoginButton"
+                                        class="settings-btn"
+                                        onclick="toggleStoreOwnerLogin()">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    Login as Store Owner
+                                </button>
+
+                                <div id="storeOwnerLoginBox"
+                                     class="delivery-login-card @(string.IsNullOrWhiteSpace(storeOwnerLoginError) ? "" : "open")">
+
+                                    <h4 style="font-weight:700; margin-bottom:6px; font-size:14px;">
+                                        Store Owner Log In
+                                    </h4>
+
+                                    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">
+                                        This Store Owner account is linked securely to your customer account.
+                                        Enter the Store Owner password provided by the administrator.
+                                    </p>
+
+                                    @if (!string.IsNullOrWhiteSpace(storeOwnerLoginError))
+                                    {
+                                        <div class="error-message"
+                                             style="padding:10px; border-radius:10px; font-size:13px; margin-bottom:12px;">
+                                            @storeOwnerLoginError
+                                        </div>
+                                    }
+
+                                    <form method="post"
+                                          asp-page-handler="StoreOwnerLogin"
+                                          class="delivery-login-form"
+                                          autocomplete="off">
+
+                                        <div class="form-group">
+                                            <label for="StoreOwnerAccountEmail">
+                                                Your Store Owner Email
+                                            </label>
+
+                                            <input id="StoreOwnerAccountEmail"
+                                                   type="email"
+                                                   value="@Model.StoreOwnerAccountEmail"
+                                                   readonly
+                                                   aria-readonly="true"
+                                                   tabindex="-1" />
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label asp-for="StoreOwnerPassword">
+                                                Store Owner Password
+                                            </label>
+
+                                            <input asp-for="StoreOwnerPassword"
+                                                   type="password"
+                                                   placeholder="Enter Store Owner password"
+                                                   autocomplete="current-password"
+                                                   required />
+                                        </div>
+
+                                        <button type="submit"
+                                                class="delivery-login-btn">
+                                            Open Store Owner Dashboard
+                                        </button>
+                                    </form>
                                 </div>
                             }
+                            else if (Model.HasPendingStoreRequest)
+                            {
+                                <button type="button"
+                                        class="settings-btn"
+                                        style="opacity:0.6; cursor:not-allowed;"
+                                        disabled>
+                                    <i class="fas fa-clock"></i>
+                                    Waiting for Admin Approval
+                                </button>
+                            }
+                            else if (Model.HasRejectedStoreRequest)
+                            {
+                                <a href="/StoreRequest"
+                                   class="settings-btn">
+                                    <i class="fas fa-rotate-right"></i>
+                                    Update and Resubmit Store Request
+                                </a>
+                            }
+                            else if (!Model.HasStoreRequest)
+                            {
+                                <a href="/StoreRequest"
+                                   class="settings-btn">
+                                    <i class="fas fa-chalkboard-user"></i>
+                                    Request Store Owner Account
+                                </a>
+                            }
+                            else
+                            {
+                                <button type="button"
+                                        class="settings-btn"
+                                        style="opacity:0.6; cursor:not-allowed;"
+                                        disabled>
+                                    <i class="fas fa-ban"></i>
+                                    Store Owner Access Unavailable
+                                </button>
+                            }
                         </div>
-                    }
-                    else
-                    {
-                        <div class="empty-state">
-                            <div class="empty-icon"><i class="far fa-bookmark"></i></div>
-                            <h3>Wishlist is Empty</h3>
-                            <p>Save items you like to monitor price changes and purchase them easily.</p>
+
+                        <div class="settings-card">
+                            <h3><i class="fas fa-motorcycle"></i> Delivery Staff Access</h3>
+
+                            @if (!string.IsNullOrWhiteSpace(Model.DeliveryAccessMessage))
+                            {
+                                if (Model.HasPendingDeliveryRequest)
+                                {
+                                    <div class="warning-message"><i class="fas fa-clock"></i> @Model.DeliveryAccessMessage</div>
+                                }
+                                else if (Model.HasApprovedDeliveryAccount)
+                                {
+                                    <div class="info-message"><i class="fas fa-info-circle"></i> @Model.DeliveryAccessMessage</div>
+                                }
+                                else if (Model.HasRejectedDeliveryRequest)
+                                {
+                                    <div class="error-message" style="padding:10px; border-radius:10px; font-size:13.5px; margin-bottom:12px;"><i class="fas fa-times-circle"></i> @Model.DeliveryAccessMessage</div>
+                                }
+                                else
+                                {
+                                    <p>@Model.DeliveryAccessMessage</p>
+                                }
+                            }
+
+                            @if (Model.HasApprovedDeliveryAccount)
+                            {
+                                <button type="button" id="showDeliveryLoginButton" class="settings-btn" onclick="toggleDeliveryLogin()">
+                                    <i class="fas fa-sign-in-alt"></i> Login as Delivery Staff
+                                </button>
+
+                                <div id="deliveryLoginBox" class="delivery-login-card @(string.IsNullOrWhiteSpace(deliveryLoginError) ? "" : "open")">
+                                    <h4 style="font-weight:700; margin-bottom:6px; font-size:14px;">Delivery Log In</h4>
+                                    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">
+                                        This delivery account is linked securely to your customer account. Enter only the delivery password provided by the administrator.
+                                    </p>
+
+                                    @if (!string.IsNullOrWhiteSpace(deliveryLoginError))
+                                    {
+                                        <div class="error-message" style="padding:10px; border-radius:10px; font-size:13px; margin-bottom:12px;">
+                                            @deliveryLoginError
+                                        </div>
+                                    }
+
+                                    <form method="post" asp-page-handler="DeliveryLogin" class="delivery-login-form" autocomplete="off">
+                                        <div class="form-group">
+                                            <label for="DeliveryAccountEmail">Your Delivery Email</label>
+                                            <input id="DeliveryAccountEmail"
+                                                   type="email"
+                                                   value="@Model.DeliveryAccountEmail"
+                                                   readonly
+                                                   aria-readonly="true"
+                                                   tabindex="-1" />
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label asp-for="DeliveryPassword">Delivery Password</label>
+                                            <input asp-for="DeliveryPassword"
+                                                   type="password"
+                                                   placeholder="Enter delivery password"
+                                                   autocomplete="current-password"
+                                                   required />
+                                        </div>
+
+                                        <button type="submit" class="delivery-login-btn">
+                                            Open Delivery Dashboard
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                            else if (Model.HasPendingDeliveryRequest)
+                            {
+                                <button type="button" class="settings-btn" style="opacity:0.6; cursor:not-allowed;" disabled>
+                                    <i class="fas fa-clock"></i> Waiting for Admin Approval
+                                </button>
+                            }
+                            else
+                            {
+                                <a href="/DeliveryRequest" class="settings-btn">
+                                    <i class="fas fa-id-card"></i> Request Delivery Account
+                                </a>
+                            }
                         </div>
-                    }
+
+                    </div>
                 </div>
 
                 <div id="activity-tab" class="tab-content">
@@ -1175,7 +1471,7 @@
                         {
                             <div class="empty-state" style="padding: 40px 20px;">
                                 <div class="empty-icon" style="font-size: 40px;"><i class="far fa-star"></i></div>
-                                <h3 style="font-size: 17px;">No Reviews Found</h3>
+                                <h3 style="font-size: 16px;">No Reviews Found</h3>
                                 <p style="font-size: 13px;">You have not published any reviews for purchased products yet.</p>
                             </div>
                         }
@@ -1186,7 +1482,7 @@
 
                         <div class="empty-state" style="padding: 40px 20px;">
                             <div class="empty-icon" style="font-size: 40px;"><i class="fas fa-store-slash"></i></div>
-                            <h3 style="font-size: 17px;">No Blocked Shops</h3>
+                            <h3 style="font-size: 16px;">No Blocked Shops</h3>
                             <p style="font-size: 13px;">Shops you block will stop appearing in your feed, search, and recommendations.</p>
                         </div>
                     </div>
@@ -1211,264 +1507,40 @@
 
                 </div>
 
-                <div id="settings-tab" class="tab-content">
-
-                    <div class="settings-card">
-                        <h3>
-                            <i class="fas fa-sliders-h" style="color: var(--accent-color);"></i>
-                            Account Settings
-                        </h3>
-                        <p>Manage your physical addresses or update your login credentials. Use "Edit Profile" in the sidebar to change your name or phone number.</p>
-
-                        <a class="settings-btn" href="/Identity/Account/Manage/ChangePassword">
-                            <i class="fas fa-key"></i> Change Password
-                        </a>
-                        <a class="settings-btn" href="/CustomerAddresses">
-                            <i class="fas fa-location-dot"></i> My Addresses
-                        </a>
-                        <a class="settings-btn" href="/CustomerComplaint">
-                            <i class="fas fa-flag"></i> File a Complaint
-                        </a>
-                    </div>
-
-                    <div class="settings-card">
-                        <h3>
-                            <i class="fas fa-store" style="color: var(--accent-color);"></i>
-                            Store Owner Access
-                        </h3>
-
-                        @if (!string.IsNullOrWhiteSpace(Model.StoreAccessMessage))
-                        {
-                            if (Model.HasPendingStoreRequest)
+                <div id="wishlist-tab" class="tab-content">
+                    @if (Model.WishlistList.Any())
+                    {
+                        <div class="instagram-grid">
+                            @foreach (var wish in Model.WishlistList)
                             {
-                                <div class="warning-message">
-                                    <i class="fas fa-clock"></i>
-                                    @Model.StoreAccessMessage
+                                var productName = CustomerProfileModel.GetSafeString(wish.Product, new[] { "ProductName", "Name", "Title" }, "Marketplace Product");
+                                var productPrice = CustomerProfileModel.GetSafeDecimal(wish.Product, new[] { "Price" }, 0.00m);
+                                var productImage = CustomerProfileModel.GetSafeString(wish.Product, new[] { "ProductImageUrl", "ImageUrl", "ImagePath", "Image" }, "https://cdn-icons-png.flaticon.com/512/1170/1170576.png");
+                                var productId = CustomerProfileModel.GetSafeInt(wish.Product, new[] { "ProductID", "Id" }, 0);
+
+                                <div class="product-grid-item">
+                                    <img src="@productImage" alt="@productName" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1170/1170576.png'" />
+                                    <div class="product-details">
+                                        <h4>@productName</h4>
+                                        <span class="price">$@productPrice.ToString("F2")</span>
+                                        <a href="/ProductDetails?id=@productId" class="view-btn">View Details</a>
+                                    </div>
                                 </div>
                             }
-                            else if (Model.HasApprovedStoreOwnerAccount)
-                            {
-                                <div class="info-message">
-                                    <i class="fas fa-info-circle"></i>
-                                    @Model.StoreAccessMessage
-                                </div>
-                            }
-                            else if (Model.HasRejectedStoreRequest)
-                            {
-                                <div class="error-message"
-                                     style="padding:10px; border-radius:8px; font-size:14px; margin-bottom:12px;">
-                                    <i class="fas fa-times-circle"></i>
-                                    @Model.StoreAccessMessage
-                                </div>
-                            }
-                            else if (Model.HasStoreRequest)
-                            {
-                                <div class="warning-message">
-                                    <i class="fas fa-triangle-exclamation"></i>
-                                    @Model.StoreAccessMessage
-                                </div>
-                            }
-                            else
-                            {
-                                <p>@Model.StoreAccessMessage</p>
-                            }
-                        }
-
-                        @if (Model.HasApprovedStoreOwnerAccount)
-                        {
-                            <button type="button"
-                                    id="showStoreOwnerLoginButton"
-                                    class="settings-btn"
-                                    onclick="toggleStoreOwnerLogin()">
-                                <i class="fas fa-sign-in-alt"></i>
-                                Login as Store Owner
-                            </button>
-
-                            <div id="storeOwnerLoginBox"
-                                 class="delivery-login-card @(string.IsNullOrWhiteSpace(storeOwnerLoginError) ? "" : "open")">
-
-                                <h4 style="font-weight:600; margin-bottom:6px;">
-                                    Store Owner Log In
-                                </h4>
-
-                                <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
-                                    This Store Owner account is linked securely to your customer account.
-                                    Enter the Store Owner password provided by the administrator.
-                                </p>
-
-                                @if (!string.IsNullOrWhiteSpace(storeOwnerLoginError))
-                                {
-                                    <div class="error-message"
-                                         style="padding:10px; border-radius:8px; font-size:13px; margin-bottom:12px;">
-                                        @storeOwnerLoginError
-                                    </div>
-                                }
-
-                                <form method="post"
-                                      asp-page-handler="StoreOwnerLogin"
-                                      class="delivery-login-form"
-                                      autocomplete="off">
-
-                                    <div class="form-group">
-                                        <label for="StoreOwnerAccountEmail">
-                                            Your Store Owner Email
-                                        </label>
-
-                                        <input id="StoreOwnerAccountEmail"
-                                               type="email"
-                                               value="@Model.StoreOwnerAccountEmail"
-                                               readonly
-                                               aria-readonly="true"
-                                               tabindex="-1" />
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label asp-for="StoreOwnerPassword">
-                                            Store Owner Password
-                                        </label>
-
-                                        <input asp-for="StoreOwnerPassword"
-                                               type="password"
-                                               placeholder="Enter Store Owner password"
-                                               autocomplete="current-password"
-                                               required />
-                                    </div>
-
-                                    <button type="submit"
-                                            class="delivery-login-btn">
-                                        Open Store Owner Dashboard
-                                    </button>
-                                </form>
-                            </div>
-                        }
-                        else if (Model.HasPendingStoreRequest)
-                        {
-                            <button type="button"
-                                    class="settings-btn"
-                                    style="opacity:0.6; cursor:not-allowed;"
-                                    disabled>
-                                <i class="fas fa-clock"></i>
-                                Waiting for Admin Approval
-                            </button>
-                        }
-                        else if (Model.HasRejectedStoreRequest)
-                        {
-                            <a href="/StoreRequest"
-                               class="settings-btn">
-                                <i class="fas fa-rotate-right"></i>
-                                Update and Resubmit Store Request
-                            </a>
-                        }
-                        else if (!Model.HasStoreRequest)
-                        {
-                            <a href="/StoreRequest"
-                               class="settings-btn">
-                                <i class="fas fa-chalkboard-user"></i>
-                                Request Store Owner Account
-                            </a>
-                        }
-                        else
-                        {
-                            <button type="button"
-                                    class="settings-btn"
-                                    style="opacity:0.6; cursor:not-allowed;"
-                                    disabled>
-                                <i class="fas fa-ban"></i>
-                                Store Owner Access Unavailable
-                            </button>
-                        }
-                    </div>
-
-                    <div class="settings-card">
-                        <h3>
-                            <i class="fas fa-motorcycle" style="color: var(--accent-color);"></i>
-                            Delivery Staff Access
-                        </h3>
-
-                        @if (!string.IsNullOrWhiteSpace(Model.DeliveryAccessMessage))
-                        {
-                            if (Model.HasPendingDeliveryRequest)
-                            {
-                                <div class="warning-message"><i class="fas fa-clock"></i> @Model.DeliveryAccessMessage</div>
-                            }
-                            else if (Model.HasApprovedDeliveryAccount)
-                            {
-                                <div class="info-message"><i class="fas fa-info-circle"></i> @Model.DeliveryAccessMessage</div>
-                            }
-                            else if (Model.HasRejectedDeliveryRequest)
-                            {
-                                <div class="error-message" style="padding:10px; border-radius:8px; font-size:14px; margin-bottom:12px;"><i class="fas fa-times-circle"></i> @Model.DeliveryAccessMessage</div>
-                            }
-                            else
-                            {
-                                <p>@Model.DeliveryAccessMessage</p>
-                            }
-                        }
-
-                        @if (Model.HasApprovedDeliveryAccount)
-                        {
-                            <button type="button" id="showDeliveryLoginButton" class="settings-btn" onclick="toggleDeliveryLogin()">
-                                <i class="fas fa-sign-in-alt"></i> Login as Delivery Staff
-                            </button>
-
-                            <div id="deliveryLoginBox" class="delivery-login-card @(string.IsNullOrWhiteSpace(deliveryLoginError) ? "" : "open")">
-                                <h4 style="font-weight:600; margin-bottom:6px;">Delivery Log In</h4>
-                                <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
-                                    This delivery account is linked securely to your customer account. Enter only the delivery password provided by the administrator.
-                                </p>
-
-                                @if (!string.IsNullOrWhiteSpace(deliveryLoginError))
-                                {
-                                    <div class="error-message" style="padding:10px; border-radius:8px; font-size:13px; margin-bottom:12px;">
-                                        @deliveryLoginError
-                                    </div>
-                                }
-
-                                <form method="post" asp-page-handler="DeliveryLogin" class="delivery-login-form" autocomplete="off">
-                                    <div class="form-group">
-                                        <label for="DeliveryAccountEmail">Your Delivery Email</label>
-                                        <input id="DeliveryAccountEmail"
-                                               type="email"
-                                               value="@Model.DeliveryAccountEmail"
-                                               readonly
-                                               aria-readonly="true"
-                                               tabindex="-1" />
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label asp-for="DeliveryPassword">Delivery Password</label>
-                                        <input asp-for="DeliveryPassword"
-                                               type="password"
-                                               placeholder="Enter delivery password"
-                                               autocomplete="current-password"
-                                               required />
-                                    </div>
-
-                                    <button type="submit" class="delivery-login-btn">
-                                        Open Delivery Dashboard
-                                    </button>
-                                </form>
-                            </div>
-                        }
-                        else if (Model.HasPendingDeliveryRequest)
-                        {
-                            <button type="button" class="settings-btn" style="opacity:0.6; cursor:not-allowed;" disabled>
-                                <i class="fas fa-clock"></i> Waiting for Admin Approval
-                            </button>
-                        }
-                        else
-                        {
-                            <a href="/DeliveryRequest" class="settings-btn">
-                                <i class="fas fa-id-card"></i> Request Delivery Account
-                            </a>
-                        }
-                    </div>
-
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="far fa-bookmark"></i></div>
+                            <h3>Wishlist is Empty</h3>
+                            <p>Save items you like to monitor price changes and purchase them easily.</p>
+                        </div>
+                    }
                 </div>
 
             </main>
         </div>
-
     </div>
 
     <div id="editProfileModal" class="modal">
@@ -1485,20 +1557,6 @@
                     <input type="text" id="CustomerPhone" name="CustomerPhone" value="@Model.CustomerPhone" required />
                 </div>
                 <button type="submit" class="save-btn">Save Changes</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="editBioModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeEditBioModal()">&times;</span>
-            <h3>Edit Your Bio</h3>
-            <form method="post" class="modal-form" asp-page-handler="EditBio">
-                <div class="form-group">
-                    <label for="CustomerBio">Bio</label>
-                    <textarea id="CustomerBio" name="CustomerBio" placeholder="Tell other shoppers a little about yourself...">@Model.CustomerBio</textarea>
-                </div>
-                <button type="submit" class="save-btn">Save Bio</button>
             </form>
         </div>
     </div>
@@ -1547,20 +1605,30 @@
     </footer>
 
     <script>
+            const TAB_META = {
+                "settings-tab": {
+                    title: "Management",
+                    subtitle: "Manage your account security, store access, and delivery access.",
+                    shortLabel: "Management"
+                },
+                "activity-tab": {
+                    title: "Your Activity",
+                    subtitle: "Reviews you've left, blocked shops, and language preferences.",
+                    shortLabel: "Your Activity"
+                },
+                "wishlist-tab": {
+                    title: "Wishlist",
+                    subtitle: "Products you've saved to track and revisit.",
+                    shortLabel: "Wishlist"
+                }
+            };
+
             function openEditModal() {
                 document.getElementById("editProfileModal").style.display = "block";
             }
 
             function closeEditModal() {
                 document.getElementById("editProfileModal").style.display = "none";
-            }
-
-            function openEditBioModal() {
-                document.getElementById("editBioModal").style.display = "block";
-            }
-
-            function closeEditBioModal() {
-                document.getElementById("editBioModal").style.display = "none";
             }
 
             function openFollowingModal() {
@@ -1580,11 +1648,10 @@
             window.onclick = function(event) {
                 const modalsToCheck = [
                     "editProfileModal",
-                    "editBioModal",
                     "followingModal"
                 ];
 
-                modalsToCheck.forEach(function (id) {
+                modalsToCheck.forEach(function(id) {
                     const modal = document.getElementById(id);
                     if (event.target === modal) {
                         modal.style.display = "none";
@@ -1618,6 +1685,13 @@
                 if (activeLink) {
                     activeLink.classList.add("active");
                 }
+
+                const meta = TAB_META[tabId];
+                if (meta) {
+                    document.getElementById("pageTitle").textContent = meta.title;
+                    document.getElementById("pageSubtitle").textContent = meta.subtitle;
+                    document.getElementById("mobileTabLabel").textContent = meta.shortLabel;
+                }
             }
 
             function selectTab(tabId) {
@@ -1637,7 +1711,7 @@
                 if (loginBox.classList.contains("open")) {
                     clearDeliveryPassword();
 
-                    window.setTimeout(function () {
+                    window.setTimeout(function() {
                         const passwordInput =
                             document.getElementById("DeliveryPassword");
 
@@ -1670,7 +1744,7 @@
                 if (loginBox.classList.contains("open")) {
                     clearStoreOwnerPassword();
 
-                    window.setTimeout(function () {
+                    window.setTimeout(function() {
                         const passwordInput =
                             document.getElementById("StoreOwnerPassword");
 
@@ -1690,19 +1764,14 @@
                 }
             }
 
-            document.addEventListener("DOMContentLoaded", function () {
+            document.addEventListener("DOMContentLoaded", function() {
                 clearDeliveryPassword();
                 clearStoreOwnerPassword();
-
-                const shouldOpenManagementTab =
-            @shouldOpenManagementTab.ToString().ToLowerInvariant();
-
-                if (shouldOpenManagementTab) {
-                    switchTab("settings-tab");
-                }
+                // Management is the default landing tab; if a delivery/store-owner
+                // login attempt failed server-side, it will already be visible here.
             });
 
-            window.addEventListener("pageshow", function () {
+            window.addEventListener("pageshow", function() {
                 clearDeliveryPassword();
                 clearStoreOwnerPassword();
             });
