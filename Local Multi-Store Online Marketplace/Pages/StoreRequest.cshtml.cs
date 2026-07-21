@@ -8,6 +8,7 @@ using Multi_Store.Services.Managers;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using System.Text.Json;
+using Multi_Store.Core.Interfaces;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
@@ -59,18 +60,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly UserManager<User> _userManager;
         private readonly ILogger<StoreRequestModel> _logger;
         private readonly IWebHostEnvironment _environment;
+        private readonly ITwilioService _twilioService;
 
         public StoreRequestModel(
-            StoreManager storeManager,
-            UserManager<User> userManager,
-            ILogger<StoreRequestModel> logger,
-            IWebHostEnvironment environment)
+     StoreManager storeManager,
+     UserManager<User> userManager,
+     ILogger<StoreRequestModel> logger,
+     IWebHostEnvironment environment,
+     ITwilioService twilioService)
         {
             _storeManager = storeManager;
             _userManager = userManager;
             _logger = logger;
             _environment = environment;
+            _twilioService = twilioService;
         }
+
+        [TempData]
+        public bool IsPhoneVerified { get; set; }
+
+        [TempData]
+        public string? VerifiedPhoneNumber { get; set; }
 
         [BindProperty]
         public StoreRequestInputModel Input { get; set; }
@@ -275,6 +285,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     "Input.PhoneNumber",
                     "Enter a valid Lebanese phone number, for example +96178123456.");
             }
+            else
+            {
+                var isPhoneVerifiedForThisNumber =
+                    IsPhoneVerified &&
+                    string.Equals(
+                        VerifiedPhoneNumber,
+                        Input.PhoneNumber,
+                        StringComparison.Ordinal);
+
+                if (!isPhoneVerifiedForThisNumber)
+                {
+                    ModelState.AddModelError(
+                        "Input.PhoneNumber",
+                        "Verify your phone number with the code we sent before submitting.");
+                }
+            }
 
             if (!IsValidCityArea(
                     Input.City,
@@ -418,6 +444,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         "/StoreRequest");
                 }
 
+                // Clear phone verification state now that the request
+                // has been successfully submitted.
+                IsPhoneVerified = false;
+                VerifiedPhoneNumber = null;
+
                 TempData["Success"] =
                     IsResubmission
                         ? "Your updated store request was resubmitted and is waiting for admin approval."
@@ -445,6 +476,106 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 return RedirectToPage(
                     "/StoreRequest");
+            }
+        }
+
+        [BindProperty]
+        public string VerificationCode { get; set; } = "";
+
+        public bool PhoneVerified { get; set; } = false;
+
+        // =====================================================
+        // OTP HANDLERS
+        // =====================================================
+        public async Task<IActionResult> OnPostSendOtpAsync(string phoneNumber)
+        {
+            phoneNumber = NormalizeLebanesePhone(phoneNumber);
+
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                return new JsonResult(new
+                {
+                    success = false,
+                    message = "Invalid phone number."
+                });
+            }
+
+            try
+            {
+                await _twilioService.SendOtpAsync(phoneNumber);
+
+                // A new code was requested, so any previous verification
+                // no longer applies until the new code is confirmed.
+                IsPhoneVerified = false;
+                VerifiedPhoneNumber = null;
+
+                return new JsonResult(new
+                {
+                    success = true,
+                    message = "OTP sent successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+        public async Task<IActionResult> OnPostVerifyOtpAsync(string phoneNumber, string code)
+        {
+            phoneNumber = NormalizeLebanesePhone(phoneNumber);
+
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                return new JsonResult(new
+                {
+                    success = false,
+                    message = "Invalid phone number."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                return new JsonResult(new
+                {
+                    success = false,
+                    message = "Enter the verification code."
+                });
+            }
+
+            try
+            {
+                var isValid = await _twilioService.VerifyOtpAsync(phoneNumber, code);
+
+                if (!isValid)
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "The verification code is incorrect or expired."
+                    });
+                }
+
+                IsPhoneVerified = true;
+                VerifiedPhoneNumber = phoneNumber;
+
+                return new JsonResult(new
+                {
+                    success = true,
+                    message = "Phone number verified successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
             }
         }
 

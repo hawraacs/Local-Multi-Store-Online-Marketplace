@@ -18,10 +18,10 @@
     {
         toastMessages.Add(
             new Dictionary<string, string>
-                    {
-                        ["type"] = "error",
-                        ["message"] = errorMessage
-                    });
+            {
+                ["type"] = "error",
+                ["message"] = errorMessage
+            });
     }
 
     if (TempData["Success"] is string successMessage &&
@@ -29,10 +29,10 @@
     {
         toastMessages.Add(
             new Dictionary<string, string>
-                    {
-                        ["type"] = "success",
-                        ["message"] = successMessage
-                    });
+            {
+                ["type"] = "success",
+                ["message"] = successMessage
+            });
     }
 
     foreach (var modelStateEntry in
@@ -52,13 +52,20 @@
             {
                 toastMessages.Add(
                     new Dictionary<string, string>
-                            {
-                                ["type"] = "error",
-                                ["message"] = message
-                            });
+                    {
+                        ["type"] = "error",
+                        ["message"] = message
+                    });
             }
         }
     }
+
+    var isPhoneAlreadyVerified =
+        Model.IsPhoneVerified &&
+        string.Equals(
+            Model.VerifiedPhoneNumber,
+            Model.Input.PhoneNumber,
+            StringComparison.Ordinal);
 }
 
 <!DOCTYPE html>
@@ -78,372 +85,401 @@
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+            * {
+                box-sizing: border-box;
+            }
 
-        body {
-            margin: 0;
-            font-family: Poppins, Arial, sans-serif;
-            background: #f4f4f7;
-            color: #111827;
-        }
+            body {
+                margin: 0;
+                font-family: Poppins, Arial, sans-serif;
+                background: #f4f4f7;
+                color: #111827;
+            }
 
-        .topbar {
-            background: #111827;
-            color: white;
-            padding: 20px 30px;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .page-wrapper {
-            min-height: calc(100vh - 65px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 35px 15px;
-        }
-
-        .card {
-            background: white;
-            width: 900px;
-            max-width: 100%;
-            padding: 34px;
-            border-radius: 18px;
-            box-shadow: 0 18px 45px rgba(15, 23, 42, .10);
-            border: 1px solid #e5e7eb;
-        }
-
-        .header-box {
-            margin-bottom: 25px;
-        }
-
-            .header-box h1 {
-                margin: 0 0 8px;
-                font-size: 26px;
+            .topbar {
+                background: #111827;
+                color: white;
+                padding: 20px 30px;
+                font-size: 20px;
                 font-weight: 700;
             }
 
-            .header-box p {
-                margin: 0;
-                color: #6b7280;
-                font-size: 14px;
-                line-height: 1.6;
-            }
-
-        .message,
-        .validation-summary-errors {
-            padding: 12px 14px;
-            border-radius: 10px;
-            margin-bottom: 18px;
-            font-size: 14px;
-            font-weight: 600;
-            line-height: 1.5;
-        }
-
-        .error-message,
-        .validation-summary-errors {
-            color: #991b1b;
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-        }
-
-        .success-message {
-            color: #166534;
-            background: #dcfce7;
-            border: 1px solid #86efac;
-        }
-
-        .validation-summary-errors ul {
-            margin: 0;
-            padding-left: 20px;
-        }
-
-        .validation-summary-valid,
-        .field-validation-valid {
-            display: none;
-        }
-
-        .field-validation-error {
-            display: block;
-            margin-top: 5px;
-            color: #b91c1c;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-        }
-
-        .form-group {
-            width: 100%;
-        }
-
-            .form-group.full {
-                grid-column: 1 / -1;
-            }
-
-        label {
-            display: block;
-            margin-bottom: 7px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #374151;
-        }
-
-        input,
-        select,
-        textarea {
-            width: 100%;
-            padding: 13px 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 10px;
-            outline: none;
-            font-family: Poppins, Arial, sans-serif;
-            font-size: 14px;
-            background: white;
-        }
-
-        textarea {
-            min-height: 105px;
-            resize: vertical;
-        }
-
-            input:focus,
-            select:focus,
-            textarea:focus {
-                border-color: #111827;
-                box-shadow: 0 0 0 3px rgba(17, 24, 39, .10);
-            }
-
-        .hint {
-            display: block;
-            margin-top: 5px;
-            font-size: 12px;
-            color: #6b7280;
-            line-height: 1.5;
-        }
-
-        .existing-file {
-            margin-top: 8px;
-            padding: 10px 12px;
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 10px;
-            font-size: 13px;
-            color: #1e40af;
-        }
-
-            .existing-file a {
-                color: #1d4ed8;
-                font-weight: 700;
-            }
-
-        .location-panel {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 16px;
-            padding: 16px;
-        }
-
-        .location-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-        }
-
-        .map-btn {
-            padding: 11px 14px;
-            border: none;
-            border-radius: 10px;
-            background: #111827;
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: Poppins, Arial, sans-serif;
-        }
-
-            .map-btn:hover {
-                background: #ff6b35;
-            }
-
-        #storeMap {
-            width: 100%;
-            height: 360px;
-            border-radius: 14px;
-            border: 1px solid #d1d5db;
-            background: #e5e7eb;
-        }
-
-        .map-message {
-            margin-top: 10px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: white;
-            border: 1px solid #e5e7eb;
-            color: #374151;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .coordinate-box {
-            display: none;
-            margin-top: 10px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: #eef2ff;
-            border: 1px solid #c7d2fe;
-            color: #3730a3;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .confirmation {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
-            background: #f9fafb;
-        }
-
-            .confirmation input {
-                width: 18px;
-                height: 18px;
-                margin-top: 2px;
-                flex: 0 0 auto;
-            }
-
-            .confirmation label {
-                margin: 0;
-                line-height: 1.5;
-            }
-
-        .submit-btn {
-            margin-top: 25px;
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            background: #111827;
-            color: white;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: .2s ease;
-        }
-
-            .submit-btn:hover {
-                background: #ff6b35;
-                transform: translateY(-1px);
-            }
-
-            .submit-btn:disabled {
-                opacity: .65;
-                cursor: not-allowed;
-                transform: none;
-            }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 18px;
-            color: #374151;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-            .back-link:hover {
-                color: #ff6b35;
-            }
-
-        @@media (max-width: 760px) {
-            .form-grid {
-                grid-template-columns: 1fr;
+            .page-wrapper {
+                min-height: calc(100vh - 65px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 35px 15px;
             }
 
             .card {
-                padding: 24px;
+                background: white;
+                width: 900px;
+                max-width: 100%;
+                padding: 34px;
+                border-radius: 18px;
+                box-shadow: 0 18px 45px rgba(15, 23, 42, .10);
+                border: 1px solid #e5e7eb;
             }
+
+            .header-box {
+                margin-bottom: 25px;
+            }
+
+                .header-box h1 {
+                    margin: 0 0 8px;
+                    font-size: 26px;
+                    font-weight: 700;
+                }
+
+                .header-box p {
+                    margin: 0;
+                    color: #6b7280;
+                    font-size: 14px;
+                    line-height: 1.6;
+                }
+
+            .message,
+            .validation-summary-errors {
+                padding: 12px 14px;
+                border-radius: 10px;
+                margin-bottom: 18px;
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 1.5;
+            }
+
+            .error-message,
+            .validation-summary-errors {
+                color: #991b1b;
+                background: #fee2e2;
+                border: 1px solid #fca5a5;
+            }
+
+            .success-message {
+                color: #166534;
+                background: #dcfce7;
+                border: 1px solid #86efac;
+            }
+
+            .validation-summary-valid,
+            .field-validation-valid {
+                display: none;
+            }
+
+            .field-validation-error {
+                display: block;
+                margin-top: 5px;
+                color: #b91c1c;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .form-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 18px;
+            }
+
+            .form-group {
+                width: 100%;
+            }
+
+                .form-group.full {
+                    grid-column: 1 / -1;
+                }
+
+            label {
+                display: block;
+                margin-bottom: 7px;
+                font-size: 14px;
+                font-weight: 600;
+                color: #374151;
+            }
+
+            input,
+            select,
+            textarea {
+                width: 100%;
+                padding: 13px 14px;
+                border: 1px solid #d1d5db;
+                border-radius: 10px;
+                outline: none;
+                font-family: Poppins, Arial, sans-serif;
+                font-size: 14px;
+                background: white;
+            }
+
+            textarea {
+                min-height: 105px;
+                resize: vertical;
+            }
+
+                input:focus,
+                select:focus,
+                textarea:focus {
+                    border-color: #111827;
+                    box-shadow: 0 0 0 3px rgba(17, 24, 39, .10);
+                }
+
+            .hint {
+                display: block;
+                margin-top: 5px;
+                font-size: 12px;
+                color: #6b7280;
+                line-height: 1.5;
+            }
+
+            .existing-file {
+                margin-top: 8px;
+                padding: 10px 12px;
+                background: #eff6ff;
+                border: 1px solid #bfdbfe;
+                border-radius: 10px;
+                font-size: 13px;
+                color: #1e40af;
+            }
+
+                .existing-file a {
+                    color: #1d4ed8;
+                    font-weight: 700;
+                }
+
+            .location-panel {
+                background: #f9fafb;
+                border: 1px solid #e5e7eb;
+                border-radius: 16px;
+                padding: 16px;
+            }
+
+            .location-actions {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-bottom: 12px;
+            }
+
+            .map-btn {
+                padding: 11px 14px;
+                border: none;
+                border-radius: 10px;
+                background: #111827;
+                color: white;
+                font-weight: 700;
+                cursor: pointer;
+                font-family: Poppins, Arial, sans-serif;
+            }
+
+                .map-btn:hover {
+                    background: #ff6b35;
+                }
+
+                .map-btn:disabled {
+                    opacity: .6;
+                    cursor: not-allowed;
+                }
 
             #storeMap {
-                height: 300px;
-            }
-        }
-
-        .toast-container {
-            position: fixed;
-            top: 22px;
-            right: 22px;
-            z-index: 99999;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            width: min(390px, calc(100vw - 32px));
-            pointer-events: none;
-        }
-
-        .toast {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 15px 16px;
-            border-radius: 14px;
-            color: white;
-            box-shadow: 0 18px 45px rgba(15, 23, 42, .22);
-            transform: translateX(120%);
-            opacity: 0;
-            transition: transform .28s ease, opacity .28s ease;
-            pointer-events: auto;
-        }
-
-            .toast.show {
-                transform: translateX(0);
-                opacity: 1;
+                width: 100%;
+                height: 360px;
+                border-radius: 14px;
+                border: 1px solid #d1d5db;
+                background: #e5e7eb;
             }
 
-        .toast-error {
-            background: #b91c1c;
-        }
-
-        .toast-success {
-            background: #15803d;
-        }
-
-        .toast-icon {
-            flex: 0 0 auto;
-            font-size: 18px;
-            line-height: 1.3;
-        }
-
-        .toast-message {
-            flex: 1;
-            font-size: 13px;
-            font-weight: 600;
-            line-height: 1.5;
-        }
-
-        .toast-close {
-            flex: 0 0 auto;
-            border: 0;
-            background: transparent;
-            color: white;
-            cursor: pointer;
-            font-size: 19px;
-            line-height: 1;
-            padding: 0;
-            opacity: .85;
-        }
-
-            .toast-close:hover {
-                opacity: 1;
+            .map-message {
+                margin-top: 10px;
+                padding: 10px 12px;
+                border-radius: 10px;
+                background: white;
+                border: 1px solid #e5e7eb;
+                color: #374151;
+                font-size: 13px;
+                font-weight: 600;
             }
+
+            .coordinate-box {
+                display: none;
+                margin-top: 10px;
+                padding: 10px 12px;
+                border-radius: 10px;
+                background: #eef2ff;
+                border: 1px solid #c7d2fe;
+                color: #3730a3;
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            .confirmation {
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 14px;
+                border: 1px solid #d1d5db;
+                border-radius: 12px;
+                background: #f9fafb;
+            }
+
+                .confirmation input {
+                    width: 18px;
+                    height: 18px;
+                    margin-top: 2px;
+                    flex: 0 0 auto;
+                }
+
+                .confirmation label {
+                    margin: 0;
+                    line-height: 1.5;
+                }
+
+            .submit-btn {
+                margin-top: 25px;
+                width: 100%;
+                padding: 15px;
+                border: none;
+                border-radius: 10px;
+                background: #111827;
+                color: white;
+                font-size: 16px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: .2s ease;
+            }
+
+                .submit-btn:hover {
+                    background: #ff6b35;
+                    transform: translateY(-1px);
+                }
+
+                .submit-btn:disabled {
+                    opacity: .65;
+                    cursor: not-allowed;
+                    transform: none;
+                }
+
+            .back-link {
+                display: inline-block;
+                margin-top: 18px;
+                color: #374151;
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+                .back-link:hover {
+                    color: #ff6b35;
+                }
+
+            .otp-section {
+                margin-top: 10px;
+            }
+
+            .otp-code-group {
+                display: none;
+                gap: 10px;
+                margin-top: 10px;
+                align-items: center;
+            }
+
+            .otp-code-input {
+                width: auto;
+                flex: 1;
+            }
+
+            .otp-status {
+                margin-top: 8px;
+            }
+
+                .otp-status.verified {
+                    color: #166534;
+                    font-weight: 700;
+                }
+
+            @@media (max-width: 760px) {
+                .form-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .card {
+                    padding: 24px;
+                }
+
+                #storeMap {
+                    height: 300px;
+                }
+
+                .otp-code-group {
+                    flex-wrap: wrap;
+                }
+            }
+
+            .toast-container {
+                position: fixed;
+                top: 22px;
+                right: 22px;
+                z-index: 99999;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                width: min(390px, calc(100vw - 32px));
+                pointer-events: none;
+            }
+
+            .toast {
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 15px 16px;
+                border-radius: 14px;
+                color: white;
+                box-shadow: 0 18px 45px rgba(15, 23, 42, .22);
+                transform: translateX(120%);
+                opacity: 0;
+                transition: transform .28s ease, opacity .28s ease;
+                pointer-events: auto;
+            }
+
+                .toast.show {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+
+            .toast-error {
+                background: #b91c1c;
+            }
+
+            .toast-success {
+                background: #15803d;
+            }
+
+            .toast-icon {
+                flex: 0 0 auto;
+                font-size: 18px;
+                line-height: 1.3;
+            }
+
+            .toast-message {
+                flex: 1;
+                font-size: 13px;
+                font-weight: 600;
+                line-height: 1.5;
+            }
+
+            .toast-close {
+                flex: 0 0 auto;
+                border: 0;
+                background: transparent;
+                color: white;
+                cursor: pointer;
+                font-size: 19px;
+                line-height: 1;
+                padding: 0;
+                opacity: .85;
+            }
+
+                .toast-close:hover {
+                    opacity: 1;
+                }
     </style>
 </head>
 
@@ -521,6 +557,42 @@
                             Accepted formats include 78123456,
                             0096178123456, or +96178123456.
                         </span>
+
+                        <div class="otp-section" id="otpSection">
+                            <button type="button"
+                                    class="map-btn"
+                                    id="sendOtpButton"
+                                    onclick="sendOtp()">
+                                Send Verification Code
+                            </button>
+
+                            <div class="otp-code-group" id="otpCodeGroup">
+                                <input type="text"
+                                       id="otpCodeInput"
+                                       class="otp-code-input"
+                                       maxlength="6"
+                                       inputmode="numeric"
+                                       placeholder="Enter 6-digit code" />
+
+                                <button type="button"
+                                        class="map-btn"
+                                        id="verifyOtpButton"
+                                        onclick="verifyOtp()">
+                                    Verify Code
+                                </button>
+                            </div>
+
+                            <div id="otpStatus"
+                                 class="hint otp-status @(isPhoneAlreadyVerified ? "verified" : "")">
+                                @(isPhoneAlreadyVerified
+                                    ? "✓ Phone number verified."
+                                    : "")
+                            </div>
+                        </div>
+
+                        <input type="hidden"
+                               id="PhoneVerifiedFlag"
+                               value="@(isPhoneAlreadyVerified ? "true" : "false")" />
                     </div>
 
                     <div class="form-group">
@@ -710,462 +782,672 @@
                          toastMessages));
 
         const cityAreaMap = {
-            "Beirut": "Beirut",
-            "Tripoli": "North Lebanon",
-            "Saida": "South Lebanon",
-            "Tyre": "South Lebanon",
-            "Zahle": "Bekaa",
-            "Jounieh": "Mount Lebanon",
-            "Byblos": "Mount Lebanon",
-            "Nabatieh": "Nabatieh",
-            "Aley": "Mount Lebanon",
-            "Baabda": "Mount Lebanon"
+        "Beirut": "Beirut",
+        "Tripoli": "North Lebanon",
+        "Saida": "South Lebanon",
+        "Tyre": "South Lebanon",
+        "Zahle": "Bekaa",
+        "Jounieh": "Mount Lebanon",
+        "Byblos": "Mount Lebanon",
+        "Nabatieh": "Nabatieh",
+        "Aley": "Mount Lebanon",
+        "Baabda": "Mount Lebanon"
         };
 
         let storeMap;
         let storeMarker;
 
         document.addEventListener(
-            "DOMContentLoaded",
-            function () {
-                configureAreaOptions();
-                initStoreMap();
-                configureSubmitProtection();
+        "DOMContentLoaded",
+        function () {
+        configureAreaOptions();
+        initStoreMap();
+        configureSubmitProtection();
+        configurePhoneVerificationReset();
 
-                serverToasts.forEach(
-                    toast =>
-                        showToast(
-                            toast.message,
-                            toast.type));
-            });
+        serverToasts.forEach(
+        toast =>
+        showToast(
+        toast.message,
+        toast.type));
+        });
 
         document
-            .getElementById("StoreCity")
-            .addEventListener(
-                "change",
-                function () {
-                    configureAreaOptions(true);
-                });
+        .getElementById("StoreCity")
+        .addEventListener(
+        "change",
+        function () {
+        configureAreaOptions(true);
+        });
 
         function configureAreaOptions(clearSelection) {
-            const citySelect =
-                document.getElementById("StoreCity");
+        const citySelect =
+        document.getElementById("StoreCity");
 
-            const areaSelect =
-                document.getElementById("StoreArea");
+        const areaSelect =
+        document.getElementById("StoreArea");
 
-            if (!citySelect || !areaSelect) {
-                return;
-            }
+        if (!citySelect || !areaSelect) {
+        return;
+        }
 
-            const previousArea =
-                clearSelection
-                    ? ""
-                    : areaSelect.dataset.selectedArea || areaSelect.value;
+        const previousArea =
+        clearSelection
+        ? ""
+        : areaSelect.dataset.selectedArea || areaSelect.value;
 
-            areaSelect.innerHTML =
-                '<option value="">Select area</option>';
+        areaSelect.innerHTML =
+        '<option value="">Select area</option>';
 
-            const expectedArea =
-                cityAreaMap[citySelect.value];
+        const expectedArea =
+        cityAreaMap[citySelect.value];
 
-            if (!expectedArea) {
-                return;
-            }
+        if (!expectedArea) {
+        return;
+        }
 
-            const option =
-                document.createElement("option");
+        const option =
+        document.createElement("option");
 
-            option.value =
-                expectedArea;
+        option.value =
+        expectedArea;
 
-            option.textContent =
-                expectedArea;
+        option.textContent =
+        expectedArea;
 
-            areaSelect.appendChild(
-                option);
+        areaSelect.appendChild(
+        option);
 
-            if (previousArea === expectedArea) {
-                areaSelect.value =
-                    expectedArea;
-            }
-            else {
-                areaSelect.value =
-                    expectedArea;
-            }
+        if (previousArea === expectedArea) {
+        areaSelect.value =
+        expectedArea;
+        }
+        else {
+        areaSelect.value =
+        expectedArea;
+        }
         }
 
         function initStoreMap() {
-            const defaultLat =
-                33.8938;
+        const defaultLat =
+        33.8938;
 
-            const defaultLng =
-                35.5018;
+        const defaultLng =
+        35.5018;
 
-            const latitudeInput =
-                document.getElementById("StoreLatitude");
+        const latitudeInput =
+        document.getElementById("StoreLatitude");
 
-            const longitudeInput =
-                document.getElementById("StoreLongitude");
+        const longitudeInput =
+        document.getElementById("StoreLongitude");
 
-            const savedLat =
-                Number.parseFloat(
-                    latitudeInput.value);
+        const savedLat =
+        Number.parseFloat(
+        latitudeInput.value);
 
-            const savedLng =
-                Number.parseFloat(
-                    longitudeInput.value);
+        const savedLng =
+        Number.parseFloat(
+        longitudeInput.value);
 
-            const hasSavedCoordinates =
-                Number.isFinite(savedLat) &&
-                Number.isFinite(savedLng) &&
-                savedLat !== 0 &&
-                savedLng !== 0;
+        const hasSavedCoordinates =
+        Number.isFinite(savedLat) &&
+        Number.isFinite(savedLng) &&
+        savedLat !== 0 &&
+        savedLng !== 0;
 
-            const initialLat =
-                hasSavedCoordinates
-                    ? savedLat
-                    : defaultLat;
+        const initialLat =
+        hasSavedCoordinates
+        ? savedLat
+        : defaultLat;
 
-            const initialLng =
-                hasSavedCoordinates
-                    ? savedLng
-                    : defaultLng;
+        const initialLng =
+        hasSavedCoordinates
+        ? savedLng
+        : defaultLng;
 
-            storeMap =
-                L.map(
-                    "storeMap",
-                    {
-                        maxBounds: [
-                            [32.8, 34.8],
-                            [35.0, 36.8]
-                        ],
-                        maxBoundsViscosity: 1.0
-                    })
-                    .setView(
-                        [initialLat, initialLng],
-                        hasSavedCoordinates
-                            ? 15
-                            : 9);
+        storeMap =
+        L.map(
+        "storeMap",
+        {
+        maxBounds: [
+        [32.8, 34.8],
+        [35.0, 36.8]
+        ],
+        maxBoundsViscosity: 1.0
+        })
+        .setView(
+        [initialLat, initialLng],
+        hasSavedCoordinates
+        ? 15
+        : 9);
 
-            L.tileLayer(
-                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                {
-                    maxZoom: 19,
-                    attribution:
-                        "&copy; OpenStreetMap contributors"
-                })
-                .addTo(storeMap);
+        L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+        maxZoom: 19,
+        attribution:
+        "&copy; OpenStreetMap contributors"
+        })
+        .addTo(storeMap);
 
-            storeMarker =
-                L.marker(
-                    [initialLat, initialLng],
-                    {
-                        draggable: true
-                    })
-                    .addTo(storeMap);
+        storeMarker =
+        L.marker(
+        [initialLat, initialLng],
+        {
+        draggable: true
+        })
+        .addTo(storeMap);
 
-            if (hasSavedCoordinates) {
-                setStoreCoordinates(
-                    savedLat,
-                    savedLng);
-            }
+        if (hasSavedCoordinates) {
+        setStoreCoordinates(
+        savedLat,
+        savedLng);
+        }
 
-            storeMap.on(
-                "click",
-                function (event) {
-                    updateStoreLocation(
-                        event.latlng.lat,
-                        event.latlng.lng,
-                        true);
-                });
+        storeMap.on(
+        "click",
+        function (event) {
+        updateStoreLocation(
+        event.latlng.lat,
+        event.latlng.lng,
+        true);
+        });
 
-            storeMarker.on(
-                "dragend",
-                function () {
-                    const position =
-                        storeMarker.getLatLng();
+        storeMarker.on(
+        "dragend",
+        function () {
+        const position =
+        storeMarker.getLatLng();
 
-                    updateStoreLocation(
-                        position.lat,
-                        position.lng,
-                        true);
-                });
+        updateStoreLocation(
+        position.lat,
+        position.lng,
+        true);
+        });
         }
 
         function updateStoreLocation(
-            latitude,
-            longitude,
-            shouldReverseGeocode) {
-            storeMarker.setLatLng(
-                [latitude, longitude]);
+        latitude,
+        longitude,
+        shouldReverseGeocode) {
+        storeMarker.setLatLng(
+        [latitude, longitude]);
 
-            setStoreCoordinates(
-                latitude,
-                longitude);
+        setStoreCoordinates(
+        latitude,
+        longitude);
 
-            if (shouldReverseGeocode) {
-                reverseStoreGeocode(
-                    latitude,
-                    longitude);
-            }
+        if (shouldReverseGeocode) {
+        reverseStoreGeocode(
+        latitude,
+        longitude);
+        }
         }
 
         function setStoreCoordinates(
-            latitude,
-            longitude) {
-            document
-                .getElementById("StoreLatitude")
-                .value =
-                    latitude.toFixed(7);
+        latitude,
+        longitude) {
+        document
+        .getElementById("StoreLatitude")
+        .value =
+        latitude.toFixed(7);
 
-            document
-                .getElementById("StoreLongitude")
-                .value =
-                    longitude.toFixed(7);
+        document
+        .getElementById("StoreLongitude")
+        .value =
+        longitude.toFixed(7);
 
-            document
-                .getElementById("storeMapMessage")
-                .innerText =
-                    "Selected location: " +
-                    latitude.toFixed(6) +
-                    ", " +
-                    longitude.toFixed(6);
+        document
+        .getElementById("storeMapMessage")
+        .innerText =
+        "Selected location: " +
+        latitude.toFixed(6) +
+        ", " +
+        longitude.toFixed(6);
 
-            const coordinateBox =
-                document.getElementById(
-                    "storeCoordinateBox");
+        const coordinateBox =
+        document.getElementById(
+        "storeCoordinateBox");
 
-            coordinateBox.style.display =
-                "block";
+        coordinateBox.style.display =
+        "block";
 
-            coordinateBox.innerText =
-                "Coordinates captured: " +
-                latitude.toFixed(6) +
-                ", " +
-                longitude.toFixed(6);
+        coordinateBox.innerText =
+        "Coordinates captured: " +
+        latitude.toFixed(6) +
+        ", " +
+        longitude.toFixed(6);
         }
 
         function useCurrentStoreLocation() {
-            const message =
-                document.getElementById(
-                    "storeMapMessage");
+        const message =
+        document.getElementById(
+        "storeMapMessage");
 
-            if (!navigator.geolocation) {
-                message.innerText =
-                    "Location is not supported. Select the location manually on the map.";
+        if (!navigator.geolocation) {
+        message.innerText =
+        "Location is not supported. Select the location manually on the map.";
 
-                return;
-            }
+        return;
+        }
 
-            message.innerText =
-                "Detecting location...";
+        message.innerText =
+        "Detecting location...";
 
-            navigator.geolocation.getCurrentPosition(
-                function (position) {
-                    const latitude =
-                        position.coords.latitude;
+        navigator.geolocation.getCurrentPosition(
+        function (position) {
+        const latitude =
+        position.coords.latitude;
 
-                    const longitude =
-                        position.coords.longitude;
+        const longitude =
+        position.coords.longitude;
 
-                    storeMap.setView(
-                        [latitude, longitude],
-                        15);
+        storeMap.setView(
+        [latitude, longitude],
+        15);
 
-                    updateStoreLocation(
-                        latitude,
-                        longitude,
-                        true);
-                },
-                function () {
-                    message.innerText =
-                        "Location permission was denied or unavailable. Select the location manually on the map.";
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                });
+        updateStoreLocation(
+        latitude,
+        longitude,
+        true);
+        },
+        function () {
+        message.innerText =
+        "Location permission was denied or unavailable. Select the location manually on the map.";
+        },
+        {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+        });
         }
 
         async function reverseStoreGeocode(
-            latitude,
-            longitude) {
-            try {
-                const url =
-                    "https://nominatim.openstreetmap.org/reverse" +
-                    "?format=jsonv2" +
-                    "&lat=" +
-                    encodeURIComponent(latitude) +
-                    "&lon=" +
-                    encodeURIComponent(longitude);
+        latitude,
+        longitude) {
+        try {
+        const url =
+        "https://nominatim.openstreetmap.org/reverse" +
+        "?format=jsonv2" +
+        "&lat=" +
+        encodeURIComponent(latitude) +
+        "&lon=" +
+        encodeURIComponent(longitude);
 
-                const response =
-                    await fetch(
-                        url,
-                        {
-                            headers: {
-                                "Accept-Language": "en"
-                            }
-                        });
+        const response =
+        await fetch(
+        url,
+        {
+        headers: {
+        "Accept-Language": "en"
+        }
+        });
 
-                if (!response.ok) {
-                    throw new Error(
-                        "Reverse geocoding failed.");
-                }
+        if (!response.ok) {
+        throw new Error(
+        "Reverse geocoding failed.");
+        }
 
-                const data =
-                    await response.json();
+        const data =
+        await response.json();
 
-                if (data?.display_name) {
-                    document
-                        .getElementById("StoreAddress")
-                        .value =
-                            data.display_name;
-                }
-            }
-            catch {
-                document
-                    .getElementById("storeMapMessage")
-                    .innerText =
-                        "The map location was saved. Enter the address manually if needed.";
-            }
+        if (data?.display_name) {
+        document
+        .getElementById("StoreAddress")
+        .value =
+        data.display_name;
+        }
+        }
+        catch {
+        document
+        .getElementById("storeMapMessage")
+        .innerText =
+        "The map location was saved. Enter the address manually if needed.";
+        }
+        }
+
+        // =====================================================
+        // OTP VERIFICATION
+        // =====================================================
+        function getAntiForgeryToken() {
+        const tokenInput =
+        document.querySelector(
+        'input[name="__RequestVerificationToken"]');
+
+        return tokenInput
+        ? tokenInput.value
+        : "";
+        }
+
+        function configurePhoneVerificationReset() {
+        const phoneInput =
+        document.querySelector(
+        '[name="Input.PhoneNumber"]');
+
+        if (!phoneInput) {
+        return;
+        }
+
+        phoneInput.addEventListener(
+        "input",
+        function () {
+        document.getElementById(
+        "PhoneVerifiedFlag").value = "false";
+
+        const statusEl =
+        document.getElementById("otpStatus");
+
+        statusEl.innerText = "";
+        statusEl.classList.remove("verified");
+
+        document.getElementById(
+        "otpCodeGroup").style.display = "none";
+        });
+        }
+
+        async function sendOtp() {
+        const phoneInput =
+        document.querySelector(
+        '[name="Input.PhoneNumber"]');
+
+        const statusEl =
+        document.getElementById("otpStatus");
+
+        const sendButton =
+        document.getElementById("sendOtpButton");
+
+        const phoneNumber =
+        phoneInput.value.trim();
+
+        if (!phoneNumber) {
+        showToast(
+        "Enter a phone number first.",
+        "error");
+
+        return;
+        }
+
+        sendButton.disabled = true;
+        sendButton.textContent = "Sending...";
+
+        try {
+        const formData = new FormData();
+        formData.append("phoneNumber", phoneNumber);
+
+        const response = await fetch(
+        "/StoreRequest?handler=SendOtp",
+        {
+        method: "POST",
+        headers: {
+        "RequestVerificationToken":
+        getAntiForgeryToken()
+        },
+        body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+        document.getElementById(
+        "otpCodeGroup").style.display = "flex";
+
+        statusEl.classList.remove("verified");
+        statusEl.innerText =
+        "Code sent. Enter it below.";
+
+        document.getElementById(
+        "PhoneVerifiedFlag").value = "false";
+
+        showToast(
+        "Verification code sent.",
+        "success");
+        }
+        else {
+        showToast(
+        data.message ||
+        "Could not send the verification code.",
+        "error");
+        }
+        }
+        catch (err) {
+        showToast(
+        "Could not send the verification code.",
+        "error");
+        }
+        finally {
+        sendButton.disabled = false;
+        sendButton.textContent =
+        "Send Verification Code";
+        }
+        }
+
+        async function verifyOtp() {
+        const phoneInput =
+        document.querySelector(
+        '[name="Input.PhoneNumber"]');
+
+        const codeInput =
+        document.getElementById("otpCodeInput");
+
+        const statusEl =
+        document.getElementById("otpStatus");
+
+        const verifyButton =
+        document.getElementById("verifyOtpButton");
+
+        const phoneNumber =
+        phoneInput.value.trim();
+
+        const code =
+        codeInput.value.trim();
+
+        if (!code) {
+        showToast(
+        "Enter the verification code.",
+        "error");
+
+        return;
+        }
+
+        verifyButton.disabled = true;
+        verifyButton.textContent = "Verifying...";
+
+        try {
+        const formData = new FormData();
+        formData.append("phoneNumber", phoneNumber);
+        formData.append("code", code);
+
+        const response = await fetch(
+        "/StoreRequest?handler=VerifyOtp",
+        {
+        method: "POST",
+        headers: {
+        "RequestVerificationToken":
+        getAntiForgeryToken()
+        },
+        body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+        statusEl.classList.add("verified");
+        statusEl.innerText =
+        "✓ Phone number verified.";
+
+        document.getElementById(
+        "PhoneVerifiedFlag").value = "true";
+
+        showToast(
+        "Phone number verified.",
+        "success");
+        }
+        else {
+        showToast(
+        data.message ||
+        "Verification failed.",
+        "error");
+        }
+        }
+        catch (err) {
+        showToast(
+        "Verification failed.",
+        "error");
+        }
+        finally {
+        verifyButton.disabled = false;
+        verifyButton.textContent = "Verify Code";
+        }
         }
 
         function configureSubmitProtection() {
-            const form =
-                document.getElementById(
-                    "storeRequestForm");
+        const form =
+        document.getElementById(
+        "storeRequestForm");
 
-            const submitButton =
-                document.getElementById(
-                    "submitStoreRequestButton");
+        const submitButton =
+        document.getElementById(
+        "submitStoreRequestButton");
 
-            if (!form || !submitButton) {
-                return;
-            }
+        if (!form || !submitButton) {
+        return;
+        }
 
-            form.addEventListener(
-                "submit",
-                function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
+        form.addEventListener(
+        "submit",
+        function (event) {
+        if (!form.checkValidity()) {
+        event.preventDefault();
 
-                        const invalidFields =
-                            Array.from(
-                                form.querySelectorAll(
-                                    ":invalid"));
+        const invalidFields =
+        Array.from(
+        form.querySelectorAll(
+        ":invalid"));
 
-                        const shownMessages =
-                            new Set();
+        const shownMessages =
+        new Set();
 
-                        invalidFields.forEach(
-                            field => {
-                                const message =
-                                    field.validationMessage ||
-                                    "Please complete the required information.";
+        invalidFields.forEach(
+        field => {
+        const message =
+        field.validationMessage ||
+        "Please complete the required information.";
 
-                                if (!shownMessages.has(
-                                        message))
-                                {
-                                    shownMessages.add(
-                                        message);
+        if (!shownMessages.has(
+        message))
+        {
+        shownMessages.add(
+        message);
 
-                                    showToast(
-                                        message,
-                                        "error");
-                                }
-                            });
+        showToast(
+        message,
+        "error");
+        }
+        });
 
-                        if (invalidFields.length > 0) {
-                            invalidFields[0].focus();
-                        }
+        if (invalidFields.length > 0) {
+        invalidFields[0].focus();
+        }
 
-                        return;
-                    }
+        return;
+        }
 
-                    submitButton.disabled =
-                        true;
+        const phoneVerifiedFlag =
+        document.getElementById(
+        "PhoneVerifiedFlag");
 
-                    submitButton.textContent =
-                        "Submitting Request...";
-                });
+        if (!phoneVerifiedFlag ||
+        phoneVerifiedFlag.value !== "true") {
+        event.preventDefault();
+
+        showToast(
+        "Please verify your phone number before submitting.",
+        "error");
+
+        return;
+        }
+
+        submitButton.disabled =
+        true;
+
+        submitButton.textContent =
+        "Submitting Request...";
+        });
         }
 
         function showToast(
-            message,
-            type) {
-            if (!message) {
-                return;
-            }
+        message,
+        type) {
+        if (!message) {
+        return;
+        }
 
-            const container =
-                document.getElementById(
-                    "toastContainer");
+        const container =
+        document.getElementById(
+        "toastContainer");
 
-            if (!container) {
-                return;
-            }
+        if (!container) {
+        return;
+        }
 
-            const toast =
-                document.createElement(
-                    "div");
+        const toast =
+        document.createElement(
+        "div");
 
-            const safeType =
-                type === "success"
-                    ? "success"
-                    : "error";
+        const safeType =
+        type === "success"
+        ? "success"
+        : "error";
 
-            toast.className =
-                `toast toast-${safeType}`;
+        toast.className =
+        `toast toast-${safeType}`;
 
-            const icon =
-                safeType === "success"
-                    ? "✓"
-                    : "!";
+        const icon =
+        safeType === "success"
+        ? "✓"
+        : "!";
 
-            toast.innerHTML =
-                `<span class="toast-icon">${icon}</span>` +
-                `<span class="toast-message"></span>` +
-                `<button type="button" class="toast-close" aria-label="Close">×</button>`;
+        toast.innerHTML =
+        `<span class="toast-icon">${icon}</span>` +
+        `<span class="toast-message"></span>` +
+        `<button type="button" class="toast-close" aria-label="Close">×</button>`;
 
-            toast
-                .querySelector(
-                    ".toast-message")
-                .textContent =
-                    message;
+        toast
+        .querySelector(
+        ".toast-message")
+        .textContent =
+        message;
 
-            const removeToast =
-                () => {
-                    toast.classList.remove(
-                        "show");
+        const removeToast =
+        () => {
+        toast.classList.remove(
+        "show");
 
-                    window.setTimeout(
-                        () => toast.remove(),
-                        280);
-                };
+        window.setTimeout(
+        () => toast.remove(),
+        280);
+        };
 
-            toast
-                .querySelector(
-                    ".toast-close")
-                .addEventListener(
-                    "click",
-                    removeToast);
+        toast
+        .querySelector(
+        ".toast-close")
+        .addEventListener(
+        "click",
+        removeToast);
 
-            container.appendChild(
-                toast);
+        container.appendChild(
+        toast);
 
-            window.requestAnimationFrame(
-                () =>
-                    toast.classList.add(
-                        "show"));
+        window.requestAnimationFrame(
+        () =>
+        toast.classList.add(
+        "show"));
 
-            window.setTimeout(
-                removeToast,
-                safeType === "success"
-                    ? 4500
-                    : 6500);
+        window.setTimeout(
+        removeToast,
+        safeType === "success"
+        ? 4500
+        : 6500);
         }
     </script>
 

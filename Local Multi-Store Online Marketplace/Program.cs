@@ -11,6 +11,8 @@ using Multi_Store.Infrastructure.Repositories;
 using Multi_Store.Services;
 using Multi_Store.Services.Email;
 using Multi_Store.Services.Managers;
+using Multi_Store.Infrastructure.Settings;
+using Multi_Store.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +41,9 @@ builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 
 builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+//twiolo 
+builder.Services.Configure<TwilioSettings>(
+    builder.Configuration.GetSection("Twilio"));
 
 // ===============================
 // Identity
@@ -91,8 +96,7 @@ builder.Services
         options.AppSecret =
             builder.Configuration["Authentication:Facebook:AppSecret"] ?? string.Empty;
     });
-builder.Services.Configure<TwilioSettings>(
-    builder.Configuration.GetSection("Twilio"));
+
 
 
 
@@ -135,6 +139,7 @@ builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 // ===============================
 // Services
 // ===============================
+builder.Services.AddScoped<ITwilioService, TwilioService>();
 builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
 builder.Services.AddScoped<SubscriptionService>();
 
