@@ -2,6 +2,8 @@
 @model Local_Multi_Store_Online_Marketplace.Pages.Customer1Model
 @{
     Layout = null;
+    var hasActiveExploreFilters = Model.CategoryId.HasValue || Model.StoreId.HasValue
+        || !string.IsNullOrEmpty(Model.Area) || Model.MinPrice.HasValue || Model.MaxPrice.HasValue;
 }
 
 <!DOCTYPE html>
@@ -412,13 +414,175 @@
                 box-sizing: content-box;
             }
 
-        .market-filter-panel {
+        /* =====================================================
+           DISCOVERY BAR (search toolbar + collapsible filters)
+           ===================================================== */
+        .discovery-bar {
             margin: 22px 0 16px;
+        }
+
+        .discovery-search {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 14px;
+            height: 52px;
+            background: #ffffff;
+            border: 1px solid #e7e2f2;
+            border-radius: 16px;
+            box-shadow: 0 10px 28px rgba(67, 46, 110, 0.07);
+        }
+
+            .discovery-search > i.fa-magnifying-glass {
+                color: #9992ab;
+            }
+
+            .discovery-search input[type="text"] {
+                flex: 1;
+                height: 100%;
+                border: none;
+                outline: none;
+                font-size: 14px;
+                color: var(--text-primary);
+                background: transparent;
+            }
+
+        .discovery-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 36px;
+            padding: 0 14px;
+            border: 1px solid #ded8eb;
+            border-radius: 10px;
+            background: #fff;
+            color: #5f5870;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+            .discovery-toggle[aria-expanded="true"] {
+                border-color: var(--accent-color);
+                color: var(--accent-color);
+            }
+
+            .discovery-toggle i {
+                font-size: 11px;
+                transition: transform 0.2s ease;
+            }
+
+            .discovery-toggle[aria-expanded="true"] i {
+                transform: rotate(180deg);
+            }
+
+        .discovery-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 10px;
+            background: var(--accent-gradient);
+            color: #fff;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .discovery-filters {
+            margin-top: 12px;
             padding: 18px;
             border: 1px solid #e7e2f2;
-            border-radius: 18px;
+            border-radius: 16px;
             background: #ffffff;
             box-shadow: 0 10px 28px rgba(67, 46, 110, 0.07);
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.25s ease, opacity 0.25s ease, margin-top 0.25s ease, padding 0.25s ease;
+        }
+
+            .discovery-filters.is-collapsed {
+                max-height: 0;
+                opacity: 0;
+                margin-top: 0;
+                padding-top: 0;
+                padding-bottom: 0;
+                border-width: 0;
+                box-shadow: none;
+            }
+
+        /* Store search autocomplete dropdown */
+        .store-search-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #e7e2f2;
+            border-radius: 14px;
+            box-shadow: 0 16px 32px rgba(67, 46, 110, 0.14);
+            z-index: 50;
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 6px;
+        }
+
+            .store-search-dropdown.hidden {
+                display: none;
+            }
+
+        .store-search-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+            .store-search-item:hover {
+                background: var(--accent-light);
+            }
+
+            .store-search-item img,
+            .store-search-item .store-search-fallback {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                object-fit: cover;
+                flex-shrink: 0;
+            }
+
+            .store-search-item .store-search-fallback {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: var(--accent-gradient);
+                color: #fff;
+                font-weight: 800;
+                font-size: 13px;
+            }
+
+            .store-search-item strong {
+                display: block;
+                font-size: 13.5px;
+            }
+
+            .store-search-item small {
+                color: #8d859c;
+                font-size: 11.5px;
+            }
+
+        .store-search-empty {
+            padding: 12px;
+            text-align: center;
+            color: #8d859c;
+            font-size: 12.5px;
         }
 
         .market-filter-grid {
@@ -568,77 +732,103 @@
             </div>
         </section>
 
-        <form method="get" asp-page="/Customer1" class="market-filter-panel">
-            <input type="hidden" name="category" value="@Model.SelectedCategory" />
+        <!-- =========================================================
+             DISCOVERY BAR — search toolbar (products + store name
+             autocomplete) with collapsible advanced filters
+             ========================================================= -->
+        <section class="discovery-bar">
+            <form method="get" asp-page="/Customer1" id="exploreDiscoveryForm">
+                <input type="hidden" name="category" value="@Model.SelectedCategory" />
 
-            <div class="market-filter-grid">
-                <div class="market-filter-field">
-                    <label for="exploreSearch">Search products or stores</label>
-                    <input id="exploreSearch" name="SearchTerm" value="@Model.SearchTerm"
-                           placeholder="What are you looking for?" />
+                <div class="discovery-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input type="text"
+                           id="exploreStoreSearchInput"
+                           name="SearchTerm"
+                           value="@Model.SearchTerm"
+                           placeholder="Search products or stores by name"
+                           autocomplete="off" />
+
+                    <div id="exploreStoreSearchResults" class="store-search-dropdown hidden"></div>
+
+                    <button type="button" class="discovery-toggle" id="exploreFiltersToggle"
+                            aria-expanded="@(hasActiveExploreFilters ? "true" : "false")"
+                            aria-controls="exploreAdvancedFilters">
+                        Filters <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+
+                    <button type="submit" class="discovery-submit" aria-label="Search">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
                 </div>
 
-                <div class="market-filter-field">
-                    <label for="exploreCategory">Category</label>
-                    <select id="exploreCategory" name="CategoryId">
-                        <option value="">All categories</option>
-                        @foreach (var filterCategory in Model.FilterCategories)
-                        {
-                            <option value="@filterCategory.CategoryID"
-                                    selected="@(Model.CategoryId == filterCategory.CategoryID ? "selected" : null)">
-                                @filterCategory.CategoryName
-                            </option>
-                        }
-                    </select>
-                </div>
+                <div class="discovery-filters market-filter-panel @(hasActiveExploreFilters ? "" : "is-collapsed")" id="exploreAdvancedFilters">
 
-                <div class="market-filter-field">
-                    <label for="exploreStore">Store</label>
-                    <select id="exploreStore" name="StoreId">
-                        <option value="">All stores</option>
-                        @foreach (var filterStore in Model.FilterStores)
-                        {
-                            <option value="@filterStore.StoreID"
-                                    selected="@(Model.StoreId == filterStore.StoreID ? "selected" : null)">
-                                @filterStore.StoreName
-                            </option>
-                        }
-                    </select>
-                </div>
+                    <div class="market-filter-grid">
+                        <div class="market-filter-field">
+                            <label for="exploreCategory">Category</label>
+                            <select id="exploreCategory" name="CategoryId">
+                                <option value="">All categories</option>
+                                @foreach (var filterCategory in Model.FilterCategories)
+                                {
+                                    <option value="@filterCategory.CategoryID"
+                                            selected="@(Model.CategoryId == filterCategory.CategoryID ? "selected" : null)">
+                                        @filterCategory.CategoryName
+                                    </option>
+                                }
+                            </select>
+                        </div>
 
-                <div class="market-filter-field">
-                    <label for="exploreArea">Area</label>
-                    <select id="exploreArea" name="Area">
-                        <option value="">All areas</option>
-                        @foreach (var filterArea in Model.FilterAreas)
-                        {
-                            <option value="@filterArea" selected="@(Model.Area == filterArea ? "selected" : null)">@filterArea</option>
-                        }
-                    </select>
-                </div>
+                        <div class="market-filter-field">
+                            <label for="exploreStore">Store</label>
+                            <select id="exploreStore" name="StoreId">
+                                <option value="">All stores</option>
+                                @foreach (var filterStore in Model.FilterStores)
+                                {
+                                    <option value="@filterStore.StoreID"
+                                            selected="@(Model.StoreId == filterStore.StoreID ? "selected" : null)">
+                                        @filterStore.StoreName
+                                    </option>
+                                }
+                            </select>
+                        </div>
 
-                <div class="market-filter-field">
-                    <label for="exploreMinPrice">Min price</label>
-                    <input id="exploreMinPrice" type="number" min="0" step="0.01"
-                           name="MinPrice" value="@Model.MinPrice" placeholder="$0" />
-                </div>
+                        <div class="market-filter-field">
+                            <label for="exploreArea">Area</label>
+                            <select id="exploreArea" name="Area">
+                                <option value="">All areas</option>
+                                @foreach (var filterArea in Model.FilterAreas)
+                                {
+                                    <option value="@filterArea" selected="@(Model.Area == filterArea ? "selected" : null)">@filterArea</option>
+                                }
+                            </select>
+                        </div>
 
-                <div class="market-filter-field">
-                    <label for="exploreMaxPrice">Max price</label>
-                    <input id="exploreMaxPrice" type="number" min="0" step="0.01"
-                           name="MaxPrice" value="@Model.MaxPrice" placeholder="Any" />
-                </div>
-            </div>
+                        <div class="market-filter-field">
+                            <label for="exploreMinPrice">Min price</label>
+                            <input id="exploreMinPrice" type="number" min="0" step="0.01"
+                                   name="MinPrice" value="@Model.MinPrice" placeholder="$0" />
+                        </div>
 
-            <div class="market-filter-actions">
-                <a asp-page="/Customer1" class="market-filter-clear">
-                    <i class="fa-solid fa-rotate-left"></i> Clear
-                </a>
-                <button type="submit" class="market-filter-button">
-                    <i class="fa-solid fa-magnifying-glass"></i> Search / Filter
-                </button>
-            </div>
-        </form>
+                        <div class="market-filter-field">
+                            <label for="exploreMaxPrice">Max price</label>
+                            <input id="exploreMaxPrice" type="number" min="0" step="0.01"
+                                   name="MaxPrice" value="@Model.MaxPrice" placeholder="Any" />
+                        </div>
+                    </div>
+
+                    <div class="market-filter-actions">
+                        <a asp-page="/Customer1" class="market-filter-clear">
+                            <i class="fa-solid fa-rotate-left"></i> Clear
+                        </a>
+                        <button type="submit" class="market-filter-button">
+                            <i class="fa-solid fa-magnifying-glass"></i> Search / Filter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
 
         <section class="category-section"
                  aria-label="Product categories">
@@ -1167,6 +1357,100 @@
                 current = (current + 1) % slides.length;
                 slides[current].classList.add('active');
             }, 4000);
+        })();
+    </script>
+
+    <script>
+        // =====================================================
+        // DISCOVERY BAR: collapsible filters + store autocomplete
+        // (kept inline since this page does not use a separate JS
+        // file for the search toolbar)
+        // =====================================================
+        (function () {
+            var toggleBtn = document.getElementById('exploreFiltersToggle');
+            var filtersPanel = document.getElementById('exploreAdvancedFilters');
+
+            if (toggleBtn && filtersPanel) {
+                toggleBtn.addEventListener('click', function () {
+                    var isCollapsed = filtersPanel.classList.toggle('is-collapsed');
+                    toggleBtn.setAttribute('aria-expanded', (!isCollapsed).toString());
+                });
+            }
+
+            var searchInput = document.getElementById('exploreStoreSearchInput');
+            var resultsBox = document.getElementById('exploreStoreSearchResults');
+
+            if (!searchInput || !resultsBox) return;
+
+            var debounceTimer = null;
+
+            function escapeHtml(value) {
+                var div = document.createElement('div');
+                div.textContent = value || '';
+                return div.innerHTML;
+            }
+
+            function renderStores(stores) {
+                if (!stores.length) {
+                    resultsBox.innerHTML = '<div class="store-search-empty">No matching stores</div>';
+                    resultsBox.classList.remove('hidden');
+                    return;
+                }
+
+                resultsBox.innerHTML = stores.map(function (store) {
+                    var safeName = escapeHtml(store.storeName);
+                    var safeArea = escapeHtml(store.area);
+
+                    var avatar = store.logoUrl
+                        ? '<img src="' + escapeHtml(store.logoUrl) + '" alt="' + safeName + '" onerror="this.onerror=null;this.style.display=\'none\';">'
+                        : '<span class="store-search-fallback">' + (safeName ? safeName.charAt(0).toUpperCase() : 'S') + '</span>';
+
+                    return '<a class="store-search-item" href="/StoreCustomerProfile?id=' + store.storeId + '">' +
+                        avatar +
+                        '<span><strong>' + safeName + '</strong>' +
+                        (safeArea ? '<small>' + safeArea + '</small>' : '') +
+                        '</span></a>';
+                }).join('');
+
+                resultsBox.classList.remove('hidden');
+            }
+
+            searchInput.addEventListener('input', function () {
+                var term = searchInput.value.trim();
+
+                clearTimeout(debounceTimer);
+
+                if (term.length === 0) {
+                    resultsBox.classList.add('hidden');
+                    resultsBox.innerHTML = '';
+                    return;
+                }
+
+                debounceTimer = setTimeout(function () {
+                    fetch('/Customer1?handler=SearchStores&term=' + encodeURIComponent(term))
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            if (data && data.success) {
+                                renderStores(data.stores || []);
+                            }
+                        })
+                        .catch(function () {
+                            resultsBox.classList.add('hidden');
+                        });
+                }, 250);
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!resultsBox.contains(event.target) && event.target !== searchInput) {
+                    resultsBox.classList.add('hidden');
+                }
+            });
+
+            searchInput.addEventListener('focus', function () {
+                if (searchInput.value.trim().length > 0 && resultsBox.innerHTML) {
+                    resultsBox.classList.remove('hidden');
+                }
+            });
         })();
     </script>
 </body>

@@ -125,6 +125,49 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         // =====================================================
+        // STORE SEARCH AUTOCOMPLETE (search toolbar)
+        // GET /Customer1?handler=SearchStores&term=abc
+        // Matches on Store.StoreName ("username" of the store).
+        // Only approved stores are returned, same rule used
+        // everywhere else on this page.
+        // =====================================================
+        public async Task<IActionResult> OnGetSearchStoresAsync(string? term)
+        {
+            var cleanTerm = term?.Trim();
+
+            if (string.IsNullOrWhiteSpace(cleanTerm))
+            {
+                return new JsonResult(new
+                {
+                    success = true,
+                    stores = new List<object>()
+                });
+            }
+
+            var stores = await _context.Stores
+                .AsNoTracking()
+                .Where(s =>
+                    s.Status == "Approved" &&
+                    s.StoreName.Contains(cleanTerm))
+                .OrderBy(s => s.StoreName)
+                .Take(8)
+                .Select(s => new
+                {
+                    storeId = s.StoreID,
+                    storeName = s.StoreName,
+                    logoUrl = s.LogoURL,
+                    area = s.Area
+                })
+                .ToListAsync();
+
+            return new JsonResult(new
+            {
+                success = true,
+                stores
+            });
+        }
+
+        // =====================================================
         // OPEN ONE EXISTING EXPLORE POST IN THE SHARED MODAL
         // Existing post likes/comments remain unchanged.
         // =====================================================

@@ -1612,13 +1612,27 @@
                             var productImage = CustomerProfileModel.GetPrimaryProductImageUrl(wish.Product)
                                 ?? "https://cdn-icons-png.flaticon.com/512/1170/1170576.png";
                             var productId = CustomerProfileModel.GetSafeInt(wish.Product, new[] { "ProductID", "Id" }, 0);
-
                             <div class="product-grid-item">
-                                <img src="@productImage" alt="@productName" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1170/1170576.png'" />
+                                <img src="@productImage"
+                                     alt="@productName"
+                                     onerror="this.src='https://cdn-icons-png.flaticon.com/512/1170/1170576.png'" />
+
                                 <div class="product-details">
                                     <h4>@productName</h4>
+
                                     <span class="price">$@productPrice.ToString("F2")</span>
-                                    <a href="/ProductDetails?id=@productId" class="view-btn">View Details</a>
+
+                                    <a href="/ProductDetails?id=@productId" class="view-btn">
+                                        View Details
+                                    </a>
+
+                                    <form method="post" asp-page-handler="ToggleWishlist">
+                                        <input type="hidden" name="productId" value="@productId" />
+
+                                        <button type="submit" class="wishlist-btn">
+                                            <i class="fas fa-heart"></i> Remove from Wishlist
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         }
