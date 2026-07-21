@@ -23,56 +23,158 @@
 }
 
 <style>
-    /* Centered floating bar at ~75% of the page width instead of edge-to-edge.
-    nav.mobile-bottom-nav (tag + class) beats a plain .mobile-bottom-nav
-    rule on specificity, so this reliably wins over page-level styles
-    like Customer1's own <style> block. */
+    /* ========== CENTERED FLOATING BAR ========== */
     nav.mobile-bottom-nav {
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
-    width: 75vw !important;
-    border-radius: 20px !important;
-    border: 1px solid #ece8f6 !important;
-    bottom: 10px !important;
-    box-shadow: 0 6px 24px rgba(30, 27, 46, 0.12) !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: 75vw !important;
+        border-radius: 20px !important;
+        border: 1px solid #ece8f6 !important;
+        bottom: 10px !important;
+        box-shadow: 0 6px 24px rgba(30, 27, 46, 0.12) !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: clamp(4px, 2vw, 28px) !important;
+        background: #ffffff;
+        padding: 8px 16px !important;
+    }
+
+    /* ========== REUSABLE NAV ITEM (matching store‑owner rail-item) ========== */
+    .mobile-bottom-nav .rail-item {
+        position: relative;
+        min-width: 60px;
+        height: 54px;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        color: #7A73A0;              /* default icon colour */
+        text-decoration: none;
+        padding: 6px 8px;
+        border: none;
+        background: none;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+        flex-shrink: 0;
+    }
+
+    .mobile-bottom-nav .rail-item i {
+        font-size: 17px;
+        line-height: 1;
+    }
+
+    .mobile-bottom-nav .rail-label {
+        font-size: 9.5px;
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: 0.1px;
+        white-space: nowrap;
+    }
+
+    /* Hover & active states (like store‑owner) */
+    .mobile-bottom-nav .rail-item:hover {
+        background: #f3effe;
+        color: #6d28d9;
+    }
+
+    .mobile-bottom-nav .rail-item.active {
+        background: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+        color: #fff;
+    }
+
+    /* ---------- DANGER MODIFIER (matches store‑owner) ---------- */
+    .mobile-bottom-nav .rail-item.danger {
+        color: #dc2626;              /* red */
+    }
+
+    .mobile-bottom-nav .rail-item.danger:hover {
+        background: #fef2f2;         /* light red */
+        color: #dc2626;
+    }
+
+    .mobile-bottom-nav .logout-form {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        padding: 0;
+        flex-shrink: 0;
+    }
+
+    /* ========== CHAT DOT ========== */
+    .chat-icon-wrap {
+        position: relative;
+        display: inline-flex;
+    }
+    .chat-nav-dot {
+        position: absolute;
+        top: -4px;
+        right: -8px;
+        width: 8px;
+        height: 8px;
+        background: #ef4444;
+        border-radius: 50%;
+        border: 1.5px solid white;
+    }
+
+    /* ========== MOBILE RESPONSIVE ========== */
+    @@media (max-width: 560px) {
+        nav.mobile-bottom-nav {
+            gap: 2px;
+            padding: 4px 6px !important;
+        }
+        .mobile-bottom-nav .rail-item {
+            min-width: 44px;
+            height: 44px;
+            padding: 4px 4px;
+        }
+        .mobile-bottom-nav .rail-item i {
+            font-size: 15px;
+        }
+        .mobile-bottom-nav .rail-label {
+            font-size: 8px;
+        }
     }
 </style>
 
 <nav class="mobile-bottom-nav" aria-label="Customer navigation">
 
-    <a href="/Customer1" class="@ActiveIf("/Customer1")">
+    <a href="/Customer1" class="rail-item @ActiveIf("/Customer1")">
         <i class="fa-solid fa-compass"></i>
-        <span>Explore</span>
+        <span class="rail-label">Explore</span>
     </a>
 
-    <a href="/CustomerFeed" class="@ActiveIf("/CustomerFeed")">
+    <a href="/CustomerFeed" class="rail-item @ActiveIf("/CustomerFeed")">
         <i class="fa-solid fa-house"></i>
-        <span>Feed</span>
+        <span class="rail-label">Feed</span>
     </a>
 
-    <a href="/CustomerCart" class="@ActiveIf("/CustomerCart")" style="position:relative;">
+    <a href="/CustomerCart" class="rail-item @ActiveIf("/CustomerCart")" style="position:relative;">
         <i class="fa-solid fa-cart-shopping"></i>
         <partial name="_CartCountBadge" />
-        <span>Cart</span>
+        <span class="rail-label">Cart</span>
     </a>
 
-    <a href="/CustomerPromotions" class="@ActiveIf("/CustomerPromotions")">
+    <a href="/CustomerPromotions" class="rail-item @ActiveIf("/CustomerPromotions")">
         <i class="fa-solid fa-tags"></i>
-        <span>Promos</span>
+        <span class="rail-label">Promos</span>
     </a>
 
-    <a href="/CustomerOrders" class="@ActiveIf("/CustomerOrders")">
+    <a href="/CustomerOrders" class="rail-item @ActiveIf("/CustomerOrders")">
         <i class="fa-solid fa-box"></i>
-        <span>Orders</span>
+        <span class="rail-label">Orders</span>
     </a>
 
-    <a href="/ReportUpdates" class="@ActiveIf("/ReportUpdates")">
+    <a href="/ReportUpdates" class="rail-item @ActiveIf("/ReportUpdates")">
         <i class="fa-solid fa-bell"></i>
-        <span>Notifications</span>
+        <span class="rail-label">Notifications</span>
     </a>
 
-    <a href="/Chat" class="@ActiveIf("/Chat")">
+    <a href="/Chat" class="rail-item @ActiveIf("/Chat")">
         <span class="chat-icon-wrap">
             <i class="fa-solid fa-paper-plane"></i>
             @if (hasChatUnread)
@@ -80,12 +182,56 @@
                 <span class="chat-nav-dot"></span>
             }
         </span>
-        <span>Chat</span>
+        <span class="rail-label">Chat</span>
     </a>
 
-    <a href="/CustomerProfile" class="@ActiveIf("/CustomerProfile")">
+    <a href="/CustomerProfile" class="rail-item @ActiveIf("/CustomerProfile")">
         <i class="fa-solid fa-user"></i>
-        <span>Profile</span>
+        <span class="rail-label">Profile</span>
     </a>
+
+    <!-- Logout – now styled exactly like the store‑owner’s danger button -->
+    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post" class="logout-form" id="logoutForm">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="rail-item danger">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span class="rail-label">Logout</span>
+        </button>
+    </form>
 
 </nav>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const logoutForm = document.getElementById('logoutForm');
+        if (!logoutForm) return;
+
+        logoutForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(logoutForm);
+            const url = logoutForm.action;
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    const returnUrl = new URL(url).searchParams.get('returnUrl') || '/';
+                    window.location.href = returnUrl;
+                } else {
+                    console.error('Logout failed:', response.statusText);
+                    // Fallback (optional): logoutForm.submit();
+                }
+            })
+            .catch(error => {
+                console.error('Network error:', error);
+                // Fallback (optional): logoutForm.submit();
+            });
+        });
+    });
+</script>

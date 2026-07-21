@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Managers;
 using Stripe;
 using System;
 using System.Linq;
@@ -23,17 +24,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         private readonly UserManager<User> _userManager;
         private readonly ILogger<StoreOwnerPaymentModel> _logger;
         private readonly IConfiguration _configuration;
+        private readonly NotificationManager _notifications;   // ADD THIS
 
         public StoreOwnerPaymentModel(
-            ApplicationDbContext context,
-            UserManager<User> userManager,
-            ILogger<StoreOwnerPaymentModel> logger,
-            IConfiguration configuration)
+    ApplicationDbContext context,
+    UserManager<User> userManager,
+    ILogger<StoreOwnerPaymentModel> logger,
+    IConfiguration configuration,
+    NotificationManager notifications)                  // ADD THIS
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
             _configuration = configuration;
+            _notifications = notifications;                     // ADD THIS
         }
 
         public StorePayment? Payment { get; set; }
@@ -199,6 +203,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+                // NEW — notify admins that a store payment came in
+                await _notifications.SendToAllAdminsAsync(
+                    title: "Store Payment Received",
+                    message: $"{store.StoreName} paid ${payment.Amount:F2}" +
+                             (isSubscriptionPayment ? " (Monthly Subscription Fee)" : $" — {payment.Description}"),
+                    type: "Payment",
+                    referenceId: payment.StorePaymentId
+                );
 
                 TempData["Success"] = $"Payment of ${payment.Amount:F2} was successfully processed.";
                 return RedirectToLocalOrDashboard();

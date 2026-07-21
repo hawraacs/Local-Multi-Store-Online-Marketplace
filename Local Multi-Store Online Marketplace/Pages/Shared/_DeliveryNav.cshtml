@@ -87,6 +87,57 @@
                     transform: translateY(-1px) scale(1.08);
                 }
 
+        /* ---------- Logout button styles (matches .bottom-link) ---------- */
+        .logout-form {
+            display: contents; /* Keep form out of flex flow, only its children count */
+        }
+
+        .logout-btn {
+            /* Inherit all .bottom-link styles, but as a button */
+            background: none !important;
+            border: none !important;
+            cursor: pointer;
+            font: inherit;
+            /* Apply same layout as .bottom-link */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 10px 22px;
+            border-radius: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all .2s ease;
+            flex: 1;
+            max-width: 180px;
+            /* Reset button defaults */
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+            .logout-btn .bottom-icon {
+                font-size: 21px;
+                line-height: 1;
+                transition: transform .2s ease;
+            }
+
+            .logout-btn:hover {
+                color: #e2e8f0;
+            }
+
+                .logout-btn:hover .bottom-icon {
+                    transform: translateY(-2px);
+                }
+
+            /* Active state – not used for logout, but we keep a hover effect */
+            .logout-btn:active {
+                transform: scale(0.96);
+            }
+
         /* ================= PAGE OFFSET FOR BOTTOM NAV ================= */
         .page {
             margin-left: 0 !important;
@@ -98,12 +149,14 @@
                 padding: 10px 12px;
             }
 
-            .bottom-link {
+            .bottom-link,
+            .logout-btn {
                 padding: 8px 10px;
                 font-size: 10px;
             }
 
-                .bottom-link .bottom-icon {
+                .bottom-link .bottom-icon,
+                .logout-btn .bottom-icon {
                     font-size: 19px;
                 }
         }
@@ -131,5 +184,52 @@
             <span class="label">Profile</span>
         </a>
 
+        <!-- Logout form – matches customer style, with AJAX -->
+        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post" class="logout-form" id="logoutForm">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="logout-btn">
+                <span class="bottom-icon">🚪</span>
+                <span class="label">Logout</span>
+            </button>
+        </form>
+
     </nav>
+
+    <!-- JavaScript for AJAX logout (same as customer version) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const logoutForm = document.getElementById('logoutForm');
+            if (!logoutForm) return;
+
+            logoutForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const formData = new FormData(logoutForm);
+                const url = logoutForm.action;
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        const returnUrl = new URL(url).searchParams.get('returnUrl') || '/';
+                        window.location.href = returnUrl;
+                    } else {
+                        console.error('Logout failed:', response.statusText);
+                        // Fallback: submit the form normally
+                        // logoutForm.submit();
+                    }
+                })
+                .catch(error => {
+                    console.error('Network error during logout:', error);
+                    // Fallback: submit normally
+                    // logoutForm.submit();
+                });
+            });
+        });
+    </script>
 }

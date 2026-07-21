@@ -6,17 +6,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace Multi_Store.Services.Managers
 {
     public class NotificationManager
     {
         private readonly INotificationRepository _notificationRepository;
+        private readonly UserManager<User> _userManager;   // ADD THIS
 
-        public NotificationManager(INotificationRepository notificationRepository)
-        {
-            _notificationRepository = notificationRepository;
-        }
+         public NotificationManager(
+        INotificationRepository notificationRepository,
+        UserManager<User> userManager)                 // ADD THIS
+    {
+        _notificationRepository = notificationRepository;
+        _userManager = userManager;                    // ADD THIS
+    }
 
         private NotificationDTO ToDTO(Notification n)
         {
@@ -59,6 +64,27 @@ namespace Multi_Store.Services.Managers
             await _notificationRepository.AddAsync(notification);
 
             return ToDTO(notification);
+        }
+        // SEND TO ALL ADMINS
+        public async Task SendToAllAdminsAsync(
+            string title,
+            string message,
+            string type,
+            int? referenceId = null,
+            string sentVia = "System")
+        {
+            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+
+            foreach (var admin in admins)
+            {
+                await SendAsync(
+                    userId: admin.Id,
+                    title: title,
+                    message: message,
+                    type: type,
+                    referenceId: referenceId,
+                    sentVia: sentVia);
+            }
         }
 
         // MARK AS READ

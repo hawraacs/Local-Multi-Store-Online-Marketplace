@@ -2,41 +2,22 @@
 @using Multi_Store.Core.Entities
 @using Multi_Store.Services.Dtos
 @using Multi_Store.Services.Managers
-@inject UserManager<User> IdentityUserManager
-@inject NotificationManager NotificationManager
 @inject UserManager<User> UserManager
 @inject StoreManager StoreManager
-
 @{
     var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
-
     var currentUser = await UserManager.GetUserAsync(User);
-
-    List<NotificationDTO> unreadNotifications = new();
-
-    if (currentUser != null)
-    {
-        unreadNotifications = await NotificationManager.GetUnreadAsync(currentUser.Id);
-    }
-
-    var unreadCount = unreadNotifications.Count;
-
     string ActiveIf(string pageName) =>
         string.Equals(currentPage, pageName, StringComparison.OrdinalIgnoreCase) ? "active" : "";
-
     var storeId = ViewData["StoreId"]?.ToString();
-   
 
-    // ----- Fetch store logo and name from the database, with fallbacks -----
     // ----- Fetch store logo, name and ID from database -----
     string storeLogoUrl = null;
     string storeName = null;
     int? currentStoreId = null;
-
     if (currentUser != null)
     {
         var store = await StoreManager.GetByUserIdAsync(currentUser.Id);
-
         if (store != null)
         {
             currentStoreId = store.StoreID;
@@ -44,32 +25,20 @@
             storeName = store.StoreName;
         }
     }
-
-    // Fallbacks
-    storeLogoUrl ??= ViewData["StoreLogoUrl"]?.ToString() ?? "~/images/default-avatar.png";
-    storeName ??= ViewData["StoreName"]?.ToString() ?? "My Store";
-
-    // Fallback to ViewData if not found (for pages that still set it) or default
     storeLogoUrl ??= ViewData["StoreLogoUrl"]?.ToString() ?? "~/images/default-avatar.png";
     storeName ??= ViewData["StoreName"]?.ToString() ?? "My Store";
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>@ViewData["Title"] - Store Owner Panel</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/store-owner.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-
     @await RenderSectionAsync("Styles", required: false)
-
     <style>
-            /* Your existing CSS (unchanged) – keep it as is */
             :root {
                 --accent-color: #6d28d9;
                 --accent-hover: #5b21b6;
@@ -82,15 +51,13 @@
                 --text-muted: #9691a4;
                 --border-color: #ece8f6;
                 --rail-icon: #7A73A0;
-                --success-color: #10b981;
                 --error-color: #dc2626;
-                --warning-color: #f59e0b;
-                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.08);
-                --shadow-md: 0 10px 28px rgba(109, 40, 217, 0.12);
-                --shadow-lg: 0 20px 46px rgba(30, 27, 46, 0.16);
+                --error-light: #fef2f2;
+                --shadow-sm: 0 1px 2px rgba(109, 40, 217, 0.04), 0 1px 3px rgba(109, 40, 217, 0.06);
+                --shadow-md: 0 4px 6px rgba(109, 40, 217, 0.05), 0 2px 4px rgba(109, 40, 217, 0.04);
+                --shadow-lg: 0 10px 24px rgba(109, 40, 217, 0.10), 0 2px 6px rgba(109, 40, 217, 0.05);
                 --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                --topbar-height: 68px;
-                --rail-height: 76px;
+                --rail-height: 72px;
                 --ease: cubic-bezier(.4, 0, .2, 1);
             }
 
@@ -103,499 +70,164 @@
                 background: var(--bg-color);
                 color: var(--text-primary);
                 margin: 0;
-                padding-top: 0;
-                padding-bottom: calc(var(--rail-height) + 34px);
+                padding-top: 24px;
+                padding-bottom: calc(var(--rail-height) + 32px);
+                -webkit-font-smoothing: antialiased;
             }
-
-            .pro-topbar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: var(--topbar-height);
-                z-index: 1000;
-                background: rgba(255, 255, 255, 0.85);
-                backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px);
-                border-bottom: 1px solid var(--border-color);
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 0 32px;
-                box-shadow: var(--shadow-sm);
-            }
-
-            .topbar-title {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                min-width: 0;
-            }
-
-                .topbar-title h1 {
-                    font-size: 18px;
-                    font-weight: 700;
-                    margin: 0;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-
-            .store-pulse {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 12px;
-                font-weight: 600;
-                color: var(--success-color);
-                background: rgba(16, 185, 129, 0.1);
-                padding: 4px 12px;
-                border-radius: 999px;
-                flex-shrink: 0;
-            }
-
-            .pulse-dot {
-                width: 7px;
-                height: 7px;
-                border-radius: 50%;
-                background: var(--success-color);
-                position: relative;
-            }
-
-                .pulse-dot::after {
-                    content: "";
-                    position: absolute;
-                    inset: 0;
-                    border-radius: 50%;
-                    background: var(--success-color);
-                    animation: pulse-ring 1.8s ease-out infinite;
-                }
-
-           @@keyframes pulse-ring {
-                0% {
-                    transform: scale(1);
-                    opacity: 0.6;
-                }
-
-                100% {
-                    transform: scale(2.6);
-                    opacity: 0;
-                }
-            }
-
-            .topbar-actions {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                flex-shrink: 0;
-            }
-
-            .topbar-search {
-                display: flex;
-                align-items: center;
-                height: 40px;
-                border-radius: 999px;
-                background: var(--bg-color);
-                border: 1.5px solid transparent;
-                width: 40px;
-                overflow: hidden;
-                transition: width 0.35s var(--ease), border-color 0.2s ease;
-            }
-
-                .topbar-search i {
-                    width: 40px;
-                    height: 40px;
-                    flex-shrink: 0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: var(--text-muted);
-                    cursor: pointer;
-                    font-size: 14px;
-                }
-
-                .topbar-search input {
-                    border: none;
-                    background: transparent;
-                    outline: none;
-                    font-size: 13.5px;
-                    font-family: inherit;
-                    color: var(--text-primary);
-                    width: 0;
-                    padding: 0;
-                    opacity: 0;
-                    transition: opacity 0.2s var(--ease);
-                }
-
-                .topbar-search.expanded {
-                    width: 240px;
-                    border-color: var(--accent-color);
-                    background: var(--card-bg);
-                }
-
-                    .topbar-search.expanded input {
-                        width: 100%;
-                        opacity: 1;
-                        padding-right: 12px;
-                    }
-
-            .topbar-icon-btn {
-                position: relative;
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                border: none;
-                background: transparent;
-                color: var(--rail-icon);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: background 0.2s ease, color 0.2s ease;
-            }
-
-                .topbar-icon-btn:hover {
-                    background: var(--accent-light);
-                    color: var(--accent-color);
-                }
-
-                .topbar-icon-btn .icon-badge {
-                    position: absolute;
-                    top: 2px;
-                    right: 2px;
-                    background: var(--error-color);
-                    color: #fff;
-                    border-radius: 999px;
-                    min-width: 16px;
-                    height: 16px;
-                    padding: 0 4px;
-                    font-size: 10px;
-                    font-weight: 800;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border: 2px solid var(--card-bg);
-                }
-
-            .topbar-avatar-btn {
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                padding: 0;
-                border: 1.5px solid var(--border-color);
-                cursor: pointer;
-                overflow: hidden;
-                background: none;
-                transition: border-color 0.2s ease;
-            }
-
-                .topbar-avatar-btn:hover {
-                    border-color: var(--accent-color);
-                }
-
-                .topbar-avatar-btn img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                }
-
-            /* glass popovers */
-            .glass-popover {
-                position: absolute;
-                top: calc(100% + 10px);
-                right: 0;
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px);
-                border: 1px solid var(--border-color);
-                border-radius: 18px;
-                box-shadow: var(--shadow-lg);
-                z-index: 950;
-                opacity: 0;
-                transform: translateY(-6px) scale(0.98);
-                transform-origin: top right;
-                pointer-events: none;
-                transition: opacity 0.18s var(--ease), transform 0.18s var(--ease);
-            }
-
-                .glass-popover.show {
-                    opacity: 1;
-                    transform: translateY(0) scale(1);
-                    pointer-events: auto;
-                }
-
-            .popover-anchor {
-                position: relative;
-            }
-
-            #notificationPopover {
-                width: 340px;
-                max-height: 420px;
-                overflow-y: auto;
-            }
-
-            .notification-header {
-                padding: 14px 16px;
-                border-bottom: 1px solid var(--border-color);
-                font-weight: 800;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .notification-count-text {
-                background: var(--accent-light);
-                color: var(--accent-color);
-                padding: 3px 9px;
-                border-radius: 999px;
-                font-size: 11px;
-                font-weight: 700;
-            }
-
-            .notification-item {
-                padding: 12px 16px;
-                border-bottom: 1px solid var(--border-color);
-            }
-
-                .notification-item:last-child {
-                    border-bottom: none;
-                }
-
-            .notification-title {
-                font-weight: 700;
-                font-size: 13.5px;
-                margin-bottom: 3px;
-            }
-
-            .notification-message {
-                color: var(--text-secondary);
-                font-size: 12.5px;
-                line-height: 1.5;
-                margin-bottom: 4px;
-            }
-
-            .notification-date {
-                color: var(--text-muted);
-                font-size: 11px;
-            }
-
-            .empty-notification {
-                padding: 24px 16px;
-                text-align: center;
-                color: var(--text-muted);
-                font-weight: 600;
-                font-size: 13px;
-            }
-
-            #userPopover {
-                width: 220px;
-                padding: 8px;
-            }
-
-            .user-popover-header {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 8px 8px 12px;
-                border-bottom: 1px solid var(--border-color);
-                margin-bottom: 6px;
-            }
-
-                .user-popover-header img {
-                    width: 34px;
-                    height: 34px;
-                    border-radius: 50%;
-                    object-fit: cover;
-                }
-
-                .user-popover-header .u-name {
-                    font-weight: 700;
-                    font-size: 13.5px;
-                }
-
-                .user-popover-header .u-store {
-                    font-size: 11.5px;
-                    color: var(--text-muted);
-                }
-
-            .dropdown-item {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 9px 10px;
-                color: var(--text-primary);
-                font-size: 13.5px;
-                font-weight: 500;
-                text-decoration: none;
-                border: none;
-                background: none;
-                width: 100%;
-                text-align: left;
-                cursor: pointer;
-                font-family: inherit;
-                border-radius: 10px;
-                transition: background 0.15s ease, color 0.15s ease;
-            }
-
-                .dropdown-item i {
-                    color: var(--rail-icon);
-                    width: 16px;
-                    text-align: center;
-                }
-
-                .dropdown-item:hover {
-                    background: var(--accent-light);
-                    color: var(--accent-color);
-                }
-
-                    .dropdown-item:hover i {
-                        color: var(--accent-color);
-                    }
-
-                .dropdown-item.danger {
-                    color: var(--error-color);
-                }
-
-                    .dropdown-item.danger i {
-                        color: var(--error-color);
-                    }
-
-                    .dropdown-item.danger:hover {
-                        background: #fef2f2;
-                    }
 
             .pro-rail {
                 position: fixed;
                 left: 50%;
-                bottom: 14px;
+                bottom: 16px;
                 transform: translateX(-50%);
-                width: 75%;
-                max-width: 1100px;
+                width: 90%;
+                max-width: 1180px;
+                min-width: 600px;
                 height: var(--rail-height);
                 background: var(--card-bg);
                 border: 1px solid var(--border-color);
-                border-radius: 22px;
+                border-radius: 16px;
                 display: flex;
                 align-items: center;
-                padding: 0 20px;
+                padding: 0 10px 0 18px;
                 z-index: 1000;
                 box-shadow: var(--shadow-lg);
+                gap: 4px;
             }
 
             .rail-brand {
-                position: absolute;
-                left: 20px;
-                top: 50%;
-                transform: translateY(-50%);
-                width: 46px;
-                height: 46px;
-                border-radius: 13px;
+                width: 42px;
+                height: 42px;
+                border-radius: 10px;
                 background: var(--accent-gradient);
                 color: #fff;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 19px;
+                font-size: 17px;
                 flex-shrink: 0;
                 text-decoration: none;
-                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.18);
-                transition: transform 0.3s var(--ease);
+                box-shadow: 0 3px 8px rgba(109, 40, 217, 0.18);
+                transition: transform 0.2s var(--ease);
+                margin-right: 8px;
             }
 
                 .rail-brand:hover {
-                    transform: translateY(-50%) scale(1.06) rotate(-4deg);
+                    transform: scale(1.05);
                 }
+            /* Scrollable nav zone with edge fade so overflow is obvious, not cramped */
+            .rail-scroll-wrap {
+                position: relative;
+                flex: 1 1 auto;
+                min-width: 0;
+                height: 100%;
+                mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+                -webkit-mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+            }
 
             .rail-nav {
                 display: flex;
                 flex-direction: row;
-                gap: 2px;
-                width: 100%;
-                margin: 0 auto;
-                padding-left: 56px;
-                overflow-x: auto;
+                gap: 4px;
                 height: 100%;
                 align-items: center;
                 justify-content: center;
+                min-width: min-content;
+                margin: 0 auto;
+                overflow-x: auto;
                 scrollbar-width: none;
+                padding: 0 14px;
+                scroll-behavior: smooth;
             }
 
                 .rail-nav::-webkit-scrollbar {
                     display: none;
                 }
 
-            /* ----- Nav items now show a permanent label under the icon,
-                                               instead of relying on a hover-only tooltip, so the owner
-                                               always knows what each control is (and what they just
-                                               clicked), including on touch devices where hover doesn't
-                                               exist. ----- */
             .rail-item {
                 position: relative;
-                width: 72px;
-                height: 62px;
-                border-radius: 14px;
+                min-width: 60px;
+                height: 54px;
+                border-radius: 10px;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                gap: 4px;
+                gap: 3px;
                 color: var(--rail-icon);
                 text-decoration: none;
                 flex-shrink: 0;
-                padding: 6px 2px;
-                transition: background 0.25s var(--ease), color 0.25s var(--ease), transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
+                padding: 6px 8px;
+                border: none;
+                background: none;
+                font-family: inherit;
+                cursor: pointer;
+                transition: background 0.15s var(--ease), color 0.15s var(--ease);
             }
 
                 .rail-item i {
-                    font-size: 24px;
+                    font-size: 17px;
                     line-height: 1;
                 }
 
             .rail-label {
-                font-size: 10px;
+                font-size: 9.5px;
                 font-weight: 600;
                 line-height: 1;
                 letter-spacing: 0.1px;
                 white-space: nowrap;
-                max-width: 68px;
-                overflow: hidden;
-                text-overflow: ellipsis;
             }
 
             .rail-item:hover {
                 background: var(--accent-light);
                 color: var(--accent-color);
-                transform: translateY(-1px);
             }
 
             .rail-item.active {
                 background: var(--accent-gradient);
                 color: #fff;
-                box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
             }
+
+            .rail-item.danger {
+                color: var(--error-color);
+            }
+
+                .rail-item.danger:hover {
+                    background: var(--error-light);
+                    color: var(--error-color);
+                }
 
             .rail-divider {
                 width: 1px;
-                height: 26px;
+                height: 24px;
                 background: var(--border-color);
-                margin: 0 5px;
                 flex-shrink: 0;
+            }
+            /* Fixed action zone — always visible, never scrolls away */
+            .rail-actions {
+                display: flex;
+                align-items: center;
+                gap: 2px;
+                flex-shrink: 0;
+                height: 100%;
+                padding-left: 8px;
+                border-left: 1px solid var(--border-color);
             }
 
             .store-main-content {
-                padding: 28px 40px 60px;
+                padding: 0 40px 60px;
                 max-width: 1200px;
                 margin: 0 auto;
             }
 
             .content-body {
-                animation: content-enter 0.45s var(--ease) both;
+                animation: content-enter 0.3s var(--ease) both;
             }
 
-           @@keyframes content-enter {
+            @@keyframes content-enter {
                 from {
                     opacity: 0;
-                    transform: translateY(10px);
+                    transform: translateY(6px);
                 }
 
                 to {
@@ -605,207 +237,120 @@
             }
 
             @@media (max-width: 768px) {
-                .pro-topbar {
-                    padding: 0 16px;
-                }
-
                 .store-main-content {
-                    padding: 20px 16px 40px;
-                }
-
-                .topbar-search.expanded {
-                    width: 140px;
-                }
-
-                .rail-item {
-                    width: 56px;
-                    height: 54px;
-                }
-
-                    .rail-item i {
-                        font-size: 18px;
-                    }
-
-                .rail-label {
-                    font-size: 8.5px;
-                    max-width: 50px;
-                }
-
-                .rail-nav {
-                    width: 100%;
-                    padding-left: 46px;
+                    padding: 0 16px 40px;
                 }
 
                 .pro-rail {
-                    width: 92%;
+                    width: 94%;
+                    min-width: unset;
                     bottom: 10px;
+                    padding: 0 6px 0 10px;
+                }
+
+                .rail-item {
+                    min-width: 50px;
+                    height: 48px;
+                    padding: 4px 6px;
+                }
+
+                    .rail-item i {
+                        font-size: 15px;
+                    }
+
+                .rail-label {
+                    font-size: 8px;
+                }
+
+                .rail-brand {
+                    width: 36px;
+                    height: 36px;
+                    font-size: 14px;
                 }
             }
     </style>
 </head>
-
 <body class="store-owner-body">
     <div class="store-owner-wrapper">
 
-       
-
-        <!-- Persistent bottom rail (reorganized, removed StoreProfile & Settings from bottom) -->
+        <!-- Persistent bottom rail -->
         <aside class="pro-rail" aria-label="Store owner navigation">
-
             <a href="/StoreOwner/Dashboard" class="rail-brand" aria-label="Store Owner Panel">
                 <i class="fas fa-store"></i>
             </a>
 
-            <nav class="rail-nav" aria-label="Main navigation">
+            <div class="rail-scroll-wrap">
+                <nav class="rail-nav" aria-label="Main navigation">
+                    <a href="/StoreOwner/Home" class="rail-item @ActiveIf("Home")" aria-current="@(ActiveIf("Home") == "active" ? "page" : null)" title="Home">
+                        <i class="fas fa-home"></i>
+                        <span class="rail-label">Home</span>
+                    </a>
+                    <a href="/StoreOwner/Dashboard" class="rail-item @ActiveIf("Dashboard")" aria-current="@(ActiveIf("Dashboard") == "active" ? "page" : null)" title="Dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span class="rail-label">Dashboard</span>
+                    </a>
+                    <div class="rail-divider"></div>
+                    <a href="/StoreOwner/Products/Index" class="rail-item @ActiveIf("Products")" aria-current="@(ActiveIf("Products") == "active" ? "page" : null)" title="Products">
+                        <i class="fas fa-box"></i>
+                        <span class="rail-label">Products</span>
+                    </a>
+                    <a href="/StoreOwner/Order/Index" class="rail-item @ActiveIf("Order")" aria-current="@(ActiveIf("Order") == "active" ? "page" : null)" title="Orders">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="rail-label">Orders</span>
+                    </a>
+                    <a href="/StoreOwner/Promotions/Index" class="rail-item @ActiveIf("Promotions")" aria-current="@(ActiveIf("Promotions") == "active" ? "page" : null)" title="Promotions">
+                        <i class="fas fa-tags"></i>
+                        <span class="rail-label">Promotions</span>
+                    </a>
+                    <a href="/StoreReviews/@currentStoreId"
+                       class="rail-item @ActiveIf("StoreReviews")"
+                       title="Reviews">
+                        <i class="fas fa-star"></i>
+                        <span class="rail-label">Reviews</span>
+                    </a>
+                    <a href="/StoreOwner/Analytics" class="rail-item @ActiveIf("Analytics")" aria-current="@(ActiveIf("Analytics") == "active" ? "page" : null)" title="Analytics">
+                        <i class="fas fa-chart-line"></i>
+                        <span class="rail-label">Analytics</span>
+                    </a>
+                    <a href="/StoreOwner/AccountStatement" class="rail-item @ActiveIf("AccountStatement")" aria-current="@(ActiveIf("AccountStatement") == "active" ? "page" : null)" title="Account Statement">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span class="rail-label">Statement</span>
+                    </a>
+                    <div class="rail-divider"></div>
+                    <a href="/Chat" class="rail-item @ActiveIf("Chat")" aria-current="@(ActiveIf("Chat") == "active" ? "page" : null)" title="Chat">
+                        <i class="fas fa-comment-dots"></i>
+                        <span class="rail-label">Chat</span>
+                    </a>
+                    <a href="/ReportUpdates" class="rail-item @ActiveIf("ReportUpdates")" aria-current="@(ActiveIf("ReportUpdates") == "active" ? "page" : null)" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="rail-label">Notifications</span>
+                    </a>
+                </nav>
+            </div>
 
-                <a href="/StoreOwner/Home" class="rail-item @ActiveIf("Home")" aria-current="@(ActiveIf("Home") == "active" ? "page" : null)" title="Home">
-                    <i class="fas fa-home"></i>
-                    <span class="rail-label">Home</span>
+            <!-- Settings & Logout: always visible, never scrolled out of view -->
+            <div class="rail-actions">
+                <a href="/StoreOwner/Settings" class="rail-item @ActiveIf("Settings")" aria-current="@(ActiveIf("Settings") == "active" ? "page" : null)" title="Settings">
+                    <i class="fas fa-cog"></i>
+                    <span class="rail-label">Settings</span>
                 </a>
-                <a href="/StoreOwner/Dashboard" class="rail-item @ActiveIf("Dashboard")" aria-current="@(ActiveIf("Dashboard") == "active" ? "page" : null)" title="Dashboard">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span class="rail-label">Dashboard</span>
-                </a>
-
-                <div class="rail-divider"></div>
-
-                <a href="/StoreOwner/Products/Index" class="rail-item @ActiveIf("Products")" aria-current="@(ActiveIf("Products") == "active" ? "page" : null)" title="Products">
-                    <i class="fas fa-box"></i>
-                    <span class="rail-label">Products</span>
-                </a>
-                <a href="/StoreOwner/Order/Index" class="rail-item @ActiveIf("Order")" aria-current="@(ActiveIf("Order") == "active" ? "page" : null)" title="Orders">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="rail-label">Orders</span>
-                </a>
-                <a href="/StoreOwner/Promotions/Index" class="rail-item @ActiveIf("Promotions")" aria-current="@(ActiveIf("Promotions") == "active" ? "page" : null)" title="Promotions">
-                    <i class="fas fa-tags"></i>
-                    <span class="rail-label">Promotions</span>
-                </a>
-                <a href="/StoreReviews/@currentStoreId"
-                   class="rail-item @ActiveIf("StoreReviews")"
-                   title="Reviews">
-
-                    <i class="fas fa-star"></i>
-                    <span class="rail-label">Reviews</span>
-                </a>
-                <a href="/StoreOwner/Analytics" class="rail-item @ActiveIf("Analytics")" aria-current="@(ActiveIf("Analytics") == "active" ? "page" : null)" title="Analytics">
-                    <i class="fas fa-chart-line"></i>
-                    <span class="rail-label">Analytics</span>
-                </a>
-                <a href="/StoreOwner/AccountStatement" class="rail-item @ActiveIf("AccountStatement")" aria-current="@(ActiveIf("AccountStatement") == "active" ? "page" : null)" title="Account Statement">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                    <span class="rail-label">Statement</span>
-                </a>
-
-                <div class="rail-divider"></div>
-
-                <a href="/Chat" class="rail-item @ActiveIf("Chat")" aria-current="@(ActiveIf("Chat") == "active" ? "page" : null)" title="Chat">
-                    <i class="fas fa-comment-dots"></i>
-                    <span class="rail-label">Chat</span>
-                </a>
-                <a href="/ReportUpdates" class="rail-item @ActiveIf("ReportUpdates")" aria-current="@(ActiveIf("ReportUpdates") == "active" ? "page" : null)" title="Notifications">
-                    <i class="fas fa-bell"></i>
-                    <span class="rail-label">Notifications</span>
-                </a>
-
-            </nav>
-
+                <form method="post" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" style="display:contents;">
+                    <button type="submit" class="rail-item danger" title="Log out">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="rail-label">Logout</span>
+                    </button>
+                </form>
+            </div>
         </aside>
-
         <!-- Main Content -->
         <main class="store-main-content">
             <div class="content-body">
                 @RenderBody()
             </div>
         </main>
-
     </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="~/js/store-owner.js" asp-append-version="true"></script>
-
-    <script>
-        (function() {
-        // Expanding search
-        const topbarSearch = document.getElementById("topbarSearch");
-        const searchToggle = document.getElementById("searchToggle");
-        const globalSearch = document.getElementById("globalSearch");
-
-        if (topbarSearch && searchToggle && globalSearch) {
-        searchToggle.addEventListener("click", function(e) {
-        e.stopPropagation();
-        topbarSearch.classList.add("expanded");
-        globalSearch.focus();
-        });
-
-        document.addEventListener("click", function(e) {
-        if (!topbarSearch.contains(e.target)) {
-        if (!globalSearch.value) {
-        topbarSearch.classList.remove("expanded");
-        }
-        }
-        });
-
-        globalSearch.addEventListener("keydown", function(e) {
-        if (e.key === "Escape") {
-        topbarSearch.classList.remove("expanded");
-        globalSearch.blur();
-        }
-        });
-        }
-
-        // Glass popovers
-        function setupPopover(btnId, popoverId) {
-        const btn = document.getElementById(btnId);
-        const popover = document.getElementById(popoverId);
-        if (!btn || !popover) return;
-
-        btn.addEventListener("click", function(e) {
-        e.stopPropagation();
-        const isOpen = popover.classList.contains("show");
-        document.querySelectorAll(".glass-popover.show").forEach(p => p.classList.remove("show"));
-        if (!isOpen) {
-        popover.classList.add("show");
-        }
-        });
-
-        popover.addEventListener("click", function(e) {
-        e.stopPropagation();
-        });
-        }
-
-        setupPopover("notificationBtn", "notificationPopover");
-        setupPopover("userBtn", "userPopover");
-
-        document.addEventListener("click", function() {
-        document.querySelectorAll(".glass-popover.show").forEach(p => p.classList.remove("show"));
-        });
-
-        document.addEventListener("keydown", function(e) {
-        if (e.key === "Escape") {
-        document.querySelectorAll(".glass-popover.show").forEach(p => p.classList.remove("show"));
-        }
-        });
-
-        // Mark all as read
-        const markAllBtn = document.getElementById("markAllReadBtn");
-        if (markAllBtn) {
-        markAllBtn.addEventListener("click", function(e) {
-        e.stopPropagation();
-        fetch('/Notification/MarkAllAsRead', { method: 'POST' })
-        .then(response => {
-        if (response.ok) {
-        window.location.reload();
-        } else {
-        console.error('Failed to mark all as read');
-        }
-        })
-        .catch(err => console.error(err));
-        });
-        }
-        })();
-    </script>
-
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
