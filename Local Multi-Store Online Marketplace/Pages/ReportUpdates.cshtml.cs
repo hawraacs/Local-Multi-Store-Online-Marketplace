@@ -60,5 +60,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             return RedirectToPage();
         }
+
+        public async Task<IActionResult> OnPostDeleteNotificationAsync(int notificationId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var notification = await _context.Notifications
+                .FirstOrDefaultAsync(n => n.NotificationID == notificationId && n.UserID == user.Id);
+
+            if (notification != null)
+            {
+                _context.Notifications.Remove(notification);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToPage();
+        }
     }
 }

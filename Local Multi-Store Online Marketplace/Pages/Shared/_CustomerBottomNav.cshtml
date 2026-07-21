@@ -23,10 +23,90 @@
 }
 
 <style>
-    /* Centered floating bar at ~75% of the page width instead of edge-to-edge.
-    nav.mobile-bottom-nav (tag + class) beats a plain .mobile-bottom-nav
-    rule on specificity, so this reliably wins over page-level styles
-    like Customer1's own <style> block. */
+    /* ============================================================
+    BASE STYLES for the bottom nav — self-contained so this
+    partial works on any page regardless of Layout (including
+    pages that set Layout = null and don't pull in site.css).
+    ============================================================ */
+    .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: #ffffff;
+    border-top: 1px solid #ece8f6;
+    padding: 8px 4px;
+    font-family: Inter, Arial, sans-serif;
+    }
+
+    .mobile-bottom-nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    color: #9691a4;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 6px 8px;
+    border-radius: 12px;
+    position: relative;
+    transition: color .2s ease, background .2s ease;
+    }
+
+    .mobile-bottom-nav a i {
+    font-size: 18px;
+    line-height: 1;
+    }
+
+    .mobile-bottom-nav a:hover {
+    color: #6d28d9;
+    }
+
+    .mobile-bottom-nav a.active {
+    color: #6d28d9;
+    background: #f3effe;
+    }
+
+    .chat-icon-wrap {
+    position: relative;
+    display: inline-flex;
+    }
+
+    .chat-nav-dot {
+    position: absolute;
+    top: -2px;
+    right: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #dc2626;
+    border: 2px solid #ffffff;
+    }
+
+    @@media (max-width: 480px) {
+    .mobile-bottom-nav a {
+    font-size: 9px;
+    padding: 6px 5px;
+    }
+
+    .mobile-bottom-nav a i {
+    font-size: 16px;
+    }
+    }
+
+    /* ============================================================
+    OVERRIDE — centered floating pill bar at ~75% of page width
+    instead of edge-to-edge. nav.mobile-bottom-nav (tag + class)
+    beats a plain .mobile-bottom-nav rule on specificity, so this
+    reliably wins over the base rules above and any page-level
+    styles like Customer1's own <style> block.
+    ============================================================ */
     nav.mobile-bottom-nav {
     left: 50% !important;
     right: auto !important;

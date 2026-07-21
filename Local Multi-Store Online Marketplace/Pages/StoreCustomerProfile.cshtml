@@ -23,10 +23,13 @@
             :root {
                 --accent: #6d28d9;
                 --accent2: #7c3aed;
-                --text: #17131f;
-                --muted: #746d7f;
-                --line: #e9e5ee;
-                --bg: #faf9fc;
+                --accent-hover: #5b21b6;
+                --accent-light: #f3effe;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                --text: #1e1b2e;
+                --muted: #6b6478;
+                --line: #ece8f6;
+                --bg: #f8f7fc;
                 --danger: #dc2626;
             }
 
@@ -53,7 +56,7 @@
             .page-shell {
                 width: min(100%,1040px);
                 margin: 0 auto;
-                padding: 24px 18px 80px;
+                padding: 24px 18px 110px;
             }
 
             .topbar {
@@ -137,7 +140,7 @@
                 }
 
             .verified {
-                color: #3b82f6;
+                color: var(--accent);
             }
 
             .stats {
@@ -190,10 +193,15 @@
             }
 
             .btn-primary {
-                background: var(--accent);
-                border-color: var(--accent);
+                background: var(--accent-gradient);
+                border-color: transparent;
                 color: #fff;
+                transition: all .2s ease;
             }
+
+                .btn-primary:hover {
+                    filter: brightness(1.05);
+                }
 
             .btn-soft {
                 background: #f1eef5;
@@ -201,10 +209,15 @@
             }
 
             .btn-green {
-                background: #16a34a;
-                border-color: #16a34a;
+                background: var(--accent-gradient);
+                border-color: transparent;
                 color: #fff;
+                transition: all .2s ease;
             }
+
+                .btn-green:hover {
+                    filter: brightness(1.05);
+                }
 
             .more-wrap {
                 position: relative;
@@ -338,7 +351,7 @@
                 display: none;
                 place-items: center;
                 border-radius: 50%;
-                background: rgba(22,163,74,.95);
+                background: var(--accent);
                 color: #fff;
                 font-size: 14px;
                 box-shadow: 0 6px 18px rgba(0,0,0,.18);
@@ -350,9 +363,9 @@
                 }
 
             .action.reposted {
-                color: #16a34a;
-                border-color: #bbf7d0;
-                background: #f0fdf4;
+                color: var(--accent);
+                border-color: var(--accent2);
+                background: var(--accent-light);
             }
 
             .empty {
@@ -667,7 +680,7 @@
 
             @@media(max-width:760px) {
                 .page-shell {
-                    padding: 12px 0 70px;
+                    padding: 12px 0 100px;
                 }
 
                 .topbar {
@@ -948,259 +961,261 @@
          does on the Feed page (its inline <script> block runs before CustomerFeed's own
          <script src="~/js/stories.js"> tag further down the page). -->
     <script>
-        const storeName = @Html.Raw(JsonSerializer.Serialize(Model.Store.StoreName));
-        const storeId = @Model.Store.StoreID;
+            const storeName = @Html.Raw(JsonSerializer.Serialize(Model.Store.StoreName));
+            const storeId = @Model.Store.StoreID;
 
-        // Single-store page: one story group only, same shape RealNestStories expects on the Feed -
-        // reuses the exact same JSON keys _StoryBarCustomer.cshtml embeds, so RealNestStories.open()
-        // (the same function the Feed calls) works identically here without any duplicate JS.
-        window.realnestStoryGroups = [@Html.Raw(JsonSerializer.Serialize(new
-        {
-            storeId = Model.Store.StoreID,
-            storeName = Model.Store.StoreName,
-            storeLogoUrl = storeLogo,
-            hasUnviewedStories = Model.StoreStories.Any(s => !s.IsViewed),
-            stories = Model.StoreStories.Select(s => new
-            {
-                storyId = s.StoryID,
-                mediaType = s.MediaType,
-                imageUrl = s.ImageUrl,
-                videoUrl = s.VideoUrl,
-                durationSeconds = s.DurationSeconds,
-                caption = s.Caption,
-                createdAt = s.CreatedAt,
-                isViewed = s.IsViewed,
-                isLiked = s.IsLikedByCurrentCustomer
-            })
-        }))];
+            // Single-store page: one story group only, same shape RealNestStories expects on the Feed -
+            // reuses the exact same JSON keys _StoryBarCustomer.cshtml embeds, so RealNestStories.open()
+            // (the same function the Feed calls) works identically here without any duplicate JS.
+            window.realnestStoryGroups = [@Html.Raw(JsonSerializer.Serialize(new
+                {
+                            storeId = Model.Store.StoreID,
+                            storeName = Model.Store.StoreName,
+                            storeLogoUrl = storeLogo,
+                            hasUnviewedStories = Model.StoreStories.Any(s => !s.IsViewed),
+                            stories = Model.StoreStories.Select(s => new
+                    {
+                                    storyId = s.StoryID,
+                                    mediaType = s.MediaType,
+                                    imageUrl = s.ImageUrl,
+                                    videoUrl = s.VideoUrl,
+                                    durationSeconds = s.DurationSeconds,
+                                    caption = s.Caption,
+                                    createdAt = s.CreatedAt,
+                                    isViewed = s.IsViewed,
+                                    isLiked = s.IsLikedByCurrentCustomer
+                    })
+                }))];
     </script>
     <script src="~/js/stories.js"></script>
 
     <script>
-        let currentProduct = null;
+            let currentProduct = null;
 
-        const reviewsByProduct = {
-        @foreach (var p in Model.Products)
-        {
-            var reviews = p.Reviews?.Where(r => r.Status == "Approved").OrderByDescending(r => r.CreatedAt).Select(r => new
-            {
-                customer = r.Customer?.User?.FullName ?? "Customer",
-                rating = r.Rating,
-                comment = r.Comment,
-                createdAt = r.CreatedAt.ToString("MMM d, yyyy")
-            }).ToList() ?? new();
-            <text>@p.ProductID: @Html.Raw(JsonSerializer.Serialize(reviews)),</text>
-        }
-        };
+            const reviewsByProduct = {
+                    @foreach (var p in Model.Products)
+                {
+                    var reviews = p.Reviews?.Where(r => r.Status == "Approved").OrderByDescending(r => r.CreatedAt).Select(r => new
+                    {
+                                    customer = r.Customer?.User?.FullName ?? "Customer",
+                                    rating = r.Rating,
+                                    comment = r.Comment,
+                                    createdAt = r.CreatedAt.ToString("MMM d, yyyy")
+                            }).ToList() ?? new();
+                    <text>@p.ProductID: @Html.Raw(JsonSerializer.Serialize(reviews)),</text>
+            }
+                    };
 
-        const profileMenu = document.getElementById('profileMenu');
-        document.getElementById('profileMoreButton').addEventListener('click', e => { e.stopPropagation(); profileMenu.classList.toggle('open'); });
-        document.addEventListener('click', () => profileMenu.classList.remove('open'));
-        profileMenu.addEventListener('click', e => e.stopPropagation());
+            const profileMenu = document.getElementById('profileMenu');
+            document.getElementById('profileMoreButton').addEventListener('click', e => { e.stopPropagation(); profileMenu.classList.toggle('open'); });
+            document.addEventListener('click', () => profileMenu.classList.remove('open'));
+            profileMenu.addEventListener('click', e => e.stopPropagation());
 
-        function toast(message, ok = true) {
-        Toastify({ text: message, duration: 2800, gravity: 'top', position: 'right', style: { background: ok ? '#16a34a' : '#dc2626' } }).showToast();
-        }
+            function toast(message, ok = true) {
+                Toastify({ text: message, duration: 2800, gravity: 'top', position: 'right', style: { background: ok ? '#16a34a' : '#dc2626' } }).showToast();
+            }
 
-        function showBlockConfirmation() {
-        profileMenu.classList.remove('open');
-        document.getElementById('blockConfirmToast').classList.add('open');
-        }
+            function showBlockConfirmation() {
+                profileMenu.classList.remove('open');
+                document.getElementById('blockConfirmToast').classList.add('open');
+            }
 
-        function hideBlockConfirmation() {
-        document.getElementById('blockConfirmToast').classList.remove('open');
-        }
+            function hideBlockConfirmation() {
+                document.getElementById('blockConfirmToast').classList.remove('open');
+            }
 
-        function submitBlockStore() {
-        const form = document.getElementById('blockStoreForm');
-        const button = document.getElementById('confirmBlockButton');
+            function submitBlockStore() {
+                const form = document.getElementById('blockStoreForm');
+                const button = document.getElementById('confirmBlockButton');
 
-        if (!form || !button)
-        return;
+                if (!form || !button)
+                    return;
 
-        button.disabled = true;
-        button.textContent = 'Blocking...';
-        form.submit();
-        }
-        function profileUrl() {
-        return `${window.location.origin}/StoreCustomerProfile?id=${storeId}`;
-        }
+                button.disabled = true;
+                button.textContent = 'Blocking...';
+                form.submit();
+            }
+            function profileUrl() {
+                return `${window.location.origin}/StoreCustomerProfile?id=${storeId}`;
+            }
 
-        function productUrl(id) {
-        return `${window.location.origin}/StoreCustomerProfile?id=${storeId}#product-${id}`;
-        }
-        async function copyText(value, message) { try { await navigator.clipboard.writeText(value); toast(message); } catch { toast('Could not copy the link.', false); } }
-        function copyCurrentUrl() {
-        copyText(profileUrl(), 'Profile link copied.');
-        }
-        function shareProfileWhatsApp() {
-        const message =
-        `🏪 ${storeName}\n` +
-        `Store profile on realnest\n` +
-        profileUrl();
+            function productUrl(id) {
+                return `${window.location.origin}/StoreCustomerProfile?id=${storeId}#product-${id}`;
+            }
+            async function copyText(value, message) { try { await navigator.clipboard.writeText(value); toast(message); } catch { toast('Could not copy the link.', false); } }
+            function copyCurrentUrl() {
+                copyText(profileUrl(), 'Profile link copied.');
+            }
+            function shareProfileWhatsApp() {
+                const message =
+                    `🏪 ${storeName}\n` +
+                    `Store profile on realnest\n` +
+                    profileUrl();
 
-        window.open(
-        'https://wa.me/?text=' + encodeURIComponent(message),
-        '_blank',
-        'noopener,noreferrer'
-        );
-        }
-        function shareProfile() {
-        shareProfileWhatsApp();
-        }
+                window.open(
+                    'https://wa.me/?text=' + encodeURIComponent(message),
+                    '_blank',
+                    'noopener,noreferrer'
+                );
+            }
+            function shareProfile() {
+                shareProfileWhatsApp();
+            }
 
-        function openProduct(el) {
-        currentProduct = { id: Number(el.dataset.productId), name: el.dataset.productName, description: el.dataset.description, price: el.dataset.price, quantity: Number(el.dataset.quantity), image: el.dataset.image };
-        document.getElementById('modalImage').src = currentProduct.image;
-        document.getElementById('modalName').textContent = currentProduct.name;
-        document.getElementById('modalPrice').textContent = '$' + currentProduct.price;
-        document.getElementById('modalDescription').textContent = currentProduct.description || 'No description.';
-        ['cartProductId','wishlistProductId','chatProductId','reviewProductId','reportProductId'].forEach(id => document.getElementById(id).value = currentProduct.id);
-        const cartButton = document.getElementById('cartButton');
-        cartButton.disabled = currentProduct.quantity <= 0;
-        cartButton.querySelector('span').textContent = currentProduct.quantity <= 0 ? 'Out of stock' : 'Add';
-        renderReviews(currentProduct.id);
-        updateRepostUi(currentProduct.id);
-        document.getElementById('productBackdrop').classList.add('open');
-        document.body.style.overflow = 'hidden';
-        history.replaceState(null, '', productUrl(currentProduct.id));
-        }
-        function renderReviews(id) {
-        const target = document.getElementById('modalReviews');
-        const reviews = reviewsByProduct[id] || [];
-        if (!reviews.length) { target.innerHTML = '<p style="color:#746d7f">No reviews yet.</p>'; return; }
-        target.innerHTML = reviews.map(r => `<div class="review"><div class="review-top"><strong>${escapeHtml(r.customer)}</strong><span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span></div><p>${escapeHtml(r.comment || '')}</p><small style="color:#8a8390">${escapeHtml(r.createdAt)}</small></div>`).join('');
-        }
-        function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
-        function closeProduct() { document.getElementById('productBackdrop').classList.remove('open'); document.body.style.overflow = ''; history.replaceState(null, '', window.location.pathname + '?id=' + storeId); }
-        function backdropClose(e,id) { if(e.target.id===id){ if(id==='productBackdrop') closeProduct(); else document.getElementById(id).classList.remove('open'); } }
-        function currentShareData() {
-        return {
-        title: currentProduct.name,
-        text:
-        `🛍️ ${currentProduct.name}\n` +
-        `$${currentProduct.price}\n` +
-        `From ${storeName}`,
-        url: productUrl(currentProduct.id)
-        };
-        }
-        function shareCurrentProduct() {
-        shareCurrentProductWhatsApp();
-        }
-        function shareCurrentProductWhatsApp() {
-        if (!currentProduct)
-        return;
+            function openProduct(el) {
+                currentProduct = { id: Number(el.dataset.productId), name: el.dataset.productName, description: el.dataset.description, price: el.dataset.price, quantity: Number(el.dataset.quantity), image: el.dataset.image };
+                document.getElementById('modalImage').src = currentProduct.image;
+                document.getElementById('modalName').textContent = currentProduct.name;
+                document.getElementById('modalPrice').textContent = '$' + currentProduct.price;
+                document.getElementById('modalDescription').textContent = currentProduct.description || 'No description.';
+                ['cartProductId', 'wishlistProductId', 'chatProductId', 'reviewProductId', 'reportProductId'].forEach(id => document.getElementById(id).value = currentProduct.id);
+                const cartButton = document.getElementById('cartButton');
+                cartButton.disabled = currentProduct.quantity <= 0;
+                cartButton.querySelector('span').textContent = currentProduct.quantity <= 0 ? 'Out of stock' : 'Add';
+                renderReviews(currentProduct.id);
+                updateRepostUi(currentProduct.id);
+                document.getElementById('productBackdrop').classList.add('open');
+                document.body.style.overflow = 'hidden';
+                history.replaceState(null, '', productUrl(currentProduct.id));
+            }
+            function renderReviews(id) {
+                const target = document.getElementById('modalReviews');
+                const reviews = reviewsByProduct[id] || [];
+                if (!reviews.length) { target.innerHTML = '<p style="color:#746d7f">No reviews yet.</p>'; return; }
+                target.innerHTML = reviews.map(r => `<div class="review"><div class="review-top"><strong>${escapeHtml(r.customer)}</strong><span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span></div><p>${escapeHtml(r.comment || '')}</p><small style="color:#8a8390">${escapeHtml(r.createdAt)}</small></div>`).join('');
+            }
+            function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c])); }
+            function closeProduct() { document.getElementById('productBackdrop').classList.remove('open'); document.body.style.overflow = ''; history.replaceState(null, '', window.location.pathname + '?id=' + storeId); }
+            function backdropClose(e, id) { if (e.target.id === id) { if (id === 'productBackdrop') closeProduct(); else document.getElementById(id).classList.remove('open'); } }
+            function currentShareData() {
+                return {
+                    title: currentProduct.name,
+                    text:
+                        `🛍️ ${currentProduct.name}\n` +
+                        `$${currentProduct.price}\n` +
+                        `From ${storeName}`,
+                    url: productUrl(currentProduct.id)
+                };
+            }
+            function shareCurrentProduct() {
+                shareCurrentProductWhatsApp();
+            }
+            function shareCurrentProductWhatsApp() {
+                if (!currentProduct)
+                    return;
 
-        const message =
-        `🛍️ ${currentProduct.name}\n` +
-        `Price: $${currentProduct.price}\n` +
-        `Store: ${storeName}\n` +
-        productUrl(currentProduct.id);
+                const message =
+                    `🛍️ ${currentProduct.name}\n` +
+                    `Price: $${currentProduct.price}\n` +
+                    `Store: ${storeName}\n` +
+                    productUrl(currentProduct.id);
 
-        window.open(
-        'https://wa.me/?text=' + encodeURIComponent(message),
-        '_blank',
-        'noopener,noreferrer'
-        );
-        }
-        function copyCurrentProductLink() { if(currentProduct) copyText(productUrl(currentProduct.id),'Product link copied.'); }
-        const repostStorageKey = 'realnest_reposted_products';
+                window.open(
+                    'https://wa.me/?text=' + encodeURIComponent(message),
+                    '_blank',
+                    'noopener,noreferrer'
+                );
+            }
+            function copyCurrentProductLink() { if (currentProduct) copyText(productUrl(currentProduct.id), 'Product link copied.'); }
+            const repostStorageKey = 'realnest_reposted_products';
 
-        function getRepostedProductIds() {
-        try {
-        const value = JSON.parse(localStorage.getItem(repostStorageKey) || '[]');
-        return Array.isArray(value) ? value.map(Number) : [];
-        } catch {
-        return [];
-        }
-        }
+            function getRepostedProductIds() {
+                try {
+                    const value = JSON.parse(localStorage.getItem(repostStorageKey) || '[]');
+                    return Array.isArray(value) ? value.map(Number) : [];
+                } catch {
+                    return [];
+                }
+            }
 
-        function saveRepostedProductIds(ids) {
-        localStorage.setItem(repostStorageKey, JSON.stringify([...new Set(ids.map(Number))]));
-        }
+            function saveRepostedProductIds(ids) {
+                localStorage.setItem(repostStorageKey, JSON.stringify([...new Set(ids.map(Number))]));
+            }
 
-        function isProductReposted(productId) {
-        return getRepostedProductIds().includes(Number(productId));
-        }
+            function isProductReposted(productId) {
+                return getRepostedProductIds().includes(Number(productId));
+            }
 
-        function updateRepostUi(productId) {
-        const reposted = isProductReposted(productId);
-        const badge = document.getElementById('repostBadge-' + productId);
-        if (badge) badge.classList.toggle('show', reposted);
+            function updateRepostUi(productId) {
+                const reposted = isProductReposted(productId);
+                const badge = document.getElementById('repostBadge-' + productId);
+                if (badge) badge.classList.toggle('show', reposted);
 
-        if (currentProduct && Number(currentProduct.id) === Number(productId)) {
-        const button = document.getElementById('repostButton');
-        const text = document.getElementById('repostButtonText');
-        if (button) button.classList.toggle('reposted', reposted);
-        if (text) text.textContent = reposted ? 'Reposted' : 'Repost';
-        }
-        }
+                if (currentProduct && Number(currentProduct.id) === Number(productId)) {
+                    const button = document.getElementById('repostButton');
+                    const text = document.getElementById('repostButtonText');
+                    if (button) button.classList.toggle('reposted', reposted);
+                    if (text) text.textContent = reposted ? 'Reposted' : 'Repost';
+                }
+            }
 
-        function refreshAllRepostBadges() {
-        document.querySelectorAll('[id^="repostBadge-"]').forEach(badge => {
-        const productId = Number(badge.id.replace('repostBadge-', ''));
-        updateRepostUi(productId);
-        });
-        }
+            function refreshAllRepostBadges() {
+                document.querySelectorAll('[id^="repostBadge-"]').forEach(badge => {
+                    const productId = Number(badge.id.replace('repostBadge-', ''));
+                    updateRepostUi(productId);
+                });
+            }
 
-        function repostCurrentProduct() {
-        if (!currentProduct) return;
+            function repostCurrentProduct() {
+                if (!currentProduct) return;
 
-        const productId = Number(currentProduct.id);
-        const ids = getRepostedProductIds();
-        const alreadyReposted = ids.includes(productId);
+                const productId = Number(currentProduct.id);
+                const ids = getRepostedProductIds();
+                const alreadyReposted = ids.includes(productId);
 
-        if (alreadyReposted) {
-        saveRepostedProductIds(ids.filter(id => id !== productId));
-        toast('Repost removed.');
-        } else {
-        ids.push(productId);
-        saveRepostedProductIds(ids);
-        toast('Product reposted.');
-        }
+                if (alreadyReposted) {
+                    saveRepostedProductIds(ids.filter(id => id !== productId));
+                    toast('Repost removed.');
+                } else {
+                    ids.push(productId);
+                    saveRepostedProductIds(ids);
+                    toast('Product reposted.');
+                }
 
-        updateRepostUi(productId);
-        }
-        function openReportDialog(){ profileMenu.classList.remove('open'); document.getElementById('reportBackdrop').classList.add('open'); }
-        function closeReportDialog(){ document.getElementById('reportBackdrop').classList.remove('open'); }
-        function openProductReportDialog(){ if(!currentProduct)return; document.getElementById('reportProductId').value=currentProduct.id; document.getElementById('productReportBackdrop').classList.add('open'); }
-        function closeProductReportDialog(){ document.getElementById('productReportBackdrop').classList.remove('open'); }
-        document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-        closeProduct();
-        closeReportDialog();
-        closeProductReportDialog();
-        hideBlockConfirmation();
-        }
-        });
+                updateRepostUi(productId);
+            }
+            function openReportDialog() { profileMenu.classList.remove('open'); document.getElementById('reportBackdrop').classList.add('open'); }
+            function closeReportDialog() { document.getElementById('reportBackdrop').classList.remove('open'); }
+            function openProductReportDialog() { if (!currentProduct) return; document.getElementById('reportProductId').value = currentProduct.id; document.getElementById('productReportBackdrop').classList.add('open'); }
+            function closeProductReportDialog() { document.getElementById('productReportBackdrop').classList.remove('open'); }
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') {
+                    closeProduct();
+                    closeReportDialog();
+                    closeProductReportDialog();
+                    hideBlockConfirmation();
+                }
+            });
 
-        refreshAllRepostBadges();
+            refreshAllRepostBadges();
 
-        @if (TempData["Success"] != null)
-        {
-            <text>toast(@Html.Raw(JsonSerializer.Serialize(TempData["Success"]?.ToString())));</text>
-        }
-        @if (TempData["Error"] != null)
-        {
-            <text>toast(@Html.Raw(JsonSerializer.Serialize(TempData["Error"]?.ToString())), false);</text>
-        }
-        window.addEventListener('DOMContentLoaded', function () {
-        const params = new URLSearchParams(window.location.search);
-        const queryProductId = params.get('productId');
+            @if (TempData["Success"] != null)
+                {
+                    <text>toast(@Html.Raw(JsonSerializer.Serialize(TempData["Success"]?.ToString())));</text>
+            }
+                @if (TempData["Error"] != null)
+                {
+                    <text>toast(@Html.Raw(JsonSerializer.Serialize(TempData["Error"]?.ToString())), false);</text>
+            }
+                window.addEventListener('DOMContentLoaded', function() {
+                    const params = new URLSearchParams(window.location.search);
+                    const queryProductId = params.get('productId');
 
-        const hashMatch = window.location.hash.match(/^#product-(\d+)$/);
-        const productId = queryProductId || (hashMatch ? hashMatch[1] : null);
+                    const hashMatch = window.location.hash.match(/^#product-(\d+)$/);
+                    const productId = queryProductId || (hashMatch ? hashMatch[1] : null);
 
-        if (!productId)
-        return;
+                    if (!productId)
+                        return;
 
-        const productTile = document.querySelector(
-        `.tile[data-product-id="${productId}"]`
-        );
+                    const productTile = document.querySelector(
+                        `.tile[data-product-id="${productId}"]`
+                    );
 
-        if (productTile)
-        openProduct(productTile);
-        });
+                    if (productTile)
+                        openProduct(productTile);
+                });
     </script>
+
+    <partial name="_CustomerBottomNav" />
 </body>
 </html>

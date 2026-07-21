@@ -2,7 +2,7 @@
 @model Local_Multi_Store_Online_Marketplace.Pages.ReportUpdatesModel
 
 @{
-    Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
+    Layout = Model.IsStoreOwner ? "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml" : null;
     var backUrl = Model.IsStoreOwner ? "/StoreOwner/Home" : "/CustomerProfile";
 }
 
@@ -57,70 +57,41 @@
                 padding: 0 20px;
             }
 
-            /* Replicating the Welcome Banner Style */
-            .welcome-banner {
-                background: var(--accent-gradient);
-                color: #ffffff;
-                padding: 32px 40px;
-                border-radius: var(--radius-lg);
-                margin-bottom: 32px;
-                box-shadow: var(--shadow-md), 0 8px 32px rgba(109, 40, 217, 0.20);
+            .page-header {
                 display: flex;
                 align-items: center;
-                gap: 20px;
-                position: relative;
-                overflow: hidden;
+                gap: 16px;
+                margin-bottom: 28px;
             }
 
-                .welcome-banner::after {
-                    content: '';
-                    position: absolute;
-                    top: -40%;
-                    right: -10%;
-                    width: 250px;
-                    height: 250px;
-                    background: rgba(255, 255, 255, 0.08);
-                    border-radius: 50%;
-                }
-
-            .back-btn-circle {
-                width: 48px;
-                height: 48px;
-                background: rgba(255, 255, 255, 0.2);
-                border: 1px solid rgba(255, 255, 255, 0.3);
+            .back-btn-plain {
+                width: 44px;
+                height: 44px;
+                background: var(--accent-light);
+                border: 1px solid var(--border-color);
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: white;
+                color: var(--accent-color);
                 text-decoration: none;
-                backdrop-filter: blur(8px);
                 transition: var(--transition);
-                z-index: 2;
+                flex-shrink: 0;
             }
 
-                .back-btn-circle:hover {
-                    background: rgba(255, 255, 255, 0.3);
-                    transform: scale(1.05);
+                .back-btn-plain:hover {
+                    background: var(--accent-color);
+                    color: #ffffff;
                 }
 
-            .welcome-text {
-                z-index: 2;
+            .page-header h2 {
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-size: 24px;
+                font-weight: 800;
+                letter-spacing: -0.5px;
+                color: var(--accent-color);
+                margin: 0;
             }
-
-                .welcome-text h2 {
-                    font-family: 'Plus Jakarta Sans', sans-serif;
-                    font-size: 26px;
-                    font-weight: 800;
-                    margin-bottom: 4px;
-                    letter-spacing: -0.5px;
-                }
-
-                .welcome-text p {
-                    font-size: 15px;
-                    opacity: 0.9;
-                    margin: 0;
-                }
 
             /* Notification Card/List Style */
             .notification-card {
@@ -135,6 +106,10 @@
                 margin: 0;
             }
 
+            .ig-notif-row-wrap {
+                position: relative;
+            }
+
             .ig-notif-row {
                 width: 100%;
                 display: flex;
@@ -143,26 +118,53 @@
                 background: none;
                 border: none;
                 border-bottom: 1px solid var(--border-color);
-                padding: 20px;
+                padding: 20px 56px 20px 20px;
                 cursor: pointer;
                 text-align: left;
                 transition: var(--transition);
                 border-radius: 12px;
             }
 
-                .ig-notif-row:last-child {
-                    border-bottom: none;
+            .ig-notif-delete-form {
+                margin: 0;
+                position: absolute;
+                top: 14px;
+                right: 14px;
+                z-index: 2;
+            }
+
+            .ig-notif-remove-btn {
+                width: 34px;
+                height: 34px;
+                border: none;
+                border-radius: 10px;
+                background: transparent;
+                color: var(--text-muted);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: var(--transition);
+            }
+
+                .ig-notif-remove-btn:hover {
+                    background: #fef2f2;
+                    color: #dc2626;
                 }
 
-                .ig-notif-row:hover {
-                    background-color: var(--accent-light);
-                    transform: translateX(4px);
-                }
+            .ig-notif-row:last-child {
+                border-bottom: none;
+            }
 
-                .ig-notif-row.unread {
-                    background-color: #fdfcff;
-                    border-left: 4px solid var(--accent-color);
-                }
+            .ig-notif-row:hover {
+                background-color: var(--accent-light);
+                transform: translateX(4px);
+            }
+
+            .ig-notif-row.unread {
+                background-color: #fdfcff;
+                border-left: 4px solid var(--accent-color);
+            }
 
             .ig-notif-icon {
                 width: 48px;
@@ -252,12 +254,7 @@
             }
 
             @@media (max-width: 768px) {
-                .welcome-banner {
-                    padding: 24px;
-                    flex-direction: row;
-                }
-
-                .welcome-text h2 {
+                .page-header h2 {
                     font-size: 20px;
                 }
             }
@@ -271,15 +268,12 @@
     }
 
     <div class="page-container">
-        <!-- Dashboard Style Banner -->
-        <div class="welcome-banner">
-            <a href="@backUrl" class="back-btn-circle">
+        <!-- Simple page header -->
+        <div class="page-header">
+            <a href="@backUrl" class="back-btn-plain">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <div class="welcome-text">
-                <h2>Report Updates</h2>
-                <p>Track the status of your reports and our team's responses.</p>
-            </div>
+            <h2><i class="fas fa-bell" style="margin-right:10px;"></i>Notifications</h2>
         </div>
 
         <!-- Dashboard Style Card Container -->
@@ -289,28 +283,36 @@
                 <div class="ig-notif-list">
                     @foreach (var n in Model.NotificationsList)
                     {
-                        <form method="post" asp-page-handler="OpenNotification" class="ig-notif-form">
-                            <input type="hidden" name="notificationId" value="@n.NotificationID" />
-                            <button type="submit" class="ig-notif-row @(n.IsRead ? "" : "unread")">
-                                <div class="ig-notif-icon">
-                                    <i class="fas fa-flag"></i>
-                                </div>
-                                <div class="ig-notif-body">
-                                    <div class="ig-notif-text">
-                                        <strong>@n.Title</strong>
-                                        <span>@n.Message</span>
+                        <div class="ig-notif-row-wrap">
+                            <form method="post" asp-page-handler="OpenNotification" class="ig-notif-form">
+                                <input type="hidden" name="notificationId" value="@n.NotificationID" />
+                                <button type="submit" class="ig-notif-row @(n.IsRead ? "" : "unread")">
+                                    <div class="ig-notif-icon">
+                                        <i class="fas fa-flag"></i>
                                     </div>
-                                    <div class="ig-notif-time">
-                                        <i class="far fa-clock"></i>
-                                        @n.SentAt.ToString("MMM d, yyyy 'at' h:mm tt")
+                                    <div class="ig-notif-body">
+                                        <div class="ig-notif-text">
+                                            <strong>@n.Title</strong>
+                                            <span>@n.Message</span>
+                                        </div>
+                                        <div class="ig-notif-time">
+                                            <i class="far fa-clock"></i>
+                                            @n.SentAt.ToString("MMM d, yyyy 'at' h:mm tt")
+                                        </div>
                                     </div>
-                                </div>
-                                @if (!n.IsRead)
-                                {
-                                    <span class="ig-notif-dot"></span>
-                                }
-                            </button>
-                        </form>
+                                    @if (!n.IsRead)
+                                    {
+                                        <span class="ig-notif-dot"></span>
+                                    }
+                                </button>
+                            </form>
+                            <form method="post" asp-page-handler="DeleteNotification" class="ig-notif-delete-form">
+                                <input type="hidden" name="notificationId" value="@n.NotificationID" />
+                                <button type="submit" class="ig-notif-remove-btn" title="Remove notification">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     }
                 </div>
             }
@@ -318,8 +320,8 @@
             {
                 <div class="empty-state">
                     <div class="empty-icon"><i class="fas fa-bell-slash"></i></div>
-                    <h3>Inbox is empty</h3>
-                    <p>When our team reviews a report you've filed, you'll see the update here.</p>
+                    <h3>No notifications yet</h3>
+                    <p>You're all caught up. New notifications will show up here as they arrive.</p>
                 </div>
             }
         </div>
