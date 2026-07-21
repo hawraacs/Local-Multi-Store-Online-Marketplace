@@ -5,185 +5,322 @@
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Delivery Partner Request</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Delivery Partner Request | realnest</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet">
+    <!-- Google Fonts (matches Login page) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: Poppins, Arial, sans-serif;
-            background: #f4f4f7;
-            color: #111827;
-        }
-
-        .topbar {
-            background: #111;
-            color: white;
-            padding: 20px 30px;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .page-wrapper {
-            min-height: calc(100vh - 65px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 35px 15px;
-        }
-
-        .card {
-            background: white;
-            width: 760px;
-            max-width: 100%;
-            padding: 34px;
-            border-radius: 18px;
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
-            border: 1px solid #e5e7eb;
-        }
-
-        .header-box {
-            margin-bottom: 25px;
-        }
-
-            .header-box h2 {
-                margin: 0 0 8px;
-                font-size: 26px;
-                font-weight: 700;
+            /* ============================================================
+                       ROOT VARIABLES — same palette as the Login page
+                       ============================================================ */
+            :root {
+                /* -------- Brand colors (Purple / Indigo) -------- */
+                --accent-color: #6d28d9;
+                --accent-hover: #5b21b6;
+                --accent-light: #f3effe;
+                --accent-steel: #4f46e5;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                /* -------- Neutral palette -------- */
+                --bg-color: #f8f7fc;
+                --card-bg: #ffffff;
+                --text-primary: #1e1b2e;
+                --text-secondary: #6b6478;
+                --text-muted: #9691a4;
+                --border-color: #ece8f6;
+                --input-bg: #f8f7fc;
+                /* -------- Semantic -------- */
+                --success-color: #10b981;
+                --error-color: #dc2626;
+                /* -------- Shadows -------- */
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+                --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.18);
+                /* -------- Typography -------- */
+                --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             }
 
-            .header-box p {
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
                 margin: 0;
-                color: #6b7280;
-                font-size: 14px;
-                line-height: 1.6;
+                font-family: var(--font-family);
+                background: var(--bg-color);
+                background-image: radial-gradient(circle at 15% 0%, rgba(109, 40, 217, 0.05), transparent 40%);
+                color: var(--text-primary);
             }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-        }
-
-        .form-group {
-            width: 100%;
-        }
-
-            .form-group.full {
-                grid-column: 1 / -1;
-            }
-
-        label {
-            display: block;
-            margin-bottom: 7px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #374151;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 13px 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 10px;
-            outline: none;
-            font-family: Poppins, Arial, sans-serif;
-            font-size: 14px;
-            background: white;
-        }
-
-            input:focus,
-            select:focus {
-                border-color: #111827;
-                box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.10);
-            }
-
-        .hint {
-            display: block;
-            margin-top: 5px;
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-        .validation-box {
-            color: #b91c1c;
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-            padding: 12px 14px;
-            border-radius: 10px;
-            margin-bottom: 18px;
-            font-size: 14px;
-        }
-
-        .submit-btn {
-            margin-top: 25px;
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            background: #111827;
-            color: white;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s ease;
-        }
-
-            .submit-btn:hover {
-                background: #ff6b35;
-                transform: translateY(-1px);
-            }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 18px;
-            color: #374151;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-            .back-link:hover {
-                color: #ff6b35;
-            }
-
-        @@media (max-width: 700px) {
-            .form-grid {
-                grid-template-columns: 1fr;
+            .page-wrapper {
+                min-height: 100vh;
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                padding: 50px 15px 60px;
             }
 
             .card {
-                padding: 24px;
+                background: var(--card-bg);
+                width: 820px;
+                max-width: 100%;
+                padding: 42px 44px;
+                border-radius: 22px;
+                box-shadow: var(--shadow-lg);
+                border: 1px solid var(--border-color);
             }
-        }
+
+            /* -------- Header -------- */
+            .header-box {
+                margin-bottom: 32px;
+                padding-bottom: 24px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+                .header-box h2 {
+                    margin: 0 0 10px;
+                    font-size: 26px;
+                    font-weight: 800;
+                    letter-spacing: -0.4px;
+                    color: var(--accent-color);
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .header-box .header-icon {
+                    font-size: 20px;
+                    width: 42px;
+                    height: 42px;
+                    flex-shrink: 0;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 12px;
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                }
+
+                .header-box p {
+                    margin: 0;
+                    color: var(--text-secondary);
+                    font-size: 13px;
+                    line-height: 1.7;
+                    max-width: 560px;
+                }
+
+            /* -------- Section blocks (organization) -------- */
+            .form-section {
+                margin-bottom: 28px;
+                padding-bottom: 26px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+                .form-section:last-of-type {
+                    border-bottom: none;
+                    margin-bottom: 0;
+                    padding-bottom: 0;
+                }
+
+            .section-heading {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 18px;
+            }
+
+                .section-heading .step-num {
+                    width: 26px;
+                    height: 26px;
+                    flex-shrink: 0;
+                    border-radius: 50%;
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                    font-size: 13px;
+                    font-weight: 800;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .section-heading h3 {
+                    margin: 0;
+                    font-size: 15px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                    letter-spacing: 0.2px;
+                }
+
+                .section-heading .section-icon {
+                    color: var(--accent-color);
+                    font-size: 14px;
+                }
+
+            .form-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 18px;
+            }
+
+            .form-group {
+                width: 100%;
+            }
+
+                .form-group.full {
+                    grid-column: 1 / -1;
+                }
+
+            label {
+                display: block;
+                margin-bottom: 7px;
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--text-primary);
+                letter-spacing: 0.2px;
+            }
+
+            input,
+            select {
+                width: 100%;
+                padding: 13px 16px;
+                border: 1.5px solid var(--border-color);
+                border-radius: 14px;
+                outline: none;
+                font-family: var(--font-family);
+                font-size: 14px;
+                background: var(--input-bg);
+                color: var(--text-primary);
+                transition: all 0.2s ease;
+            }
+
+                input:focus,
+                select:focus {
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.10);
+                    background: #ffffff;
+                }
+
+                input::placeholder {
+                    color: var(--text-muted);
+                }
+
+            .hint {
+                display: block;
+                margin-top: 6px;
+                font-size: 12px;
+                color: var(--text-muted);
+            }
+
+            /* -------- File upload -------- */
+            .file-drop {
+                border: 1.5px dashed var(--border-color);
+                border-radius: 14px;
+                padding: 18px;
+                background: var(--input-bg);
+                transition: all 0.2s ease;
+            }
+
+                .file-drop:focus-within {
+                    border-color: var(--accent-color);
+                    background: #ffffff;
+                }
+
+            /* -------- Validation -------- */
+            .validation-box {
+                color: #991b1b;
+                background: #fef2f2;
+                border: 1px solid #fecaca;
+                padding: 13px 16px;
+                border-radius: 12px;
+                margin-bottom: 20px;
+                font-size: 13px;
+            }
+
+            /* -------- Submit -------- */
+            .submit-btn {
+                margin-top: 8px;
+                width: 100%;
+                padding: 16px;
+                border: none;
+                border-radius: 14px;
+                background: var(--accent-gradient);
+                color: #ffffff;
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+                letter-spacing: 0.3px;
+                box-shadow: 0 4px 20px rgba(109, 40, 217, 0.25);
+                transition: all 0.25s ease;
+                font-family: var(--font-family);
+            }
+
+                .submit-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 30px rgba(109, 40, 217, 0.35);
+                    background: linear-gradient(135deg, #5b21b6 0%, #6d28d9 55%, #4338ca 100%);
+                }
+
+                .submit-btn:active {
+                    transform: translateY(0);
+                }
+
+            /* -------- Back link -------- */
+            .back-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                margin-top: 24px;
+                padding: 10px 20px;
+                border-radius: 12px;
+                background: var(--accent-light);
+                color: var(--accent-color);
+                text-decoration: none;
+                font-size: 13px;
+                font-weight: 700;
+                transition: all 0.25s ease;
+            }
+
+                .back-link:hover {
+                    background: var(--accent-color);
+                    color: #ffffff;
+                    transform: translateX(-2px);
+                }
+
+            @@media (max-width: 700px) {
+                .form-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .card {
+                    padding: 26px;
+                    border-radius: 20px;
+                }
+
+                .header-box h2 {
+                    font-size: 24px;
+                }
+            }
     </style>
 </head>
 
 <body>
-
-    <div class="topbar">
-        Delivery Partner Request
-    </div>
 
     <div class="page-wrapper">
 
         <div class="card">
 
             <div class="header-box">
-                <h2>Become a Delivery Partner 🚚</h2>
+                <h2><i class="fa-solid fa-truck-fast header-icon"></i> Become a Delivery Partner</h2>
                 <p>
-                    Fill in your personal, vehicle, and working area information.
-                    Your request will be reviewed by the admin before approval.
+                    Fill in your personal, vehicle, and working area information below.
+                    Your request will be reviewed by our admin team before approval.
                 </p>
             </div>
 
@@ -194,86 +331,117 @@
 
             <form method="post" enctype="multipart/form-data">
 
-                <div class="form-grid">
-
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input asp-for="Delivery.FullName"
-                               placeholder="Example: Fatima"
-                               required />
+                <!-- ============ SECTION 1: PERSONAL INFO ============ -->
+                <div class="form-section">
+                    <div class="section-heading">
+                        <span class="step-num">1</span>
+                        <i class="fa-solid fa-id-card section-icon"></i>
+                        <h3>Personal Information</h3>
                     </div>
 
-                    <div class="form-group">
-                        <label>Phone Number</label>
-                        <input asp-for="Delivery.PhoneNumber"
-                               type="tel"
-                               placeholder="Example: 78 123 456"
-                               pattern="^[0-9+\s-]{6,20}$"
-                               required />
-                        <span class="hint">Use numbers only or +961 format.</span>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input asp-for="Delivery.FullName"
+                                   placeholder="Example: Fatima"
+                                   required />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input asp-for="Delivery.PhoneNumber"
+                                   type="tel"
+                                   placeholder="Example: 78 123 456"
+                                   pattern="^[0-9+\s-]{6,20}$"
+                                   required />
+                            <span class="hint">Use numbers only or +961 format.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============ SECTION 2: VEHICLE & AREA ============ -->
+                <div class="form-section">
+                    <div class="section-heading">
+                        <span class="step-num">2</span>
+                        <i class="fa-solid fa-motorcycle section-icon"></i>
+                        <h3>Vehicle &amp; Working Area</h3>
                     </div>
 
-                    <div class="form-group">
-                        <label>Vehicle Type</label>
-                        <select asp-for="Delivery.VehicleType" required>
-                            <option value="">Select vehicle type</option>
-                            <option value="Motorcycle">Motorcycle</option>
-                            <option value="Car">Car</option>
-                            <option value="Van">Van</option>
-                            <option value="Bicycle">Bicycle</option>
-                        </select>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Vehicle Type</label>
+                            <select asp-for="Delivery.VehicleType" required>
+                                <option value="">Select vehicle type</option>
+                                <option value="Motorcycle">Motorcycle</option>
+                                <option value="Car">Car</option>
+                                <option value="Van">Van</option>
+                                <option value="Bicycle">Bicycle</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Vehicle Number / Plate</label>
+                            <input asp-for="Delivery.VehicleNumber"
+                                   placeholder="Example: B 123456"
+                                   required />
+                        </div>
+
+                        <div class="form-group full">
+                            <label>Working Area</label>
+                            <select asp-for="Delivery.Area" required>
+                                <option value="">Select your area</option>
+                                <option value="Beirut">Beirut</option>
+                                <option value="Mount Lebanon">Mount Lebanon</option>
+                                <option value="Tripoli">Tripoli</option>
+                                <option value="Saida">Saida</option>
+                                <option value="Tyre">Tyre</option>
+                                <option value="Zahle">Zahle</option>
+                                <option value="Bekaa">Bekaa</option>
+                                <option value="Jounieh">Jounieh</option>
+                                <option value="Byblos">Byblos</option>
+                                <option value="Nabatieh">Nabatieh</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============ SECTION 3: LICENSE & DOCUMENTS ============ -->
+                <div class="form-section">
+                    <div class="section-heading">
+                        <span class="step-num">3</span>
+                        <i class="fa-solid fa-file-shield section-icon"></i>
+                        <h3>License &amp; Verification Documents</h3>
                     </div>
 
-                    <div class="form-group">
-                        <label>Vehicle Number / Plate</label>
-                        <input asp-for="Delivery.VehicleNumber"
-                               placeholder="Example: B 123456"
-                               required />
-                    </div>
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label>Driving License Number</label>
+                            <input asp-for="Delivery.DrivingLicenseNumber"
+                                   placeholder="Enter your license number"
+                                   required />
+                        </div>
 
-                    <div class="form-group">
-                        <label>Working Area</label>
-                        <select asp-for="Delivery.Area" required>
-                            <option value="">Select your area</option>
-                            <option value="Beirut">Beirut</option>
-                            <option value="Mount Lebanon">Mount Lebanon</option>
-                            <option value="Tripoli">Tripoli</option>
-                            <option value="Saida">Saida</option>
-                            <option value="Tyre">Tyre</option>
-                            <option value="Zahle">Zahle</option>
-                            <option value="Bekaa">Bekaa</option>
-                            <option value="Jounieh">Jounieh</option>
-                            <option value="Byblos">Byblos</option>
-                            <option value="Nabatieh">Nabatieh</option>
-                        </select>
+                        <div class="form-group full">
+                            <label>ID Proof &amp; Driving License</label>
+                            <div class="file-drop">
+                                <input asp-for="IDProofFile"
+                                       type="file"
+                                       accept=".jpg,.jpeg,.png,.pdf"
+                                       required />
+                            </div>
+                            <span class="hint">Upload one file (JPG, PNG, or PDF) clearly showing both your national ID and your driving license, with the license number visible.</span>
+                        </div>
                     </div>
-
-                    <div class="form-group">
-                        <label>Driving License Number</label>
-                        <input asp-for="Delivery.DrivingLicenseNumber"
-                               placeholder="Enter your license number"
-                               required />
-                    </div>
-
-                    <div class="form-group full">
-                        <label>ID Proof</label>
-                        <input asp-for="IDProofFile"
-                               type="file"
-                               accept=".jpg,.jpeg,.png,.pdf"
-                               required />
-                        <span class="hint">Upload your ID proof as JPG, PNG, or PDF.</span>
-                    </div>
-
                 </div>
 
                 <button type="submit" class="submit-btn">
-                    Submit Request
+                    <i class="fa-solid fa-paper-plane" style="margin-right: 8px;"></i> Submit Request
                 </button>
 
             </form>
 
             <a href="/CustomerProfile" class="back-link">
-                ← Back to Profile
+                <i class="fa-solid fa-arrow-left-long"></i> Back to My Profile
             </a>
 
         </div>

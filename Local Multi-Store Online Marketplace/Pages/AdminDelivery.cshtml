@@ -115,6 +115,12 @@
                 text-decoration: underline;
             }
 
+        .license-number {
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+        }
+
         .success-box {
             color: #065f46;
             background: #d1fae5;
@@ -194,6 +200,8 @@
         When you approve a customer delivery request, the system creates a new delivery login.
         The original customer account stays unchanged.
         You can view each approved delivery login from the <strong>Delivery Login</strong> column.
+        Compare the <strong>Driving License #</strong> shown below against the uploaded
+        <strong>ID Proof</strong> document before approving.
     </div>
 
     @if (TempData["Success"] != null)
@@ -218,6 +226,7 @@
                     <th>Phone</th>
                     <th>Vehicle</th>
                     <th>Area</th>
+                    <th>Driving License #</th>
                     <th>ID Proof</th>
                     <th>Status</th>
                     <th>Active</th>
@@ -231,7 +240,7 @@
                 @if (Model.Deliveries == null || !Model.Deliveries.Any())
                 {
                     <tr>
-                        <td colspan="10">No delivery requests found.</td>
+                        <td colspan="11">No delivery requests found.</td>
                     </tr>
                 }
                 else
@@ -251,6 +260,17 @@
                             <td>@d.PhoneNumber</td>
                             <td>@d.VehicleType</td>
                             <td>@d.Area</td>
+
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(d.DrivingLicenseNumber))
+                                {
+                                    <span class="license-number">@d.DrivingLicenseNumber</span>
+                                }
+                                else
+                                {
+                                    <span>-</span>
+                                }
+                            </td>
 
                             <td>
                                 @if (!string.IsNullOrWhiteSpace(d.IDProofURL))
