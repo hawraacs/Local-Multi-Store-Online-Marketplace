@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,7 @@ using Multi_Store.Infrastructure.Data;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
-    [Authorize(Roles = "Customer,StoreOwner")]
+    [Authorize(Roles = "Customer,StoreOwner,DeliveryPerson")]
     public class ReportUpdatesModel : PageModel
     {
         private readonly UserManager<User> _userManager;
@@ -26,6 +27,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         // Tells the view which role's chrome/back-link to render
         public bool IsStoreOwner { get; set; }
+        public bool IsDeliveryPerson { get; set; }
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -34,9 +36,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
 
             IsStoreOwner = await _userManager.IsInRoleAsync(user, "StoreOwner");
+            IsDeliveryPerson = await _userManager.IsInRoleAsync(user, "DeliveryPerson");
 
             NotificationsList = await _context.Notifications
-                .Where(n => n.UserID == user.Id && n.Type == "ReportUpdate")
+                .Where(n => n.UserID == user.Id && (n.Type == "ReportUpdate" || n.Type == "AdminWarning"))
                 .OrderByDescending(n => n.SentAt)
                 .ToListAsync();
 

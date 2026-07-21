@@ -262,6 +262,7 @@
             font-size: 12.5px;
             color: var(--text-secondary);
             margin-bottom: 12px;
+            white-space: pre-line;
         }
 
             .report-admin-notes strong {
@@ -324,6 +325,16 @@
 
             .action-dismiss:hover {
                 background: var(--danger);
+                color: #fff;
+            }
+
+        .action-warn {
+            background: var(--warning-bg);
+            color: var(--warning-txt);
+        }
+
+            .action-warn:hover {
+                background: var(--warning);
                 color: #fff;
             }
 
@@ -468,6 +479,13 @@
                     <div class="report-actions">
                         @if (r.Status == "Pending Review")
                         {
+                            <form method="post" asp-page-handler="Warn" asp-route-reportId="@r.ReportID">
+                                <input type="text" name="warningMessage" class="notes-input" placeholder="Warning message..." required />
+                                <button type="submit" class="action-btn action-warn">
+                                    <i class="fas fa-triangle-exclamation"></i> Warn
+                                </button>
+                            </form>
+
                             <form method="post" asp-page-handler="Resolve" asp-route-reportId="@r.ReportID">
                                 <input type="text" name="adminNotes" class="notes-input" placeholder="Optional note..." />
                                 <button type="submit" class="action-btn action-resolve">
