@@ -9,10 +9,6 @@
 
     var storeOwnerLoginError =
         TempData["StoreOwnerLoginError"]?.ToString();
-
-    var shouldOpenManagementTab =
-        !string.IsNullOrWhiteSpace(deliveryLoginError) ||
-        !string.IsNullOrWhiteSpace(storeOwnerLoginError);
 }
 
 <!DOCTYPE html>
@@ -37,13 +33,15 @@
                 --accent-hover: #5b21b6;
                 --accent-light: #f3effe;
                 --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-                --like-color: #ef4444;
                 --success-color: #10b981;
                 --error-color: #dc2626;
                 --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+                --font-display: 'Playfair Display', Georgia, serif;
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.05);
                 --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
-                --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
+                --shadow-lg: 0 20px 44px rgba(30, 27, 46, 0.16);
+                --radius-lg: 20px;
+                --radius-md: 14px;
             }
 
             * {
@@ -148,101 +146,192 @@
                 }
 
             .profile-container {
-                max-width: 1180px;
+                max-width: 900px;
                 width: 100%;
-                margin: 30px auto;
+                margin: 28px auto;
                 padding: 0 20px;
             }
 
-            .profile-header {
-                display: flex;
+            .main-content {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .profile-header-card {
+                position: relative;
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-md);
+                padding: 0 24px 20px;
+                margin-bottom: 22px;
+                overflow: hidden;
+            }
+
+            .profile-cover {
+                height: 74px;
+                margin: 0 -24px 0;
+                background: var(--accent-gradient);
+                background-size: 200% 200%;
+                animation: coverDrift 10s ease infinite;
+                position: relative;
+            }
+
+                .profile-cover::after {
+                    content: "";
+                    position: absolute;
+                    inset: 0;
+                    background-image: radial-gradient(circle at 15% 30%, rgba(255,255,255,0.16) 0, transparent 45%), radial-gradient(circle at 85% 70%, rgba(255,255,255,0.12) 0, transparent 40%);
+                }
+
+            @@keyframes coverDrift {
+                0%, 100% {
+                    background-position: 0% 50%;
+                }
+
+                50% {
+                    background-position: 100% 50%;
+                }
+            }
+
+            .header-menu-btn {
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                width: 38px;
+                height: 38px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.22);
+                backdrop-filter: blur(6px);
+                border: 1px solid rgba(255, 255, 255, 0.4);
+                color: #ffffff;
+                display: inline-flex;
                 align-items: center;
-                gap: 60px;
-                padding-bottom: 44px;
-                border-bottom: 1px solid var(--border-color);
-                margin-bottom: 28px;
+                justify-content: center;
+                font-size: 15px;
+                cursor: pointer;
+                transition: background-color 0.15s ease, transform 0.15s ease;
+                z-index: 2;
             }
 
-            .profile-avatar-container {
+                .header-menu-btn:hover {
+                    background: rgba(255, 255, 255, 0.34);
+                    transform: translateY(-1px);
+                }
+
+            .ig-top-row {
+                display: flex;
+                align-items: flex-end;
+                gap: 16px;
+                margin-top: -34px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .ig-avatar {
+                width: 76px;
+                height: 76px;
                 flex-shrink: 0;
-            }
-
-            .profile-avatar {
-                width: 150px;
-                height: 150px;
                 border-radius: 50%;
                 background: var(--accent-gradient);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 70px;
+                font-size: 32px;
                 color: #ffffff;
-                border: 2px solid #ffffff;
+                border: 4px solid #ffffff;
                 box-shadow: var(--shadow-md);
+                transition: transform 0.2s ease;
             }
 
-            .profile-details {
+                .ig-avatar:hover {
+                    transform: scale(1.04) rotate(-2deg);
+                }
+
+            .ig-identity {
+                padding-bottom: 6px;
+            }
+
+            .ig-identity {
                 flex-grow: 1;
+                min-width: 0;
             }
 
-            .profile-username-row {
+            .ig-name {
+                font-family: var(--font-display);
+                font-size: 19px;
+                font-weight: 700;
+                color: var(--text-primary);
                 display: flex;
                 align-items: center;
-                gap: 20px;
-                flex-wrap: wrap;
-                margin-bottom: 20px;
+                gap: 6px;
+                line-height: 1.3;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
-            .profile-username {
-                font-family: 'Playfair Display', Georgia, serif;
-                font-size: 28px;
+            .ig-joined {
+                font-size: 12px;
+                color: var(--text-secondary);
+                margin-top: 3px;
+            }
+
+            .ig-stats-row {
+                display: flex;
+                margin-top: 18px;
+                padding-top: 16px;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .ig-stat {
+                flex: 1;
+                text-align: center;
+                cursor: default;
+                border-radius: 10px;
+                padding: 4px 2px;
+                transition: background-color 0.15s ease;
+            }
+
+                .ig-stat.clickable {
+                    cursor: pointer;
+                }
+
+                    .ig-stat.clickable:hover {
+                        background: var(--accent-light);
+                    }
+
+            .ig-stat-count {
+                display: block;
+                font-size: 17px;
                 font-weight: 800;
                 color: var(--text-primary);
-                display: flex;
-                align-items: center;
             }
 
-            .profile-stats-row {
-                display: flex;
-                gap: 40px;
-                margin-bottom: 20px;
-            }
-
-            .stat-item {
-                font-size: 16px;
-                color: var(--text-primary);
-                transition: opacity 0.15s ease;
-            }
-
-            .stat-item-clickable:hover {
-                color: var(--accent-color);
-            }
-
-            .stat-count {
-                font-weight: 700;
-            }
-
-            .profile-bio {
-                font-size: 14px;
-                line-height: 1.5;
+            .ig-stat-label {
+                display: block;
+                font-size: 11px;
                 color: var(--text-secondary);
+                margin-top: 2px;
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
             }
 
-            .bio-badges {
+            .ig-badges {
                 display: flex;
                 flex-wrap: wrap;
-                gap: 8px;
-                margin-top: 12px;
+                gap: 6px;
+                margin-top: 16px;
             }
 
-            .bio-badge {
+            .sidebar-badge {
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
                 background: var(--accent-light);
-                padding: 4px 10px;
-                border-radius: 12px;
-                font-size: 12px;
+                padding: 4px 9px;
+                border-radius: 10px;
+                font-size: 11px;
                 font-weight: 700;
                 color: var(--accent-color);
             }
@@ -253,27 +342,10 @@
                 border: 1px solid #fef3c7;
             }
 
-            .menu-trigger-btn {
-                width: 38px;
-                height: 38px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 15px;
-                background-color: var(--accent-light);
-                border: 1px solid var(--border-color);
-                border-radius: 50px;
-                color: var(--accent-color);
-                cursor: pointer;
-                flex-shrink: 0;
-                transition: all 0.2s ease;
+            .restricted-badge {
+                background: #fee2e2;
+                color: #b91c1c;
             }
-
-                .menu-trigger-btn:hover {
-                    background-color: var(--accent-color);
-                    border-color: var(--accent-color);
-                    color: #ffffff;
-                }
 
             .sidebar-overlay {
                 display: none;
@@ -290,60 +362,83 @@
                     opacity: 1;
                 }
 
-            .sidebar {
+            .profile-sidebar {
                 position: fixed;
                 top: 0;
                 right: -300px;
                 width: 280px;
-                max-width: 82vw;
+                max-width: 85vw;
                 height: 100%;
                 background: var(--card-bg);
+                border-left: 1px solid var(--border-color);
                 box-shadow: var(--shadow-lg);
                 z-index: 9999;
-                display: flex;
-                flex-direction: column;
                 overflow-y: auto;
                 transition: right 0.3s ease;
+                display: flex;
+                flex-direction: column;
             }
 
-                .sidebar.open {
+                .profile-sidebar.open {
                     right: 0;
                 }
 
-            .sidebar-panel-header {
+            .sidebar-drawer-head {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                padding: 16px 20px;
+                padding: 18px 16px;
                 border-bottom: 1px solid var(--border-color);
-                flex-shrink: 0;
             }
 
-                .sidebar-panel-header h3 {
-                    font-size: 16px;
-                    font-weight: 800;
-                    color: var(--text-primary);
+                .sidebar-drawer-head span {
+                    font-family: var(--font-display);
+                    font-weight: 700;
+                    font-size: 15px;
                 }
 
-            .sidebar-divider {
-                height: 1px;
-                background: var(--border-color);
-                margin: 6px 0;
+            .sidebar-close-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                background: var(--bg-color);
+                border: 1px solid var(--border-color);
+                color: var(--text-secondary);
+                font-size: 15px;
+                cursor: pointer;
+            }
+
+            .sidebar-nav {
+                padding: 10px 12px;
+            }
+
+            .sidebar-nav-label,
+            .sidebar-section-label {
+                font-size: 10.5px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: var(--text-secondary);
+                padding: 12px 12px 6px;
             }
 
             .sidebar-link {
                 display: flex;
                 align-items: center;
-                gap: 14px;
+                gap: 12px;
                 width: 100%;
-                padding: 14px 20px;
-                font-size: 14.5px;
+                padding: 11px 12px;
+                font-size: 14px;
                 font-weight: 600;
                 font-family: var(--font-family);
                 color: var(--text-primary);
                 text-decoration: none;
                 background: transparent;
                 border: none;
+                border-radius: 10px;
                 cursor: pointer;
                 text-align: left;
                 transition: background-color 0.15s ease, color 0.15s ease;
@@ -353,7 +448,7 @@
                     width: 18px;
                     text-align: center;
                     color: var(--accent-color);
-                    font-size: 16px;
+                    font-size: 15px;
                 }
 
                 .sidebar-link:hover {
@@ -361,13 +456,14 @@
                 }
 
                 .sidebar-link.active {
-                    background: var(--accent-light);
-                    color: var(--accent-color);
+                    background: var(--accent-color);
+                    color: #ffffff;
                     font-weight: 800;
+                    box-shadow: 0 6px 14px rgba(109, 40, 217, 0.25);
                 }
 
                     .sidebar-link.active i {
-                        color: var(--accent-color);
+                        color: #ffffff;
                     }
 
                 .sidebar-link.logout {
@@ -382,61 +478,298 @@
                         background: #fef2f2;
                     }
 
+            .sidebar-divider {
+                height: 1px;
+                background: var(--border-color);
+                margin: 8px 12px;
+            }
+
             .logout-form {
                 margin: 0;
             }
 
-            .content-area {
-                width: 100%;
+            .content-topbar {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 16px;
+                margin-bottom: 22px;
             }
 
-            .profile-user-bio {
+            .page-heading h1 {
+                font-family: var(--font-display);
+                font-size: 26px;
+                font-weight: 700;
+                color: var(--text-primary);
+            }
+
+            .page-heading p {
+                font-size: 13.5px;
+                color: var(--text-secondary);
+                margin-top: 4px;
+            }
+
+            .topbar-actions {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-shrink: 0;
+            }
+
+            .mobile-menu-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                color: var(--text-primary);
+                font-weight: 700;
+                font-size: 13px;
+                padding: 9px 14px;
+                border-radius: 50px;
                 cursor: pointer;
-                border-radius: 10px;
-                padding: 6px 0;
-                margin-bottom: 4px;
-                transition: opacity 0.15s ease;
+                box-shadow: var(--shadow-sm);
             }
 
-                .profile-user-bio:hover {
-                    opacity: 0.75;
+                .mobile-menu-btn i.fa-bars {
+                    color: var(--accent-color);
                 }
-
-                .profile-user-bio p {
-                    font-size: 14px;
-                    line-height: 1.5;
-                    color: var(--text-primary);
-                }
-
-                .profile-user-bio .bio-placeholder {
-                    color: var(--text-secondary);
-                    font-style: italic;
-                }
-
-                    .profile-user-bio .bio-placeholder i {
-                        margin-right: 6px;
-                        color: var(--accent-color);
-                    }
 
             .tab-content {
                 display: none;
-                animation: fadeUp 0.4s ease forwards;
+                animation: fadeUp 0.35s ease forwards;
             }
 
                 .tab-content.active {
                     display: block;
                 }
 
+            .settings-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 18px;
+            }
+
+            .settings-card {
+                position: relative;
+                background: var(--card-bg);
+                padding: 24px 26px 24px 30px;
+                border-radius: var(--radius-lg);
+                border: 1px solid var(--border-color);
+                box-shadow: var(--shadow-sm);
+                transition: box-shadow 0.2s ease, transform 0.2s ease;
+                --card-accent: var(--accent-color);
+                --card-accent-light: var(--accent-light);
+            }
+
+                .settings-card::before {
+                    content: "";
+                    position: absolute;
+                    left: 0;
+                    top: 18px;
+                    bottom: 18px;
+                    width: 4px;
+                    border-radius: 4px;
+                    background: var(--card-accent);
+                }
+
+                .settings-card:hover {
+                    box-shadow: var(--shadow-md);
+                    transform: translateY(-2px);
+                }
+
+                .settings-card.accent-store {
+                    --card-accent: #2563eb;
+                    --card-accent-light: #eaf1ff;
+                }
+
+                .settings-card.accent-delivery {
+                    --card-accent: #d97706;
+                    --card-accent-light: #fff6e8;
+                }
+
+                .settings-card h3 {
+                    font-size: 16.5px;
+                    font-weight: 800;
+                    margin-bottom: 14px;
+                    color: var(--text-primary);
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    border-bottom: 1px solid var(--border-color);
+                    padding-bottom: 12px;
+                }
+
+                    .settings-card h3 i {
+                        width: 36px;
+                        height: 36px;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        background: var(--card-accent-light);
+                        border-radius: 10px;
+                        color: var(--card-accent);
+                        font-size: 15px;
+                    }
+
+                .settings-card p {
+                    color: var(--text-secondary);
+                    font-size: 13.5px;
+                    line-height: 1.55;
+                    margin-bottom: 18px;
+                }
+
+            .settings-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 9px;
+                background: var(--accent-gradient);
+                color: white;
+                padding: 10px 18px;
+                text-decoration: none;
+                border-radius: 50px;
+                font-weight: 700;
+                font-size: 13px;
+                transition: all 0.2s ease;
+                border: none;
+                cursor: pointer;
+                margin-right: 10px;
+                margin-bottom: 8px;
+                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.18);
+            }
+
+                .settings-btn:hover {
+                    opacity: 0.94;
+                }
+
+                .settings-btn.subtle {
+                    background: var(--card-bg);
+                    color: var(--accent-color);
+                    border: 1px solid var(--border-color);
+                    box-shadow: none;
+                }
+
+                    .settings-btn.subtle:hover {
+                        background: var(--accent-light);
+                    }
+
+            .message {
+                padding: 14px 18px;
+                border-radius: 12px;
+                font-weight: 700;
+                margin-bottom: 20px;
+            }
+
+            .success-message {
+                background: #ecfdf5;
+                color: var(--success-color);
+                border: 1px solid #d1fae5;
+            }
+
+            .error-message {
+                background: #fef2f2;
+                color: var(--error-color);
+                border: 1px solid #fee2e2;
+            }
+
+            .warning-message {
+                background: #fff5f5;
+                color: var(--error-color);
+                border: 1px solid #ffd1cc;
+                padding: 12px;
+                border-radius: 10px;
+                font-size: 13.5px;
+                margin-bottom: 16px;
+            }
+
+            .info-message {
+                background: var(--accent-light);
+                color: var(--accent-color);
+                border: 1px solid var(--border-color);
+                padding: 12px;
+                border-radius: 10px;
+                font-size: 13.5px;
+                margin-bottom: 16px;
+            }
+
+            .delivery-login-card {
+                display: none;
+                margin-top: 16px;
+                background: var(--bg-color);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-md);
+                padding: 18px;
+            }
+
+                .delivery-login-card.open {
+                    display: block;
+                }
+
+            .delivery-login-form {
+                display: grid;
+                gap: 12px;
+                margin-top: 12px;
+            }
+
+            .delivery-login-btn {
+                border: none;
+                background: var(--accent-gradient);
+                color: white;
+                padding: 11px;
+                border-radius: 50px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: opacity 0.15s;
+                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25);
+            }
+
+                .delivery-login-btn:hover {
+                    opacity: 0.95;
+                }
+
+            .form-group {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+                .form-group label {
+                    font-size: 12.5px;
+                    font-weight: 700;
+                    color: var(--text-secondary);
+                }
+
+                .form-group input,
+                .form-group select,
+                .form-group textarea {
+                    padding: 10px 12px;
+                    border: 1px solid var(--border-color);
+                    border-radius: 8px;
+                    outline: none;
+                    font-size: 14px;
+                    color: var(--text-primary);
+                    width: 100%;
+                    background: var(--card-bg);
+                    font-family: var(--font-family);
+                    transition: all 0.2s ease;
+                }
+
+                    .form-group input:focus,
+                    .form-group select:focus,
+                    .form-group textarea:focus {
+                        border-color: var(--accent-color);
+                    }
+
             .instagram-grid {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
-                gap: 24px;
+                gap: 22px;
             }
 
             .product-grid-item {
                 background: var(--card-bg);
                 border: 1px solid var(--border-color);
-                border-radius: 20px;
+                border-radius: var(--radius-lg);
                 overflow: hidden;
                 display: flex;
                 flex-direction: column;
@@ -451,7 +784,7 @@
 
                 .product-grid-item img {
                     width: 100%;
-                    height: 180px;
+                    height: 170px;
                     object-fit: cover;
                     border-bottom: 1px solid var(--border-color);
                 }
@@ -464,16 +797,16 @@
             }
 
                 .product-details h4 {
-                    font-size: 15px;
+                    font-size: 14.5px;
                     font-weight: 700;
                     color: var(--text-primary);
                     margin-bottom: 6px;
-                    height: 40px;
+                    height: 38px;
                     overflow: hidden;
                 }
 
                 .product-details .price {
-                    font-size: 16px;
+                    font-size: 15.5px;
                     font-weight: 800;
                     color: var(--accent-color);
                     margin-bottom: 12px;
@@ -501,32 +834,32 @@
 
             .empty-state {
                 text-align: center;
-                padding: 60px 20px;
+                padding: 54px 20px;
                 color: var(--text-secondary);
             }
 
             .empty-icon {
-                font-size: 50px;
-                margin-bottom: 16px;
+                font-size: 46px;
+                margin-bottom: 14px;
                 color: var(--border-color);
             }
 
             .empty-state h3 {
-                font-size: 20px;
+                font-size: 18px;
                 font-weight: 800;
                 color: var(--text-primary);
                 margin-bottom: 8px;
             }
 
             .empty-state p {
-                font-size: 14px;
+                font-size: 13.5px;
                 max-width: 350px;
-                margin: 0 auto 20px;
+                margin: 0 auto;
                 line-height: 1.5;
             }
 
             .activity-section {
-                margin-bottom: 32px;
+                margin-bottom: 30px;
             }
 
                 .activity-section:last-child {
@@ -534,9 +867,9 @@
                 }
 
             .activity-section-title {
-                font-family: 'Playfair Display', Georgia, serif;
-                font-size: 17px;
-                font-weight: 800;
+                font-family: var(--font-display);
+                font-size: 16.5px;
+                font-weight: 700;
                 color: var(--text-primary);
                 display: flex;
                 align-items: center;
@@ -548,20 +881,20 @@
 
                 .activity-section-title i {
                     color: var(--accent-color);
-                    font-size: 15px;
+                    font-size: 14px;
                 }
 
             .reviews-container {
                 display: flex;
                 flex-direction: column;
-                gap: 16px;
+                gap: 14px;
             }
 
             .review-row {
                 background: var(--card-bg);
                 border: 1px solid var(--border-color);
-                border-radius: 16px;
-                padding: 20px;
+                border-radius: var(--radius-md);
+                padding: 18px 20px;
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-start;
@@ -574,14 +907,14 @@
             }
 
                 .review-main h4 {
-                    font-size: 16px;
+                    font-size: 15px;
                     font-weight: 700;
                     color: var(--text-primary);
                     margin-bottom: 6px;
                 }
 
                 .review-main p {
-                    font-size: 14px;
+                    font-size: 13.5px;
                     color: var(--text-secondary);
                     line-height: 1.5;
                     font-style: italic;
@@ -593,102 +926,12 @@
                 flex-direction: column;
                 align-items: flex-end;
                 gap: 6px;
-                min-width: 120px;
+                min-width: 110px;
             }
 
             .stars-row {
                 display: flex;
                 gap: 2px;
-            }
-
-            .settings-card {
-                background: var(--card-bg);
-                padding: 28px 32px;
-                border-radius: 20px;
-                margin-bottom: 24px;
-                border: 1px solid var(--border-color);
-                box-shadow: var(--shadow-sm);
-            }
-
-                .settings-card h3 {
-                    font-size: 18px;
-                    font-weight: 800;
-                    margin-bottom: 16px;
-                    color: var(--text-primary);
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    border-bottom: 1px solid var(--border-color);
-                    padding-bottom: 12px;
-                }
-
-                .settings-card p {
-                    color: var(--text-secondary);
-                    font-size: 14px;
-                    line-height: 1.5;
-                    margin-bottom: 20px;
-                }
-
-            .settings-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 10px;
-                background: var(--accent-gradient);
-                color: white;
-                padding: 10px 20px;
-                text-decoration: none;
-                border-radius: 50px;
-                font-weight: 700;
-                font-size: 13px;
-                transition: all 0.2s ease;
-                border: none;
-                cursor: pointer;
-                margin-right: 12px;
-                margin-bottom: 8px;
-                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.15);
-            }
-
-                .settings-btn:hover {
-                    opacity: 0.95;
-                }
-
-            .message {
-                padding: 14px 18px;
-                border-radius: 8px;
-                font-weight: 700;
-                margin-bottom: 20px;
-            }
-
-            .success-message {
-                background: #ecfdf5;
-                color: var(--success-color);
-                border: 1px solid #d1fae5;
-            }
-
-            .error-message {
-                background: #fef2f2;
-                color: var(--error-color);
-                border: 1px solid #fee2e2;
-            }
-
-            .warning-message {
-                background: #fff5f5;
-                color: var(--error-color);
-                border: 1px solid #ffd1cc;
-                padding: 12px;
-                border-radius: 8px;
-                font-size: 14px;
-                margin-bottom: 16px;
-            }
-
-            .info-message {
-                background: var(--accent-light);
-                color: var(--accent-color);
-                border: 1px solid var(--border-color);
-                padding: 12px;
-                border-radius: 8px;
-                font-size: 14px;
-                margin-bottom: 16px;
             }
 
             .modal {
@@ -707,9 +950,9 @@
                 background-color: var(--card-bg);
                 margin: 10% auto;
                 padding: 30px;
-                border-radius: 20px;
+                border-radius: var(--radius-lg);
                 width: 90%;
-                max-width: 450px;
+                max-width: 440px;
                 box-shadow: var(--shadow-lg);
                 border: 1px solid var(--border-color);
                 position: relative;
@@ -732,7 +975,7 @@
 
             .modal h3 {
                 margin-bottom: 20px;
-                font-size: 20px;
+                font-size: 19px;
                 color: var(--text-primary);
                 font-weight: 800;
             }
@@ -742,45 +985,6 @@
                 flex-direction: column;
                 gap: 16px;
             }
-
-            .form-group {
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-            }
-
-                .form-group label {
-                    font-size: 13px;
-                    font-weight: 700;
-                    color: var(--text-secondary);
-                }
-
-                .form-group input,
-                .form-group select,
-                .form-group textarea {
-                    padding: 10px 12px;
-                    border: 1px solid var(--border-color);
-                    border-radius: 8px;
-                    outline: none;
-                    font-size: 14px;
-                    color: var(--text-primary);
-                    width: 100%;
-                    background: var(--bg-color);
-                    font-family: var(--font-family);
-                    transition: all 0.2s ease;
-                }
-
-                .form-group textarea {
-                    resize: vertical;
-                    min-height: 90px;
-                }
-
-                    .form-group input:focus,
-                    .form-group select:focus,
-                    .form-group textarea:focus {
-                        border-color: var(--accent-color);
-                        background: #ffffff;
-                    }
 
             .save-btn {
                 background: var(--accent-gradient);
@@ -873,45 +1077,10 @@
                     color: #ffffff;
                 }
 
-            .delivery-login-card {
-                display: none;
-                margin-top: 18px;
-                background: var(--bg-color);
-                border: 1px solid var(--border-color);
-                border-radius: 16px;
-                padding: 18px;
-            }
-
-                .delivery-login-card.open {
-                    display: block;
-                }
-
-            .delivery-login-form {
-                display: grid;
-                gap: 12px;
-                margin-top: 12px;
-            }
-
-            .delivery-login-btn {
-                border: none;
-                background: var(--accent-gradient);
-                color: white;
-                padding: 11px;
-                border-radius: 50px;
-                font-weight: 700;
-                cursor: pointer;
-                transition: opacity 0.15s;
-                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25);
-            }
-
-                .delivery-login-btn:hover {
-                    opacity: 0.95;
-                }
-
             @@keyframes fadeUp {
                 from {
                     opacity: 0;
-                    transform: translateY(12px);
+                    transform: translateY(10px);
                 }
 
                 to {
@@ -932,21 +1101,22 @@
                 }
             }
 
-            @@media (max-width: 768px) {
-                .profile-header {
-                    flex-direction: column;
-                    text-align: center;
-                    gap: 24px;
-                    padding-bottom: 24px;
-                }
-
-                .profile-stats-row {
-                    justify-content: center;
-                }
-
+            @@media (max-width: 992px) {
                 .instagram-grid {
                     grid-template-columns: repeat(1, 1fr);
                     gap: 16px;
+                }
+            }
+
+            @@media (max-width: 480px) {
+                .ig-name {
+                    font-size: 17px;
+                }
+
+                .ig-avatar {
+                    width: 58px;
+                    height: 58px;
+                    font-size: 26px;
                 }
             }
 
@@ -965,277 +1135,166 @@
 
     <partial name="_CustomerBottomNav" />
 
-    <div class="profile-container" style="position: relative;">
+    <div class="profile-container">
 
-        <div style="position: absolute; top: 0; right: 20px; z-index: 10;">
-            <partial name="_MessageBell" />
-        </div>
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
 
-        @if (TempData["Success"] != null)
-        {
-            <div class="message success-message">
-                @TempData["Success"]
-            </div>
-        }
+        <div class="profile-header-card">
+            <div class="profile-cover"></div>
 
-        @if (!ViewData.ModelState.IsValid)
-        {
-            <div class="message error-message">
-                Please check your information and try again.
-            </div>
-        }
+            <button type="button" class="header-menu-btn" onclick="openSidebar()" aria-label="Open menu">
+                <i class="fas fa-bars"></i>
+            </button>
 
-        <div class="profile-header">
-            <div class="profile-avatar-container">
-                <div class="profile-avatar">
+            <div class="ig-top-row">
+                <div class="ig-avatar">
                     <i class="fas fa-user-astronaut"></i>
                 </div>
-            </div>
-
-            <div class="profile-details">
-                <div class="profile-username-row">
-                    <h2 class="profile-username">
+                <div class="ig-identity">
+                    <div class="ig-name">
                         @Model.CustomerFullName
                         @if (Model.IsVerified)
                         {
                             <span title="Verified Customer">
-                                <i class="fas fa-check-circle" style="color: #6d28d9; font-size: 18px; margin-left: 8px;"></i>
-                            </span>
-                        }
-                    </h2>
-                    <button class="menu-trigger-btn" onclick="openSidebar()" title="Menu">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                </div>
-
-                <div class="profile-user-bio" onclick="openEditBioModal()" title="Click to edit your bio">
-                    @if (!string.IsNullOrWhiteSpace(Model.CustomerBio))
-                    {
-                        <p>@Model.CustomerBio</p>
-                    }
-                    else
-                    {
-                        <p class="bio-placeholder"><i class="fas fa-pen"></i>Add a bio</p>
-                    }
-                </div>
-
-                <div class="profile-stats-row">
-                    <div class="stat-item">
-                        <span class="stat-count">@Model.OrdersCount</span> orders
-                    </div>
-                    <div class="stat-item stat-item-clickable" onclick="openFollowingModal()" style="cursor: pointer;">
-                        <span class="stat-count">@Model.FollowedStoresList.Count</span> following
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-count">@Model.WishlistCount</span> wishlisted
-                    </div>
-                </div>
-
-                <div class="profile-bio">
-                    <p class="bio-text"><i class="fas fa-envelope" style="color:#6b6478; margin-right:4px;"></i> @Model.CustomerEmail</p>
-                    <p class="bio-text"><i class="fas fa-phone" style="color:#6b6478; margin-right:4px;"></i> @Model.CustomerPhone</p>
-
-                    <div class="bio-badges">
-                        <span class="bio-badge loyalty-badge">
-                            <i class="fas fa-star"></i> @Model.LoyaltyPoints Loyalty Pts
-                        </span>
-                        <span class="bio-badge">
-                            <i class="fas fa-venus-mars"></i> @Model.Gender
-                        </span>
-                        <span class="bio-badge">
-                            <i class="fas fa-calendar-alt"></i> Joined @Model.CreatedAt.ToString("MMM yyyy")
-                        </span>
-                        @if (Model.CODBlocked)
-                        {
-                            <span class="bio-badge" style="background:#fee2e2; color:#b91c1c;">
-                                <i class="fas fa-ban"></i> COD Restricted
+                                <i class="fas fa-check-circle" style="color: #6d28d9; font-size: 14px;"></i>
                             </span>
                         }
                     </div>
+                    <div class="ig-joined">Customer since @Model.CreatedAt.ToString("MMM yyyy")</div>
                 </div>
+            </div>
+
+            <div class="ig-stats-row">
+                <div class="ig-stat">
+                    <span class="ig-stat-count">@Model.OrdersCount</span>
+                    <span class="ig-stat-label">Orders</span>
+                </div>
+                <div class="ig-stat clickable" onclick="openFollowingModal()">
+                    <span class="ig-stat-count">@Model.FollowedStoresList.Count</span>
+                    <span class="ig-stat-label">Following</span>
+                </div>
+                <div class="ig-stat">
+                    <span class="ig-stat-count">@Model.ReviewsList.Count</span>
+                    <span class="ig-stat-label">Reviews</span>
+                </div>
+                <div class="ig-stat">
+                    <span class="ig-stat-count">@Model.WishlistCount</span>
+                    <span class="ig-stat-label">Wishlist</span>
+                </div>
+            </div>
+
+            <div class="ig-badges">
+                <span class="sidebar-badge loyalty-badge">
+                    <i class="fas fa-star"></i> @Model.LoyaltyPoints pts
+                </span>
+                <span class="sidebar-badge">
+                    <i class="fas fa-venus-mars"></i> @Model.Gender
+                </span>
+                @if (Model.CODBlocked)
+                {
+                    <span class="sidebar-badge restricted-badge">
+                        <i class="fas fa-ban"></i> COD Restricted
+                    </span>
+                }
             </div>
         </div>
 
-        <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+        <aside id="sidebar" class="profile-sidebar">
 
-        <aside id="sidebar" class="sidebar">
-            <div class="sidebar-panel-header">
-                <h3>Menu</h3>
-                <span class="close-modal" onclick="closeSidebar()" style="position: static; font-size: 20px; color: #aaa; cursor: pointer;">&times;</span>
+            <div class="sidebar-drawer-head">
+                <span>Menu</span>
+                <button type="button" class="sidebar-close-btn" onclick="closeSidebar()" aria-label="Close menu">
+                    <i class="fas fa-xmark"></i>
+                </button>
             </div>
 
-            <button id="link-wishlist-tab" class="sidebar-link active" data-tab="wishlist-tab" onclick="selectTab('wishlist-tab')">
-                <i class="far fa-bookmark"></i> Wishlist
-            </button>
-            <button id="link-activity-tab" class="sidebar-link" data-tab="activity-tab" onclick="selectTab('activity-tab')">
-                <i class="fas fa-clock-rotate-left"></i> Your Activity
-            </button>
-            <button id="link-settings-tab" class="sidebar-link" data-tab="settings-tab" onclick="selectTab('settings-tab')">
-                <i class="fas fa-cog"></i> Management
-            </button>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-label">Dashboard</div>
 
-            <div class="sidebar-divider"></div>
-
-            <button type="button" class="sidebar-link" onclick="closeSidebar(); openEditModal();">
-                <i class="fas fa-user-pen"></i> Edit Profile
-            </button>
-            <button type="button" class="sidebar-link" onclick="closeSidebar(); openEditBioModal();">
-                <i class="fas fa-pen"></i> Edit Bio
-            </button>
-            <a href="/HelpCenter" class="sidebar-link">
-                <i class="fas fa-circle-question"></i> Help Center
-            </a>
-            <a href="/CustomerComplaint" class="sidebar-link">
-                <i class="fas fa-flag"></i> File a Complaint
-            </a>
-
-            <div class="sidebar-divider"></div>
-
-            <form method="post" asp-page="/Identity/Account/Logout" asp-route-returnUrl="/" class="logout-form">
-                <button type="submit" class="sidebar-link logout">
-                    <i class="fas fa-right-from-bracket"></i> Logout
+                <button id="link-settings-tab" class="sidebar-link active" data-tab="settings-tab" onclick="selectTab('settings-tab')">
+                    <i class="fas fa-sliders-h"></i> Management
                 </button>
-            </form>
+                <button id="link-activity-tab" class="sidebar-link" data-tab="activity-tab" onclick="selectTab('activity-tab')">
+                    <i class="fas fa-clock-rotate-left"></i> Your Activity
+                </button>
+                <button id="link-wishlist-tab" class="sidebar-link" data-tab="wishlist-tab" onclick="selectTab('wishlist-tab')">
+                    <i class="far fa-bookmark"></i> Wishlist
+                </button>
+
+                <div class="sidebar-divider"></div>
+                <div class="sidebar-nav-label">Account</div>
+
+                <button type="button" class="sidebar-link" onclick="openEditModal(); closeSidebar();">
+                    <i class="fas fa-user-pen"></i> Edit Profile
+                </button>
+
+                <div class="sidebar-divider"></div>
+                <div class="sidebar-nav-label">Support</div>
+
+                <a href="/HelpCenter" class="sidebar-link">
+                    <i class="fas fa-circle-question"></i> Help Center
+                </a>
+                <a href="/CustomerComplaint" class="sidebar-link">
+                    <i class="fas fa-flag"></i> File a Complaint
+                </a>
+
+                <div class="sidebar-divider"></div>
+
+                <form method="post" asp-page="/Identity/Account/Logout" asp-route-returnUrl="/" class="logout-form">
+                    <button type="submit" class="sidebar-link logout">
+                        <i class="fas fa-right-from-bracket"></i> Logout
+                    </button>
+                </form>
+            </nav>
         </aside>
 
-        <div class="page-layout">
-            <main class="content-area">
+        <main class="main-content">
 
-                <div id="wishlist-tab" class="tab-content active">
-                    @if (Model.WishlistList.Any())
-                    {
-                        <div class="instagram-grid">
-                            @foreach (var wish in Model.WishlistList)
-                            {
-                                var productName = CustomerProfileModel.GetSafeString(wish.Product, new[] { "ProductName", "Name", "Title" }, "Marketplace Product");
-                                var productPrice = CustomerProfileModel.GetSafeDecimal(wish.Product, new[] { "Price" }, 0.00m);
-                                var productImage = CustomerProfileModel.GetSafeString(wish.Product, new[] { "ProductImageUrl", "ImageUrl", "ImagePath", "Image" }, "https://cdn-icons-png.flaticon.com/512/1170/1170576.png");
-                                var productId = CustomerProfileModel.GetSafeInt(wish.Product, new[] { "ProductID", "Id" }, 0);
-
-                                <div class="product-grid-item">
-                                    <img src="@productImage" alt="@productName" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1170/1170576.png'" />
-                                    <div class="product-details">
-                                        <h4>@productName</h4>
-                                        <span class="price">$@productPrice.ToString("F2")</span>
-                                        <a href="/ProductDetails?id=@productId" class="view-btn">View Details</a>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="empty-state">
-                            <div class="empty-icon"><i class="far fa-bookmark"></i></div>
-                            <h3>Wishlist is Empty</h3>
-                            <p>Save items you like to monitor price changes and purchase them easily.</p>
-                        </div>
-                    }
+            <div class="content-topbar">
+                <div class="page-heading">
+                    <h1 id="pageTitle">Management</h1>
+                    <p id="pageSubtitle">Manage your account security, store access, and delivery access.</p>
                 </div>
-
-                <div id="activity-tab" class="tab-content">
-
-                    <div class="activity-section">
-                        <h3 class="activity-section-title"><i class="far fa-star"></i> Your Reviews</h3>
-
-                        @if (Model.ReviewsList.Any())
-                        {
-                            <div class="reviews-container">
-                                @foreach (var r in Model.ReviewsList)
-                                {
-                                    var productName = CustomerProfileModel.GetSafeString(r.Product, new[] { "ProductName", "Name" }, "Product");
-                                    var rating = CustomerProfileModel.GetSafeInt(r, new[] { "Rating", "Stars", "Score" }, 5);
-                                    var comment = CustomerProfileModel.GetSafeString(r, new[] { "Comment", "Text", "ReviewText", "Description" }, "No feedback left.");
-
-                                    <div class="review-row">
-                                        <div class="review-main">
-                                            <h4>@productName</h4>
-                                            <p>"@comment"</p>
-                                        </div>
-                                        <div class="review-meta">
-                                            <div class="stars-row">
-                                                @for (int i = 1; i <= 5; i++)
-                                                {
-                                                    if (i <= rating)
-                                                    {
-                                                        <i class="fas fa-star" style="color: #FFC107;"></i>
-                                                    }
-                                                    else
-                                                    {
-                                                        <i class="far fa-star" style="color: #dbdbdb;"></i>
-                                                    }
-                                                }
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="empty-state" style="padding: 40px 20px;">
-                                <div class="empty-icon" style="font-size: 40px;"><i class="far fa-star"></i></div>
-                                <h3 style="font-size: 17px;">No Reviews Found</h3>
-                                <p style="font-size: 13px;">You have not published any reviews for purchased products yet.</p>
-                            </div>
-                        }
-                    </div>
-
-                    <div class="activity-section">
-                        <h3 class="activity-section-title"><i class="fas fa-ban"></i> Blocked Shops</h3>
-
-                        <div class="empty-state" style="padding: 40px 20px;">
-                            <div class="empty-icon" style="font-size: 40px;"><i class="fas fa-store-slash"></i></div>
-                            <h3 style="font-size: 17px;">No Blocked Shops</h3>
-                            <p style="font-size: 13px;">Shops you block will stop appearing in your feed, search, and recommendations.</p>
-                        </div>
-                    </div>
-
-                    <div class="activity-section">
-                        <h3 class="activity-section-title"><i class="fas fa-globe"></i> Language Preference</h3>
-
-                        <div class="settings-card" style="box-shadow: none; padding: 22px; margin-bottom: 0;">
-                            <div class="form-group" style="max-width: 280px; margin-bottom: 16px;">
-                                <label for="languageSelect">App Language</label>
-                                <select id="languageSelect">
-                                    <option value="en">English</option>
-                                    <option value="ar">العربية (Arabic)</option>
-                                    <option value="fr">Français</option>
-                                </select>
-                            </div>
-                            <button type="button" class="settings-btn" onclick="saveLanguagePreference()">
-                                <i class="fas fa-check"></i> Save Language
-                            </button>
-                        </div>
-                    </div>
-
+                <div class="topbar-actions">
+                    <partial name="_MessageBell" />
                 </div>
+            </div>
 
-                <div id="settings-tab" class="tab-content">
+            @if (TempData["Success"] != null)
+            {
+                <div class="message success-message">
+                    @TempData["Success"]
+                </div>
+            }
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="message error-message">
+                    Please check your information and try again.
+                </div>
+            }
+
+            <div id="settings-tab" class="tab-content active">
+
+                <div class="settings-grid">
 
                     <div class="settings-card">
-                        <h3>
-                            <i class="fas fa-sliders-h" style="color: var(--accent-color);"></i>
-                            Account Settings
-                        </h3>
-                        <p>Manage your physical addresses or update your login credentials. Use "Edit Profile" in the sidebar to change your name or phone number.</p>
+                        <h3><i class="fas fa-sliders-h"></i> Account Settings</h3>
+                        <p>Manage your physical addresses or update your login credentials. Use "Edit Profile" in the menu to change your name or phone number.</p>
 
                         <a class="settings-btn" href="/Identity/Account/Manage/ChangePassword">
                             <i class="fas fa-key"></i> Change Password
                         </a>
-                        <a class="settings-btn" href="/CustomerAddresses">
+                        <a class="settings-btn subtle" href="/CustomerAddresses">
                             <i class="fas fa-location-dot"></i> My Addresses
                         </a>
-                        <a class="settings-btn" href="/CustomerComplaint">
+                        <a class="settings-btn subtle" href="/CustomerComplaint">
                             <i class="fas fa-flag"></i> File a Complaint
                         </a>
                     </div>
 
-                    <div class="settings-card">
-                        <h3>
-                            <i class="fas fa-store" style="color: var(--accent-color);"></i>
-                            Store Owner Access
-                        </h3>
+                    <div class="settings-card accent-store">
+                        <h3><i class="fas fa-store"></i> Store Owner Access</h3>
 
                         @if (!string.IsNullOrWhiteSpace(Model.StoreAccessMessage))
                         {
@@ -1256,7 +1315,7 @@
                             else if (Model.HasRejectedStoreRequest)
                             {
                                 <div class="error-message"
-                                     style="padding:10px; border-radius:8px; font-size:14px; margin-bottom:12px;">
+                                     style="padding:10px; border-radius:10px; font-size:13.5px; margin-bottom:12px;">
                                     <i class="fas fa-times-circle"></i>
                                     @Model.StoreAccessMessage
                                 </div>
@@ -1287,11 +1346,11 @@
                             <div id="storeOwnerLoginBox"
                                  class="delivery-login-card @(string.IsNullOrWhiteSpace(storeOwnerLoginError) ? "" : "open")">
 
-                                <h4 style="font-weight:600; margin-bottom:6px;">
+                                <h4 style="font-weight:700; margin-bottom:6px; font-size:14px;">
                                     Store Owner Log In
                                 </h4>
 
-                                <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
+                                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">
                                     This Store Owner account is linked securely to your customer account.
                                     Enter the Store Owner password provided by the administrator.
                                 </p>
@@ -1299,7 +1358,7 @@
                                 @if (!string.IsNullOrWhiteSpace(storeOwnerLoginError))
                                 {
                                     <div class="error-message"
-                                         style="padding:10px; border-radius:8px; font-size:13px; margin-bottom:12px;">
+                                         style="padding:10px; border-radius:10px; font-size:13px; margin-bottom:12px;">
                                         @storeOwnerLoginError
                                     </div>
                                 }
@@ -1379,11 +1438,8 @@
                         }
                     </div>
 
-                    <div class="settings-card">
-                        <h3>
-                            <i class="fas fa-motorcycle" style="color: var(--accent-color);"></i>
-                            Delivery Staff Access
-                        </h3>
+                    <div class="settings-card accent-delivery">
+                        <h3><i class="fas fa-motorcycle"></i> Delivery Staff Access</h3>
 
                         @if (!string.IsNullOrWhiteSpace(Model.DeliveryAccessMessage))
                         {
@@ -1397,7 +1453,7 @@
                             }
                             else if (Model.HasRejectedDeliveryRequest)
                             {
-                                <div class="error-message" style="padding:10px; border-radius:8px; font-size:14px; margin-bottom:12px;"><i class="fas fa-times-circle"></i> @Model.DeliveryAccessMessage</div>
+                                <div class="error-message" style="padding:10px; border-radius:10px; font-size:13.5px; margin-bottom:12px;"><i class="fas fa-times-circle"></i> @Model.DeliveryAccessMessage</div>
                             }
                             else
                             {
@@ -1412,14 +1468,14 @@
                             </button>
 
                             <div id="deliveryLoginBox" class="delivery-login-card @(string.IsNullOrWhiteSpace(deliveryLoginError) ? "" : "open")">
-                                <h4 style="font-weight:600; margin-bottom:6px;">Delivery Log In</h4>
-                                <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
+                                <h4 style="font-weight:700; margin-bottom:6px; font-size:14px;">Delivery Log In</h4>
+                                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">
                                     This delivery account is linked securely to your customer account. Enter only the delivery password provided by the administrator.
                                 </p>
 
                                 @if (!string.IsNullOrWhiteSpace(deliveryLoginError))
                                 {
-                                    <div class="error-message" style="padding:10px; border-radius:8px; font-size:13px; margin-bottom:12px;">
+                                    <div class="error-message" style="padding:10px; border-radius:10px; font-size:13px; margin-bottom:12px;">
                                         @deliveryLoginError
                                     </div>
                                 }
@@ -1465,10 +1521,120 @@
                     </div>
 
                 </div>
+            </div>
 
-            </main>
-        </div>
+            <div id="activity-tab" class="tab-content">
 
+                <div class="activity-section">
+                    <h3 class="activity-section-title"><i class="far fa-star"></i> Your Reviews</h3>
+
+                    @if (Model.ReviewsList.Any())
+                    {
+                        <div class="reviews-container">
+                            @foreach (var r in Model.ReviewsList)
+                            {
+                                var productName = CustomerProfileModel.GetSafeString(r.Product, new[] { "ProductName", "Name" }, "Product");
+                                var rating = CustomerProfileModel.GetSafeInt(r, new[] { "Rating", "Stars", "Score" }, 5);
+                                var comment = CustomerProfileModel.GetSafeString(r, new[] { "Comment", "Text", "ReviewText", "Description" }, "No feedback left.");
+
+                                <div class="review-row">
+                                    <div class="review-main">
+                                        <h4>@productName</h4>
+                                        <p>"@comment"</p>
+                                    </div>
+                                    <div class="review-meta">
+                                        <div class="stars-row">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= rating)
+                                                {
+                                                    <i class="fas fa-star" style="color: #FFC107;"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="far fa-star" style="color: #dbdbdb;"></i>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state" style="padding: 40px 20px;">
+                            <div class="empty-icon" style="font-size: 40px;"><i class="far fa-star"></i></div>
+                            <h3 style="font-size: 16px;">No Reviews Found</h3>
+                            <p style="font-size: 13px;">You have not published any reviews for purchased products yet.</p>
+                        </div>
+                    }
+                </div>
+
+                <div class="activity-section">
+                    <h3 class="activity-section-title"><i class="fas fa-ban"></i> Blocked Shops</h3>
+
+                    <div class="empty-state" style="padding: 40px 20px;">
+                        <div class="empty-icon" style="font-size: 40px;"><i class="fas fa-store-slash"></i></div>
+                        <h3 style="font-size: 16px;">No Blocked Shops</h3>
+                        <p style="font-size: 13px;">Shops you block will stop appearing in your feed, search, and recommendations.</p>
+                    </div>
+                </div>
+
+                <div class="activity-section">
+                    <h3 class="activity-section-title"><i class="fas fa-globe"></i> Language Preference</h3>
+
+                    <div class="settings-card" style="box-shadow: none; padding: 22px; margin-bottom: 0;">
+                        <div class="form-group" style="max-width: 280px; margin-bottom: 16px;">
+                            <label for="languageSelect">App Language</label>
+                            <select id="languageSelect">
+                                <option value="en">English</option>
+                                <option value="ar">العربية (Arabic)</option>
+                                <option value="fr">Français</option>
+                            </select>
+                        </div>
+                        <button type="button" class="settings-btn" onclick="saveLanguagePreference()">
+                            <i class="fas fa-check"></i> Save Language
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="wishlist-tab" class="tab-content">
+                @if (Model.WishlistList.Any())
+                {
+                    <div class="instagram-grid">
+                        @foreach (var wish in Model.WishlistList)
+                        {
+                            var productName = CustomerProfileModel.GetSafeString(wish.Product, new[] { "ProductName", "Name", "Title" }, "Marketplace Product");
+                            var productPrice = CustomerProfileModel.GetSafeDecimal(wish.Product, new[] { "Price" }, 0.00m);
+                            var productImage = CustomerProfileModel.GetPrimaryProductImageUrl(wish.Product)
+                                ?? "https://cdn-icons-png.flaticon.com/512/1170/1170576.png";
+                            var productId = CustomerProfileModel.GetSafeInt(wish.Product, new[] { "ProductID", "Id" }, 0);
+
+                            <div class="product-grid-item">
+                                <img src="@productImage" alt="@productName" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1170/1170576.png'" />
+                                <div class="product-details">
+                                    <h4>@productName</h4>
+                                    <span class="price">$@productPrice.ToString("F2")</span>
+                                    <a href="/ProductDetails?id=@productId" class="view-btn">View Details</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="far fa-bookmark"></i></div>
+                        <h3>Wishlist is Empty</h3>
+                        <p>Save items you like to monitor price changes and purchase them easily.</p>
+                    </div>
+                }
+            </div>
+
+        </main>
     </div>
 
     <div id="editProfileModal" class="modal">
@@ -1485,20 +1651,6 @@
                     <input type="text" id="CustomerPhone" name="CustomerPhone" value="@Model.CustomerPhone" required />
                 </div>
                 <button type="submit" class="save-btn">Save Changes</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="editBioModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeEditBioModal()">&times;</span>
-            <h3>Edit Your Bio</h3>
-            <form method="post" class="modal-form" asp-page-handler="EditBio">
-                <div class="form-group">
-                    <label for="CustomerBio">Bio</label>
-                    <textarea id="CustomerBio" name="CustomerBio" placeholder="Tell other shoppers a little about yourself...">@Model.CustomerBio</textarea>
-                </div>
-                <button type="submit" class="save-btn">Save Bio</button>
             </form>
         </div>
     </div>
@@ -1547,20 +1699,27 @@
     </footer>
 
     <script>
+            const TAB_META = {
+                "settings-tab": {
+                    title: "Management",
+                    subtitle: "Manage your account security, store access, and delivery access."
+                },
+                "activity-tab": {
+                    title: "Your Activity",
+                    subtitle: "Reviews you've left, blocked shops, and language preferences."
+                },
+                "wishlist-tab": {
+                    title: "Wishlist",
+                    subtitle: "Products you've saved to track and revisit."
+                }
+            };
+
             function openEditModal() {
                 document.getElementById("editProfileModal").style.display = "block";
             }
 
             function closeEditModal() {
                 document.getElementById("editProfileModal").style.display = "none";
-            }
-
-            function openEditBioModal() {
-                document.getElementById("editBioModal").style.display = "block";
-            }
-
-            function closeEditBioModal() {
-                document.getElementById("editBioModal").style.display = "none";
             }
 
             function openFollowingModal() {
@@ -1580,11 +1739,10 @@
             window.onclick = function(event) {
                 const modalsToCheck = [
                     "editProfileModal",
-                    "editBioModal",
                     "followingModal"
                 ];
 
-                modalsToCheck.forEach(function (id) {
+                modalsToCheck.forEach(function(id) {
                     const modal = document.getElementById(id);
                     if (event.target === modal) {
                         modal.style.display = "none";
@@ -1618,6 +1776,12 @@
                 if (activeLink) {
                     activeLink.classList.add("active");
                 }
+
+                const meta = TAB_META[tabId];
+                if (meta) {
+                    document.getElementById("pageTitle").textContent = meta.title;
+                    document.getElementById("pageSubtitle").textContent = meta.subtitle;
+                }
             }
 
             function selectTab(tabId) {
@@ -1637,7 +1801,7 @@
                 if (loginBox.classList.contains("open")) {
                     clearDeliveryPassword();
 
-                    window.setTimeout(function () {
+                    window.setTimeout(function() {
                         const passwordInput =
                             document.getElementById("DeliveryPassword");
 
@@ -1670,7 +1834,7 @@
                 if (loginBox.classList.contains("open")) {
                     clearStoreOwnerPassword();
 
-                    window.setTimeout(function () {
+                    window.setTimeout(function() {
                         const passwordInput =
                             document.getElementById("StoreOwnerPassword");
 
@@ -1690,19 +1854,12 @@
                 }
             }
 
-            document.addEventListener("DOMContentLoaded", function () {
+            document.addEventListener("DOMContentLoaded", function() {
                 clearDeliveryPassword();
                 clearStoreOwnerPassword();
-
-                const shouldOpenManagementTab =
-            @shouldOpenManagementTab.ToString().ToLowerInvariant();
-
-                if (shouldOpenManagementTab) {
-                    switchTab("settings-tab");
-                }
             });
 
-            window.addEventListener("pageshow", function () {
+            window.addEventListener("pageshow", function() {
                 clearDeliveryPassword();
                 clearStoreOwnerPassword();
             });

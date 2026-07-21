@@ -176,7 +176,14 @@ builder.Services.AddScoped<IPromotionManager, PromotionManager>();
 builder.Services.AddScoped<OtpManager>();
 builder.Services.AddScoped<EmailotppManager>();
 builder.Services.AddScoped<SmsOtpManager>();
-
+builder.Services.AddDistributedMemoryCache(); // in-memory session store
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(10);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
 
 var app = builder.Build();
 
@@ -244,6 +251,8 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseSession();
 
 app.MapRazorPages();
 app.MapControllers();

@@ -148,6 +148,25 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return defaultValue;
         }
 
+        // Picks the best product photo out of the Product.Images collection:
+        // prefers the one flagged IsPrimary, then falls back to the lowest
+        // DisplayOrder, then to any image at all. Returns null if the
+        // product has no images loaded/attached.
+        public static string? GetPrimaryProductImageUrl(Product? product)
+        {
+            if (product?.Images == null || product.Images.Count == 0)
+            {
+                return null;
+            }
+
+            var best = product.Images
+                .OrderByDescending(img => img.IsPrimary)
+                .ThenBy(img => img.DisplayOrder)
+                .FirstOrDefault(img => !string.IsNullOrWhiteSpace(img.ImageUrl));
+
+            return best?.ImageUrl;
+        }
+
         public async Task<IActionResult> OnGetAsync()
         {
             var loaded = await LoadCustomerProfileAsync();
@@ -537,6 +556,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         .ThenInclude(fs => fs.Store)
                     .Include(c => c.Wishlists)
                         .ThenInclude(w => w.Product)
+                            .ThenInclude(p => p.Images)
                     .Include(c => c.Reviews)
                         .ThenInclude(r => r.Product)
                     .FirstOrDefaultAsync(c => c.UserID == user.Id);
@@ -547,7 +567,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 {
                     customer = await _context.Customers
                         .Include("FollowedStores")
-                        .Include("Wishlists")
+                        .Include("Wishlists.Product.Images")
                         .Include("Reviews")
                         .FirstOrDefaultAsync(c => c.UserID == user.Id);
                 }

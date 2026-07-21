@@ -39,11 +39,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _storyManager = storyManager;
         }
 
-        public List<string> NavbarCategories { get; set; } = new()
-        {
-            "All","Electronics","Fashion","Home","Beauty","Food",
-            "jewelery","Sports","Books","Pets","Automotive"
-        };
+        public List<string> NavbarCategories { get; set; } = new();
 
         public string? SelectedCategory { get; set; }
         public List<Product> Products { get; set; } = new();
@@ -117,6 +113,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             ViewMode = ShowingAllProducts ? "All" : "Following";
             SelectedCategory = category;
+
+            NavbarCategories = await _context.Categories
+                .AsNoTracking()
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.DisplayOrder)
+                .ThenBy(c => c.CategoryName)
+                .Select(c => c.CategoryName)
+                .Distinct()
+                .ToListAsync();
 
             await LoadFilterOptionsAsync();
 
@@ -375,6 +380,46 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
+
+
+        // ================= ADD REVIEW =================
+        public async Task<IActionResult> OnPostAddReviewAsync(int productId, int rating, string comment)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToPage();
+
+            var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
+            if (customer == null) return RedirectToPage();
+
+            if (rating < 1 || rating > 5 || string.IsNullOrWhiteSpace(comment))
+            {
+                TempData["Error"] = "Please provide a rating between 1 and 5 and a comment.";
+                return RedirectToPage();
+            }
+
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductID == productId && p.IsActive);
+            if (product == null)
+            {
+                TempData["Error"] = "Product is not available.";
+                return RedirectToPage();
+            }
+
+            _context.Reviews.Add(new Review
+            {
+                ProductID = productId,
+                StoreID = product.StoreID,   // required FK - pulled from the product being reviewed
+                CustomerID = customer.CustomerID,
+                Rating = rating,
+                Comment = comment.Trim(),
+                Status = "Approved",          // matches your existing .Where(r => r.Status == "Approved") filter
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Thanks for your review!";
+            return RedirectToPage();
+        }
         // ================= STORY VIEWED (NEW) =================
         public async Task<IActionResult> OnPostMarkStoryViewedAsync(int storyId)
         {
