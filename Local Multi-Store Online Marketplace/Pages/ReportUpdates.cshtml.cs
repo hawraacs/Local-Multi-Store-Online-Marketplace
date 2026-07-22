@@ -11,7 +11,7 @@ using Multi_Store.Infrastructure.Data;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
-    [Authorize(Roles = "Customer,StoreOwner,DeliveryPerson")]
+    [Authorize(Roles = "Customer,StoreOwner,Delivery")]
     public class ReportUpdatesModel : PageModel
     {
         private readonly UserManager<User> _userManager;
@@ -36,7 +36,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
 
             IsStoreOwner = await _userManager.IsInRoleAsync(user, "StoreOwner");
-            IsDeliveryPerson = await _userManager.IsInRoleAsync(user, "DeliveryPerson");
+            IsDeliveryPerson = await _userManager.IsInRoleAsync(user, "Delivery");
 
             NotificationsList = await _context.Notifications
                 .Where(n => n.UserID == user.Id && (n.Type == "ReportUpdate" || n.Type == "AdminWarning"))

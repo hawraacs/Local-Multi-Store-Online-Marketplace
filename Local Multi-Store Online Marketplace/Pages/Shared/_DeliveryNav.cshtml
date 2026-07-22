@@ -179,6 +179,11 @@
             <span class="label">Chat</span>
         </a>
 
+        <a href="/ReportUpdates" class="@NavActiveClass("/ReportUpdates")">
+            <span class="bottom-icon">🔔</span>
+            <span class="label">Notifications</span>
+        </a>
+
         <a href="/DeliveryProfile" class="@NavActiveClass("/DeliveryProfile")">
             <span class="bottom-icon">👤</span>
             <span class="label">Profile</span>
@@ -197,11 +202,11 @@
 
     <!-- JavaScript for AJAX logout (same as customer version) -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const logoutForm = document.getElementById('logoutForm');
             if (!logoutForm) return;
 
-            logoutForm.addEventListener('submit', function (e) {
+            logoutForm.addEventListener('submit', function(e) {
                 e.preventDefault();
 
                 const formData = new FormData(logoutForm);
@@ -214,21 +219,21 @@
                         'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
                     }
                 })
-                .then(response => {
-                    if (response.ok) {
-                        const returnUrl = new URL(url).searchParams.get('returnUrl') || '/';
-                        window.location.href = returnUrl;
-                    } else {
-                        console.error('Logout failed:', response.statusText);
-                        // Fallback: submit the form normally
+                    .then(response => {
+                        if (response.ok) {
+                            const returnUrl = new URL(url).searchParams.get('returnUrl') || '/';
+                            window.location.href = returnUrl;
+                        } else {
+                            console.error('Logout failed:', response.statusText);
+                            // Fallback: submit the form normally
+                            // logoutForm.submit();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Network error during logout:', error);
+                        // Fallback: submit normally
                         // logoutForm.submit();
-                    }
-                })
-                .catch(error => {
-                    console.error('Network error during logout:', error);
-                    // Fallback: submit normally
-                    // logoutForm.submit();
-                });
+                    });
             });
         });
     </script>

@@ -25,6 +25,7 @@
 <style>
     /* ========== CENTERED FLOATING BAR ========== */
     nav.mobile-bottom-nav {
+        position: fixed !important;
         left: 50% !important;
         right: auto !important;
         transform: translateX(-50%) !important;
@@ -39,6 +40,7 @@
         gap: clamp(4px, 2vw, 28px) !important;
         background: #ffffff;
         padding: 8px 16px !important;
+        z-index: 999;
     }
 
     /* ========== REUSABLE NAV ITEM (matching store‑owner rail-item) ========== */
@@ -52,7 +54,7 @@
         align-items: center;
         justify-content: center;
         gap: 3px;
-        color: #7A73A0;              /* default icon colour */
+        color: #7A73A0; /* default icon colour */
         text-decoration: none;
         padding: 6px 8px;
         border: none;
@@ -63,10 +65,10 @@
         flex-shrink: 0;
     }
 
-    .mobile-bottom-nav .rail-item i {
-        font-size: 17px;
-        line-height: 1;
-    }
+        .mobile-bottom-nav .rail-item i {
+            font-size: 17px;
+            line-height: 1;
+        }
 
     .mobile-bottom-nav .rail-label {
         font-size: 9.5px;
@@ -89,13 +91,13 @@
 
     /* ---------- DANGER MODIFIER (matches store‑owner) ---------- */
     .mobile-bottom-nav .rail-item.danger {
-        color: #dc2626;              /* red */
+        color: #dc2626; /* red */
     }
 
-    .mobile-bottom-nav .rail-item.danger:hover {
-        background: #fef2f2;         /* light red */
-        color: #dc2626;
-    }
+        .mobile-bottom-nav .rail-item.danger:hover {
+            background: #fef2f2; /* light red */
+            color: #dc2626;
+        }
 
     .mobile-bottom-nav .logout-form {
         display: flex;
@@ -110,6 +112,7 @@
         position: relative;
         display: inline-flex;
     }
+
     .chat-nav-dot {
         position: absolute;
         top: -4px;
@@ -127,14 +130,17 @@
             gap: 2px;
             padding: 4px 6px !important;
         }
+
         .mobile-bottom-nav .rail-item {
             min-width: 44px;
             height: 44px;
             padding: 4px 4px;
         }
-        .mobile-bottom-nav .rail-item i {
-            font-size: 15px;
-        }
+
+            .mobile-bottom-nav .rail-item i {
+                font-size: 15px;
+            }
+
         .mobile-bottom-nav .rail-label {
             font-size: 8px;
         }
@@ -202,11 +208,11 @@
 </nav>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const logoutForm = document.getElementById('logoutForm');
         if (!logoutForm) return;
 
-        logoutForm.addEventListener('submit', function (e) {
+        logoutForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
             const formData = new FormData(logoutForm);
@@ -219,19 +225,19 @@
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
                 }
             })
-            .then(response => {
-                if (response.ok) {
-                    const returnUrl = new URL(url).searchParams.get('returnUrl') || '/';
-                    window.location.href = returnUrl;
-                } else {
-                    console.error('Logout failed:', response.statusText);
+                .then(response => {
+                    if (response.ok) {
+                        const returnUrl = new URL(url).searchParams.get('returnUrl') || '/';
+                        window.location.href = returnUrl;
+                    } else {
+                        console.error('Logout failed:', response.statusText);
+                        // Fallback (optional): logoutForm.submit();
+                    }
+                })
+                .catch(error => {
+                    console.error('Network error:', error);
                     // Fallback (optional): logoutForm.submit();
-                }
-            })
-            .catch(error => {
-                console.error('Network error:', error);
-                // Fallback (optional): logoutForm.submit();
-            });
+                });
         });
     });
 </script>
