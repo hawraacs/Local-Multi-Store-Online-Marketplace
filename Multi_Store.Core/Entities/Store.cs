@@ -90,6 +90,7 @@ namespace Multi_Store.Core.Entities
 
         public bool IsSuspended { get; set; } = false;
        
+
         // Navigation Properties
 
         public virtual User Owner { get; set; } = null!;

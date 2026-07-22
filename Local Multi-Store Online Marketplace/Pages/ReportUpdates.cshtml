@@ -2,7 +2,7 @@
 @model Local_Multi_Store_Online_Marketplace.Pages.ReportUpdatesModel
 
 @{
-    Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
+    Layout = Model.IsStoreOwner ? "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml" : null;
     var backUrl = Model.IsStoreOwner ? "/StoreOwner/Home" : "/CustomerProfile";
 }
 
@@ -135,6 +135,10 @@
                 margin: 0;
             }
 
+            .ig-notif-row-wrap {
+                position: relative;
+            }
+
             .ig-notif-row {
                 width: 100%;
                 display: flex;
@@ -143,26 +147,53 @@
                 background: none;
                 border: none;
                 border-bottom: 1px solid var(--border-color);
-                padding: 20px;
+                padding: 20px 56px 20px 20px;
                 cursor: pointer;
                 text-align: left;
                 transition: var(--transition);
                 border-radius: 12px;
             }
 
-                .ig-notif-row:last-child {
-                    border-bottom: none;
+            .ig-notif-delete-form {
+                margin: 0;
+                position: absolute;
+                top: 14px;
+                right: 14px;
+                z-index: 2;
+            }
+
+            .ig-notif-remove-btn {
+                width: 34px;
+                height: 34px;
+                border: none;
+                border-radius: 10px;
+                background: transparent;
+                color: var(--text-muted);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: var(--transition);
+            }
+
+                .ig-notif-remove-btn:hover {
+                    background: #fef2f2;
+                    color: #dc2626;
                 }
 
-                .ig-notif-row:hover {
-                    background-color: var(--accent-light);
-                    transform: translateX(4px);
-                }
+            .ig-notif-row:last-child {
+                border-bottom: none;
+            }
 
-                .ig-notif-row.unread {
-                    background-color: #fdfcff;
-                    border-left: 4px solid var(--accent-color);
-                }
+            .ig-notif-row:hover {
+                background-color: var(--accent-light);
+                transform: translateX(4px);
+            }
+
+            .ig-notif-row.unread {
+                background-color: #fdfcff;
+                border-left: 4px solid var(--accent-color);
+            }
 
             .ig-notif-icon {
                 width: 48px;
@@ -267,7 +298,14 @@
 
     @if (!Model.IsStoreOwner)
     {
-        <partial name="_CustomerBottomNav" />
+        if (Model.IsDeliveryPerson)
+        {
+            <partial name="_DeliveryNav" />
+        }
+        else
+        {
+            <partial name="_CustomerBottomNav" />
+        }
     }
 
     <div class="page-container">
@@ -289,28 +327,36 @@
                 <div class="ig-notif-list">
                     @foreach (var n in Model.NotificationsList)
                     {
-                        <form method="post" asp-page-handler="OpenNotification" class="ig-notif-form">
-                            <input type="hidden" name="notificationId" value="@n.NotificationID" />
-                            <button type="submit" class="ig-notif-row @(n.IsRead ? "" : "unread")">
-                                <div class="ig-notif-icon">
-                                    <i class="fas fa-flag"></i>
-                                </div>
-                                <div class="ig-notif-body">
-                                    <div class="ig-notif-text">
-                                        <strong>@n.Title</strong>
-                                        <span>@n.Message</span>
+                        <div class="ig-notif-row-wrap">
+                            <form method="post" asp-page-handler="OpenNotification" class="ig-notif-form">
+                                <input type="hidden" name="notificationId" value="@n.NotificationID" />
+                                <button type="submit" class="ig-notif-row @(n.IsRead ? "" : "unread")">
+                                    <div class="ig-notif-icon">
+                                        <i class="fas fa-flag"></i>
                                     </div>
-                                    <div class="ig-notif-time">
-                                        <i class="far fa-clock"></i>
-                                        @n.SentAt.ToString("MMM d, yyyy 'at' h:mm tt")
+                                    <div class="ig-notif-body">
+                                        <div class="ig-notif-text">
+                                            <strong>@n.Title</strong>
+                                            <span>@n.Message</span>
+                                        </div>
+                                        <div class="ig-notif-time">
+                                            <i class="far fa-clock"></i>
+                                            @n.SentAt.ToString("MMM d, yyyy 'at' h:mm tt")
+                                        </div>
                                     </div>
-                                </div>
-                                @if (!n.IsRead)
-                                {
-                                    <span class="ig-notif-dot"></span>
-                                }
-                            </button>
-                        </form>
+                                    @if (!n.IsRead)
+                                    {
+                                        <span class="ig-notif-dot"></span>
+                                    }
+                                </button>
+                            </form>
+                            <form method="post" asp-page-handler="DeleteNotification" class="ig-notif-delete-form">
+                                <input type="hidden" name="notificationId" value="@n.NotificationID" />
+                                <button type="submit" class="ig-notif-remove-btn" title="Remove notification">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     }
                 </div>
             }

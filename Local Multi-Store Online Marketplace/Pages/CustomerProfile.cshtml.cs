@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services.Dtos;
+using Multi_Store.Services.Managers;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
@@ -19,15 +20,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly ApplicationDbContext _context;
+        private readonly WishlistManager _wishlistManager;
+
 
         public CustomerProfileModel(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            WishlistManager wishlistManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
+            _wishlistManager = wishlistManager;
         }
 
         [BindProperty]
@@ -520,6 +525,31 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             return RedirectToPage();
         }
+        public async Task<IActionResult> OnPostToggleWishlistAsync(int productId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+                return RedirectToPage();
+
+            if (await _wishlistManager.IsInWishlistAsync(customer.CustomerID, productId))
+            {
+                await _wishlistManager.RemoveFromWishlistAsync(customer.CustomerID, productId);
+            }
+            else
+            {
+                await _wishlistManager.AddToWishlistAsync(customer.CustomerID, productId);
+            }
+
+            return RedirectToPage();
+        }
+
 
         private async Task<bool> LoadCustomerProfileAsync()
         {

@@ -15,13 +15,13 @@ namespace Multi_Store.Services.Managers
         private readonly INotificationRepository _notificationRepository;
         private readonly UserManager<User> _userManager;   // ADD THIS
 
-         public NotificationManager(
-        INotificationRepository notificationRepository,
-        UserManager<User> userManager)                 // ADD THIS
-    {
-        _notificationRepository = notificationRepository;
-        _userManager = userManager;                    // ADD THIS
-    }
+        public NotificationManager(
+       INotificationRepository notificationRepository,
+       UserManager<User> userManager)                 // ADD THIS
+        {
+            _notificationRepository = notificationRepository;
+            _userManager = userManager;                    // ADD THIS
+        }
 
         private NotificationDTO ToDTO(Notification n)
         {
@@ -65,6 +65,7 @@ namespace Multi_Store.Services.Managers
 
             return ToDTO(notification);
         }
+
         // SEND TO ALL ADMINS
         public async Task SendToAllAdminsAsync(
             string title,

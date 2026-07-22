@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
+
 namespace Multi_Store.Infrastructure.Data
 {
     public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, int>
@@ -10,10 +11,13 @@ namespace Multi_Store.Infrastructure.Data
             : base(options)
         {
         }
+
         public ApplicationDbContext()
         {
         }
+
         // ================= DbSets =================
+
         public DbSet<Report> Reports => Set<Report>();
         public DbSet<BlockRelation> BlockRelations { get; set; }
         public DbSet<ProductHide> ProductHides { get; set; }
@@ -59,9 +63,11 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<Story> Stories { get; set; }
         public DbSet<StoryView> StoryViews { get; set; }
         public DbSet<StoryLike> StoryLikes { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
             // ================= STORIES ================= 
             // New, additive block - same style as the StorePayment block below it.
             // One-directional relationship: Store.cs is left untouched (no ICollection<Story>
@@ -69,78 +75,100 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<Story>(entity =>
             {
                 entity.HasKey(e => e.StoryID);
+
                 entity.Property(e => e.ImageUrl)
                       .HasMaxLength(500);
+
                 entity.Property(e => e.MediaType)
                       .IsRequired()
                       .HasMaxLength(10)
                       .HasDefaultValue("Image");
+
                 entity.Property(e => e.VideoUrl)
                       .HasMaxLength(500);
+
                 entity.Property(e => e.Caption)
                       .HasMaxLength(300);
+
                 entity.HasOne(e => e.Store)
                       .WithMany()
                       .HasForeignKey(e => e.StoreID)
                       .OnDelete(DeleteBehavior.Cascade);
+
                 entity.HasIndex(e => new { e.StoreID, e.ExpiresAt, e.IsActive });
             });
+
             // ================= STORY VIEWS ================= 
             // New, additive block. Tracks which customer has seen which story
             // (DB-backed viewed state, not JavaScript-only).
             modelBuilder.Entity<StoryView>(entity =>
             {
                 entity.HasKey(e => e.StoryViewID);
+
                 entity.HasOne(e => e.Story)
                       .WithMany()
                       .HasForeignKey(e => e.StoryID)
                       .OnDelete(DeleteBehavior.Cascade);
+
                 entity.HasOne(e => e.Customer)
                       .WithMany()
                       .HasForeignKey(e => e.CustomerID)
                       .OnDelete(DeleteBehavior.Restrict);
+
                 entity.HasIndex(e => new { e.StoryID, e.CustomerID }).IsUnique();
             });
+
             // ================= PRODUCT BOOSTS =================
             // New, additive block - same pattern as StorePayment above.
             modelBuilder.Entity<ProductBoost>(entity =>
             {
                 entity.HasKey(e => e.ProductBoostID);
+
                 entity.Property(e => e.Status)
                       .IsRequired()
                       .HasMaxLength(20)
                       .HasDefaultValue("PendingPayment");
+
                 entity.Property(e => e.AmountPaid).HasPrecision(18, 2);
+
                 entity.HasOne(e => e.Product)
                       .WithMany(p => p.Boosts)
                       .HasForeignKey(e => e.ProductID)
                       .OnDelete(DeleteBehavior.Cascade);
+
                 entity.HasOne(e => e.Store)
                       .WithMany(s => s.ProductBoosts)
                       .HasForeignKey(e => e.StoreID)
                       .OnDelete(DeleteBehavior.Restrict);
+
                 entity.HasOne(e => e.StorePayment)
                       .WithMany()
                       .HasForeignKey(e => e.StorePaymentId)
                       .OnDelete(DeleteBehavior.SetNull);
+
                 entity.HasIndex(e => new { e.Status, e.EndDate });
                 entity.HasIndex(e => new { e.ProductID, e.Status });
             });
+
             // ================= STORY LIKES ================= 
             // New, additive block. Same shape/pattern as STORY VIEWS above.
             modelBuilder.Entity<StoryLike>(entity =>
             {
                 entity.HasKey(e => e.StoryLikeID);
+
                 entity.HasOne(e => e.Story)
                       .WithMany()
                       .HasForeignKey(e => e.StoryID)
                       .OnDelete(DeleteBehavior.Cascade);
+
                 entity.HasOne(e => e.Customer)
                       .WithMany()
                       .HasForeignKey(e => e.CustomerID)
                       .OnDelete(DeleteBehavior.Restrict);
+
                 entity.HasIndex(e => new { e.StoryID, e.CustomerID }).IsUnique();
             });
+
             modelBuilder.Entity<StorePayment>(entity =>
             {
                 entity.HasKey(e => e.StorePaymentId);
@@ -151,6 +179,7 @@ namespace Multi_Store.Infrastructure.Data
                       .HasForeignKey(e => e.StoreId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+
             // ================= KEYS =================
             modelBuilder.Entity<AuditLog>().HasKey(e => e.AuditLogID);
             modelBuilder.Entity<Cart>().HasKey(e => e.CartID);
@@ -164,19 +193,23 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<DeliveryArea>().HasKey(e => e.DeliveryAreaID);
             modelBuilder.Entity<DeliveryAssignment>().HasKey(e => e.AssignmentID);
             modelBuilder.Entity<DeliveryPaymentCollection>().HasKey(e => e.CollectionID);
+
             modelBuilder.Entity<DeliveryPaymentCollection>()
                 .Property(e => e.CollectedAmount)
                 .HasPrecision(18, 2);
+
             modelBuilder.Entity<DeliveryPaymentCollection>()
                 .HasOne(e => e.Order)
                 .WithMany()
                 .HasForeignKey(e => e.OrderID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<DeliveryPaymentCollection>()
                 .HasOne(e => e.DeliveryPerson)
                 .WithMany()
                 .HasForeignKey(e => e.DeliveryPersonID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<DeliveryPaymentCollection>()
                 .HasIndex(e => e.OrderID)
                 .IsUnique();
@@ -198,6 +231,7 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<ExploreMedia>().HasKey(e => e.ExploreMediaID);
             modelBuilder.Entity<ExploreLike>().HasKey(e => e.ExploreLikeID);
             modelBuilder.Entity<ExploreComment>().HasKey(e => e.ExploreCommentID);
+
             // ================= INDEXES =================
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
             modelBuilder.Entity<Store>().HasIndex(s => s.StoreCode).IsUnique();
@@ -216,12 +250,14 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<ExploreMedia>().HasIndex(e => new { e.ExplorePostID, e.DisplayOrder });
             modelBuilder.Entity<ExploreLike>().HasIndex(e => new { e.ExplorePostID, e.CustomerID }).IsUnique();
             modelBuilder.Entity<ExploreComment>().HasIndex(e => new { e.ExplorePostID, e.CreatedAt });
+
             // ================= RELATIONSHIPS =================
             modelBuilder.Entity<Customer>()
                 .HasOne(c => c.User)
                 .WithOne(u => u.Customer)
                 .HasForeignKey<Customer>(c => c.UserID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Store>()
                 .HasOne(s => s.Owner)
                 .WithOne(u => u.Store)
@@ -232,6 +268,7 @@ namespace Multi_Store.Infrastructure.Data
     .WithMany()
     .HasForeignKey(s => s.RequestedByUserID)
     .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<DeliveryPerson>()
                 .HasOne(d => d.User)
                 .WithOne(u => u.DeliveryPerson)
@@ -247,26 +284,31 @@ namespace Multi_Store.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(c => c.DefaultAddressID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.OrderItem)
                 .WithOne(oi => oi.Review)
                 .HasForeignKey<Review>(r => r.OrderItemID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<CustomerAddress>()
                 .HasOne(ca => ca.Customer)
                 .WithMany(c => c.Addresses)
                 .HasForeignKey(ca => ca.CustomerID)
                 .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<Wishlist>()
                 .HasOne(w => w.Customer)
                 .WithMany(c => c.Wishlists)
                 .HasForeignKey(w => w.CustomerID)
                 .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.Customer)
                 .WithMany(c => c.Orders)
                 .HasForeignKey(o => o.CustomerID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.Customer)
                 .WithMany(c => c.Reviews)
@@ -277,86 +319,103 @@ namespace Multi_Store.Infrastructure.Data
                 .WithMany(p => p.Reviews)
                 .HasForeignKey(r => r.ProductID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Complaint>()
                 .HasOne(c => c.Customer)
                 .WithMany(cu => cu.Complaints)
                 .HasForeignKey(c => c.CustomerID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.Store)
                 .WithMany(s => s.Products)
                 .HasForeignKey(p => p.StoreID)
                 .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.Category)
                 .WithMany(c => c.Products)
                 .HasForeignKey(p => p.CategoryID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<ProductImage>()
                 .HasOne(pi => pi.Product)
                 .WithMany(p => p.Images)
                 .HasForeignKey(pi => pi.ProductID)
                 .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<CartItem>()
                 .HasOne(ci => ci.Cart)
                 .WithMany(c => c.CartItems)
                 .HasForeignKey(ci => ci.CartID)
                 .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<CartItem>()
                 .HasOne(ci => ci.Product)
                 .WithMany(p => p.CartItems)
                 .HasForeignKey(ci => ci.ProductID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Order)
                 .WithMany(o => o.OrderItems)
                 .HasForeignKey(oi => oi.OrderID)
                 .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Product)
                 .WithMany(p => p.OrderItems)
                 .HasForeignKey(oi => oi.ProductID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Payment>()
                 .HasOne(p => p.Order)
                 .WithMany(o => o.Payments)
                 .HasForeignKey(p => p.OrderID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<RefundRequest>()
                 .HasOne(r => r.Order)
                 .WithOne(o => o.RefundRequest)
                 .HasForeignKey<RefundRequest>(r => r.OrderID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<DeliveryAssignment>()
                 .HasOne(d => d.Order)
                 .WithOne(o => o.DeliveryAssignment)
                 .HasForeignKey<DeliveryAssignment>(d => d.OrderID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<DeliveryAssignment>()
                 .HasOne(d => d.DeliveryPerson)
                 .WithMany(dp => dp.Assignments)
                 .HasForeignKey(d => d.DeliveryPersonID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<AuditLog>()
                 .HasOne(a => a.User)
                 .WithMany(u => u.AuditLogs)
                 .HasForeignKey(a => a.UserID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.User)
                 .WithMany(u => u.Notifications)
                 .HasForeignKey(n => n.UserID)
                 .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<ChatMessage>()
                 .HasOne(cm => cm.Sender)
                 .WithMany(u => u.SentMessages)
                 .HasForeignKey(cm => cm.SenderID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<ChatMessage>()
                 .HasOne(cm => cm.Receiver)
                 .WithMany(u => u.ReceivedMessages)
                 .HasForeignKey(cm => cm.ReceiverID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             // Changed from SetNull -> Restrict to avoid multiple-cascade-path conflict
             // (SQL Server error 1785) with Store -> Product -> ChatMessages.
             modelBuilder.Entity<ChatMessage>()
@@ -364,6 +423,7 @@ namespace Multi_Store.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(cm => cm.ProductID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             // NEW - additive. Nullable FK. Changed from SetNull -> Restrict to avoid a
             // multiple-cascade-path conflict with ChatMessages -> Product -> Store
             // (SQL Server error 1785: introducing FK may cause cycles/multiple cascade paths).
@@ -374,54 +434,71 @@ namespace Multi_Store.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(cm => cm.StoryID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<PasswordResetOtp>(entity =>
             {
                 entity.HasKey(x => x.PasswordResetOtpID);
+
                 entity.Property(x => x.DeliveryMethod)
                     .IsRequired()
                     .HasMaxLength(20);
+
                 entity.Property(x => x.Target)
                     .IsRequired()
                     .HasMaxLength(256);
+
                 entity.Property(x => x.OtpHash)
                     .IsRequired();
+
                 entity.HasOne(x => x.User)
                     .WithMany()
                     .HasForeignKey(x => x.UserID)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+
             modelBuilder.Entity<Promotion>()
     .HasKey(p => p.PromotionID);
+
             modelBuilder.Entity<Promotion>()
                 .HasOne(p => p.Store)
                 .WithMany()
                 .HasForeignKey(p => p.StoreID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<PromotionRecipient>()
                 .HasKey(pr => pr.PromotionRecipientID);
+
             modelBuilder.Entity<PromotionRecipient>()
                 .HasOne(pr => pr.Promotion)
                 .WithMany(p => p.PromotionRecipients)
                 .HasForeignKey(pr => pr.PromotionID)
                 .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<PromotionRecipient>()
                 .HasOne(pr => pr.Customer)
                 .WithMany()
                 .HasForeignKey(pr => pr.CustomerID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             // ================= RECENTLY VIEWED PRODUCTS =================
             modelBuilder.Entity<RecentlyViewedProduct>(entity =>
             {
                 entity.ToTable("RecentlyViewedProducts");
+
                 entity.HasKey(rv => rv.Id);
+
                 entity.Property(rv => rv.Id)
                     .HasColumnName("ID");
+
                 entity.Property(rv => rv.CustomerID)
                     .HasColumnName("CustomerId");
+
                 entity.Property(rv => rv.ProductID)
                     .HasColumnName("ProductID");
+
                 entity.Property(rv => rv.ViewedAt)
                     .HasColumnName("ViewedAt");
+
                 entity.HasIndex(rv => new { rv.CustomerID, rv.ProductID })
                     .IsUnique();
             });
@@ -430,25 +507,33 @@ namespace Multi_Store.Infrastructure.Data
                 .WithMany(p => p.RecentlyViewedProducts)
                 .HasForeignKey(rv => rv.ProductID)
                 .OnDelete(DeleteBehavior.Cascade);
+
             // ================= CONFIG =================
             modelBuilder.Entity<Product>().Ignore(p => p.IsOutOfStock);
+
             modelBuilder.Entity<Order>()
                 .Property(o => o.OrderDate)
                 .HasDefaultValueSql("GETUTCDATE()");
+
             modelBuilder.Entity<User>()
                 .Property(u => u.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
+
             modelBuilder.Entity<Store>()
                 .Property(s => s.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
+
             modelBuilder.Entity<Cart>()
                 .Property(c => c.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
+
             modelBuilder.Entity<Cart>()
                 .Property(c => c.UpdatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
+
             modelBuilder.Entity<Review>()
                 .ToTable(t => t.HasCheckConstraint("CK_Review_Rating", "Rating >= 1 AND Rating <= 5"));
+
             // ================= PRECISION =================
             modelBuilder.Entity<Store>().Property(s => s.CommissionRate).HasPrecision(18, 2);
             modelBuilder.Entity<Store>().Property(s => s.Rating).HasPrecision(18, 2);
@@ -456,78 +541,97 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<Store>().Property(s => s.Latitude).HasPrecision(18, 6);
             modelBuilder.Entity<Store>().Property(s => s.Longitude).HasPrecision(18, 6);
             modelBuilder.Entity<Store>().Property(s => s.OutstandingBalance).HasPrecision(18, 2);
+
             modelBuilder.Entity<Product>().Property(p => p.Price).HasPrecision(18, 2);
             modelBuilder.Entity<Product>().Property(p => p.CompareAtPrice).HasPrecision(18, 2);
             modelBuilder.Entity<Product>().Property(p => p.Rating).HasPrecision(18, 2);
             modelBuilder.Entity<Product>().Property(p => p.Weight).HasPrecision(18, 2);
+
             modelBuilder.Entity<Order>().Property(o => o.Subtotal).HasPrecision(18, 2);
             modelBuilder.Entity<Order>().Property(o => o.DeliveryFee).HasPrecision(18, 2);
             modelBuilder.Entity<Order>().Property(o => o.DiscountAmount).HasPrecision(18, 2);
             modelBuilder.Entity<Order>().Property(o => o.TaxAmount).HasPrecision(18, 2);
             modelBuilder.Entity<Order>().Property(o => o.TotalAmount).HasPrecision(18, 2);
+
             modelBuilder.Entity<CartItem>().Property(ci => ci.PriceAtAddTime).HasPrecision(18, 2);
+
             modelBuilder.Entity<OrderItem>().Property(oi => oi.ProductPrice).HasPrecision(18, 2);
             modelBuilder.Entity<OrderItem>().Property(oi => oi.TotalPrice).HasPrecision(18, 2);
+
             modelBuilder.Entity<Payment>().Property(p => p.Amount).HasPrecision(18, 2);
             modelBuilder.Entity<Payment>().Property(p => p.RefundAmount).HasPrecision(18, 2);
+
             modelBuilder.Entity<RefundRequest>().Property(r => r.RequestedAmount).HasPrecision(18, 2);
             modelBuilder.Entity<RefundRequest>().Property(r => r.ApprovedAmount).HasPrecision(18, 2);
             // ================= EXPLORE CONFIGURATION =================
+
             modelBuilder.Entity<ExplorePost>(entity =>
             {
                 entity.Property(e => e.PostType)
                     .IsRequired()
                     .HasMaxLength(20);
+
                 entity.Property(e => e.Caption)
                     .HasMaxLength(2200);
             });
+
             modelBuilder.Entity<ExploreMedia>(entity =>
             {
                 entity.Property(e => e.MediaType)
                     .IsRequired()
                     .HasMaxLength(20);
+
                 entity.Property(e => e.MediaUrl)
                     .IsRequired()
                     .HasMaxLength(2048);
+
                 entity.Property(e => e.ThumbnailUrl)
                     .HasMaxLength(2048);
             });
+
             modelBuilder.Entity<ExploreComment>(entity =>
             {
                 entity.Property(e => e.CommentText)
                     .IsRequired()
                     .HasMaxLength(1000);
             });
+
             modelBuilder.Entity<ExplorePost>()
                 .HasOne(e => e.Store)
                 .WithMany(s => s.ExplorePosts)
                 .HasForeignKey(e => e.StoreID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<ExplorePost>()
                 .HasOne(e => e.Product)
                 .WithMany(p => p.ExplorePosts)
                 .HasForeignKey(e => e.ProductID)
                 .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<ExploreMedia>()
                 .HasOne(e => e.ExplorePost)
                 .WithMany(p => p.Media)
                 .HasForeignKey(e => e.ExplorePostID)
                 .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<ExploreLike>()
                 .HasOne(e => e.ExplorePost)
                 .WithMany(p => p.Likes)
                 .HasForeignKey(e => e.ExplorePostID)
                 .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<ExploreLike>()
                 .HasOne(e => e.Customer)
                 .WithMany(c => c.ExploreLikes)
                 .HasForeignKey(e => e.CustomerID)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<ExploreComment>()
                 .HasOne(e => e.ExplorePost)
                 .WithMany(p => p.Comments)
                 .HasForeignKey(e => e.ExplorePostID)
                 .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<ExploreComment>()
                 .HasOne(e => e.Customer)
                 .WithMany(c => c.ExploreComments)
