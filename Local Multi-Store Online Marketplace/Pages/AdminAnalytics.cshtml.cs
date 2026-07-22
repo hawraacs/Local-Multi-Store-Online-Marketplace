@@ -29,10 +29,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public int TotalCustomers { get; set; }
         public int ActiveStores { get; set; }
         public int ActiveSubscriptions { get; set; }
+        public decimal BoostRevenueInRange { get; set; }   // ADD THIS
 
         // ── Revenue Breakdown ──
         public decimal CommissionRevenue { get; set; }
         public decimal SubscriptionRevenue { get; set; }
+        public decimal BoostRevenue { get; set; }   // ADD THIS (mirrors CommissionRevenue/SubscriptionRevenue, last-30-days)
 
         // ── Monthly Growth Comparison ──
         public decimal RevenuePrevious { get; set; }
@@ -41,6 +43,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public int NewStoresPrevious { get; set; }
         public int NewCustomersCurrent { get; set; }
         public int NewCustomersPrevious { get; set; }
+        public decimal BoostRevenuePrevious { get; set; }   // ADD THIS
 
         // ── Charts ──
         public List<string> MonthlyRevenueLabels { get; set; } = new();
@@ -85,13 +88,32 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .ToListAsync();
 
             // ── Revenue & Orders ──
-            RevenueInRange = currentOrders
+            var commissionInRange = currentOrders
                 .SelectMany(o => o.OrderItems)
                 .Sum(oi => oi.TotalPrice * oi.Store.CommissionRate / 100m);
 
-            RevenuePrevious = prevOrders
+            var commissionPrevious = prevOrders
                 .SelectMany(o => o.OrderItems)
                 .Sum(oi => oi.TotalPrice * oi.Store.CommissionRate / 100m);
+
+            // Boost revenue for current vs previous 30-day windows (NEW)
+            // Booked the same way as AdminRevenue/AdminBoosts/Admin1: counted once
+            // paid for (Active or Expired), using CreatedAt as the booking date.
+            BoostRevenueInRange = await _context.ProductBoosts
+                .Where(b => (b.Status == "Active" || b.Status == "Expired")
+                            && b.CreatedAt >= rangeStart)
+                .SumAsync(b => (decimal?)b.AmountPaid) ?? 0m;
+
+            BoostRevenuePrevious = await _context.ProductBoosts
+                .Where(b => (b.Status == "Active" || b.Status == "Expired")
+                            && b.CreatedAt >= prevStart && b.CreatedAt < rangeStart)
+                .SumAsync(b => (decimal?)b.AmountPaid) ?? 0m;
+
+            // RevenueInRange / RevenuePrevious now represent TOTAL platform revenue
+            // (commission + boosts) for the KPI card + growth %, matching the dashboard's
+            // TotalPlatformRevenue definition elsewhere in the app.
+            RevenueInRange = commissionInRange + BoostRevenueInRange;
+            RevenuePrevious = commissionPrevious + BoostRevenuePrevious;
 
             RevenueGrowth = RevenuePrevious > 0
                 ? ((RevenueInRange - RevenuePrevious) / RevenuePrevious) * 100
@@ -104,12 +126,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 ? currentOrders.Sum(o => o.TotalAmount) / OrdersInRange
                 : 0;
 
-            // ── Commission vs Subscription Revenue (last 30 days) ──
-            CommissionRevenue = RevenueInRange; // same as total commission from current orders
+            // ── Commission vs Subscription vs Boost Revenue (last 30 days) ──
+            CommissionRevenue = commissionInRange;
 
             SubscriptionRevenue = await _context.SubscriptionPayments
                 .Where(p => p.PaymentDate >= rangeStart)
                 .SumAsync(p => p.Amount);
+
+            BoostRevenue = BoostRevenueInRange;   // ADD THIS — feeds the pie chart
 
             // ── Customers ──
             TotalCustomers = await _context.Customers.CountAsync();
@@ -175,7 +199,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     .Where(p => p.PaymentDate >= monthStart && p.PaymentDate < monthEnd)
                     .SumAsync(p => p.Amount);
 
-                MonthlyRevenueData.Add(monthlyCommission + monthlySubscriptions);
+                // Monthly boost revenue (NEW)
+                var monthlyBoosts = await _context.ProductBoosts
+                    .Where(b => (b.Status == "Active" || b.Status == "Expired")
+                                && b.CreatedAt >= monthStart && b.CreatedAt < monthEnd)
+                    .SumAsync(b => (decimal?)b.AmountPaid) ?? 0m;
+
+                MonthlyRevenueData.Add(monthlyCommission + monthlySubscriptions + monthlyBoosts);   // CHANGED
             }
 
             // ── Monthly Orders ──

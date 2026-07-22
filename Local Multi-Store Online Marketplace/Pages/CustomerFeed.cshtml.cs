@@ -20,6 +20,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly WishlistManager _wishlistManager;
         private readonly ApplicationDbContext _context;
         private readonly StoryManager _storyManager;
+        private readonly BoostManager _boostManager;   // ADD THIS
 
         public CustomerFeedModel(
             StoreManager storeManager,
@@ -28,7 +29,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             MessagingManager messagingManager,
             WishlistManager wishlistManager,
             ApplicationDbContext context,
-            StoryManager storyManager)
+            StoryManager storyManager,
+            BoostManager boostManager)                  // ADD THIS
         {
             _storeManager = storeManager;
             _userManager = userManager;
@@ -37,6 +39,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _wishlistManager = wishlistManager;
             _context = context;
             _storyManager = storyManager;
+            _boostManager = boostManager;                // ADD THIS
         }
 
         public List<string> NavbarCategories { get; set; } = new();
@@ -47,6 +50,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public List<FeedCategoryFilterViewModel> FilterCategories { get; set; } = new();
         public List<FeedStoreFilterViewModel> FilterStores { get; set; } = new();
         public List<string> FilterAreas { get; set; } = new();
+
+        // NEW — active-boosted product IDs, used by the view to show the "Boosted" badge
+        public HashSet<int> BoostedProductIds { get; set; } = new();
 
         // New: story circles for the top of the Feed - only from stores this customer follows
         public List<StoryGroupDTO> FollowedStoryGroups { get; set; } = new();
@@ -195,10 +201,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (MaxPrice.HasValue)
                 query = query.Where(p => p.Price <= MaxPrice.Value);
 
-            Products = await query
-                .OrderByDescending(p => p.CreatedAt)
+            // NEW — expire any due boosts, then fetch active boosted product IDs
+            await _boostManager.ExpireDueBoostsAsync();
+            BoostedProductIds = await _boostManager.GetActiveBoostedProductIdsAsync();
+
+            var unordered = await query.ToListAsync();
+
+            // NEW — boosted products first, then newest first (same as before)
+            Products = unordered
+                .OrderByDescending(p => BoostedProductIds.Contains(p.ProductID))
+                .ThenByDescending(p => p.CreatedAt)
                 .ThenByDescending(p => p.ProductID)
-                .ToListAsync();
+                .ToList();
         }
 
         private async Task LoadFilterOptionsAsync()
@@ -379,8 +393,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             TempData["Success"] = "Report submitted. Our team will review it.";
             return RedirectToPage();
         }
-
-
 
         // ================= ADD REVIEW =================
         public async Task<IActionResult> OnPostAddReviewAsync(int productId, int rating, string comment)

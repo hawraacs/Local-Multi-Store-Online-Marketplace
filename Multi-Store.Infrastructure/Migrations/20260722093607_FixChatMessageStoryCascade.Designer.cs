@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Multi_Store.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Multi_Store.Infrastructure.Data;
 namespace Multi_Store.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260722093607_FixChatMessageStoryCascade")]
+    partial class FixChatMessageStoryCascade
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,7 +202,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("AuditLogs", (string)null);
+                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.BlockRelation", b =>
@@ -229,7 +232,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("BlockRelations", (string)null);
+                    b.ToTable("BlockRelations");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Cart", b =>
@@ -263,7 +266,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("CustomerID");
 
-                    b.ToTable("Carts", (string)null);
+                    b.ToTable("Carts");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.CartItem", b =>
@@ -296,7 +299,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("ProductID");
 
-                    b.ToTable("CartItems", (string)null);
+                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Category", b =>
@@ -337,7 +340,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("ParentCategoryID");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.ChatMessage", b =>
@@ -388,7 +391,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoryID");
 
-                    b.ToTable("ChatMessages", (string)null);
+                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Complaint", b =>
@@ -448,7 +451,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoreID");
 
-                    b.ToTable("Complaints", (string)null);
+                    b.ToTable("Complaints");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Coupon", b =>
@@ -504,7 +507,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoreID");
 
-                    b.ToTable("Coupons", (string)null);
+                    b.ToTable("Coupons");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Customer", b =>
@@ -546,7 +549,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("UserID")
                         .IsUnique();
 
-                    b.ToTable("Customers", (string)null);
+                    b.ToTable("Customers");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.CustomerAddress", b =>
@@ -594,7 +597,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("CustomerID");
 
-                    b.ToTable("CustomerAddresses", (string)null);
+                    b.ToTable("CustomerAddresses");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.DeliveryArea", b =>
@@ -638,7 +641,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoreID");
 
-                    b.ToTable("DeliveryAreas", (string)null);
+                    b.ToTable("DeliveryAreas");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.DeliveryAssignment", b =>
@@ -678,7 +681,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("OrderID")
                         .IsUnique();
 
-                    b.ToTable("DeliveryAssignments", (string)null);
+                    b.ToTable("DeliveryAssignments");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.DeliveryPaymentCollection", b =>
@@ -712,7 +715,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("OrderID")
                         .IsUnique();
 
-                    b.ToTable("DeliveryPaymentCollections", (string)null);
+                    b.ToTable("DeliveryPaymentCollections");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.DeliveryPerson", b =>
@@ -788,7 +791,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("UserID")
                         .IsUnique();
 
-                    b.ToTable("DeliveryPersons", (string)null);
+                    b.ToTable("DeliveryPersons");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.ExploreComment", b =>
@@ -825,7 +828,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("ExplorePostID", "CreatedAt");
 
-                    b.ToTable("ExploreComments", (string)null);
+                    b.ToTable("ExploreComments");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.ExploreLike", b =>
@@ -852,7 +855,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("ExplorePostID", "CustomerID")
                         .IsUnique();
 
-                    b.ToTable("ExploreLikes", (string)null);
+                    b.ToTable("ExploreLikes");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.ExploreMedia", b =>
@@ -890,7 +893,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("ExplorePostID", "DisplayOrder");
 
-                    b.ToTable("ExploreMedia", (string)null);
+                    b.ToTable("ExploreMedia");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.ExplorePost", b =>
@@ -940,7 +943,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoreID", "CreatedAt");
 
-                    b.ToTable("ExplorePosts", (string)null);
+                    b.ToTable("ExplorePosts");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Notification", b =>
@@ -983,7 +986,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Order", b =>
@@ -1059,7 +1062,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("OrderNumber")
                         .IsUnique();
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.OrderItem", b =>
@@ -1105,7 +1108,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoreID");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.OrderStatusHistory", b =>
@@ -1141,7 +1144,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("OrderID");
 
-                    b.ToTable("OrderStatusHistories", (string)null);
+                    b.ToTable("OrderStatusHistories");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.OtpCode", b =>
@@ -1192,7 +1195,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("OtpCodes", (string)null);
+                    b.ToTable("OtpCodes");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.PasswordResetOtp", b =>
@@ -1236,7 +1239,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("PasswordResetOtps", (string)null);
+                    b.ToTable("PasswordResetOtps");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Payment", b =>
@@ -1283,7 +1286,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("OrderID");
 
-                    b.ToTable("Payments", (string)null);
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Product", b =>
@@ -1355,7 +1358,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoreID");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.ProductBoost", b =>
@@ -1411,7 +1414,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("Status", "EndDate");
 
-                    b.ToTable("ProductBoosts", (string)null);
+                    b.ToTable("ProductBoosts");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.ProductHide", b =>
@@ -1433,7 +1436,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProductHides", (string)null);
+                    b.ToTable("ProductHides");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.ProductImage", b =>
@@ -1462,7 +1465,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("ProductID");
 
-                    b.ToTable("ProductImages", (string)null);
+                    b.ToTable("ProductImages");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Promotion", b =>
@@ -1519,7 +1522,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoreID");
 
-                    b.ToTable("Promotions", (string)null);
+                    b.ToTable("Promotions");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.PromotionRecipient", b =>
@@ -1548,7 +1551,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("PromotionID");
 
-                    b.ToTable("PromotionRecipients", (string)null);
+                    b.ToTable("PromotionRecipients");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.RecentlyViewedProduct", b =>
@@ -1634,7 +1637,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("OrderID")
                         .IsUnique();
 
-                    b.ToTable("RefundRequests", (string)null);
+                    b.ToTable("RefundRequests");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Report", b =>
@@ -1684,7 +1687,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("ReporterStoreID");
 
-                    b.ToTable("Reports", (string)null);
+                    b.ToTable("Reports");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Review", b =>
@@ -1738,7 +1741,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoreID");
 
-                    b.ToTable("Reviews", null, t =>
+                    b.ToTable("Reviews", t =>
                         {
                             t.HasCheckConstraint("CK_Review_Rating", "Rating >= 1 AND Rating <= 5");
                         });
@@ -1780,7 +1783,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("Sessions", (string)null);
+                    b.ToTable("Sessions");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Store", b =>
@@ -1940,7 +1943,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("StoreCode")
                         .IsUnique();
 
-                    b.ToTable("Stores", (string)null);
+                    b.ToTable("Stores");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.StoreFollow", b =>
@@ -1966,7 +1969,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoreID");
 
-                    b.ToTable("StoreFollows", (string)null);
+                    b.ToTable("StoreFollows");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.StorePayment", b =>
@@ -2009,7 +2012,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("StorePayments", (string)null);
+                    b.ToTable("StorePayments");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Story", b =>
@@ -2058,7 +2061,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoreID", "ExpiresAt", "IsActive");
 
-                    b.ToTable("Stories", (string)null);
+                    b.ToTable("Stories");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.StoryLike", b =>
@@ -2085,7 +2088,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("StoryID", "CustomerID")
                         .IsUnique();
 
-                    b.ToTable("StoryLikes", (string)null);
+                    b.ToTable("StoryLikes");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.StoryView", b =>
@@ -2112,7 +2115,7 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.HasIndex("StoryID", "CustomerID")
                         .IsUnique();
 
-                    b.ToTable("StoryViews", (string)null);
+                    b.ToTable("StoryViews");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.SubscriptionPayment", b =>
@@ -2142,7 +2145,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("SubscriptionPayments", (string)null);
+                    b.ToTable("SubscriptionPayments");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.SystemConfig", b =>
@@ -2185,7 +2188,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("UpdaterId");
 
-                    b.ToTable("SystemConfigs", (string)null);
+                    b.ToTable("SystemConfigs");
                 });
 
             modelBuilder.Entity("Multi_Store.Core.Entities.User", b =>
@@ -2301,7 +2304,7 @@ namespace Multi_Store.Infrastructure.Migrations
 
                     b.HasIndex("ProductID");
 
-                    b.ToTable("Wishlists", (string)null);
+                    b.ToTable("Wishlists");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>

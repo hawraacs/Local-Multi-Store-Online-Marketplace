@@ -23,6 +23,9 @@
             --positive-txt: #15803D;
             --warn-bg: #FEF3C7;
             --warn-txt: #B45309;
+            /* Boost accent (amber/orange), distinct from brand indigo */
+            --boost: #F59E0B;
+            --boost-soft: rgba(245, 158, 11, 0.10);
             --radius-sm: 10px;
             --radius: 16px;
             --radius-lg: 22px;
@@ -93,7 +96,7 @@
         /* ── Stat Cards ── */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
             gap: 18px;
             margin: 28px 0;
         }
@@ -135,6 +138,14 @@
                 stroke-linejoin: round;
             }
 
+            .stat-icon.boost {
+                background: var(--boost-soft);
+            }
+
+                .stat-icon.boost svg {
+                    stroke: var(--boost);
+                }
+
         .stat-title {
             color: var(--muted);
             font-size: 11.5px;
@@ -162,6 +173,11 @@
 
             .stat-change .positive {
                 color: var(--positive);
+                font-weight: 700;
+            }
+
+            .stat-change .boost-txt {
+                color: var(--boost);
                 font-weight: 700;
             }
 
@@ -455,7 +471,7 @@
             <div class="stat-title">Revenue (30 days)</div>
             <div class="stat-value">$@Model.RevenueInRange.ToString("N0")</div>
             <div class="stat-change">
-                <span class="positive">↑ @Model.RevenueGrowth.ToString("N1")%</span> vs previous period
+                <span class="@(Model.RevenueGrowth >= 0 ? "positive" : "")">@(Model.RevenueGrowth >= 0 ? "↑" : "↓") @Math.Abs(Model.RevenueGrowth).ToString("N1")%</span> vs previous period
             </div>
         </div>
 
@@ -485,6 +501,15 @@
             <div class="stat-title">Active Subscriptions</div>
             <div class="stat-value">@Model.ActiveSubscriptions</div>
             <div class="stat-change">Currently subscribed stores</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon boost"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-6z" /></svg></div>
+            <div class="stat-title">Boost Revenue (30 days)</div>
+            <div class="stat-value">$@Model.BoostRevenueInRange.ToString("N0")</div>
+            <div class="stat-change">
+                <span class="boost-txt">$@Model.BoostRevenue.ToString("N0")</span> from paid product boosts
+            </div>
         </div>
     </div>
 
@@ -576,6 +601,14 @@
                         <td>@Model.OrdersInRange</td>
                         <td class="@(Model.OrdersInRange >= Model.OrdersPrevious ? "positive" : "negative")">
                             @(Model.OrdersInRange >= Model.OrdersPrevious ? "↑" : "↓") @(((decimal)(Model.OrdersInRange - Model.OrdersPrevious) / (Model.OrdersPrevious == 0 ? 1 : Model.OrdersPrevious) * 100).ToString("N1"))%
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Boost Revenue</strong></td>
+                        <td>$@Model.BoostRevenuePrevious.ToString("N0")</td>
+                        <td>$@Model.BoostRevenueInRange.ToString("N0")</td>
+                        <td class="@(Model.BoostRevenueInRange >= Model.BoostRevenuePrevious ? "positive" : "negative")">
+                            @(Model.BoostRevenueInRange >= Model.BoostRevenuePrevious ? "↑" : "↓") @(((decimal)(Model.BoostRevenueInRange - Model.BoostRevenuePrevious) / (Model.BoostRevenuePrevious == 0 ? 1 : Model.BoostRevenuePrevious) * 100).ToString("N1"))%
                         </td>
                     </tr>
                     <tr>
@@ -672,6 +705,7 @@
 
         const commissionRev = @Model.CommissionRevenue;
         const subscriptionRev = @Model.SubscriptionRevenue;
+        const boostRev = @Model.BoostRevenue;
 
         // ── 1. Revenue (12 months) ──
         initChart('revenueChart', {
@@ -725,10 +759,10 @@
         initChart('revenueBreakdownChart', {
         type: 'pie',
         data: {
-        labels: ['Commission', 'Subscription'],
+        labels: ['Commission', 'Subscription', 'Boosts'],
         datasets: [{
-        data: [commissionRev, subscriptionRev],
-        backgroundColor: ['#6366F1', '#8B5CF6'],
+        data: [commissionRev, subscriptionRev, boostRev],
+        backgroundColor: ['#6366F1', '#8B5CF6', '#F59E0B'],
         borderWidth: 0
         }]
         },

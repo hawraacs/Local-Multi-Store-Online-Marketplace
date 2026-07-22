@@ -3,31 +3,26 @@
 @{
     ViewData["Title"] = "User Management";
 }
-
 @section Styles {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* ============================================================
-                   ADMIN THEME — matches Admin Dashboard (light / indigo+sky)
-                   ============================================================ */
+                           ADMIN THEME — matches Admin Dashboard (light / indigo+sky)
+                           ============================================================ */
         :root {
-            /* ── Backgrounds ── */
             --bg-color: #F8FAFC;
             --bg-soft: #F1F5F9;
             --card-bg: #FFFFFF;
             --surface: #FFFFFF;
             --surface-2: #F8FAFC;
             --surface-hover: #F1F5F9;
-            /* ── Text ── */
             --text-primary: #0F172A;
             --text-secondary: #475569;
             --text-muted: #94A3B8;
             --text: #0F172A;
-            /* ── Borders ── */
             --border-color: #E2E8F0;
             --border: #E2E8F0;
-            /* ── Accent (Indigo + Sky) ── */
             --accent-color: #6366F1;
             --accent-hover: #4F46E5;
             --accent-light: #EEF2FF;
@@ -37,7 +32,6 @@
             --brand-light: #A5B4FC;
             --brand-soft: rgba(99, 102, 241, 0.08);
             --brand-soft-hover: rgba(99, 102, 241, 0.15);
-            /* ── Semantic States ── */
             --success: #16A34A;
             --success-bg: #DCFCE7;
             --success-txt: #15803D;
@@ -50,12 +44,16 @@
             --info: #6366F1;
             --info-bg: #EEF2FF;
             --info-txt: #4338CA;
-            /* ── Shadows ── */
+            --purple: #8B5CF6;
+            --purple-bg: #F3E8FF;
+            --purple-txt: #6D28D9;
+            --teal: #0D9488;
+            --teal-bg: #CCFBF1;
+            --teal-txt: #0F766E;
             --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
             --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
             --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10);
             --shadow-hover: 0 16px 40px rgba(15, 23, 42, 0.14);
-            /* ── Radius / Font / Transition ── */
             --radius-sm: 10px;
             --radius: 16px;
             --radius-lg: 24px;
@@ -81,14 +79,172 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
+        .page-wrap {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.5rem 3rem;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+            .page-header h1 {
+                font-size: 1.9rem;
+                font-weight: 900;
+                letter-spacing: -0.03em;
+                background: var(--accent-gradient);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin-bottom: 0.25rem;
+            }
+
+                .page-header h1 i {
+                    -webkit-text-fill-color: var(--brand);
+                    margin-right: 8px;
+                }
+
+            .page-header p {
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #FFFFFF;
+            color: var(--text-primary);
+            border-radius: 999px;
+            padding: 8px 18px 8px 14px;
+            font-size: 12.5px;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+            .header-badge .dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--brand);
+                flex-shrink: 0;
+                animation: pulse-dot 2s ease-in-out infinite;
+            }
+
+        @@keyframes pulse-dot {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(0.85);
+            }
+        }
+
+        /* ── Summary stat chips ── */
+        .stats-strip {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 14px;
+            margin-bottom: 1.75rem;
+        }
+
+        @@media (max-width: 900px) {
+            .stats-strip {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @@media (max-width: 560px) {
+            .stats-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .mini-stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 16px 14px;
+            box-shadow: var(--shadow-sm);
+            transition: transform var(--transition), box-shadow var(--transition);
+            cursor: pointer;
+        }
+
+            .mini-stat:hover {
+                transform: translateY(-3px);
+                box-shadow: var(--shadow-md);
+            }
+
+            .mini-stat .mini-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 9px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 13px;
+                margin-bottom: 10px;
+            }
+
+            .mini-stat.total .mini-icon {
+                background: var(--brand-soft);
+                color: var(--brand);
+            }
+
+            .mini-stat.active .mini-icon {
+                background: var(--success-bg);
+                color: var(--success-txt);
+            }
+
+            .mini-stat.pending .mini-icon {
+                background: var(--warning-bg);
+                color: var(--warning-txt);
+            }
+
+            .mini-stat.owners .mini-icon {
+                background: var(--purple-bg);
+                color: var(--purple-txt);
+            }
+
+            .mini-stat.customers .mini-icon {
+                background: var(--teal-bg);
+                color: var(--teal-txt);
+            }
+
+            .mini-stat .mini-value {
+                font-size: 24px;
+                font-weight: 900;
+                letter-spacing: -0.02em;
+                color: var(--text-primary);
+                margin-bottom: 2px;
+            }
+
+            .mini-stat .mini-label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                color: var(--text-muted);
+            }
+
         /* ── Main Card ── */
         .users-card {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius-xl);
-            padding: 2rem 2rem 1.5rem;
-            margin: 2rem auto;
-            max-width: 1400px;
+            padding: 1.75rem 1.75rem 1.25rem;
             box-shadow: var(--shadow-sm);
             transition: box-shadow var(--transition), border-color var(--transition);
         }
@@ -98,79 +254,82 @@
                 border-color: var(--brand-light);
             }
 
-            .users-card h3 {
-                font-size: 1.75rem;
-                font-weight: 800;
-                letter-spacing: -0.03em;
-                background: var(--accent-gradient);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                margin-bottom: 0.25rem;
-                display: inline-block;
-            }
-
-                .users-card h3 i {
-                    -webkit-text-fill-color: initial;
-                    color: var(--brand);
-                    margin-right: 0.5rem;
-                }
-
         /* ── Filter Bar ── */
         .filter-bar {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
-            margin: 1.5rem 0 1.75rem;
+            margin-bottom: 1.5rem;
             align-items: center;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
         }
 
-            .filter-bar input,
-            .filter-bar select {
-                padding: 0.55rem 1rem;
-                border-radius: 999px;
-                border: 1px solid var(--border);
-                font-size: 0.85rem;
-                background: var(--surface);
-                color: var(--text-primary);
-                font-family: var(--font);
-                transition: border-color var(--transition), box-shadow var(--transition);
-                min-width: 140px;
+        .filter-search {
+            position: relative;
+            flex: 1 1 220px;
+        }
+
+            .filter-search i {
+                position: absolute;
+                left: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-muted);
+                font-size: 12.5px;
             }
 
-                .filter-bar input:focus,
-                .filter-bar select:focus {
-                    outline: none;
-                    border-color: var(--brand);
-                    box-shadow: 0 0 0 3px var(--brand-soft);
-                }
+            .filter-search input {
+                width: 100%;
+                padding: 0.6rem 1rem 0.6rem 2.2rem;
+            }
 
-                .filter-bar input::placeholder {
-                    color: var(--text-muted);
-                }
+        .filter-bar input,
+        .filter-bar select {
+            padding: 0.6rem 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            font-size: 0.85rem;
+            background: var(--surface);
+            color: var(--text-primary);
+            font-family: var(--font);
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+
+            .filter-bar input:focus,
+            .filter-bar select:focus {
+                outline: none;
+                border-color: var(--brand);
+                box-shadow: 0 0 0 3px var(--brand-soft);
+            }
+
+            .filter-bar input::placeholder {
+                color: var(--text-muted);
+            }
 
         /* ── Export Button ── */
         .btn-export {
-            background: var(--brand);
+            background: var(--accent-gradient);
             color: white;
             border: none;
-            padding: 0.55rem 1.25rem;
+            padding: 0.6rem 1.3rem;
             border-radius: 999px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 0.85rem;
             transition: all var(--transition);
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
             font-family: var(--font);
-            box-shadow: var(--shadow-sm);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
         }
 
             .btn-export:hover {
-                background: var(--brand-dark);
                 transform: translateY(-1px);
-                box-shadow: var(--shadow-md);
+                box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
             }
 
             .btn-export i {
@@ -195,14 +354,22 @@
             text-align: left;
             padding: 0.9rem 1rem;
             background: var(--surface-2);
-            font-weight: 600;
-            font-size: 0.7rem;
+            font-weight: 700;
+            font-size: 0.68rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: var(--text-muted);
             border-bottom: 1.5px solid var(--border);
             white-space: nowrap;
         }
+
+            thead th:first-child {
+                border-radius: var(--radius-sm) 0 0 0;
+            }
+
+            thead th:last-child {
+                border-radius: 0 var(--radius-sm) 0 0;
+            }
 
         tbody td {
             padding: 0.9rem 1rem;
@@ -228,41 +395,145 @@
             cursor: pointer;
         }
 
-        /* ── Badges ── */
+        /* ── User identity cell ── */
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--brand-soft);
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .user-cell strong {
+            display: block;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 0.88rem;
+        }
+
+        .user-email {
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
+        .user-phone {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        /* ── Role badges ── */
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.28rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+            .role-badge::before {
+                content: "";
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+
+        .role-customer {
+            background: var(--teal-bg);
+            color: var(--teal-txt);
+        }
+
+            .role-customer::before {
+                background: var(--teal);
+            }
+
+        .role-storeowner {
+            background: var(--purple-bg);
+            color: var(--purple-txt);
+        }
+
+            .role-storeowner::before {
+                background: var(--purple);
+            }
+
+        .role-deliverystaff {
+            background: var(--info-bg);
+            color: var(--info-txt);
+        }
+
+            .role-deliverystaff::before {
+                background: var(--info);
+            }
+
+        .role-admin {
+            background: var(--danger-bg);
+            color: var(--danger-txt);
+        }
+
+            .role-admin::before {
+                background: var(--danger);
+            }
+
+        .role-default {
+            background: var(--bg-soft);
+            color: var(--text-muted);
+        }
+
+            .role-default::before {
+                background: var(--text-muted);
+            }
+
+        /* ── Status Badges ── */
         .badge {
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
-            padding: 0.2rem 0.8rem;
+            padding: 0.28rem 0.8rem;
             border-radius: 999px;
             font-size: 0.75rem;
-            font-weight: 600;
-            border: 1px solid transparent;
+            font-weight: 700;
             white-space: nowrap;
         }
+
+            .badge::before {
+                content: "";
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
 
         .badge-active {
             background: var(--success-bg);
             color: var(--success-txt);
-            border-color: #86EFAC;
         }
 
             .badge-active::before {
-                content: "●";
-                font-size: 0.6rem;
-                color: var(--success);
+                background: var(--success);
             }
 
         .badge-pending {
             background: var(--warning-bg);
             color: var(--warning-txt);
-            border-color: #FCD34D;
         }
 
             .badge-pending::before {
-                content: "●";
-                font-size: 0.6rem;
-                color: var(--warning);
+                background: var(--warning);
             }
 
         /* ── Action Buttons ── */
@@ -273,100 +544,110 @@
             align-items: center;
         }
 
-        .btn-approve,
-        .btn-deactivate {
+        .btn-approve, .btn-deactivate {
             border: none;
-            padding: 0.3rem 0.8rem;
+            padding: 0.35rem 0.85rem;
             border-radius: 999px;
             cursor: pointer;
             font-size: 0.75rem;
-            font-weight: 600;
+            font-weight: 700;
             transition: all var(--transition);
             white-space: nowrap;
             display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
+            gap: 0.35rem;
             font-family: var(--font);
-            box-shadow: var(--shadow-sm);
         }
 
         .btn-approve {
-            background: var(--success);
-            color: white;
+            background: var(--success-bg);
+            color: var(--success-txt);
         }
 
             .btn-approve:hover {
-                background: #0E9F6E;
+                background: var(--success);
+                color: #fff;
                 transform: translateY(-1px);
-                box-shadow: var(--shadow-md);
+                box-shadow: var(--shadow-sm);
             }
 
         .btn-deactivate {
-            background: var(--danger);
-            color: white;
+            background: var(--danger-bg);
+            color: var(--danger-txt);
         }
 
             .btn-deactivate:hover {
-                background: #B91C1C;
+                background: var(--danger);
+                color: #fff;
                 transform: translateY(-1px);
-                box-shadow: var(--shadow-md);
+                box-shadow: var(--shadow-sm);
             }
 
-            .btn-approve i,
-            .btn-deactivate i {
+            .btn-approve i, .btn-deactivate i {
                 font-size: 0.7rem;
             }
 
         /* ── Empty state ── */
-        tbody tr td[colspan] {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: var(--text-muted);
-            font-style: italic;
-            font-size: 0.95rem;
+        .empty-row td {
+            padding: 3.5rem 1rem !important;
         }
 
-            tbody tr td[colspan] i {
+        .empty-state-inline {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+        }
+
+            .empty-state-inline i {
+                font-size: 30px;
                 color: var(--border);
-                margin-bottom: 0.5rem;
             }
 
-            tbody tr td[colspan] p {
-                margin-top: 0.5rem;
+            .empty-state-inline strong {
+                font-size: 0.95rem;
+                color: var(--text-secondary);
+                font-weight: 700;
             }
 
         /* ── Responsive ── */
         @@media (max-width: 768px) {
+            .page-wrap {
+                padding: 0 1rem 2rem;
+                margin: 1rem auto;
+            }
+
             .users-card {
-                padding: 1.25rem;
-                margin: 1rem;
+                padding: 1.1rem;
             }
 
             .filter-bar {
                 gap: 8px;
+                padding: 10px 12px;
             }
 
-                .filter-bar input,
-                .filter-bar select {
-                    min-width: 100px;
+                .filter-bar input, .filter-bar select {
                     font-size: 0.8rem;
-                    padding: 0.4rem 0.8rem;
+                    padding: 0.5rem 0.8rem;
                 }
 
+            .filter-search input {
+                padding-left: 2rem;
+            }
+
             .btn-export {
-                padding: 0.4rem 0.9rem;
+                padding: 0.5rem 1rem;
                 font-size: 0.8rem;
             }
 
-            thead th,
-            tbody td {
+            thead th, tbody td {
                 padding: 0.65rem 0.65rem;
                 font-size: 0.8rem;
             }
 
-            .btn-approve,
-            .btn-deactivate {
-                padding: 0.2rem 0.6rem;
+            .btn-approve, .btn-deactivate {
+                padding: 0.25rem 0.6rem;
                 font-size: 0.7rem;
             }
         }
@@ -377,109 +658,182 @@
                 align-items: stretch;
             }
 
-                .filter-bar input,
-                .filter-bar select,
-                .btn-export {
-                    width: 100%;
-                }
+            .filter-search {
+                flex: 1 1 auto;
+            }
+
+            .btn-export {
+                width: 100%;
+                justify-content: center;
+            }
         }
 
-        button:focus-visible,
-        input:focus-visible,
-        select:focus-visible {
+        button:focus-visible, input:focus-visible, select:focus-visible {
             outline: 2px solid var(--brand);
             outline-offset: 2px;
         }
     </style>
 }
 
-<div class="users-card">
-    <h3><i class="fas fa-users"></i> User Management</h3>
+@{
+    var totalUsers = Model.Users?.Count ?? 0;
+    var activeUsers = Model.Users?.Count(u => u.IsActive) ?? 0;
+    var pendingUsers = Model.Users?.Count(u => !u.IsActive) ?? 0;
+    var storeOwners = Model.Users?.Count(u => (u.Roles ?? "").Contains("StoreOwner")) ?? 0;
+    var customers = Model.Users?.Count(u => (u.Roles ?? "").Contains("Customer")) ?? 0;
+}
 
-    <div class="filter-bar">
-        <input type="text" id="searchUser" placeholder="🔍 Name or Email...">
-        <select id="roleFilter">
-            <option value="">All Roles</option>
-            <option>Customer</option>
-            <option>StoreOwner</option>
-            <option>DeliveryStaff</option>
-            <option>Admin</option>
-        </select>
-        <select id="statusFilter">
-            <option value="">All Status</option>
-            <option value="true">Active</option>
-            <option value="false">Pending/Inactive</option>
-        </select>
-        <button id="exportCsvBtn" class="btn-export"><i class="fas fa-download"></i> Export CSV</button>
+<div class="page-wrap">
+
+    <div class="page-header">
+        <div>
+            <h1><i class="fas fa-users"></i>User Management</h1>
+            <p>View, filter, and manage every account on the platform</p>
+        </div>
+        <div class="header-badge">
+            <span class="dot"></span>
+            @totalUsers total users
+        </div>
     </div>
 
-    <div class="table-responsive">
-        <table id="usersTable">
-            <thead>
-                <tr>
-                    <th style="width:30px"><input type="checkbox" id="selectAll"></th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    <th style="width:180px">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Users != null && Model.Users.Any())
-                {
-                    foreach (var user in Model.Users)
+    <!-- ── Quick summary chips ── -->
+    <div class="stats-strip">
+        <div class="mini-stat total">
+            <div class="mini-icon"><i class="fas fa-users"></i></div>
+            <div class="mini-value">@totalUsers</div>
+            <div class="mini-label">All Users</div>
+        </div>
+        <div class="mini-stat active">
+            <div class="mini-icon"><i class="fas fa-circle-check"></i></div>
+            <div class="mini-value">@activeUsers</div>
+            <div class="mini-label">Active</div>
+        </div>
+        <div class="mini-stat pending">
+            <div class="mini-icon"><i class="fas fa-hourglass-half"></i></div>
+            <div class="mini-value">@pendingUsers</div>
+            <div class="mini-label">Pending</div>
+        </div>
+        <div class="mini-stat owners">
+            <div class="mini-icon"><i class="fas fa-store"></i></div>
+            <div class="mini-value">@storeOwners</div>
+            <div class="mini-label">Store Owners</div>
+        </div>
+        <div class="mini-stat customers">
+            <div class="mini-icon"><i class="fas fa-user"></i></div>
+            <div class="mini-value">@customers</div>
+            <div class="mini-label">Customers</div>
+        </div>
+    </div>
+
+    <div class="users-card">
+
+        <div class="filter-bar">
+            <div class="filter-search">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="text" id="searchUser" placeholder="Search name or email...">
+            </div>
+            <select id="roleFilter">
+                <option value="">All Roles</option>
+                <option>Customer</option>
+                <option>StoreOwner</option>
+                <option>DeliveryStaff</option>
+                <option>Admin</option>
+            </select>
+            <select id="statusFilter">
+                <option value="">All Status</option>
+                <option value="true">Active</option>
+                <option value="false">Pending/Inactive</option>
+            </select>
+            <button id="exportCsvBtn" class="btn-export"><i class="fas fa-download"></i> Export CSV</button>
+        </div>
+
+        <div class="table-responsive">
+            <table id="usersTable">
+                <thead>
+                    <tr>
+                        <th style="width:30px"><input type="checkbox" id="selectAll"></th>
+                        <th>User</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th style="width:180px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Users != null && Model.Users.Any())
                     {
-                        <tr data-role="@user.Roles" data-active="@user.IsActive.ToString()">
-                            <td><input type="checkbox" class="userCheckbox" data-id="@user.UserId"></td>
-                            <td>@user.FullName</td>
-                            <td>@user.Email</td>
-                            <td>@user.PhoneNumber</td>
-                            <td>@user.Roles</td>
-                            <td>
-                                <span class="badge @(user.IsActive ? "badge-active" : "badge-pending")">
-                                    @(user.IsActive ? "Active" : "Pending")
-                                </span>
-                            </td>
-                            <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
-                            <td>
-                                <div class="action-buttons">
-                                    @if (!user.IsActive)
-                                    {
-                                        <form method="post" asp-page-handler="Approve" style="display:inline;">
-                                            <input type="hidden" name="userId" value="@user.UserId" />
-                                            <button type="submit" class="btn-approve">
-                                                <i class="fas fa-check-circle"></i> Approve
-                                            </button>
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <form method="post" asp-page-handler="Deactivate" style="display:inline;">
-                                            <input type="hidden" name="userId" value="@user.UserId" />
-                                            <button type="submit" class="btn-deactivate">
-                                                <i class="fas fa-ban"></i> Deactivate
-                                            </button>
-                                        </form>
-                                    }
+                        foreach (var user in Model.Users)
+                        {
+                            var roleKey = (user.Roles ?? "").Replace(" ", "").ToLower();
+                            var roleClass = roleKey switch
+                            {
+                                "customer" => "role-customer",
+                                "storeowner" => "role-storeowner",
+                                "deliverystaff" => "role-deliverystaff",
+                                "admin" => "role-admin",
+                                _ => "role-default"
+                            };
+                            var initial = string.IsNullOrWhiteSpace(user.FullName) ? "U" : user.FullName.Substring(0, 1).ToUpper();
+
+                            <tr data-role="@user.Roles" data-active="@user.IsActive.ToString()">
+                                <td><input type="checkbox" class="userCheckbox" data-id="@user.UserId"></td>
+                                <td>
+                                    <div class="user-cell">
+                                        <span class="user-avatar">@initial</span>
+                                        <div>
+                                            <strong>@user.FullName</strong>
+                                            <span class="user-email">@user.Email</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="user-phone">@user.PhoneNumber</td>
+                                <td><span class="role-badge @roleClass">@user.Roles</span></td>
+                                <td>
+                                    <span class="badge @(user.IsActive ? "badge-active" : "badge-pending")">
+                                        @(user.IsActive ? "Active" : "Pending")
+                                    </span>
+                                </td>
+                                <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        @if (!user.IsActive)
+                                        {
+                                            <form method="post" asp-page-handler="Approve" style="display:inline;">
+                                                <input type="hidden" name="userId" value="@user.UserId" />
+                                                <button type="submit" class="btn-approve">
+                                                    <i class="fas fa-check-circle"></i> Approve
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form method="post" asp-page-handler="Deactivate" style="display:inline;">
+                                                <input type="hidden" name="userId" value="@user.UserId" />
+                                                <button type="submit" class="btn-deactivate">
+                                                    <i class="fas fa-ban"></i> Deactivate
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr class="empty-row">
+                            <td colspan="7">
+                                <div class="empty-state-inline">
+                                    <i class="fas fa-inbox"></i>
+                                    <strong>No users found</strong>
                                 </div>
                             </td>
                         </tr>
                     }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="8" style="text-align:center; padding:40px;">
-                            <i class="fas fa-inbox fa-2x" style="color:#cbd5e1;"></i>
-                            <p style="margin-top:10px;">No users found.</p>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -494,17 +848,19 @@
         const term = searchInput.value.toLowerCase();
         const role = roleFilter.value.toLowerCase();
         const status = statusFilter.value; // 'true' or 'false'
+
         rows.forEach(row => {
-            // Skip the "no users" row if it exists
-            if (row.cells.length < 8) return;
+            if (row.classList.contains('empty-row')) return;
+
             const name = row.cells[1]?.innerText.toLowerCase() || '';
-            const email = row.cells[2]?.innerText.toLowerCase() || '';
-            const roleText = row.cells[4]?.innerText.toLowerCase() || '';
+            const roleText = row.cells[3]?.innerText.toLowerCase() || '';
             const isActive = row.dataset.active === 'True';
-            let show = (name.includes(term) || email.includes(term));
+
+            let show = name.includes(term);
             if (role && !roleText.includes(role)) show = false;
             if (status === 'true' && !isActive) show = false;
             if (status === 'false' && isActive) show = false;
+
             row.style.display = show ? '' : 'none';
         });
     }
@@ -513,15 +869,26 @@
     roleFilter.addEventListener('change', filterTable);
     statusFilter.addEventListener('change', filterTable);
 
-    // Export CSV
+    // Export CSV — only visible (filtered-in) rows, fixed to use vanilla JS
+    // instead of jQuery's ":visible" selector, which isn't valid in plain CSS/JS.
     document.getElementById('exportCsvBtn').addEventListener('click', () => {
         let csv = "Name,Email,Phone,Role,Status,Joined\n";
-        document.querySelectorAll('#usersTable tbody tr:visible').forEach(row => {
-            if (row.cells.length < 8) return;
-            const cells = row.cells;
-            csv += `"${cells[1].innerText}","${cells[2].innerText}","${cells[3].innerText}","${cells[4].innerText}","${cells[5].innerText}","${cells[6].innerText}"\n`;
+        document.querySelectorAll('#usersTable tbody tr').forEach(row => {
+            if (row.classList.contains('empty-row')) return;
+            if (row.style.display === 'none') return;
+
+            const nameCell = row.cells[1];
+            const name = nameCell.querySelector('strong')?.innerText || '';
+            const email = nameCell.querySelector('.user-email')?.innerText || '';
+            const phone = row.cells[2]?.innerText || '';
+            const role = row.cells[3]?.innerText || '';
+            const status = row.cells[4]?.innerText.trim() || '';
+            const joined = row.cells[5]?.innerText || '';
+
+            csv += `"${name}","${email}","${phone}","${role}","${status}","${joined}"\n`;
         });
-        const blob = new Blob([csv], {type: 'text/csv'});
+
+        const blob = new Blob([csv], { type: 'text/csv' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = 'users_export.csv';

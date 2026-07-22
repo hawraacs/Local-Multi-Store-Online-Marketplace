@@ -89,7 +89,7 @@ namespace Multi_Store.Core.Entities
         public DateTime? GracePeriodEndDate { get; set; }
 
         public bool IsSuspended { get; set; } = false;
-
+       
         // Navigation Properties
 
         public virtual User Owner { get; set; } = null!;
@@ -112,5 +112,7 @@ namespace Multi_Store.Core.Entities
             = new List<StoreFollow>();
         public virtual ICollection<ExplorePost> ExplorePosts { get; set; }
     = new List<ExplorePost>();
+        public virtual ICollection<ProductBoost> ProductBoosts { get; set; } = new List<ProductBoost>();
+
     }
 }

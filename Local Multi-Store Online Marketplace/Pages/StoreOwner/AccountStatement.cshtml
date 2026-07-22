@@ -22,85 +22,316 @@
             --border-color: #ece8f6;
             /* -------- Semantic -------- */
             --success-color: #10b981;
+            --success-bg: #ecfdf5;
             --error-color: #dc2626;
+            --error-bg: #fef2f2;
             --warning-color: #f59e0b;
+            --warning-bg: #fffbeb;
+            --info-color: #4338ca;
+            --info-bg: #eef2ff;
+            /* -------- Boost accent (amber), distinct from brand purple -------- */
+            --boost-color: #f59e0b;
+            --boost-hover: #d97706;
+            --boost-light: #fef3c7;
             /* -------- Shadows -------- */
             --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
             --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 22px;
+            --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        h2 {
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        /* ── Page header ── */
+        .statement-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 26px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .statement-header h2 {
             font-size: 24px;
             font-weight: 800;
             color: var(--text-primary);
             letter-spacing: -0.4px;
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-            h2 + p {
-                color: var(--text-secondary);
-                font-size: 14px;
-                margin-top: -4px;
-                margin-bottom: 24px;
+            .statement-header h2 i {
+                color: var(--accent-color);
+                font-size: 22px;
             }
 
+        .statement-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .period-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            padding: 7px 16px;
+            border-radius: 999px;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            box-shadow: var(--shadow-sm);
+        }
+
+            .period-badge i {
+                color: var(--accent-color);
+            }
+
+        /* ── Subscription box ── */
+        .subscription-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 22px 26px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 18px;
+            transition: var(--transition);
+        }
+
+            .subscription-box:hover {
+                box-shadow: var(--shadow-md);
+            }
+
+        .subscription-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .subscription-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            flex-shrink: 0;
+        }
+
+        .subscription-icon.active-icon {
+            background: var(--success-bg);
+            color: var(--success-color);
+        }
+
+        .subscription-icon.expired-icon {
+            background: var(--error-bg);
+            color: var(--error-color);
+        }
+
+        .subscription-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .subscription-status {
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+            .subscription-status.active {
+                color: var(--success-color);
+            }
+
+            .subscription-status.expired {
+                color: var(--error-color);
+            }
+
+        .subscription-expiry {
+            color: var(--text-secondary);
+            font-size: 12.5px;
+            margin-top: 2px;
+        }
+
+        .btn-renew {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 12px 26px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(109, 40, 217, 0.25);
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .btn-renew:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 26px rgba(109, 40, 217, 0.32);
+            }
+
+        /* ── Summary cards ── */
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            gap: 18px;
             margin-bottom: 30px;
         }
 
         .summary-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            padding: 20px;
-            border-radius: 18px;
+            padding: 20px 22px;
+            border-radius: var(--radius-md);
             box-shadow: var(--shadow-sm);
-            transition: all 0.25s ease;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
 
+            .summary-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: var(--accent-gradient);
+                opacity: 0;
+                transition: var(--transition);
+            }
+
             .summary-card:hover {
-                transform: translateY(-2px);
+                transform: translateY(-3px);
                 box-shadow: var(--shadow-md);
+                border-color: var(--accent-color);
             }
 
-            .summary-card .label {
-                font-size: 13px;
-                font-weight: 600;
-                color: var(--text-secondary);
-                margin-bottom: 8px;
-            }
+                .summary-card:hover::before {
+                    opacity: 1;
+                }
 
-            .summary-card .value {
-                font-size: 24px;
-                font-weight: 800;
-                color: var(--text-primary);
-                letter-spacing: -0.4px;
-            }
+        .summary-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
 
+        .summary-icon.gross { background: var(--accent-light); color: var(--accent-color); }
+        .summary-icon.commission { background: var(--info-bg); color: var(--info-color); }
+        .summary-icon.subscription { background: var(--warning-bg); color: var(--warning-color); }
+        .summary-icon.boost { background: var(--boost-light); color: var(--boost-hover); }
+        .summary-icon.net { background: var(--success-bg); color: var(--success-color); }
+        .summary-icon.balance { background: var(--accent-light); color: var(--accent-color); }
+
+        .summary-card .label {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+        }
+
+        .summary-card .value {
+            font-size: 23px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.4px;
+        }
+
+        .positive {
+            color: var(--success-color);
+        }
+
+        .negative {
+            color: var(--error-color);
+        }
+
+        .negative-commission { color: var(--info-color); }
+        .negative-subscription { color: var(--warning-color); }
+        .negative-boost { color: var(--boost-hover); }
+
+        /* ── Statement table panel ── */
         .statement-table {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 22px;
+            border-radius: var(--radius-lg);
+            padding: 22px 24px 12px;
             box-shadow: var(--shadow-sm);
         }
 
-            .statement-table h4 {
-                font-size: 16px;
-                font-weight: 800;
-                color: var(--text-primary);
-                margin-bottom: 16px;
+        .statement-table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .statement-table h4 {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .statement-table h4 i {
+                color: var(--accent-color);
             }
+
+        .row-count {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
 
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
+            min-width: 760px;
         }
 
         th, td {
-            padding: 12px 10px;
+            padding: 12px 14px;
             border-bottom: 1px solid var(--border-color);
             text-align: left;
         }
@@ -115,128 +346,155 @@
         }
 
             th:first-child {
-                border-top-left-radius: 10px;
+                border-top-left-radius: var(--radius-sm);
             }
 
             th:last-child {
-                border-top-right-radius: 10px;
+                border-top-right-radius: var(--radius-sm);
             }
 
         tbody tr:hover td {
             background: var(--bg-color);
         }
 
-        .positive {
-            color: var(--success-color);
+        tbody tr:last-child td {
+            border-bottom: none;
         }
 
-        .negative {
-            color: var(--error-color);
+        .badge-order, .badge-subscription, .badge-boost {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
         }
 
         .badge-order {
             background: var(--accent-light);
             color: var(--accent-color);
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
         }
 
         .badge-subscription {
-            background: #eef2ff;
-            color: #4338ca;
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
+            background: var(--info-bg);
+            color: var(--info-color);
         }
 
-        .subscription-box {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            padding: 20px 24px;
-            border-radius: 18px;
-            margin-bottom: 25px;
-            box-shadow: var(--shadow-sm);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
+        .badge-boost {
+            background: var(--boost-light);
+            color: var(--boost-hover);
         }
 
-        .subscription-status {
-            font-weight: 800;
+        /* ── Empty state ── */
+        .empty-statement {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-muted);
         }
 
-            .subscription-status.active {
-                color: var(--success-color);
+            .empty-statement i {
+                font-size: 30px;
+                color: var(--border-color);
+                display: block;
+                margin-bottom: 10px;
             }
 
-            .subscription-status.expired {
-                color: var(--error-color);
+            .empty-statement strong {
+                font-size: 14px;
+                color: var(--text-secondary);
+                font-weight: 700;
+                display: block;
             }
 
-        .btn-renew {
-            background: var(--accent-gradient);
-            color: white;
-            border: none;
-            padding: 12px 26px;
-            border-radius: 30px;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(109, 40, 217, 0.25);
-            transition: all 0.25s ease;
+        @@media (max-width: 768px) {
+            .subscription-box {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .btn-renew {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .summary-value {
+                font-size: 20px;
+            }
         }
-
-            .btn-renew:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 26px rgba(109, 40, 217, 0.32);
-            }
     </style>
 }
 
-<h2>Account Statement</h2>
-<p>@Model.Store?.StoreName</p>
-
-<!-- Subscription Renewal Box -->
-<div class="subscription-box">
+<!-- ========== PAGE HEADER ========== -->
+<div class="statement-header">
     <div>
-        <strong>Subscription Status:</strong>
-        <span class="subscription-status @(Model.Store.SubscriptionExpiryDate >= DateTime.Now ? "active" : "expired")">
-            @(Model.Store.SubscriptionExpiryDate >= DateTime.Now ? "Active" : "Expired")
-        </span>
-        <br />
-        <span>Expires: @(Model.Store.SubscriptionExpiryDate?.ToString("dd MMM yyyy") ?? "Not Available")</span>
+        <h2><i class="fas fa-file-invoice-dollar"></i> Account Statement</h2>
+        <p>@Model.Store?.StoreName</p>
+    </div>
+    <span class="period-badge">
+        <i class="far fa-calendar-alt"></i>
+        All-time transaction history
+    </span>
+</div>
+
+<!-- ========== SUBSCRIPTION RENEWAL BOX ========== -->
+@{
+    var isSubActive = Model.Store.SubscriptionExpiryDate >= DateTime.Now;
+}
+<div class="subscription-box">
+    <div class="subscription-info">
+        <div class="subscription-icon @(isSubActive ? "active-icon" : "expired-icon")">
+            <i class="fas @(isSubActive ? "fa-circle-check" : "fa-triangle-exclamation")"></i>
+        </div>
+        <div>
+            <div class="subscription-label">Subscription Status</div>
+            <div class="subscription-status @(isSubActive ? "active" : "expired")">
+                @(isSubActive ? "Active" : "Expired")
+            </div>
+            <div class="subscription-expiry">
+                Expires: @(Model.Store.SubscriptionExpiryDate?.ToString("dd MMM yyyy") ?? "Not Available")
+            </div>
+        </div>
     </div>
     <form method="post" asp-page-handler="Renew">
-        <button type="submit" class="btn-renew">Renew Subscription ($20)</button>
+        <button type="submit" class="btn-renew">
+            <i class="fas fa-arrows-rotate"></i> Renew Subscription ($20)
+        </button>
     </form>
 </div>
 
-<!-- Summary Cards -->
+<!-- ========== SUMMARY CARDS ========== -->
 <div class="summary-grid">
     <div class="summary-card">
+        <div class="summary-icon gross"><i class="fas fa-sack-dollar"></i></div>
         <div class="label">Gross Revenue</div>
         <div class="value">$@Model.Summary.TotalGrossRevenue.ToString("N2")</div>
     </div>
     <div class="summary-card">
+        <div class="summary-icon commission"><i class="fas fa-percent"></i></div>
         <div class="label">Commission (5%)</div>
-        <div class="value negative">-$@Model.Summary.TotalCommission.ToString("N2")</div>
+        <div class="value negative-commission">-$@Model.Summary.TotalCommission.ToString("N2")</div>
     </div>
     <div class="summary-card">
+        <div class="summary-icon subscription"><i class="fas fa-calendar-check"></i></div>
         <div class="label">Subscription Fees</div>
-        <div class="value negative">-$@Model.Summary.TotalSubscriptionFees.ToString("N2")</div>
+        <div class="value negative-subscription">-$@Model.Summary.TotalSubscriptionFees.ToString("N2")</div>
     </div>
     <div class="summary-card">
+        <div class="summary-icon boost"><i class="fas fa-bolt"></i></div>
+        <div class="label">Boost Fees</div>
+        <div class="value negative-boost">-$@Model.Summary.TotalBoostFees.ToString("N2")</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-icon net"><i class="fas fa-scale-balanced"></i></div>
         <div class="label">Net Revenue</div>
         <div class="value @(Model.Summary.NetRevenue >= 0 ? "positive" : "negative")">
             $@Model.Summary.NetRevenue.ToString("N2")
         </div>
     </div>
     <div class="summary-card">
+        <div class="summary-icon balance"><i class="fas fa-wallet"></i></div>
         <div class="label">Outstanding Balance</div>
         <div class="value @(Model.Summary.OutstandingBalance >= 0 ? "positive" : "negative")">
             $@Model.Summary.OutstandingBalance.ToString("N2")
@@ -244,52 +502,68 @@
     </div>
 </div>
 
-<!-- Transaction History -->
+<!-- ========== TRANSACTION HISTORY ========== -->
 <div class="statement-table">
-    <h4>Transaction History</h4>
-    <table>
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th style="text-align:right;">Gross</th>
-                <th style="text-align:right;">Commission</th>
-                <th style="text-align:right;">Subscription</th>
-                <th style="text-align:right;">Net Effect</th>
-                <th>Type</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (!Model.Lines.Any())
-            {
-                <tr><td colspan="7" style="text-align:center; padding:30px;">No transactions yet.</td></tr>
-            }
-            else
-            {
-                foreach (var line in Model.Lines)
-                {
+    <div class="statement-table-header">
+        <h4><i class="fas fa-receipt"></i> Transaction History</h4>
+        <span class="row-count">@Model.Lines.Count transaction@(Model.Lines.Count != 1 ? "s" : "")</span>
+    </div>
+
+    @if (!Model.Lines.Any())
+    {
+        <div class="empty-statement">
+            <i class="fas fa-inbox"></i>
+            <strong>No transactions yet</strong>
+            Orders, subscriptions, and boosts will appear here once processed.
+        </div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
                     <tr>
-                        <td>@line.Date.ToString("dd MMM yyyy")</td>
-                        <td>@line.Description</td>
-                        <td style="text-align:right;">$@line.GrossRevenue.ToString("N2")</td>
-                        <td class="negative" style="text-align:right;">$@line.Commission.ToString("N2")</td>
-                        <td class="negative" style="text-align:right;">$@line.SubscriptionFee.ToString("N2")</td>
-                        <td class="@(line.NetEffect >= 0 ? "positive" : "negative")" style="text-align:right;">
-                            $@line.NetEffect.ToString("N2")
-                        </td>
-                        <td>
-                            @if (line.Type == LineType.Order)
-                            {
-                                <span class="badge-order">Order</span>
-                            }
-                            else
-                            {
-                                <span class="badge-subscription">Subscription</span>
-                            }
-                        </td>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th style="text-align:right;">Gross</th>
+                        <th style="text-align:right;">Commission</th>
+                        <th style="text-align:right;">Subscription</th>
+                        <th style="text-align:right;">Boost</th>
+                        <th style="text-align:right;">Net Effect</th>
+                        <th>Type</th>
                     </tr>
-                }
-            }
-        </tbody>
-    </table>
+                </thead>
+                <tbody>
+                    @foreach (var line in Model.Lines)
+                    {
+                        <tr>
+                            <td>@line.Date.ToString("dd MMM yyyy")</td>
+                            <td>@line.Description</td>
+                            <td style="text-align:right;">$@line.GrossRevenue.ToString("N2")</td>
+                            <td class="negative-commission" style="text-align:right;">$@line.Commission.ToString("N2")</td>
+                            <td class="negative-subscription" style="text-align:right;">$@line.SubscriptionFee.ToString("N2")</td>
+                            <td class="negative-boost" style="text-align:right;">$@line.BoostFee.ToString("N2")</td>
+                            <td class="@(line.NetEffect >= 0 ? "positive" : "negative")" style="text-align:right; font-weight:700;">
+                                $@line.NetEffect.ToString("N2")
+                            </td>
+                            <td>
+                                @if (line.Type == LineType.Order)
+                                {
+                                    <span class="badge-order"><i class="fas fa-bag-shopping"></i> Order</span>
+                                }
+                                else if (line.Type == LineType.Subscription)
+                                {
+                                    <span class="badge-subscription"><i class="fas fa-calendar-check"></i> Subscription</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-boost"><i class="fas fa-bolt"></i> Boost</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 </div>

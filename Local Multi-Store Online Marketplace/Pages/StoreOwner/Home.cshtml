@@ -28,8 +28,13 @@
             --border-strong: #d4cee8;
             --border-focus: #d4cee8;
             --success: #10b981;
+            --success-bg: #ecfdf5;
             --error: #dc2626;
+            --error-bg: #fef2f2;
             --warning: #f59e0b;
+            --boost-color: #f59e0b;
+            --boost-hover: #d97706;
+            --boost-light: #fef3c7;
             --shadow-xs: 0 1px 3px rgba(30,27,46,.04);
             --shadow-sm: 0 4px 12px rgba(109,40,217,.06);
             --shadow-md: 0 10px 30px rgba(109,40,217,.10);
@@ -40,6 +45,18 @@
             --radius-lg: 24px;
             --ease: cubic-bezier(0.22,1,0.36,1);
             --duration: .35s;
+        }
+
+        /* Hide the store-owner bottom nav/toggle while the product feed overlay is
+           open — it was rendering on top of the post card (stacking context issue).
+           Targeting a few likely selectors since the exact bottom-nav class in
+           _StoreOwnerLayout.cshtml wasn't confirmed; safe to trim once verified. */
+        body.feed-open .mobile-bottom-nav,
+        body.feed-open .owner-bottom-nav,
+        body.feed-open .bottom-nav,
+        body.feed-open nav[class*="bottom"],
+        body.feed-open .side-panel-toggle {
+            display: none !important;
         }
 
         body {
@@ -353,10 +370,21 @@
             justify-content: center;
             gap: 6px;
             transition: all var(--duration) var(--ease);
+            text-decoration: none;
         }
 
             .product-boost-btn:hover {
                 background: var(--accent-gradient);
+                color: #fff;
+            }
+
+        .product-boost-btn.is-boosted {
+            background: var(--boost-light);
+            color: var(--boost-hover);
+        }
+
+            .product-boost-btn.is-boosted:hover {
+                background: var(--boost-color);
                 color: #fff;
             }
 
@@ -675,6 +703,13 @@
             border-radius: 3px;
         }
 
+        .product-badge.boosted-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         .image-count-badge {
             position: absolute;
             top: 12px;
@@ -761,22 +796,26 @@
         }
 
         /* ============================================================
-                                   INSTAGRAM-STYLE FEED — store header on top, image, details below
-                                   ============================================================ */
+           INSTAGRAM-STYLE FEED — redesigned viewer
+           ============================================================ */
         .feed-overlay {
             display: none;
             position: fixed;
             inset: 0;
             z-index: 100000;
-            background: #efedf5;
+            background: rgba(15, 13, 26, 0.55);
+            backdrop-filter: blur(6px);
             overflow-y: scroll;
             scroll-snap-type: y mandatory;
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
+            opacity: 0;
+            transition: opacity 0.25s ease;
         }
 
             .feed-overlay.open {
                 display: block;
+                opacity: 1;
             }
 
             .feed-overlay.dragging {
@@ -792,7 +831,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 32px 20px;
+            padding: 40px 20px;
             box-sizing: border-box;
         }
 
@@ -800,14 +839,14 @@
             background: var(--surface);
             border-radius: var(--radius-lg);
             width: 100%;
-            max-width: 470px;
+            max-width: 460px;
             height: 100%;
-            max-height: 800px;
-            box-shadow: var(--shadow-xl);
+            max-height: 780px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.45);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         /* ---- Post header: shop logo + name, always visible at top ---- */
@@ -815,7 +854,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 13px 16px;
+            padding: 14px 18px;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
             background: var(--surface);
@@ -829,8 +868,8 @@
         }
 
             .post-header-store img {
-                width: 36px;
-                height: 36px;
+                width: 38px;
+                height: 38px;
                 border-radius: 50%;
                 object-fit: cover;
                 border: 1.5px solid var(--border);
@@ -844,6 +883,22 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .post-header-boosted-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--boost-light);
+            color: var(--boost-hover);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 20px;
+            flex-shrink: 0;
         }
 
         .post-header-store-sub {
@@ -852,8 +907,8 @@
         }
 
         .post-close-btn {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: var(--surface-alt);
             border: none;
@@ -864,15 +919,18 @@
             font-size: 15px;
             color: var(--text-secondary);
             flex-shrink: 0;
+            transition: all 0.2s ease;
         }
 
             .post-close-btn:hover {
                 background: var(--border);
+                color: var(--text-primary);
+                transform: rotate(90deg);
             }
 
         /* ---- Image area ---- */
         .post-media {
-            background: #000;
+            background: #0d0b17;
             width: 100%;
             aspect-ratio: 1 / 1;
             flex-shrink: 0;
@@ -897,43 +955,71 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            background: rgba(23, 24, 29, 0.45);
-            color: #fff;
+            background: rgba(255, 255, 255, 0.92);
+            color: var(--text-primary);
             border: none;
             cursor: pointer;
             z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+            transition: all 0.2s ease;
         }
 
+            .gallery-nav:hover {
+                background: #fff;
+                transform: translateY(-50%) scale(1.08);
+            }
+
             .gallery-nav.prev {
-                left: 10px;
+                left: 12px;
             }
 
             .gallery-nav.next {
-                right: 10px;
+                right: 12px;
             }
+
+        .gallery-counter {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.55);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 11px;
+            border-radius: 20px;
+            backdrop-filter: blur(3px);
+            z-index: 3;
+        }
 
         .gallery-dots {
             position: absolute;
-            bottom: 10px;
+            bottom: 12px;
             left: 0;
             right: 0;
             display: flex;
             justify-content: center;
-            gap: 5px;
+            gap: 6px;
+            z-index: 3;
         }
 
             .gallery-dots span {
-                width: 5px;
-                height: 5px;
+                width: 6px;
+                height: 6px;
                 border-radius: 50%;
-                background: rgba(255,255,255,0.45);
+                background: rgba(255,255,255,0.4);
+                transition: all 0.2s ease;
             }
 
                 .gallery-dots span.active {
                     background: #fff;
+                    width: 16px;
+                    border-radius: 4px;
                 }
 
         /* ---- Details below image ---- */
@@ -945,14 +1031,14 @@
         }
 
         .post-meta {
-            padding: 14px 16px;
+            padding: 16px 18px;
             border-bottom: 1px solid var(--border);
         }
 
             .post-meta h3 {
-                font-size: 16px;
+                font-size: 16.5px;
                 font-weight: 700;
-                margin: 0 0 6px;
+                margin: 0 0 8px;
                 color: var(--text-primary);
             }
 
@@ -960,12 +1046,12 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .post-price {
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 17px;
+            font-weight: 800;
             color: var(--text-primary);
         }
 
@@ -974,7 +1060,7 @@
             font-weight: 700;
             color: var(--success);
             background: var(--success-bg);
-            padding: 2px 11px;
+            padding: 3px 11px;
             border-radius: 20px;
         }
 
@@ -986,7 +1072,7 @@
         }
 
         .post-reviews {
-            padding: 14px 16px 20px;
+            padding: 16px 18px 22px;
         }
 
         .post-reviews-title {
@@ -995,34 +1081,59 @@
             text-transform: uppercase;
             letter-spacing: 0.6px;
             color: var(--text-muted);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
+
+        .post-reviews-empty {
+            text-align: center;
+            padding: 24px 12px;
+            color: var(--text-muted);
+            font-size: 12.5px;
+            background: var(--surface-alt);
+            border-radius: var(--radius-sm);
+            border: 1px dashed var(--border);
+        }
+
+            .post-reviews-empty i {
+                display: block;
+                font-size: 22px;
+                margin-bottom: 8px;
+                color: var(--border-strong);
+            }
 
         .review-row {
             background: var(--surface-alt);
             border-radius: var(--radius-sm);
-            padding: 11px 13px;
-            margin-bottom: 8px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
             border: 1px solid var(--border);
+            transition: border-color 0.2s ease;
         }
+
+            .review-row:hover {
+                border-color: var(--border-strong);
+            }
 
         .reviewer-info {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
         }
 
         .reviewer-avatar {
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             background: var(--accent-dark);
             color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10.5px;
+            font-size: 11px;
             font-weight: 700;
             flex-shrink: 0;
         }
@@ -1030,8 +1141,8 @@
         .review-row p {
             font-size: 12.5px;
             color: var(--text-secondary);
-            margin: 0 0 8px;
-            line-height: 1.5;
+            margin: 0 0 10px;
+            line-height: 1.55;
         }
 
         .review-row strong {
@@ -1044,7 +1155,7 @@
             background: var(--error-bg);
             color: var(--error);
             border: none;
-            padding: 6px 0;
+            padding: 7px 0;
             border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 10.5px;
@@ -1053,7 +1164,13 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
+            transition: all 0.2s ease;
         }
+
+            .delete-review-btn:hover {
+                background: var(--error);
+                color: #fff;
+            }
 
         @@media (max-width: 480px) {
             .side-panel {
@@ -1222,9 +1339,9 @@
                                     <span class="price">$@p.Price</span>
                                     <span class="review-count"><i class="fas fa-star"></i> @reviewCount review@(reviewCount != 1 ? "s" : "")</span>
                                 </div>
-                                <button type="button" class="product-boost-btn" onclick="event.stopPropagation(); alert('Boost campaign for &quot;@p.ProductName&quot; would start here.')">
+                                <a class="product-boost-btn" href="/StoreOwner/Products/Boost?productId=@p.ProductID">
                                     <i class="fas fa-bolt"></i> Boost
-                                </button>
+                                </a>
                             </div>
                         </div>
                     }
@@ -1295,11 +1412,15 @@
                     <div class="post-header-store">
                         <img src="@(Model.Store?.LogoURL ?? "/images/store.png")" alt="@Model.Store?.StoreName" />
                         <div>
-                            <div class="post-header-store-name">@Model.Store?.StoreName</div>
+                            <div class="post-header-store-name">
+                                @Model.Store?.StoreName
+                            </div>
                             <div class="post-header-store-sub">Official Store</div>
                         </div>
                     </div>
-                    <button class="post-close-btn" onclick="closeProductModal()">&times;</button>
+                    <button class="post-close-btn" onclick="closeProductModal()" aria-label="Close">
+                        <i class="fas fa-xmark"></i>
+                    </button>
                 </div>
 
                 <!-- ===== Image ===== -->
@@ -1311,10 +1432,15 @@
                             <img src="@orderedImages[idx].ImageUrl" style="display:@(idx == 0 ? "block" : "none")" draggable="false" />
                         }
                     }
+                    else
+                    {
+                        <img src="/images/no-image.png" draggable="false" />
+                    }
                     @if (imageCount > 1)
                     {
-                        <button class="gallery-nav prev" onclick="changeModalImage(@p.ProductID, -1)"><i class="fas fa-chevron-left"></i></button>
-                        <button class="gallery-nav next" onclick="changeModalImage(@p.ProductID, 1)"><i class="fas fa-chevron-right"></i></button>
+                        <span class="gallery-counter"><span class="gallery-counter-current">1</span>/@imageCount</span>
+                        <button class="gallery-nav prev" onclick="changeModalImage(@p.ProductID, -1)" aria-label="Previous image"><i class="fas fa-chevron-left"></i></button>
+                        <button class="gallery-nav next" onclick="changeModalImage(@p.ProductID, 1)" aria-label="Next image"><i class="fas fa-chevron-right"></i></button>
                         <div class="gallery-dots">
                             @for (int d = 0; d < imageCount; d++)
                             {
@@ -1335,9 +1461,11 @@
                         <p class="post-description">@p.Description</p>
                     </div>
                     <div class="post-reviews">
+                        <div class="post-reviews-title">
+                            <i class="fas fa-comments"></i> @reviewCount Review@(reviewCount != 1 ? "s" : "")
+                        </div>
                         @if (p.Reviews != null && p.Reviews.Any())
                         {
-                            <div class="post-reviews-title">@reviewCount Review@(reviewCount != 1 ? "s" : "")</div>
                             @foreach (var review in p.Reviews.OrderByDescending(r => r.CreatedAt))
                             {
                                 <div class="review-row">
@@ -1351,6 +1479,13 @@
                                     </form>
                                 </div>
                             }
+                        }
+                        else
+                        {
+                            <div class="post-reviews-empty">
+                                <i class="fas fa-comment-slash"></i>
+                                No reviews yet for this product.
+                            </div>
                         }
                     </div>
                 </div>
@@ -1384,8 +1519,16 @@
 
 <script>
     const productOrder = [@Html.Raw(string.Join(",", Model.Products.Select(p => p.ProductID)))];
-    let currentProductId = null;
-    const feedOverlay = document.getElementById('feedOverlay');
+let currentProductId = null;
+const feedOverlay = document.getElementById('feedOverlay');
+
+// Move the overlay to be a direct child of <body>, escaping any stacking
+// context created by wrapper elements in the layout (e.g. transformed
+// containers) that were letting the bottom nav paint on top despite our
+// very high z-index. This guarantees the overlay is always on top.
+if (feedOverlay && feedOverlay.parentElement !== document.body) {
+    document.body.appendChild(feedOverlay);
+}
 
     function sectionFor(id) {
         return document.getElementById('feed-' + id);
@@ -1395,18 +1538,27 @@
         if (!feedOverlay) return;
         feedOverlay.classList.add('open');
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('feed-open');
         currentProductId = id;
 
         const sec = sectionFor(id);
-        if (sec) {
-            feedOverlay.scrollTop = sec.offsetTop;
-        }
+        if (!sec) return;
+
+        // scrollIntoView is far more reliable than computing offsetTop manually —
+        // it always aligns to the actual rendered position, regardless of any
+        // layout timing quirks from the overlay just becoming visible.
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                sec.scrollIntoView({ behavior: 'auto', block: 'start' });
+            });
+        });
     }
 
     function closeProductModal() {
         if (!feedOverlay) return;
         feedOverlay.classList.remove('open');
         document.body.style.overflow = '';
+        document.body.classList.remove('feed-open');
         currentProductId = null;
     }
 
@@ -1440,18 +1592,26 @@
         const imgs = sec.querySelectorAll('.post-media img');
         const dots = sec.querySelectorAll('.gallery-dots span');
         const media = sec.querySelector('.post-media');
+        const counter = sec.querySelector('.gallery-counter-current');
         let current = parseInt(media.dataset.currentImage);
         imgs[current].style.display = 'none';
         if (dots[current]) dots[current].classList.remove('active');
         current = (current + direction + imgs.length) % imgs.length;
         imgs[current].style.display = 'block';
         if (dots[current]) dots[current].classList.add('active');
+        if (counter) counter.textContent = current + 1;
         media.dataset.currentImage = current;
     }
 
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && currentProductId !== null) closeProductModal();
-        if (e.key === 'Escape') closeSidePanel();
+        if (currentProductId === null) return;
+        if (e.key === 'Escape') { closeProductModal(); return; }
+        if (e.key === 'ArrowLeft') changeModalImage(currentProductId, -1);
+        if (e.key === 'ArrowRight') changeModalImage(currentProductId, 1);
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && currentProductId === null) closeSidePanel();
     });
 
     window.onload = function () {
@@ -1511,12 +1671,12 @@
                 const newId = productOrder[idx + dir];
                 if (newId != null) {
                     const sec = sectionFor(newId);
-                    if (sec) feedOverlay.scrollTo({ top: sec.offsetTop, behavior: 'smooth' });
+                    if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     return;
                 }
             }
             const sec = sectionFor(currentProductId);
-            if (sec) feedOverlay.scrollTo({ top: sec.offsetTop, behavior: 'smooth' });
+            if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         document.addEventListener('pointerdown', onPointerDown);

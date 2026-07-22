@@ -19,17 +19,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly UserManager<User> _userManager;
         private readonly WishlistManager _wishlistManager;
         private readonly MessagingManager _messagingManager;
+        private readonly BoostManager _boostManager;   // ADD THIS
 
         public Customer1Model(
             ApplicationDbContext context,
             UserManager<User> userManager,
             WishlistManager wishlistManager,
-            MessagingManager messagingManager)
+            MessagingManager messagingManager,
+            BoostManager boostManager)                  // ADD THIS
         {
             _context = context;
             _userManager = userManager;
             _wishlistManager = wishlistManager;
             _messagingManager = messagingManager;
+            _boostManager = boostManager;                // ADD THIS
         }
 
         public List<ExploreGridItemViewModel> InitialItems { get; set; } = new();
@@ -992,6 +995,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var normalizedSearch = searchTerm?.Trim();
             var normalizedArea = area?.Trim();
 
+            // NEW — expire due boosts and grab currently-active boosted product IDs,
+            // so both posts and plain products can be flagged/sorted below.
+            await _boostManager.ExpireDueBoostsAsync();
+            var boostedIds = await _boostManager.GetActiveBoostedProductIdsAsync();
+
             var postsQuery = _context.ExplorePosts
                 .AsNoTracking()
                 .Where(post =>
@@ -1070,6 +1078,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 })
                 .ToListAsync();
 
+            // NEW — stamp IsBoosted onto posts (post.ProductID may be null for pure image posts)
+            foreach (var item in postItems)
+            {
+                item.IsBoosted = item.ProductID.HasValue && boostedIds.Contains(item.ProductID.Value);
+            }
+
             var productsQuery = _context.Products
                 .AsNoTracking()
                 .Where(product =>
@@ -1133,11 +1147,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 })
                 .ToListAsync();
 
+            // NEW — stamp IsBoosted onto plain products
+            foreach (var item in productItems)
+            {
+                item.IsBoosted = item.ProductID.HasValue && boostedIds.Contains(item.ProductID.Value);
+            }
+
             var skip = (page - 1) * ExplorePageSize;
 
+            // CHANGED — boosted items float to the top, then existing date/id ordering
             var pageItems = postItems
                 .Concat(productItems)
-                .OrderByDescending(item => item.SortDate)
+                .OrderByDescending(item => item.IsBoosted)
+                .ThenByDescending(item => item.SortDate)
                 .ThenByDescending(item => item.ExplorePostID ?? 0)
                 .ThenByDescending(item => item.ProductID ?? 0)
                 .Skip(skip)
@@ -1549,6 +1571,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public string? CategoryName { get; set; }
 
         public DateTime SortDate { get; set; }
+
+        // NEW — true when this item's linked product has an active boost
+        public bool IsBoosted { get; set; }
     }
 
     public class ExplorePostDetailsViewModel

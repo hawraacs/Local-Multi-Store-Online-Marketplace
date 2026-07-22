@@ -64,5 +64,9 @@ namespace Multi_Store.Core.Entities
         // Explore posts linked to this product
         public virtual ICollection<ExplorePost> ExplorePosts { get; set; }
             = new List<ExplorePost>();
+
+        // Boost campaigns run on this product
+        public virtual ICollection<ProductBoost> Boosts { get; set; }
+            = new List<ProductBoost>();
     }
 }

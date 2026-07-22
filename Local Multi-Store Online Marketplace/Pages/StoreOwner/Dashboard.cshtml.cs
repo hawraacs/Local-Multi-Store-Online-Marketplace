@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
 using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Managers;
 using System.Linq;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
@@ -18,18 +19,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         private readonly ApplicationDbContext _context;
         private readonly ICurrentStoreService _currentStoreService;
         private readonly UserManager<User> _userManager;
+        private readonly BoostManager _boostManager;   // ADD THIS
 
         private readonly IConfiguration _configuration;
         public DashboardModel(
     ApplicationDbContext context,
     ICurrentStoreService currentStoreService,
     UserManager<User> userManager,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    BoostManager boostManager)                  // ADD THIS
         {
             _context = context;
             _currentStoreService = currentStoreService;
             _userManager = userManager;
             _configuration = configuration;
+            _boostManager = boostManager;                // ADD THIS
         }
 
         public Store Store { get; set; } = new();
@@ -39,6 +43,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public List<LowStockProduct> LowStockProducts { get; set; } = new();
         public List<SalesDataPoint> WeeklySales { get; set; } = new();
         public decimal StripeBalance { get; set; } = 0;
+
+        // NEW — active/pending boosts for this store, shown in a small panel
+        public List<ActiveBoostSummary> ActiveBoosts { get; set; } = new();
+
         public async Task<IActionResult> OnGetAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -77,6 +85,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             await LoadTopProducts(store.StoreID);
             await LoadLowStockProducts(store.StoreID);
             await LoadWeeklySales(store.StoreID);
+            await LoadBoostSummary(store.StoreID);   // ADD THIS
 
             return Page();
         }
@@ -179,7 +188,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     p.Quantity <= 0);
 
             // =========================
-            // PROFIT ANALYTICS (NEW)
+            // PROFIT ANALYTICS
             // =========================
 
             var deliveredOrderItems = await _context.OrderItems
@@ -217,6 +226,38 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     p.OriginalPrice.HasValue &&
                     p.OriginalPrice > 0 &&
                     ((p.Price - p.OriginalPrice.Value) / p.Price) * 100 < 10);
+
+            // =========================
+            // BOOST STATS (NEW)
+            // =========================
+
+            await _boostManager.ExpireDueBoostsAsync();
+
+            Stats.ActiveBoostsCount = await _context.ProductBoosts
+                .CountAsync(b => b.StoreID == storeId && b.Status == "Active");
+
+            Stats.TotalBoostSpend = await _context.ProductBoosts
+                .Where(b => b.StoreID == storeId && (b.Status == "Active" || b.Status == "Expired"))
+                .SumAsync(b => (decimal?)b.AmountPaid) ?? 0m;
+        }
+
+        // NEW — small panel of the store's currently active/pending boosts
+        private async Task LoadBoostSummary(int storeId)
+        {
+            ActiveBoosts = await _context.ProductBoosts
+                .Include(b => b.Product)
+                .Where(b => b.StoreID == storeId && (b.Status == "Active" || b.Status == "PendingPayment"))
+                .OrderByDescending(b => b.CreatedAt)
+                .Take(5)
+                .Select(b => new ActiveBoostSummary
+                {
+                    ProductID = b.ProductID,
+                    ProductName = b.Product != null ? b.Product.ProductName : "Product",
+                    Status = b.Status,
+                    EndDate = b.EndDate,
+                    DurationDays = b.DurationDays
+                })
+                .ToListAsync();
         }
 
         private async Task LoadRecentOrders(int storeId)
@@ -365,17 +406,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public int LowStockCount { get; set; }
         public int OutOfStockCount { get; set; }
 
-        // NEW FIELDS (PROFIT ANALYTICS)
+        // PROFIT ANALYTICS
         public decimal TotalProfit { get; set; }
         public decimal AverageMarginPercent { get; set; }
         public int LowMarginProductsCount { get; set; }
         public decimal OutstandingBalance { get; set; }
 
         public string SubscriptionStatus { get; set; } = "";
+
+        // BOOST STATS (NEW)
+        public int ActiveBoostsCount { get; set; }
+        public decimal TotalBoostSpend { get; set; }
     }
 
     public class RecentOrder
-    { 
+    {
         public int OrderID { get; set; }
         public string OrderNumber { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
@@ -406,5 +451,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public DateTime Date { get; set; }
         public decimal Revenue { get; set; }
         public string DayName { get; set; } = string.Empty;
+    }
+
+    // NEW
+    public class ActiveBoostSummary
+    {
+        public int ProductID { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public DateTime? EndDate { get; set; }
+        public int DurationDays { get; set; }
     }
 }

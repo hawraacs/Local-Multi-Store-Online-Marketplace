@@ -14,7 +14,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     public class AdminRevenueModel : PageModel
     {
         private readonly ApplicationDbContext _context;
-
         public AdminRevenueModel(ApplicationDbContext context)
         {
             _context = context;
@@ -24,26 +23,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public decimal TotalPlatformRevenue { get; set; }
         public decimal TotalCommission { get; set; }
         public decimal TotalSubscriptionRevenue { get; set; }
+        public decimal TotalBoostRevenue { get; set; }   // ADD THIS
         public int TotalStoresWithRevenue { get; set; }
         public decimal TotalSales { get; set; } // total order amount before commission
 
         // ─── Filter properties ───
         [BindProperty(SupportsGet = true)]
         public DateTime? StartDate { get; set; }
-
         [BindProperty(SupportsGet = true)]
         public DateTime? EndDate { get; set; }
-
         [BindProperty(SupportsGet = true)]
         public string SearchTerm { get; set; }
-
         [BindProperty(SupportsGet = true)]
-        public string RevenueType { get; set; } = "All"; // All, Commission, Subscription
+        public string RevenueType { get; set; } = "All"; // All, Commission, Subscription, Boost
 
         // ─── Pagination ───
         [BindProperty(SupportsGet = true)]
         public int PageIndex { get; set; } = 1;
-
         public int PageSize { get; } = 10;
         public int TotalCount { get; set; }
         public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
@@ -61,6 +57,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             // ─── 1. Build base store query with search filter ───
             var storesQuery = _context.Stores.AsNoTracking();
+
             if (!string.IsNullOrWhiteSpace(SearchTerm))
                 storesQuery = storesQuery.Where(s => s.StoreName.Contains(SearchTerm));
 
@@ -112,12 +109,34 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 x => x.SubscriptionFees
             );
 
+            // ─── 4b. Boost revenue for these stores (NEW) ───
+            // Counted the same way as your other revenue lines: booked once a boost
+            // has been paid for (Active or Expired), matching AmountPaid at time of purchase.
+            var boostQuery = from b in _context.ProductBoosts
+                             where storeIds.Contains(b.StoreID)
+                                && (b.Status == "Active" || b.Status == "Expired")
+                                && (StartDate == null || b.CreatedAt >= StartDate)
+                                && (EndDate == null || b.CreatedAt <= EndDate)
+                             group b by b.StoreID into g
+                             select new
+                             {
+                                 StoreId = g.Key,
+                                 BoostFees = g.Sum(b => b.AmountPaid)
+                             };
+
+            var boostData = await boostQuery.ToDictionaryAsync(
+                x => x.StoreId,
+                x => x.BoostFees
+            );
+
             // ─── 5. Build final list ───
             var revenueList = new List<StoreRevenueDto>();
+
             foreach (var store in storePage)
             {
                 decimal sales = 0;
                 int orderCount = 0;
+
                 if (orderData.TryGetValue(store.StoreID, out var ord))
                 {
                     sales = ord.TotalSales;
@@ -126,6 +145,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 decimal commission = sales * store.CommissionRate / 100m;
                 decimal subscription = subscriptionData.TryGetValue(store.StoreID, out var sub) ? sub : 0;
+                decimal boostFees = boostData.TryGetValue(store.StoreID, out var bf) ? bf : 0;   // ADD THIS
 
                 revenueList.Add(new StoreRevenueDto
                 {
@@ -134,6 +154,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     TotalSales = sales,
                     Commission = commission,
                     SubscriptionFees = subscription,
+                    BoostFees = boostFees,   // ADD THIS
                     OrderCount = orderCount
                 });
             }
@@ -143,6 +164,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 revenueList = revenueList.Where(r => r.Commission > 0).ToList();
             else if (RevenueType == "Subscription")
                 revenueList = revenueList.Where(r => r.SubscriptionFees > 0).ToList();
+            else if (RevenueType == "Boost")   // ADD THIS
+                revenueList = revenueList.Where(r => r.BoostFees > 0).ToList();
 
             StoreRevenueList = revenueList;
 
@@ -177,9 +200,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     && (StartDate == null || sp.PaymentDate >= StartDate)
                     && (EndDate == null || sp.PaymentDate <= EndDate))
                 .SumAsync(sp => sp.Amount);
-
             TotalSubscriptionRevenue = totalSubData;
-            TotalPlatformRevenue = TotalCommission + TotalSubscriptionRevenue;
+
+            // Total boost revenue (NEW)
+            TotalBoostRevenue = await _context.ProductBoosts
+                .Where(b => allStoreIds.Contains(b.StoreID)
+                    && (b.Status == "Active" || b.Status == "Expired")
+                    && (StartDate == null || b.CreatedAt >= StartDate)
+                    && (EndDate == null || b.CreatedAt <= EndDate))
+                .SumAsync(b => (decimal?)b.AmountPaid) ?? 0m;
+
+            TotalPlatformRevenue = TotalCommission + TotalSubscriptionRevenue + TotalBoostRevenue;   // CHANGED
 
             // Stores with revenue
             var storesWithRevenue = await _context.Stores
@@ -193,11 +224,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     HasSubscription = _context.SubscriptionPayments
                         .Any(sp => sp.StoreId == s.StoreID
                             && (StartDate == null || sp.PaymentDate >= StartDate)
-                            && (EndDate == null || sp.PaymentDate <= EndDate))
+                            && (EndDate == null || sp.PaymentDate <= EndDate)),
+                    HasBoost = _context.ProductBoosts   // ADD THIS
+                        .Any(b => b.StoreID == s.StoreID
+                            && (b.Status == "Active" || b.Status == "Expired")
+                            && (StartDate == null || b.CreatedAt >= StartDate)
+                            && (EndDate == null || b.CreatedAt <= EndDate))
                 })
                 .ToListAsync();
 
-            TotalStoresWithRevenue = storesWithRevenue.Count(s => s.HasCommission || s.HasSubscription);
+            TotalStoresWithRevenue = storesWithRevenue.Count(s => s.HasCommission || s.HasSubscription || s.HasBoost);   // CHANGED
         }
 
         // ─── CSV Export ───
@@ -205,6 +241,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             DateTime? startDate, DateTime? endDate, string searchTerm, string revenueType)
         {
             var storesQuery = _context.Stores.AsNoTracking();
+
             if (!string.IsNullOrWhiteSpace(searchTerm))
                 storesQuery = storesQuery.Where(s => s.StoreName.Contains(searchTerm));
 
@@ -241,15 +278,32 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 })
                 .ToDictionaryAsync(x => x.StoreId, x => x.Total);
 
+            // Boost data (NEW)
+            var boostData = await _context.ProductBoosts
+                .Where(b => storeIds.Contains(b.StoreID)
+                    && (b.Status == "Active" || b.Status == "Expired")
+                    && (startDate == null || b.CreatedAt >= startDate)
+                    && (endDate == null || b.CreatedAt <= endDate))
+                .GroupBy(b => b.StoreID)
+                .Select(g => new
+                {
+                    StoreId = g.Key,
+                    Total = g.Sum(b => b.AmountPaid)
+                })
+                .ToDictionaryAsync(x => x.StoreId, x => x.Total);
+
             var data = new List<StoreRevenueDto>();
+
             foreach (var store in allStores)
             {
                 decimal sales = orderData.TryGetValue(store.StoreID, out var s) ? s : 0;
                 decimal commission = sales * store.CommissionRate / 100m;
                 decimal subscription = subData.TryGetValue(store.StoreID, out var sub) ? sub : 0;
+                decimal boostFees = boostData.TryGetValue(store.StoreID, out var bf) ? bf : 0;   // ADD THIS
 
                 if (revenueType == "Commission" && commission == 0) continue;
                 if (revenueType == "Subscription" && subscription == 0) continue;
+                if (revenueType == "Boost" && boostFees == 0) continue;   // ADD THIS
 
                 data.Add(new StoreRevenueDto
                 {
@@ -258,18 +312,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     TotalSales = sales,
                     Commission = commission,
                     SubscriptionFees = subscription,
+                    BoostFees = boostFees,   // ADD THIS
                     OrderCount = 0
                 });
             }
 
-            data = data.OrderByDescending(r => r.Commission + r.SubscriptionFees).ToList();
+            data = data.OrderByDescending(r => r.Commission + r.SubscriptionFees + r.BoostFees).ToList();   // CHANGED
 
             // Build CSV
-            var csv = "Store Name,Commission Rate,Total Sales,Commission,Subscription Fees,Total Revenue\n";
+            var csv = "Store Name,Commission Rate,Total Sales,Commission,Subscription Fees,Boost Fees,Total Revenue\n";   // CHANGED
             foreach (var item in data)
             {
-                var total = item.Commission + item.SubscriptionFees;
-                csv += $"{item.StoreName},{item.CommissionRate}%,{item.TotalSales:N2},{item.Commission:N2},{item.SubscriptionFees:N2},{total:N2}\n";
+                var total = item.Commission + item.SubscriptionFees + item.BoostFees;   // CHANGED
+                csv += $"{item.StoreName},{item.CommissionRate}%,{item.TotalSales:N2},{item.Commission:N2},{item.SubscriptionFees:N2},{item.BoostFees:N2},{total:N2}\n";   // CHANGED
             }
 
             var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
@@ -285,7 +340,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public decimal TotalSales { get; set; }
         public decimal Commission { get; set; }
         public decimal SubscriptionFees { get; set; }
+        public decimal BoostFees { get; set; }   // ADD THIS
         public int OrderCount { get; set; }
-        public decimal TotalRevenue => Commission + SubscriptionFees;
+        public decimal TotalRevenue => Commission + SubscriptionFees + BoostFees;   // CHANGED
     }
 }

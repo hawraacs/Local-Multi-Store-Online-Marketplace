@@ -13,6 +13,7 @@ using Multi_Store.Services.Email;
 using Multi_Store.Services.Managers;
 using Multi_Store.Infrastructure.Settings;
 using Multi_Store.Infrastructure.Services;
+using Multi_Store.Services.Managers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -162,6 +163,7 @@ builder.Services.AddScoped<PaymentManager>();
 builder.Services.AddScoped<DeliveryManager>();
 builder.Services.AddScoped<ReviewManager>();
 builder.Services.AddScoped<NotificationManager>();
+builder.Services.AddScoped<BoostManager>();
 builder.Services.AddScoped<ComplaintManager>();
 builder.Services.AddScoped<MessagingManager>();
 builder.Services.AddScoped<WishlistManager>();

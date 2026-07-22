@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "Revenue Report";
 }
-
 @section Styles {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -46,6 +45,10 @@
             --info: #6366F1;
             --info-bg: #EEF2FF;
             --info-txt: #4338CA;
+            /* Boost accent (amber/orange), distinct from commission/subscription colors */
+            --boost: #F59E0B;
+            --boost-bg: #FEF3C7;
+            --boost-txt: #B45309;
             --radius-sm: 10px;
             --radius: 16px;
             --radius-lg: 24px;
@@ -119,12 +122,18 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 18px;
             margin: 28px 0 32px;
         }
 
-        @@media (max-width: 1200px) {
+        @@media (max-width: 1400px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @@media (max-width: 900px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -231,7 +240,6 @@
             color: var(--text-secondary);
             flex-wrap: wrap;
         }
-
         /* ── Filters ── */
         .filter-bar {
             background: var(--surface);
@@ -329,7 +337,6 @@
                 background: #15803D;
                 transform: scale(1.02);
             }
-
         /* ── Table panel ── */
         .table-panel {
             background: var(--surface);
@@ -518,9 +525,7 @@
         }
     </style>
 }
-
 <div class="dashboard">
-
     <!-- Header -->
     <div class="dashboard-header">
         <div class="header-left">
@@ -532,7 +537,6 @@
             @DateTime.Now.ToString("MMM yyyy")
         </div>
     </div>
-
     <!-- ─── Summary Cards ─── -->
     <div class="stats-grid">
         <div class="stat-card">
@@ -564,6 +568,15 @@
         </div>
         <div class="stat-card">
             <div class="stat-top">
+                <div class="stat-icon" style="color: var(--boost); background: var(--boost-bg);"><i class="fas fa-bolt"></i></div>
+            </div>
+            <div class="stat-body">
+                <div class="stat-title">Total Boost Fees</div>
+                <div class="stat-value"><span class="currency">$</span>@Model.TotalBoostRevenue.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top">
                 <div class="stat-icon" style="color: var(--positive); background: var(--positive-bg);"><i class="fas fa-store"></i></div>
             </div>
             <div class="stat-body">
@@ -572,7 +585,6 @@
             </div>
         </div>
     </div>
-
     <!-- ─── Filter Bar ─── -->
     <form method="get" class="filter-bar">
         <div class="filter-group">
@@ -593,6 +605,7 @@
                 <option value="All" selected="@(Model.RevenueType == "All")">All</option>
                 <option value="Commission" selected="@(Model.RevenueType == "Commission")">Commission only</option>
                 <option value="Subscription" selected="@(Model.RevenueType == "Subscription")">Subscription only</option>
+                <option value="Boost" selected="@(Model.RevenueType == "Boost")">Boost only</option>
             </select>
         </div>
         <div class="filter-actions">
@@ -601,7 +614,6 @@
             <a href="@Url.Page("AdminRevenue", "ExportCsv", new { startDate = Model.StartDate, endDate = Model.EndDate, searchTerm = Model.SearchTerm, revenueType = Model.RevenueType })" class="btn btn-success"><i class="fas fa-file-csv"></i> Export CSV</a>
         </div>
     </form>
-
     <!-- ─── Table ─── -->
     <div class="table-panel">
         <div class="panel-header">
@@ -617,6 +629,7 @@
                         <th style="text-align:right;">Total Sales</th>
                         <th style="text-align:right;">Commission</th>
                         <th style="text-align:right;">Subscription</th>
+                        <th style="text-align:right;">Boost Fees</th>
                         <th style="text-align:right;">Total Revenue</th>
                         <th style="text-align:center;">Orders</th>
                     </tr>
@@ -625,7 +638,7 @@
                     @if (!Model.StoreRevenueList.Any())
                     {
                         <tr>
-                            <td colspan="7" class="empty-state">
+                            <td colspan="8" class="empty-state">
                                 <i class="fas fa-store-slash"></i> No stores found with the current filters.
                             </td>
                         </tr>
@@ -640,6 +653,7 @@
                                 <td style="text-align:right;"><span class="amount">$@item.TotalSales.ToString("N2")</span></td>
                                 <td style="text-align:right; color:var(--info); font-weight:700;">$@item.Commission.ToString("N2")</td>
                                 <td style="text-align:right; color:var(--warning); font-weight:700;">$@item.SubscriptionFees.ToString("N2")</td>
+                                <td style="text-align:right; color:var(--boost); font-weight:700;">$@item.BoostFees.ToString("N2")</td>
                                 <td style="text-align:right; font-weight:800; font-size:16px;">$@item.TotalRevenue.ToString("N2")</td>
                                 <td style="text-align:center;">@item.OrderCount</td>
                             </tr>
@@ -648,7 +662,6 @@
                 </tbody>
             </table>
         </div>
-
         <!-- Pagination -->
         @if (Model.TotalPages > 1)
         {
@@ -675,5 +688,4 @@
             </div>
         }
     </div>
-
 </div>

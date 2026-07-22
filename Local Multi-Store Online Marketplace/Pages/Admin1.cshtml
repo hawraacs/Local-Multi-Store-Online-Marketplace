@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* ============================================================
-                           DARK NAVY / SLATE THEME — Admin Command Center
-                           ============================================================ */
+                                   DARK NAVY / SLATE THEME — Admin Command Center
+                                   ============================================================ */
         :root {
             /* ── Backgrounds ── */
             --bg-color: #F8FAFC;
@@ -50,6 +50,10 @@
             --info: #6366F1;
             --info-bg: #EEF2FF;
             --info-txt: #4338CA;
+            /* Boost accent (amber/orange) */
+            --boost: #F59E0B;
+            --boost-bg: #FEF3C7;
+            --boost-txt: #B45309;
             /* ── Shadows ── */
             --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
             --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
@@ -311,6 +315,79 @@
             .stat-footer .neutral {
                 color: var(--text-muted);
                 font-weight: 500;
+            }
+
+        /* ── Revenue composition bar (NEW) ── */
+        .revenue-breakdown {
+            margin-top: auto;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .revenue-bar {
+            display: flex;
+            width: 100%;
+            height: 7px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: var(--bg-soft);
+            margin-bottom: 10px;
+        }
+
+        .revenue-bar-segment {
+            height: 100%;
+            transition: width var(--transition);
+        }
+
+            .revenue-bar-segment.commission {
+                background: var(--info);
+            }
+
+            .revenue-bar-segment.subscription {
+                background: var(--warning);
+            }
+
+            .revenue-bar-segment.boost {
+                background: var(--boost);
+            }
+
+        .revenue-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .revenue-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .revenue-legend-item .dot {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+
+                .revenue-legend-item .dot.commission {
+                    background: var(--info);
+                }
+
+                .revenue-legend-item .dot.subscription {
+                    background: var(--warning);
+                }
+
+                .revenue-legend-item .dot.boost {
+                    background: var(--boost);
+                }
+
+            .revenue-legend-item .amount {
+                color: var(--text-primary);
+                font-weight: 700;
             }
 
         /* ── Section Label ── */
@@ -705,6 +782,12 @@
     </style>
 }
 
+@{
+    var commissionShare = Model.TotalPlatformRevenue > 0 ? (double)(Model.TotalCommission / Model.TotalPlatformRevenue) * 100 : 0;
+    var subscriptionShare = Model.TotalPlatformRevenue > 0 ? (double)(Model.TotalSubscriptionRevenue / Model.TotalPlatformRevenue) * 100 : 0;
+    var boostShare = Model.TotalPlatformRevenue > 0 ? (double)(Model.TotalBoostRevenue / Model.TotalPlatformRevenue) * 100 : 0;
+}
+
 <div class="dashboard">
 
     <!-- Header -->
@@ -732,10 +815,27 @@
                     <span class="currency">$</span>@Model.TotalPlatformRevenue.ToString("N0")
                 </div>
             </div>
-            <div class="stat-footer">
-                <span class="neutral"><i class="fas fa-percent"></i> $@Model.TotalCommission.ToString("N0") commission</span>
-                <span>·</span>
-                <span class="neutral"><i class="fas fa-calendar-check"></i> $@Model.TotalSubscriptionRevenue.ToString("N0") subscriptions</span>
+
+            <div class="revenue-breakdown">
+                <div class="revenue-bar">
+                    <div class="revenue-bar-segment commission" style="width: @commissionShare.ToString("F1")%;"></div>
+                    <div class="revenue-bar-segment subscription" style="width: @subscriptionShare.ToString("F1")%;"></div>
+                    <div class="revenue-bar-segment boost" style="width: @boostShare.ToString("F1")%;"></div>
+                </div>
+                <div class="revenue-legend">
+                    <span class="revenue-legend-item">
+                        <span class="dot commission"></span>
+                        Commission <span class="amount">$@Model.TotalCommission.ToString("N0")</span>
+                    </span>
+                    <span class="revenue-legend-item">
+                        <span class="dot subscription"></span>
+                        Subscriptions <span class="amount">$@Model.TotalSubscriptionRevenue.ToString("N0")</span>
+                    </span>
+                    <span class="revenue-legend-item">
+                        <span class="dot boost"></span>
+                        Boosts <span class="amount">$@Model.TotalBoostRevenue.ToString("N0")</span>
+                    </span>
+                </div>
             </div>
         </div>
 

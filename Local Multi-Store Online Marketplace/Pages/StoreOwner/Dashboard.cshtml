@@ -8,8 +8,8 @@
 @section Styles {
     <style>
         /* ============================================================
-           ROOT VARIABLES — matches brand palette
-           ============================================================ */
+                   ROOT VARIABLES — matches brand palette
+                   ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -23,14 +23,22 @@
             --text-muted: #9691a4;
             --border-color: #ece8f6;
             --success-color: #10b981;
+            --success-bg: #ecfdf5;
             --error-color: #dc2626;
+            --error-bg: #fef2f2;
             --warning-color: #f59e0b;
+            --warning-bg: #fffbeb;
             --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
             --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
             --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.18);
+            --radius-sm: 10px;
             --radius-md: 16px;
             --radius-lg: 24px;
             --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            /* Boost accent (amber/orange), distinct from brand purple */
+            --boost-color: #f59e0b;
+            --boost-hover: #d97706;
+            --boost-light: #fef3c7;
         }
 
         body {
@@ -41,8 +49,8 @@
         }
 
         /* ============================================================
-           WELCOME BANNER — upgraded with icon & gradient glow
-           ============================================================ */
+                   WELCOME BANNER
+                   ============================================================ */
         .welcome-banner {
             background: var(--accent-gradient);
             color: #ffffff;
@@ -59,17 +67,17 @@
             overflow: hidden;
         }
 
-        .welcome-banner::after {
-            content: '';
-            position: absolute;
-            top: -40%;
-            right: -10%;
-            width: 300px;
-            height: 300px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 50%;
-            pointer-events: none;
-        }
+            .welcome-banner::after {
+                content: '';
+                position: absolute;
+                top: -40%;
+                right: -10%;
+                width: 300px;
+                height: 300px;
+                background: rgba(255, 255, 255, 0.06);
+                border-radius: 50%;
+                pointer-events: none;
+            }
 
         .welcome-text h2 {
             font-size: 24px;
@@ -99,13 +107,44 @@
         }
 
         /* ============================================================
-           STATS GRID — responsive, elevated cards
-           ============================================================ */
+                   SECTION LABELS
+                   ============================================================ */
+        .section-label {
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin: 32px 0 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+            .section-label:first-of-type {
+                margin-top: 0;
+            }
+
+            .section-label::after {
+                content: "";
+                flex: 1;
+                height: 1px;
+                background: var(--border-color);
+            }
+
+            .section-label i {
+                color: var(--accent-color);
+                font-size: 12px;
+            }
+
+        /* ============================================================
+                   STATS GRID
+                   ============================================================ */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 28px;
+            gap: 18px;
+            margin-bottom: 8px;
         }
 
         .stat-card {
@@ -119,27 +158,27 @@
             overflow: hidden;
         }
 
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--accent-gradient);
-            opacity: 0;
-            transition: var(--transition);
-        }
+            .stat-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: var(--accent-gradient);
+                opacity: 0;
+                transition: var(--transition);
+            }
 
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-md);
-            border-color: var(--accent-color);
-        }
+            .stat-card:hover {
+                transform: translateY(-4px);
+                box-shadow: var(--shadow-md);
+                border-color: var(--accent-color);
+            }
 
-        .stat-card:hover::before {
-            opacity: 1;
-        }
+                .stat-card:hover::before {
+                    opacity: 1;
+                }
 
         .stat-header {
             display: flex;
@@ -149,7 +188,7 @@
         }
 
         .stat-title {
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 600;
             color: var(--text-secondary);
             letter-spacing: 0.3px;
@@ -182,8 +221,25 @@
             color: #fff;
         }
 
+        /* Boost-themed icon variant — stays amber even on card hover */
+        .stat-icon.boost-icon {
+            background: var(--boost-light);
+        }
+
+            .stat-icon.boost-icon i {
+                color: var(--boost-hover);
+            }
+
+        .stat-card:hover .stat-icon.boost-icon {
+            background: var(--boost-color);
+        }
+
+            .stat-card:hover .stat-icon.boost-icon i {
+                color: #fff;
+            }
+
         .stat-value {
-            font-size: 28px;
+            font-size: 27px;
             font-weight: 800;
             color: var(--text-primary);
             letter-spacing: -0.5px;
@@ -206,13 +262,12 @@
         }
 
         /* ============================================================
-           DASHBOARD ROW — two columns
-           ============================================================ */
+                   DASHBOARD ROW — two columns
+                   ============================================================ */
         .dashboard-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin-bottom: 30px;
+            gap: 20px;
         }
 
         .dashboard-card {
@@ -224,10 +279,10 @@
             transition: var(--transition);
         }
 
-        .dashboard-card:hover {
-            box-shadow: var(--shadow-md);
-            border-color: var(--accent-color);
-        }
+            .dashboard-card:hover {
+                box-shadow: var(--shadow-md);
+                border-color: var(--accent-color);
+            }
 
         .card-header {
             display: flex;
@@ -238,32 +293,48 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        .card-header h3 {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+            .card-header h3 {
+                font-size: 15.5px;
+                font-weight: 700;
+                color: var(--text-primary);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin: 0;
+            }
 
-        .card-header h3 i {
-            color: var(--accent-color);
-            font-size: 18px;
-        }
+                .card-header h3 i {
+                    color: var(--accent-color);
+                    font-size: 17px;
+                }
 
-        .card-header .view-all {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--accent-color);
-            text-decoration: none;
-            transition: var(--transition);
-        }
+                    .card-header h3 i.boost-icon-inline {
+                        color: var(--boost-hover);
+                    }
 
-        .card-header .view-all:hover {
-            color: var(--accent-hover);
-            text-decoration: underline;
-        }
+            .card-header .view-all {
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--accent-color);
+                text-decoration: none;
+                transition: var(--transition);
+                white-space: nowrap;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+                .card-header .view-all:hover {
+                    color: var(--accent-hover);
+                }
+
+                .card-header .view-all.boost-cta {
+                    color: var(--boost-hover);
+                }
+
+                    .card-header .view-all.boost-cta:hover {
+                        color: var(--boost-color);
+                    }
 
         .row-item {
             display: flex;
@@ -274,46 +345,174 @@
             transition: var(--transition);
         }
 
-        .row-item:last-child {
-            border-bottom: none;
-        }
+            .row-item:last-child {
+                border-bottom: none;
+            }
 
-        .row-item:hover {
-            background: var(--accent-light);
-            margin: 0 -8px;
-            padding-left: 8px;
-            padding-right: 8px;
-            border-radius: 8px;
-        }
+            .row-item:hover {
+                background: var(--accent-light);
+                margin: 0 -8px;
+                padding-left: 8px;
+                padding-right: 8px;
+                border-radius: 8px;
+            }
 
-        .row-item strong {
-            color: var(--text-primary);
-            font-size: 14px;
-            font-weight: 700;
-        }
+            .row-item strong {
+                color: var(--text-primary);
+                font-size: 14px;
+                font-weight: 700;
+            }
 
-        .row-item small {
-            color: var(--text-muted);
-            font-size: 12px;
-            display: block;
-        }
+            .row-item small {
+                color: var(--text-muted);
+                font-size: 12px;
+                display: block;
+            }
 
-        .row-item .amount {
-            color: var(--accent-color);
-            font-weight: 700;
-            font-size: 14px;
-        }
+            .row-item .amount {
+                color: var(--accent-color);
+                font-weight: 700;
+                font-size: 14px;
+            }
 
         .empty-row {
-            padding: 24px 0;
+            padding: 28px 12px;
             text-align: center;
             color: var(--text-muted);
             font-size: 13px;
         }
 
+            .empty-row i {
+                display: block;
+                font-size: 22px;
+                color: var(--border-color);
+                margin-bottom: 8px;
+            }
+
         /* ============================================================
-           RESPONSIVE
-           ============================================================ */
+                   BOOST PANEL — dedicated card-based layout
+                   ============================================================ */
+        .boost-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .boost-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+            .boost-item:hover {
+                border-color: var(--boost-color);
+                box-shadow: 0 4px 14px rgba(245, 158, 11, 0.10);
+            }
+
+        .boost-item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .boost-item-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+            .boost-item-icon.is-active {
+                background: var(--success-bg);
+                color: var(--success-color);
+            }
+
+            .boost-item-icon.is-pending {
+                background: var(--warning-bg);
+                color: var(--warning-color);
+            }
+
+        .boost-item-text {
+            min-width: 0;
+        }
+
+            .boost-item-text strong {
+                display: block;
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--text-primary);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 220px;
+            }
+
+        .boost-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 999px;
+            margin-top: 3px;
+        }
+
+            .boost-badge.is-active {
+                background: var(--success-bg);
+                color: #047857;
+            }
+
+            .boost-badge.is-pending {
+                background: var(--warning-bg);
+                color: #b45309;
+            }
+
+        .boost-item-action {
+            flex-shrink: 0;
+            text-decoration: none;
+            font-size: 12.5px;
+            font-weight: 700;
+            padding: 7px 16px;
+            border-radius: 999px;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+            .boost-item-action.view {
+                background: var(--success-bg);
+                color: #047857;
+            }
+
+                .boost-item-action.view:hover {
+                    background: var(--success-color);
+                    color: #fff;
+                }
+
+            .boost-item-action.pay {
+                background: var(--boost-light);
+                color: var(--boost-hover);
+            }
+
+                .boost-item-action.pay:hover {
+                    background: var(--boost-color);
+                    color: #fff;
+                }
+
+        /* ============================================================
+                   RESPONSIVE
+                   ============================================================ */
         @@media (max-width: 992px) {
             .dashboard-row {
                 grid-template-columns: 1fr;
@@ -325,19 +524,31 @@
                 grid-template-columns: repeat(2, 1fr);
                 gap: 14px;
             }
+
             .stat-card {
                 padding: 16px 18px;
             }
+
             .stat-value {
-                font-size: 22px;
+                font-size: 21px;
             }
+
             .welcome-banner {
                 padding: 24px 20px;
                 flex-direction: column;
                 align-items: flex-start;
             }
+
             .welcome-icon {
                 align-self: flex-end;
+            }
+
+            .boost-item {
+                flex-wrap: wrap;
+            }
+
+            .boost-item-text strong {
+                max-width: 160px;
             }
         }
 
@@ -360,7 +571,11 @@
     </div>
 </div>
 
-<!-- ========== STATS GRID 1 ========== -->
+<!-- ========== OVERVIEW ========== -->
+<div class="section-label">
+    <i class="fas fa-gauge-high"></i>
+    Overview
+</div>
 <div class="stats-grid">
 
     <div class="stat-card">
@@ -412,9 +627,22 @@
         <div class="stat-change">@Model.Stats.SubscriptionStatus</div>
     </div>
 
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Active Boosts</span>
+            <div class="stat-icon boost-icon"><i class="fas fa-bolt"></i></div>
+        </div>
+        <div class="stat-value">@Model.Stats.ActiveBoostsCount</div>
+        <div class="stat-change">$@Model.Stats.TotalBoostSpend.ToString("N2") spent total</div>
+    </div>
+
 </div>
 
-<!-- ========== STATS GRID 2 (order status + profit) ========== -->
+<!-- ========== ORDER PIPELINE ========== -->
+<div class="section-label">
+    <i class="fas fa-truck-fast"></i>
+    Order Pipeline
+</div>
 <div class="stats-grid">
 
     <div class="stat-card">
@@ -449,6 +677,15 @@
         <div class="stat-value">$@Model.Stats.TodayRevenue.ToString("N2")</div>
     </div>
 
+</div>
+
+<!-- ========== PROFITABILITY ========== -->
+<div class="section-label">
+    <i class="fas fa-sack-dollar"></i>
+    Profitability
+</div>
+<div class="stats-grid">
+
     <div class="stat-card">
         <div class="stat-header">
             <span class="stat-title">Total Profit</span>
@@ -471,14 +708,18 @@
 
 </div>
 
-<!-- ========== RECENT ORDERS & TOP PRODUCTS ========== -->
-<div class="dashboard-row">
+<!-- ========== ACTIVITY ========== -->
+<div class="section-label">
+    <i class="fas fa-clock-rotate-left"></i>
+    Activity
+</div>
+<div class="dashboard-row" style="margin-bottom: 20px;">
 
     <!-- Recent Orders -->
     <div class="dashboard-card">
         <div class="card-header">
             <h3><i class="fas fa-list-ul"></i> Recent Orders</h3>
-            <a href="/StoreOwner/Orders" class="view-all">View All</a>
+            <a href="/StoreOwner/Orders" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
         </div>
 
         @if (Model.RecentOrders.Any())
@@ -496,7 +737,10 @@
         }
         else
         {
-            <div class="empty-row">No recent orders yet.</div>
+            <div class="empty-row">
+                <i class="fas fa-inbox"></i>
+                No recent orders yet.
+            </div>
         }
     </div>
 
@@ -504,7 +748,7 @@
     <div class="dashboard-card">
         <div class="card-header">
             <h3><i class="fas fa-crown"></i> Top Products</h3>
-            <a href="/StoreOwner/Products" class="view-all">View All</a>
+            <a href="/StoreOwner/Products" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
         </div>
 
         @if (Model.TopProducts.Any())
@@ -519,8 +763,62 @@
         }
         else
         {
-            <div class="empty-row">No product data yet.</div>
+            <div class="empty-row">
+                <i class="fas fa-box-open"></i>
+                No product data yet.
+            </div>
         }
     </div>
 
+</div>
+
+<!-- ========== ACTIVE BOOSTS ========== -->
+<div class="dashboard-card">
+    <div class="card-header">
+        <h3><i class="fas fa-bolt boost-icon-inline"></i> Active Boosts</h3>
+        <a href="/StoreOwner/Products/Index" class="view-all boost-cta">Boost a product <i class="fas fa-arrow-right"></i></a>
+    </div>
+
+    @if (Model.ActiveBoosts.Any())
+    {
+        <div class="boost-list">
+            @foreach (var boost in Model.ActiveBoosts)
+            {
+                var isActive = boost.Status == "Active";
+                <div class="boost-item">
+                    <div class="boost-item-info">
+                        <div class="boost-item-icon @(isActive ? "is-active" : "is-pending")">
+                            <i class="fas @(isActive ? "fa-bolt" : "fa-hourglass-half")"></i>
+                        </div>
+                        <div class="boost-item-text">
+                            <strong>@boost.ProductName</strong>
+                            @if (isActive)
+                            {
+                                <span class="boost-badge is-active">
+                                    <i class="fas fa-circle-check"></i> Ends @boost.EndDate?.ToString("dd MMM")
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="boost-badge is-pending">
+                                    <i class="fas fa-hourglass-half"></i> Payment pending &middot; @boost.DurationDays days
+                                </span>
+                            }
+                        </div>
+                    </div>
+                    <a href="/StoreOwner/Products/Boost?productId=@boost.ProductID"
+                       class="boost-item-action @(isActive ? "view" : "pay")">
+                        @(isActive ? "View" : "Pay Now")
+                    </a>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-row">
+            <i class="fas fa-bolt"></i>
+            No active boosts. Boost a product from your product list to get more visibility!
+        </div>
+    }
 </div>

@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* ============================================================
-                   ADMIN THEME — matches Admin Dashboard (light / indigo+sky)
-                   ============================================================ */
+                           ADMIN THEME — matches Admin Dashboard (light / indigo+sky)
+                           ============================================================ */
         :root {
             /* ── Backgrounds ── */
             --bg-color: #F8FAFC;
@@ -81,6 +81,74 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
+        .page-wrap {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.5rem 3rem;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+            .page-header h1 {
+                font-size: 1.9rem;
+                font-weight: 900;
+                letter-spacing: -0.03em;
+                background: var(--accent-gradient);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin-bottom: 0.25rem;
+            }
+
+            .page-header p {
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #FFFFFF;
+            color: var(--text-primary);
+            border-radius: 999px;
+            padding: 8px 18px 8px 14px;
+            font-size: 12.5px;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+            .header-badge .dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--brand);
+                flex-shrink: 0;
+                animation: pulse-dot 2s ease-in-out infinite;
+            }
+
+        @@keyframes pulse-dot {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(0.85);
+            }
+        }
+
         /* ── Alerts ── */
         .alert {
             padding: 1rem 1.25rem;
@@ -148,14 +216,99 @@
                 flex-shrink: 0;
             }
 
+        /* ── Summary stat chips ── */
+        .stats-strip {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 14px;
+            margin-bottom: 1.75rem;
+        }
+
+        @@media (max-width: 900px) {
+            .stats-strip {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @@media (max-width: 560px) {
+            .stats-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .mini-stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 16px 14px;
+            box-shadow: var(--shadow-sm);
+            transition: transform var(--transition), box-shadow var(--transition);
+            cursor: pointer;
+        }
+
+            .mini-stat:hover {
+                transform: translateY(-3px);
+                box-shadow: var(--shadow-md);
+            }
+
+            .mini-stat .mini-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 9px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 13px;
+                margin-bottom: 10px;
+            }
+
+            .mini-stat.total .mini-icon {
+                background: var(--brand-soft);
+                color: var(--brand);
+            }
+
+            .mini-stat.pending .mini-icon {
+                background: var(--warning-bg);
+                color: var(--warning-txt);
+            }
+
+            .mini-stat.active .mini-icon {
+                background: var(--success-bg);
+                color: var(--success-txt);
+            }
+
+            .mini-stat.suspended .mini-icon {
+                background: var(--danger-bg);
+                color: var(--danger-txt);
+            }
+
+            .mini-stat.expired .mini-icon {
+                background: #F1F5F9;
+                color: var(--text-muted);
+            }
+
+            .mini-stat .mini-value {
+                font-size: 24px;
+                font-weight: 900;
+                letter-spacing: -0.02em;
+                color: var(--text-primary);
+                margin-bottom: 2px;
+            }
+
+            .mini-stat .mini-label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                color: var(--text-muted);
+            }
+
         /* ── Main Card ── */
         .stores-card {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius-xl);
-            padding: 2rem 2rem 1.5rem;
-            margin: 2rem auto;
-            max-width: 1400px;
+            padding: 1.75rem 1.75rem 1.25rem;
             box-shadow: var(--shadow-sm);
             transition: box-shadow var(--transition), border-color var(--transition);
         }
@@ -165,69 +318,44 @@
                 border-color: var(--brand-light);
             }
 
-            .stores-card h3 {
-                font-size: 1.75rem;
-                font-weight: 800;
-                letter-spacing: -0.03em;
-                background: var(--accent-gradient);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                margin-bottom: 0.25rem;
-                display: inline-block;
-            }
-
-            .stores-card > p {
-                color: var(--text-secondary);
-                margin-top: 0.25rem;
-                font-size: 0.9rem;
-            }
-
         /* ── Tabs ── */
         .tabs {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.25rem;
-            border-bottom: 2px solid var(--border);
-            margin: 1.5rem 0 1.75rem 0;
-            padding-bottom: 0;
+            gap: 6px;
+            background: var(--surface-2);
+            padding: 5px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+            width: fit-content;
+            max-width: 100%;
         }
 
         .tab-btn {
             background: none;
             border: none;
-            padding: 0.65rem 1.25rem;
-            font-weight: 600;
-            font-size: 0.9rem;
+            padding: 8px 18px;
+            font-weight: 700;
+            font-size: 0.83rem;
             cursor: pointer;
             color: var(--text-secondary);
-            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            border-radius: 999px;
             transition: all var(--transition);
-            position: relative;
             font-family: var(--font);
             letter-spacing: 0.01em;
+            white-space: nowrap;
         }
 
             .tab-btn:hover {
                 color: var(--brand);
-                background: var(--brand-soft);
             }
 
             .tab-btn.active {
-                color: var(--brand);
-                background: transparent;
+                color: #fff;
+                background: var(--accent-gradient);
+                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.30);
             }
-
-                .tab-btn.active::after {
-                    content: '';
-                    position: absolute;
-                    bottom: -2px;
-                    left: 0;
-                    right: 0;
-                    height: 3px;
-                    background: var(--accent-gradient);
-                    border-radius: 3px 3px 0 0;
-                }
 
             .tab-btn:focus-visible {
                 outline: 2px solid var(--brand);
@@ -238,7 +366,6 @@
         .table-responsive {
             overflow-x: auto;
             border-radius: var(--radius);
-            margin-top: 0.5rem;
             border: 1px solid var(--border);
             background: var(--surface);
         }
@@ -253,14 +380,22 @@
             text-align: left;
             padding: 0.9rem 1rem;
             background: var(--surface-2);
-            font-weight: 600;
-            font-size: 0.7rem;
+            font-weight: 700;
+            font-size: 0.68rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: var(--text-muted);
             border-bottom: 1.5px solid var(--border);
             white-space: nowrap;
         }
+
+            thead th:first-child {
+                border-radius: var(--radius-sm) 0 0 0;
+            }
+
+            thead th:last-child {
+                border-radius: 0 var(--radius-sm) 0 0;
+            }
 
         tbody td {
             padding: 0.9rem 1rem;
@@ -278,73 +413,146 @@
             background: var(--surface-hover);
         }
 
+        /* ── Store / owner identity cells ── */
+        .store-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .store-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: var(--brand-soft);
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .store-cell strong {
+            display: block;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 0.88rem;
+        }
+
+        .store-city {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .owner-cell strong {
+            color: var(--text-primary);
+            font-weight: 600;
+            display: block;
+            font-size: 0.85rem;
+        }
+
+        .owner-email {
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
         /* ── Status Badges ── */
         .status-badge {
-            padding: 0.25rem 0.8rem;
+            padding: 0.3rem 0.85rem;
             border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.72rem;
+            font-weight: 700;
             display: inline-flex;
             align-items: center;
             gap: 0.375rem;
             white-space: nowrap;
             letter-spacing: 0.01em;
-            border: 1px solid transparent;
         }
+
+            .status-badge::before {
+                content: "";
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
 
         .status-pending {
             background: var(--warning-bg);
             color: var(--warning-txt);
-            border-color: #FCD34D;
         }
+
+            .status-pending::before {
+                background: var(--warning);
+            }
 
         .status-approved {
             background: var(--success-bg);
             color: var(--success-txt);
-            border-color: #86EFAC;
         }
+
+            .status-approved::before {
+                background: var(--success);
+            }
 
         .status-inactive {
             background: var(--bg-soft);
             color: var(--text-muted);
-            border-color: var(--border);
         }
+
+            .status-inactive::before {
+                background: var(--text-muted);
+            }
 
         .status-expired {
             background: var(--danger-bg);
             color: var(--danger-txt);
-            border-color: #FCA5A5;
         }
+
+            .status-expired::before {
+                background: var(--danger);
+            }
 
         .status-suspended {
             background: #FEF2F2;
             color: #991B1B;
-            border-color: #FCA5A5;
         }
 
-        .status-pending::before {
-            content: "⏳";
-            font-size: 0.7rem;
+            .status-suspended::before {
+                background: #DC2626;
+            }
+
+        /* ── Expiry cell ── */
+        .expiry-cell {
+            font-size: 0.82rem;
+            white-space: nowrap;
         }
 
-        .status-approved::before {
-            content: "✓";
-            font-weight: bold;
+        .expiry-date {
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
-        .status-inactive::before {
-            content: "⛔";
-            font-size: 0.7rem;
+        .expiry-sub {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            display: block;
+            margin-top: 2px;
         }
 
-        .status-expired::before {
-            content: "⌛";
-            font-size: 0.7rem;
-        }
+            .expiry-sub.expired-txt {
+                color: var(--danger);
+                font-weight: 700;
+            }
 
-        .status-suspended::before {
-            content: "🚫";
-            font-size: 0.7rem;
+        .expiry-never {
+            color: var(--text-muted);
+            font-style: italic;
         }
 
         /* ── Actions Cell ── */
@@ -353,159 +561,169 @@
             flex-wrap: wrap;
             gap: 0.4rem;
             align-items: center;
+            min-width: 240px;
         }
 
-        .btn-approve,
-        .btn-reject,
-        .btn-deactivate,
-        .btn-activate {
+        .btn-approve, .btn-reject, .btn-deactivate, .btn-activate {
             border: none;
-            padding: 0.35rem 0.85rem;
+            padding: 0.4rem 0.85rem;
             border-radius: 999px;
             cursor: pointer;
             font-size: 0.72rem;
-            font-weight: 600;
+            font-weight: 700;
             transition: all var(--transition);
             white-space: nowrap;
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
             letter-spacing: 0.01em;
-            box-shadow: var(--shadow-sm);
             font-family: var(--font);
         }
 
         .btn-approve {
-            background: var(--success);
-            color: white;
+            background: var(--success-bg);
+            color: var(--success-txt);
         }
 
             .btn-approve:hover {
-                background: #0E9F6E;
+                background: var(--success);
+                color: #fff;
                 transform: translateY(-1px);
-                box-shadow: var(--shadow-md);
+                box-shadow: var(--shadow-sm);
             }
 
         .btn-reject {
-            background: var(--danger);
-            color: white;
+            background: var(--danger-bg);
+            color: var(--danger-txt);
         }
 
             .btn-reject:hover {
-                background: #B91C1C;
+                background: var(--danger);
+                color: #fff;
                 transform: translateY(-1px);
             }
 
         .btn-deactivate {
-            background: var(--warning);
-            color: white;
+            background: var(--warning-bg);
+            color: var(--warning-txt);
         }
 
             .btn-deactivate:hover {
-                background: #B45309;
+                background: var(--warning);
+                color: #fff;
                 transform: translateY(-1px);
             }
 
         .btn-activate {
-            background: var(--brand);
-            color: white;
+            background: var(--brand-soft);
+            color: var(--brand-dark);
         }
 
             .btn-activate:hover {
-                background: var(--brand-dark);
+                background: var(--brand);
+                color: #fff;
                 transform: translateY(-1px);
-                box-shadow: var(--shadow-md);
+                box-shadow: var(--shadow-sm);
             }
-
-        /* ── Subscription expiry column ── */
-        td:nth-child(7) {
-            font-size: 0.8rem;
-            white-space: nowrap;
-        }
-
-            td:nth-child(7) small {
-                color: var(--text-muted);
-                font-size: 0.7rem;
-                display: block;
-                margin-top: 0.15rem;
-            }
-
-        /* ── Empty state ── */
-        tbody tr td[colspan] {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: var(--text-muted);
-            font-style: italic;
-            font-size: 0.95rem;
-        }
-
-            tbody tr td[colspan]::before {
-                content: "📭 ";
-                font-style: normal;
-            }
-
-        /* ── Responsive ── */
-        @@media (max-width: 768px) {
-            .stores-card {
-                padding: 1.25rem;
-                margin: 1rem;
-            }
-
-            .tab-btn {
-                padding: 0.45rem 0.9rem;
-                font-size: 0.8rem;
-            }
-
-            thead th,
-            tbody td {
-                padding: 0.65rem 0.65rem;
-            }
-
-            .actions-cell {
-                gap: 0.3rem;
-            }
-
-            .btn-approve,
-            .btn-reject,
-            .btn-deactivate,
-            .btn-activate {
-                padding: 0.25rem 0.6rem;
-                font-size: 0.65rem;
-            }
-
-            td:nth-child(7) {
-                font-size: 0.7rem;
-            }
-
-                td:nth-child(7) small {
-                    font-size: 0.6rem;
-                }
-        }
-
-        @@media (max-width: 480px) {
-            .tabs {
-                gap: 0;
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .tab-btn {
-                flex: 0 0 auto;
-                padding: 0.4rem 0.75rem;
-                font-size: 0.75rem;
-            }
-        }
 
         button:focus-visible {
             outline: 2px solid var(--brand);
             outline-offset: 2px;
         }
+
+        /* ── Empty state ── */
+        .empty-row td {
+            padding: 3.5rem 1rem !important;
+        }
+
+        .empty-state-inline {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+        }
+
+            .empty-state-inline i {
+                font-size: 30px;
+                color: var(--border);
+            }
+
+            .empty-state-inline strong {
+                font-size: 0.95rem;
+                color: var(--text-secondary);
+                font-weight: 700;
+            }
+
+            .empty-state-inline span {
+                font-size: 0.82rem;
+            }
+
+        /* ── Responsive ── */
+        @@media (max-width: 768px) {
+            .page-wrap {
+                padding: 0 1rem 2rem;
+                margin: 1rem auto;
+            }
+
+            .stores-card {
+                padding: 1.1rem;
+            }
+
+            .tab-btn {
+                padding: 6px 14px;
+                font-size: 0.78rem;
+            }
+
+            thead th, tbody td {
+                padding: 0.65rem 0.65rem;
+            }
+
+            .actions-cell {
+                gap: 0.3rem;
+                min-width: 0;
+            }
+
+            .btn-approve, .btn-reject, .btn-deactivate, .btn-activate {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.65rem;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                max-width: 100%;
+            }
+
+            .tab-btn {
+                flex: 0 0 auto;
+            }
+        }
     </style>
 }
-<div class="stores-card">
-    <h3>🏪 Store Management</h3>
-    <p style="color: var(--gray-600); margin-top: 0.25rem; font-size: 0.9rem;">Manage store approvals, subscriptions, and account status</p>
+
+@{
+    var totalStores = Model.Stores?.Count ?? 0;
+    var activeCount = Model.Stores?.Count(s => (s.Status ?? "").Equals("Approved", StringComparison.OrdinalIgnoreCase)) ?? 0;
+    var suspendedCount = Model.Stores?.Count(s => (s.Status ?? "").Equals("Suspended", StringComparison.OrdinalIgnoreCase)) ?? 0;
+    var expiredCount = Model.Stores?.Count(s => (s.SubscriptionStatus ?? "").Equals("Expired", StringComparison.OrdinalIgnoreCase)) ?? 0;
+}
+
+<div class="page-wrap">
+
+    <div class="page-header">
+        <div>
+            <h1><i class="fas fa-store" style="-webkit-text-fill-color: var(--brand); margin-right:8px;"></i>Store Management</h1>
+            <p>Manage store approvals, subscriptions, and account status</p>
+        </div>
+        <div class="header-badge">
+            <span class="dot"></span>
+            @totalStores total stores
+        </div>
+    </div>
 
     @if (TempData["Success"] != null)
     {
@@ -517,141 +735,187 @@
         <div class="alert alert-danger">@TempData["Error"]</div>
     }
 
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="all">📋 All Stores</button>
-        <button class="tab-btn" data-tab="pending">⏳ Pending (@Model.PendingCount)</button>
-        <button class="tab-btn" data-tab="active">✅ Active</button>
-        <button class="tab-btn" data-tab="inactive">❌ Inactive</button>
-        <button class="tab-btn" data-tab="suspended">🚫 Suspended</button>
-        <button class="tab-btn" data-tab="expired">⌛ Expired</button>
+    <!-- ── Quick summary chips (click to filter, same as tabs) ── -->
+    <div class="stats-strip">
+        <div class="mini-stat total" onclick="document.querySelector('.tab-btn[data-tab=all]').click()">
+            <div class="mini-icon"><i class="fas fa-store"></i></div>
+            <div class="mini-value">@totalStores</div>
+            <div class="mini-label">All Stores</div>
+        </div>
+        <div class="mini-stat pending" onclick="document.querySelector('.tab-btn[data-tab=pending]').click()">
+            <div class="mini-icon"><i class="fas fa-hourglass-half"></i></div>
+            <div class="mini-value">@Model.PendingCount</div>
+            <div class="mini-label">Pending</div>
+        </div>
+        <div class="mini-stat active" onclick="document.querySelector('.tab-btn[data-tab=active]').click()">
+            <div class="mini-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="mini-value">@activeCount</div>
+            <div class="mini-label">Active</div>
+        </div>
+        <div class="mini-stat suspended" onclick="document.querySelector('.tab-btn[data-tab=suspended]').click()">
+            <div class="mini-icon"><i class="fas fa-ban"></i></div>
+            <div class="mini-value">@suspendedCount</div>
+            <div class="mini-label">Suspended</div>
+        </div>
+        <div class="mini-stat expired" onclick="document.querySelector('.tab-btn[data-tab=expired]').click()">
+            <div class="mini-icon"><i class="fas fa-calendar-times"></i></div>
+            <div class="mini-value">@expiredCount</div>
+            <div class="mini-label">Expired</div>
+        </div>
     </div>
-    <div class="table-responsive">
-        <table id="storesTable">
-            <thead>
-                <tr>
-                    <th>Store Name</th>
-                    <th>Owner</th>
-                    <th>Email</th>
-                    <th>City</th>
-                    <th>Status</th>
-                    <th>Subscription</th>
-                    <th>Expiry Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Stores != null && Model.Stores.Any())
-                {
-                    foreach (var store in Model.Stores)
+
+    <div class="stores-card">
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="all">All Stores</button>
+            <button class="tab-btn" data-tab="pending">Pending (@Model.PendingCount)</button>
+            <button class="tab-btn" data-tab="active">Active</button>
+            <button class="tab-btn" data-tab="inactive">Inactive</button>
+            <button class="tab-btn" data-tab="suspended">Suspended</button>
+            <button class="tab-btn" data-tab="expired">Expired</button>
+        </div>
+
+        <div class="table-responsive">
+            <table id="storesTable">
+                <thead>
+                    <tr>
+                        <th>Store</th>
+                        <th>Owner</th>
+                        <th>Status</th>
+                        <th>Subscription</th>
+                        <th>Expiry</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Stores != null && Model.Stores.Any())
                     {
-                        if (store == null) continue;
-
-                        var status = store.Status ?? "Pending";
-                        var statusKey = status.ToLower();
-
-                        var subStatus = store.SubscriptionStatus ?? "Active";
-                        var subStatusKey = subStatus.ToLower();
-
-                        int daysLeft = 0;
-                        bool hasExpiry = store.SubscriptionExpiryDate.HasValue;
-                        if (hasExpiry)
+                        foreach (var store in Model.Stores)
                         {
-                            daysLeft = (store.SubscriptionExpiryDate.Value.Date - DateTime.UtcNow.Date).Days;
-                        }
+                            if (store == null) continue;
 
-                        <tr data-status="@statusKey" data-substatus="@subStatusKey">
-                            <td>@store.StoreName</td>
-                            <td>@store.Owner?.FullName</td>
-                            <td>@store.OwnerEmail</td>
-                            <td>@store.City</td>
-                            <td>
-                                <span class="status-badge
-                                    @(statusKey == "approved" ? "status-approved" :
-                                        statusKey == "pending" ? "status-pending" :
-                                        "status-inactive")">
-                                    @status
-                                </span>
-                            </td>
-                            <td>
-                                <span class="status-badge
-                                    @(subStatusKey == "active" ? "status-approved" :
-                                        subStatusKey == "expired" ? "status-expired" :
-                                        "status-inactive")">
-                                    @subStatus
-                                </span>
-                            </td>
-                            <td>
-                                @if (hasExpiry)
-                                {
-                                    if (daysLeft < 0)
+                            var status = store.Status ?? "Pending";
+                            var statusKey = status.ToLower();
+
+                            var subStatus = store.SubscriptionStatus ?? "Active";
+                            var subStatusKey = subStatus.ToLower();
+
+                            int daysLeft = 0;
+                            bool hasExpiry = store.SubscriptionExpiryDate.HasValue;
+                            if (hasExpiry)
+                            {
+                                daysLeft = (store.SubscriptionExpiryDate.Value.Date - DateTime.UtcNow.Date).Days;
+                            }
+
+                            var storeInitial = string.IsNullOrWhiteSpace(store.StoreName) ? "S" : store.StoreName.Substring(0, 1).ToUpper();
+
+                            <tr data-status="@statusKey" data-substatus="@subStatusKey">
+                                <td>
+                                    <div class="store-cell">
+                                        <span class="store-avatar">@storeInitial</span>
+                                        <div>
+                                            <strong>@store.StoreName</strong>
+                                            <span class="store-city"><i class="fas fa-location-dot"></i> @store.City</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="owner-cell">
+                                    <strong>@store.Owner?.FullName</strong>
+                                    <span class="owner-email">@store.OwnerEmail</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge
+                                        @(statusKey == "approved" ? "status-approved" :
+                                              statusKey == "pending" ? "status-pending" :
+                                              "status-inactive")">
+                                        @status
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge
+                                        @(subStatusKey == "active" ? "status-approved" :
+                                              subStatusKey == "expired" ? "status-expired" :
+                                              "status-inactive")">
+                                        @subStatus
+                                    </span>
+                                </td>
+                                <td class="expiry-cell">
+                                    @if (hasExpiry)
                                     {
-                                        <span style="color: #dc2626; font-weight: 500;">Expired</span>
-                                        <br />
-                                        <small>@store.SubscriptionExpiryDate.Value.ToString("yyyy-MM-dd")</small>
+                                        if (daysLeft < 0)
+                                        {
+                                            <span class="expiry-date">@store.SubscriptionExpiryDate.Value.ToString("dd MMM yyyy")</span>
+                                            <span class="expiry-sub expired-txt">Expired</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="expiry-date">@store.SubscriptionExpiryDate.Value.ToString("dd MMM yyyy")</span>
+                                            <span class="expiry-sub">@daysLeft days left</span>
+                                        }
                                     }
                                     else
                                     {
-                                        <span>@store.SubscriptionExpiryDate.Value.ToString("yyyy-MM-dd")</span>
-                                        <br />
-                                        <small>@daysLeft days left</small>
+                                        <span class="expiry-never">Never</span>
                                     }
-                                }
-                                else
-                                {
-                                    <span style="color: var(--gray-600);">Never</span>
-                                }
-                            </td>
-                            <td class="actions-cell">
-                                @if (statusKey == "pending")
-                                {
-                                    <form method="post" asp-page-handler="Approve" style="display:inline;">
-                                        <input type="hidden" name="id" value="@store.StoreID" />
-                                        <button class="btn-approve" title="Approve store">✓ Approve</button>
-                                    </form>
-                                    <form method="post" asp-page-handler="Reject" style="display:inline;">
-                                        <input type="hidden" name="id" value="@store.StoreID" />
-                                        <button class="btn-reject" title="Reject store">✗ Reject</button>
-                                    </form>
-                                }
-                                else if (statusKey == "approved")
-                                {
-                                    <form method="post" asp-page-handler="Deactivate" style="display:inline;">
-                                        <input type="hidden" name="id" value="@store.StoreID" />
-                                        <button class="btn-deactivate" title="Deactivate store">⛔ Deactivate</button>
-                                    </form>
-                                }
-                                else if (statusKey == "inactive")
-                                {
-                                    <form method="post" asp-page-handler="Activate" style="display:inline;">
-                                        <input type="hidden" name="id" value="@store.StoreID" />
-                                        <button class="btn-activate" title="Activate store">▶ Activate</button>
-                                    </form>
-                                }
+                                </td>
+                                <td class="actions-cell">
+                                    @if (statusKey == "pending")
+                                    {
+                                        <form method="post" asp-page-handler="Approve" style="display:inline;">
+                                            <input type="hidden" name="id" value="@store.StoreID" />
+                                            <button class="btn-approve" title="Approve store"><i class="fas fa-check"></i> Approve</button>
+                                        </form>
+                                        <form method="post" asp-page-handler="Reject" style="display:inline;">
+                                            <input type="hidden" name="id" value="@store.StoreID" />
+                                            <button class="btn-reject" title="Reject store"><i class="fas fa-xmark"></i> Reject</button>
+                                        </form>
+                                    }
+                                    else if (statusKey == "approved")
+                                    {
+                                        <form method="post" asp-page-handler="Deactivate" style="display:inline;">
+                                            <input type="hidden" name="id" value="@store.StoreID" />
+                                            <button class="btn-deactivate" title="Deactivate store"><i class="fas fa-ban"></i> Deactivate</button>
+                                        </form>
+                                    }
+                                    else if (statusKey == "inactive")
+                                    {
+                                        <form method="post" asp-page-handler="Activate" style="display:inline;">
+                                            <input type="hidden" name="id" value="@store.StoreID" />
+                                            <button class="btn-activate" title="Activate store"><i class="fas fa-play"></i> Activate</button>
+                                        </form>
+                                    }
 
-                                <form method="post" asp-page-handler="Extend" style="display:inline;">
-                                    <input type="hidden" name="id" value="@store.StoreID" />
-                                    <button class="btn-activate" title="Extend subscription by 30 days">📅 Extend (+30d)</button>
-                                </form>
-                                <form method="post" asp-page-handler="Suspend" style="display:inline;">
-                                    <input type="hidden" name="id" value="@store.StoreID" />
-                                    <button class="btn-deactivate" title="Suspend subscription">⏸ Suspend</button>
-                                </form>
-                                <form method="post" asp-page-handler="ActivateSubscription" style="display:inline;">
-                                    <input type="hidden" name="id" value="@store.StoreID" />
-                                    <button class="btn-approve" title="Activate subscription">🔄 Activate Sub</button>
-                                </form>
+                                    <form method="post" asp-page-handler="Extend" style="display:inline;">
+                                        <input type="hidden" name="id" value="@store.StoreID" />
+                                        <button class="btn-activate" title="Extend subscription by 30 days"><i class="fas fa-calendar-plus"></i> +30d</button>
+                                    </form>
+                                    <form method="post" asp-page-handler="Suspend" style="display:inline;">
+                                        <input type="hidden" name="id" value="@store.StoreID" />
+                                        <button class="btn-deactivate" title="Suspend subscription"><i class="fas fa-pause"></i> Suspend</button>
+                                    </form>
+                                    <form method="post" asp-page-handler="ActivateSubscription" style="display:inline;">
+                                        <input type="hidden" name="id" value="@store.StoreID" />
+                                        <button class="btn-approve" title="Activate subscription"><i class="fas fa-rotate"></i> Activate Sub</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr class="empty-row">
+                            <td colspan="6">
+                                <div class="empty-state-inline">
+                                    <i class="fas fa-inbox"></i>
+                                    <strong>No stores found</strong>
+                                    <span>Stores will appear here once they register.</span>
+                                </div>
                             </td>
                         </tr>
                     }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="8" style="text-align: center; padding: 3rem;">📭 No stores found</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -662,8 +926,7 @@
     function filterTable(tabId) {
         rows.forEach(row => {
             // Skip the empty state row (colspan)
-            if (row.cells.length === 1 && row.cells[0].colSpan) {
-                row.style.display = '';
+            if (row.classList.contains('empty-row')) {
                 return;
             }
             const status = row.dataset.status;      // from store.Status (lowercase)

@@ -201,6 +201,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 .OrderBy(sp => sp.PaymentDate)
                 .ToListAsync();
 
+            // Boost payments (NEW) — counted the same way as elsewhere in the app:
+            // booked once actually paid for (Active or Expired), using CreatedAt as the
+            // transaction date since that's when the store owner's card was charged.
+            var boostPayments = await _context.ProductBoosts
+                .Include(b => b.Product)
+                .Where(b => b.StoreID == store.StoreID && (b.Status == "Active" || b.Status == "Expired"))
+                .OrderBy(b => b.CreatedAt)
+                .ToListAsync();
+
             var lines = new List<StatementLine>();
 
             foreach (var o in orderGroups)
@@ -212,6 +221,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     GrossRevenue = o.GrossAmount,
                     Commission = o.Commission,
                     SubscriptionFee = 0,
+                    BoostFee = 0,
                     Type = LineType.Order
                 });
             }
@@ -225,7 +235,24 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     GrossRevenue = 0,
                     Commission = 0,
                     SubscriptionFee = p.Amount,
+                    BoostFee = 0,
                     Type = LineType.Subscription
+                });
+            }
+
+            // NEW — one line per paid boost
+            foreach (var b in boostPayments)
+            {
+                var productName = b.Product?.ProductName ?? "Product";
+                lines.Add(new StatementLine
+                {
+                    Date = b.CreatedAt,
+                    Description = $"Boost - {productName} ({b.DurationDays} days)",
+                    GrossRevenue = 0,
+                    Commission = 0,
+                    SubscriptionFee = 0,
+                    BoostFee = b.AmountPaid,
+                    Type = LineType.Boost
                 });
             }
 
@@ -234,7 +261,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             Summary.TotalGrossRevenue = orderGroups.Sum(o => o.GrossAmount);
             Summary.TotalCommission = orderGroups.Sum(o => o.Commission);
             Summary.TotalSubscriptionFees = subscriptionPayments.Sum(p => p.Amount);
-            Summary.NetRevenue = Summary.TotalGrossRevenue - Summary.TotalCommission - Summary.TotalSubscriptionFees;
+            Summary.TotalBoostFees = boostPayments.Sum(b => b.AmountPaid);   // NEW
+            Summary.NetRevenue = Summary.TotalGrossRevenue - Summary.TotalCommission - Summary.TotalSubscriptionFees - Summary.TotalBoostFees;   // CHANGED
             Summary.OutstandingBalance = store.OutstandingBalance;
         }
 
@@ -272,6 +300,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public decimal TotalGrossRevenue { get; set; }
         public decimal TotalCommission { get; set; }
         public decimal TotalSubscriptionFees { get; set; }
+        public decimal TotalBoostFees { get; set; }   // NEW
         public decimal NetRevenue { get; set; }
         public decimal OutstandingBalance { get; set; }
     }
@@ -283,13 +312,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public decimal GrossRevenue { get; set; }
         public decimal Commission { get; set; }
         public decimal SubscriptionFee { get; set; }
+        public decimal BoostFee { get; set; }   // NEW
         public LineType Type { get; set; }
-        public decimal NetEffect => GrossRevenue - Commission - SubscriptionFee;
+        public decimal NetEffect => GrossRevenue - Commission - SubscriptionFee - BoostFee;   // CHANGED
     }
 
     public enum LineType
     {
         Order,
-        Subscription
+        Subscription,
+        Boost   // NEW
     }
 }

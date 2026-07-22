@@ -24,20 +24,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         private readonly UserManager<User> _userManager;
         private readonly ILogger<StoreOwnerPaymentModel> _logger;
         private readonly IConfiguration _configuration;
-        private readonly NotificationManager _notifications;   // ADD THIS
+        private readonly NotificationManager _notifications;
+        private readonly BoostManager _boostManager;
 
         public StoreOwnerPaymentModel(
-    ApplicationDbContext context,
-    UserManager<User> userManager,
-    ILogger<StoreOwnerPaymentModel> logger,
-    IConfiguration configuration,
-    NotificationManager notifications)                  // ADD THIS
+            ApplicationDbContext context,
+            UserManager<User> userManager,
+            ILogger<StoreOwnerPaymentModel> logger,
+            IConfiguration configuration,
+            NotificationManager notifications,
+            BoostManager boostManager)
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
             _configuration = configuration;
-            _notifications = notifications;                     // ADD THIS
+            _notifications = notifications;
+            _boostManager = boostManager;
         }
 
         public StorePayment? Payment { get; set; }
@@ -67,10 +70,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         [BindProperty(SupportsGet = true)]
         public string? ReturnUrl { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int paymentId, string? returnUrl = null)
+        // NEW — carries the pending ProductBoost through GET -> form -> POST
+        // so we know which boost to activate once payment succeeds.
+        [BindProperty(SupportsGet = true)]
+        public int? BoostId { get; set; }
+
+        public async Task<IActionResult> OnGetAsync(int paymentId, string? returnUrl = null, int? boostId = null)
         {
             PaymentId = paymentId;
             ReturnUrl = returnUrl;
+            BoostId = boostId;
 
             var payment = await LoadPaymentForCurrentStoreOwnerAsync(paymentId);
             if (payment == null)
@@ -201,18 +210,46 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     _context.SubscriptionPayments.Add(subscriptionPayment);
                 }
 
+                // NEW — activate the boost tied to this payment, if any.
+                // Only trust BoostId if it actually belongs to this StorePayment,
+                // so a tampered/stale query param can't activate an unrelated boost.
+                if (BoostId.HasValue)
+                {
+                    var boostBelongsToThisPayment = await _context.ProductBoosts
+                        .AnyAsync(b => b.ProductBoostID == BoostId.Value
+                                    && b.StorePaymentId == payment.StorePaymentId
+                                    && b.StoreID == store.StoreID);
+
+                    if (boostBelongsToThisPayment)
+                    {
+                        await _boostManager.ActivateBoostAsync(BoostId.Value);
+                    }
+                    else
+                    {
+                        _logger.LogWarning(
+                            "BoostId {BoostId} did not match payment {PaymentId} for store {StoreId}; skipping activation.",
+                            BoostId.Value, payment.StorePaymentId, store.StoreID);
+                    }
+                }
+
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
                 // NEW — notify admins that a store payment came in
                 await _notifications.SendToAllAdminsAsync(
                     title: "Store Payment Received",
                     message: $"{store.StoreName} paid ${payment.Amount:F2}" +
-                             (isSubscriptionPayment ? " (Monthly Subscription Fee)" : $" — {payment.Description}"),
+                             (isSubscriptionPayment ? " (Monthly Subscription Fee)" :
+                              BoostId.HasValue ? $" (Product Boost — {payment.Description})" :
+                              $" — {payment.Description}"),
                     type: "Payment",
                     referenceId: payment.StorePaymentId
                 );
 
-                TempData["Success"] = $"Payment of ${payment.Amount:F2} was successfully processed.";
+                TempData["Success"] = BoostId.HasValue
+                    ? $"Payment of ${payment.Amount:F2} was processed — your boost is now active."
+                    : $"Payment of ${payment.Amount:F2} was successfully processed.";
+
                 return RedirectToLocalOrDashboard();
             }
             catch (Exception ex)

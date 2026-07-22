@@ -65,6 +65,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
         public int CancelledOrders { get; set; }
 
+        // ── BOOST ANALYTICS (NEW) ──
+        public decimal BoostSpendInRange { get; set; }
+        public int BoostsStartedInRange { get; set; }
+        public int CurrentActiveBoostsCount { get; set; }
+        public List<BoostPerformanceViewModel> BoostedProductPerformance { get; set; } = new();
+
         public List<BestSellingProductViewModel> BestSellingProducts { get; set; } = new();
 
         public List<DailyRevenueViewModel> DailyRevenue { get; set; } = new();
@@ -215,7 +221,83 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 })
                 .ToList();
 
+            // ── BOOST ANALYTICS (NEW) ──
+            await LoadBoostAnalyticsAsync(store.StoreID, deliveredOrderItems);
+
             return Page();
+        }
+
+        private async Task LoadBoostAnalyticsAsync(int storeId, List<OrderItem> deliveredOrderItemsInRange)
+        {
+            // Money actually spent starting a boost within the selected date range,
+            // counted once paid for (Active or Expired) — same rule used across the
+            // admin boost/revenue pages, scoped here to CreatedAt within the range.
+            BoostSpendInRange = await _context.ProductBoosts
+                .Where(b => b.StoreID == storeId
+                    && (b.Status == "Active" || b.Status == "Expired")
+                    && b.CreatedAt >= ReportStartDate
+                    && b.CreatedAt <= ReportEndDate)
+                .SumAsync(b => (decimal?)b.AmountPaid) ?? 0m;
+
+            BoostsStartedInRange = await _context.ProductBoosts
+                .CountAsync(b => b.StoreID == storeId
+                    && b.CreatedAt >= ReportStartDate
+                    && b.CreatedAt <= ReportEndDate);
+
+            // Live count, independent of the date range — "how many are boosted right now"
+            var now = DateTime.UtcNow;
+            CurrentActiveBoostsCount = await _context.ProductBoosts
+                .CountAsync(b => b.StoreID == storeId && b.Status == "Active" && b.EndDate > now);
+
+            // Performance of products that have ever been boosted, using the same
+            // delivered-order-items-in-range figures already computed above.
+            var boostedProductIds = await _context.ProductBoosts
+                .Where(b => b.StoreID == storeId)
+                .Select(b => b.ProductID)
+                .Distinct()
+                .ToListAsync();
+
+            if (boostedProductIds.Count == 0)
+            {
+                BoostedProductPerformance = new List<BoostPerformanceViewModel>();
+                return;
+            }
+
+            var products = await _context.Products
+                .Where(p => boostedProductIds.Contains(p.ProductID))
+                .Select(p => new { p.ProductID, p.ProductName })
+                .ToListAsync();
+
+            var activeBoosts = await _context.ProductBoosts
+                .Where(b => boostedProductIds.Contains(b.ProductID) && b.StoreID == storeId)
+                .OrderByDescending(b => b.CreatedAt)
+                .ToListAsync();
+
+            BoostedProductPerformance = products
+                .Select(p =>
+                {
+                    var latestBoost = activeBoosts.FirstOrDefault(b => b.ProductID == p.ProductID);
+                    var revenueInRange = deliveredOrderItemsInRange
+                        .Where(oi => oi.ProductID == p.ProductID)
+                        .Sum(oi => oi.TotalPrice);
+                    var unitsInRange = deliveredOrderItemsInRange
+                        .Where(oi => oi.ProductID == p.ProductID)
+                        .Sum(oi => oi.Quantity);
+
+                    return new BoostPerformanceViewModel
+                    {
+                        ProductID = p.ProductID,
+                        ProductName = p.ProductName,
+                        IsCurrentlyBoosted = latestBoost != null && latestBoost.Status == "Active" && latestBoost.EndDate > now,
+                        LastBoostStatus = latestBoost?.Status ?? "Expired",
+                        RevenueInRange = revenueInRange,
+                        UnitsSoldInRange = unitsInRange
+                    };
+                })
+                .OrderByDescending(x => x.IsCurrentlyBoosted)
+                .ThenByDescending(x => x.RevenueInRange)
+                .Take(6)
+                .ToList();
         }
 
         private (DateTime StartDate, DateTime EndDate) GetDateRange()
@@ -329,5 +411,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public string PaymentStatus { get; set; } = string.Empty;
 
         public decimal Amount { get; set; }
+    }
+
+    // NEW
+    public class BoostPerformanceViewModel
+    {
+        public int ProductID { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public bool IsCurrentlyBoosted { get; set; }
+        public string LastBoostStatus { get; set; } = string.Empty;
+        public decimal RevenueInRange { get; set; }
+        public int UnitsSoldInRange { get; set; }
     }
 }

@@ -24,7 +24,7 @@ namespace Multi_Store.Infrastructure.Migrations
                 column: "ProductID",
                 principalTable: "Products",
                 principalColumn: "ProductID",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.NoAction);   // CHANGED from SetNull -> NoAction
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Reviews_Products_ProductID",

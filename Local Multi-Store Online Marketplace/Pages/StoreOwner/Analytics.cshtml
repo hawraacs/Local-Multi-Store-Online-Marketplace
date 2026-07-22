@@ -30,6 +30,10 @@
             --radius-md: 12px;
             --radius-lg: 20px;
             --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            /* Boost accent (amber/orange), distinct from brand purple */
+            --boost-color: #f59e0b;
+            --boost-hover: #d97706;
+            --boost-light: #fef3c7;
         }
 
         body {
@@ -221,6 +225,33 @@
             }
 
         /* ============================================================
+                   SECTION LABELS
+                   ============================================================ */
+        .section-label {
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin: 0 0 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+            .section-label::after {
+                content: "";
+                flex: 1;
+                height: 1px;
+                background: var(--border-color);
+            }
+
+            .section-label i {
+                color: var(--accent-color);
+                font-size: 12px;
+            }
+
+        /* ============================================================
                    METRIC GRID
                    ============================================================ */
         .metric-grid {
@@ -279,6 +310,17 @@
 
         .metric-card:hover .metric-icon {
             background: var(--accent-color);
+            color: #fff;
+        }
+
+        /* Boost-themed icon variant — stays amber even on card hover */
+        .metric-icon.boost-icon {
+            background: var(--boost-light);
+            color: var(--boost-hover);
+        }
+
+        .metric-card:hover .metric-icon.boost-icon {
+            background: var(--boost-color);
             color: #fff;
         }
 
@@ -571,6 +613,20 @@
                 border-color: #ef4444;
             }
 
+        /* ----- Boost link action ----- */
+        .boost-action-link {
+            color: var(--boost-hover);
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+            .boost-action-link:hover {
+                color: var(--boost-color);
+                text-decoration: underline;
+            }
+
         /* ============================================================
                    EMPTY STATE
                    ============================================================ */
@@ -738,7 +794,11 @@
         </form>
     </div>
 
-    <!-- ========== METRIC GRID ========== -->
+    <!-- ========== REVENUE & ORDERS ========== -->
+    <div class="section-label">
+        <i class="fas fa-sack-dollar"></i>
+        Revenue &amp; Orders
+    </div>
     <div class="metric-grid">
         <div class="metric-card">
             <div class="metric-icon"><i class="fas fa-dollar-sign"></i></div>
@@ -802,9 +862,20 @@
             <div class="metric-value">$@Model.EstimatedNetEarnings.ToString("N2")</div>
             <div class="metric-note">Revenue after commission</div>
         </div>
+
+        <div class="metric-card">
+            <div class="metric-icon boost-icon"><i class="fas fa-bolt"></i></div>
+            <div class="metric-label">Boost Spend</div>
+            <div class="metric-value">$@Model.BoostSpendInRange.ToString("N2")</div>
+            <div class="metric-note">@Model.CurrentActiveBoostsCount active now &middot; @Model.BoostsStartedInRange started this period</div>
+        </div>
     </div>
 
-    <!-- ========== MAIN GRID: Daily Revenue + Order Status ========== -->
+    <!-- ========== SALES BREAKDOWN ========== -->
+    <div class="section-label">
+        <i class="fas fa-chart-column"></i>
+        Sales Breakdown
+    </div>
     <div class="main-grid">
         <!-- Daily Revenue -->
         <div class="data-card">
@@ -867,6 +938,12 @@
         </div>
     </div>
 
+    <!-- ========== PRODUCT PERFORMANCE ========== -->
+    <div class="section-label">
+        <i class="fas fa-crown"></i>
+        Product Performance
+    </div>
+
     <!-- ========== BEST-SELLING PRODUCTS ========== -->
     <div class="table-card">
         <h3><i class="fas fa-crown"></i> Best-Selling Products</h3>
@@ -902,6 +979,66 @@
                 No delivered product sales yet.
             </div>
         }
+    </div>
+
+    <!-- ========== BOOSTED PRODUCT PERFORMANCE ========== -->
+    <div class="table-card">
+        <h3><i class="fas fa-bolt" style="color:var(--boost-hover);"></i> Boosted Product Performance</h3>
+
+        @if (Model.BoostedProductPerformance.Any())
+        {
+            <div class="table-wrap">
+                <table class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Boost Status</th>
+                            <th>Units Sold (period)</th>
+                            <th>Revenue (period)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.BoostedProductPerformance)
+                        {
+                            <tr>
+                                <td><strong>@item.ProductName</strong></td>
+                                <td>
+                                    @if (item.IsCurrentlyBoosted)
+                                    {
+                                        <span class="status-badge delivered">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge">@item.LastBoostStatus</span>
+                                    }
+                                </td>
+                                <td>@item.UnitsSoldInRange</td>
+                                <td><strong>$@item.RevenueInRange.ToString("N2")</strong></td>
+                                <td>
+                                    <a href="/StoreOwner/Products/Boost?productId=@item.ProductID" class="boost-action-link">
+                                        @(item.IsCurrentlyBoosted ? "Manage" : "Boost again")
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-box">
+                <i class="fas fa-bolt"></i>
+                You haven't boosted any products yet.
+            </div>
+        }
+    </div>
+
+    <!-- ========== RECENT ACTIVITY ========== -->
+    <div class="section-label">
+        <i class="fas fa-history"></i>
+        Recent Activity
     </div>
 
     <!-- ========== RECENT ORDERS ========== -->

@@ -1,0 +1,416 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.BoostModel
+@{
+    ViewData["Title"] = "Boost Product";
+    Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --accent: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            --bg: #f8f7fc;
+            --surface: #ffffff;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            --text-muted: #9691a4;
+            --border: #ece8f6;
+            --success: #10b981;
+            --success-bg: #dcfce7;
+            --error: #dc2626;
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+        }
+
+        body {
+            background: var(--bg);
+        }
+
+        .boost-page {
+            max-width: 720px;
+            margin: 28px auto;
+            padding: 0 24px;
+        }
+
+        .boost-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 18px;
+        }
+
+            .boost-back-link:hover {
+                color: var(--accent);
+            }
+
+        .boost-header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+        }
+
+        .boost-product-thumb {
+            width: 72px;
+            height: 72px;
+            border-radius: var(--radius-md);
+            object-fit: cover;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .boost-header-info h1 {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0 0 4px;
+        }
+
+        .boost-header-info p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .boost-header-price {
+            margin-left: auto;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        /* ---- Active boost status card ---- */
+        .boost-status-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .boost-status-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--success-bg);
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+            .boost-status-icon.pending {
+                background: #fef3c7;
+                color: #d97706;
+            }
+
+        .boost-status-info h3 {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0 0 4px;
+        }
+
+        .boost-status-info p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .boost-status-badge {
+            margin-left: auto;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: var(--success-bg);
+            color: var(--success);
+            flex-shrink: 0;
+        }
+
+            .boost-status-badge.pending {
+                background: #fef3c7;
+                color: #d97706;
+            }
+
+        /* ---- Duration picker ---- */
+        .boost-form-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            box-shadow: var(--shadow-sm);
+        }
+
+            .boost-form-card h2 {
+                font-size: 16px;
+                font-weight: 800;
+                color: var(--text-primary);
+                margin: 0 0 6px;
+            }
+
+            .boost-form-card > p {
+                font-size: 13.5px;
+                color: var(--text-secondary);
+                margin: 0 0 20px;
+            }
+
+        .boost-options-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        @@media (max-width: 640px) {
+            .boost-options-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .boost-option {
+            position: relative;
+        }
+
+            .boost-option input[type="radio"] {
+                position: absolute;
+                opacity: 0;
+                pointer-events: none;
+            }
+
+        .boost-option-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 18px 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+            .boost-option-label:hover {
+                border-color: var(--accent);
+                background: var(--accent-light);
+            }
+
+        .boost-option input[type="radio"]:checked + .boost-option-label {
+            border-color: var(--accent);
+            background: var(--accent-light);
+            box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.12);
+        }
+
+        .boost-option-days {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .boost-option-price {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .boost-option-perday {
+            font-size: 10.5px;
+            color: var(--text-muted);
+        }
+
+        .boost-submit-btn {
+            width: 100%;
+            background: var(--accent-gradient);
+            color: #fff;
+            border: none;
+            padding: 14px 0;
+            border-radius: var(--radius-sm);
+            font-size: 14.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+            .boost-submit-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: var(--shadow-md);
+                color: #fff;
+            }
+
+        .boost-note {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .boost-alert {
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+            .boost-alert.success {
+                background: var(--success-bg);
+                color: var(--success);
+            }
+
+            .boost-alert.error {
+                background: #fee2e2;
+                color: var(--error);
+            }
+    </style>
+}
+
+<div class="boost-page">
+
+    <a asp-page="/StoreOwner/Home" class="boost-back-link">
+        <i class="fas fa-arrow-left"></i> Back to my products
+    </a>
+
+    @if (TempData["Success"] is string successMessage && !string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div class="boost-alert success"><i class="fas fa-circle-check"></i> @successMessage</div>
+    }
+    @if (TempData["Error"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="boost-alert error"><i class="fas fa-circle-exclamation"></i> @errorMessage</div>
+    }
+
+    <!-- ========== PRODUCT HEADER ========== -->
+    <div class="boost-header">
+        @{
+            var thumb = Model.Product.Images?
+                .OrderByDescending(i => i.IsPrimary)
+                .ThenBy(i => i.DisplayOrder)
+                .Select(i => i.ImageUrl)
+                .FirstOrDefault() ?? "/images/no-image.png";
+        }
+        <img class="boost-product-thumb" src="@thumb" alt="@Model.Product.ProductName" />
+        <div class="boost-header-info">
+            <h1>@Model.Product.ProductName</h1>
+            <p>Boost this product so it appears higher and marked "Boosted" to customers.</p>
+        </div>
+        <div class="boost-header-price">$@Model.Product.Price</div>
+    </div>
+
+    <!-- ========== CURRENT / PENDING BOOST STATUS ========== -->
+    @if (Model.ExistingBoost != null)
+    {
+        var boost = Model.ExistingBoost;
+        var isActive = boost.Status == "Active";
+        <div class="boost-status-card">
+            <div class="boost-status-icon @(isActive ? "" : "pending")">
+                <i class="fas @(isActive ? "fa-bolt" : "fa-hourglass-half")"></i>
+            </div>
+            <div class="boost-status-info">
+                @if (isActive)
+                {
+                    <h3>This product is currently boosted</h3>
+                    <p>Boost ends on @boost.EndDate?.ToString("dd MMM yyyy, h:mm tt")</p>
+                }
+                else
+                {
+                    <h3>Boost payment pending</h3>
+                    <p>Complete payment to activate this @boost.DurationDays-day boost.</p>
+                }
+            </div>
+            <span class="boost-status-badge @(isActive ? "" : "pending")">@boost.Status</span>
+        </div>
+
+        @if (!isActive && boost.StorePaymentId.HasValue)
+        {
+            <div class="boost-form-card">
+                <h2>Finish setting up your boost</h2>
+                <p>Your @boost.DurationDays-day boost for $@boost.AmountPaid.ToString("N2") is waiting on payment.</p>
+
+                <a class="boost-submit-btn"
+                   href="@Url.Page("/StoreOwner/StoreOwnerPayment", new
+                   {
+                       paymentId = boost.StorePaymentId,
+                       returnUrl = Url.Page("/StoreOwner/Products/Boost", new { ProductId = Model.ProductId }),
+                       boostId = boost.ProductBoostID
+                   })"
+                   style="text-decoration:none;">
+                    <i class="fas fa-credit-card"></i> Continue Payment
+                </a>
+
+                <p class="boost-note">
+                    You'll be redirected to a secure payment page to finish activating this boost.
+                </p>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- ========== DURATION PICKER FORM (only when no active/pending boost) ========== -->
+        <div class="boost-form-card">
+            <h2>Choose a boost duration</h2>
+            <p>Your product will be prioritized in the customer feed and marked "Boosted" for the selected period.</p>
+
+            <form method="post" asp-page-handler="StartBoost">
+                <input type="hidden" asp-for="ProductId" />
+
+                <div class="boost-options-grid">
+                    @for (int i = 0; i < Model.PricingOptions.Count; i++)
+                    {
+                        var opt = Model.PricingOptions[i];
+                        var perDay = opt.Price / opt.DurationDays;
+                        <div class="boost-option">
+                            <input type="radio"
+                                   id="duration_@opt.DurationDays"
+                                   name="SelectedDurationDays"
+                                   value="@opt.DurationDays"
+                                   checked="@(i == 0 ? "checked" : null)" />
+                            <label class="boost-option-label" for="duration_@opt.DurationDays">
+                                <span class="boost-option-days">@opt.DurationDays days</span>
+                                <span class="boost-option-price">$@opt.Price.ToString("N2")</span>
+                                <span class="boost-option-perday">$@perDay.ToString("N2")/day</span>
+                            </label>
+                        </div>
+                    }
+                </div>
+
+                <button type="submit" class="boost-submit-btn">
+                    <i class="fas fa-bolt"></i> Start Boost
+                </button>
+
+                <p class="boost-note">
+                    Charged to your saved card if available, otherwise you'll be redirected to complete payment.
+                </p>
+            </form>
+        </div>
+    }
+
+</div>
