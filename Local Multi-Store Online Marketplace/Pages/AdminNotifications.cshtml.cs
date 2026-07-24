@@ -24,8 +24,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // Returns the current admin's most recent notifications as JSON.
         public async Task<JsonResult> OnGetListAsync()
         {
-            var userId = _userManager.GetUserId(User);
-            if (userId == null || !int.TryParse(userId, out var uid))
+            var uid = GetCurrentAdminId();
+            if (uid == null)
             {
                 return new JsonResult(new { items = Array.Empty<object>(), unreadCount = 0 });
             }
@@ -52,11 +52,44 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return new JsonResult(new { items, unreadCount });
         }
 
+        // POST /AdminNotifications?handler=MarkRead
+        // Marks a single notification as read (called when the admin opens/clicks it)
+        // and returns the fresh unread count so the topbar badge can update immediately.
+        public async Task<JsonResult> OnPostMarkReadAsync([FromForm] int id)
+        {
+            var uid = GetCurrentAdminId();
+            if (uid == null)
+            {
+                return new JsonResult(new { success = false });
+            }
+
+            var notification = await _db.Notifications
+                .FirstOrDefaultAsync(n => n.NotificationID == id && n.UserID == uid);
+
+            // Either the notification doesn't exist or it doesn't belong to this admin -
+            // don't leak whether the id exists, just report failure either way.
+            if (notification == null)
+            {
+                return new JsonResult(new { success = false });
+            }
+
+            if (!notification.IsRead)
+            {
+                notification.IsRead = true;
+                await _db.SaveChangesAsync();
+            }
+
+            var unreadCount = await _db.Notifications
+                .CountAsync(n => n.UserID == uid && !n.IsRead);
+
+            return new JsonResult(new { success = true, unreadCount });
+        }
+
         // POST /AdminNotifications?handler=MarkAllRead
         public async Task<JsonResult> OnPostMarkAllReadAsync()
         {
-            var userId = _userManager.GetUserId(User);
-            if (userId == null || !int.TryParse(userId, out var uid))
+            var uid = GetCurrentAdminId();
+            if (uid == null)
             {
                 return new JsonResult(new { success = false });
             }
@@ -72,10 +105,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             await _db.SaveChangesAsync();
 
-            return new JsonResult(new { success = true });
+            return new JsonResult(new { success = true, unreadCount = 0 });
         }
 
         // Fallback so the page doesn't error if ever hit directly without a handler.
         public IActionResult OnGet() => new EmptyResult();
+
+        private int? GetCurrentAdminId()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null || !int.TryParse(userId, out var uid))
+            {
+                return null;
+            }
+            return uid;
+        }
     }
 }
