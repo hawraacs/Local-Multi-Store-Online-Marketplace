@@ -6,7 +6,6 @@ using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
 using Multi_Store.Core.ViewModels.StoreOwner;
 using Multi_Store.Infrastructure.Data;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 {
@@ -32,7 +31,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 
         [BindProperty]
         public ProductViewModel ProductVM { get; set; } = new();
-        public List<SelectListItem> CategoriesSelectList { get; set; } = new();
+
+        // Nested category tree (roots only; each node's own Children is populated).
+        // Replaces the old flat "CategoriesSelectList" — the picker in the view
+        // renders parents with their children directly nested beneath them.
+        public List<CategoryTreeItem> CategoryTree { get; set; } = new();
 
         // =============================================================
         // ON GET – Check subscription status
@@ -175,20 +178,62 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
         // HELPER METHODS
         // =============================================================
 
+        /// <summary>
+        /// Builds the real category tree (parents with their children nested
+        /// directly beneath them, to any depth) for the category picker.
+        /// </summary>
         private async Task LoadCategories()
         {
-            CategoriesSelectList = await _context.Categories
+            var categories = await _context.Categories
                 .Where(c => c.IsActive)
-                .OrderBy(c => c.ParentCategoryID)
-                .ThenBy(c => c.CategoryName)
-                .Select(c => new SelectListItem
-                {
-                    Value = c.CategoryID.ToString(),
-                    Text = c.ParentCategoryID == null
-                        ? c.CategoryName
-                        : " └ " + c.CategoryName
-                })
+                .OrderBy(c => c.CategoryName)
                 .ToListAsync();
+
+            var byParent = categories.ToLookup(c => c.ParentCategoryID);
+
+            List<CategoryTreeItem> BuildChildren(int? parentId, int depth, string parentPath)
+            {
+                var nodes = new List<CategoryTreeItem>();
+
+                foreach (var cat in byParent[parentId].OrderBy(c => c.CategoryName))
+                {
+                    var path = string.IsNullOrEmpty(parentPath)
+                        ? cat.CategoryName
+                        : $"{parentPath} › {cat.CategoryName}";
+
+                    var node = new CategoryTreeItem
+                    {
+                        CategoryId = cat.CategoryID,
+                        Name = cat.CategoryName,
+                        Depth = depth,
+                        Path = path
+                    };
+                    node.Children = BuildChildren(cat.CategoryID, depth + 1, path);
+                    nodes.Add(node);
+                }
+
+                return nodes;
+            }
+
+            CategoryTree = BuildChildren(null, 0, "");
+        }
+
+        /// <summary>
+        /// Finds the "Grandparent › Parent › Name" breadcrumb for a given category id,
+        /// used to pre-fill the picker's label when redisplaying the form (e.g. after
+        /// a validation error) so the admin still sees what they had selected.
+        /// </summary>
+        public static string? FindCategoryPath(List<CategoryTreeItem> nodes, int id)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.CategoryId == id) return node.Path;
+
+                var found = FindCategoryPath(node.Children, id);
+                if (found != null) return found;
+            }
+
+            return null;
         }
 
         private async Task SaveProductImages(int productId, List<IFormFile> images)
@@ -285,5 +330,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 
             return payment;
         }
+    }
+
+    public class CategoryTreeItem
+    {
+        public int CategoryId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int Depth { get; set; }
+        public string Path { get; set; } = string.Empty; // e.g. "Electronics › Phones"
+        public List<CategoryTreeItem> Children { get; set; } = new();
     }
 }

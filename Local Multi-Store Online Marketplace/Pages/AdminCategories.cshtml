@@ -22,20 +22,21 @@
 
         .stat-card {
             background: white;
-            border-radius: 24px;
-            padding: 20px;
+            border-radius: 20px;
+            padding: 22px 20px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #f1f5f9;
             transition: transform 0.2s, box-shadow 0.2s;
             text-align: center;
         }
 
             .stat-card:hover {
                 transform: translateY(-4px);
-                box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+                box-shadow: 0 10px 24px rgba(0,0,0,0.08);
             }
 
             .stat-card i {
-                font-size: 32px;
+                font-size: 30px;
                 color: #6366f1;
                 margin-bottom: 8px;
             }
@@ -44,20 +45,22 @@
             font-size: 28px;
             font-weight: 800;
             color: #0f172a;
+            line-height: 1;
         }
 
         .stat-label {
             font-size: 13px;
             color: #64748b;
-            margin-top: 5px;
+            margin-top: 6px;
         }
 
         /* ── Main Card ── */
         .category-card {
             background: white;
-            border-radius: 24px;
+            border-radius: 20px;
             padding: 24px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #f1f5f9;
         }
 
         .category-header {
@@ -66,7 +69,7 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
             .category-header h3 {
@@ -75,8 +78,19 @@
                 margin: 0;
                 display: flex;
                 align-items: center;
-                gap: 8px;
+                gap: 10px;
+                font-size: 19px;
             }
+
+                .category-header h3 i {
+                    color: #6366f1;
+                }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
 
         .btn-add {
             background: #16a34a;
@@ -86,6 +100,7 @@
             border-radius: 40px;
             cursor: pointer;
             font-weight: 600;
+            font-size: 14px;
             transition: background 0.2s, transform 0.1s;
             display: inline-flex;
             align-items: center;
@@ -97,9 +112,29 @@
                 transform: scale(1.02);
             }
 
+        .btn-tree-action {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            padding: 10px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: background 0.2s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .btn-tree-action:hover {
+                background: #e2e8f0;
+                transform: translateY(-1px);
+            }
+
         /* ── Filter Bar ── */
         .filter-bar {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .filter-input {
@@ -108,7 +143,7 @@
             border: 1px solid #e2e8f0;
             font-size: 14px;
             width: 100%;
-            max-width: 300px;
+            max-width: 320px;
             background: #f8fafc;
             transition: border-color 0.2s, background 0.2s;
         }
@@ -120,63 +155,129 @@
                 box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
             }
 
-        /* ── Table ── */
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: 16px;
+        /* ── Category Tree ── */
+        .tree-wrapper {
             border: 1px solid #eef2f6;
+            border-radius: 16px;
+            padding: 12px 16px;
+            background: #fcfdfe;
         }
 
-        .categories-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
+        ul.category-tree,
+        ul.tree-children {
+            list-style: none;
+            margin: 0;
+            padding: 0;
         }
 
-            .categories-table th {
-                background: #f8fafc;
-                padding: 14px 16px;
-                text-align: left;
-                font-weight: 700;
-                color: #1e293b;
-                border-bottom: 2px solid #e2e8f0;
-            }
-
-            .categories-table td {
-                padding: 14px 16px;
-                border-bottom: 1px solid #f1f5f9;
-                color: #334155;
-                vertical-align: middle;
-            }
-
-            .categories-table tbody tr:last-child td {
-                border-bottom: none;
-            }
-
-            .categories-table tbody tr:hover td {
-                background: #f8fafc;
-            }
-
-        .subcategory-indent {
-            margin-left: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+        ul.tree-children {
+            margin-left: 22px;
+            padding-left: 16px;
+            border-left: 2px dashed #e2e8f0;
         }
 
-        .subcategory-icon {
-            color: #94a3b8;
-            font-size: 12px;
+        li.tree-node {
+            position: relative;
+            margin: 2px 0;
         }
 
-        /* ── Action Buttons ── */
-        .action-group {
+        .node-row {
             display: flex;
-            gap: 8px;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 12px;
+            transition: background 0.15s;
             flex-wrap: wrap;
         }
 
-        .btn-edit, .btn-delete {
+            .node-row:hover {
+                background: #f1f5f9;
+            }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #64748b;
+            border-radius: 6px;
+            flex-shrink: 0;
+            transition: transform 0.15s, background 0.15s;
+        }
+
+            .toggle-btn:hover {
+                background: #e2e8f0;
+            }
+
+            .toggle-btn i {
+                transition: transform 0.15s;
+                font-size: 12px;
+            }
+
+        .toggle-spacer {
+            width: 22px;
+            flex-shrink: 0;
+            display: inline-block;
+        }
+
+        li.tree-node.collapsed > ul.tree-children {
+            display: none;
+        }
+
+        li.tree-node.collapsed > .node-row .toggle-btn i {
+            transform: rotate(0deg);
+        }
+
+        li.tree-node:not(.collapsed) > .node-row .toggle-btn i {
+            transform: rotate(90deg);
+        }
+
+        .node-icon {
+            color: #6366f1;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .node-name {
+            font-weight: 600;
+            color: #0f172a;
+            font-size: 14px;
+        }
+
+        .node-slug {
+            font-size: 12px;
+            color: #94a3b8;
+            background: #f1f5f9;
+            padding: 2px 9px;
+            border-radius: 20px;
+        }
+
+        .node-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: #6366f1;
+            background: rgba(99,102,241,0.1);
+            padding: 2px 9px;
+            border-radius: 20px;
+        }
+
+        .node-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .delete-form {
+            display: inline;
+        }
+
+        .btn-edit, .btn-delete, .btn-add-sub {
             border: none;
             padding: 6px 12px;
             border-radius: 8px;
@@ -188,6 +289,18 @@
             align-items: center;
             gap: 5px;
         }
+
+        .btn-add-sub {
+            background: #ecfdf5;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+            .btn-add-sub:hover {
+                background: #16a34a;
+                color: white;
+                transform: translateY(-1px);
+            }
 
         .btn-edit {
             background: #6366f1;
@@ -208,6 +321,32 @@
                 background: #b91c1c;
                 transform: translateY(-1px);
             }
+
+        /* ── Parent breadcrumb preview (Add/Edit modal) ── */
+        .parent-preview {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f1f5f9;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #475569;
+            margin-bottom: 16px;
+        }
+
+            .parent-preview i {
+                color: #6366f1;
+            }
+
+            .parent-preview strong {
+                color: #0f172a;
+            }
+
+        #parentId option:disabled {
+            color: #cbd5e1;
+        }
 
         /* ── Empty State ── */
         .empty-state {
@@ -281,23 +420,26 @@
                 padding: 16px;
             }
 
-            .categories-table th,
-            .categories-table td {
-                padding: 10px 12px;
-                font-size: 13px;
-            }
-
-            .action-group {
-                flex-direction: column;
-                gap: 4px;
-            }
-
             .stat-card {
                 padding: 16px;
             }
 
             .stat-value {
                 font-size: 24px;
+            }
+
+            .node-actions {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .node-row {
+                gap: 8px;
+            }
+
+            ul.tree-children {
+                margin-left: 14px;
+                padding-left: 10px;
             }
         }
     </style>
@@ -327,9 +469,17 @@
     <div class="category-card">
         <div class="category-header">
             <h3><i class="fas fa-sitemap"></i> Product Categories</h3>
-            <button class="btn-add" id="btnAddCategory">
-                <i class="fas fa-plus"></i> Add Category
-            </button>
+            <div class="header-actions">
+                <button type="button" class="btn-tree-action" id="btnExpandAll">
+                    <i class="fas fa-angles-down"></i> Expand all
+                </button>
+                <button type="button" class="btn-tree-action" id="btnCollapseAll">
+                    <i class="fas fa-angles-up"></i> Collapse all
+                </button>
+                <button class="btn-add" id="btnAddCategory">
+                    <i class="fas fa-plus"></i> Add Category
+                </button>
+            </div>
         </div>
 
         <!-- Search Filter -->
@@ -337,73 +487,24 @@
             <input type="text" id="searchCategory" class="filter-input" placeholder="🔍 Search categories by name...">
         </div>
 
-        <!-- Categories Table -->
-        <div class="table-wrapper">
-            <table class="categories-table" id="categoriesTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Slug</th>
-                        <th>Parent</th>
-                        <th style="width: 140px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Categories != null && Model.Categories.Any())
+        <!-- Categories Tree -->
+        <div class="tree-wrapper">
+            @if (Model.Categories != null && Model.Categories.Any())
+            {
+                <ul class="category-tree" id="categoryTreeRoot">
+                    @foreach (var root in Model.RootCategories)
                     {
-                        foreach (var cat in Model.Categories)
-                        {
-                            var isSubcategory = !string.IsNullOrEmpty(cat.ParentName) && cat.ParentName != "None";
-                            <tr data-name="@cat.Name.ToLowerInvariant()">
-                                <td>@cat.CategoryId</td>
-                                <td>
-                                    @if (isSubcategory)
-                                    {
-                                        <div class="subcategory-indent">
-                                            <i class="fas fa-level-down-alt subcategory-icon"></i>
-                                            <span>@cat.Name</span>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <span><i class="fas fa-folder-open" style="color:#6366f1; margin-right:6px;"></i> @cat.Name</span>
-                                    }
-                                </td>
-                                <td>@cat.Slug</td>
-                                <td>@cat.ParentName</td>
-                                <td>
-                                    <div class="action-group">
-                                        <button class="btn-edit"
-                                                data-id="@cat.CategoryId"
-                                                data-name="@cat.Name"
-                                                data-parentid="@cat.ParentId">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <form method="post" asp-page-handler="Delete" style="display:inline;" onsubmit="return confirm('Delete this category? Related products will be unassigned.');">
-                                            <input type="hidden" name="id" value="@cat.CategoryId" />
-                                            <button type="submit" class="btn-delete">
-                                                <i class="fas fa-trash"></i> Delete
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
+                        <partial name="_CategoryNode" model="root" />
                     }
-                    else
-                    {
-                        <tr>
-                            <td colspan="5">
-                                <div class="empty-state">
-                                    <i class="fas fa-inbox"></i>
-                                    <p>No categories found. Click "Add Category" to create one.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                </ul>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No categories found. Click "Add Category" to create one.</p>
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -427,21 +528,22 @@
                         <div class="invalid-feedback">Please enter a category name.</div>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-2">
                         <label for="parentId" class="form-label">Parent Category</label>
                         <select name="parentId" id="parentId" class="form-select">
-                            <option value="">None (Top Level)</option>
-                            @if (Model.Categories != null)
+                            <option value="" data-path="Top Level">None (Top Level)</option>
+                            @foreach (var opt in Model.ParentDropdownOptions)
                             {
-                                // Show only top‑level categories (those with no parent)
-                                // When editing, we will exclude the current category itself later via JS.
-                                foreach (var p in Model.Categories.Where(c => string.IsNullOrEmpty(c.ParentName) || c.ParentName == "None"))
-                                {
-                                    <option value="@p.CategoryId">@p.Name</option>
-                                }
+                                <option value="@opt.CategoryId"
+                                        data-parent="@(opt.ParentId?.ToString() ?? "")"
+                                        data-path="@opt.Path">@(new string('\u00A0', opt.Depth * 4))@(opt.Depth > 0 ? "↳ " : "")@opt.Name</option>
                             }
                         </select>
-                        <small class="text-muted">Leave empty for a top‑level category.</small>
+                    </div>
+
+                    <div class="parent-preview" id="parentPreview">
+                        <i class="fas fa-sitemap"></i>
+                        <span>Will be created under: <strong id="parentPreviewText">Top Level</strong></span>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -465,14 +567,75 @@
             const parentId = document.getElementById('parentId');
             const modalTitle = document.getElementById('modalTitle');
 
-            // ─── Add button ─────────────────────────────────────────────
+            const parentPreviewText = document.getElementById('parentPreviewText');
+
+            // Map of categoryId -> parentId (as strings), built from the dropdown itself.
+            const parentMap = {};
+            parentId.querySelectorAll('option').forEach(opt => {
+                if (opt.value) parentMap[opt.value] = opt.dataset.parent || '';
+            });
+
+            function updateParentPreview() {
+                const selected = parentId.options[parentId.selectedIndex];
+                const path = selected ? (selected.dataset.path || selected.textContent.trim()) : 'Top Level';
+                parentPreviewText.textContent = path;
+            }
+
+            function getDescendantIds(id) {
+                const result = new Set();
+                let changed = true;
+                while (changed) {
+                    changed = false;
+                    for (const [childId, parId] of Object.entries(parentMap)) {
+                        if ((parId === id || result.has(parId)) && !result.has(childId)) {
+                            result.add(childId);
+                            changed = true;
+                        }
+                    }
+                }
+                return result;
+            }
+
+            // Re-enable every option (used when opening "Add" fresh, or closing the modal).
+            function enableAllParentOptions() {
+                parentId.querySelectorAll('option').forEach(opt => { opt.disabled = false; });
+            }
+
+            // Prevent a category from being reparented under itself or one of its own children.
+            function restrictParentOptionsFor(id) {
+                enableAllParentOptions();
+                const blocked = getDescendantIds(id);
+                blocked.add(id);
+                parentId.querySelectorAll('option').forEach(opt => {
+                    if (blocked.has(opt.value)) opt.disabled = true;
+                });
+            }
+
+            parentId.addEventListener('change', updateParentPreview);
+
+            // ─── Add button (top-level "Add Category") ───────────────────
             document.getElementById('btnAddCategory').addEventListener('click', function() {
-                // Reset form
                 form.reset();
                 form.classList.remove('was-validated');
                 catId.value = '';
+                enableAllParentOptions();
+                updateParentPreview();
                 modalTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Add Category';
                 modal.show();
+            });
+
+            // ─── Add-subcategory buttons (per tree node) ──────────────────
+            document.querySelectorAll('.btn-add-sub').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    form.reset();
+                    form.classList.remove('was-validated');
+                    catId.value = '';
+                    enableAllParentOptions();
+                    parentId.value = this.dataset.parentid;
+                    updateParentPreview();
+                    modalTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Add Subcategory under ' + this.dataset.parentname;
+                    modal.show();
+                });
             });
 
             // ─── Edit buttons ────────────────────────────────────────────
@@ -484,7 +647,9 @@
 
                     catId.value = id;
                     catName.value = name;
+                    restrictParentOptionsFor(id);
                     parentId.value = parent;
+                    updateParentPreview();
 
                     form.classList.remove('was-validated');
                     modalTitle.innerHTML = '<i class="fas fa-edit"></i> Edit Category';
@@ -498,18 +663,8 @@
                 form.classList.remove('was-validated');
                 catId.value = '';
                 parentId.value = '';
-            });
-
-            // ─── Search / Filter ────────────────────────────────────────
-            const searchInput = document.getElementById('searchCategory');
-            const rows = document.querySelectorAll('#categoriesTable tbody tr');
-
-            searchInput.addEventListener('input', function() {
-                const term = this.value.toLowerCase().trim();
-                rows.forEach(row => {
-                    const name = row.dataset.name || '';
-                    row.style.display = name.includes(term) ? '' : 'none';
-                });
+                enableAllParentOptions();
+                updateParentPreview();
             });
 
             // ─── Bootstrap validation (optional) ──────────────────────
@@ -519,6 +674,65 @@
                     event.stopPropagation();
                 }
                 this.classList.add('was-validated');
+            });
+
+            // ─── Tree: expand / collapse ──────────────────────────────
+            const treeRoot = document.getElementById('categoryTreeRoot');
+
+            if (treeRoot) {
+                treeRoot.addEventListener('click', function(e) {
+                    const btn = e.target.closest('.toggle-btn');
+                    if (!btn) return;
+                    const li = btn.closest('li.tree-node');
+                    li.classList.toggle('collapsed');
+                });
+
+                document.getElementById('btnExpandAll').addEventListener('click', function() {
+                    treeRoot.querySelectorAll('li.tree-node').forEach(li => li.classList.remove('collapsed'));
+                });
+
+                document.getElementById('btnCollapseAll').addEventListener('click', function() {
+                    treeRoot.querySelectorAll('li.tree-node').forEach(li => {
+                        if (li.querySelector(':scope > .node-row .toggle-btn')) {
+                            li.classList.add('collapsed');
+                        }
+                    });
+                });
+            }
+
+            // ─── Search / Filter (tree-aware) ─────────────────────────
+            const searchInput = document.getElementById('searchCategory');
+
+            searchInput.addEventListener('input', function() {
+                const term = this.value.toLowerCase().trim();
+
+                if (!treeRoot) return;
+
+                if (!term) {
+                    treeRoot.querySelectorAll('li.tree-node').forEach(li => {
+                        li.style.display = '';
+                    });
+                    return;
+                }
+
+                // Hide everything first, then reveal matches + their ancestors,
+                // expanding any ancestor that was collapsed.
+                treeRoot.querySelectorAll('li.tree-node').forEach(li => {
+                    li.style.display = 'none';
+                });
+
+                treeRoot.querySelectorAll('li.tree-node').forEach(li => {
+                    const name = li.dataset.name || '';
+                    if (name.includes(term)) {
+                        li.style.display = '';
+                        let parentLi = li.parentElement.closest('li.tree-node');
+                        while (parentLi) {
+                            parentLi.style.display = '';
+                            parentLi.classList.remove('collapsed');
+                            parentLi = parentLi.parentElement.closest('li.tree-node');
+                        }
+                    }
+                });
             });
 
         })();
