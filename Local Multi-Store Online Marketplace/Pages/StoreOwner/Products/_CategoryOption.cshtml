@@ -1,0 +1,23 @@
+﻿@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.CategoryTreeItem
+
+<div class="category-option@(Model.Children.Any() ? " has-children" : "")"
+     data-id="@Model.CategoryId"
+     data-name="@Model.Name"
+     data-path="@Model.Path"
+     style="padding-left: @(14 + Model.Depth * 22)px;">
+    @if (Model.Depth > 0)
+    {
+        <i class="fas fa-level-down-alt option-connector-icon"></i>
+    }
+    <i class="fas @(Model.Children.Any() ? "fa-folder-open" : "fa-tag") option-branch-icon@(Model.Depth == 0 ? " option-root-icon" : "")"></i>
+    <span class="option-name">@Model.Name</span>
+    @if (Model.Children.Any())
+    {
+        <span class="option-count">@Model.Children.Count</span>
+    }
+</div>
+@foreach (var child in Model.Children)
+{
+    <partial name="_CategoryOption" model="child" />
+}
+

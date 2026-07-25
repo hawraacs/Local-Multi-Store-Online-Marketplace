@@ -787,6 +787,57 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
 
             // =================================================
+            // NEW ORDER NOTIFICATION — one per store involved.
+            // A cart can span multiple stores, so every store whose
+            // products were just purchased gets its own notification
+            // (this was the missing piece — everything else in this
+            // method already notified admins/delivery/low-stock, but
+            // nothing ever told the store owner "you got an order").
+            // =================================================
+            var involvedStoreIds = cart.CartItems
+                .Where(item => item.Product != null)
+                .Select(item => item.Product!.StoreID)
+                .Distinct()
+                .ToList();
+
+            foreach (var storeId in involvedStoreIds)
+            {
+                var involvedStore = await _context.Stores
+                    .FirstOrDefaultAsync(storeItem =>
+                        storeItem.StoreID == storeId);
+
+                if (involvedStore != null)
+                {
+                    var itemCountForStore = cart.CartItems
+                        .Where(item =>
+                            item.Product != null &&
+                            item.Product.StoreID == storeId)
+                        .Sum(item => item.Quantity);
+
+                    _context.Notifications.Add(new Notification
+                    {
+                        UserID = involvedStore.OwnerUserID,
+
+                        Title = "New Order Received",
+
+                        Message =
+                            $"You have a new order ({order.OrderNumber}) " +
+                            $"with {itemCountForStore} item(s) waiting to be processed.",
+
+                        Type = "NewOrder",
+
+                        ReferenceID = order.OrderID,
+
+                        IsRead = false,
+
+                        SentAt = DateTime.UtcNow,
+
+                        SentVia = "System"
+                    });
+                }
+            }
+
+            // =================================================
             // CLEAR CART AFTER ORDER CREATION
             // =================================================
             _context.CartItems.RemoveRange(

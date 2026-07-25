@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Multi_Store.Core.Entities;
+using Multi_Store.Core.Reposinterface;
 using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
 using System.ComponentModel.DataAnnotations;
@@ -61,19 +62,25 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly ILogger<StoreRequestModel> _logger;
         private readonly IWebHostEnvironment _environment;
         private readonly ITwilioService _twilioService;
+        private readonly IAuditLogRepository _auditLogRepository;
+        private readonly NotificationManager _notifications;
 
         public StoreRequestModel(
      StoreManager storeManager,
      UserManager<User> userManager,
      ILogger<StoreRequestModel> logger,
      IWebHostEnvironment environment,
-     ITwilioService twilioService)
+     ITwilioService twilioService,
+     IAuditLogRepository auditLogRepository,
+     NotificationManager notifications)
         {
             _storeManager = storeManager;
             _userManager = userManager;
             _logger = logger;
             _environment = environment;
             _twilioService = twilioService;
+            _auditLogRepository = auditLogRepository;
+            _notifications = notifications;
         }
 
         [TempData]
@@ -448,6 +455,36 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 // has been successfully submitted.
                 IsPhoneVerified = false;
                 VerifiedPhoneNumber = null;
+
+                // Look the request back up to get its StoreID for the audit log
+                // and notification (TryRegisterStoreAsync doesn't return the id directly).
+                var newStore = await _storeManager.GetByRequestedByUserIdAsync(user.Id);
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var userAgent = Request.Headers.UserAgent.ToString();
+                if (string.IsNullOrWhiteSpace(userAgent))
+                {
+                    userAgent = "Unknown";
+                }
+
+                await _auditLogRepository.AddAsync(new AuditLog
+                {
+                    UserID = user.Id,
+                    Action = "CreateStoreRequest",
+                    EntityName = "StoreRequest",
+                    EntityID = newStore?.StoreID.ToString() ?? "0",
+                    OldValue = null,
+                    NewValue = $"Store request created: {storeDto.StoreName}",
+                    IPAddress = ipAddress,
+                    UserAgent = userAgent,
+                    ActionDate = DateTime.UtcNow
+                });
+
+                await _notifications.SendToAllAdminsAsync(
+                    title: "New store registration request",
+                    message: $"\"{storeDto.StoreName}\" has requested to open a store and is awaiting approval.",
+                    type: "StoreRequest",
+                    referenceId: newStore?.StoreID);
 
                 TempData["Success"] =
                     IsResubmission

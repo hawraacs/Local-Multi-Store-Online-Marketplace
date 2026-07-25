@@ -183,6 +183,28 @@
                 font-weight: 700;
             }
 
+        /* ── Deep-link highlight ── */
+        @@keyframes deepLinkPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.45);
+                background-color: #eef2ff;
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+                background-color: #eef2ff;
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+                background-color: transparent;
+            }
+        }
+
+        tr.deep-link-highlight td {
+            animation: deepLinkPulse 1.6s ease-out 2;
+        }
+
         @@media (max-width: 768px) {
             .complaints-card {
                 padding: 16px;
@@ -275,7 +297,7 @@
                         var refundFormId =
                             $"refundForm-{complaint.ComplaintId}";
 
-                        <tr data-status="@filterStatus">
+                        <tr data-status="@filterStatus" data-complaint-id="@complaint.ComplaintId">
 
                             <td class="ticket-number">
                                 #@complaint.ComplaintId
@@ -459,6 +481,26 @@
                             filterComplaints();
                         });
                 });
+
+                // ─── Deep link: ?id=123 scrolls to and highlights that
+                // complaint's row. "All" tab is active by default, so the
+                // row is already visible regardless of its status.
+                const params = new URLSearchParams(window.location.search);
+                const targetId = params.get("id");
+
+                if (targetId) {
+                    const targetRow = document.querySelector(
+                        '#complaintsTable tbody tr[data-complaint-id="' + targetId + '"]'
+                    );
+
+                    if (targetRow) {
+                        targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
+                        targetRow.classList.add("deep-link-highlight");
+                        setTimeout(function () {
+                            targetRow.classList.remove("deep-link-highlight");
+                        }, 3500);
+                    }
+                }
             });
 
         function openResolveConfirmation(

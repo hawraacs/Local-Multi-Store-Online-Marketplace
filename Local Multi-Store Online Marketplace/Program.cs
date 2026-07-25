@@ -22,6 +22,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
+//adminlog
+builder.Services.AddHttpContextAccessor();
+
 // ===============================
 // HttpContextAccessor
 // ===============================
@@ -140,6 +143,11 @@ builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 builder.Services.AddScoped<ITwilioService, TwilioService>();
 builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
 builder.Services.AddScoped<SubscriptionService>();
+
+// Broadcasts a Notification row to every user in the "Admin" role
+// (new complaints, store/delivery signup requests, orders, etc.).
+// See Infrastructure/Services/AdminNotificationService.cs
+builder.Services.AddScoped<IAdminNotificationService, AdminNotificationService>();
 
 // ===============================
 // AutoMapper

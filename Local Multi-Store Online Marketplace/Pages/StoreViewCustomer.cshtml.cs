@@ -193,8 +193,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var storeId = GetSafeInt(myStore, new[] { "StoreID", "Id" }, 0);
 
-            var customerExists = await _context.Customers.AnyAsync(c => c.CustomerID == customerId);
-            if (!customerExists)
+            var customer = await _context.Customers
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.CustomerID == customerId);
+            if (customer == null)
                 return NotFound();
 
             if (string.IsNullOrWhiteSpace(reason))
@@ -203,7 +205,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage(new { customerId });
             }
 
-            _context.Reports.Add(new Report
+            var report = new Report
             {
                 ReporterStoreID = storeId,           // adjust to your actual FK name on Report
                 TargetType = "Customer",
@@ -214,9 +216,41 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     : description.Trim(),
                 Status = "Pending Review",
                 CreatedAt = DateTime.UtcNow
-            });
+            };
 
+            _context.Reports.Add(report);
             await _context.SaveChangesAsync();
+
+            // =====================================================
+            // NOTIFY ALL ADMINS — reports were being saved but nobody
+            // was ever told one came in. Same pattern used for the
+            // Complaint-based reports in StoreCustomerProfileModel.
+            // =====================================================
+            var customerLabel = !string.IsNullOrWhiteSpace(customer.User?.FullName)
+                ? customer.User!.FullName
+                : $"Customer #{customerId}";
+
+            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+
+            foreach (var admin in admins)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    UserID = admin.Id,
+                    Title = "New report filed",
+                    Message = $"A store owner reported customer \"{customerLabel}\" for \"{report.Reason}\".",
+                    Type = "Report",
+                    ReferenceID = report.ReportID,
+                    IsRead = false,
+                    SentAt = DateTime.UtcNow,
+                    SentVia = "System"
+                });
+            }
+
+            if (admins.Any())
+            {
+                await _context.SaveChangesAsync();
+            }
 
             TempData["Success"] = "Your report has been submitted. Our team will review it.";
             return RedirectToPage(new { customerId });

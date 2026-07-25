@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
+using Multi_Store.Core.Reposinterface;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services;
 using Multi_Store.Services.Dtos;
@@ -22,6 +23,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<AdminStoresModel> _logger;
+        private readonly IAuditLogRepository _auditLogRepository;
+        private readonly NotificationManager _notifications;
 
         public AdminStoresModel(
         StoreManager storeManager,
@@ -29,7 +32,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         UserManager<User> userManager,
         ApplicationDbContext context,
         IEmailSender emailSender,
-        ILogger<AdminStoresModel> logger)
+        ILogger<AdminStoresModel> logger,
+        IAuditLogRepository auditLogRepository,
+        NotificationManager notifications)
         {
             _storeManager = storeManager;
             _subscriptionService = subscriptionService;
@@ -37,6 +42,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _context = context;
             _emailSender = emailSender;
             _logger = logger;
+            _auditLogRepository = auditLogRepository;
+            _notifications = notifications;
         }
 
         public List<StoreDTO> Stores { get; set; } = new();
@@ -144,6 +151,36 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                             id,
                             admin.Id,
                             _userManager);
+
+                // Log the approval and notify the requester immediately -
+                // regardless of whether new credentials were generated below,
+                // an "Approve" action on this store just happened.
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var userAgent = Request.Headers.UserAgent.ToString();
+                if (string.IsNullOrWhiteSpace(userAgent))
+                {
+                    userAgent = "Unknown";
+                }
+
+                await _auditLogRepository.AddAsync(new AuditLog
+                {
+                    UserID = admin.Id,
+                    Action = "ApproveStore",
+                    EntityName = "Store",
+                    EntityID = id.ToString(),
+                    OldValue = storeRequest.Status,
+                    NewValue = "Approved",
+                    IPAddress = ipAddress,
+                    UserAgent = userAgent,
+                    ActionDate = DateTime.UtcNow
+                });
+
+                await _notifications.SendAsync(
+                    userId: originalCustomer.Id,
+                    title: "Your store has been approved!",
+                    message: $"Your store \"{storeRequest.StoreName}\" has been approved. Check your email for your Store Owner login details.",
+                    type: "StoreRequest",
+                    referenceId: id);
 
                 // Keep these for the existing Admin page.
                 TempData["Email"] =
@@ -288,10 +325,58 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // =====================================================
         public async Task<IActionResult> OnPostReject(int id)
         {
+            var admin =
+                await _userManager.GetUserAsync(User);
+
             try
             {
+                // Snapshot before RejectStoreAsync mutates/removes anything,
+                // so we still know who to notify and what the store was called.
+                var storeSnapshot =
+                    await _context.Stores
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(s =>
+                            s.StoreID == id);
+
                 await _storeManager
                     .RejectStoreAsync(id);
+
+                if (admin != null)
+                {
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                    var userAgent = Request.Headers.UserAgent.ToString();
+                    if (string.IsNullOrWhiteSpace(userAgent))
+                    {
+                        userAgent = "Unknown";
+                    }
+
+                    await _auditLogRepository.AddAsync(new AuditLog
+                    {
+                        UserID = admin.Id,
+                        Action = "RejectStore",
+                        EntityName = "Store",
+                        EntityID = id.ToString(),
+                        OldValue = storeSnapshot?.Status,
+                        NewValue = "Rejected",
+                        IPAddress = ipAddress,
+                        UserAgent = userAgent,
+                        ActionDate = DateTime.UtcNow
+                    });
+                }
+
+                if (storeSnapshot != null)
+                {
+                    var requesterId =
+                        storeSnapshot.RequestedByUserID
+                        ?? storeSnapshot.OwnerUserID;
+
+                    await _notifications.SendAsync(
+                        userId: requesterId,
+                        title: "Your store request was rejected",
+                        message: $"Your request to open \"{storeSnapshot.StoreName}\" was not approved. Contact support for more details.",
+                        type: "StoreRequest",
+                        referenceId: id);
+                }
 
                 TempData["Success"] =
                     "Store rejected successfully.";

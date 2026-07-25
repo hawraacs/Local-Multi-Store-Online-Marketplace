@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -15,10 +16,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     public class CustomerComplaintModel : PageModel
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<User> _userManager;
 
-        public CustomerComplaintModel(ApplicationDbContext context)
+        public CustomerComplaintModel(
+            ApplicationDbContext context,
+            UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // Dropdown source for the form
@@ -111,7 +116,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 }
             }
 
-            _context.Complaints.Add(new Complaint
+            var complaint = new Complaint
             {
                 CustomerID = (int)customerId,
                 StoreID = resolvedStoreId,
@@ -120,9 +125,38 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 Description = description.Trim(),
                 Status = "Pending Review",
                 CreatedAt = DateTime.UtcNow
-            });
+            };
 
+            _context.Complaints.Add(complaint);
             await _context.SaveChangesAsync();
+
+            // =====================================================
+            // NOTIFY ALL ADMINS — a complaint being filed at all was
+            // previously invisible to admins until someone happened to
+            // check the Complaints page. Same pattern used elsewhere
+            // in the app (CustomerCartModel.NotifyAdminsAsync).
+            // =====================================================
+            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+
+            foreach (var admin in admins)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    UserID = admin.Id,
+                    Title = "New complaint filed",
+                    Message = $"A customer filed a \"{category}\" complaint and it's awaiting review.",
+                    Type = "Complaint",
+                    ReferenceID = complaint.ComplaintID,
+                    IsRead = false,
+                    SentAt = DateTime.UtcNow,
+                    SentVia = "System"
+                });
+            }
+
+            if (admins.Any())
+            {
+                await _context.SaveChangesAsync();
+            }
 
             TempData["Success"] = "Your complaint has been submitted. Our team will review it shortly.";
             return RedirectToPage();

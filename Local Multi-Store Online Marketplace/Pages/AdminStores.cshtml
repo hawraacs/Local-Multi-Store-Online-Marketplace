@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* ============================================================
-                           ADMIN THEME — matches Admin Dashboard (light / indigo+sky)
-                           ============================================================ */
+                                   ADMIN THEME — matches Admin Dashboard (light / indigo+sky)
+                                   ============================================================ */
         :root {
             /* ── Backgrounds ── */
             --bg-color: #F8FAFC;
@@ -659,6 +659,28 @@
                 font-size: 0.82rem;
             }
 
+        /* ── Deep-link highlight ── */
+        @@keyframes deepLinkPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.45);
+                background-color: var(--brand-soft);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+                background-color: var(--brand-soft);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+                background-color: transparent;
+            }
+        }
+
+        tr.deep-link-highlight td {
+            animation: deepLinkPulse 1.6s ease-out 2;
+        }
+
         /* ── Responsive ── */
         @@media (max-width: 768px) {
             .page-wrap {
@@ -809,7 +831,7 @@
 
                             var storeInitial = string.IsNullOrWhiteSpace(store.StoreName) ? "S" : store.StoreName.Substring(0, 1).ToUpper();
 
-                            <tr data-status="@statusKey" data-substatus="@subStatusKey">
+                            <tr data-status="@statusKey" data-substatus="@subStatusKey" data-store-id="@store.StoreID">
                                 <td>
                                     <div class="store-cell">
                                         <span class="store-avatar">@storeInitial</span>
@@ -826,16 +848,16 @@
                                 <td>
                                     <span class="status-badge
                                         @(statusKey == "approved" ? "status-approved" :
-                                              statusKey == "pending" ? "status-pending" :
-                                              "status-inactive")">
+                                                statusKey == "pending" ? "status-pending" :
+                                                "status-inactive")">
                                         @status
                                     </span>
                                 </td>
                                 <td>
                                     <span class="status-badge
                                         @(subStatusKey == "active" ? "status-approved" :
-                                              subStatusKey == "expired" ? "status-expired" :
-                                              "status-inactive")">
+                                                subStatusKey == "expired" ? "status-expired" :
+                                                "status-inactive")">
                                         @subStatus
                                     </span>
                                 </td>
@@ -962,6 +984,26 @@
         const targetTab = document.querySelector(`.tab-btn[data-tab="${tabParam}"]`);
         if (targetTab) {
             targetTab.click();
+        }
+    }
+
+    // ── Deep link: ?id=123 -> force "All" tab (in case a suspended/expired
+    // store's row is hidden under a narrower tab), then scroll + highlight ──
+    const targetStoreId = urlParams.get('id');
+    if (targetStoreId) {
+        const allTab = document.querySelector('.tab-btn[data-tab="all"]');
+        if (allTab) allTab.click();
+
+        const targetRow = document.querySelector(
+            '#storesTable tbody tr[data-store-id="' + targetStoreId + '"]'
+        );
+
+        if (targetRow) {
+            targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            targetRow.classList.add('deep-link-highlight');
+            setTimeout(function () {
+                targetRow.classList.remove('deep-link-highlight');
+            }, 3500);
         }
     }
 </script>

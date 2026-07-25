@@ -1,8 +1,605 @@
-﻿@page "/AdminNotifications"
+﻿@page
 @model Local_Multi_Store_Online_Marketplace.Pages.AdminNotificationsModel
 @{
-    Layout = null;
+    ViewData["Title"] = "Notifications";
 }
-@* This page only exists to expose the OnGetListAsync / OnPostMarkAllReadAsync handlers
-   used by the admin top bar's notification dropdown (see _Layout.cshtml).
-   It is never rendered directly. *@
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f1f5f9;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        /* ── Page Header ── */
+        .notif-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+            .notif-page-header h2 {
+                font-size: 26px;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+                color: #0b1a33;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+                .notif-page-header h2 i {
+                    color: #6366f1;
+                    font-size: 28px;
+                }
+        /* ── Stats ── */
+        .notif-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            }
+
+            .stat-card .stat-label {
+                font-size: 13px;
+                font-weight: 500;
+                color: #64748b;
+                letter-spacing: 0.02em;
+                text-transform: uppercase;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .stat-card .stat-value {
+                font-size: 28px;
+                font-weight: 700;
+                color: #0b1a33;
+                margin-top: 4px;
+                letter-spacing: -0.01em;
+            }
+        /* ── Main card ── */
+        .notif-card {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 28px 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+        /* ── Filter bar ── */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            align-items: center;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 16px;
+            border: 1px solid #e9edf4;
+        }
+
+            .filter-bar .filter-group {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                flex: 1 1 180px;
+                min-width: 140px;
+            }
+
+                .filter-bar .filter-group i {
+                    color: #94a3b8;
+                    font-size: 14px;
+                    width: 18px;
+                    text-align: center;
+                }
+
+            .filter-bar input,
+            .filter-bar select {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                padding: 8px 14px;
+                font-size: 14px;
+                font-family: inherit;
+                color: #1e293b;
+                width: 100%;
+                outline: none;
+                min-height: 40px;
+                transition: border-color 0.2s, box-shadow 0.2s;
+            }
+
+                .filter-bar input:focus,
+                .filter-bar select:focus {
+                    border-color: #6366f1;
+                    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+                }
+
+        .filter-actions {
+            margin-left: auto;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            min-height: 40px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+            .btn-outline:hover {
+                background: #f1f5f9;
+                border-color: #cbd5e1;
+            }
+        /* ── Notification list ── */
+        .notif-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .notif-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 1px solid #f1f5f9;
+            transition: background 0.15s ease;
+            cursor: pointer;
+        }
+
+            .notif-item:hover {
+                background: #f8fafc;
+            }
+
+            .notif-item.unread {
+                background: #eef2ff;
+                border-color: #e0e7ff;
+            }
+
+                .notif-item.unread:hover {
+                    background: #e5e9ff;
+                }
+
+            .notif-item.hidden-by-filter {
+                display: none;
+            }
+
+        .notif-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 16px;
+        }
+
+            .notif-icon.type-store {
+                background: #eef2ff;
+                color: #4338ca;
+            }
+
+            .notif-icon.type-delivery {
+                background: #e0f2fe;
+                color: #075985;
+            }
+
+            .notif-icon.type-complaint {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+
+            .notif-icon.type-report {
+                background: #fef3c7;
+                color: #92400e;
+            }
+
+            .notif-icon.type-refund {
+                background: #fce7f3;
+                color: #9d174d;
+            }
+
+            .notif-icon.type-payment {
+                background: #dcfce7;
+                color: #166534;
+            }
+
+            .notif-icon.type-default {
+                background: #f1f5f9;
+                color: #475569;
+            }
+
+        .notif-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notif-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .notif-title .dot {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: #6366f1;
+                flex-shrink: 0;
+            }
+
+        .notif-message {
+            font-size: 13.5px;
+            color: #475569;
+            margin-top: 3px;
+            line-height: 1.5;
+        }
+
+        .notif-meta {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notif-type-badge {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .mark-read-btn {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #6366f1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+            .mark-read-btn:hover {
+                background: #eef2ff;
+                transform: scale(1.06);
+            }
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 56px 20px;
+            color: #94a3b8;
+        }
+
+            .empty-state i {
+                font-size: 44px;
+                color: #cbd5e1;
+                margin-bottom: 12px;
+                display: block;
+            }
+
+            .empty-state h4 {
+                font-size: 17px;
+                font-weight: 600;
+                color: #475569;
+                margin: 0 0 4px;
+            }
+
+            .empty-state p {
+                font-size: 14px;
+                margin: 0;
+            }
+
+        @@media (max-width: 640px) {
+            .notif-card {
+                padding: 18px 14px 14px;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-actions {
+                margin-left: 0;
+            }
+
+                .filter-actions .btn {
+                    width: 100%;
+                    justify-content: center;
+                }
+        }
+    </style>
+}
+
+<div class="notif-page-header">
+    <h2><i class="fas fa-bell"></i> Notifications</h2>
+    <form method="post" asp-page-handler="MarkAllRead">
+        <button type="submit" class="btn btn-outline">
+            <i class="fas fa-check-double"></i> Mark all as read
+        </button>
+    </form>
+</div>
+
+<div class="notif-stats">
+    <div class="stat-card">
+        <div class="stat-label"><i class="fas fa-inbox"></i> Total</div>
+        <div class="stat-value">@Model.TotalCount</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="fas fa-envelope"></i> Unread</div>
+        <div class="stat-value">@Model.UnreadCount</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="fas fa-clock"></i> Today</div>
+        <div class="stat-value">@Model.TodayCount</div>
+    </div>
+</div>
+
+<div class="notif-card">
+    <div class="filter-bar">
+        <div class="filter-group">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchNotif" placeholder="Search title or message…" autocomplete="off">
+        </div>
+        <div class="filter-group" style="flex:0.7 1 140px;">
+            <i class="fas fa-tag"></i>
+            <select id="typeFilter">
+                <option value="">All types</option>
+                @foreach (var type in Model.Notifications.Select(n => n.Type).Distinct().OrderBy(t => t))
+                {
+                    <option value="@type">@type</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group" style="flex:0.6 1 120px;">
+            <i class="fas fa-filter"></i>
+            <select id="readFilter">
+                <option value="">All</option>
+                <option value="unread">Unread only</option>
+                <option value="read">Read only</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="notif-list" id="notifList">
+        @if (Model.Notifications.Any())
+        {
+            @foreach (var n in Model.Notifications)
+            {
+                var iconClass = n.Type?.ToLower() switch
+                {
+                    "store" or "storerequest" => "type-store fas fa-store",
+                    "delivery" or "deliveryrequest" => "type-delivery fas fa-truck",
+                    "complaint" => "type-complaint fas fa-exclamation-circle",
+                    "report" => "type-report fas fa-flag",
+                    "refund" => "type-refund fas fa-money-bill-wave",
+                    "payment" => "type-payment fas fa-credit-card",
+                    _ => "type-default fas fa-bell"
+                };
+                var iconWrapperClass = iconClass.Split(' ')[0];
+                var iconGlyphClasses = string.Join(" ", iconClass.Split(' ').Skip(1));
+
+                <div class="notif-item@(n.IsRead ? "" : " unread")"
+                     data-title="@n.Title.ToLowerInvariant()"
+                     data-message="@n.Message.ToLowerInvariant()"
+                     data-type="@n.Type"
+                     data-read="@(n.IsRead ? "read" : "unread")"
+                     data-id="@n.NotificationID"
+                     data-reference-id="@n.ReferenceID"
+                     role="button"
+                     tabindex="0">
+                    <div class="notif-icon @iconWrapperClass">
+                        <i class="@iconGlyphClasses"></i>
+                    </div>
+                    <div class="notif-body">
+                        <div class="notif-title">
+                            @n.Title
+                            @if (!n.IsRead)
+                            {
+                                <span class="dot"></span>
+                            }
+                        </div>
+                        <div class="notif-message">@n.Message</div>
+                        <div class="notif-meta">
+                            <span>@n.SentAt.ToString("MMM d, yyyy · h:mm tt") UTC</span>
+                            <span class="notif-type-badge">@n.Type</span>
+                        </div>
+                    </div>
+                    @if (!n.IsRead)
+                    {
+                        <button type="button" class="mark-read-btn mark-read-only" title="Mark as read (without opening)">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-bell-slash"></i>
+                <h4>No notifications</h4>
+                <p>You're all caught up.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+        const searchInput = document.getElementById('searchNotif');
+        const typeFilter = document.getElementById('typeFilter');
+        const readFilter = document.getElementById('readFilter');
+        const items = Array.from(document.querySelectorAll('.notif-item'));
+
+        function applyFilters() {
+            const term = searchInput.value.toLowerCase().trim();
+            const type = typeFilter.value;
+            const read = readFilter.value;
+
+            items.forEach(item => {
+                const title = item.dataset.title || '';
+                const message = item.dataset.message || '';
+                const itemType = item.dataset.type || '';
+                const itemRead = item.dataset.read || '';
+
+                let match = true;
+                if (term) match = title.includes(term) || message.includes(term);
+                if (match && type) match = itemType === type;
+                if (match && read) match = itemRead === read;
+
+                item.classList.toggle('hidden-by-filter', !match);
+            });
+        }
+
+        function debounce(fn, delay = 200) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        searchInput.addEventListener('input', debounce(applyFilters));
+        typeFilter.addEventListener('change', applyFilters);
+        readFilter.addEventListener('change', applyFilters);
+
+        // ─── Click a notification -> mark read (if needed) -> go to the
+        // related admin page. Same routing table and endpoint the topbar
+        // bell dropdown uses (?handler=MarkReadApi), so both stay in sync.
+        function notifLinkFor(type, referenceId) {
+            const suffix = referenceId ? ('?id=' + encodeURIComponent(referenceId)) : '';
+            switch ((type || '').toLowerCase()) {
+                case 'storerequest': return '/AdminStores' + suffix;
+                case 'deliveryrequest': return '/AdminDelivery' + suffix;
+                case 'deliveryassigned':
+                case 'deliveryassignmentpending':
+                    return '/AdminAssignDelivery' + (referenceId ? ('?orderId=' + encodeURIComponent(referenceId)) : '');
+                case 'complaint': return '/AdminComplaints' + suffix;
+                case 'report': return '/AdminReports' + suffix;
+                case 'payment':
+                case 'storepayment':
+                case 'subscriptionpayment':
+                    return '/AdminRevenue' + suffix;
+                default: return '/AdminReports';
+            }
+        }
+
+        function getAntiForgeryToken() {
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            return tokenInput ? tokenInput.value : '';
+        }
+
+        items.forEach(item => {
+            item.addEventListener('click', function(e) {
+                // The small standalone "mark as read" checkmark shouldn't navigate.
+                if (e.target.closest('.mark-read-only')) return;
+
+                const id = this.dataset.id;
+                const type = this.dataset.type;
+                const referenceId = this.dataset.referenceId;
+                const wasUnread = this.dataset.read === 'unread';
+                const href = notifLinkFor(type, referenceId);
+
+                if (!wasUnread) {
+                    window.location.href = href;
+                    return;
+                }
+
+                fetch('/AdminNotifications?handler=MarkReadApi', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'RequestVerificationToken': getAntiForgeryToken(),
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'id=' + encodeURIComponent(id)
+                })
+                    .catch(function() { /* still navigate even if this fails */ })
+                    .finally(function() {
+                        window.location.href = href;
+                    });
+            });
+        });
+
+        // Standalone checkmark: mark read in place, no navigation, no full reload.
+        document.querySelectorAll('.mark-read-only').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const item = this.closest('.notif-item');
+                const id = item?.dataset.id;
+                if (!id) return;
+
+                fetch('/AdminNotifications?handler=MarkReadApi', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'RequestVerificationToken': getAntiForgeryToken(),
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'id=' + encodeURIComponent(id)
+                })
+                    .then(function() {
+                        item.classList.remove('unread');
+                        item.dataset.read = 'read';
+                        const dot = item.querySelector('.dot');
+                        if (dot) dot.remove();
+                        btn.remove();
+                    });
+            });
+        });
+    })();
+</script>
