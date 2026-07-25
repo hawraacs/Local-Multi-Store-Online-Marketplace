@@ -44,8 +44,8 @@
             }
 
             /* =========================
-                                   ROLE NAV (non-admin roles)
-                                   ========================= */
+                                               ROLE NAV (non-admin roles)
+                                               ========================= */
             .role-nav {
                 background: #1E293B;
                 padding: 8px 0;
@@ -131,8 +131,8 @@
             }
 
             /* =========================
-                                   ADMIN SHELL
-                                   ========================= */
+                                               ADMIN SHELL
+                                               ========================= */
             .admin-shell {
                 display: grid;
                 grid-template-columns: var(--sidebar-w) 1fr;
@@ -154,8 +154,8 @@
                 }
 
             /* =========================
-                                   ADMIN SIDEBAR
-                                   ========================= */
+                                               ADMIN SIDEBAR
+                                               ========================= */
             .admin-sidebar {
                 grid-area: sidebar;
                 width: var(--sidebar-w);
@@ -354,8 +354,8 @@
             }
 
             /* =========================
-                                   ADMIN TOP BAR
-                                   ========================= */
+                                               ADMIN TOP BAR
+                                               ========================= */
             .admin-topbar {
                 grid-area: topbar;
                 position: sticky;
@@ -494,8 +494,8 @@
             }
 
             /* =========================
-                                   SEARCH
-                                   ========================= */
+                                               SEARCH
+                                               ========================= */
             .topbar-search {
                 position: relative;
                 display: flex;
@@ -582,8 +582,8 @@
             }
 
             /* =========================
-                                   NOTIFICATION PANEL
-                                   ========================= */
+                                               NOTIFICATION PANEL
+                                               ========================= */
             .topbar-notif-wrap {
                 position: relative;
             }
@@ -659,8 +659,8 @@
                 }
 
             /* notif-item is now a <button> (was <a>) so it can mark itself read
-               before navigating away - this resets default button styling so it
-               still looks/behaves exactly like the old link row. */
+                           before navigating away - this resets default button styling so it
+                           still looks/behaves exactly like the old link row. */
             .notif-item {
                 width: 100%;
                 display: flex;
@@ -754,8 +754,8 @@
                 }
 
             /* =========================
-                                   USER PROFILE (topbar)
-                                   ========================= */
+                                               USER PROFILE (topbar)
+                                               ========================= */
             .topbar-user {
                 display: flex;
                 align-items: center;
@@ -803,8 +803,8 @@
                     }
 
             /* =========================
-                                   MAIN CONTENT
-                                   ========================= */
+                                               MAIN CONTENT
+                                               ========================= */
             .admin-main {
                 grid-area: main;
                 padding: 28px 32px;
@@ -815,8 +815,8 @@
             }
 
             /* =========================
-                                   MOBILE OVERLAY
-                                   ========================= */
+                                               MOBILE OVERLAY
+                                               ========================= */
             .sidebar-overlay {
                 display: none;
                 position: fixed;
@@ -834,8 +834,8 @@
                 }
 
             /* =========================
-                                   MOBILE RESPONSIVE
-                                   ========================= */
+                                               MOBILE RESPONSIVE
+                                               ========================= */
             @@media (max-width: 992px) {
                 .admin-main {
                     padding: 20px;
@@ -1002,11 +1002,11 @@
                             <span>Stores</span>
                         </a>
                         <a href="/AdminBoosts" data-title="Boosted Products"
-   class="@(isActive("/AdminBoosts") ? "active" : "")"
-   aria-current="@(isActive("/AdminBoosts") ? "page" : null)">
-    <i class="fas fa-bolt"></i>
-    <span>Boosted Products</span>
-</a>
+                           class="@(isActive("/AdminBoosts") ? "active" : "")"
+                           aria-current="@(isActive("/AdminBoosts") ? "page" : null)">
+                            <i class="fas fa-bolt"></i>
+                            <span>Boosted Products</span>
+                        </a>
                         <a href="/AdminUsers" data-title="Users"
                            class="@(isActive("/AdminUsers") ? "active" : "")"
                            aria-current="@(isActive("/AdminUsers") ? "page" : null)">
@@ -1328,17 +1328,26 @@
         switch ((type || "").toLowerCase()) {
         case "complaint":
         return { icon: "fa-flag", cls: "warn" };
-        case "delivery":
+        case "report":
+        return { icon: "fa-flag", cls: "warn" };
+        case "storerequest":
+        return { icon: "fa-store", cls: "info" };
+        case "deliveryrequest":
         return { icon: "fa-truck", cls: "accent" };
-        case "store":
-        case "user":
-        return { icon: "fa-user-plus", cls: "info" };
+        case "deliveryassigned":
+        case "deliveryassignmentpending":
+        return { icon: "fa-route", cls: "accent" };
+        case "payment":
+        case "storepayment":
+        case "subscriptionpayment":
+        return { icon: "fa-credit-card", cls: "accent" };
         default:
         return { icon: "fa-bell", cls: "info" };
         }
         }
 
         function notifLinkFor(type, referenceId) {
+        var suffix = referenceId ? ("?id=" + referenceId) : "";
         switch ((type || "").toLowerCase()) {
         case "storerequest": return "/AdminStores" + suffix;
         case "deliveryrequest": return "/AdminDelivery" + suffix;
@@ -1406,6 +1415,45 @@
         '</div>' +
         '</button>';
         }).join("");
+
+        list.querySelectorAll(".notif-item").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+        var id = this.dataset.id;
+        var href = this.dataset.href;
+        var wasUnread = this.dataset.unread === "true";
+
+        if (!wasUnread) {
+        window.location.href = href;
+        return;
+        }
+        markNotificationRead(id, href);
+        });
+        });
+        }
+
+        function markNotificationRead(id, href) {
+        var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+        var token = tokenInput ? tokenInput.value : "";
+
+        fetch("/AdminNotifications?handler=MarkReadApi", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+        "RequestVerificationToken": token,
+        "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "id=" + encodeURIComponent(id)
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+        if (data && typeof data.unreadCount === "number") {
+        updateNotifBadge(data.unreadCount);
+        }
+        })
+        .catch(function () { /* fail silently, still navigate */ })
+        .finally(function () {
+        window.location.href = href;
+        });
         }
 
         function loadNotifications() {
@@ -1416,7 +1464,8 @@
         renderNotifications(data.items, data.unreadCount);
         notificationsLoaded = true;
         })
-        .catch(function () {
+        .catch(function (err) {
+        console.error("Failed to load notifications:", err);
         if (list) list.innerHTML = '<div class="notif-empty">Couldn\'t load notifications.</div>';
         });
         }
@@ -1426,7 +1475,7 @@
         var token = tokenInput ? tokenInput.value : "";
 
         fetch("/AdminNotifications?handler=MarkAllReadApi", {
-            method: "POST",
+        method: "POST",
         credentials: "same-origin",
         headers: {
         "RequestVerificationToken": token,
@@ -1488,4 +1537,3 @@
 
 </body>
 </html>
-
