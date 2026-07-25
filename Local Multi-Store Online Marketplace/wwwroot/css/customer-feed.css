@@ -1,5 +1,5 @@
 ﻿/* =============================================================
-   CUSTOMER FEED — STYLESHEET (v2 — visual redesign)
+   CUSTOMER FEED — STYLESHEET (v3 — full-width + story revamp)
    Local Multi-Store Online Marketplace ("realnest")
    -------------------------------------------------------------
    Design notes:
@@ -10,6 +10,12 @@
      Plus Jakarta Sans (UI) for a less "template" feel.
    - Signature touch: price shown as a market price-tag (dashed
      border + punch hole + slight rotation) instead of a plain pill.
+   - v3: the page shell now spans the same width as Customer1's
+     Explore page (var(--page-max-width)) instead of a narrow
+     980px column, so Feed no longer looks cramped on desktop.
+     Story circles are bigger and follow an Instagram-style
+     state: unviewed = warm orange ring, viewed = brand purple
+     ring (instead of a flat grey).
 
    Sections:
      1. Design Tokens
@@ -52,6 +58,11 @@
     --shadow-sm: 0 2px 8px rgba(38, 20, 71, 0.05);
     --shadow-md: 0 12px 28px rgba(38, 20, 71, 0.08);
     --shadow-lg: 0 24px 48px rgba(38, 20, 71, 0.14);
+    /* NEW — shared page width so Feed matches Customer1/Explore */
+    --page-max-width: 1400px;
+    /* NEW — story ring states (Instagram-style) */
+    --story-ring-unviewed: linear-gradient(135deg, #ffd166 0%, #f59e0b 45%, #ea580c 100%);
+    --story-ring-viewed: var(--accent-gradient);
 }
 
 /* -------------------------------------------------------------
@@ -166,54 +177,82 @@ body {
    4. STORY BAR
    Matches _StoryBarCustomer.cshtml: .story-bar .story-circle
    .story-ring(--active|--viewed) .story-img .story-label
+
+   v3 — bigger circles + Instagram-style states:
+     unviewed  -> warm orange ring  (--story-ring-unviewed)
+     viewed    -> brand purple ring (--story-ring-viewed)
    ------------------------------------------------------------- */
-.story-bar {
+#customerStoryBar.story-bar {
     display: flex;
-    padding: 22px 16px 24px !important;
-    gap: 14px !important;
+    padding: 26px 24px 28px !important;
+    gap: 20px !important;
     overflow-x: auto;
     scrollbar-width: none;
-    max-width: 980px;
+    max-width: var(--page-max-width);
     margin: 0 auto;
 }
 
-    .story-bar::-webkit-scrollbar {
+    #customerStoryBar.story-bar::-webkit-scrollbar {
         display: none;
     }
 
-.story-circle {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    width: 78px !important;
-    flex-shrink: 0;
+#customerStoryBar .story-circle {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 140px !important;
+    flex-shrink: 0 !important;
     cursor: pointer;
 }
 
-.story-ring,
-.story-ring--active {
-    background: conic-gradient(from 45deg, #f6c453 0%, #e0793a 22%, #c23f78 45%, #7c3aed 68%, #4f46e5 88%, #f6c453 100%) !important;
-    padding: 3px !important;
+/* Default / unviewed ring = orange, Instagram-style "new story" state.
+   IMPORTANT: width/height here MUST equal story-img size + (2 x padding),
+   otherwise the image overflows past the ring and hides the colored
+   border completely (this was the actual bug). */
+#customerStoryBar .story-ring,
+#customerStoryBar .story-ring--active {
+    width: 130px !important;
+    height: 130px !important;
+    background: var(--story-ring-unviewed) !important;
+    padding: 6px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: transform .2s ease;
 }
 
-.story-ring--viewed {
-    background: var(--border-strong) !important;
-}
-
-.story-img {
-    width: 66px !important;
-    height: 66px !important;
+/* Once opened, the ring turns brand purple instead of flat grey */
+#customerStoryBar .story-ring--viewed {
+    width: 130px !important;
+    height: 130px !important;
+    background: var(--story-ring-viewed) !important;
+    padding: 6px !important;
     border-radius: 50% !important;
-    border: 3px solid #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: .92;
+}
+
+#customerStoryBar .story-circle:hover .story-ring,
+#customerStoryBar .story-circle:hover .story-ring--active,
+#customerStoryBar .story-circle:hover .story-ring--viewed {
+    transform: scale(1.04);
+}
+
+#customerStoryBar .story-img {
+    width: 118px !important;
+    height: 118px !important;
+    border-radius: 50% !important;
+    border: 4px solid #ffffff !important;
     display: block !important;
     object-fit: cover !important;
 }
 
-.story-label {
-    font-size: 12px !important;
+#customerStoryBar .story-label {
+    font-size: 15px !important;
     font-weight: 600 !important;
     color: var(--text-secondary);
     max-width: 100%;
@@ -228,19 +267,19 @@ body {
    Structural fix for the old always-open 6-column filter grid.
    ------------------------------------------------------------- */
 .discovery-bar {
-    max-width: 980px;
+    max-width: var(--page-max-width);
     margin: 6px auto 18px;
-    padding: 0 16px;
+    padding: 0 24px;
 }
 
 .discovery-search {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 999px;
-    padding: 6px 8px 6px 18px;
+    padding: 10px 10px 10px 24px;
     box-shadow: var(--shadow-sm);
     transition: box-shadow .2s ease, border-color .2s ease;
 }
@@ -252,7 +291,7 @@ body {
 
     .discovery-search i.fa-magnifying-glass {
         color: var(--text-muted);
-        font-size: 14px;
+        font-size: 18px;
     }
 
     .discovery-search input[type="text"],
@@ -262,7 +301,7 @@ body {
         outline: none;
         background: transparent;
         font-family: var(--font-family);
-        font-size: 14px;
+        font-size: 17px;
         color: var(--text-primary);
         min-width: 0;
     }
@@ -274,13 +313,13 @@ body {
 .discovery-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     border: none;
     background: var(--accent-light);
     color: var(--accent-color);
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 800;
-    padding: 9px 14px;
+    padding: 12px 18px;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
@@ -293,7 +332,7 @@ body {
 
     .discovery-toggle i {
         transition: transform .2s ease;
-        font-size: 10px;
+        font-size: 13px;
     }
 
     .discovery-toggle[aria-expanded="true"] i {
@@ -302,8 +341,8 @@ body {
 
 .discovery-submit {
     border: none;
-    width: 38px;
-    height: 38px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: var(--accent-gradient);
     color: #fff;
@@ -312,6 +351,7 @@ body {
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
+    font-size: 17px;
     box-shadow: 0 4px 12px rgba(109, 40, 217, .28);
 }
 
@@ -406,9 +446,9 @@ body {
     display: flex;
     gap: 22px;
     overflow-x: auto;
-    padding: 4px 16px 16px;
+    padding: 4px 24px 16px;
     margin: 0 auto 6px;
-    max-width: 980px;
+    max-width: var(--page-max-width);
     scrollbar-width: none;
     border-bottom: 1px solid var(--border-color);
     -webkit-overflow-scrolling: touch;
@@ -421,9 +461,9 @@ body {
 .category-chip {
     position: relative;
     text-decoration: none;
-    padding: 6px 2px 12px;
+    padding: 8px 2px 14px;
     color: var(--text-secondary);
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 700;
     white-space: nowrap;
     flex-shrink: 0;
@@ -462,19 +502,31 @@ body {
 
 /* -------------------------------------------------------------
    7. FEED POST CARD
+
+   v3 — the feed shell now spans var(--page-max-width) just like
+   Customer1's Explore grid, and switches to a responsive
+   multi-column grid on wider screens so the page doesn't look
+   like a narrow strip surrounded by empty space on desktop.
+   Each individual post card keeps a comfortable reading width.
    ------------------------------------------------------------- */
 .feed-container {
-    max-width: 980px;
+    /* Posts stack under each other, one per row — now matched to
+       the exact same width as .discovery-bar / .category-section
+       so the feed lines up with the search bar above it. */
+    max-width: var(--page-max-width);
     margin: 0 auto 60px auto;
-    padding: 0 16px;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
 }
 
 .post {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: 24px;
     overflow: hidden;
-    margin-bottom: 28px;
+    margin-bottom: 0;
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow-md);
@@ -487,7 +539,7 @@ body {
     }
 
 .post-body {
-    padding: 22px;
+    padding: 44px;
     display: flex;
     flex-direction: column;
 }
@@ -496,7 +548,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
+    padding: 28px 36px;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -513,11 +565,11 @@ body {
 }
 
 .store-avatar {
-    width: 38px;
-    height: 38px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     background: var(--accent-gradient);
-    padding: 2px;
+    padding: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -532,7 +584,7 @@ body {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
+        font-size: 21px;
         font-weight: 800;
         color: var(--accent-color);
     }
@@ -540,7 +592,7 @@ body {
 .store-name {
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: 15px;
+    font-size: 22px;
     color: var(--text-primary);
     text-decoration: none;
     transition: color .2s ease;
@@ -551,12 +603,12 @@ body {
     }
 
 .btn-follow-action {
-    font-size: 12px;
+    font-size: 15.5px;
     font-weight: 800;
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 7px 15px;
+    padding: 11px 24px;
     border-radius: 999px;
     transition: all .25s ease;
 }
@@ -584,21 +636,22 @@ body {
     }
 
 .post-image-container {
+    /* Fills the full width of the post card, no side margins/white
+       space - every post gets the exact same square box regardless
+       of the original photo's dimensions, cropped via object-fit. */
     width: 100%;
-    max-height: 640px;
+    aspect-ratio: 1 / 1;
     overflow: hidden;
     background-color: var(--accent-light);
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
 }
 
 .post-image {
     width: 100%;
-    height: auto;
-    max-height: 640px;
-    object-fit: contain;
+    height: 100%;
+    object-fit: cover;
+    display: block;
     transition: transform .6s cubic-bezier(.16,1,.3,1);
 }
 
@@ -608,23 +661,23 @@ body {
 
 /* -- Product info -- */
 .product-meta {
-    margin-top: 6px;
+    margin-top: 10px;
 }
 
 .product-title-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 12px;
+    gap: 24px;
+    margin-bottom: 20px;
 }
 
 .product-name {
     font-family: var(--font-display);
-    font-size: 20px;
+    font-size: 36px;
     font-weight: 600;
     color: var(--text-primary);
-    line-height: 1.3;
+    line-height: 1.25;
 }
 
 /* Signature element: hand-tied market price tag */
@@ -632,13 +685,13 @@ body {
     position: relative;
     flex-shrink: 0;
     font-family: var(--font-family);
-    font-size: 15px;
+    font-size: 22px;
     font-weight: 800;
     color: var(--accent-deep);
     background: var(--amber-light);
-    padding: 5px 14px 5px 20px;
-    border: 1.5px dashed var(--amber);
-    border-radius: 3px 12px 12px 3px;
+    padding: 9px 22px 9px 32px;
+    border: 2px dashed var(--amber);
+    border-radius: 5px 16px 16px 5px;
     white-space: nowrap;
     transform: rotate(-2deg);
     box-shadow: var(--shadow-sm);
@@ -647,21 +700,21 @@ body {
     .product-price::before {
         content: '';
         position: absolute;
-        left: 7px;
+        left: 11px;
         top: 50%;
         transform: translateY(-50%);
-        width: 5px;
-        height: 5px;
+        width: 7px;
+        height: 7px;
         border-radius: 50%;
         background: var(--bg-color);
         border: 1px solid var(--amber);
     }
 
 .product-description {
-    font-size: 14px;
+    font-size: 19px;
     color: var(--text-secondary);
-    line-height: 1.55;
-    margin-bottom: 18px;
+    line-height: 1.7;
+    margin-bottom: 28px;
 }
 
 /* -- Actions bar: minimal icon-forward buttons -- */
@@ -669,7 +722,7 @@ body {
     display: flex;
     align-items: stretch;
     gap: 0;
-    margin: 4px 0 16px;
+    margin: 10px 0 28px;
     border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
 }
@@ -685,21 +738,21 @@ body {
     background: transparent;
     border: none;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 22px;
     color: var(--text-muted);
-    padding: 8px;
+    padding: 12px;
 }
 
 .post-menu-dropdown {
     display: none;
     position: absolute;
     right: 0;
-    top: 30px;
+    top: 38px;
     background: white;
     border: 1px solid var(--border-color);
     border-radius: 12px;
     box-shadow: var(--shadow-md);
-    min-width: 160px;
+    min-width: 200px;
     z-index: 999;
     overflow: hidden;
 }
@@ -710,12 +763,12 @@ body {
 
     .post-menu-dropdown button {
         width: 100%;
-        padding: 10px;
+        padding: 14px 16px;
         background: none;
         border: none;
         text-align: left;
         cursor: pointer;
-        font-size: 13px;
+        font-size: 15px;
     }
 
         .post-menu-dropdown button:hover {
@@ -726,12 +779,12 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
-    padding: 12px 10px;
+    gap: 11px;
+    padding: 20px 16px;
     border: none;
     background: transparent;
     cursor: pointer;
-    font-size: 12.5px;
+    font-size: 17px;
     font-weight: 700;
     color: var(--text-secondary);
     transition: color .2s ease;
@@ -749,7 +802,7 @@ body {
     }
 
     .btn-action i {
-        font-size: 14px;
+        font-size: 20px;
     }
 
     .btn-action:hover {
@@ -783,17 +836,17 @@ body {
 .comment-inputs {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
     border-bottom: 1.5px solid var(--border-color);
-    padding-bottom: 10px;
+    padding-bottom: 16px;
 }
 
 .rating-input {
-    width: 64px;
+    width: 90px;
     border: none;
     border-right: 1.5px solid var(--border-color);
-    padding: 6px 10px 6px 0;
-    font-size: 13px;
+    padding: 10px 14px 10px 0;
+    font-size: 17px;
     text-align: center;
     outline: none;
     background: transparent;
@@ -806,8 +859,8 @@ body {
     flex-grow: 1;
     border: none;
     outline: none;
-    padding: 6px 0;
-    font-size: 13px;
+    padding: 10px 0;
+    font-size: 17px;
     font-family: var(--font-family);
     background: transparent;
 }
@@ -821,9 +874,9 @@ body {
     border: none;
     color: var(--accent-color);
     font-weight: 800;
-    font-size: 13px;
+    font-size: 17px;
     cursor: pointer;
-    padding: 0 4px;
+    padding: 0 8px;
     transition: all .2s ease;
 }
 
@@ -832,22 +885,22 @@ body {
     }
 
 .comments-section {
-    margin-top: 14px;
+    margin-top: 22px;
 }
 
 .comments-header-label {
-    font-size: 10.5px;
+    font-size: 13.5px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: .8px;
     color: var(--text-muted);
-    margin-bottom: 10px;
+    margin-bottom: 14px;
 }
 
 .comment {
-    padding: 9px 0;
+    padding: 14px 0;
     border-bottom: 1px solid #f6f3fb;
-    font-size: 13px;
+    font-size: 16.5px;
 }
 
     .comment:last-child {
@@ -858,26 +911,252 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 3px;
+    margin-bottom: 5px;
 }
+
+.comment-author-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.review-delete-form {
+    margin: 0;
+}
+
+.review-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease;
+}
+
+    .review-delete-btn:hover {
+        background: #fdeceb;
+        color: var(--error-color);
+    }
 
 .comment-author {
     font-weight: 700;
     color: var(--text-primary);
-    font-size: 12.5px;
+    font-size: 16px;
 }
 
 .comment-stars {
     color: var(--amber);
-    font-size: 11px;
+    font-size: 13.5px;
     font-weight: 700;
     letter-spacing: 1px;
 }
 
 .comment-text {
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: 1.6;
 }
+
+/* -------------------------------------------------------------
+   8b. PRODUCT REVIEW COMPOSER (star picker) + SHOW MORE/LESS
+   Mirrors Customer1's Explore modal review composer so writing a
+   review looks/feels the same across the app, plus a SHEIN-style
+   "show more reviews" disclosure instead of dumping every review.
+   ------------------------------------------------------------- */
+.product-review-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    background: var(--amber-light);
+    border-radius: 14px;
+}
+
+    .product-review-summary strong {
+        font-family: var(--font-display);
+        font-size: 30px;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1;
+    }
+
+    /* NOTE: this must be a DIRECT child combinator (>), not a descendant
+       selector - .product-review-stars is ALSO a <span> nested inside,
+       so a plain descendant selector here was forcing its individual
+       star icons into a vertical column instead of a horizontal row. */
+    .product-review-summary > span {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+.product-review-stars {
+    display: inline-flex;
+    align-items: center;
+    color: var(--amber);
+    font-size: 16px;
+    gap: 2px;
+}
+
+.product-review-summary small {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.product-review-form {
+    margin: 4px 0 22px;
+    padding: 18px 20px 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fbfaff 0%, #ffffff 100%);
+    box-shadow: var(--shadow-sm);
+}
+
+.product-review-form-label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    text-transform: uppercase;
+}
+
+.product-review-form-stars {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 14px;
+}
+
+    .product-review-form-stars .star-pick {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        padding: 3px;
+        font-size: 24px;
+        line-height: 1;
+        color: #d8d2e6;
+        transition: transform .15s ease, color .15s ease;
+    }
+
+        .product-review-form-stars .star-pick:hover,
+        .product-review-form-stars .star-pick:focus-visible {
+            transform: scale(1.18);
+        }
+
+        .product-review-form-stars .star-pick.filled,
+        .product-review-form-stars .star-pick.filled i {
+            color: var(--amber);
+        }
+
+.product-review-form-hint {
+    margin-left: 6px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+    .product-review-form-hint.active {
+        color: var(--accent-color);
+    }
+
+.product-review-form-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+    .product-review-form-row input[type="text"] {
+        flex: 1;
+        min-height: 48px;
+        padding: 0 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: #fff;
+        font-size: 15px;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+        .product-review-form-row input[type="text"]:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+.product-review-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 48px;
+    padding: 0 22px;
+    border: none;
+    border-radius: 12px;
+    background: var(--accent-gradient);
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity .2s ease, transform .15s ease;
+}
+
+    .product-review-submit:hover {
+        transform: translateY(-1px);
+    }
+
+/* Reviews beyond the first two are hidden until "Show all" is tapped */
+.review-hidden {
+    display: none;
+}
+
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.show-more-reviews-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px 18px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--card-bg);
+    color: var(--accent-color);
+    font-weight: 800;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, transform .15s ease;
+}
+
+    .show-more-reviews-btn::after {
+        content: '\f078'; /* fa-chevron-down */
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: 10px;
+        transition: transform .2s ease;
+    }
+
+    .show-more-reviews-btn[data-expanded="true"]::after {
+        transform: rotate(180deg);
+    }
+
+    .show-more-reviews-btn:hover {
+        background: var(--accent-light);
+        border-color: var(--accent-color);
+        transform: translateY(-1px);
+    }
 
 /* -------------------------------------------------------------
    9. EMPTY STATE
@@ -891,6 +1170,7 @@ body {
     color: var(--text-secondary);
     margin-top: 30px;
     box-shadow: var(--shadow-sm);
+    grid-column: 1 / -1;
 }
 
 .empty-icon {
@@ -993,23 +1273,103 @@ body {
 
 /* -------------------------------------------------------------
    11. RESPONSIVE RULES
+
+   Posts stay stacked one under the other at every width; only
+   the surrounding page chrome (story bar / discovery bar /
+   categories) scales with the wider page shell.
    ------------------------------------------------------------- */
 @media (max-width: 768px) {
     .feed-container {
         padding: 0 12px;
     }
 
+    .discovery-bar,
+    .category-section,
+    .story-bar {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
     .post {
         border-radius: 16px;
-        margin-bottom: 20px;
+    }
+
+    .post-header {
+        padding: 16px 18px;
     }
 
     .post-body {
-        padding: 16px;
+        padding: 18px;
+    }
+
+    .store-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .store-name {
+        font-size: 15px;
+    }
+
+    .product-name {
+        font-size: 21px;
+    }
+
+    .product-price {
+        font-size: 15px;
+        padding: 6px 14px 6px 20px;
+    }
+
+    .product-description {
+        font-size: 14.5px;
+        margin-bottom: 18px;
+    }
+
+    .btn-action {
+        font-size: 12.5px;
+        padding: 13px 8px;
+    }
+
+        .btn-action i {
+            font-size: 15px;
+        }
+
+    .comments-header-label {
+        font-size: 10.5px;
+    }
+
+    .comment {
+        font-size: 13px;
     }
 
     .discovery-filters {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .story-circle {
+        width: 108px !important;
+    }
+
+    #customerStoryBar .story-circle {
+        width: 108px !important;
+    }
+
+    .story-img {
+        width: 90px !important;
+        height: 90px !important;
+    }
+
+    #customerStoryBar .story-img {
+        width: 90px !important;
+        height: 90px !important;
+    }
+
+    #customerStoryBar .story-ring,
+    #customerStoryBar .story-ring--active,
+    #customerStoryBar .story-ring--viewed {
+        width: 100px !important;
+        height: 100px !important;
+        padding: 5px !important;
     }
 }
 
@@ -1020,5 +1380,31 @@ body {
 
     .product-name {
         font-size: 17px;
+    }
+
+    .story-circle {
+        width: 92px !important;
+    }
+
+    #customerStoryBar .story-circle {
+        width: 92px !important;
+    }
+
+    .story-img {
+        width: 76px !important;
+        height: 76px !important;
+    }
+
+    #customerStoryBar .story-img {
+        width: 76px !important;
+        height: 76px !important;
+    }
+
+    #customerStoryBar .story-ring,
+    #customerStoryBar .story-ring--active,
+    #customerStoryBar .story-ring--viewed {
+        width: 84px !important;
+        height: 84px !important;
+        padding: 4px !important;
     }
 }

@@ -17,7 +17,7 @@
 
     <!-- Page styles -->
     <link rel="stylesheet" href="~/css/stories.css" />
-    <link rel="stylesheet" href="~/css/customer-feed.css" />
+    <link rel="stylesheet" href="~/css/customer-feed.css" asp-append-version="true" />
 
     <!-- Boosted badge styles (move into customer-feed.css whenever convenient) -->
     <style>
@@ -225,6 +225,17 @@
                 var isFollowing = Model.FollowingStoreIds.Contains(product.StoreID);
                 var isBoosted = Model.BoostedProductIds.Contains(product.ProductID);
 
+                // NEW — approved reviews, pre-sorted, used for both the summary
+                // stats and the show-more/less list below.
+                var approvedReviews = (product.Reviews ?? new List<Multi_Store.Core.Entities.Review>())
+                    .Where(r => r.Status == "Approved")
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToList();
+                var reviewCount = approvedReviews.Count;
+                var avgRating = reviewCount > 0 ? approvedReviews.Average(r => r.Rating) : 0;
+                var fullStars = (int)Math.Round(avgRating);
+                var visibleReviewCount = 2;
+
                 <article class="post">
 
                     <!-- Post header: store identity + follow / overflow menu -->
@@ -351,50 +362,128 @@
 
                         </div>
 
-                        <!-- Review composer -->
-                        <form method="post" asp-page-handler="AddReview" class="comment-form">
-                            <input type="hidden" name="productId" value="@product.ProductID" />
-                            <div class="comment-inputs">
-                                <input type="number"
-                                       name="rating"
-                                       min="1"
-                                       max="5"
-                                       class="rating-input"
-                                       placeholder="⭐ Rating"
-                                       required />
+                        <!-- ============================================================
+                             REVIEW SUMMARY (average rating + count) — same look as
+                             Customer1's Explore modal review summary.
+                             ============================================================ -->
+                        @if (reviewCount > 0)
+                        {
+                            <div class="product-review-summary">
+                                <strong>@avgRating.ToString("0.0")</strong>
+                                <span>
+                                    <span class="product-review-stars">
+                                        @for (var s = 0; s < 5; s++)
+                                        {
+                                            if (s < fullStars)
+                                            {
+                                                <i class="fa-solid fa-star"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fa-regular fa-star"></i>
+                                            }
+                                        }
+                                    </span>
+                                    <small>@reviewCount review@(reviewCount == 1 ? "" : "s")</small>
+                                </span>
+                            </div>
+                        }
 
+                        <!-- ============================================================
+                             REVIEW COMPOSER — star picker instead of a plain number
+                             box, same interaction as Customer1's "write a review".
+                             ============================================================ -->
+                        <form method="post" asp-page-handler="AddReview" class="product-review-form">
+                            <input type="hidden" name="productId" value="@product.ProductID" />
+                            <input type="hidden" name="rating" value="0" class="product-review-rating-input" />
+
+                            <span class="product-review-form-label">Write a review</span>
+
+                            <div class="product-review-form-stars">
+                                <button type="button" class="star-pick" data-star="1" aria-label="1 star">
+                                    <i class="fa-regular fa-star"></i>
+                                </button>
+                                <button type="button" class="star-pick" data-star="2" aria-label="2 stars">
+                                    <i class="fa-regular fa-star"></i>
+                                </button>
+                                <button type="button" class="star-pick" data-star="3" aria-label="3 stars">
+                                    <i class="fa-regular fa-star"></i>
+                                </button>
+                                <button type="button" class="star-pick" data-star="4" aria-label="4 stars">
+                                    <i class="fa-regular fa-star"></i>
+                                </button>
+                                <button type="button" class="star-pick" data-star="5" aria-label="5 stars">
+                                    <i class="fa-regular fa-star"></i>
+                                </button>
+                                <span class="product-review-form-hint">Tap a star</span>
+                            </div>
+
+                            <div class="product-review-form-row">
                                 <input type="text"
                                        name="comment"
-                                       class="comment-text-input"
-                                       placeholder="Add a comment..."
+                                       class="product-review-comment-input"
+                                       placeholder="Share your thoughts about this product..."
                                        required />
 
-                                <button class="btn-post-comment" type="submit">Post</button>
+                                <button type="submit" class="product-review-submit">
+                                    <i class="fa-solid fa-paper-plane"></i> Post
+                                </button>
                             </div>
                         </form>
 
-                        <!-- Approved reviews -->
+                        <!-- ============================================================
+                             REVIEWS LIST — first 2 shown, rest hidden behind a
+                             "Show all N reviews" / "Show less" toggle (SHEIN-style).
+                             ============================================================ -->
                         <div class="comments-section">
-                            @if (product.Reviews != null && product.Reviews.Any())
+                            @if (reviewCount > 0)
                             {
-                                <div class="comments-header-label">Comments</div>
+                                <div class="comments-header-label">Reviews (@reviewCount)</div>
 
-                                @foreach (var review in product.Reviews
-                                    .Where(r => r.Status == "Approved")
-                                    .OrderByDescending(r => r.CreatedAt))
-                                {
-                                    <div class="comment">
-                                        <div class="comment-author-row">
-                                            <span class="comment-author">@review.Customer?.User?.FullName</span>
-                                            <span class="comment-stars">
-                                                @for (var i = 0; i < review.Rating; i++)
+                                <div class="reviews-list" data-reviews-list>
+                                    @for (var i = 0; i < approvedReviews.Count; i++)
+                                    {
+                                        var review = approvedReviews[i];
+
+                                        <div class="comment @(i >= visibleReviewCount ? "review-hidden" : "")">
+                                            <div class="comment-author-row">
+                                                <div class="comment-author-meta">
+                                                    <span class="comment-author">@review.Customer?.User?.FullName</span>
+                                                    <span class="comment-stars">
+                                                        @for (var s = 0; s < review.Rating; s++)
+                                                        {
+                                                            @:⭐
+                                                        }
+                                                    </span>
+                                                </div>
+
+                                                @if (review.CustomerID == Model.CurrentCustomerId)
                                                 {
-                                                    @:⭐
+                                                    <form method="post"
+                                                          asp-page-handler="DeleteReview"
+                                                          class="review-delete-form"
+                                                          onsubmit="return confirm('Delete your review? This cannot be undone.');">
+                                                        <input type="hidden" name="reviewId" value="@review.ReviewID" />
+                                                        <button type="submit" class="review-delete-btn" aria-label="Delete your review" title="Delete your review">
+                                                            <i class="fa-solid fa-trash"></i>
+                                                        </button>
+                                                    </form>
                                                 }
-                                            </span>
+                                            </div>
+                                            <div class="comment-text">@review.Comment</div>
                                         </div>
-                                        <div class="comment-text">@review.Comment</div>
-                                    </div>
+                                    }
+                                </div>
+
+                                @if (reviewCount > visibleReviewCount)
+                                {
+                                    <button type="button"
+                                            class="show-more-reviews-btn"
+                                            data-toggle-reviews
+                                            data-expanded="false"
+                                            data-show-label="Show all @reviewCount reviews">
+                                        Show all @reviewCount reviews
+                                    </button>
                                 }
                             }
                         </div>
@@ -422,7 +511,7 @@
 
     <!-- Page scripts -->
     <script src="~/js/stories.js"></script>
-    <script src="~/js/customer-feed.js"></script>
+    <script src="~/js/customer-feed.js" asp-append-version="true"></script>
 
 </body>
 </html>

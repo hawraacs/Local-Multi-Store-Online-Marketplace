@@ -54,6 +54,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // NEW — active-boosted product IDs, used by the view to show the "Boosted" badge
         public HashSet<int> BoostedProductIds { get; set; } = new();
 
+        // NEW — the logged-in customer's own CustomerID, exposed so the view can
+        // decide whether to show a "delete" button on a given review (only the
+        // customer who wrote it should be able to remove it).
+        public int CurrentCustomerId { get; set; }
+
         // New: story circles for the top of the Feed - only from stores this customer follows
         public List<StoryGroupDTO> FollowedStoryGroups { get; set; } = new();
 
@@ -74,6 +79,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
             if (customer == null) return;
+
+            // NEW — exposed to the view for the "delete my review" button check.
+            CurrentCustomerId = customer.CustomerID;
 
             var followedStories = await _storyManager.GetFollowedStoriesAsync(customer.CustomerID);
             var viewedStoryIds = await _storyManager.GetViewedStoryIdsAsync(customer.CustomerID);
@@ -432,6 +440,40 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             TempData["Success"] = "Thanks for your review!";
             return RedirectToPage();
         }
+
+        // ================= DELETE REVIEW (NEW) =================
+        // Lets a customer remove ONLY their own review. The ownership check
+        // (review.CustomerID == customer.CustomerID) is what stops anyone
+        // from deleting someone else's review by guessing/tampering with
+        // the reviewId in the posted form.
+        public async Task<IActionResult> OnPostDeleteReviewAsync(int reviewId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToPage();
+
+            var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
+            if (customer == null) return RedirectToPage();
+
+            var review = await _context.Reviews.FirstOrDefaultAsync(r => r.ReviewID == reviewId);
+            if (review == null)
+            {
+                TempData["Error"] = "That review could not be found - it may have already been removed.";
+                return RedirectToPage();
+            }
+
+            if (review.CustomerID != customer.CustomerID)
+            {
+                TempData["Error"] = "You can only delete your own review.";
+                return RedirectToPage();
+            }
+
+            _context.Reviews.Remove(review);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Your review has been removed.";
+            return RedirectToPage();
+        }
+
         // ================= STORY VIEWED (NEW) =================
         public async Task<IActionResult> OnPostMarkStoryViewedAsync(int storyId)
         {
