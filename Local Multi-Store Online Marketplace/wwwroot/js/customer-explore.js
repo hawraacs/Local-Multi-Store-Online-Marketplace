@@ -63,9 +63,19 @@
     const productReviewRating = document.getElementById("productReviewRating");
     const productReviewStars = document.getElementById("productReviewStars");
     const productReviewCount = document.getElementById("productReviewCount");
-    const writeProductReviewLink = document.getElementById("writeProductReviewLink");
     const modalProductReviews = document.getElementById("modalProductReviews");
     const emptyProductReviews = document.getElementById("emptyProductReviews");
+
+    // Inline "write a review" composer (posts directly, no page redirect)
+    const productReviewForm = document.getElementById("productReviewForm");
+    const productReviewProductIdInput = document.getElementById("productReviewProductId");
+    const productReviewRatingInput = document.getElementById("productReviewRatingInput");
+    const productReviewCommentInput = document.getElementById("productReviewCommentInput");
+    const productReviewStarPicker = document.getElementById("productReviewStarPicker");
+    const productReviewStarHint = document.getElementById("productReviewStarHint");
+    const productReviewStarButtons = productReviewStarPicker
+        ? Array.from(productReviewStarPicker.querySelectorAll(".star-pick"))
+        : [];
 
     const relatedItemsGrid = document.getElementById("relatedItemsGrid");
     const emptyRelatedItems = document.getElementById("emptyRelatedItems");
@@ -887,8 +897,17 @@
         productReviewCount.textContent =
             `${totalRatings.toLocaleString()} ${totalRatings === 1 ? "review" : "reviews"}`;
 
-        writeProductReviewLink.href =
-            `/CreateProductReview/${encodeURIComponent(content.productID)}`;
+        // Wire the inline review composer to this product and reset it
+        // for a fresh entry every time a different item is opened.
+        if (productReviewProductIdInput) {
+            productReviewProductIdInput.value = String(content.productID);
+        }
+
+        if (productReviewForm) {
+            productReviewForm.reset();
+        }
+
+        setStarPickerValue(0);
 
         modalProductReviews.innerHTML = "";
 
@@ -939,6 +958,137 @@
 
         return item;
     }
+
+    // =========================================================
+    // STAR PICKER (inline product review composer)
+    // =========================================================
+    function paintStarButtons(value) {
+        productReviewStarButtons.forEach(button => {
+            const starValue = Number(button.dataset.star);
+            const isFilled = starValue <= value;
+
+            button.classList.toggle("filled", isFilled);
+            button.setAttribute("aria-pressed", isFilled ? "true" : "false");
+
+            const icon = button.querySelector("i");
+
+            if (icon) {
+                icon.className = isFilled
+                    ? "fa-solid fa-star"
+                    : "fa-regular fa-star";
+            }
+        });
+    }
+
+    function setStarPickerValue(value) {
+        const safeValue = Math.max(0, Math.min(5, Number(value) || 0));
+
+        if (productReviewRatingInput) {
+            productReviewRatingInput.value = String(safeValue);
+        }
+
+        paintStarButtons(safeValue);
+
+        if (productReviewStarHint) {
+            const labels = ["Tap a star", "Poor", "Fair", "Good", "Great", "Excellent"];
+
+            productReviewStarHint.textContent = labels[safeValue] || "Tap a star";
+            productReviewStarHint.classList.toggle("active", safeValue > 0);
+        }
+    }
+
+    productReviewStarButtons.forEach(button => {
+        const starValue = Number(button.dataset.star);
+
+        button.addEventListener("click", () => {
+            setStarPickerValue(starValue);
+        });
+
+        button.addEventListener("mouseenter", () => {
+            paintStarButtons(starValue);
+        });
+
+        button.addEventListener("focus", () => {
+            paintStarButtons(starValue);
+        });
+    });
+
+    productReviewStarPicker?.addEventListener("mouseleave", () => {
+        paintStarButtons(Number(productReviewRatingInput?.value || 0));
+    });
+
+    productReviewStarPicker?.addEventListener("focusout", event => {
+        if (!productReviewStarPicker.contains(event.relatedTarget)) {
+            paintStarButtons(Number(productReviewRatingInput?.value || 0));
+        }
+    });
+
+    // =========================================================
+    // INLINE PRODUCT REVIEW SUBMIT (no redirect)
+    // =========================================================
+    productReviewForm?.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        if (
+            !currentPost ||
+            currentPost.productID === null ||
+            currentPost.productID === undefined
+        ) {
+            return;
+        }
+
+        const rating = Number(productReviewRatingInput.value);
+        const comment = productReviewCommentInput.value.trim();
+
+        if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+            showToast("Please give a rating between 1 and 5.", "error");
+            return;
+        }
+
+        if (!comment) {
+            showToast("Please write a comment.", "error");
+            return;
+        }
+
+        const submitButton = productReviewForm.querySelector("button[type='submit']");
+        submitButton.disabled = true;
+
+        try {
+            const data = await postForm("AddExploreProductReview", {
+                productId: currentPost.productID,
+                rating,
+                comment
+            });
+
+            emptyProductReviews.classList.add("hidden");
+            modalProductReviews.prepend(createProductReviewElement(data.review));
+
+            productReviewForm.reset();
+            if (productReviewProductIdInput) {
+                productReviewProductIdInput.value = String(currentPost.productID);
+            }
+            setStarPickerValue(0);
+
+            const averageRating = Number(data.averageRating || 0);
+            const totalRatings = Number(data.totalRatings || 0);
+
+            productReviewRating.textContent = averageRating.toFixed(1);
+            productReviewStars.innerHTML = createStarMarkup(averageRating);
+            productReviewCount.textContent =
+                `${totalRatings.toLocaleString()} ${totalRatings === 1 ? "review" : "reviews"}`;
+
+            if (currentPost) {
+                currentPost.productRating = averageRating;
+                currentPost.productTotalRatings = totalRatings;
+            }
+
+            showToast(data.message, "success");
+        } catch (error) {
+            showToast(error.message, "error");
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
 
     // =========================================================
     // MEDIA CAROUSEL

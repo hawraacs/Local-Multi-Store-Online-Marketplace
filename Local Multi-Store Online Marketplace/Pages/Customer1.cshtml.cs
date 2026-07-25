@@ -861,6 +861,112 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         // =====================================================
+        // ADD PRODUCT REVIEW DIRECTLY FROM EXPLORE MODAL
+        // (no redirect to /CreateProductReview) — mirrors the
+        // inline review composer already used on CustomerFeed.
+        // =====================================================
+        public async Task<IActionResult> OnPostAddExploreProductReviewAsync(
+            int productId,
+            int rating,
+            string? comment)
+        {
+            var customer = await GetCurrentCustomerAsync();
+
+            if (customer == null)
+            {
+                return JsonError(
+                    "Please login as a customer first.",
+                    StatusCodes.Status401Unauthorized);
+            }
+
+            if (rating < 1 || rating > 5)
+            {
+                return JsonError(
+                    "Please give a rating between 1 and 5.",
+                    StatusCodes.Status400BadRequest);
+            }
+
+            var cleanComment = comment?.Trim();
+
+            if (string.IsNullOrWhiteSpace(cleanComment))
+            {
+                return JsonError(
+                    "Please write a comment.",
+                    StatusCodes.Status400BadRequest);
+            }
+
+            if (cleanComment.Length > 1000)
+            {
+                return JsonError(
+                    "Comment cannot exceed 1000 characters.",
+                    StatusCodes.Status400BadRequest);
+            }
+
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p =>
+                    p.ProductID == productId &&
+                    p.IsActive &&
+                    p.Store.Status == "Approved");
+
+            if (product == null)
+            {
+                return JsonError(
+                    "Product is not available.",
+                    StatusCodes.Status404NotFound);
+            }
+
+            var review = new Review
+            {
+                ProductID = productId,
+                StoreID = product.StoreID,
+                CustomerID = customer.CustomerID,
+                Rating = rating,
+                Comment = cleanComment,
+                Status = "Approved",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Reviews.Add(review);
+            await _context.SaveChangesAsync();
+
+            // Recompute this product's aggregate rating/total from all
+            // non-rejected reviews so the summary shown in the modal
+            // (stars + count) stays in sync immediately.
+            var approvedReviews = await _context.Reviews
+                .Where(r =>
+                    r.ProductID == productId &&
+                    r.Status != "Rejected")
+                .ToListAsync();
+
+            var totalRatings = approvedReviews.Count;
+            var averageRating = totalRatings > 0
+                ? Math.Round((decimal)approvedReviews.Average(r => r.Rating), 2)
+                : 0m;
+
+            product.Rating = averageRating;
+            product.TotalRatings = totalRatings;
+
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new
+            {
+                success = true,
+                message = "Thanks for your review!",
+                averageRating,
+                totalRatings,
+                review = new ExploreProductReviewViewModel
+                {
+                    ReviewID = review.ReviewID,
+                    CustomerName = GetCustomerDisplayName(customer),
+                    Rating = review.Rating,
+                    Comment = review.Comment,
+                    IsVerifiedPurchase = review.IsVerifiedPurchase,
+                    CreatedAt = review.CreatedAt
+                }
+            });
+        }
+
+        // =====================================================
         // EXISTING STANDARD HANDLERS KEPT FOR COMPATIBILITY
         // =====================================================
         public async Task<IActionResult> OnPostAddToCartAsync(int productId)

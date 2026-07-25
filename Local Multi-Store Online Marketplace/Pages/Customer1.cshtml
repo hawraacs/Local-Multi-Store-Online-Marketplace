@@ -686,6 +686,159 @@
         }
 
         }
+
+        /* =====================================================
+           INLINE PRODUCT REVIEW COMPOSER (Explore modal)
+           ===================================================== */
+        .product-review-summary {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .product-review-form {
+            margin: 14px 0 18px;
+            padding: 14px 16px 16px;
+            border: 1px solid #ece7f6;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #fbfaff 0%, #ffffff 100%);
+            box-shadow: 0 6px 18px rgba(67, 46, 110, 0.05);
+        }
+
+        .product-review-form-label {
+            font-size: 11.5px;
+            font-weight: 800;
+            letter-spacing: .2px;
+            color: #6b6478;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .product-review-form-stars {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+            .product-review-form-stars .star-pick {
+                border: none;
+                background: transparent;
+                cursor: pointer;
+                padding: 2px;
+                font-size: 20px;
+                line-height: 1;
+                color: #d8d2e6;
+                transition: transform 0.15s ease, color 0.15s ease;
+            }
+
+                .product-review-form-stars .star-pick:hover,
+                .product-review-form-stars .star-pick:focus-visible {
+                    transform: scale(1.18);
+                }
+
+                .product-review-form-stars .star-pick.hovered,
+                .product-review-form-stars .star-pick.filled {
+                    color: #f5a524;
+                }
+
+                .product-review-form-stars .star-pick i.fa-solid {
+                    color: #f5a524;
+                }
+
+        .product-review-form-hint {
+            font-size: 12px;
+            font-weight: 700;
+            color: #a79fbb;
+            margin-left: 4px;
+        }
+
+            .product-review-form-hint.active {
+                color: #6d28d9;
+            }
+
+        .product-review-form-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+            .product-review-form-row input[type="text"] {
+                flex: 1;
+                min-height: 44px;
+                padding: 0 14px;
+                border: 1px solid #e3ddf1;
+                border-radius: 12px;
+                background: #fff;
+                font-size: 13.5px;
+                color: var(--text-primary);
+                outline: none;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            }
+
+                .product-review-form-row input[type="text"]:focus {
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 0 3px rgba(109, 40, 217, .10);
+                }
+
+        .product-review-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 44px;
+            padding: 0 18px;
+            border: none;
+            border-radius: 12px;
+            background: var(--accent-gradient);
+            color: #fff;
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: opacity 0.2s ease, transform 0.15s ease;
+        }
+
+            .product-review-submit:hover:not(:disabled) {
+                transform: translateY(-1px);
+            }
+
+            .product-review-submit:disabled {
+                opacity: 0.6;
+                cursor: default;
+                transform: none;
+            }
+
+        .product-review-item {
+            display: flex;
+            gap: 10px;
+            padding: 12px 0;
+            border-top: 1px solid #f1eef8;
+        }
+
+            .product-review-item:first-child {
+                border-top: none;
+            }
+
+            .product-review-item .review-stars {
+                color: #f5a524;
+                font-size: 11px;
+                margin: 2px 0 4px;
+            }
+
+            .product-review-item .verified-review {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                font-size: 10px;
+                font-weight: 800;
+                color: #16a34a;
+                background: #eafbf1;
+                border-radius: 20px;
+                padding: 2px 8px;
+                margin-left: 6px;
+            }
     </style>
 </head>
 
@@ -1300,13 +1453,6 @@
                                 <span class="section-label">Customer feedback</span>
                                 <h3>Ratings & reviews</h3>
                             </div>
-
-                            <a id="writeProductReviewLink"
-                               href="#"
-                               class="write-review-link">
-                                <i class="fa-solid fa-star"></i>
-                                Write a review
-                            </a>
                         </div>
 
                         <div class="product-review-summary">
@@ -1318,6 +1464,53 @@
                                 <small id="productReviewCount">0 reviews</small>
                             </span>
                         </div>
+
+                        <!-- Inline "write a review" composer — posts directly from the
+                             Explore modal instead of routing to /CreateProductReview -->
+                        <form id="productReviewForm" class="product-review-form">
+                            <input type="hidden" id="productReviewProductId" name="productId" value="" />
+                            <input type="hidden" id="productReviewRatingInput" name="rating" value="0" />
+
+                            <span class="product-review-form-label">Your rating</span>
+
+                            <div class="product-review-form-stars"
+                                 id="productReviewStarPicker"
+                                 role="radiogroup"
+                                 aria-label="Select a star rating">
+
+                                <button type="button" class="star-pick" data-star="1" aria-label="1 star">
+                                    <i class="fa-regular fa-star"></i>
+                                </button>
+                                <button type="button" class="star-pick" data-star="2" aria-label="2 stars">
+                                    <i class="fa-regular fa-star"></i>
+                                </button>
+                                <button type="button" class="star-pick" data-star="3" aria-label="3 stars">
+                                    <i class="fa-regular fa-star"></i>
+                                </button>
+                                <button type="button" class="star-pick" data-star="4" aria-label="4 stars">
+                                    <i class="fa-regular fa-star"></i>
+                                </button>
+                                <button type="button" class="star-pick" data-star="5" aria-label="5 stars">
+                                    <i class="fa-regular fa-star"></i>
+                                </button>
+
+                                <span id="productReviewStarHint" class="product-review-form-hint">Tap a star</span>
+                            </div>
+
+                            <div class="product-review-form-row">
+                                <input type="text"
+                                       id="productReviewCommentInput"
+                                       name="comment"
+                                       maxlength="1000"
+                                       placeholder="Share your thoughts about this product..."
+                                       required />
+
+                                <button type="submit" class="product-review-submit" aria-label="Post review">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                    Post
+                                </button>
+                            </div>
+                        </form>
 
                         <div id="modalProductReviews"
                              class="product-reviews-list"></div>
