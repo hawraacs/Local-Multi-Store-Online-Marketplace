@@ -46,13 +46,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // =====================================================
         public async Task<IActionResult> OnGetListAsync()
         {
-            var currentUserId = GetCurrentUserId();
-
-            var all = await _notifications.GetUserAsync(currentUserId);
-            var recent = all.OrderByDescending(n => n.SentAt).Take(10);
-            var unreadCount = await _notifications.GetUnreadCountAsync(currentUserId);
-
-            return new JsonResult(new
+            var userId = _userManager.GetUserId(User);
+            if (userId == null || !int.TryParse(userId, out var uid))
             {
                 items = recent.Select(n => new
                 {
@@ -86,17 +81,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
-        // =====================================================
-        // MARK ALL AS READ — same story, full page's own <form>.
         // POST /AdminNotifications?handler=MarkAllRead
-        // =====================================================
-        public async Task<IActionResult> OnPostMarkAllReadAsync()
+        public async Task<JsonResult> OnPostMarkAllReadAsync()
         {
-            var currentUserId = GetCurrentUserId();
-            await _notifications.MarkAllAsReadAsync(currentUserId);
-
-            return RedirectToPage();
-        }
+            var userId = _userManager.GetUserId(User);
+            if (userId == null || !int.TryParse(userId, out var uid))
+            {
+                return new JsonResult(new { success = false });
+            }
 
         // =====================================================
         // MARK ONE AS READ (JSON) — used by the topbar bell's fetch() call.
@@ -128,9 +120,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return new JsonResult(new { success = true, unreadCount = 0 });
         }
 
-        private int GetCurrentUserId()
-        {
-            return int.Parse(_userManager.GetUserId(base.User)!);
-        }
+        // Fallback so the page doesn't error if ever hit directly without a handler.
+        public IActionResult OnGet() => new EmptyResult();
     }
 }

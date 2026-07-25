@@ -1406,45 +1406,6 @@
         '</div>' +
         '</button>';
         }).join("");
-
-        list.querySelectorAll(".notif-item").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-        var id = this.dataset.id;
-        var href = this.dataset.href;
-        var wasUnread = this.dataset.unread === "true";
-
-        if (!wasUnread) {
-        window.location.href = href;
-        return;
-        }
-        markNotificationRead(id, href);
-        });
-        });
-        }
-
-        function markNotificationRead(id, href) {
-        var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-        var token = tokenInput ? tokenInput.value : "";
-
-fetch("/AdminNotifications?handler=MarkReadApi", {
-    method: "POST",
-        credentials: "same-origin",
-        headers: {
-        "RequestVerificationToken": token,
-        "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: "id=" + encodeURIComponent(id)
-        })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-        if (data && typeof data.unreadCount === "number") {
-        updateNotifBadge(data.unreadCount);
-        }
-        })
-        .catch(function () { /* fail silently, still navigate */ })
-        .finally(function () {
-        window.location.href = href;
-        });
         }
 
         function loadNotifications() {
