@@ -32,6 +32,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return int.TryParse(userId, out var uid) ? uid : 0;
         }
 
+        // =====================================================
+        // FULL PAGE (direct visits to /AdminNotifications)
+        // NOTE: this is the ONLY GET handler on this page. A stray
+        // "public IActionResult OnGet() => new EmptyResult();" got
+        // merged in alongside this one, which is what caused
+        // "Multiple handlers matched" - do not re-add a second OnGet.
+        // =====================================================
         public async Task OnGetAsync()
         {
             var currentUserId = GetCurrentUserId();
@@ -39,6 +46,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             Notifications = all.OrderByDescending(n => n.SentAt).ToList();
         }
 
+        // =====================================================
+        // JSON LIST — used only by the topbar bell dropdown.
+        // GET /AdminNotifications?handler=List
+        // =====================================================
         public async Task<IActionResult> OnGetListAsync()
         {
             var userId = _userManager.GetUserId(User);
@@ -65,6 +76,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return new JsonResult(new { items, unreadCount });
         }
 
+        // =====================================================
+        // MARK ONE AS READ — used by the FULL PAGE's own <form> (native
+        // post-back, browser navigates, so this redirects, not JSON).
+        // POST /AdminNotifications?handler=MarkRead
+        // =====================================================
         public async Task<IActionResult> OnPostMarkReadAsync(int id)
         {
             var currentUserId = GetCurrentUserId();
@@ -76,18 +92,24 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
-        public async Task<JsonResult> OnPostMarkAllReadAsync()
+        // =====================================================
+        // MARK ALL AS READ — same story, full page's own <form>.
+        // FIX: this had been changed to return JsonResult, which breaks
+        // a normal HTML form post (the browser would just display raw
+        // JSON instead of the page). Restored to RedirectToPage().
+        // POST /AdminNotifications?handler=MarkAllRead
+        // =====================================================
+        public async Task<IActionResult> OnPostMarkAllReadAsync()
         {
-            var userId = _userManager.GetUserId(User);
-            if (userId == null || !int.TryParse(userId, out var uid))
-            {
-                return new JsonResult(new { success = false });
-            }
-
-            await _notifications.MarkAllAsReadAsync(uid);
-            return new JsonResult(new { success = true, unreadCount = 0 });
+            var currentUserId = GetCurrentUserId();
+            await _notifications.MarkAllAsReadAsync(currentUserId);
+            return RedirectToPage();
         }
 
+        // =====================================================
+        // MARK ONE AS READ (JSON) — used by the topbar bell's fetch() call.
+        // POST /AdminNotifications?handler=MarkReadApi
+        // =====================================================
         public async Task<IActionResult> OnPostMarkReadApiAsync(int id)
         {
             var currentUserId = GetCurrentUserId();
@@ -101,13 +123,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return new JsonResult(new { success = true, unreadCount });
         }
 
+        // =====================================================
+        // MARK ALL AS READ (JSON) — used by the topbar bell's fetch() call.
+        // POST /AdminNotifications?handler=MarkAllReadApi
+        // =====================================================
         public async Task<IActionResult> OnPostMarkAllReadApiAsync()
         {
             var currentUserId = GetCurrentUserId();
             await _notifications.MarkAllAsReadAsync(currentUserId);
             return new JsonResult(new { success = true, unreadCount = 0 });
         }
-
-        public IActionResult OnGet() => new EmptyResult();
     }
 }
