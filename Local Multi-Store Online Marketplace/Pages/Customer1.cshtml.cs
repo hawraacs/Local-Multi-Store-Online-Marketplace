@@ -339,11 +339,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 });
             }
 
+            // CHANGED — related items are now matched on Category/Name
+            // similarity instead of the current post's store.
             details.RelatedItems = await LoadRelatedItemsAsync(
                 currentPostId: post.ExplorePostID,
                 currentProductId: post.ProductID,
                 storeId: post.StoreID,
-                categoryId: details.CategoryID);
+                categoryId: details.CategoryID,
+                currentProductName: details.ProductName);
 
             return new JsonResult(new
             {
@@ -454,11 +457,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 Reviews = MapProductReviews(product)
             };
 
+            // CHANGED — related items are now matched on Category/Name
+            // similarity instead of the current product's store.
             details.RelatedItems = await LoadRelatedItemsAsync(
                 currentPostId: 0,
                 currentProductId: product.ProductID,
                 storeId: product.StoreID,
-                categoryId: product.CategoryID);
+                categoryId: product.CategoryID,
+                currentProductName: product.ProductName);
 
             return new JsonResult(new
             {
@@ -1225,14 +1231,30 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         // =====================================================
         // RELATED POSTS / PRODUCTS INSIDE MODAL
+        // CHANGED — "Familiar products" are now matched by
+        // Category match OR Product-Name keyword similarity.
+        // Store is no longer used as a matching criterion (it is
+        // kept as a parameter only for backward compatibility with
+        // callers, but is unused in the query below).
         // =====================================================
         private async Task<List<ExploreGridItemViewModel>>
             LoadRelatedItemsAsync(
                 int currentPostId,
                 int? currentProductId,
                 int storeId,
-                int? categoryId)
+                int? categoryId,
+                string? currentProductName)
         {
+            // Extract meaningful keywords (longer than 2 chars) from the
+            // current product's name to use for a "similar name" match.
+            var nameKeywords = (currentProductName ?? string.Empty)
+                .Split(new[] { ' ', '-', '_', ',', '.', '/' },
+                    StringSplitOptions.RemoveEmptyEntries)
+                .Where(word => word.Length > 2)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(6) // cap keyword count to keep the generated SQL sane
+                .ToList();
+
             var relatedPostsQuery = _context.ExplorePosts
                 .AsNoTracking()
                 .Where(post =>
@@ -1240,14 +1262,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     post.IsActive &&
                     post.Store.Status == "Approved" &&
                     post.Media.Any() &&
+                    post.Product != null &&
+                    post.Product.IsActive &&
                     (
-                        post.StoreID == storeId ||
-                        (
-                            categoryId.HasValue &&
-                            post.Product != null &&
-                            post.Product.IsActive &&
-                            post.Product.CategoryID == categoryId.Value
-                        )
+                        (categoryId.HasValue && post.Product.CategoryID == categoryId.Value)
+                        ||
+                        nameKeywords.Any(keyword => post.Product.ProductName.Contains(keyword))
                     ));
 
             var relatedPosts = await relatedPostsQuery
@@ -1255,6 +1275,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     categoryId.HasValue &&
                     post.Product != null &&
                     post.Product.CategoryID == categoryId.Value)
+                .ThenByDescending(post =>
+                    nameKeywords.Any(keyword => post.Product!.ProductName.Contains(keyword)))
                 .ThenByDescending(post => post.CreatedAt)
                 .Take(8)
                 .Select(post => new ExploreGridItemViewModel
@@ -1306,17 +1328,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     (!currentProductId.HasValue ||
                      product.ProductID != currentProductId.Value) &&
                     (
-                        product.StoreID == storeId ||
-                        (
-                            categoryId.HasValue &&
-                            product.CategoryID == categoryId.Value
-                        )
+                        (categoryId.HasValue && product.CategoryID == categoryId.Value)
+                        ||
+                        nameKeywords.Any(keyword => product.ProductName.Contains(keyword))
                     ));
 
             var relatedProducts = await relatedProductsQuery
                 .OrderByDescending(product =>
                     categoryId.HasValue &&
                     product.CategoryID == categoryId.Value)
+                .ThenByDescending(product =>
+                    nameKeywords.Any(keyword => product.ProductName.Contains(keyword)))
                 .ThenByDescending(product => product.Rating)
                 .ThenByDescending(product => product.CreatedAt)
                 .Take(8)

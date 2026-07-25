@@ -70,6 +70,11 @@
 
 /* =========================================================
    PROFESSIONAL INSTAGRAM-LIKE MODAL
+   CHANGED — media stays on top, everything else (details,
+   action buttons, linked product, comments, reviews, and
+   "Familiar products") stacks below it. The two-column
+   desktop grid override has been removed so this holds at
+   every breakpoint, not just on narrow screens.
    ========================================================= */
 .explore-modal {
     padding: 24px;
@@ -81,18 +86,16 @@
 }
 
 .explore-modal-card {
-    width: min(1280px, calc(100vw - 48px));
-    height: min(860px, calc(100vh - 48px));
-    grid-template-columns: minmax(0, 1.62fr) minmax(400px, 0.9fr);
+    width: min(720px, calc(100vw - 48px));
+    max-height: min(880px, calc(100vh - 48px));
     border: 1px solid var(--explore-modal-border);
     border-radius: 20px;
     background: #fff;
     box-shadow: 0 34px 100px rgba(0, 0, 0, 0.42);
 }
 
-/* Media remains fixed while the information panel scrolls */
+/* Media pane sits at the top of the stacked card */
 .modal-media-pane {
-    min-width: 0;
     overflow: hidden;
     background: radial-gradient(circle at center, #18181b 0%, #09090b 68%);
 }
@@ -112,15 +115,13 @@
     }
 
 .modal-information {
-    min-width: 0;
-    overflow: hidden;
-    border-left: 1px solid var(--explore-panel-border);
+    overflow: visible;
+    border-top: 1px solid var(--explore-panel-border);
     background: #fff;
 }
 
 .modal-scroll-area {
-    height: 100%;
-    overflow-y: auto;
+    overflow: visible;
     scrollbar-width: thin;
     scrollbar-color: #cfd3da transparent;
 }
@@ -325,12 +326,6 @@
     }
 }
 
-@media (max-width: 1100px) {
-    .explore-modal-card {
-        grid-template-columns: minmax(0, 1.35fr) minmax(370px, 0.9fr);
-    }
-}
-
 @media (max-width: 920px) {
     .explore-modal {
         padding: 0;
@@ -339,8 +334,7 @@
     .explore-modal-card {
         width: 100%;
         height: 100%;
-        grid-template-columns: 1fr;
-        grid-template-rows: 50vh minmax(0, 1fr);
+        max-height: 100%;
         border: none;
         border-radius: 0;
     }
@@ -364,10 +358,6 @@
         .explore-intro h1 {
             font-size: 34px;
         }
-
-    .explore-modal-card {
-        grid-template-rows: 44vh minmax(0, 1fr);
-    }
 
     .modal-store-header {
         padding-right: 62px;
