@@ -27,6 +27,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         [BindProperty(SupportsGet = true)]
         public string StatusFilter { get; set; } = "Pending Review";
 
+        // Deep-link target from a notification (?id=123). When present, the
+        // default "Pending Review" tab is overridden to "All" below so an
+        // already-resolved/dismissed report isn't hidden from view.
+        [BindProperty(SupportsGet = true)]
+        public int? Id { get; set; }
+
         public List<ReportRow> Reports { get; set; } = new();
 
         public int PendingCount { get; set; }
@@ -35,6 +41,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public async Task OnGetAsync()
         {
+            // If we're deep-linking to a specific report and the caller didn't
+            // explicitly choose a tab, show "All" so the target report is
+            // guaranteed to be in the filtered list regardless of its status.
+            if (Id.HasValue && !Request.Query.ContainsKey("StatusFilter"))
+            {
+                StatusFilter = "All";
+            }
+
             var reports = await _context.Reports
                 .Include(r => r.ReporterCustomer)
                     .ThenInclude(cu => cu!.User)
