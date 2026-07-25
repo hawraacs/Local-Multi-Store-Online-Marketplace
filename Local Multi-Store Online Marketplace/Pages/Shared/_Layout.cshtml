@@ -1141,7 +1141,8 @@
                                     <div class="notif-panel-list" id="notifList">
                                         <div class="notif-empty" id="notifEmpty">Loading notifications…</div>
                                     </div>
-                                    <a href="/AdminReports" class="notif-panel-footer">View all notifications</a>
+                                    <a href="/AdminNotifications" class="notif-panel-footer">View all notifications</a>
+
                                 </div>
                             </div>
 
@@ -1338,12 +1339,15 @@
         }
 
         function notifLinkFor(type, referenceId) {
+        const suffix = referenceId ? ("?id=" + referenceId) : "";
         switch ((type || "").toLowerCase()) {
-        case "complaint": return "/AdminComplaints" + (referenceId ? ("?id=" + referenceId) : "");
-        case "delivery": return "/AdminDelivery" + (referenceId ? ("?id=" + referenceId) : "");
-        case "store": return "/AdminStores" + (referenceId ? ("?id=" + referenceId) : "");
-        case "user": return "/AdminUsers" + (referenceId ? ("?id=" + referenceId) : "");
-        case "order": return "/AdminOrders" + (referenceId ? ("?id=" + referenceId) : "");
+        case "storerequest": return "/AdminStores" + suffix;
+        case "deliveryrequest": return "/AdminDelivery" + suffix;
+        case "deliveryassigned":
+        case "deliveryassignmentpending":
+        return "/AdminAssignDelivery" + (referenceId ? ("?orderId=" + referenceId) : "");
+        case "complaint": return "/AdminComplaints" + suffix;
+        case "report": return "/AdminReports" + suffix;
         default: return "/AdminReports";
         }
         }
@@ -1419,8 +1423,8 @@
         var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
         var token = tokenInput ? tokenInput.value : "";
 
-        fetch("/AdminNotifications?handler=MarkRead", {
-        method: "POST",
+fetch("/AdminNotifications?handler=MarkReadApi", {
+    method: "POST",
         credentials: "same-origin",
         headers: {
         "RequestVerificationToken": token,
@@ -1457,8 +1461,8 @@
         var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
         var token = tokenInput ? tokenInput.value : "";
 
-        fetch("/AdminNotifications?handler=MarkAllRead", {
-        method: "POST",
+        fetch("/AdminNotifications?handler=MarkAllReadApi", {
+            method: "POST",
         credentials: "same-origin",
         headers: {
         "RequestVerificationToken": token,

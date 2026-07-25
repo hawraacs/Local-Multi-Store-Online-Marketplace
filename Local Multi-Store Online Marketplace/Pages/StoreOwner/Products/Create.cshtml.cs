@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
+using Multi_Store.Core.Reposinterface;
 using Multi_Store.Core.ViewModels.StoreOwner;
 using Multi_Store.Infrastructure.Data;
 
@@ -16,17 +17,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
         private readonly ICurrentStoreService _currentStoreService;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IConfiguration _configuration;
+        private readonly IAuditLogRepository _auditLogRepository;
 
         public CreateModel(
             ApplicationDbContext context,
             ICurrentStoreService currentStoreService,
             IWebHostEnvironment webHostEnvironment,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IAuditLogRepository auditLogRepository)
         {
             _context = context;
             _currentStoreService = currentStoreService;
             _webHostEnvironment = webHostEnvironment;
             _configuration = configuration;
+            _auditLogRepository = auditLogRepository;
         }
 
         [BindProperty]
@@ -165,6 +169,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
+
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            var userAgent = Request.Headers.UserAgent.ToString();
+            if (string.IsNullOrWhiteSpace(userAgent))
+            {
+                userAgent = "Unknown";
+            }
+
+            await _auditLogRepository.AddAsync(new AuditLog
+            {
+                UserID = store.OwnerUserID,
+                Action = "CreateProduct",
+                EntityName = "Product",
+                EntityID = product.ProductID.ToString(),
+                OldValue = null,
+                NewValue = $"Product created: {product.ProductName}",
+                IPAddress = ipAddress,
+                UserAgent = userAgent,
+                ActionDate = DateTime.UtcNow
+            });
 
             // Save images
             if (ProductVM.UploadedImages != null && ProductVM.UploadedImages.Any())

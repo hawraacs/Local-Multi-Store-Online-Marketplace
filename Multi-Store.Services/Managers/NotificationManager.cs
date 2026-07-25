@@ -103,6 +103,18 @@ namespace Multi_Store.Services.Managers
             return ToDTO(notification);
         }
 
+        // MARK ALL AS READ FOR A USER
+        public async Task MarkAllAsReadAsync(int userId)
+        {
+            var unread = await _notificationRepository.GetUnreadByUserAsync(userId);
+
+            foreach (var notification in unread)
+            {
+                notification.IsRead = true;
+                await _notificationRepository.UpdateAsync(notification);
+            }
+        }
+
         // GET USER NOTIFICATIONS
         public async Task<List<NotificationDTO>> GetUserAsync(int userId)
         {

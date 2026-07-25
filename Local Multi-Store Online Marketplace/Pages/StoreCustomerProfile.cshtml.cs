@@ -221,8 +221,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (customer == null)
                 return RedirectToLogin();
 
-            var storeExists = await _context.Stores.AnyAsync(s => s.StoreID == storeId);
-            if (!storeExists)
+            var store = await _context.Stores.FirstOrDefaultAsync(s => s.StoreID == storeId);
+            if (store == null)
                 return NotFound();
 
             var cleanType = string.IsNullOrWhiteSpace(complaintType)
@@ -236,7 +236,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage(new { id = storeId });
             }
 
-            _context.Complaints.Add(new Complaint
+            var complaint = new Complaint
             {
                 CustomerID = customer.CustomerID,
                 StoreID = storeId,
@@ -246,9 +246,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 Description = cleanDescription,
                 Status = "Pending Review",
                 CreatedAt = DateTime.UtcNow
-            });
+            };
 
+            _context.Complaints.Add(complaint);
             await _context.SaveChangesAsync();
+
+            await NotifyAdminsOfReportAsync(
+                $"A customer reported the store \"{store.StoreName}\" for \"{cleanType}\".",
+                complaint.ComplaintID);
+
             TempData["Success"] = "Your report was submitted for review.";
             return RedirectToPage(new { id = storeId });
         }
@@ -274,7 +280,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage(new { id = product.StoreID });
             }
 
-            _context.Complaints.Add(new Complaint
+            var complaint = new Complaint
             {
                 CustomerID = customer.CustomerID,
                 StoreID = product.StoreID,
@@ -283,9 +289,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 Description = cleanDescription,
                 Status = "Pending Review",
                 CreatedAt = DateTime.UtcNow
-            });
+            };
 
+            _context.Complaints.Add(complaint);
             await _context.SaveChangesAsync();
+
+            await NotifyAdminsOfReportAsync(
+                $"A customer reported the product \"{product.ProductName}\".",
+                complaint.ComplaintID);
+
             TempData["Success"] = "Product report submitted.";
             return RedirectToPage(new { id = product.StoreID });
         }
@@ -490,5 +502,34 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         private IActionResult RedirectToLogin() =>
             RedirectToPage("/Account/Login", new { area = "Identity" });
+
+        // =====================================================
+        // NOTIFY ADMINS OF A NEW REPORT (store or product report,
+        // both stored as Complaint records in this file specifically)
+        // =====================================================
+        private async Task NotifyAdminsOfReportAsync(string message, int complaintId)
+        {
+            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+
+            foreach (var admin in admins)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    UserID = admin.Id,
+                    Title = "New report filed",
+                    Message = message,
+                    Type = "Complaint",
+                    ReferenceID = complaintId,
+                    IsRead = false,
+                    SentAt = DateTime.UtcNow,
+                    SentVia = "System"
+                });
+            }
+
+            if (admins.Any())
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
