@@ -2,123 +2,125 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
-using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Dtos;
+using Multi_Store.Services.Managers;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
     [Authorize(Roles = "Admin")]
     public class AdminNotificationsModel : PageModel
     {
-        private readonly ApplicationDbContext _db;
+        private readonly NotificationManager _notifications;
         private readonly UserManager<User> _userManager;
 
-        public AdminNotificationsModel(ApplicationDbContext db, UserManager<User> userManager)
+        public AdminNotificationsModel(NotificationManager notifications, UserManager<User> userManager)
         {
-            _db = db;
+            _notifications = notifications;
             _userManager = userManager;
         }
 
-        // GET /AdminNotifications?handler=List
-        // Returns the current admin's most recent notifications as JSON.
-        public async Task<JsonResult> OnGetListAsync()
+        // NotificationDTO has the same property names as the Notification entity
+        // (NotificationID, Title, Message, Type, IsRead, SentAt), so the view
+        // markup from before still works unchanged against this DTO.
+        public List<NotificationDTO> Notifications { get; set; } = new();
+
+        public int TotalCount => Notifications.Count;
+        public int UnreadCount => Notifications.Count(n => !n.IsRead);
+        public int TodayCount => Notifications.Count(n => n.SentAt.Date == DateTime.UtcNow.Date);
+
+        // =====================================================
+        // FULL PAGE (direct visits to /AdminNotifications)
+        // =====================================================
+        public async Task OnGetAsync()
         {
-            var uid = GetCurrentAdminId();
-            if (uid == null)
-            {
-                return new JsonResult(new { items = Array.Empty<object>(), unreadCount = 0 });
-            }
+            var currentUserId = GetCurrentUserId();
 
-            var items = await _db.Notifications
-                .Where(n => n.UserID == uid)
-                .OrderByDescending(n => n.SentAt)
-                .Take(20)
-                .Select(n => new
-                {
-                    n.NotificationID,
-                    n.Title,
-                    n.Message,
-                    n.Type,
-                    n.ReferenceID,
-                    n.IsRead,
-                    SentAt = n.SentAt
-                })
-                .ToListAsync();
-
-            var unreadCount = await _db.Notifications
-                .CountAsync(n => n.UserID == uid && !n.IsRead);
-
-            return new JsonResult(new { items, unreadCount });
+            var all = await _notifications.GetUserAsync(currentUserId);
+            Notifications = all.OrderByDescending(n => n.SentAt).ToList();
         }
 
-        // POST /AdminNotifications?handler=MarkRead
-        // Marks a single notification as read (called when the admin opens/clicks it)
-        // and returns the fresh unread count so the topbar badge can update immediately.
-        public async Task<JsonResult> OnPostMarkReadAsync([FromForm] int id)
+        // =====================================================
+        // JSON LIST — used only by the topbar bell dropdown in the admin layout.
+        // GET /AdminNotifications?handler=List
+        // =====================================================
+        public async Task<IActionResult> OnGetListAsync()
         {
-            var uid = GetCurrentAdminId();
-            if (uid == null)
+            var userId = _userManager.GetUserId(User);
+            if (userId == null || !int.TryParse(userId, out var uid))
             {
-                return new JsonResult(new { success = false });
+                items = recent.Select(n => new
+                {
+                    notificationID = n.NotificationID,
+                    type = n.Type,
+                    referenceID = n.ReferenceID,
+                    title = n.Title,
+                    message = n.Message,
+                    isRead = n.IsRead,
+                    sentAt = n.SentAt
+                }),
+                unreadCount
+            });
+        }
+
+        // =====================================================
+        // MARK ONE AS READ — used by the FULL PAGE's own <form> (native post-back,
+        // browser navigates, so this must redirect, not return JSON).
+        // POST /AdminNotifications?handler=MarkRead
+        // =====================================================
+        public async Task<IActionResult> OnPostMarkReadAsync(int id)
+        {
+            var currentUserId = GetCurrentUserId();
+
+            var mine = await _notifications.GetUserAsync(currentUserId);
+            if (mine.Any(n => n.NotificationID == id))
+            {
+                await _notifications.MarkAsReadAsync(id);
             }
 
-            var notification = await _db.Notifications
-                .FirstOrDefaultAsync(n => n.NotificationID == id && n.UserID == uid);
-
-            // Either the notification doesn't exist or it doesn't belong to this admin -
-            // don't leak whether the id exists, just report failure either way.
-            if (notification == null)
-            {
-                return new JsonResult(new { success = false });
-            }
-
-            if (!notification.IsRead)
-            {
-                notification.IsRead = true;
-                await _db.SaveChangesAsync();
-            }
-
-            var unreadCount = await _db.Notifications
-                .CountAsync(n => n.UserID == uid && !n.IsRead);
-
-            return new JsonResult(new { success = true, unreadCount });
+            return RedirectToPage();
         }
 
         // POST /AdminNotifications?handler=MarkAllRead
         public async Task<JsonResult> OnPostMarkAllReadAsync()
         {
-            var uid = GetCurrentAdminId();
-            if (uid == null)
+            var userId = _userManager.GetUserId(User);
+            if (userId == null || !int.TryParse(userId, out var uid))
             {
                 return new JsonResult(new { success = false });
             }
 
-            var unread = await _db.Notifications
-                .Where(n => n.UserID == uid && !n.IsRead)
-                .ToListAsync();
+        // =====================================================
+        // MARK ONE AS READ (JSON) — used by the topbar bell's fetch() call.
+        // POST /AdminNotifications?handler=MarkReadApi
+        // =====================================================
+        public async Task<IActionResult> OnPostMarkReadApiAsync(int id)
+        {
+            var currentUserId = GetCurrentUserId();
 
-            foreach (var n in unread)
+            var mine = await _notifications.GetUserAsync(currentUserId);
+            if (mine.Any(n => n.NotificationID == id))
             {
-                n.IsRead = true;
+                await _notifications.MarkAsReadAsync(id);
             }
 
-            await _db.SaveChangesAsync();
+            var unreadCount = await _notifications.GetUnreadCountAsync(currentUserId);
+            return new JsonResult(new { success = true, unreadCount });
+        }
+
+        // =====================================================
+        // MARK ALL AS READ (JSON) — used by the topbar bell's fetch() call.
+        // POST /AdminNotifications?handler=MarkAllReadApi
+        // =====================================================
+        public async Task<IActionResult> OnPostMarkAllReadApiAsync()
+        {
+            var currentUserId = GetCurrentUserId();
+            await _notifications.MarkAllAsReadAsync(currentUserId);
 
             return new JsonResult(new { success = true, unreadCount = 0 });
         }
 
         // Fallback so the page doesn't error if ever hit directly without a handler.
         public IActionResult OnGet() => new EmptyResult();
-
-        private int? GetCurrentAdminId()
-        {
-            var userId = _userManager.GetUserId(User);
-            if (userId == null || !int.TryParse(userId, out var uid))
-            {
-                return null;
-            }
-            return uid;
-        }
     }
 }

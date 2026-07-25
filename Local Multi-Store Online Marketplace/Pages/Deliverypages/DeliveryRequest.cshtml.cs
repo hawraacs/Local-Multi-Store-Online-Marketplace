@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Multi_Store.Core.Entities;
+using Multi_Store.Core.Reposinterface;
 using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
 using Microsoft.AspNetCore.Authorization;
@@ -18,15 +19,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         private readonly DeliveryManager _deliveryManager;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<DeliveryRequestModel> _logger;
+        private readonly IAuditLogRepository _auditLogRepository;
+        private readonly NotificationManager _notifications;
 
         public DeliveryRequestModel(
             DeliveryManager deliveryManager,
             UserManager<User> userManager,
-            ILogger<DeliveryRequestModel> logger)
+            ILogger<DeliveryRequestModel> logger,
+            IAuditLogRepository auditLogRepository,
+            NotificationManager notifications)
         {
             _deliveryManager = deliveryManager;
             _userManager = userManager;
             _logger = logger;
+            _auditLogRepository = auditLogRepository;
+            _notifications = notifications;
         }
 
         [BindProperty]
@@ -110,6 +117,32 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                 var id = await _deliveryManager.RegisterDeliveryPersonAsync(Delivery);
 
                 _logger.LogInformation("Delivery created with ID: {Id}", id);
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var userAgent = Request.Headers.UserAgent.ToString();
+                if (string.IsNullOrWhiteSpace(userAgent))
+                {
+                    userAgent = "Unknown";
+                }
+
+                await _auditLogRepository.AddAsync(new AuditLog
+                {
+                    UserID = user.Id,
+                    Action = "CreateDeliveryPersonRequest",
+                    EntityName = "DeliveryPersonRequest",
+                    EntityID = id.ToString(),
+                    OldValue = null,
+                    NewValue = $"Delivery partner application created: {Delivery.FullName}",
+                    IPAddress = ipAddress,
+                    UserAgent = userAgent,
+                    ActionDate = DateTime.UtcNow
+                });
+
+                await _notifications.SendToAllAdminsAsync(
+                    title: "New delivery partner application",
+                    message: $"{Delivery.FullName} has applied to become a delivery partner and is awaiting approval.",
+                    type: "DeliveryRequest",
+                    referenceId: id);
 
                 TempData["Success"] = "Delivery staff request submitted successfully. Waiting for admin approval.";
 

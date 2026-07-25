@@ -22,6 +22,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
+//adminlog
+builder.Services.AddHttpContextAccessor();
+
 // ===============================
 // HttpContextAccessor
 // ===============================
