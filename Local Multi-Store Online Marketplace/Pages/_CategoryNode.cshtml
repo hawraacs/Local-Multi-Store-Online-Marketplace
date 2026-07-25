@@ -1,0 +1,60 @@
+﻿@model Local_Multi_Store_Online_Marketplace.Pages.CategoryViewModel
+
+<li class="tree-node" data-name="@Model.Name.ToLowerInvariant()">
+    <div class="node-row">
+        @if (Model.Children.Any())
+        {
+            <button type="button" class="toggle-btn" aria-label="Toggle">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        }
+        else
+        {
+            <span class="toggle-spacer"></span>
+        }
+
+        <span class="node-icon">
+            <i class="fas @(Model.Children.Any() ? "fa-folder-open" : "fa-tag")"></i>
+        </span>
+
+        <span class="node-name">@Model.Name</span>
+        <span class="node-slug">@Model.Slug</span>
+
+        @if (Model.Children.Any())
+        {
+            <span class="node-badge">@Model.Children.Count sub</span>
+        }
+
+        <div class="node-actions">
+            <button class="btn-add-sub"
+                    data-parentid="@Model.CategoryId"
+                    data-parentname="@Model.Path"
+                    title="Add subcategory under @Model.Name">
+                <i class="fas fa-plus"></i> Add sub
+            </button>
+            <button class="btn-edit"
+                    data-id="@Model.CategoryId"
+                    data-name="@Model.Name"
+                    data-parentid="@Model.ParentId">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            <form method="post" asp-page-handler="Delete" class="delete-form"
+                  onsubmit="return confirm('Delete this category? Related products will be unassigned.');">
+                <input type="hidden" name="id" value="@Model.CategoryId" />
+                <button type="submit" class="btn-delete">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Children.Any())
+    {
+        <ul class="tree-children">
+            @foreach (var child in Model.Children)
+            {
+                <partial name="_CategoryNode" model="child" />
+            }
+        </ul>
+    }
+</li>

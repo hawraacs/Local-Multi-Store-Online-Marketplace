@@ -658,13 +658,22 @@
                     border-radius: 20px;
                 }
 
+            /* notif-item is now a <button> (was <a>) so it can mark itself read
+               before navigating away - this resets default button styling so it
+               still looks/behaves exactly like the old link row. */
             .notif-item {
+                width: 100%;
                 display: flex;
                 align-items: flex-start;
                 gap: 14px;
                 padding: 12px 18px;
                 text-decoration: none;
+                border: none;
                 border-bottom: 1px solid var(--admin-border);
+                background: none;
+                font-family: inherit;
+                cursor: pointer;
+                text-align: left;
                 transition: background .15s ease;
             }
 
@@ -1351,17 +1360,22 @@
         return days + (days === 1 ? " day ago" : " days ago");
         }
 
-        function renderNotifications(items, unreadCount) {
-        var list = document.getElementById("notifList");
+        function updateNotifBadge(unreadCount) {
         var badge = document.getElementById("notifBadge");
-        if (!list || !badge) return;
-
+        if (!badge) return;
         if (unreadCount > 0) {
         badge.textContent = unreadCount > 9 ? "9+" : String(unreadCount);
         badge.style.display = "flex";
         } else {
         badge.style.display = "none";
         }
+        }
+
+        function renderNotifications(items, unreadCount) {
+        var list = document.getElementById("notifList");
+        if (!list) return;
+
+        updateNotifBadge(unreadCount);
 
         if (!items || items.length === 0) {
         list.innerHTML = '<div class="notif-empty">You\'re all caught up.</div>';
@@ -1373,15 +1387,57 @@
         var href = notifLinkFor(n.type, n.referenceID);
         var unreadClass = n.isRead ? "" : " unread";
         var title = (n.title || n.message || "Notification").replace(/</g, "&lt;");
+        // Rendered as a <button> (not <a>) so a click can mark-as-read first,
+        // then navigate. data-id / data-href / data-unread carry what
+        // the click handler below needs.
         return '' +
-        '<a href="' + href + '" class="notif-item' + unreadClass + '">' +
+        '<button type="button" class="notif-item' + unreadClass + '" data-id="' + n.notificationID + '" data-href="' + href + '" data-unread="' + (!n.isRead) + '">' +
         '<i class="fas ' + meta.icon + ' notif-icon ' + meta.cls + '"></i>' +
         '<div>' +
         '<div class="notif-text">' + title + '</div>' +
         '<div class="notif-time">' + timeAgo(n.sentAt) + '</div>' +
         '</div>' +
-        '</a>';
+        '</button>';
         }).join("");
+
+        list.querySelectorAll(".notif-item").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+        var id = this.dataset.id;
+        var href = this.dataset.href;
+        var wasUnread = this.dataset.unread === "true";
+
+        if (!wasUnread) {
+        window.location.href = href;
+        return;
+        }
+        markNotificationRead(id, href);
+        });
+        });
+        }
+
+        function markNotificationRead(id, href) {
+        var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+        var token = tokenInput ? tokenInput.value : "";
+
+        fetch("/AdminNotifications?handler=MarkRead", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+        "RequestVerificationToken": token,
+        "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "id=" + encodeURIComponent(id)
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+        if (data && typeof data.unreadCount === "number") {
+        updateNotifBadge(data.unreadCount);
+        }
+        })
+        .catch(function () { /* fail silently, still navigate */ })
+        .finally(function () {
+        window.location.href = href;
+        });
         }
 
         function loadNotifications() {
@@ -1464,3 +1520,4 @@
 
 </body>
 </html>
+

@@ -141,6 +141,11 @@ builder.Services.AddScoped<ITwilioService, TwilioService>();
 builder.Services.AddScoped<ICurrentStoreService, CurrentStoreService>();
 builder.Services.AddScoped<SubscriptionService>();
 
+// Broadcasts a Notification row to every user in the "Admin" role
+// (new complaints, store/delivery signup requests, orders, etc.).
+// See Infrastructure/Services/AdminNotificationService.cs
+builder.Services.AddScoped<IAdminNotificationService, AdminNotificationService>();
+
 // ===============================
 // AutoMapper
 // ===============================

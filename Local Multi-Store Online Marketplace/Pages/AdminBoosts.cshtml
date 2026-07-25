@@ -6,43 +6,50 @@
 
 @section Styles {
     <style>
-        :root {
-            --boost-bg: #F8FAFC;
-            --boost-surface: #FFFFFF;
-            --boost-surface-2: #F8FAFC;
-            --boost-border: #E2E8F0;
-            --boost-text: #0F172A;
-            --boost-text-secondary: #475569;
-            --boost-text-muted: #94A3B8;
-            --boost-accent: #F59E0B;
-            --boost-accent-2: #F97316;
-            --boost-gradient: linear-gradient(135deg, #F59E0B 0%, #F97316 100%);
-            --boost-soft: rgba(245, 158, 11, 0.10);
-            --boost-soft-hover: rgba(245, 158, 11, 0.18);
-            --boost-positive: #16A34A;
-            --boost-positive-bg: #DCFCE7;
-            --boost-positive-txt: #15803D;
-            --boost-warning: #D97706;
-            --boost-warning-bg: #FEF3C7;
-            --boost-warning-txt: #B45309;
-            --boost-danger: #DC2626;
-            --boost-danger-bg: #FEE2E2;
-            --boost-danger-txt: #B91C1C;
-            --boost-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.06);
-            --boost-shadow-md: 0 8px 24px rgba(245, 158, 11, 0.10);
-            --boost-shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.10);
-            --boost-radius-sm: 10px;
-            --boost-radius: 16px;
-            --boost-radius-lg: 22px;
-            --boost-transition: 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        /* ── Base container (matches Category Management page) ── */
+        .boost-dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        .boost-dashboard {
-            max-width: 1360px;
-            margin: 0 auto;
-            padding: 0 20px 48px;
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-            color: var(--boost-text);
+        /* ===================== STAT CARDS ===================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: center;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+            }
+
+            .stat-card i {
+                font-size: 32px;
+                color: #6366f1;
+                margin-bottom: 8px;
+            }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 5px;
         }
 
         /* ===================== HEADER ===================== */
@@ -52,26 +59,19 @@
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 16px;
-            padding: 32px 0 24px;
-            border-bottom: 1px solid var(--boost-border);
-            margin-bottom: 8px;
+            margin-bottom: 24px;
         }
 
         .boost-header-left h1 {
-            font-size: 27px;
-            font-weight: 900;
-            letter-spacing: -0.03em;
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
             margin: 0 0 4px;
-            background: var(--boost-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
         .boost-header-left p {
-            font-size: 14px;
-            color: var(--boost-text-secondary);
-            font-weight: 500;
+            font-size: 13px;
+            color: #64748b;
             margin: 0;
         }
 
@@ -79,14 +79,13 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: #FFFFFF;
-            color: var(--boost-text);
+            background: white;
+            color: #0f172a;
             border-radius: 999px;
             padding: 8px 18px 8px 14px;
             font-size: 12.5px;
             font-weight: 600;
-            box-shadow: var(--boost-shadow-sm);
-            border: 1px solid var(--boost-border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             white-space: nowrap;
         }
 
@@ -94,7 +93,7 @@
                 width: 8px;
                 height: 8px;
                 border-radius: 50%;
-                background: var(--boost-accent);
+                background: #16a34a;
                 flex-shrink: 0;
                 animation: boost-pulse 2s ease-in-out infinite;
             }
@@ -111,128 +110,12 @@
             }
         }
 
-        /* ===================== STAT CARDS ===================== */
-        .boost-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 18px;
-            margin: 28px 0 32px;
-        }
-
-        @@media (max-width: 1100px) {
-            .boost-stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @@media (max-width: 560px) {
-            .boost-stats-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-        }
-
-        .boost-stat-card {
-            position: relative;
-            background: var(--boost-surface);
-            border: 1px solid var(--boost-border);
-            border-radius: var(--boost-radius);
-            padding: 22px 20px 18px;
-            box-shadow: var(--boost-shadow-sm);
-            transition: transform var(--boost-transition), box-shadow var(--boost-transition), border-color var(--boost-transition);
-            overflow: hidden;
-        }
-
-            .boost-stat-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 3px;
-                background: var(--boost-gradient);
-                opacity: 0;
-                transition: opacity var(--boost-transition);
-            }
-
-            .boost-stat-card:hover {
-                transform: translateY(-4px);
-                box-shadow: var(--boost-shadow-md);
-                border-color: rgba(245, 158, 11, 0.35);
-            }
-
-                .boost-stat-card:hover::before {
-                    opacity: 1;
-                }
-
-        .boost-stat-top {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            margin-bottom: 14px;
-        }
-
-        .boost-stat-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: var(--boost-radius-sm);
-            background: var(--boost-soft);
-            color: var(--boost-accent-2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 19px;
-            transition: background var(--boost-transition), transform var(--boost-transition);
-        }
-
-        .boost-stat-card:hover .boost-stat-icon {
-            background: var(--boost-soft-hover);
-            transform: scale(1.06);
-        }
-
-        .boost-stat-tag {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--boost-text-muted);
-            background: var(--boost-surface-2);
-            padding: 3px 10px;
-            border-radius: 999px;
-            border: 1px solid var(--boost-border);
-        }
-
-        .boost-stat-title {
-            color: var(--boost-text-secondary);
-            font-size: 11.5px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.07em;
-            margin-bottom: 6px;
-        }
-
-        .boost-stat-value {
-            font-size: 30px;
-            font-weight: 900;
-            letter-spacing: -0.03em;
-            line-height: 1.1;
-            color: var(--boost-text);
-        }
-
-            .boost-stat-value .currency {
-                font-size: 17px;
-                font-weight: 700;
-                color: var(--boost-text-secondary);
-                margin-right: 2px;
-            }
-
-        /* ===================== FILTER + TABLE PANEL ===================== */
+        /* ===================== FILTER + TABLE PANEL (matches Category card) ===================== */
         .boost-panel {
-            background: var(--boost-surface);
-            border: 1px solid var(--boost-border);
-            border-radius: var(--boost-radius-lg);
-            padding: 24px 26px 12px;
-            box-shadow: var(--boost-shadow-sm);
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
         .boost-panel-header {
@@ -240,132 +123,106 @@
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 14px;
-            margin-bottom: 18px;
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
             .boost-panel-header h3 {
-                font-size: 16px;
-                font-weight: 800;
+                font-weight: 700;
+                color: #0f172a;
                 margin: 0;
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                color: var(--boost-text);
+                gap: 8px;
             }
 
                 .boost-panel-header h3 i {
-                    color: var(--boost-accent-2);
-                    font-size: 17px;
+                    color: #6366f1;
                 }
 
+        /* Filter tabs styled like the category filter-input pill */
         .boost-filter-tabs {
             display: flex;
             gap: 6px;
             flex-wrap: wrap;
-            background: var(--boost-surface-2);
+            background: #f8fafc;
             padding: 4px;
-            border-radius: 999px;
-            border: 1px solid var(--boost-border);
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
         }
 
         .boost-filter-tab {
             display: inline-flex;
             align-items: center;
             padding: 7px 16px;
-            border-radius: 999px;
+            border-radius: 40px;
             font-size: 12.5px;
-            font-weight: 700;
-            color: var(--boost-text-secondary);
+            font-weight: 600;
+            color: #64748b;
             text-decoration: none;
-            transition: all var(--boost-transition);
+            transition: background 0.2s, color 0.2s;
         }
 
             .boost-filter-tab:hover {
-                color: var(--boost-accent-2);
+                color: #4f46e5;
             }
 
             .boost-filter-tab.is-active {
-                background: var(--boost-gradient);
+                background: #6366f1;
                 color: #ffffff;
-                box-shadow: 0 4px 12px rgba(245, 158, 11, 0.30);
             }
 
-        /* ===================== TABLE ===================== */
-        .boost-table-responsive {
+        /* ===================== TABLE (matches categories-table) ===================== */
+        .table-wrapper {
             overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid #eef2f6;
         }
 
         .boost-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13.5px;
+            font-size: 14px;
         }
 
             .boost-table thead th {
-                padding: 12px 16px;
+                background: #f8fafc;
+                padding: 14px 16px;
                 text-align: left;
-                font-size: 10.5px;
                 font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.09em;
-                color: var(--boost-text-muted);
-                background: var(--boost-surface-2);
-                border-bottom: 1.5px solid var(--boost-border);
+                color: #1e293b;
+                border-bottom: 2px solid #e2e8f0;
             }
-
-                .boost-table thead th:first-child {
-                    border-radius: var(--boost-radius-sm) 0 0 0;
-                    padding-left: 20px;
-                }
-
-                .boost-table thead th:last-child {
-                    border-radius: 0 var(--boost-radius-sm) 0 0;
-                    padding-right: 20px;
-                }
 
             .boost-table tbody td {
                 padding: 14px 16px;
-                border-bottom: 1px solid var(--boost-border);
-                color: var(--boost-text-secondary);
-                font-weight: 500;
+                border-bottom: 1px solid #f1f5f9;
+                color: #334155;
                 vertical-align: middle;
             }
 
-                .boost-table tbody td:first-child {
-                    padding-left: 20px;
-                }
-
-                .boost-table tbody td:last-child {
-                    padding-right: 20px;
-                }
-
-            .boost-table tbody tr {
-                transition: background var(--boost-transition);
+            .boost-table tbody tr:last-child td {
+                border-bottom: none;
             }
 
-                .boost-table tbody tr:hover td {
-                    background: var(--boost-surface-2);
-                }
-
-                .boost-table tbody tr:last-child td {
-                    border-bottom: none;
-                }
+            .boost-table tbody tr:hover td {
+                background: #f8fafc;
+            }
 
         .boost-entity-cell {
             display: flex;
             align-items: center;
             gap: 10px;
             font-weight: 600;
-            color: var(--boost-text);
+            color: #0f172a;
         }
 
         .boost-avatar {
             width: 32px;
             height: 32px;
             border-radius: 10px;
-            background: var(--boost-soft);
-            color: var(--boost-accent-2);
+            background: rgba(99, 102, 241, 0.10);
+            color: #6366f1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -387,18 +244,18 @@
             align-items: center;
             gap: 5px;
             font-size: 12px;
-            font-weight: 700;
-            color: var(--boost-text);
-            background: var(--boost-surface-2);
-            border: 1px solid var(--boost-border);
+            font-weight: 600;
+            color: #334155;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             padding: 3px 11px;
             border-radius: 999px;
         }
 
         .boost-amount {
-            font-weight: 800;
+            font-weight: 700;
             font-variant-numeric: tabular-nums;
-            color: var(--boost-text);
+            color: #0f172a;
         }
 
         .boost-badge {
@@ -420,66 +277,58 @@
                 flex-shrink: 0;
             }
 
+        /* Status badges keep semantic colors (green/amber/red) for quick scanning */
         .boost-badge-active {
-            background: var(--boost-positive-bg);
-            color: var(--boost-positive-txt);
+            background: #dcfce7;
+            color: #15803d;
         }
 
             .boost-badge-active::before {
-                background: var(--boost-positive);
+                background: #16a34a;
             }
 
         .boost-badge-pending {
-            background: var(--boost-warning-bg);
-            color: var(--boost-warning-txt);
+            background: #fef3c7;
+            color: #b45309;
         }
 
             .boost-badge-pending::before {
-                background: var(--boost-warning);
+                background: #d97706;
             }
 
         .boost-badge-expired {
-            background: var(--boost-danger-bg);
-            color: var(--boost-danger-txt);
+            background: #fee2e2;
+            color: #b91c1c;
         }
 
             .boost-badge-expired::before {
-                background: var(--boost-danger);
+                background: #dc2626;
             }
 
         .boost-date-cell {
             font-size: 12.5px;
-            color: var(--boost-text-secondary);
+            color: #64748b;
         }
 
-        .boost-date-dash {
-            color: var(--boost-text-muted);
-        }
-
-        /* ===================== EMPTY STATE ===================== */
+        /* ===================== EMPTY STATE (matches empty-state) ===================== */
         .boost-empty-state {
             text-align: center;
-            padding: 56px 16px;
-            color: var(--boost-text-muted);
+            padding: 60px 20px;
+            color: #94a3b8;
         }
 
-            .boost-empty-state .boost-empty-icon {
-                width: 56px;
-                height: 56px;
-                border-radius: 50%;
-                background: var(--boost-soft);
-                color: var(--boost-accent-2);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 22px;
-                margin: 0 auto 14px;
+            .boost-empty-state i {
+                font-size: 48px;
+                margin-bottom: 16px;
+                opacity: 0.5;
+                display: block;
+                color: #6366f1;
             }
 
             .boost-empty-state h4 {
                 font-size: 15px;
                 font-weight: 700;
-                color: var(--boost-text);
+                color: #0f172a;
                 margin: 0 0 4px;
             }
 
@@ -488,25 +337,28 @@
                 margin: 0;
             }
 
-        @@media (max-width: 600px) {
-            .boost-dashboard {
-                padding: 0 12px 32px;
-            }
-
+        /* ===================== RESPONSIVE ===================== */
+        @@media (max-width: 768px) {
             .boost-panel {
-                padding: 18px 14px 10px;
+                padding: 16px;
             }
 
-            .boost-stat-card {
-                padding: 16px 14px 14px;
+            .boost-table th,
+            .boost-table td {
+                padding: 10px 12px;
+                font-size: 13px;
             }
 
-            .boost-stat-value {
-                font-size: 23px;
+            .stat-card {
+                padding: 16px;
+            }
+
+            .stat-value {
+                font-size: 24px;
             }
 
             .boost-header-left h1 {
-                font-size: 21px;
+                font-size: 19px;
             }
         }
     </style>
@@ -521,7 +373,7 @@
     <!-- ===================== HEADER ===================== -->
     <div class="boost-header-row">
         <div class="boost-header-left">
-            <h1>Boosted Products</h1>
+            <h1><i class="fas fa-bolt" style="color:#6366f1;"></i> Boosted Products</h1>
             <p>Track paid product boosts and boost revenue across the marketplace</p>
         </div>
         <div class="boost-live-badge">
@@ -531,50 +383,36 @@
     </div>
 
     <!-- ===================== STAT CARDS ===================== -->
-    <div class="boost-stats-grid">
-        <div class="boost-stat-card">
-            <div class="boost-stat-top">
-                <div class="boost-stat-icon"><i class="fas fa-sack-dollar"></i></div>
-                <span class="boost-stat-tag">All time</span>
-            </div>
-            <div class="boost-stat-title">Boost Revenue</div>
-            <div class="boost-stat-value">
-                <span class="currency">$</span>@Model.TotalBoostRevenue.ToString("N0")
-            </div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <i class="fas fa-sack-dollar"></i>
+            <div class="stat-value">$@Model.TotalBoostRevenue.ToString("N0")</div>
+            <div class="stat-label">Boost Revenue</div>
         </div>
 
-        <div class="boost-stat-card">
-            <div class="boost-stat-top">
-                <div class="boost-stat-icon"><i class="fas fa-fire"></i></div>
-                <span class="boost-stat-tag">Live</span>
-            </div>
-            <div class="boost-stat-title">Active Boosts</div>
-            <div class="boost-stat-value">@Model.Boosts.Count(b => b.Status == "Active")</div>
+        <div class="stat-card">
+            <i class="fas fa-fire"></i>
+            <div class="stat-value">@Model.Boosts.Count(b => b.Status == "Active")</div>
+            <div class="stat-label">Active Boosts</div>
         </div>
 
-        <div class="boost-stat-card">
-            <div class="boost-stat-top">
-                <div class="boost-stat-icon"><i class="fas fa-hourglass-half"></i></div>
-                <span class="boost-stat-tag">Unpaid</span>
-            </div>
-            <div class="boost-stat-title">Pending Payment</div>
-            <div class="boost-stat-value">@Model.Boosts.Count(b => b.Status == "PendingPayment")</div>
+        <div class="stat-card">
+            <i class="fas fa-hourglass-half"></i>
+            <div class="stat-value">@Model.Boosts.Count(b => b.Status == "PendingPayment")</div>
+            <div class="stat-label">Pending Payment</div>
         </div>
 
-        <div class="boost-stat-card">
-            <div class="boost-stat-top">
-                <div class="boost-stat-icon"><i class="fas fa-clock-rotate-left"></i></div>
-                <span class="boost-stat-tag">Past</span>
-            </div>
-            <div class="boost-stat-title">Expired Boosts</div>
-            <div class="boost-stat-value">@Model.Boosts.Count(b => b.Status == "Expired")</div>
+        <div class="stat-card">
+            <i class="fas fa-clock-rotate-left"></i>
+            <div class="stat-value">@Model.Boosts.Count(b => b.Status == "Expired")</div>
+            <div class="stat-label">Expired Boosts</div>
         </div>
     </div>
 
     <!-- ===================== FILTER + TABLE ===================== -->
     <div class="boost-panel">
         <div class="boost-panel-header">
-            <h3><i class="fas fa-bolt"></i> All Boost Requests</h3>
+            <h3><i class="fas fa-list"></i> All Boost Requests</h3>
 
             <div class="boost-filter-tabs">
                 <a asp-page="/AdminBoosts" class="boost-filter-tab @(string.IsNullOrEmpty(statusFilter) ? "is-active" : "")">All</a>
@@ -584,7 +422,7 @@
             </div>
         </div>
 
-        <div class="boost-table-responsive">
+        <div class="table-wrapper">
             <table class="boost-table">
                 <thead>
                     <tr>
@@ -603,7 +441,7 @@
                         <tr>
                             <td colspan="7">
                                 <div class="boost-empty-state">
-                                    <div class="boost-empty-icon"><i class="fas fa-bolt"></i></div>
+                                    <i class="fas fa-bolt"></i>
                                     <h4>No boosts yet</h4>
                                     <p>Boosted products will show up here once a store starts one.</p>
                                 </div>
