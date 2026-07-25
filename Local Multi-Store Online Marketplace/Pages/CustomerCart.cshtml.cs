@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -115,6 +116,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (customerId == null)
             {
+                if (IsAjaxRequest())
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "Please login as a customer first."
+                    })
+                    { StatusCode = StatusCodes.Status401Unauthorized };
+                }
+
                 TempData["Error"] =
                     "Please login as a customer first.";
 
@@ -125,6 +136,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (quantity <= 0)
             {
+                if (IsAjaxRequest())
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "Quantity must be greater than 0."
+                    });
+                }
+
                 TempData["Error"] =
                     "Quantity must be greater than 0.";
 
@@ -141,6 +161,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (cartItem == null)
             {
+                if (IsAjaxRequest())
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "Cart item not found."
+                    });
+                }
+
                 TempData["Error"] =
                     "Cart item not found.";
 
@@ -151,6 +180,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (cartItem.Product == null ||
                 cartItem.Product.Quantity < quantity)
             {
+                if (IsAjaxRequest())
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "Not enough stock available."
+                    });
+                }
+
                 TempData["Error"] =
                     "Not enough stock available.";
 
@@ -163,11 +201,50 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             await _context.SaveChangesAsync();
 
+            if (IsAjaxRequest())
+            {
+                // Reuse the exact same summary calculation logic
+                // used on page load so every derived total (items,
+                // subtotal, discount, delivery fee, grand total)
+                // stays perfectly in sync with the server.
+                await LoadCartAsync(customerId.Value);
+
+                return new JsonResult(new
+                {
+                    success = true,
+                    itemsCount = CartItems.Sum(item => item.Quantity),
+                    totalAmount = TotalAmount,
+                    hasActiveAddress = HasActiveAddress,
+                    estimatedDeliveryFee = EstimatedDeliveryFee,
+                    freeDeliveryApplied = TotalAmount > FreeDeliveryThreshold,
+                    discountAmount = DiscountAmount,
+                    couponMessage = CouponMessage,
+                    grandTotal = GrandTotal,
+                    updatedItem = new
+                    {
+                        cartItemId = cartItem.CartItemID,
+                        quantity = cartItem.Quantity,
+                        lineTotal = cartItem.PriceAtAddTime * cartItem.Quantity
+                    }
+                });
+            }
+
             TempData["Success"] =
                 "Cart updated successfully.";
 
             return RedirectToPage(
                 new { AppliedCouponCode });
+        }
+
+        // =====================================================
+        // AJAX REQUEST DETECTION
+        // =====================================================
+        private bool IsAjaxRequest()
+        {
+            return string.Equals(
+                Request.Headers["X-Requested-With"],
+                "XMLHttpRequest",
+                StringComparison.OrdinalIgnoreCase);
         }
 
         // =====================================================
