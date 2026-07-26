@@ -85,6 +85,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                 var itemCount = await _context.OrderItems
                     .CountAsync(oi => oi.OrderID == order.OrderID && oi.StoreID == store.StoreID);
 
+                // Fix for H4 (partial, Option 1): does this order contain
+                // items from more than one store? If so, Order.Status is
+                // shared with other stores and this view must not let this
+                // store owner end the whole order (Delivered/Cancelled).
+                var distinctStoreCount = await _context.OrderItems
+                    .Where(oi => oi.OrderID == order.OrderID)
+                    .Select(oi => oi.StoreID)
+                    .Distinct()
+                    .CountAsync();
+
                 Orders.Add(new OrderViewModel
                 {
                     OrderID = order.OrderID,
@@ -93,7 +103,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                     TotalAmount = order.TotalAmount,
                     Status = order.Status,
                     OrderDate = order.OrderDate,
-                    ItemCount = itemCount
+                    ItemCount = itemCount,
+                    IsMultiVendor = distinctStoreCount > 1
                 });
             }
 
@@ -132,6 +143,29 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
             {
                 TempData["ErrorMessage"] = "Order not found.";
                 return RedirectToPage();
+            }
+
+            // Fix for H4 (partial, Option 1): if this order has items from
+            // more than one store, refuse to let this store owner set a
+            // terminal status (Delivered/Cancelled) — Order.Status is a
+            // single, shared field, so ending it here would also end it
+            // for every other store still involved in this order.
+            if (AllowedOrderStatuses.IsTerminal(newStatus))
+            {
+                var distinctStoreCount = await _context.OrderItems
+                    .Where(oi => oi.OrderID == orderId)
+                    .Select(oi => oi.StoreID)
+                    .Distinct()
+                    .CountAsync();
+
+                if (distinctStoreCount > 1)
+                {
+                    TempData["ErrorMessage"] =
+                        "This order includes items from other stores. " +
+                        "'" + newStatus + "' cannot be set from here for a multi-vendor order.";
+
+                    return RedirectToPage(new { pageIndex = PageIndex, statusFilter = StatusFilter, searchTerm = SearchTerm });
+                }
             }
 
             var previousStatus = order.Status;
@@ -185,5 +219,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
         public string Status { get; set; } = string.Empty;
         public DateTime OrderDate { get; set; }
         public int ItemCount { get; set; }
+        public bool IsMultiVendor { get; set; }
     }
 }
