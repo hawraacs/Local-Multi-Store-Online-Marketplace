@@ -28,6 +28,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private const decimal RatePerKm = 0.50m;
         private const decimal DefaultDeliveryFeePerStore = 3.00m;
 
+        // A cart item's product is treated as "Best Selling" (for the
+        // Instagram-style filter chip on the cart page) once it has sold
+        // at least this many units across all orders, store-wide.
+        // Tune this to match what "best selling" should mean for the
+        // marketplace.
+        private const int BestSellingSalesThreshold = 10;
+
+        // A cart item is treated as "Almost Out of Stock" (for the
+        // filter chip) once its remaining stock drops to or below this
+        // number of units.
+        private const int LowStockCartThreshold = 5;
+
         private static readonly HttpClient DistanceHttpClient = new()
         {
             Timeout = TimeSpan.FromSeconds(6)
@@ -73,6 +85,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public string? PaymentMethod { get; set; }
             = "Cash On Delivery";
 
+        // Comma-separated CartItemIDs the customer checked on the
+        // Shein-style cart UI (only these are ordered at checkout;
+        // everything else stays in the cart). Flows through GET
+        // redirects too, so it survives the "add address, come
+        // back and finish checkout" round-trip.
+        [BindProperty(SupportsGet = true)]
+        public string? SelectedCartItemIds { get; set; }
+
         // =====================================================
         // GET CART
         // =====================================================
@@ -97,7 +117,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return await PlaceOrderFromCartAsync(
                     customerId.Value,
                     AppliedCouponCode,
-                    PaymentMethod);
+                    PaymentMethod,
+                    SelectedCartItemIds);
             }
 
             await LoadCartAsync(customerId.Value);
@@ -257,6 +278,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (customerId == null)
             {
+                if (IsAjaxRequest())
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "Please login as a customer first."
+                    })
+                    { StatusCode = StatusCodes.Status401Unauthorized };
+                }
+
                 TempData["Error"] =
                     "Please login as a customer first.";
 
@@ -273,6 +304,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (cartItem == null)
             {
+                if (IsAjaxRequest())
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "Cart item not found."
+                    });
+                }
+
                 TempData["Error"] =
                     "Cart item not found.";
 
@@ -285,6 +325,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _context.CartItems.Remove(cartItem);
 
             await _context.SaveChangesAsync();
+
+            if (IsAjaxRequest())
+            {
+                // Used by the "Remove Selected" bulk-trash action,
+                // which fires one fetch per checked item and then
+                // reloads the page once every request settles.
+                return new JsonResult(new { success = true });
+            }
 
             TempData["Success"] =
                 "Item removed from cart.";
@@ -424,7 +472,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // =====================================================
         public async Task<IActionResult> OnPostCheckoutAsync(
             string? appliedCouponCode,
-            string? paymentMethod)
+            string? paymentMethod,
+            string? selectedCartItemIds)
         {
             var customerId = await GetCurrentCustomerIdAsync();
 
@@ -441,16 +490,52 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return await PlaceOrderFromCartAsync(
                 customerId.Value,
                 appliedCouponCode,
-                paymentMethod);
+                paymentMethod,
+                selectedCartItemIds);
+        }
+
+        // =====================================================
+        // PARSE SELECTED CART ITEM IDS
+        // (comma-separated string coming from the Shein-style
+        // checkbox selection on the cart page)
+        // =====================================================
+        private static List<int> ParseSelectedCartItemIds(
+            string? rawSelectedIds)
+        {
+            if (string.IsNullOrWhiteSpace(rawSelectedIds))
+            {
+                return new List<int>();
+            }
+
+            return rawSelectedIds
+                .Split(
+                    ',',
+                    StringSplitOptions.RemoveEmptyEntries |
+                    StringSplitOptions.TrimEntries)
+                .Select(part =>
+                    int.TryParse(part, out var value)
+                        ? value
+                        : (int?)null)
+                .Where(value => value.HasValue)
+                .Select(value => value!.Value)
+                .Distinct()
+                .ToList();
         }
 
         // =====================================================
         // PLACE ORDER
+        // Only the CartItems whose IDs appear in
+        // selectedCartItemIds are turned into an order; every
+        // other cart item is left untouched in the customer's
+        // cart. If no selection is provided (e.g. an older client
+        // or a direct call), the whole cart is checked out, to
+        // stay backward compatible.
         // =====================================================
         private async Task<IActionResult> PlaceOrderFromCartAsync(
             int customerId,
             string? appliedCouponCode,
-            string? paymentMethod)
+            string? paymentMethod,
+            string? selectedCartItemIds)
         {
             var cleanPaymentMethod =
                 string.IsNullOrWhiteSpace(paymentMethod)
@@ -531,6 +616,32 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage();
             }
 
+            // =================================================
+            // RESOLVE WHICH CART ITEMS ARE ACTUALLY BEING
+            // CHECKED OUT (the Shein-style "selected only" set)
+            // =================================================
+            var selectedIds =
+                ParseSelectedCartItemIds(selectedCartItemIds);
+
+            var itemsToCheckout = selectedIds.Any()
+                ? cart.CartItems
+                    .Where(ci => selectedIds.Contains(ci.CartItemID))
+                    .ToList()
+                : cart.CartItems.ToList();
+
+            if (!itemsToCheckout.Any())
+            {
+                TempData["Error"] =
+                    "Please select at least one item to checkout.";
+
+                return RedirectToPage(
+                    new
+                    {
+                        AppliedCouponCode =
+                            appliedCouponCode
+                    });
+            }
+
             var address = customer.Addresses
                 .FirstOrDefault(addressItem =>
                     addressItem.IsDefault &&
@@ -554,6 +665,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     Uri.EscapeDataString(
                         cleanPaymentMethod);
 
+                var encodedSelectedIds =
+                    Uri.EscapeDataString(
+                        string.Join(
+                            ",",
+                            itemsToCheckout.Select(
+                                item => item.CartItemID)));
+
                 return RedirectToPage(
                     "/CustomerAddresses",
                     new
@@ -562,14 +680,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                             $"/CustomerCart" +
                             $"?CheckoutAfterAddress=true" +
                             $"&AppliedCouponCode={encodedCoupon}" +
-                            $"&PaymentMethod={encodedPayment}"
+                            $"&PaymentMethod={encodedPayment}" +
+                            $"&SelectedCartItemIds={encodedSelectedIds}"
                     });
             }
 
             // =================================================
             // VALIDATE PRODUCTS, SUBSCRIPTIONS, AND STOCK
+            // (only for the items actually being checked out)
             // =================================================
-            foreach (var item in cart.CartItems)
+            foreach (var item in itemsToCheckout)
             {
                 if (item.Product == null ||
                     !item.Product.IsActive)
@@ -621,21 +741,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 }
             }
 
-            var subtotal = cart.CartItems.Sum(
+            var subtotal = itemsToCheckout.Sum(
                 item =>
                     item.PriceAtAddTime *
                     item.Quantity);
 
             var deliveryFee =
                 await CalculateDeliveryFeeAsync(
-                    cart.CartItems.ToList(),
+                    itemsToCheckout,
                     address,
                     subtotal);
 
             var couponResult =
                 await CalculateCouponDiscountAsync(
                     appliedCouponCode,
-                    cart.CartItems.ToList(),
+                    itemsToCheckout,
                     subtotal);
 
             if (!couponResult.IsValid &&
@@ -760,8 +880,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             // =================================================
             // CREATE ORDER ITEMS AND UPDATE STOCK
+            // (only for the checked-out items)
             // =================================================
-            foreach (var item in cart.CartItems.ToList())
+            foreach (var item in itemsToCheckout.ToList())
             {
                 if (item.Product == null)
                 {
@@ -870,8 +991,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             // (this was the missing piece — everything else in this
             // method already notified admins/delivery/low-stock, but
             // nothing ever told the store owner "you got an order").
+            // Only stores present in the CHECKED-OUT items get
+            // notified — stores whose items were left in the cart
+            // are not.
             // =================================================
-            var involvedStoreIds = cart.CartItems
+            var involvedStoreIds = itemsToCheckout
                 .Where(item => item.Product != null)
                 .Select(item => item.Product!.StoreID)
                 .Distinct()
@@ -885,7 +1009,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 if (involvedStore != null)
                 {
-                    var itemCountForStore = cart.CartItems
+                    var itemCountForStore = itemsToCheckout
                         .Where(item =>
                             item.Product != null &&
                             item.Product.StoreID == storeId)
@@ -915,10 +1039,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
 
             // =================================================
-            // CLEAR CART AFTER ORDER CREATION
+            // CLEAR ONLY THE CHECKED-OUT ITEMS FROM THE CART
+            // Anything the customer left unchecked stays in the
+            // cart for a later checkout.
             // =================================================
             _context.CartItems.RemoveRange(
-                cart.CartItems);
+                itemsToCheckout);
 
             cart.UpdatedAt = DateTime.UtcNow;
 
@@ -1729,13 +1855,60 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                                         image.ImageUrl)
                                     .FirstOrDefault()
                                     ?? "/images/no-image.png"
-                                : "/images/no-image.png"
+                                : "/images/no-image.png",
+
+                        IsAlmostOutOfStock =
+                            item.Product != null &&
+                            item.Product.Quantity <=
+                                LowStockCartThreshold
                     })
                 .ToList();
 
             TotalAmount =
                 CartItems.Sum(item =>
                     item.TotalPrice);
+
+            // =================================================
+            // BEST SELLING FLAG (Instagram-style filter chip)
+            // Computed from real sales history: how many units of
+            // each product in the cart have ever been ordered,
+            // across all customers.
+            // =================================================
+            var cartProductIds = CartItems
+                .Select(item => item.ProductID)
+                .Distinct()
+                .ToList();
+
+            if (cartProductIds.Any())
+            {
+                var totalSoldByProduct =
+                    await _context.OrderItems
+                        .Where(orderItem =>
+                            cartProductIds.Contains(
+                                orderItem.ProductID))
+                        .GroupBy(orderItem =>
+                            orderItem.ProductID)
+                        .Select(group =>
+                            new
+                            {
+                                ProductID = group.Key,
+                                TotalSold =
+                                    group.Sum(orderItem =>
+                                        orderItem.Quantity)
+                            })
+                        .ToDictionaryAsync(
+                            entry => entry.ProductID,
+                            entry => entry.TotalSold);
+
+                foreach (var cartItem in CartItems)
+                {
+                    cartItem.IsBestSeller =
+                        totalSoldByProduct.TryGetValue(
+                            cartItem.ProductID,
+                            out var totalSold) &&
+                        totalSold >= BestSellingSalesThreshold;
+                }
+            }
 
             var customer =
                 await _context.Customers
@@ -1863,6 +2036,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public string ImageUrl { get; set; }
             = "/images/no-image.png";
+
+        // Drives the "Best Selling" filter chip on the cart page.
+        // Computed from real order history — see LoadCartAsync.
+        public bool IsBestSeller { get; set; }
+
+        // Drives the "Almost Out of Stock" filter chip on the cart page.
+        public bool IsAlmostOutOfStock { get; set; }
     }
 
     // =========================================================
