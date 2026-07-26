@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* ============================================================
-                           ADMIN THEME — matches Admin Dashboard (light / indigo+sky)
-                           ============================================================ */
+                                   ADMIN THEME — matches Admin Dashboard (light / indigo+sky)
+                                   ============================================================ */
         :root {
             --bg-color: #F8FAFC;
             --bg-soft: #F1F5F9;
@@ -254,37 +254,26 @@
                 border-color: var(--brand-light);
             }
 
-        /* ── Filter Bar ── */
+        /* ── Filter Bar (role/status dropdowns + export) ── */
         .filter-bar {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
             margin-bottom: 1.5rem;
             align-items: center;
+            justify-content: space-between;
             background: var(--surface-2);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 14px 16px;
         }
 
-        .filter-search {
-            position: relative;
-            flex: 1 1 220px;
+        .filter-bar-left {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
         }
-
-            .filter-search i {
-                position: absolute;
-                left: 14px;
-                top: 50%;
-                transform: translateY(-50%);
-                color: var(--text-muted);
-                font-size: 12.5px;
-            }
-
-            .filter-search input {
-                width: 100%;
-                padding: 0.6rem 1rem 0.6rem 2.2rem;
-            }
 
         .filter-bar input,
         .filter-bar select {
@@ -307,6 +296,31 @@
 
             .filter-bar input::placeholder {
                 color: var(--text-muted);
+            }
+
+        .search-reset-all {
+            background: none;
+            border: none;
+            color: var(--brand);
+            font-family: var(--font);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            padding: 6px 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .search-reset-all:hover {
+                text-decoration: underline;
+            }
+
+            .search-reset-all:disabled {
+                color: var(--text-muted);
+                cursor: default;
+                text-decoration: none;
             }
 
         /* ── Export Button ── */
@@ -369,6 +383,80 @@
 
             thead th:last-child {
                 border-radius: 0 var(--radius-sm) 0 0;
+            }
+
+        /* ── Per-column header search ── */
+        .col-search-row th {
+            background: var(--surface);
+            border-bottom: 1.5px solid var(--border);
+            padding: 0.5rem 0.7rem 0.75rem;
+        }
+
+        .col-search-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+            .col-search-wrap i.fa-magnifying-glass {
+                position: absolute;
+                left: 10px;
+                color: var(--text-muted);
+                font-size: 0.72rem;
+                pointer-events: none;
+            }
+
+        .col-search-input {
+            width: 100%;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            border-radius: 8px;
+            padding: 6px 26px 6px 26px;
+            font-family: var(--font);
+            font-size: 0.76rem;
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: normal;
+            color: var(--text-primary);
+            transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+        }
+
+            .col-search-input::placeholder {
+                color: var(--text-muted);
+                font-weight: 400;
+            }
+
+            .col-search-input:focus {
+                outline: none;
+                border-color: var(--brand);
+                background: var(--surface);
+                box-shadow: 0 0 0 3px var(--brand-soft);
+            }
+
+            .col-search-input.has-value {
+                border-color: var(--brand-light);
+                background: var(--surface);
+            }
+
+        .col-search-clear {
+            position: absolute;
+            right: 6px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.68rem;
+            padding: 3px;
+            display: none;
+            line-height: 1;
+        }
+
+            .col-search-clear:hover {
+                color: var(--danger);
+            }
+
+            .col-search-clear.visible {
+                display: inline-flex;
             }
 
         tbody td {
@@ -611,6 +699,10 @@
                 font-weight: 700;
             }
 
+            .empty-state-inline span {
+                font-size: 0.82rem;
+            }
+
         /* ── Responsive ── */
         @@media (max-width: 768px) {
             .page-wrap {
@@ -631,10 +723,6 @@
                     font-size: 0.8rem;
                     padding: 0.5rem 0.8rem;
                 }
-
-            .filter-search input {
-                padding-left: 2rem;
-            }
 
             .btn-export {
                 padding: 0.5rem 1rem;
@@ -658,8 +746,9 @@
                 align-items: stretch;
             }
 
-            .filter-search {
-                flex: 1 1 auto;
+            .filter-bar-left {
+                flex-direction: column;
+                align-items: stretch;
             }
 
             .btn-export {
@@ -728,22 +817,23 @@
     <div class="users-card">
 
         <div class="filter-bar">
-            <div class="filter-search">
-                <i class="fas fa-magnifying-glass"></i>
-                <input type="text" id="searchUser" placeholder="Search name or email...">
+            <div class="filter-bar-left">
+                <select id="roleFilter">
+                    <option value="">All Roles</option>
+                    <option>Customer</option>
+                    <option>StoreOwner</option>
+                    <option>DeliveryStaff</option>
+                    <option>Admin</option>
+                </select>
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="true">Active</option>
+                    <option value="false">Pending/Inactive</option>
+                </select>
+                <button type="button" id="clearAllColumnFilters" class="search-reset-all" disabled>
+                    <i class="fas fa-filter-circle-xmark"></i> Clear column filters
+                </button>
             </div>
-            <select id="roleFilter">
-                <option value="">All Roles</option>
-                <option>Customer</option>
-                <option>StoreOwner</option>
-                <option>DeliveryStaff</option>
-                <option>Admin</option>
-            </select>
-            <select id="statusFilter">
-                <option value="">All Status</option>
-                <option value="true">Active</option>
-                <option value="false">Pending/Inactive</option>
-            </select>
             <button id="exportCsvBtn" class="btn-export"><i class="fas fa-download"></i> Export CSV</button>
         </div>
 
@@ -758,6 +848,45 @@
                         <th>Status</th>
                         <th>Joined</th>
                         <th style="width:180px">Actions</th>
+                    </tr>
+                    <tr class="col-search-row">
+                        <th></th>
+                        <th data-col="user">
+                            <div class="col-search-wrap">
+                                <i class="fas fa-magnifying-glass"></i>
+                                <input type="text" class="col-search-input" data-col="user" placeholder="Filter name/email..." autocomplete="off" />
+                                <button type="button" class="col-search-clear" title="Clear"><i class="fas fa-xmark"></i></button>
+                            </div>
+                        </th>
+                        <th data-col="phone">
+                            <div class="col-search-wrap">
+                                <i class="fas fa-magnifying-glass"></i>
+                                <input type="text" class="col-search-input" data-col="phone" placeholder="Filter phone..." autocomplete="off" />
+                                <button type="button" class="col-search-clear" title="Clear"><i class="fas fa-xmark"></i></button>
+                            </div>
+                        </th>
+                        <th data-col="role">
+                            <div class="col-search-wrap">
+                                <i class="fas fa-magnifying-glass"></i>
+                                <input type="text" class="col-search-input" data-col="role" placeholder="Filter role..." autocomplete="off" />
+                                <button type="button" class="col-search-clear" title="Clear"><i class="fas fa-xmark"></i></button>
+                            </div>
+                        </th>
+                        <th data-col="status">
+                            <div class="col-search-wrap">
+                                <i class="fas fa-magnifying-glass"></i>
+                                <input type="text" class="col-search-input" data-col="status" placeholder="Filter status..." autocomplete="off" />
+                                <button type="button" class="col-search-clear" title="Clear"><i class="fas fa-xmark"></i></button>
+                            </div>
+                        </th>
+                        <th data-col="joined">
+                            <div class="col-search-wrap">
+                                <i class="fas fa-magnifying-glass"></i>
+                                <input type="text" class="col-search-input" data-col="joined" placeholder="Filter date..." autocomplete="off" />
+                                <button type="button" class="col-search-clear" title="Clear"><i class="fas fa-xmark"></i></button>
+                            </div>
+                        </th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -775,8 +904,20 @@
                                 _ => "role-default"
                             };
                             var initial = string.IsNullOrWhiteSpace(user.FullName) ? "U" : user.FullName.Substring(0, 1).ToUpper();
+                            var joinedText = user.CreatedAt.ToString("dd MMM yyyy");
+                            var statusText = user.IsActive ? "Active" : "Pending";
+                            var userKey = ((user.FullName ?? "") + " " + (user.Email ?? "")).ToLower();
+                            var phoneKey = (user.PhoneNumber ?? "").ToLower();
+                            var roleKeyText = (user.Roles ?? "").ToLower();
+                            var statusKeyText = statusText.ToLower();
+                            var joinedKey = joinedText.ToLower();
 
-                            <tr data-role="@user.Roles" data-active="@user.IsActive.ToString()">
+                            <tr data-role="@user.Roles" data-active="@user.IsActive.ToString()"
+                                data-col-user="@userKey"
+                                data-col-phone="@phoneKey"
+                                data-col-role="@roleKeyText"
+                                data-col-status="@statusKeyText"
+                                data-col-joined="@joinedKey">
                                 <td><input type="checkbox" class="userCheckbox" data-id="@user.UserId"></td>
                                 <td>
                                     <div class="user-cell">
@@ -791,10 +932,10 @@
                                 <td><span class="role-badge @roleClass">@user.Roles</span></td>
                                 <td>
                                     <span class="badge @(user.IsActive ? "badge-active" : "badge-pending")">
-                                        @(user.IsActive ? "Active" : "Pending")
+                                        @statusText
                                     </span>
                                 </td>
-                                <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                                <td>@joinedText</td>
                                 <td>
                                     <div class="action-buttons">
                                         @if (!user.IsActive)
@@ -838,36 +979,119 @@
 </div>
 
 <script>
-    // Filtering logic
-    const searchInput = document.getElementById('searchUser');
+    // ── Elements ──
     const roleFilter = document.getElementById('roleFilter');
     const statusFilter = document.getElementById('statusFilter');
     const rows = document.querySelectorAll('#usersTable tbody tr');
+    const colSearchInputs = document.querySelectorAll('.col-search-input');
+    const clearAllBtn = document.getElementById('clearAllColumnFilters');
+
+    // One search term per column, e.g. { user: 'john', phone: '', role: '', status: '', joined: '' }
+    const columnFilters = {};
+    colSearchInputs.forEach(input => { columnFilters[input.dataset.col] = ''; });
 
     function filterTable() {
-        const term = searchInput.value.toLowerCase();
         const role = roleFilter.value.toLowerCase();
         const status = statusFilter.value; // 'true' or 'false'
+        let visibleCount = 0;
 
         rows.forEach(row => {
             if (row.classList.contains('empty-row')) return;
 
-            const name = row.cells[1]?.innerText.toLowerCase() || '';
-            const roleText = row.cells[3]?.innerText.toLowerCase() || '';
             const isActive = row.dataset.active === 'True';
 
-            let show = name.includes(term);
-            if (role && !roleText.includes(role)) show = false;
+            let show = true;
+            if (role && !(row.dataset.colRole || '').includes(role)) show = false;
             if (status === 'true' && !isActive) show = false;
             if (status === 'false' && isActive) show = false;
 
+            // Every non-empty per-column filter must match its own column (AND across columns)
+            for (const col in columnFilters) {
+                const term = columnFilters[col];
+                if (term === '') continue;
+                const cellValue = row.dataset['col' + col.charAt(0).toUpperCase() + col.slice(1)] || '';
+                if (!cellValue.includes(term)) {
+                    show = false;
+                    break;
+                }
+            }
+
             row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
         });
+
+        toggleNoResultsMessage(visibleCount);
+        updateClearAllButton();
     }
 
-    searchInput.addEventListener('keyup', filterTable);
+    function toggleNoResultsMessage(visibleCount) {
+        const table = document.getElementById('usersTable');
+        let noResultsRow = table.querySelector('.no-results-row');
+        const anyFilterActive = Object.values(columnFilters).some(v => v !== '') || roleFilter.value || statusFilter.value;
+
+        if (visibleCount === 0 && anyFilterActive) {
+            if (!noResultsRow) {
+                noResultsRow = document.createElement('tr');
+                noResultsRow.className = 'no-results-row empty-row';
+                noResultsRow.innerHTML = `
+                    <td colspan="7">
+                        <div class="empty-state-inline">
+                            <i class="fas fa-magnifying-glass"></i>
+                            <strong>No matching users</strong>
+                            <span>Try adjusting your filters.</span>
+                        </div>
+                    </td>`;
+                table.querySelector('tbody').appendChild(noResultsRow);
+            }
+            noResultsRow.style.display = '';
+        } else if (noResultsRow) {
+            noResultsRow.style.display = 'none';
+        }
+    }
+
+    function updateClearAllButton() {
+        const anyActive = Object.values(columnFilters).some(v => v !== '');
+        if (clearAllBtn) clearAllBtn.disabled = !anyActive;
+    }
+
+    // Role / status dropdowns
     roleFilter.addEventListener('change', filterTable);
     statusFilter.addEventListener('change', filterTable);
+
+    // Per-column search inputs
+    colSearchInputs.forEach(input => {
+        const wrap = input.closest('.col-search-wrap');
+        const clearBtn = wrap.querySelector('.col-search-clear');
+
+        input.addEventListener('input', () => {
+            const term = input.value.trim().toLowerCase();
+            columnFilters[input.dataset.col] = term;
+            input.classList.toggle('has-value', term !== '');
+            clearBtn.classList.toggle('visible', term !== '');
+            filterTable();
+        });
+
+        clearBtn.addEventListener('click', () => {
+            input.value = '';
+            columnFilters[input.dataset.col] = '';
+            input.classList.remove('has-value');
+            clearBtn.classList.remove('visible');
+            input.focus();
+            filterTable();
+        });
+    });
+
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', () => {
+            colSearchInputs.forEach(input => {
+                input.value = '';
+                columnFilters[input.dataset.col] = '';
+                input.classList.remove('has-value');
+                input.closest('.col-search-wrap').querySelector('.col-search-clear').classList.remove('visible');
+            });
+            filterTable();
+        });
+    }
 
     // Export CSV — only visible (filtered-in) rows, fixed to use vanilla JS
     // instead of jQuery's ":visible" selector, which isn't valid in plain CSS/JS.
