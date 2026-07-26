@@ -37,9 +37,10 @@
         }
 
         .assign-page {
-            max-width: 1100px;
+            max-width: 100%;
+            width: 100%;
             margin: 0 auto;
-            padding: 0 4px 48px;
+            padding: 0 20px 48px;
             color: var(--text);
             font-family: var(--font);
         }
@@ -193,8 +194,9 @@
             padding: 9px 12px;
             border-radius: var(--radius-sm);
             border: 1px solid var(--border);
-            width: 240px;
-            max-width: 100%;
+            width: 100%;
+            min-width: 220px;
+            max-width: 340px;
             background: var(--surface);
             color: var(--text);
             font-family: var(--font);
@@ -232,6 +234,69 @@
                 opacity: 1;
             }
 
+        /* ── Product column (same pattern as CustomerOrders.cshtml) ── */
+        .products-cell {
+            min-width: 210px;
+            max-width: 340px;
+        }
+
+        .product-line {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed var(--border);
+        }
+
+            .product-line:last-child {
+                margin-bottom: 0;
+                padding-bottom: 0;
+                border-bottom: none;
+            }
+
+        .product-name {
+            color: var(--text);
+            font-weight: 600;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        .product-quantity {
+            flex-shrink: 0;
+            padding: 2px 8px;
+            background: var(--brand-soft);
+            color: var(--brand-dark);
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .no-products {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* ── Delivery Region column ── */
+        .region-cell {
+            min-width: 150px;
+        }
+
+        .region-badge {
+            display: inline-block;
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
         .no-delivery {
             display: inline-block;
             background: var(--danger-bg);
@@ -251,13 +316,93 @@
             font-size: 14px;
         }
 
+        /* ── In-header filter row (replaces the old top filter panel) ── */
+        thead .filter-row th {
+            padding: 8px 10px 12px;
+            background: var(--surface-2);
+            border-bottom: 1px solid var(--border);
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .col-filter {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+            .col-filter input,
+            .col-filter select {
+                padding: 6px 8px;
+                border-radius: var(--radius-sm);
+                border: 1px solid var(--border);
+                font-family: var(--font);
+                font-size: 12.5px;
+                background: var(--surface);
+                color: var(--text);
+                outline: none;
+                width: 100%;
+                min-width: 90px;
+            }
+
+                .col-filter input:focus,
+                .col-filter select:focus {
+                    border-color: var(--brand);
+                    box-shadow: 0 0 0 3px var(--brand-soft);
+                }
+
+        .col-filter-range {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+            .col-filter-range input {
+                width: 100%;
+            }
+
+        .col-filter-sub-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+        }
+
+        .clear-filters-btn {
+            background: var(--surface);
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 12px;
+            font-family: var(--font);
+            width: 100%;
+        }
+
+            .clear-filters-btn:hover {
+                border-color: var(--brand);
+                color: var(--brand);
+            }
+
+        .no-filter-results {
+            text-align: center;
+            color: var(--muted);
+            padding: 32px 16px;
+            font-weight: 500;
+            font-size: 13.5px;
+        }
+
         @@media (max-width: 850px) {
             .assign-page {
                 padding: 0 12px 32px;
             }
 
             table {
-                min-width: 900px;
+                min-width: 1050px;
             }
         }
     </style>
@@ -306,15 +451,85 @@
     {
         <div class="panel">
             <div class="table-responsive">
-                <table>
+                <table id="assignTable">
                     <thead>
                         <tr>
                             <th>Order Number</th>
                             <th>Date</th>
                             <th>Status</th>
                             <th>Total</th>
+                            <th>Product</th>
+                            <th>Delivery Region</th>
                             <th>Assign Delivery Person</th>
                             <th>Action</th>
+                        </tr>
+
+                        <tr class="filter-row">
+                            <th>
+                                <div class="col-filter">
+                                    <input type="text" id="filterOrderNumber" placeholder="Search order #" />
+                                    <span class="col-filter-sub-label">Customer</span>
+                                    <input type="text" id="filterCustomerName" placeholder="Search customer" />
+                                </div>
+                            </th>
+
+                            <th>
+                                <div class="col-filter-range">
+                                    <span class="col-filter-sub-label">From</span>
+                                    <input type="date" id="filterDateFrom" />
+                                    <span class="col-filter-sub-label">To</span>
+                                    <input type="date" id="filterDateTo" />
+                                </div>
+                            </th>
+
+                            <th>
+                                <div class="col-filter">
+                                    <select id="filterStatus">
+                                        <option value="">All</option>
+                                        @foreach (var status in Model.Orders
+                                       .Select(o => o.Status)
+                                       .Where(s => !string.IsNullOrWhiteSpace(s))
+                                       .Distinct()
+                                       .OrderBy(s => s))
+                                        {
+                                            <option value="@status">@status</option>
+                                        }
+                                    </select>
+                                </div>
+                            </th>
+
+                            <th>
+                                <div class="col-filter-range">
+                                    <span class="col-filter-sub-label">Min</span>
+                                    <input type="number" id="filterAmountMin" placeholder="Min" min="0" step="0.01" />
+                                    <span class="col-filter-sub-label">Max</span>
+                                    <input type="number" id="filterAmountMax" placeholder="Max" min="0" step="0.01" />
+                                </div>
+                            </th>
+
+                            <th>
+                                <div class="col-filter">
+                                    <input type="text" id="filterProduct" placeholder="Search product" />
+                                </div>
+                            </th>
+
+                            <th>
+                                <div class="col-filter">
+                                    <input type="text" id="filterRegion" placeholder="Search region" />
+                                </div>
+                            </th>
+
+                            <th>
+                                <div class="col-filter">
+                                    <input type="text" id="filterDeliveryPerson" placeholder="Search delivery person" />
+                                </div>
+                            </th>
+
+                            <th>
+                                <button type="button" class="clear-filters-btn" id="clearFiltersBtn">
+                                    Clear
+                                </button>
+                            </th>
                         </tr>
                     </thead>
 
@@ -323,7 +538,29 @@
                         {
                             var formId = $"assignForm_{order.OrderID}";
 
-                            <tr>
+                            var orderNumberSearchText =
+                            order.OrderNumber.ToLower();
+
+                            var customerSearchText =
+                            order.CustomerName.ToLower();
+
+                            var productSearchText = order.Products != null
+                            ? string.Join(" | ", order.Products.Select(p => p.ProductName))
+                            : "";
+
+                            var deliveryPeopleSearchText = order.AvailableDeliveryPeople != null
+                            ? string.Join(" | ", order.AvailableDeliveryPeople.Select(p => p.FullName))
+                            : "";
+
+                            <tr data-order-number="@orderNumberSearchText"
+                                data-customer-name="@customerSearchText"
+                                data-customer-id="@order.CustomerID"
+                                data-product="@productSearchText.ToLower()"
+                                data-region="@order.DeliveryRegion.ToLower()"
+                                data-status="@order.Status"
+                                data-delivery-people="@deliveryPeopleSearchText.ToLower()"
+                                data-date="@order.OrderDate.ToString("yyyy-MM-dd")"
+                                data-total="@order.TotalAmount.ToString(System.Globalization.CultureInfo.InvariantCulture)">
                                 <td>
                                     <span class="order-number">
                                         @order.OrderNumber
@@ -346,6 +583,37 @@
                                     $@order.TotalAmount.ToString("N2")
                                 </td>
 
+                                <td class="products-cell">
+                                    @if (order.Products != null &&
+                                   order.Products.Count > 0)
+                                    {
+                                        @foreach (var product in order.Products)
+                                        {
+                                            <div class="product-line">
+                                                <span class="product-name">
+                                                    @product.ProductName
+                                                </span>
+
+                                                <span class="product-quantity">
+                                                    ×@product.Quantity
+                                                </span>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="no-products">
+                                            No products
+                                        </span>
+                                    }
+                                </td>
+
+                                <td class="region-cell">
+                                    <span class="region-badge">
+                                        @order.DeliveryRegion
+                                    </span>
+                                </td>
+
                                 <td>
                                     @if (order.AvailableDeliveryPeople != null &&
                                    order.AvailableDeliveryPeople.Any())
@@ -363,11 +631,29 @@
                                                     Select delivery
                                                 </option>
 
-                                                @foreach (var delivery in order.AvailableDeliveryPeople)
+                                                @foreach (var groupLabel in new[] { "Same Area", "Nearby", "Far" })
                                                 {
-                                                    <option value="@delivery.DeliveryPersonID">
-                                                        @delivery.FullName - @delivery.Area - @delivery.VehicleType
-                                                    </option>
+                                                    var groupPeople = order.AvailableDeliveryPeople
+                                                    .Where(p => p.AreaLabel == groupLabel)
+                                                    .ToList();
+
+                                                    if (groupPeople.Any())
+                                                    {
+                                                        var groupEmoji = groupLabel == "Same Area"
+                                                        ? "🟢"
+                                                        : groupLabel == "Nearby"
+                                                        ? "🟡"
+                                                        : "⚪";
+
+                                                        <optgroup label="@(groupEmoji + " " + groupLabel)">
+                                                            @foreach (var delivery in groupPeople)
+                                                            {
+                                                                <option value="@delivery.DeliveryPersonID">
+                                                                    @delivery.FullName - @delivery.Area - @delivery.VehicleType
+                                                                </option>
+                                                            }
+                                                        </optgroup>
+                                                    }
                                                 }
                                             </select>
                                         </form>
@@ -400,8 +686,171 @@
                         }
                     </tbody>
                 </table>
+
+                <div class="no-filter-results" id="noFilterResults" style="display:none;">
+                    No orders match the current filters.
+                </div>
             </div>
         </div>
     }
 
 </div>
+
+@if (Model.Orders != null && Model.Orders.Any())
+{
+    <script>
+        (function () {
+            // ==========================================
+            // CLIENT-SIDE FILTERING ONLY.
+            //
+            // This purely shows/hides existing <tr> elements based on
+            // their data-* attributes (already rendered server-side).
+            // It does not touch, resubmit, or alter any of the existing
+            // Assign forms, POST handlers, or row content in any way.
+            // ==========================================
+            var table = document.getElementById('assignTable');
+            if (!table) {
+                return;
+            }
+
+            var rows = Array.prototype.slice.call(
+                table.querySelectorAll('tbody tr'));
+
+            var noResultsEl = document.getElementById('noFilterResults');
+
+            var orderNumberInput = document.getElementById('filterOrderNumber');
+            var customerNameInput = document.getElementById('filterCustomerName');
+            var productInput = document.getElementById('filterProduct');
+            var regionInput = document.getElementById('filterRegion');
+            var statusSelect = document.getElementById('filterStatus');
+            var deliveryPersonInput = document.getElementById('filterDeliveryPerson');
+            var dateFromInput = document.getElementById('filterDateFrom');
+            var dateToInput = document.getElementById('filterDateTo');
+            var amountMinInput = document.getElementById('filterAmountMin');
+            var amountMaxInput = document.getElementById('filterAmountMax');
+            var clearBtn = document.getElementById('clearFiltersBtn');
+
+            function applyFilters() {
+                var orderNumberVal = orderNumberInput.value.trim().toLowerCase();
+                var customerNameVal = customerNameInput.value.trim().toLowerCase();
+                var productVal = productInput.value.trim().toLowerCase();
+                var regionVal = regionInput.value.trim().toLowerCase();
+                var statusVal = statusSelect.value;
+                var deliveryPersonVal = deliveryPersonInput.value.trim().toLowerCase();
+                var dateFromVal = dateFromInput.value; // yyyy-MM-dd or ""
+                var dateToVal = dateToInput.value;
+                var amountMinVal = amountMinInput.value !== '' ? parseFloat(amountMinInput.value) : null;
+                var amountMaxVal = amountMaxInput.value !== '' ? parseFloat(amountMaxInput.value) : null;
+
+                var visibleCount = 0;
+
+                rows.forEach(function (row) {
+                    var matches = true;
+
+                    if (orderNumberVal) {
+                        // Match only against the part after "ORD-", using
+                        // starts-with instead of contains-anywhere, so a
+                        // short value like "23" doesn't match every order
+                        // whose long timestamp-based number happens to
+                        // contain "23" somewhere in the middle.
+                        var orderNumberSuffix = row.dataset.orderNumber.replace(/^ord-/, '');
+
+                        if (orderNumberSuffix.indexOf(orderNumberVal) !== 0) {
+                            matches = false;
+                        }
+                    }
+
+                    if (matches && customerNameVal) {
+                        // Pure digits -> "starts with" match on the real Customer ID.
+                        // Anything else -> partial match on the customer name text.
+                        if (/^\d+$/.test(customerNameVal)) {
+                            if (row.dataset.customerId.indexOf(customerNameVal) !== 0) {
+                                matches = false;
+                            }
+                        } else if (row.dataset.customerName.indexOf(customerNameVal) === -1) {
+                            matches = false;
+                        }
+                    }
+
+                    if (matches && deliveryPersonVal &&
+                        row.dataset.deliveryPeople.indexOf(deliveryPersonVal) === -1) {
+                        matches = false;
+                    }
+
+                    if (matches && productVal &&
+                        row.dataset.product.indexOf(productVal) === -1) {
+                        matches = false;
+                    }
+
+                    if (matches && regionVal &&
+                        row.dataset.region.indexOf(regionVal) === -1) {
+                        matches = false;
+                    }
+
+                    if (matches && statusVal &&
+                        row.dataset.status !== statusVal) {
+                        matches = false;
+                    }
+
+                    if (matches && dateFromVal &&
+                        row.dataset.date < dateFromVal) {
+                        matches = false;
+                    }
+
+                    if (matches && dateToVal &&
+                        row.dataset.date > dateToVal) {
+                        matches = false;
+                    }
+
+                    if (matches && amountMinVal !== null) {
+                        var total = parseFloat(row.dataset.total);
+                        if (isNaN(total) || total < amountMinVal) {
+                            matches = false;
+                        }
+                    }
+
+                    if (matches && amountMaxVal !== null) {
+                        var totalMax = parseFloat(row.dataset.total);
+                        if (isNaN(totalMax) || totalMax > amountMaxVal) {
+                            matches = false;
+                        }
+                    }
+
+                    row.style.display = matches ? '' : 'none';
+
+                    if (matches) {
+                        visibleCount++;
+                    }
+                });
+
+                if (noResultsEl) {
+                    noResultsEl.style.display = visibleCount === 0 ? '' : 'none';
+                }
+            }
+
+            [orderNumberInput, customerNameInput, productInput, regionInput,
+             deliveryPersonInput, dateFromInput, dateToInput,
+             amountMinInput, amountMaxInput].forEach(function (input) {
+                input.addEventListener('input', applyFilters);
+            });
+
+            statusSelect.addEventListener('change', applyFilters);
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function () {
+                    orderNumberInput.value = '';
+                    customerNameInput.value = '';
+                    productInput.value = '';
+                    regionInput.value = '';
+                    statusSelect.value = '';
+                    deliveryPersonInput.value = '';
+                    dateFromInput.value = '';
+                    dateToInput.value = '';
+                    amountMinInput.value = '';
+                    amountMaxInput.value = '';
+                    applyFilters();
+                });
+            }
+        })();
+    </script>
+}
