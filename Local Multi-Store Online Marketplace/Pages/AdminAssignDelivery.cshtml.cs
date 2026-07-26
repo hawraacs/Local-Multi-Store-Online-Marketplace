@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Managers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     public class AdminAssignDeliveryModel : PageModel
     {
         private readonly ApplicationDbContext _context;
+
+        // Stateless helper with no dependencies of its own, so it's
+        // instantiated directly here rather than requiring a DI
+        // registration change in Program.cs.
+        private readonly AreaProximityService _areaProximityService =
+            new AreaProximityService();
 
         public AdminAssignDeliveryModel(
             ApplicationDbContext context)
@@ -58,12 +65,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
 
             var order =
-                await _context.Orders
-                    .Include(o => o.Customer)
-                        .ThenInclude(c => c.User)
-                    .Include(o => o.DeliveryAssignment)
-                    .FirstOrDefaultAsync(o =>
-                        o.OrderID == orderId);
+    await _context.Orders
+        .Include(o => o.Customer)
+            .ThenInclude(c => c.User)
+        .Include(o => o.DeliveryAssignment)
+        .Include(o => o.Address)
+        .FirstOrDefaultAsync(o =>
+            o.OrderID == orderId);
 
             if (order == null)
             {
@@ -108,11 +116,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         d.DeliveryPersonID == deliveryPersonId &&
                         d.IsActive &&
                         d.Status == "Approved");
-
             if (deliveryPerson == null)
             {
                 TempData["Error"] =
                     "Delivery person is not approved or active.";
+
+                return RedirectToPage();
+            }
+
+            // ==========================================
+            // DELIVERY REGION VALIDATION
+            // ==========================================
+            if (order.Address == null ||
+                string.IsNullOrWhiteSpace(order.Address.Area))
+            {
+                TempData["Error"] =
+                    "Order delivery region is missing.";
 
                 return RedirectToPage();
             }
@@ -262,14 +281,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             // RequestedByUserID is NOT required here because
             // old records may still contain NULL.
             var deliveryPeople =
-                await _context.DeliveryPersons
-                    .AsNoTracking()
-                    .Where(d =>
-                        d.IsActive &&
-                        d.Status == "Approved")
-                    .OrderBy(d =>
-                        d.FullName)
-                    .ToListAsync();
+    await _context.DeliveryPersons
+        .AsNoTracking()
+        .Where(d =>
+            d.IsActive &&
+            d.Status == "Approved")
+        .OrderBy(d =>
+            d.FullName)
+        .ToListAsync();
 
             var orderEntities =
                 await _context.Orders
@@ -277,6 +296,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     .Include(o => o.Customer)
                         .ThenInclude(c => c.User)
                     .Include(o => o.DeliveryAssignment)
+                    .Include(o => o.OrderItems)
+                    .Include(o => o.Address)
                     .Where(o =>
                         o.DeliveryAssignment == null &&
                         (
@@ -318,44 +339,101 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         CustomerUserID =
                             order.Customer.UserID,
 
+                        // Reuses the User.FullName property already
+                        // loaded via the existing Customer -> User
+                        // Include above. No new query needed.
+                        CustomerName =
+                            string.IsNullOrWhiteSpace(
+                                order.Customer.User.FullName)
+                                ? "N/A"
+                                : order.Customer.User.FullName,
+
+                        // ==================================
+                        // PRODUCTS FOR THIS ORDER
+                        //
+                        // Same mapping already used by
+                        // CustomerOrders.cshtml.cs (OrderItems ->
+                        // ProductName / Quantity), reused here so the
+                        // admin can see what's in the order.
+                        // ==================================
+                        Products =
+                            order.OrderItems
+                                .OrderBy(orderItem =>
+                                    orderItem.OrderItemID)
+                                .Select(orderItem =>
+                                    new AdminAssignProductViewModel
+                                    {
+                                        ProductName =
+                                            orderItem.ProductName,
+
+                                        Quantity =
+                                            orderItem.Quantity
+                                    })
+                                .ToList(),
+
+                        // ==================================
+                        // DELIVERY REGION FOR THIS ORDER
+                        //
+                        // Reuses the same Order.Address.Area field
+                        // already used elsewhere (e.g. delivery order
+                        // details) to represent the delivery region.
+                        // ==================================
+                        DeliveryRegion =
+                            order.Address != null &&
+                            !string.IsNullOrWhiteSpace(order.Address.Area)
+                                ? order.Address.Area
+                                : "N/A",
+
                         // ==================================
                         // DELIVERY LIST FOR THIS ORDER
                         //
-                        // NULL RequestedByUserID:
-                        // show the delivery person.
+                        // Ranked Same Area (3) / Nearby (2) / Far (1)
+                        // via AreaProximityService, so the most
+                        // suitable delivery person shows first.
                         //
-                        // Different customer:
-                        // show the delivery person.
-                        //
-                        // Same original customer:
-                        // hide the delivery person.
+                        // Also keeps the existing rule that prevents a
+                        // customer from delivering their own order.
                         // ==================================
                         AvailableDeliveryPeople =
                             deliveryPeople
                                 .Where(delivery =>
                                     !delivery.RequestedByUserID.HasValue ||
-                                    delivery.RequestedByUserID.Value !=
-                                    order.Customer.UserID)
-                                .Select(delivery =>
+                                    delivery.RequestedByUserID.Value != order.Customer.UserID)
+                                .Select(delivery => new
+                                {
+                                    delivery,
+                                    priority = _areaProximityService.GetPriority(
+                                        order.Address?.Area,
+                                        delivery.Area)
+                                })
+                                .OrderByDescending(x => x.priority)
+                                .ThenBy(x => x.delivery.FullName)
+                                .Select(x =>
                                     new AdminAssignDeliveryPersonViewModel
                                     {
                                         DeliveryPersonID =
-                                            delivery.DeliveryPersonID,
+                                            x.delivery.DeliveryPersonID,
 
                                         RequestedByUserID =
-                                            delivery.RequestedByUserID,
+                                            x.delivery.RequestedByUserID,
 
                                         FullName =
-                                            delivery.FullName,
+                                            x.delivery.FullName,
 
                                         PhoneNumber =
-                                            delivery.PhoneNumber,
+                                            x.delivery.PhoneNumber,
 
                                         Area =
-                                            delivery.Area,
+                                            x.delivery.Area,
 
                                         VehicleType =
-                                            delivery.VehicleType
+                                            x.delivery.VehicleType,
+
+                                        AreaPriority =
+                                            x.priority,
+
+                                        AreaLabel =
+                                            _areaProximityService.GetLabel(x.priority)
                                     })
                                 .ToList()
                     })
@@ -397,10 +475,34 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public int CustomerUserID { get; set; }
 
+        public string CustomerName { get; set; }
+            = string.Empty;
+
+        public List<AdminAssignProductViewModel> Products { get; set; }
+            = new();
+
+        public string DeliveryRegion { get; set; }
+            = string.Empty;
+
         public List<AdminAssignDeliveryPersonViewModel>
             AvailableDeliveryPeople
         { get; set; }
             = new();
+    }
+
+    // ==========================================
+    // PRODUCT LINE VIEW MODEL
+    //
+    // Mirrors CustomerOrderProductViewModel in
+    // CustomerOrders.cshtml.cs (ProductName + Quantity),
+    // reused here for consistency.
+    // ==========================================
+    public class AdminAssignProductViewModel
+    {
+        public string ProductName { get; set; }
+            = string.Empty;
+
+        public int Quantity { get; set; }
     }
 
     // ==========================================
@@ -422,6 +524,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             = string.Empty;
 
         public string VehicleType { get; set; }
+            = string.Empty;
+
+        public int AreaPriority { get; set; }
+
+        public string AreaLabel { get; set; }
             = string.Empty;
     }
 }
