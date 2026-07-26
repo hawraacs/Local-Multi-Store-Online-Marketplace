@@ -9,21 +9,13 @@
         ? Model.Notifications.Count
         : 0;
 
-    var totalAssignments = Model.Assignments != null
-        ? Model.Assignments.Count
-        : 0;
+    var totalAssignments = Model.TotalAssignmentsCount;
 
-    var assignedCount = Model.Assignments != null
-        ? Model.Assignments.Count(a => a.AssignmentStatus == "Assigned")
-        : 0;
+    var assignedCount = Model.AssignedAssignmentsCount;
 
-    var outForDeliveryCount = Model.Assignments != null
-        ? Model.Assignments.Count(a => a.AssignmentStatus == "OutForDelivery")
-        : 0;
+    var outForDeliveryCount = Model.OutForDeliveryAssignmentsCount;
 
-    var deliveredCount = Model.Assignments != null
-        ? Model.Assignments.Count(a => a.AssignmentStatus == "Delivered")
-        : 0;
+    var deliveredCount = Model.DeliveredAssignmentsCount;
 }
 
 <!DOCTYPE html>
@@ -1703,14 +1695,21 @@
         document.addEventListener(
             "DOMContentLoaded",
             function () {
-                updateMyLocation();
-
-                window.setInterval(
-                    updateMyLocation,
-                    1000);
+                startWatchingMyLocation();
             });
 
-        function updateMyLocation() {
+        window.addEventListener(
+            "beforeunload",
+            function () {
+                stopWatchingMyLocation();
+            });
+
+        let myLocationWatchId = null;
+        let isSendingLocationUpdate = false;
+        let lastLocationSendAttempt = 0;
+        const LOCATION_SEND_MIN_INTERVAL_MS = 1000;
+
+        function startWatchingMyLocation() {
             const status =
                 document.getElementById(
                     "locationStatus");
@@ -1735,127 +1734,164 @@
             status.innerText =
                 "Getting GPS location...";
 
-            navigator.geolocation.getCurrentPosition(
-                async function (position) {
-                    const lat =
-                        position.coords.latitude;
+            myLocationWatchId =
+                navigator.geolocation.watchPosition(
+                    function (position) {
+                        handleLocationUpdate(position, status);
+                    },
 
-                    const lng =
-                        position.coords.longitude;
+                    function (error) {
+                        handleLocationError(error, status);
+                    },
 
-                    const accuracy =
-                        position.coords.accuracy;
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 500
+                    });
+        }
 
-                    try {
-                        const response =
-                            await fetch(
-                                "/api/delivery-tracking/update-location",
-                                {
-                                    method: "POST",
+        function stopWatchingMyLocation() {
+            if (myLocationWatchId !== null &&
+                navigator.geolocation) {
 
-                                    credentials:
-                                        "same-origin",
+                navigator.geolocation.clearWatch(
+                    myLocationWatchId);
 
-                                    headers: {
-                                        "Content-Type":
-                                            "application/json"
-                                    },
+                myLocationWatchId = null;
+            }
+        }
 
-                                    body:
-                                        JSON.stringify({
-                                            latitude: lat,
-                                            longitude: lng
-                                        })
-                                });
+        async function handleLocationUpdate(position, status) {
+            const now = Date.now();
 
-                        let data = null;
+            if (isSendingLocationUpdate) {
+                return;
+            }
 
-                        try {
-                            data =
-                                await response.json();
-                        }
-                        catch {
-                            data = null;
-                        }
+            if (now - lastLocationSendAttempt <
+                LOCATION_SEND_MIN_INTERVAL_MS) {
+                return;
+            }
 
-                        if (!response.ok) {
-                            status.className =
-                                "location-status gps-bad";
+            lastLocationSendAttempt = now;
+            isSendingLocationUpdate = true;
 
-                            status.innerText =
-                                data?.message ||
-                                "Could not update location. Please login as approved delivery staff.";
+            const lat =
+                position.coords.latitude;
 
-                            return;
-                        }
+            const lng =
+                position.coords.longitude;
 
-                        if (data &&
-                            data.success) {
+            const accuracy =
+                position.coords.accuracy;
 
-                            status.className =
-                                "location-status gps-good";
+            try {
+                const response =
+                    await fetch(
+                        "/api/delivery-tracking/update-location",
+                        {
+                            method: "POST",
 
-                            status.innerText =
-                                "Location updated: " +
-                                lat.toFixed(6) +
-                                ", " +
-                                lng.toFixed(6) +
-                                " | Accuracy: " +
-                                Math.round(accuracy) +
-                                "m | Time: " +
-                                (data.updatedAt || "now");
-                        }
-                        else {
-                            status.className =
-                                "location-status gps-bad";
+                            credentials:
+                                "same-origin",
 
-                            status.innerText =
-                                data?.message ||
-                                "Could not update location.";
-                        }
-                    }
-                    catch {
-                        status.className =
-                            "location-status gps-bad";
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
 
-                        status.innerText =
-                            "Could not update location. Check your connection.";
-                    }
-                },
+                            body:
+                                JSON.stringify({
+                                    latitude: lat,
+                                    longitude: lng
+                                })
+                        });
 
-                function (error) {
+                let data = null;
+
+                try {
+                    data =
+                        await response.json();
+                }
+                catch {
+                    data = null;
+                }
+
+                if (!response.ok) {
                     status.className =
                         "location-status gps-bad";
 
-                    if (error.code ===
-                        error.PERMISSION_DENIED) {
+                    status.innerText =
+                        data?.message ||
+                        "Could not update location. Please login as approved delivery staff.";
 
-                        status.innerText =
-                            "GPS permission denied. Click the lock icon near the URL and allow Location.";
-                    }
-                    else if (error.code ===
-                             error.POSITION_UNAVAILABLE) {
+                    return;
+                }
 
-                        status.innerText =
-                            "GPS position unavailable. Enable device location and try again.";
-                    }
-                    else if (error.code ===
-                             error.TIMEOUT) {
+                if (data &&
+                    data.success) {
 
-                        status.innerText =
-                            "GPS timeout. Trying again in 1 second.";
-                    }
-                    else {
-                        status.innerText =
-                            "GPS is off. Location update temporarily unavailable.";
-                    }
-                },
+                    status.className =
+                        "location-status gps-good";
 
-                {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 500
-                });
+                    status.innerText =
+                        "Location updated: " +
+                        lat.toFixed(6) +
+                        ", " +
+                        lng.toFixed(6) +
+                        " | Accuracy: " +
+                        Math.round(accuracy) +
+                        "m | Time: " +
+                        (data.updatedAt || "now");
+                }
+                else {
+                    status.className =
+                        "location-status gps-bad";
+
+                    status.innerText =
+                        data?.message ||
+                        "Could not update location.";
+                }
+            }
+            catch {
+                status.className =
+                    "location-status gps-bad";
+
+                status.innerText =
+                    "Could not update location. Check your connection.";
+            }
+            finally {
+                isSendingLocationUpdate = false;
+            }
+        }
+
+        function handleLocationError(error, status) {
+            status.className =
+                "location-status gps-bad";
+
+            if (error.code ===
+                error.PERMISSION_DENIED) {
+
+                status.innerText =
+                    "GPS permission denied. Click the lock icon near the URL and allow Location.";
+            }
+            else if (error.code ===
+                     error.POSITION_UNAVAILABLE) {
+
+                status.innerText =
+                    "GPS position unavailable. Enable device location and try again.";
+            }
+            else if (error.code ===
+                     error.TIMEOUT) {
+
+                status.innerText =
+                    "GPS timeout. Retrying automatically...";
+            }
+            else {
+                status.innerText =
+                    "GPS is off. Location update temporarily unavailable.";
+            }
         }
     </script>
 

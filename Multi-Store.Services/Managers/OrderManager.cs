@@ -235,10 +235,35 @@ namespace Multi_Store.Services.Managers
             if (order == null)
                 throw new Exception("Order not found");
 
-            if (order.Status == "Shipped" || order.Status == "Delivered")
-                throw new Exception("Cannot cancel shipped/delivered order");
+            // Now also blocks "Out for Delivery" (previously only Shipped/Delivered),
+            // matching AdminOrders.OnPostCancelAsync's stricter rule.
+            if (order.Status == "Shipped" ||
+                order.Status == "Delivered" ||
+                order.Status == "Out for Delivery" ||
+                order.Status == "OutForDelivery")
+                throw new Exception("Cannot cancel an order that is out for delivery or delivered");
+
+            // Blocks cancelling an already-paid order without a refund first,
+            // matching AdminOrders.OnPostCancelAsync's rule. Payment flow itself
+            // (creating/confirming/refunding payments) is untouched — this only reads.
+            var hasPaidPayment =
+                string.Equals(order.PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase) ||
+                (order.Payments != null && order.Payments.Any(p =>
+                    string.Equals(p.Status, "Paid", StringComparison.OrdinalIgnoreCase)));
+
+            if (hasPaidPayment)
+                throw new Exception("This order has already been paid. Please request a refund instead of cancelling.");
 
             var oldStatus = order.Status;
+
+            // Cascade cancellation to any active delivery assignment so it is not
+            // left dangling/active after the order itself is cancelled.
+            if (order.DeliveryAssignment != null &&
+                !string.Equals(order.DeliveryAssignment.Status, "Delivered", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(order.DeliveryAssignment.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
+            {
+                order.DeliveryAssignment.Status = "Cancelled";
+            }
 
             order.Status = "Cancelled";
             order.CancellationReason = reason;
