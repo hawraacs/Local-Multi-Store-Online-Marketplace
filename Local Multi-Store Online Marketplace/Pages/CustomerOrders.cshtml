@@ -23,7 +23,7 @@
                 --border-color: #ece8f6;
                 --text-primary: #1e1b2e;
                 --text-secondary: #6b6478;
-                /* Purple / Indigo palette */
+                /* Purple / Indigo palette — same tokens as the Cart page */
                 --accent-color: #6d28d9;
                 --accent-hover: #5b21b6;
                 --accent-light: #f3effe;
@@ -53,10 +53,10 @@
             }
 
             /* ============================================================
-                       BOTTOM NAV — now rendered by the shared _CustomerBottomNav
-                       partial. Styles below match Customer1/Chat/Feed/Cart exactly
-                       (same class names), so the partial renders identically here.
-                       ============================================================ */
+                                   BOTTOM NAV — rendered by the shared _CustomerBottomNav
+                                   partial. Styles below match Customer1/Chat/Feed/Cart
+                                   exactly (same class names).
+                                   ============================================================ */
             .mobile-bottom-nav {
                 display: flex !important;
                 position: fixed;
@@ -146,80 +146,201 @@
                     box-sizing: content-box;
                 }
 
-            /* PAGE CONTENT */
+            /* PAGE CONTENT — header treatment matches the Cart page's
+                           .cart-header (Playfair title + secondary subtitle). */
             .orders-page {
                 min-height: 100vh;
-                padding: 40px 16px;
+                padding: 32px 16px 20px;
             }
+
+            .orders-header {
+                text-align: center;
+                margin-bottom: 20px;
+                max-width: 1250px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+                .orders-header h2 {
+                    font-family: 'Playfair Display', Georgia, serif;
+                    font-size: 34px;
+                    font-weight: 800;
+                    margin: 0 0 8px;
+                    color: var(--text-primary);
+                }
+
+                .orders-header p {
+                    margin: 0;
+                    color: var(--text-secondary);
+                    font-size: 15px;
+                    font-weight: 500;
+                }
 
             .orders-box {
                 max-width: 1250px;
                 margin: auto;
-                padding: 30px;
+                padding: 28px;
                 background: var(--card-bg);
                 border: 1px solid var(--border-color);
-                border-radius: 20px;
-                box-shadow: var(--shadow-md);
+                border-radius: 24px;
+                box-shadow: var(--shadow-lg);
             }
 
-            h2 {
-                font-family: 'Playfair Display', Georgia, serif;
-                font-size: 34px;
-                font-weight: 800;
-                margin-top: 0;
-                margin-bottom: 30px;
-                color: var(--text-primary);
-                text-align: center;
-            }
-
-            /* TABLES */
+            /* TABLES — a single, predictable grid: fixed column
+                           widths (via <colgroup>), a sticky header so long order
+                           histories stay readable, top-aligned cells so rows of
+                           different heights (multi-product orders) still line up
+                           cleanly, and subtle zebra striping to help the eye track
+                           across a row. */
             .table-wrapper {
                 width: 100%;
-                overflow-x: auto;
-                border-radius: 12px;
+                overflow: auto;
+                max-height: 640px;
+                border-radius: 16px;
                 border: 1px solid var(--border-color);
             }
 
             table {
                 width: 100%;
-                min-width: 1150px;
-                border-collapse: collapse;
+                min-width: 1320px;
+                border-collapse: separate;
+                border-spacing: 0;
+                table-layout: fixed;
+            }
+
+            thead tr {
+                position: sticky;
+                top: 0;
+                z-index: 2;
+                background: var(--accent-gradient);
             }
 
             th {
-                padding: 16px;
-                background: var(--text-primary);
+                padding: 24px 12px;
+                background: transparent;
                 color: white;
-                font-size: 13px;
+                font-size: 12px;
                 font-weight: 700;
                 text-transform: uppercase;
-                letter-spacing: 0.5px;
+                letter-spacing: 0.6px;
                 text-align: left;
                 vertical-align: middle;
+                white-space: normal;
+                line-height: 1.35;
+                box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.15);
             }
+
+                th.col-status,
+                th.col-pay-status,
+                th.col-total,
+                th.col-tracking,
+                th.col-invoice {
+                    text-align: center;
+                }
+
+                th.col-total {
+                    text-align: right;
+                }
 
             td {
                 padding: 16px;
                 border-bottom: 1px solid var(--border-color);
                 color: var(--text-secondary);
-                font-size: 14px;
-                vertical-align: middle;
+                font-size: 13.5px;
+                vertical-align: top;
+            }
+
+            tbody tr:last-child td {
+                border-bottom: none;
+            }
+
+            tbody tr:nth-child(even) {
+                background: #fcfbff;
             }
 
             tbody tr:hover {
                 background: var(--accent-light);
             }
 
+            /* Column widths — keeps every row aligned to the same grid
+                           regardless of content length. Products is deliberately
+                           narrower now; the space goes to Payment Method/Status so
+                           values like "Cash On Delivery" have room to breathe. */
+            .col-order {
+                width: 11%;
+            }
+
+            .col-store {
+                width: 9%;
+            }
+
+            .col-products {
+                width: 13%;
+            }
+
+            .col-date {
+                width: 9%;
+            }
+
+            .col-status {
+                width: 9%;
+            }
+
+            .col-pay-method {
+                width: 12%;
+            }
+
+            .col-pay-status {
+                width: 11%;
+            }
+
+            .col-total {
+                width: 9%;
+            }
+
+            .col-tracking {
+                width: 9%;
+            }
+
+            .col-invoice {
+                width: 8%;
+            }
+
             .order-number {
-                min-width: 150px;
+                min-width: 120px;
                 color: var(--accent-color);
                 font-weight: 800;
+                font-size: 14px;
                 word-break: break-word;
             }
 
+            .store-cell {
+                min-width: 120px;
+                color: var(--text-primary);
+                font-weight: 700;
+                font-size: 13px;
+            }
+
+                .store-cell i {
+                    color: var(--accent-color);
+                    margin-right: 6px;
+                }
+
             .products-cell {
-                min-width: 190px;
-                max-width: 250px;
+                min-width: 150px;
+            }
+
+            .date-cell {
+                white-space: nowrap;
+                font-weight: 600;
+                color: var(--text-secondary);
+            }
+
+            .pay-method-cell {
+                min-width: 115px;
+                font-weight: 600;
+                color: var(--text-primary);
+                word-break: break-word;
             }
 
             .product-line {
@@ -262,57 +383,128 @@
                 font-weight: 600;
             }
 
-            /* BADGES */
+            /* STATUS CELL */
+            .status-cell {
+                min-width: 100px;
+                text-align: center;
+            }
+
+            /* BADGES — one consistent shape (pill) across the page,
+                           but the COLOR now carries meaning: amber = waiting,
+                           blue = in progress, purple = out for delivery,
+                           green = completed/paid, red = cancelled/unpaid. This
+                           keeps the palette purposeful instead of every status
+                           looking the same. */
             .status-badge {
-                display: inline-block;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
                 padding: 6px 12px;
-                background: #fff7ed;
-                color: #c2410c;
-                border: 1px solid #ffedd5;
                 border-radius: 999px;
-                font-size: 12px;
+                font-size: 11.5px;
                 font-weight: 800;
                 white-space: nowrap;
+                background: #f3effe;
+                color: var(--accent-color);
+                border: 1px solid #e4d9fb;
             }
+
+                .status-badge.status-pending {
+                    background: #fff7ed;
+                    color: #c2410c;
+                    border-color: #fed7aa;
+                }
+
+                .status-badge.status-processing {
+                    background: #eff6ff;
+                    color: #1d4ed8;
+                    border-color: #bfdbfe;
+                }
+
+                .status-badge.status-outfordelivery {
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                    border-color: #e4d9fb;
+                }
+
+                .status-badge.status-delivered {
+                    background: #dcfce7;
+                    color: #166534;
+                    border-color: #86efac;
+                }
+
+                .status-badge.status-cancelled {
+                    background: #fef2f2;
+                    color: var(--error-color);
+                    border-color: #fee2e2;
+                }
 
             .paid-badge {
                 display: inline-block;
-                padding: 6px 12px;
-                background: #ecfdf5;
-                color: var(--success-color);
-                border: 1px solid #d1fae5;
+                padding: 5px 11px;
+                background: #dcfce7;
+                color: #166534;
+                border: 1px solid #86efac;
                 border-radius: 999px;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: 800;
                 white-space: nowrap;
             }
 
             .pending-badge {
                 display: inline-block;
-                padding: 6px 12px;
+                padding: 5px 11px;
                 background: #fef2f2;
                 color: var(--error-color);
                 border: 1px solid #fee2e2;
                 border-radius: 999px;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: 800;
                 white-space: nowrap;
             }
 
-            /* ACTIONS */
+            .pay-status-cell {
+                min-width: 110px;
+                text-align: center;
+            }
+
+            /* TOTAL CELL — right-aligned so figures line up like a
+                           ledger, with the order's total emphasized. */
+            .total-cell {
+                min-width: 90px;
+                text-align: right;
+            }
+
+            .total-amount {
+                display: block;
+                color: var(--text-primary);
+                font-weight: 800;
+                font-size: 15px;
+                white-space: nowrap;
+            }
+
+            /* TRACKING / INVOICE CELLS — centered single-action
+                           columns matching the Cart page's pill buttons. */
+            .tracking-cell,
+            .invoice-cell {
+                min-width: 130px;
+                text-align: center;
+            }
+
             .track-btn,
             .invoice-btn {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                margin-bottom: 5px;
-                padding: 8px 14px;
+                gap: 6px;
+                width: 100%;
+                padding: 9px 14px;
                 background: var(--accent-light);
                 color: var(--accent-color);
                 border: 1px solid var(--border-color);
                 border-radius: 50px;
                 text-decoration: none;
-                font-size: 13px;
+                font-size: 12.5px;
                 font-weight: 700;
                 white-space: nowrap;
                 transition: all 0.2s ease;
@@ -322,34 +514,42 @@
                 background: var(--accent-gradient);
                 color: white;
                 border: none;
-                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.15);
+                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.2);
             }
 
             .track-btn:hover {
                 background: var(--accent-color);
                 color: white;
                 border-color: var(--accent-color);
+                transform: translateY(-1px);
             }
 
             .invoice-btn:hover {
                 opacity: 0.95;
-                box-shadow: 0 6px 14px rgba(109, 40, 217, 0.25);
+                box-shadow: 0 6px 14px rgba(109, 40, 217, 0.3);
+                transform: translateY(-1px);
             }
 
             .disabled-track {
+                display: block;
                 color: var(--text-secondary);
-                font-size: 12px;
+                font-size: 11.5px;
                 font-weight: 700;
                 line-height: 1.4;
+                text-align: center;
             }
 
-            /* EMPTY STATES */
+            /* EMPTY STATES — matches Cart's .empty-cart card exactly. */
             .empty-box {
+                max-width: 700px;
+                margin: 40px auto 0;
                 padding: 60px 40px;
                 color: var(--text-secondary);
                 text-align: center;
                 border: 2px dashed #ded4f5;
                 border-radius: 20px;
+                background: var(--card-bg);
+                box-shadow: var(--shadow-sm);
             }
 
                 .empty-box h3 {
@@ -410,7 +610,11 @@
                 }
 
                 table {
-                    min-width: 1150px;
+                    min-width: 1320px;
+                }
+
+                .table-wrapper {
+                    max-height: 520px;
                 }
             }
     </style>
@@ -421,54 +625,75 @@
     <partial name="_CustomerBottomNav" />
 
     <div class="orders-page">
-        <div class="orders-box">
 
-            <h2>My Orders</h2>
+        <div class="orders-header">
+            <h2>📦 My Orders</h2>
 
-            @if (TempData["Success"] != null)
-            {
-                <div class="message success-message">
-                    @TempData["Success"]
-                </div>
-            }
+            <p>
+                Track deliveries, payments, and invoices for
+                everything you've ordered.
+            </p>
+        </div>
 
-            @if (TempData["Error"] != null)
-            {
-                <div class="message error-message">
-                    @TempData["Error"]
-                </div>
-            }
+        @if (TempData["Success"] != null)
+        {
+            <div class="message success-message">
+                @TempData["Success"]
+            </div>
+        }
 
-            @if (Model.Orders == null || !Model.Orders.Any())
-            {
-                <div class="empty-box">
-                    <h3>No orders yet</h3>
+        @if (TempData["Error"] != null)
+        {
+            <div class="message error-message">
+                @TempData["Error"]
+            </div>
+        }
 
-                    <p>
-                        Your orders will appear here after checkout.
-                    </p>
+        @if (Model.Orders == null || !Model.Orders.Any())
+        {
+            <div class="empty-box">
+                <h3>No orders yet</h3>
 
-                    <a href="/CustomerProducts"
-                       class="shop-link">
-                        Start Shopping
-                    </a>
-                </div>
-            }
-            else
-            {
+                <p>
+                    Your orders will appear here after checkout.
+                </p>
+
+                <a href="/CustomerProducts"
+                   class="shop-link">
+                    Start Shopping
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="orders-box">
                 <div class="table-wrapper">
                     <table>
+                        <colgroup>
+                            <col class="col-order" />
+                            <col class="col-store" />
+                            <col class="col-products" />
+                            <col class="col-date" />
+                            <col class="col-status" />
+                            <col class="col-pay-method" />
+                            <col class="col-pay-status" />
+                            <col class="col-total" />
+                            <col class="col-tracking" />
+                            <col class="col-invoice" />
+                        </colgroup>
+
                         <thead>
                             <tr>
-                                <th>Order Number</th>
-                                <th>Products</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Payment Method</th>
-                                <th>Payment Status</th>
-                                <th>Total</th>
-                                <th>Tracking</th>
-                                <th>Invoice</th>
+                                <th class="col-order">Order Number</th>
+                                <th class="col-store">Store</th>
+                                <th class="col-products">Products</th>
+                                <th class="col-date">Date</th>
+                                <th class="col-status">Status</th>
+                                <th class="col-pay-method">Payment Method</th>
+                                <th class="col-pay-status">Payment Status</th>
+                                <th class="col-total">Total</th>
+                                <th class="col-tracking">Tracking</th>
+                                <th class="col-invoice">Invoice</th>
                             </tr>
                         </thead>
 
@@ -483,9 +708,27 @@
                                 ? "paid-badge"
                                 : "pending-badge";
 
+                                var statusClass = (order.Status?.Trim().ToLowerInvariant()) switch
+                                {
+                                    "pending" => "status-pending",
+                                    "processing" => "status-processing",
+                                    "confirmed" => "status-processing",
+                                    "assigned" => "status-processing",
+                                    "out for delivery" => "status-outfordelivery",
+                                    "delivered" => "status-delivered",
+                                    "cancelled" => "status-cancelled",
+                                    "failed" => "status-cancelled",
+                                    "refunded" => "status-cancelled",
+                                    _ => ""
+                                };
+
                                 <tr>
                                     <td class="order-number">
                                         @order.OrderNumber
+                                    </td>
+
+                                    <td class="store-cell">
+                                        <i class="fa-solid fa-store"></i>@(string.IsNullOrWhiteSpace(order.StoreName) ? "—" : order.StoreName)
                                     </td>
 
                                     <td class="products-cell">
@@ -513,35 +756,38 @@
                                         }
                                     </td>
 
-                                    <td>
+                                    <td class="date-cell">
                                         @order.OrderDate.ToString("dd MMM yyyy")
                                     </td>
 
-                                    <td>
-                                        <span class="status-badge">
+                                    <td class="status-cell">
+                                        <span class="status-badge @statusClass">
                                             @order.Status
                                         </span>
                                     </td>
 
-                                    <td>
+                                    <td class="pay-method-cell">
                                         @order.PaymentMethod
                                     </td>
 
-                                    <td>
+                                    <td class="pay-status-cell">
                                         <span class="@paymentClass">
                                             @order.PaymentStatus
                                         </span>
                                     </td>
 
-                                    <td>
-                                        $@order.TotalAmount.ToString("N2")
+                                    <td class="total-cell">
+                                        <span class="total-amount">
+                                            $@order.TotalAmount.ToString("N2")
+                                        </span>
                                     </td>
 
-                                    <td>
+                                    <td class="tracking-cell">
                                         @if (order.CanTrack)
                                         {
                                             <a class="track-btn"
                                                href="/TrackDelivery?OrderId=@order.OrderID">
+                                                <i class="fa-solid fa-truck"></i>
                                                 Track Delivery
                                             </a>
                                         }
@@ -553,11 +799,12 @@
                                         }
                                     </td>
 
-                                    <td>
+                                    <td class="invoice-cell">
                                         @if (order.CanViewInvoice)
                                         {
                                             <a class="invoice-btn"
                                                href="/Invoice?orderId=@order.OrderID">
+                                                <i class="fa-solid fa-file-invoice"></i>
                                                 View Invoice
                                             </a>
                                         }
@@ -573,8 +820,8 @@
                         </tbody>
                     </table>
                 </div>
-            }
-        </div>
+            </div>
+        }
     </div>
 </body>
 </html>
