@@ -1263,17 +1263,7 @@
     }
     else if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
-        <!--
-            BUGFIX: previously built via
-              toast.innerHTML = '...' + @Html.Raw(JsonEncodedText.Encode(...)) + '...'
-            — JSON-escaping only escapes double quotes, not single quotes, so a
-            message containing an apostrophe (plausible from Stripe error text,
-            e.g. "Your card's security code is incorrect.") would break out of the
-            single-quoted JS string literal. It also isn't HTML-escaping, so this
-            was assigning unescaped content via innerHTML. Rebuilt using the same
-            safe data-attribute + textContent pattern already used a few dozen
-            lines above for the same concept (see #serverPaymentError).
-        -->
+      
         <div id="serverPaymentErrorFallback" data-message="@Model.ErrorMessage" style="display:none;"></div>
         <script>
             (function() {
