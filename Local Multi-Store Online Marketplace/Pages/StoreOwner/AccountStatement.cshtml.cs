@@ -48,15 +48,31 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public StatementSummary Summary { get; set; } = new();
         public List<StatementLine> Lines { get; set; } = new();
 
+        // NEW — exposed to the view so the "Renew Subscription" button shows the
+        // real configured amount instead of a hardcoded "$20" label that could
+        // silently drift out of sync with the actual charge (see bugfix note in
+        // OnPostRenewAsync below).
+        public decimal MonthlySubscriptionFee { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
-            var store = await GetStoreAsync();
-            if (store == null)
-                return RedirectToPage("/StoreOwner/Dashboard");
+            try
+            {
+                var store = await GetStoreAsync();
+                if (store == null)
+                    return RedirectToPage("/StoreOwner/Dashboard");
 
-            Store = store;
-            await BuildStatementAsync(store);
-            return Page();
+                Store = store;
+                MonthlySubscriptionFee = GetMonthlyFee();
+                await BuildStatementAsync(store);
+                return Page();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading Account Statement.");
+                TempData["ErrorMessage"] = "Something went wrong while loading your account statement. Please try again.";
+                return RedirectToPage("/StoreOwner/Dashboard");
+            }
         }
 
         // =============================================================
@@ -68,20 +84,45 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             if (store == null)
                 return RedirectToPage("/StoreOwner/Dashboard");
 
+            // BUGFIX: previously ChargeSavedCardAsync was called with a hardcoded
+            // 20.00m, while GetOrCreatePendingSubscriptionPaymentAsync (the manual
+            // fallback below) correctly read the fee from configuration. If that
+            // config value was ever changed, the two payment paths would charge
+            // DIFFERENT amounts for the same renewal depending on which one fired.
+            // Read once here and used consistently for both paths.
+            var monthlyFee = GetMonthlyFee();
+
             // If we have saved card, attempt auto-charge
             if (!string.IsNullOrEmpty(store.StripeCustomerId) && !string.IsNullOrEmpty(store.StripePaymentMethodId))
             {
-                var success = await ChargeSavedCardAsync(store, 20.00m);
-                if (success)
+                var result = await ChargeSavedCardAsync(store, monthlyFee);
+
+                switch (result)
                 {
-                    TempData["Success"] = "Subscription renewed automatically using your saved card.";
-                    return RedirectToPage();
+                    case ChargeResult.Succeeded:
+                        TempData["Success"] = "Subscription renewed automatically using your saved card.";
+                        return RedirectToPage();
+
+                    case ChargeResult.ErrorAfterCharge:
+                        // BUGFIX: this outcome didn't exist before. Previously, any
+                        // non-StripeException thrown after a successful charge (e.g.
+                        // a DB failure while recording the payment) propagated as an
+                        // unhandled exception — or, if it had been caught generically,
+                        // would have fallen through below and created a SECOND pending
+                        // payment for a renewal the store owner was already charged for.
+                        TempData["ErrorMessage"] =
+                            "Your payment went through, but we couldn't finish recording the renewal. " +
+                            "Please contact support — you will not be charged again.";
+                        return RedirectToPage();
+
+                    case ChargeResult.Declined:
+                        // fall through to manual payment
+                        break;
                 }
-                // fall through to manual payment
             }
 
             // Manual: create pending payment and redirect to payment page
-            var pendingPayment = await GetOrCreatePendingSubscriptionPaymentAsync(store.StoreID);
+            var pendingPayment = await GetOrCreatePendingSubscriptionPaymentAsync(store.StoreID, monthlyFee);
             if (pendingPayment == null)
             {
                 TempData["ErrorMessage"] = "Unable to create payment request. Please try again.";
@@ -99,8 +140,24 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         // Helpers
         // =============================================================
 
-        private async Task<bool> ChargeSavedCardAsync(Store store, decimal amount)
+        private decimal GetMonthlyFee() =>
+            _configuration.GetValue<decimal>("StoreSettings:MonthlySubscriptionFee", 20.00m);
+
+        private enum ChargeResult
         {
+            Succeeded,
+            Declined,
+            // BUGFIX: represents "Stripe charged the card successfully, but our own
+            // follow-up processing failed" — previously indistinguishable from a
+            // plain decline, which is a materially different (and much more urgent)
+            // situation: the customer has already paid.
+            ErrorAfterCharge
+        }
+
+        private async Task<ChargeResult> ChargeSavedCardAsync(Store store, decimal amount)
+        {
+            PaymentIntent intent;
+
             try
             {
                 StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
@@ -115,50 +172,71 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     Confirm = true,
                 };
                 var service = new PaymentIntentService();
-                var intent = await service.CreateAsync(options);
+                intent = await service.CreateAsync(options);
 
-                if (intent.Status == "succeeded")
+                if (intent.Status != "succeeded")
                 {
-                    // Record payment and extend subscription
-                    await using var transaction = await _context.Database.BeginTransactionAsync();
-                    try
-                    {
-                        var transferId = intent.Id;
-
-                        DateTime newExpiry = DateTime.UtcNow.AddMonths(1);
-                        if (store.SubscriptionExpiryDate.HasValue && store.SubscriptionExpiryDate.Value > DateTime.UtcNow)
-                            newExpiry = store.SubscriptionExpiryDate.Value.AddMonths(1);
-
-                        store.SubscriptionStatus = "Active";
-                        store.SubscriptionExpiryDate = newExpiry;
-                        store.LastPaymentDate = DateTime.UtcNow;
-                        store.LastPaymentAmount = amount;
-
-                        var subscriptionPayment = new SubscriptionPayment
-                        {
-                            StoreId = store.StoreID,
-                            Amount = amount,
-                            PaymentDate = DateTime.UtcNow,
-                            Reference = $"Auto-renewal - {transferId}"
-                        };
-                        _context.SubscriptionPayments.Add(subscriptionPayment);
-
-                        await _context.SaveChangesAsync();
-                        await transaction.CommitAsync();
-                        return true;
-                    }
-                    catch
-                    {
-                        await transaction.RollbackAsync();
-                        throw;
-                    }
+                    return ChargeResult.Declined;
                 }
-                return false;
             }
             catch (StripeException ex)
             {
                 _logger.LogError(ex, "Auto-renewal failed for store {StoreId}.", store.StoreID);
-                return false;
+                return ChargeResult.Declined;
+            }
+
+            // BUGFIX: everything past this point runs AFTER Stripe has already
+            // confirmed the charge succeeded. Previously, the transaction below had
+            // its own try/catch that rolled back and re-threw on any failure — but
+            // that re-thrown exception (e.g. a DbUpdateException) is not a
+            // StripeException, so it was NOT caught by the outer catch above and
+            // propagated as an unhandled exception, with the store owner's card
+            // already charged. Now caught here specifically and logged at Critical
+            // severity, since "charged but not recorded" needs a person to notice
+            // and reconcile, not just a retry.
+            try
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    var transferId = intent.Id;
+
+                    DateTime newExpiry = DateTime.UtcNow.AddMonths(1);
+                    if (store.SubscriptionExpiryDate.HasValue && store.SubscriptionExpiryDate.Value > DateTime.UtcNow)
+                        newExpiry = store.SubscriptionExpiryDate.Value.AddMonths(1);
+
+                    store.SubscriptionStatus = "Active";
+                    store.SubscriptionExpiryDate = newExpiry;
+                    store.LastPaymentDate = DateTime.UtcNow;
+                    store.LastPaymentAmount = amount;
+
+                    var subscriptionPayment = new SubscriptionPayment
+                    {
+                        StoreId = store.StoreID,
+                        Amount = amount,
+                        PaymentDate = DateTime.UtcNow,
+                        Reference = $"Auto-renewal - {transferId}"
+                    };
+                    _context.SubscriptionPayments.Add(subscriptionPayment);
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return ChargeResult.Succeeded;
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(
+                    ex,
+                    "Store {StoreId} was charged via PaymentIntent {PaymentIntentId} for renewal but recording it failed afterward. Needs manual reconciliation.",
+                    store.StoreID,
+                    intent.Id);
+                return ChargeResult.ErrorAfterCharge;
             }
         }
 
@@ -192,7 +270,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     OrderNumber = g.First().Order.OrderNumber,
                     OrderDate = g.First().Order.OrderDate,
                     GrossAmount = g.Sum(oi => oi.TotalPrice),
-                    Commission = g.Sum(oi => oi.TotalPrice * 0.05m)
+                    // BUGFIX: previously hardcoded * 0.05m regardless of the store's
+                    // actual configured commission rate. AnalyticsModel (and the
+                    // Settings page) both treat CommissionRate as a real per-store,
+                    // admin-configurable value — a store whose real rate isn't
+                    // exactly 5% would see a DIFFERENT commission figure here than
+                    // on the Analytics page for the exact same orders.
+                    Commission = g.Sum(oi => oi.TotalPrice * (store.CommissionRate / 100m))
                 })
                 .ToList();
 
@@ -266,9 +350,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             Summary.OutstandingBalance = store.OutstandingBalance;
         }
 
-        private async Task<StorePayment?> GetOrCreatePendingSubscriptionPaymentAsync(int storeId)
+        private async Task<StorePayment?> GetOrCreatePendingSubscriptionPaymentAsync(int storeId, decimal monthlyFee)
         {
-            decimal monthlyFee = _configuration.GetValue<decimal>("StoreSettings:MonthlySubscriptionFee", 20.00m);
             const string description = "Monthly Subscription Fee";
 
             var existing = await _context.StorePayments

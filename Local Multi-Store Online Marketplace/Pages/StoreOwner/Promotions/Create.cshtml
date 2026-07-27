@@ -6,6 +6,7 @@
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
            ROOT VARIABLES — consistent brand palette
@@ -30,11 +31,14 @@
             --radius-md: 12px;
             --radius-lg: 20px;
             --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            /* Same display face used across the rest of the Store Owner section. */
+            --font-display: 'Fraunces', 'Georgia', serif;
         }
 
         .promotion-page {
             background: var(--bg-color);
             padding: 32px 0 60px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         .promotion-wrapper {
@@ -51,11 +55,12 @@
         }
 
         .page-heading h2 {
+            font-family: var(--font-display);
             font-size: 28px;
-            font-weight: 800;
+            font-weight: 600;
             color: var(--text-primary);
             margin-bottom: 4px;
-            letter-spacing: -0.4px;
+            letter-spacing: -0.2px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -130,8 +135,9 @@
 
         .promo-card-header h3 {
             margin: 0 0 4px;
-            font-size: 20px;
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-size: 21px;
+            font-weight: 600;
         }
 
         .promo-card-header p {
@@ -302,6 +308,22 @@
             font-weight: 500;
         }
 
+        /* BUGFIX (design/UX): previously every coupon field below the toggle was
+           always visible and enabled regardless of the checkbox — confusing, since
+           the checkbox's whole label implies it gates them. Wrapped in a
+           collapsible container the script below actually shows/hides. */
+        .coupon-fields {
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transition: max-height 0.3s ease, opacity 0.2s ease;
+        }
+
+            .coupon-fields.expanded {
+                max-height: 900px;
+                opacity: 1;
+            }
+
         .coupon-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -387,8 +409,9 @@
         }
 
         .side-card h4 {
-            font-size: 16px;
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-size: 17px;
+            font-weight: 600;
             color: var(--text-primary);
             margin-bottom: 14px;
             display: flex;
@@ -454,6 +477,10 @@
             letter-spacing: 0.5px;
         }
 
+            .preview-coupon.hidden {
+                display: none;
+            }
+
         .tips-list {
             padding-left: 20px;
             margin: 0;
@@ -464,6 +491,24 @@
 
         .tips-list li::marker {
             color: var(--accent-color);
+        }
+
+        /* ============================================================
+           ACCESSIBILITY
+           ============================================================ */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.001ms !important;
+            }
         }
 
         /* ============================================================
@@ -567,7 +612,7 @@
                 </div>
 
                 <div class="promo-card-body">
-                    <form method="post">
+                    <form method="post" id="promotionForm">
 
                         <!-- Section 1: Main Message -->
                         <div class="form-section">
@@ -623,7 +668,7 @@
 
                             <div class="coupon-box">
                                 <div class="coupon-toggle">
-                                    <input asp-for="Promotion.CreateCoupon" class="form-check-input" type="checkbox" />
+                                    <input asp-for="Promotion.CreateCoupon" class="form-check-input" type="checkbox" id="createCouponToggle" />
                                     <div>
                                         <label asp-for="Promotion.CreateCoupon" class="form-check-label">
                                             Create a coupon for this promotion
@@ -634,72 +679,78 @@
                                     </div>
                                 </div>
 
-                                <div class="form-group">
-                                    <label asp-for="Promotion.CouponCode" class="form-label">Coupon Code</label>
-                                    <input asp-for="Promotion.CouponCode"
-                                           class="form-control"
-                                           placeholder="e.g. SUMMER20, WELCOME10" />
-                                    <span asp-validation-for="Promotion.CouponCode" class="text-danger"></span>
-                                    <div class="help-text">
-                                        If left blank, a random code will be generated automatically.
-                                    </div>
-                                </div>
-
-                                <div class="coupon-grid">
+                                <!-- BUGFIX: everything below now lives inside .coupon-fields,
+                                     which the script toggles based on the checkbox above —
+                                     previously all of this was always visible/editable no
+                                     matter what the checkbox said. -->
+                                <div class="coupon-fields" id="couponFields">
                                     <div class="form-group">
-                                        <label asp-for="Promotion.DiscountType" class="form-label">
-                                            Discount Type <span class="required">*</span>
-                                        </label>
-                                        <select asp-for="Promotion.DiscountType" class="form-select">
-                                            <option value="Percentage">Percentage (%)</option>
-                                            <option value="Fixed">Fixed Amount ($)</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label asp-for="Promotion.DiscountValue" class="form-label">
-                                            Discount Value <span class="required">*</span>
-                                        </label>
-                                        <input asp-for="Promotion.DiscountValue"
+                                        <label asp-for="Promotion.CouponCode" class="form-label">Coupon Code</label>
+                                        <input asp-for="Promotion.CouponCode"
                                                class="form-control"
-                                               placeholder="e.g. 20" />
-                                        <span asp-validation-for="Promotion.DiscountValue" class="text-danger"></span>
+                                               placeholder="e.g. SUMMER20, WELCOME10" />
+                                        <span asp-validation-for="Promotion.CouponCode" class="text-danger"></span>
+                                        <div class="help-text">
+                                            If left blank, a random code will be generated automatically.
+                                        </div>
                                     </div>
 
-                                    <div class="form-group">
-                                        <label asp-for="Promotion.MinimumOrderAmount" class="form-label">Minimum Order</label>
-                                        <input asp-for="Promotion.MinimumOrderAmount"
-                                               class="form-control"
-                                               placeholder="e.g. 50" />
-                                        <span asp-validation-for="Promotion.MinimumOrderAmount" class="text-danger"></span>
-                                        <div class="help-text">Optional: Minimum cart total to use this coupon.</div>
-                                    </div>
+                                    <div class="coupon-grid">
+                                        <div class="form-group">
+                                            <label asp-for="Promotion.DiscountType" class="form-label">
+                                                Discount Type <span class="required">*</span>
+                                            </label>
+                                            <select asp-for="Promotion.DiscountType" class="form-select">
+                                                <option value="Percentage">Percentage (%)</option>
+                                                <option value="Fixed">Fixed Amount ($)</option>
+                                            </select>
+                                        </div>
 
-                                    <div class="form-group">
-                                        <label asp-for="Promotion.MaximumDiscountAmount" class="form-label">Max Discount</label>
-                                        <input asp-for="Promotion.MaximumDiscountAmount"
-                                               class="form-control"
-                                               placeholder="e.g. 50" />
-                                        <span asp-validation-for="Promotion.MaximumDiscountAmount" class="text-danger"></span>
-                                        <div class="help-text">Optional: Maximum discount amount in dollars.</div>
-                                    </div>
+                                        <div class="form-group">
+                                            <label asp-for="Promotion.DiscountValue" class="form-label">
+                                                Discount Value <span class="required">*</span>
+                                            </label>
+                                            <input asp-for="Promotion.DiscountValue"
+                                                   class="form-control"
+                                                   placeholder="e.g. 20" />
+                                            <span asp-validation-for="Promotion.DiscountValue" class="text-danger"></span>
+                                        </div>
 
-                                    <div class="form-group">
-                                        <label asp-for="Promotion.CouponEndDate" class="form-label">Coupon End Date</label>
-                                        <input asp-for="Promotion.CouponEndDate"
-                                               type="date"
-                                               class="form-control" />
-                                        <span asp-validation-for="Promotion.CouponEndDate" class="text-danger"></span>
-                                        <div class="help-text">Optional: When the coupon expires.</div>
-                                    </div>
+                                        <div class="form-group">
+                                            <label asp-for="Promotion.MinimumOrderAmount" class="form-label">Minimum Order</label>
+                                            <input asp-for="Promotion.MinimumOrderAmount"
+                                                   class="form-control"
+                                                   placeholder="e.g. 50" />
+                                            <span asp-validation-for="Promotion.MinimumOrderAmount" class="text-danger"></span>
+                                            <div class="help-text">Optional: Minimum cart total to use this coupon.</div>
+                                        </div>
 
-                                    <div class="form-group">
-                                        <label asp-for="Promotion.UsageLimit" class="form-label">Usage Limit</label>
-                                        <input asp-for="Promotion.UsageLimit"
-                                               class="form-control"
-                                               placeholder="e.g. 100" />
-                                        <span asp-validation-for="Promotion.UsageLimit" class="text-danger"></span>
-                                        <div class="help-text">Optional: Maximum number of times this coupon can be used.</div>
+                                        <div class="form-group">
+                                            <label asp-for="Promotion.MaximumDiscountAmount" class="form-label">Max Discount</label>
+                                            <input asp-for="Promotion.MaximumDiscountAmount"
+                                                   class="form-control"
+                                                   placeholder="e.g. 50" />
+                                            <span asp-validation-for="Promotion.MaximumDiscountAmount" class="text-danger"></span>
+                                            <div class="help-text">Optional: Maximum discount amount in dollars.</div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label asp-for="Promotion.CouponEndDate" class="form-label">Coupon End Date</label>
+                                            <input asp-for="Promotion.CouponEndDate"
+                                                   type="date"
+                                                   class="form-control" />
+                                            <span asp-validation-for="Promotion.CouponEndDate" class="text-danger"></span>
+                                            <div class="help-text">Optional: When the coupon expires.</div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label asp-for="Promotion.UsageLimit" class="form-label">Usage Limit</label>
+                                            <input asp-for="Promotion.UsageLimit"
+                                                   class="form-control"
+                                                   placeholder="e.g. 100" />
+                                            <span asp-validation-for="Promotion.UsageLimit" class="text-danger"></span>
+                                            <div class="help-text">Optional: Maximum number of times this coupon can be used.</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -755,6 +806,40 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function() {
+            /* ── Coupon fields show/hide ──────────────────────────────── */
+            const couponToggle = document.getElementById('createCouponToggle');
+            const couponFields = document.getElementById('couponFields');
+            const previewCoupon = document.getElementById('previewCoupon');
+
+            function syncCouponVisibility() {
+                const isOn = couponToggle.checked;
+                couponFields.classList.toggle('expanded', isOn);
+                // BUGFIX: the live preview always showed a coupon line even when
+                // "Create a coupon" was unchecked, implying the customer message
+                // would include one when it wouldn't.
+                if (previewCoupon) previewCoupon.classList.toggle('hidden', !isOn);
+            }
+
+            couponToggle.addEventListener('change', syncCouponVisibility);
+            // Sync on load too — e.g. after a validation error redisplays the page
+            // with CreateCoupon already checked from the previous submission.
+            syncCouponVisibility();
+
+            /* ── Confirm before sending ───────────────────────────────── */
+            // Sending a promotion messages every customer in the selected
+            // audience and can't be undone — worth one extra step before firing
+            // it off, the same way destructive actions elsewhere in this app do.
+            const form = document.getElementById('promotionForm');
+            form.addEventListener('submit', function(e) {
+                if (!confirm('Send this promotion now? It will go out immediately to the selected audience and cannot be recalled.')) {
+                    e.preventDefault();
+                }
+            });
+        })();
+    </script>
 
     <!-- Live preview update -->
     <script>

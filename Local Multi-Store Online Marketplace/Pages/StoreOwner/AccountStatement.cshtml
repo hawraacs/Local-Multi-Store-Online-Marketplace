@@ -6,6 +6,7 @@
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             /* -------- Brand colors (Purple / Indigo) -------- */
@@ -40,6 +41,8 @@
             --radius-md: 16px;
             --radius-lg: 22px;
             --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            /* Same display face used across the rest of the Store Owner section. */
+            --font-display: 'Fraunces', 'Georgia', serif;
         }
 
         body {
@@ -59,10 +62,11 @@
         }
 
         .statement-header h2 {
-            font-size: 24px;
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-size: 25px;
+            font-weight: 600;
             color: var(--text-primary);
-            letter-spacing: -0.4px;
+            letter-spacing: -0.2px;
             margin: 0 0 4px;
             display: flex;
             align-items: center;
@@ -300,8 +304,9 @@
         }
 
         .statement-table h4 {
-            font-size: 16px;
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-size: 17px;
+            font-weight: 600;
             color: var(--text-primary);
             margin: 0;
             display: flex;
@@ -408,6 +413,19 @@
                 display: block;
             }
 
+        /* ── Accessibility ── */
+        a:focus-visible,
+        button:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.001ms !important;
+            }
+        }
+
         @@media (max-width: 768px) {
             .subscription-box {
                 flex-direction: column;
@@ -440,7 +458,12 @@
 
 <!-- ========== SUBSCRIPTION RENEWAL BOX ========== -->
 @{
-    var isSubActive = Model.Store.SubscriptionExpiryDate >= DateTime.Now;
+    // BUGFIX: was DateTime.Now (local server time) compared against a date that's
+    // always set/extended using DateTime.UtcNow in the code-behind. On a server
+    // not running in UTC, this comparison could disagree with the actual UTC
+    // expiry by the server's timezone offset — showing "Active" when it's really
+    // expired, or vice versa.
+    var isSubActive = Model.Store.SubscriptionExpiryDate >= DateTime.UtcNow;
 }
 <div class="subscription-box">
     <div class="subscription-info">
@@ -459,7 +482,11 @@
     </div>
     <form method="post" asp-page-handler="Renew">
         <button type="submit" class="btn-renew">
-            <i class="fas fa-arrows-rotate"></i> Renew Subscription ($20)
+            <i class="fas fa-arrows-rotate"></i>
+            @* BUGFIX: was a hardcoded "$20" — the actual amount charged comes from
+               configuration (StoreSettings:MonthlySubscriptionFee) and could differ
+               from this literal text if that setting is ever changed. *@
+            Renew Subscription ($@Model.MonthlySubscriptionFee.ToString("N2"))
         </button>
     </form>
 </div>
@@ -473,7 +500,9 @@
     </div>
     <div class="summary-card">
         <div class="summary-icon commission"><i class="fas fa-percent"></i></div>
-        <div class="label">Commission (5%)</div>
+        @* BUGFIX: was a hardcoded "Commission (5%)" label regardless of the store's
+           actual configured rate — now shows the real rate from Model.Store. *@
+        <div class="label">Commission (@Model.Store.CommissionRate.ToString("N1")%)</div>
         <div class="value negative-commission">-$@Model.Summary.TotalCommission.ToString("N2")</div>
     </div>
     <div class="summary-card">

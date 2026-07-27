@@ -6,6 +6,7 @@
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
            ROOT VARIABLES — consistent brand palette
@@ -30,6 +31,8 @@
             --radius-md: 12px;
             --radius-lg: 20px;
             --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            /* Same display face used across the rest of the Store Owner section. */
+            --font-display: 'Fraunces', 'Georgia', serif;
         }
 
         body {
@@ -76,9 +79,10 @@
 
         .settings-hero h2 {
             margin: 0 0 6px;
+            font-family: var(--font-display);
             font-size: 26px;
-            font-weight: 800;
-            letter-spacing: -0.4px;
+            font-weight: 600;
+            letter-spacing: -0.2px;
             position: relative;
             z-index: 1;
             display: flex;
@@ -161,6 +165,34 @@
         }
 
         /* ============================================================
+           VALIDATION SUMMARY — this page had none at all before, unlike
+           every other form in this app.
+           ============================================================ */
+        .validation-summary-errors {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            margin-bottom: 24px;
+        }
+
+        .validation-summary-errors ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .validation-summary-errors li {
+            color: var(--error-color);
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.6;
+        }
+
+        .validation-summary-errors:empty {
+            display: none;
+        }
+
+        /* ============================================================
            GRID
            ============================================================ */
         .settings-grid {
@@ -195,8 +227,9 @@
 
         .card-header h3 {
             margin: 0 0 4px;
-            font-size: 17px;
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 600;
             color: var(--text-primary);
             display: flex;
             align-items: center;
@@ -265,6 +298,23 @@
             line-height: 1.5;
             font-weight: 400;
         }
+
+        /* BUGFIX (design/UX): the "Fixed Delivery Fee" and "COD Max Limit" fields
+           were always visible/editable regardless of their toggle's state, even
+           though the help text under each says it's only relevant when enabled —
+           same pattern-level issue already fixed on the Promotions page. Wrapped
+           in a collapsible container the script below now actually controls. */
+        .conditional-field {
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transition: max-height 0.3s ease, opacity 0.2s ease;
+        }
+
+            .conditional-field.expanded {
+                max-height: 200px;
+                opacity: 1;
+            }
 
         /* ============================================================
            FORM ELEMENTS
@@ -423,8 +473,9 @@
 
         .side-card h4 {
             margin: 0 0 14px;
+            font-family: var(--font-display);
             font-size: 16px;
-            font-weight: 800;
+            font-weight: 600;
             color: var(--text-primary);
             display: flex;
             align-items: center;
@@ -457,6 +508,23 @@
             color: var(--text-primary);
             font-weight: 700;
             text-align: right;
+        }
+
+        /* ============================================================
+           ACCESSIBILITY
+           ============================================================ */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.001ms !important;
+            }
         }
 
         /* ============================================================
@@ -561,6 +629,12 @@
 
     <!-- ========== GRID ========== -->
     <form method="post">
+        @* BUGFIX: this page had no validation summary at all, unlike every other
+           form in this app. Any model-level error added via
+           ModelState.AddModelError("", ...) in the code-behind would previously
+           have been completely invisible to the user. *@
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom:20px;"></div>
+
         <div class="settings-grid">
 
             <!-- ===== LEFT COLUMN: SETTINGS CARDS ===== -->
@@ -576,7 +650,7 @@
                     <div class="card-body">
                         <div class="setting-option">
                             <div class="switch-row">
-                                <input asp-for="StoreSettings.HasFixedDeliveryFee" />
+                                <input asp-for="StoreSettings.HasFixedDeliveryFee" id="hasFixedFeeToggle" />
                                 <div>
                                     <label asp-for="StoreSettings.HasFixedDeliveryFee">
                                         Use Fixed Delivery Fee
@@ -588,14 +662,16 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label asp-for="StoreSettings.FixedDeliveryFee">Fixed Delivery Fee ($)</label>
-                            <input asp-for="StoreSettings.FixedDeliveryFee"
-                                   class="form-control"
-                                   placeholder="e.g. 3.00" />
-                            <span asp-validation-for="StoreSettings.FixedDeliveryFee" class="text-danger"></span>
-                            <div class="help-text">
-                                Required only when fixed delivery fee is enabled.
+                        <div class="conditional-field" id="fixedFeeField">
+                            <div class="form-group">
+                                <label asp-for="StoreSettings.FixedDeliveryFee">Fixed Delivery Fee ($)</label>
+                                <input asp-for="StoreSettings.FixedDeliveryFee"
+                                       class="form-control"
+                                       placeholder="e.g. 3.00" />
+                                <span asp-validation-for="StoreSettings.FixedDeliveryFee" class="text-danger"></span>
+                                <div class="help-text">
+                                    Required only when fixed delivery fee is enabled.
+                                </div>
                             </div>
                         </div>
 
@@ -616,7 +692,7 @@
                     <div class="card-body">
                         <div class="setting-option">
                             <div class="switch-row">
-                                <input asp-for="StoreSettings.CODSupported" />
+                                <input asp-for="StoreSettings.CODSupported" id="codSupportedToggle" />
                                 <div>
                                     <label asp-for="StoreSettings.CODSupported">
                                         Cash On Delivery Supported
@@ -628,14 +704,16 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label asp-for="StoreSettings.CODMaxLimit">COD Max Limit ($)</label>
-                            <input asp-for="StoreSettings.CODMaxLimit"
-                                   class="form-control"
-                                   placeholder="e.g. 5000.00" />
-                            <span asp-validation-for="StoreSettings.CODMaxLimit" class="text-danger"></span>
-                            <div class="help-text">
-                                Customers cannot use COD above this order amount.
+                        <div class="conditional-field" id="codLimitField">
+                            <div class="form-group">
+                                <label asp-for="StoreSettings.CODMaxLimit">COD Max Limit ($)</label>
+                                <input asp-for="StoreSettings.CODMaxLimit"
+                                       class="form-control"
+                                       placeholder="e.g. 5000.00" />
+                                <span asp-validation-for="StoreSettings.CODMaxLimit" class="text-danger"></span>
+                                <div class="help-text">
+                                    Customers cannot use COD above this order amount.
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -780,4 +858,31 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            // BUGFIX: "Fixed Delivery Fee" and "COD Max Limit" were always shown
+            // and editable no matter what their toggle said, despite each one's
+            // own help text claiming it only matters when enabled. Both are now
+            // actually gated by their checkbox, the same fix already applied to
+            // the Promotions page's coupon fields.
+            function wireToggle(toggleId, fieldId) {
+                const toggle = document.getElementById(toggleId);
+                const field = document.getElementById(fieldId);
+                if (!toggle || !field) return;
+
+                function sync() {
+                    field.classList.toggle('expanded', toggle.checked);
+                }
+
+                toggle.addEventListener('change', sync);
+                // Sync on load too, e.g. after a validation error redisplays the
+                // page with the checkbox already checked from the previous submit.
+                sync();
+            }
+
+            wireToggle('hasFixedFeeToggle', 'fixedFeeField');
+            wireToggle('codSupportedToggle', 'codLimitField');
+        })();
+    </script>
 }

@@ -13,15 +13,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         private readonly ApplicationDbContext _context;
         private readonly ICurrentStoreService _currentStoreService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ILogger<StoreProfileModel> _logger;
+
+        // BUGFIX: previously only checked the file extension — no Content-Type
+        // cross-check, no magic-byte signature check, and no size limit at all.
+        // Same category of gap already found and fixed on Products/Create and
+        // Products/Edit; applied the same way here.
+        private static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
+        private static readonly string[] AllowedImageMimeTypes = { "image/jpeg", "image/png", "image/webp" };
+        private const long MaxLogoSizeBytes = 5 * 1024 * 1024; // 5 MB
 
         public StoreProfileModel(
             ApplicationDbContext context,
             ICurrentStoreService currentStoreService,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            ILogger<StoreProfileModel> logger)
         {
             _context = context;
             _currentStoreService = currentStoreService;
             _webHostEnvironment = webHostEnvironment;
+            _logger = logger;
         }
 
         [BindProperty]
@@ -29,44 +40,53 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
         public async Task<IActionResult> OnGetAsync()
         {
-            if (!await _currentStoreService.IsStoreOwnerAsync())
+            try
             {
-                return RedirectToPage("/Account/AccessDenied", new { area = "Identity" });
+                if (!await _currentStoreService.IsStoreOwnerAsync())
+                {
+                    return RedirectToPage("/Account/AccessDenied", new { area = "Identity" });
+                }
+
+                var store = await _currentStoreService.GetCurrentStoreAsync();
+
+                if (store == null)
+                {
+                    TempData["ErrorMessage"] = "Store not found. Please make sure your store is approved.";
+                    return RedirectToPage("/StoreOwner/Dashboard");
+                }
+
+                ViewData["StoreName"] = store.StoreName;
+                ViewData["StoreId"] = store.StoreID;
+
+                StoreVM = new StoreProfileInputModel
+                {
+                    StoreID = store.StoreID,
+                    StoreName = store.StoreName,
+                    Description = store.Description,
+                    LogoURL = store.LogoURL,
+                    PhoneNumber = store.PhoneNumber,
+                    Email = store.Email,
+                    AddressLine1 = store.AddressLine1,
+                    AddressLine2 = store.AddressLine2,
+                    City = store.City,
+                    Area = store.Area,
+                    Latitude = store.Latitude,
+                    Longitude = store.Longitude,
+                    BusinessLicenseNumber = store.BusinessLicenseNumber,
+                    BusinessLicenseURL = store.BusinessLicenseURL,
+                    Status = store.Status,
+                    CODSupported = store.CODSupported,
+                    CODMaxLimit = store.CODMaxLimit
+                };
+
+                return Page();
             }
-
-            var store = await _currentStoreService.GetCurrentStoreAsync();
-
-            if (store == null)
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Store not found. Please make sure your store is approved.";
+                _logger.LogError(ex, "Error loading Store Profile page.");
+                TempData["ErrorMessage"] = "Something went wrong while loading your store profile. Please try again.";
                 return RedirectToPage("/StoreOwner/Dashboard");
             }
-
-            ViewData["StoreName"] = store.StoreName;
-            ViewData["StoreId"] = store.StoreID;
-
-            StoreVM = new StoreProfileInputModel
-            {
-                StoreID = store.StoreID,
-                StoreName = store.StoreName,
-                Description = store.Description,
-                LogoURL = store.LogoURL,
-                PhoneNumber = store.PhoneNumber,
-                Email = store.Email,
-                AddressLine1 = store.AddressLine1,
-                AddressLine2 = store.AddressLine2,
-                City = store.City,
-                Area = store.Area,
-                Latitude = store.Latitude,
-                Longitude = store.Longitude,
-                BusinessLicenseNumber = store.BusinessLicenseNumber,
-                BusinessLicenseURL = store.BusinessLicenseURL,
-                Status = store.Status,
-                CODSupported = store.CODSupported,
-                CODMaxLimit = store.CODMaxLimit
-            };
-
-            return Page();
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -84,53 +104,128 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 return RedirectToPage("/StoreOwner/Dashboard");
             }
 
-            StoreVM.StoreName = StoreVM.StoreName?.Trim() ?? string.Empty;
-            StoreVM.Description = StoreVM.Description?.Trim() ?? string.Empty;
-            StoreVM.PhoneNumber = StoreVM.PhoneNumber?.Trim() ?? string.Empty;
-            StoreVM.Email = StoreVM.Email?.Trim() ?? string.Empty;
-            StoreVM.AddressLine1 = StoreVM.AddressLine1?.Trim() ?? string.Empty;
-            StoreVM.AddressLine2 = StoreVM.AddressLine2?.Trim();
-            StoreVM.City = StoreVM.City?.Trim() ?? string.Empty;
-            StoreVM.Area = StoreVM.Area?.Trim() ?? string.Empty;
-            StoreVM.BusinessLicenseNumber = StoreVM.BusinessLicenseNumber?.Trim();
-
-            if (string.IsNullOrWhiteSpace(StoreVM.StoreName))
+            try
             {
-                ModelState.AddModelError("StoreVM.StoreName", "Store name is required.");
+                StoreVM.StoreName = StoreVM.StoreName?.Trim() ?? string.Empty;
+                StoreVM.Description = StoreVM.Description?.Trim() ?? string.Empty;
+                StoreVM.PhoneNumber = StoreVM.PhoneNumber?.Trim() ?? string.Empty;
+                StoreVM.Email = StoreVM.Email?.Trim() ?? string.Empty;
+                StoreVM.AddressLine1 = StoreVM.AddressLine1?.Trim() ?? string.Empty;
+                StoreVM.AddressLine2 = StoreVM.AddressLine2?.Trim();
+                StoreVM.City = StoreVM.City?.Trim() ?? string.Empty;
+                StoreVM.Area = StoreVM.Area?.Trim() ?? string.Empty;
+                StoreVM.BusinessLicenseNumber = StoreVM.BusinessLicenseNumber?.Trim();
+
+                if (string.IsNullOrWhiteSpace(StoreVM.StoreName))
+                {
+                    ModelState.AddModelError("StoreVM.StoreName", "Store name is required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(StoreVM.Email))
+                {
+                    ModelState.AddModelError("StoreVM.Email", "Email is required.");
+                }
+                else if (!IsValidEmail(StoreVM.Email))
+                {
+                    // BUGFIX: previously only checked that Email was non-empty, not
+                    // that it was actually a valid email address. store.Email is
+                    // used elsewhere to create the Stripe Customer for this store
+                    // (see StoreOwnerPaymentModel.GetOrCreateCustomerAsync) — an
+                    // invalid address saved here could silently break that later.
+                    ModelState.AddModelError("StoreVM.Email", "Please enter a valid email address.");
+                }
+
+                if (string.IsNullOrWhiteSpace(StoreVM.PhoneNumber))
+                {
+                    ModelState.AddModelError("StoreVM.PhoneNumber", "Phone number is required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(StoreVM.AddressLine1))
+                {
+                    ModelState.AddModelError("StoreVM.AddressLine1", "Address is required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(StoreVM.City))
+                {
+                    ModelState.AddModelError("StoreVM.City", "City is required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(StoreVM.Area))
+                {
+                    ModelState.AddModelError("StoreVM.Area", "Area is required.");
+                }
+
+                // BUGFIX: Latitude/Longitude had no validation at all — a store
+                // owner could save geographically impossible values (e.g.
+                // Latitude = 999), silently breaking delivery-distance
+                // calculations elsewhere that assume valid coordinates.
+                if (StoreVM.Latitude < -90 || StoreVM.Latitude > 90)
+                {
+                    ModelState.AddModelError("StoreVM.Latitude", "Latitude must be between -90 and 90.");
+                }
+
+                if (StoreVM.Longitude < -180 || StoreVM.Longitude > 180)
+                {
+                    ModelState.AddModelError("StoreVM.Longitude", "Longitude must be between -180 and 180.");
+                }
+
+                if (StoreVM.CODMaxLimit < 0)
+                {
+                    ModelState.AddModelError("StoreVM.CODMaxLimit", "COD max limit cannot be negative.");
+                }
+
+                // BUGFIX: logo validation was extension-only — no size limit, no
+                // Content-Type cross-check, no magic-byte signature check. A file
+                // renamed to end in .jpg (regardless of its real contents) would
+                // previously pass straight through.
+                if (StoreVM.LogoFile != null && StoreVM.LogoFile.Length > 0)
+                {
+                    var logoError = await ValidateLogoFileAsync(StoreVM.LogoFile);
+                    if (logoError != null)
+                    {
+                        ModelState.AddModelError("StoreVM.LogoFile", logoError);
+                    }
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    StoreVM.LogoURL = store.LogoURL;
+                    StoreVM.Status = store.Status;
+                    StoreVM.BusinessLicenseURL = store.BusinessLicenseURL;
+                    ViewData["StoreName"] = store.StoreName;
+                    ViewData["StoreId"] = store.StoreID;
+                    return Page();
+                }
+
+                if (StoreVM.LogoFile != null && StoreVM.LogoFile.Length > 0)
+                {
+                    store.LogoURL = await SaveStoreLogoAsync(store.StoreID, StoreVM.LogoFile);
+                }
+
+                store.StoreName = StoreVM.StoreName;
+                store.Description = StoreVM.Description;
+                store.PhoneNumber = StoreVM.PhoneNumber;
+                store.Email = StoreVM.Email;
+                store.AddressLine1 = StoreVM.AddressLine1;
+                store.AddressLine2 = StoreVM.AddressLine2;
+                store.City = StoreVM.City;
+                store.Area = StoreVM.Area;
+                store.Latitude = StoreVM.Latitude;
+                store.Longitude = StoreVM.Longitude;
+                store.BusinessLicenseNumber = StoreVM.BusinessLicenseNumber;
+                store.CODSupported = StoreVM.CODSupported;
+                store.CODMaxLimit = StoreVM.CODMaxLimit;
+
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Store profile updated successfully.";
+
+                return RedirectToPage();
             }
-
-            if (string.IsNullOrWhiteSpace(StoreVM.Email))
+            catch (Exception ex)
             {
-                ModelState.AddModelError("StoreVM.Email", "Email is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(StoreVM.PhoneNumber))
-            {
-                ModelState.AddModelError("StoreVM.PhoneNumber", "Phone number is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(StoreVM.AddressLine1))
-            {
-                ModelState.AddModelError("StoreVM.AddressLine1", "Address is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(StoreVM.City))
-            {
-                ModelState.AddModelError("StoreVM.City", "City is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(StoreVM.Area))
-            {
-                ModelState.AddModelError("StoreVM.Area", "Area is required.");
-            }
-
-            if (StoreVM.CODMaxLimit < 0)
-            {
-                ModelState.AddModelError("StoreVM.CODMaxLimit", "COD max limit cannot be negative.");
-            }
-
-            if (!ModelState.IsValid)
-            {
+                _logger.LogError(ex, "Error updating Store Profile for store {StoreId}.", store.StoreID);
+                ModelState.AddModelError("", "Something went wrong while saving your changes. Please try again.");
                 StoreVM.LogoURL = store.LogoURL;
                 StoreVM.Status = store.Status;
                 StoreVM.BusinessLicenseURL = store.BusinessLicenseURL;
@@ -138,45 +233,80 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 ViewData["StoreId"] = store.StoreID;
                 return Page();
             }
+        }
 
-            if (StoreVM.LogoFile != null && StoreVM.LogoFile.Length > 0)
+        private static bool IsValidEmail(string email)
+        {
+            try
             {
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-                var extension = Path.GetExtension(StoreVM.LogoFile.FileName).ToLower();
+                var address = new System.Net.Mail.MailAddress(email);
+                return address.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
-                if (!allowedExtensions.Contains(extension))
-                {
-                    ModelState.AddModelError("StoreVM.LogoFile", "Only JPG, JPEG, PNG, or WEBP images are allowed.");
-                    StoreVM.LogoURL = store.LogoURL;
-                    StoreVM.Status = store.Status;
-                    ViewData["StoreName"] = store.StoreName;
-                    ViewData["StoreId"] = store.StoreID;
-                    return Page();
-
-                }
-
-                store.LogoURL = await SaveStoreLogoAsync(store.StoreID, StoreVM.LogoFile);
+        /// <summary>
+        /// Validates the uploaded store logo: size, extension/MIME type, and the
+        /// actual file signature (magic bytes) — extension and Content-Type are
+        /// both client-supplied and easily spoofed, so the header bytes are
+        /// checked too before anything is trusted or saved to disk.
+        /// </summary>
+        private static async Task<string?> ValidateLogoFileAsync(IFormFile logoFile)
+        {
+            if (logoFile.Length > MaxLogoSizeBytes)
+            {
+                return "Logo image is too large. Maximum size is 5 MB.";
             }
 
-            store.StoreName = StoreVM.StoreName;
-            store.Description = StoreVM.Description;
-            store.PhoneNumber = StoreVM.PhoneNumber;
-            store.Email = StoreVM.Email;
-            store.AddressLine1 = StoreVM.AddressLine1;
-            store.AddressLine2 = StoreVM.AddressLine2;
-            store.City = StoreVM.City;
-            store.Area = StoreVM.Area;
-            store.Latitude = StoreVM.Latitude;
-            store.Longitude = StoreVM.Longitude;
-            store.BusinessLicenseNumber = StoreVM.BusinessLicenseNumber;
-            store.CODSupported = StoreVM.CODSupported;
-            store.CODMaxLimit = StoreVM.CODMaxLimit;
+            var extension = Path.GetExtension(logoFile.FileName).ToLowerInvariant();
+            var contentType = logoFile.ContentType?.ToLowerInvariant();
 
-            await _context.SaveChangesAsync();
+            if (!AllowedImageExtensions.Contains(extension) || !AllowedImageMimeTypes.Contains(contentType))
+            {
+                return "Only JPG, JPEG, PNG, or WEBP images are allowed.";
+            }
 
-            TempData["SuccessMessage"] = "Store profile updated successfully.";
+            if (!await HasValidImageSignatureAsync(logoFile))
+            {
+                return "That file doesn't look like a valid image. Please try a different file.";
+            }
 
-            return RedirectToPage();
+            return null;
+        }
+
+        private static async Task<bool> HasValidImageSignatureAsync(IFormFile file)
+        {
+            var buffer = new byte[12];
+            int bytesRead;
+
+            using (var stream = file.OpenReadStream())
+            {
+                bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
+            }
+
+            if (bytesRead < 4) return false;
+
+            bool StartsWith(byte[] signature, int offset = 0)
+            {
+                if (buffer.Length < offset + signature.Length) return false;
+                for (int i = 0; i < signature.Length; i++)
+                {
+                    if (buffer[offset + i] != signature[i]) return false;
+                }
+                return true;
+            }
+
+            if (StartsWith(new byte[] { 0xFF, 0xD8, 0xFF })) return true;                 // JPEG
+            if (StartsWith(new byte[] { 0x89, 0x50, 0x4E, 0x47 })) return true;            // PNG
+            if (bytesRead >= 12 &&
+                StartsWith(new byte[] { 0x52, 0x49, 0x46, 0x46 }, 0) &&                    // "RIFF"
+                StartsWith(new byte[] { 0x57, 0x45, 0x42, 0x50 }, 8))                       // "WEBP"
+                return true;
+
+            return false;
         }
 
         private async Task<string> SaveStoreLogoAsync(int storeId, IFormFile logoFile)
