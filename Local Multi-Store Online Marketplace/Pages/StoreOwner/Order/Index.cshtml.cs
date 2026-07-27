@@ -97,15 +97,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                     .Take(PageSize)
                     .ToListAsync();
 
-                // 5. Build ViewModel with item counts
+                // 5. Build ViewModel with item counts and multi-vendor flag
                 // BUGFIX (perf): previously issued one COUNT query per order in a
                 // loop (N+1). Batched into a single grouped query for the whole page.
                 var orderIds = orders.Select(o => o.OrderID).ToList();
+
                 var itemCounts = await _context.OrderItems
                     .Where(oi => orderIds.Contains(oi.OrderID) && oi.StoreID == store.StoreID)
                     .GroupBy(oi => oi.OrderID)
                     .Select(g => new { OrderID = g.Key, Count = g.Count() })
                     .ToDictionaryAsync(x => x.OrderID, x => x.Count);
+
+                // Fix for H4 (partial, Option 1): does each order contain items
+                // from more than one store? If so, Order.Status is shared with
+                // other stores and the view must not let this store owner end
+                // the whole order (Delivered/Cancelled). Batched the same way as
+                // itemCounts above so this page never issues a per-order query.
+                var storeCountsPerOrder = await _context.OrderItems
+                    .Where(oi => orderIds.Contains(oi.OrderID))
+                    .GroupBy(oi => oi.OrderID)
+                    .Select(g => new { OrderID = g.Key, StoreCount = g.Select(x => x.StoreID).Distinct().Count() })
+                    .ToDictionaryAsync(x => x.OrderID, x => x.StoreCount);
 
                 Orders = orders.Select(order => new OrderViewModel
                 {
@@ -115,7 +127,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                     TotalAmount = order.TotalAmount,
                     Status = order.Status,
                     OrderDate = order.OrderDate,
-                    ItemCount = itemCounts.TryGetValue(order.OrderID, out var count) ? count : 0
+                    ItemCount = itemCounts.TryGetValue(order.OrderID, out var count) ? count : 0,
+                    IsMultiVendor = storeCountsPerOrder.TryGetValue(order.OrderID, out var storeCount) && storeCount > 1
                 }).ToList();
 
                 return Page();
@@ -190,6 +203,29 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                     return RedirectToPage(routeValues);
                 }
 
+                // Fix for H4 (partial, Option 1): if this order has items from
+                // more than one store, refuse to let this store owner set a
+                // terminal status (Delivered/Cancelled) — Order.Status is a
+                // single, shared field, so ending it here would also end it
+                // for every other store still involved in this order.
+                if (AllowedOrderStatuses.IsTerminal(newStatus))
+                {
+                    var distinctStoreCount = await _context.OrderItems
+                        .Where(oi => oi.OrderID == orderId)
+                        .Select(oi => oi.StoreID)
+                        .Distinct()
+                        .CountAsync();
+
+                    if (distinctStoreCount > 1)
+                    {
+                        TempData["ErrorMessage"] =
+                            "This order includes items from other stores. " +
+                            "'" + newStatus + "' cannot be set from here for a multi-vendor order.";
+
+                        return RedirectToPage(routeValues);
+                    }
+                }
+
                 var previousStatus = order.Status;
                 order.Status = newStatus;
 
@@ -248,5 +284,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
         public string Status { get; set; } = string.Empty;
         public DateTime OrderDate { get; set; }
         public int ItemCount { get; set; }
+        public bool IsMultiVendor { get; set; }
     }
 }

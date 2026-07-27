@@ -165,7 +165,7 @@ namespace Local_Multi_Store_Online_Marketplace.Controllers
 
                     lastLocationUpdateText = assignment.DeliveryTime.HasValue
                         ? assignment.DeliveryTime.Value.ToLocalTime().ToString("HH:mm:ss")
-                        : DateTime.Now.ToString("HH:mm:ss"),
+                        : DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss"),
 
                     trackingMode = "Delivered",
                     etaText = "Arrived",

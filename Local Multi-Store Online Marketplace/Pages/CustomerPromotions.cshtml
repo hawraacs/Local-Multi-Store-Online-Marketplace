@@ -26,6 +26,7 @@
                 --accent-light: #f3effe;
                 --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
                 --success-color: #10b981;
+                --danger-color: #ef4444;
                 --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                 --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
                 --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
@@ -48,10 +49,10 @@
             }
 
             /* ============================================================
-                       BOTTOM NAV — rendered by the shared _CustomerBottomNav partial.
-                       Styles below match every other customer page exactly (same
-                       class names), so the partial renders identically here.
-                       ============================================================ */
+                                   BOTTOM NAV — rendered by the shared _CustomerBottomNav partial.
+                                   Styles below match every other customer page exactly (same
+                                   class names), so the partial renders identically here.
+                                   ============================================================ */
             .mobile-bottom-nav {
                 display: flex !important;
                 position: fixed;
@@ -148,18 +149,135 @@
             }
 
             .promotions-box {
-                max-width: 950px;
+                max-width: 1280px;
                 margin: 0 auto;
             }
 
-                .promotions-box h2 {
+            .promotions-heading {
+                text-align: center;
+                margin-bottom: 8px;
+            }
+
+                .promotions-heading h2 {
                     font-family: 'Playfair Display', Georgia, serif;
                     font-size: 34px;
                     font-weight: 800;
-                    margin-bottom: 30px;
                     color: var(--text-primary);
-                    text-align: center;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 12px;
                 }
+
+                    .promotions-heading h2 i {
+                        font-size: 28px;
+                        color: var(--accent-color);
+                    }
+
+            .promo-toolbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                flex-wrap: wrap;
+                margin-bottom: 8px;
+            }
+
+            .mark-all-btn {
+                border: 1px solid var(--border-color);
+                background: var(--card-bg);
+                color: var(--accent-color);
+                padding: 9px 18px;
+                border-radius: 50px;
+                font-size: 13px;
+                font-weight: 700;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                flex-shrink: 0;
+                white-space: nowrap;
+                transition: all 0.2s ease;
+                box-shadow: var(--shadow-sm);
+            }
+
+                .mark-all-btn:hover:not(:disabled) {
+                    background: var(--accent-color);
+                    color: #fff;
+                    border-color: var(--accent-color);
+                }
+
+                .mark-all-btn:disabled {
+                    opacity: 0.4;
+                    cursor: not-allowed;
+                }
+
+            .promotions-subtext {
+                text-align: center;
+                color: var(--text-secondary);
+                font-size: 15px;
+                font-weight: 500;
+                margin-bottom: 24px;
+            }
+
+            .promo-filter-tabs {
+                display: flex;
+                justify-content: flex-start;
+                gap: 12px;
+                overflow-x: auto;
+                padding: 4px 4px 4px 0;
+                margin-bottom: 28px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+
+                .promo-filter-tabs::-webkit-scrollbar {
+                    display: none;
+                }
+
+                .promo-filter-tabs button {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 9px;
+                    min-width: 130px;
+                    border: 1px solid var(--border-color);
+                    background: var(--card-bg);
+                    color: var(--text-secondary);
+                    font-family: inherit;
+                    font-size: 14px;
+                    font-weight: 700;
+                    padding: 15px 22px;
+                    border-radius: 18px;
+                    cursor: pointer;
+                    flex-shrink: 0;
+                    box-shadow: var(--shadow-sm);
+                    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+                }
+
+                    .promo-filter-tabs button i {
+                        font-size: 18px;
+                        color: var(--accent-color);
+                        transition: color 0.2s ease;
+                    }
+
+                    .promo-filter-tabs button:hover:not(.active) {
+                        transform: translateY(-2px);
+                        box-shadow: var(--shadow-md);
+                        border-color: var(--accent-color);
+                        color: var(--accent-color);
+                    }
+
+                    .promo-filter-tabs button.active {
+                        background: var(--accent-gradient);
+                        color: #fff;
+                        border-color: transparent;
+                        box-shadow: 0 8px 20px rgba(109, 40, 217, 0.28);
+                    }
+
+                        .promo-filter-tabs button.active i {
+                            color: #fff;
+                        }
 
             .promotions-empty {
                 max-width: 700px;
@@ -173,6 +291,19 @@
                 box-shadow: var(--shadow-sm);
             }
 
+                .promotions-empty .empty-icon {
+                    width: 64px;
+                    height: 64px;
+                    margin: 0 auto 18px;
+                    border-radius: 50%;
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 26px;
+                }
+
                 .promotions-empty h3 {
                     color: var(--text-primary);
                     font-size: 20px;
@@ -182,17 +313,20 @@
 
             .promotions-grid {
                 display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
+                grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+                gap: 24px;
             }
 
             .promo-card {
                 background: var(--card-bg);
                 border: 1px solid var(--border-color);
-                border-radius: 20px;
-                padding: 22px;
+                border-radius: 22px;
+                padding: 30px;
+                min-height: 220px;
+                display: flex;
+                flex-direction: column;
                 box-shadow: var(--shadow-sm);
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
             }
 
                 .promo-card:hover {
@@ -205,6 +339,10 @@
                     box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.08), var(--shadow-sm);
                 }
 
+                .promo-card.is-hidden {
+                    display: none;
+                }
+
             .promo-header {
                 display: flex;
                 justify-content: space-between;
@@ -214,7 +352,7 @@
             }
 
             .promo-title {
-                font-size: 17px;
+                font-size: 19px;
                 font-weight: 800;
                 color: var(--text-primary);
             }
@@ -231,10 +369,10 @@
             }
 
             .promo-message {
-                font-size: 14px;
+                font-size: 15px;
                 color: var(--text-secondary);
-                line-height: 1.55;
-                margin-bottom: 14px;
+                line-height: 1.6;
+                margin-bottom: 16px;
             }
 
             .promo-coupon {
@@ -246,6 +384,36 @@
                 font-size: 13px;
                 font-weight: 700;
                 margin-bottom: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+                .promo-coupon .copy-code-btn {
+                    border: none;
+                    background: rgba(16, 185, 129, 0.12);
+                    color: var(--success-color);
+                    font-size: 11.5px;
+                    font-weight: 800;
+                    padding: 5px 10px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    white-space: nowrap;
+                }
+
+                    .promo-coupon .copy-code-btn:hover {
+                        background: var(--success-color);
+                        color: #fff;
+                    }
+
+            .promo-footer {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                margin-top: auto;
+                padding-top: 6px;
             }
 
             .promo-date {
@@ -256,7 +424,6 @@
             }
 
             .promo-mark-read-btn {
-                margin-top: 14px;
                 border: 1px solid var(--border-color);
                 background: var(--accent-light);
                 color: var(--accent-color);
@@ -268,15 +435,60 @@
                 transition: all 0.2s ease;
             }
 
-                .promo-mark-read-btn:hover {
+                .promo-mark-read-btn:hover:not(:disabled) {
                     background: var(--accent-color);
                     color: #ffffff;
                     border-color: var(--accent-color);
                 }
 
-            @@media (max-width: 700px) {
+                .promo-mark-read-btn:disabled {
+                    opacity: 0.6;
+                    cursor: wait;
+                }
+
+            /* Toast */
+            .promo-toast {
+                position: fixed;
+                left: 50%;
+                bottom: 90px;
+                transform: translateX(-50%) translateY(20px);
+                background: var(--text-primary);
+                color: #fff;
+                font-size: 13.5px;
+                font-weight: 600;
+                padding: 12px 20px;
+                border-radius: 50px;
+                box-shadow: var(--shadow-lg);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.25s ease, transform 0.25s ease;
+                z-index: 300;
+            }
+
+                .promo-toast.visible {
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(0);
+                    pointer-events: auto;
+                }
+
+            @@media (max-width: 780px) {
                 .promotions-grid {
                     grid-template-columns: 1fr;
+                }
+
+                .promo-toolbar {
+                    justify-content: center;
+                }
+
+                .mark-all-btn {
+                    width: 100%;
+                    justify-content: center;
+                }
+
+                .promo-filter-tabs button {
+                    min-width: 110px;
+                    padding: 13px 18px;
+                    font-size: 13px;
                 }
             }
     </style>
@@ -286,24 +498,56 @@
 
     <partial name="_CustomerBottomNav" />
 
+    <form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+
     <div class="promotions-page">
         <div class="promotions-box">
 
-            <h2>My Promotions</h2>
+            <div class="promotions-heading">
+                <h2><i class="fa-solid fa-gift"></i> My Promotions</h2>
+            </div>
+
+            @if (Model.Promotions != null && Model.Promotions.Any())
+            {
+                <p class="promotions-subtext" id="promoSubtext">
+                    <span id="unreadCount">@Model.Promotions.Count(p => !p.IsRead)</span> unread of @Model.Promotions.Count total offers
+                </p>
+
+                <div class="promo-toolbar">
+                    <div class="promo-filter-tabs">
+                        <button type="button" class="active" data-filter="all">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>All</span>
+                        </button>
+                        <button type="button" data-filter="unread">
+                            <i class="fa-solid fa-envelope"></i>
+                            <span>Unread</span>
+                        </button>
+                    </div>
+
+                    @if (Model.Promotions.Any(p => !p.IsRead))
+                    {
+                        <button type="button" class="mark-all-btn" id="markAllBtn">
+                            <i class="fa-solid fa-check-double"></i> Mark all as read
+                        </button>
+                    }
+                </div>
+            }
 
             @if (Model.Promotions == null || !Model.Promotions.Any())
             {
                 <div class="promotions-empty">
+                    <div class="empty-icon"><i class="fa-regular fa-bell"></i></div>
                     <h3>No promotions yet</h3>
                     <p>Offers and coupons from stores you follow will show up here.</p>
                 </div>
             }
             else
             {
-                <div class="promotions-grid">
+                <div class="promotions-grid" id="promotionsGrid">
                     @foreach (var item in Model.Promotions)
                     {
-                        <div class="promo-card @(item.IsRead ? "" : "unread")">
+                        <div class="promo-card @(item.IsRead ? "" : "unread")" data-promo-id="@item.PromotionRecipientID" data-read="@item.IsRead.ToString().ToLower()">
 
                             <div class="promo-header">
                                 <span class="promo-title">@item.Promotion?.Title</span>
@@ -319,23 +563,23 @@
                             @if (!string.IsNullOrWhiteSpace(item.Promotion?.CouponCode))
                             {
                                 <div class="promo-coupon">
-                                    Coupon Code: <strong>@item.Promotion.CouponCode</strong>
+                                    <span>Coupon Code: <strong>@item.Promotion.CouponCode</strong></span>
+                                    <button type="button" class="copy-code-btn" data-code="@item.Promotion.CouponCode">Copy</button>
                                 </div>
                             }
 
-                            <small class="promo-date">
-                                Sent: @item.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                            </small>
+                            <div class="promo-footer">
+                                <small class="promo-date">
+                                    Sent: @item.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                </small>
 
-                            @if (!item.IsRead)
-                            {
-                                <form method="post">
-                                    <input type="hidden" name="promotionRecipientId" value="@item.PromotionRecipientID" />
-                                    <button asp-page-handler="MarkAsRead" class="promo-mark-read-btn">
+                                @if (!item.IsRead)
+                                {
+                                    <button type="button" class="promo-mark-read-btn" data-id="@item.PromotionRecipientID">
                                         Mark as read
                                     </button>
-                                </form>
-                            }
+                                }
+                            </div>
                         </div>
                     }
                 </div>
@@ -343,6 +587,124 @@
 
         </div>
     </div>
+
+    <div class="promo-toast" id="promoToast" role="status" aria-live="polite"></div>
+
+    <script>
+            (function() {
+                const grid = document.getElementById('promotionsGrid');
+                const toast = document.getElementById('promoToast');
+                const unreadCountEl = document.getElementById('unreadCount');
+                const markAllBtn = document.getElementById('markAllBtn');
+                const tokenInput = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
+
+                function showToast(message) {
+                    if (!toast) return;
+                    toast.textContent = message;
+                    toast.classList.add('visible');
+                    clearTimeout(showToast._t);
+                    showToast._t = setTimeout(() => toast.classList.remove('visible'), 2200);
+                }
+
+                function updateUnreadCount(delta) {
+                    if (!unreadCountEl) return;
+                    const next = Math.max(0, parseInt(unreadCountEl.textContent, 10) + delta);
+                    unreadCountEl.textContent = next;
+                    if (next === 0 && markAllBtn) markAllBtn.remove();
+                }
+
+                async function markAsRead(id, btn) {
+                    if (!tokenInput) return false;
+                    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('__RequestVerificationToken', tokenInput.value);
+                        formData.append('promotionRecipientId', id);
+
+                        const response = await fetch('?handler=MarkAsRead', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+
+                        if (!response.ok) throw new Error('Request failed');
+                        return true;
+                    } catch (err) {
+                        showToast('Could not update. Please try again.');
+                        if (btn) { btn.disabled = false; btn.textContent = 'Mark as read'; }
+                        return false;
+                    }
+                }
+
+                if (grid) {
+                    grid.addEventListener('click', async function(e) {
+                        const copyBtn = e.target.closest('.copy-code-btn');
+                        if (copyBtn) {
+                            const code = copyBtn.dataset.code;
+                            try {
+                                await navigator.clipboard.writeText(code);
+                                showToast('Coupon code copied');
+                            } catch {
+                                showToast('Copy this code: ' + code);
+                            }
+                            return;
+                        }
+
+                        const readBtn = e.target.closest('.promo-mark-read-btn');
+                        if (readBtn) {
+                            const card = readBtn.closest('.promo-card');
+                            const id = readBtn.dataset.id;
+                            const ok = await markAsRead(id, readBtn);
+                            if (ok && card) {
+                                card.classList.remove('unread');
+                                card.dataset.read = 'true';
+                                const badge = card.querySelector('.promo-new-badge');
+                                if (badge) badge.remove();
+                                readBtn.remove();
+                                updateUnreadCount(-1);
+                                showToast('Marked as read');
+                            }
+                        }
+                    });
+                }
+
+                if (markAllBtn) {
+                    markAllBtn.addEventListener('click', async function() {
+                        const unreadButtons = Array.from(document.querySelectorAll('.promo-mark-read-btn'));
+                        markAllBtn.disabled = true;
+                        markAllBtn.textContent = 'Marking all…';
+
+                        for (const btn of unreadButtons) {
+                            const card = btn.closest('.promo-card');
+                            const id = btn.dataset.id;
+                            const ok = await markAsRead(id, btn);
+                            if (ok && card) {
+                                card.classList.remove('unread');
+                                const badge = card.querySelector('.promo-new-badge');
+                                if (badge) badge.remove();
+                                btn.remove();
+                            }
+                        }
+                        if (unreadCountEl) unreadCountEl.textContent = '0';
+                        showToast('All promotions marked as read');
+                    });
+                }
+
+                const filterTabs = document.querySelectorAll('.promo-filter-tabs button');
+                filterTabs.forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        filterTabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        const filter = tab.dataset.filter;
+                        document.querySelectorAll('.promo-card').forEach(card => {
+                            const isUnread = card.dataset.read === 'false';
+                            card.classList.toggle('is-hidden', filter === 'unread' && !isUnread);
+                        });
+                    });
+                });
+            })();
+    </script>
 
 </body>
 </html>

@@ -9,8 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
-                   ROOT VARIABLES — consistent brand palette
-                   ============================================================ */
+                           ROOT VARIABLES — consistent brand palette
+                           ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -42,8 +42,8 @@
         }
 
         /* ============================================================
-                   HEADER
-                   ============================================================ */
+                           HEADER
+                           ============================================================ */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -57,8 +57,8 @@
                 margin: 0;
                 font-family: var(--font-display);
                 font-size: 26px;
-                font-weight: 600;
-                letter-spacing: -0.2px;
+                font-weight: 800;
+                letter-spacing: -0.4px;
                 color: var(--text-primary);
                 display: flex;
                 align-items: center;
@@ -163,8 +163,8 @@
         }
 
         /* ============================================================
-                   ALERTS
-                   ============================================================ */
+                           ALERTS
+                           ============================================================ */
         .alert {
             border-radius: var(--radius-md);
             padding: 14px 18px;
@@ -191,8 +191,8 @@
         }
 
         /* ============================================================
-                   CARDS
-                   ============================================================ */
+                           CARDS
+                           ============================================================ */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -250,8 +250,8 @@
             }
 
         /* ============================================================
-                   TABLE
-                   ============================================================ */
+                           TABLE
+                           ============================================================ */
         .table-wrap {
             overflow-x: auto;
         }
@@ -308,8 +308,8 @@
         }
 
         /* ============================================================
-                   STATUS UPDATE FORM
-                   ============================================================ */
+                           STATUS UPDATE FORM
+                           ============================================================ */
         .status-form {
             display: flex;
             flex-wrap: wrap;
@@ -397,8 +397,8 @@
             }
 
         /* ============================================================
-                   ACCESSIBILITY
-                   ============================================================ */
+                           ACCESSIBILITY
+                           ============================================================ */
         a:focus-visible,
         button:focus-visible,
         select:focus-visible {
@@ -413,8 +413,8 @@
         }
 
         /* ============================================================
-                   RESPONSIVE
-                   ============================================================ */
+                           RESPONSIVE
+                           ============================================================ */
         @@media (max-width: 768px) {
             .page-header {
                 flex-direction: column;
@@ -574,9 +574,13 @@
                     <select name="newStatus" id="newStatusSelect" class="form-select">
                         @foreach (var status in Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order.IndexModel.ValidOrderStatuses)
                         {
-                            <option value="@status" selected="@(Model.Order?.Status == status)">
-                                @(status == "OutForDelivery" ? "Out for Delivery" : status)
-                            </option>
+                            var isTerminal = status == "Delivered" || status == "Cancelled";
+                            if (!(Model.Order?.IsMultiVendor == true && isTerminal))
+                            {
+                                <option value="@status" selected="@(Model.Order?.Status == status)">
+                                    @(status == "OutForDelivery" ? "Out for Delivery" : status)
+                                </option>
+                            }
                         }
                     </select>
                 </div>

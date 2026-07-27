@@ -76,6 +76,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                 // Compute subtotal
                 var subtotal = items.Sum(i => i.TotalPrice);
 
+                // Fix for H4 (partial, Option 1): does this order contain
+                // items from more than one store?
+                var distinctStoreCount = await _context.OrderItems
+                    .Where(oi => oi.OrderID == id)
+                    .Select(oi => oi.StoreID)
+                    .Distinct()
+                    .CountAsync();
+
                 // Prepare view models
                 Order = new OrderDetailsViewModel
                 {
@@ -98,7 +106,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                     OrderDate = order.OrderDate,
                     Subtotal = subtotal,
                     DeliveryFee = order.DeliveryFee,
-                    TotalAmount = order.TotalAmount
+                    TotalAmount = order.TotalAmount,
+                    IsMultiVendor = distinctStoreCount > 1
                 };
 
                 OrderItems = items.Select(i => new OrderItemViewModel
@@ -169,6 +178,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                     return RedirectToPage("/StoreOwner/Order/Index");
                 }
 
+                // Fix for H4 (partial, Option 1): same guard as Index.cshtml.cs —
+                // a multi-vendor order can't be marked Delivered/Cancelled from
+                // this single-store page since other stores' items are unaffected.
+                if (AllowedOrderStatuses.IsTerminal(newStatus))
+                {
+                    var distinctStoreCount = await _context.OrderItems
+                        .Where(oi => oi.OrderID == orderId)
+                        .Select(oi => oi.StoreID)
+                        .Distinct()
+                        .CountAsync();
+
+                    if (distinctStoreCount > 1)
+                    {
+                        TempData["ErrorMessage"] =
+                            "This order includes items from other stores. " +
+                            "'" + newStatus + "' cannot be set from here for a multi-vendor order.";
+
+                        return RedirectToPage(new { id = orderId });
+                    }
+                }
+
                 var previousStatus = order.Status;
                 order.Status = newStatus;
 
@@ -230,6 +260,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
         public decimal Subtotal { get; set; }
         public decimal DeliveryFee { get; set; }
         public decimal TotalAmount { get; set; }
+        public bool IsMultiVendor { get; set; }
     }
 
     public class OrderItemViewModel

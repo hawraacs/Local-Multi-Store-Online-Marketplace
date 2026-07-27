@@ -9,8 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
-                           ROOT VARIABLES — consistent brand palette
-                           ============================================================ */
+                                   ROOT VARIABLES — consistent brand palette
+                                   ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -42,8 +42,8 @@
         }
 
         /* ============================================================
-                           ALERTS
-                           ============================================================ */
+                                   ALERTS
+                                   ============================================================ */
         .alert {
             padding: 14px 20px;
             border-radius: var(--radius-md);
@@ -72,8 +72,8 @@
         }
 
         /* ============================================================
-                           HEADER
-                           ============================================================ */
+                                   HEADER
+                                   ============================================================ */
         .orders-header {
             display: flex;
             justify-content: space-between;
@@ -104,8 +104,8 @@
             }
 
         /* ============================================================
-                           STATS ROW
-                           ============================================================ */
+                                   STATS ROW
+                                   ============================================================ */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -152,9 +152,9 @@
             }
 
         /* ============================================================
-                           SEARCH / FILTER BAR — was fully supported server-side
-                           (StatusFilter/SearchTerm query params) but had no UI at all.
-                           ============================================================ */
+                                   SEARCH / FILTER BAR — was fully supported server-side
+                                   (StatusFilter/SearchTerm query params) but had no UI at all.
+                                   ============================================================ */
         .search-filter-bar {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -218,8 +218,8 @@
             }
 
         /* ============================================================
-                           CARD
-                           ============================================================ */
+                                   CARD
+                                   ============================================================ */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -256,8 +256,8 @@
         }
 
         /* ============================================================
-                           TABLE
-                           ============================================================ */
+                                   TABLE
+                                   ============================================================ */
         .table {
             font-size: 14px;
             color: var(--text-primary);
@@ -377,9 +377,9 @@
             }
 
         /* ============================================================
-                           PAGINATION — the model already computed PageIndex/TotalPages;
-                           there was simply no control anywhere to use them.
-                           ============================================================ */
+                                   PAGINATION — the model already computed PageIndex/TotalPages;
+                                   there was simply no control anywhere to use them.
+                                   ============================================================ */
         .pagination-wrap {
             display: flex;
             align-items: center;
@@ -423,8 +423,8 @@
         }
 
         /* ============================================================
-                           ACCESSIBILITY
-                           ============================================================ */
+                                   ACCESSIBILITY
+                                   ============================================================ */
         a:focus-visible,
         button:focus-visible,
         input:focus-visible,
@@ -441,8 +441,8 @@
         }
 
         /* ============================================================
-                           RESPONSIVE
-                           ============================================================ */
+                                   RESPONSIVE
+                                   ============================================================ */
         @@media (max-width: 768px) {
             .orders-header {
                 flex-direction: column;
@@ -612,9 +612,13 @@
                                     <select name="newStatus" class="status-select" onchange="this.form.submit()">
                                         @foreach (var status in Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order.IndexModel.ValidOrderStatuses)
                                         {
-                                            <option value="@status" selected="@(order.Status == status)">
-                                                @(status == "OutForDelivery" ? "Out for Delivery" : status)
-                                            </option>
+                                            var isTerminal = status == "Delivered" || status == "Cancelled";
+                                            if (!(order.IsMultiVendor && isTerminal))
+                                            {
+                                                <option value="@status" selected="@(order.Status == status)">
+                                                    @(status == "OutForDelivery" ? "Out for Delivery" : status)
+                                                </option>
+                                            }
                                         }
                                     </select>
                                 </form>

@@ -63,6 +63,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     OrderID = o.OrderID,
                     OrderNumber = o.OrderNumber,
 
+                    // Order has no direct Store navigation — StoreID
+                    // lives on each OrderItem instead. Most orders will
+                    // only have one distinct store, but we join all
+                    // distinct store names in case an order ever spans
+                    // items from more than one store.
+                    StoreName = string.Join(
+                        ", ",
+                        o.OrderItems
+                            .Select(orderItem => orderItem.Store.StoreName)
+                            .Distinct()),
+
                     Products = o.OrderItems
                         .OrderBy(orderItem => orderItem.OrderItemID)
                         .Select(orderItem => new CustomerOrderProductViewModel
@@ -97,6 +108,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             public int OrderID { get; set; }
 
             public string OrderNumber { get; set; } = string.Empty;
+
+            public string StoreName { get; set; } = string.Empty;
 
             public List<CustomerOrderProductViewModel> Products { get; set; }
                 = new();

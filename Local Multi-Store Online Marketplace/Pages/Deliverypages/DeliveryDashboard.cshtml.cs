@@ -39,6 +39,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         public string? ErrorMessage { get; set; }
 
         // =====================================================
+        // ALL-TIME KPI COUNTS (Fix for H1: these are deliberately
+        // separate from `Assignments` above, which only holds
+        // currently-active work and excludes Delivered/Cancelled/
+        // Failed by design. The KPI summary panel needs the real
+        // all-time totals, so it must not be derived from the
+        // already-filtered Assignments list.
+        // =====================================================
+        public int TotalAssignmentsCount { get; set; }
+
+        public int AssignedAssignmentsCount { get; set; }
+
+        public int OutForDeliveryAssignmentsCount { get; set; }
+
+        public int DeliveredAssignmentsCount { get; set; }
+
+        // =====================================================
         // LOAD DELIVERY DASHBOARD
         // =====================================================
         public async Task<IActionResult> OnGetAsync()
@@ -80,6 +96,36 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                     .OrderByDescending(assignment =>
                         assignment.AssignedAt)
                     .ToListAsync();
+
+            // Fix for H1: all-time counts for the KPI panel, queried
+            // separately from rawAssignments above (which intentionally
+            // excludes Delivered/Cancelled/Failed for the Active
+            // Assignments list). This query includes every status so
+            // "Delivered" and "Total" reflect real history, not just
+            // what's currently active.
+            var allAssignmentStatuses =
+                await _context.DeliveryAssignments
+                    .AsNoTracking()
+                    .Where(assignment =>
+                        assignment.DeliveryPersonID ==
+                            deliveryPerson.DeliveryPersonID)
+                    .Select(assignment => assignment.Status)
+                    .ToListAsync();
+
+            TotalAssignmentsCount =
+                allAssignmentStatuses.Count;
+
+            AssignedAssignmentsCount =
+                allAssignmentStatuses.Count(status =>
+                    status == "Assigned");
+
+            OutForDeliveryAssignmentsCount =
+                allAssignmentStatuses.Count(status =>
+                    status == "OutForDelivery");
+
+            DeliveredAssignmentsCount =
+                allAssignmentStatuses.Count(status =>
+                    status == "Delivered");
 
             Assignments = rawAssignments
                 .Select(assignment => new DeliveryAssignmentViewModel

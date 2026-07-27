@@ -23,6 +23,11 @@ namespace Multi_Store.Core.Entities
 
         public string? DeliveryProofImageURL { get; set; }
 
+        // UI-only personal preference for the delivery person.
+        // Does NOT delete or affect the order, assignment history,
+        // admin visibility, customer visibility, or reporting/analytics.
+        public bool IsHiddenByDeliveryPerson { get; set; } = false;
+
         // Relationships
 
         // Many Assignments belong to one Order

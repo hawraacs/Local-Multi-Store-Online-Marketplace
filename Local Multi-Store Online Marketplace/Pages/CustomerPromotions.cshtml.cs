@@ -11,10 +11,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     public class CustomerPromotionsModel : PageModel
     {
         private readonly IPromotionManager _promotionManager;
+        private readonly ILogger<CustomerPromotionsModel> _logger;
 
-        public CustomerPromotionsModel(IPromotionManager promotionManager)
+        public CustomerPromotionsModel(IPromotionManager promotionManager, ILogger<CustomerPromotionsModel> logger)
         {
             _promotionManager = promotionManager;
+            _logger = logger;
         }
 
         public List<PromotionRecipient> Promotions { get; set; } = new();
@@ -22,17 +24,42 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public async Task OnGetAsync()
         {
             int userId = GetCurrentUserId();
-            Promotions = await _promotionManager.GetCustomerPromotionsAsync(userId);
+            var promotions = await _promotionManager.GetCustomerPromotionsAsync(userId);
+
+            // Unread first, then most recent — keeps the page scannable as the list grows.
+            Promotions = promotions
+                .OrderBy(p => p.IsRead)
+                .ThenByDescending(p => p.CreatedAt)
+                .ToList();
         }
 
         public async Task<IActionResult> OnPostMarkAsReadAsync(int promotionRecipientId)
         {
             int userId = GetCurrentUserId();
 
-            await _promotionManager.MarkAsReadAsync(promotionRecipientId, userId);
+            try
+            {
+                await _promotionManager.MarkAsReadAsync(promotionRecipientId, userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to mark promotion {PromotionRecipientId} as read for user {UserId}",
+                    promotionRecipientId, userId);
+
+                if (IsAjaxRequest())
+                    return new JsonResult(new { success = false }) { StatusCode = 400 };
+
+                return RedirectToPage();
+            }
+
+            if (IsAjaxRequest())
+                return new JsonResult(new { success = true, promotionRecipientId });
 
             return RedirectToPage();
         }
+
+        private bool IsAjaxRequest() =>
+            Request.Headers["X-Requested-With"] == "XMLHttpRequest";
 
         private int GetCurrentUserId()
         {
