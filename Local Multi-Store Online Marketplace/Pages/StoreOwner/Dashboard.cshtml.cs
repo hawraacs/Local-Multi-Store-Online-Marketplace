@@ -22,18 +22,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         private readonly BoostManager _boostManager;   // ADD THIS
 
         private readonly IConfiguration _configuration;
+        private readonly ILogger<DashboardModel> _logger;
+
         public DashboardModel(
     ApplicationDbContext context,
     ICurrentStoreService currentStoreService,
     UserManager<User> userManager,
     IConfiguration configuration,
-    BoostManager boostManager)                  // ADD THIS
+    BoostManager boostManager,                  // ADD THIS
+    ILogger<DashboardModel> logger)
         {
             _context = context;
             _currentStoreService = currentStoreService;
             _userManager = userManager;
             _configuration = configuration;
             _boostManager = boostManager;                // ADD THIS
+            _logger = logger;
         }
 
         public Store Store { get; set; } = new();
@@ -49,45 +53,63 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
         public async Task<IActionResult> OnGetAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
-
-            if (user == null)
-                return RedirectToPage("/Account/Login");
-
-            var store = await _currentStoreService.GetCurrentStoreAsync();
-
-            if (store == null)
+            try
             {
-                store = await _context.Stores
-                    .FirstOrDefaultAsync(s =>
-                        s.OwnerUserID == user.Id &&
-                        s.Status == "Approved");
-            }
+                var user = await _userManager.GetUserAsync(User);
 
-            if (store == null)
-            {
-                TempData["ErrorMessage"] = "Store profile was not found. Please contact admin.";
-                Store = new Store { StoreName = "No Store Found" };
+                if (user == null)
+                    return RedirectToPage("/Account/Login");
+
+                var store = await _currentStoreService.GetCurrentStoreAsync();
+
+                if (store == null)
+                {
+                    store = await _context.Stores
+                        .FirstOrDefaultAsync(s =>
+                            s.OwnerUserID == user.Id &&
+                            s.Status == "Approved");
+                }
+
+                if (store == null)
+                {
+                    TempData["ErrorMessage"] = "Store profile was not found. Please contact admin.";
+                    Store = new Store { StoreName = "No Store Found" };
+                    return Page();
+                }
+
+                Store = store;
+                if (!string.IsNullOrWhiteSpace(store.StripeAccountId))
+                {
+                    StripeBalance = await GetStripeBalanceAsync(store.StripeAccountId);
+                }
+
+                ViewData["StoreName"] = store.StoreName;
+                ViewData["StoreId"] = store.StoreID;
+
+                await LoadDashboardStats(store.StoreID);
+                await LoadRecentOrders(store.StoreID);
+                await LoadTopProducts(store.StoreID);
+                await LoadLowStockProducts(store.StoreID);
+                await LoadWeeklySales(store.StoreID);
+                await LoadBoostSummary(store.StoreID);   // ADD THIS
+
                 return Page();
             }
-
-            Store = store;
-            if (!string.IsNullOrWhiteSpace(store.StripeAccountId))
+            catch (Exception ex)
             {
-                StripeBalance = await GetStripeBalanceAsync(store.StripeAccountId);
+                _logger.LogError(ex, "Error loading Store Owner Dashboard for user {UserId}.", User?.Identity?.Name);
+
+                // Keep whatever defaults are already in place so the page still renders
+                // (empty lists, zeroed stats) instead of showing an unhandled-exception page.
+                TempData["ErrorMessage"] = "Something went wrong while loading your dashboard. Please refresh the page or try again shortly.";
+
+                if (string.IsNullOrWhiteSpace(Store?.StoreName))
+                {
+                    Store = new Store { StoreName = "Dashboard" };
+                }
+
+                return Page();
             }
-
-            ViewData["StoreName"] = store.StoreName;
-            ViewData["StoreId"] = store.StoreID;
-
-            await LoadDashboardStats(store.StoreID);
-            await LoadRecentOrders(store.StoreID);
-            await LoadTopProducts(store.StoreID);
-            await LoadLowStockProducts(store.StoreID);
-            await LoadWeeklySales(store.StoreID);
-            await LoadBoostSummary(store.StoreID);   // ADD THIS
-
-            return Page();
         }
 
         private async Task LoadDashboardStats(int storeId)
@@ -206,11 +228,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 .Sum(oi =>
                     (oi.Product.Price - oi.Product.OriginalPrice.Value) * oi.Quantity);
 
+            // BUGFIX: previously this filtered on OriginalPrice > 0 but not Price > 0.
+            // A product with Price == 0 (e.g. a free/giveaway item) would divide by
+            // zero below and throw DivideByZeroException for the whole dashboard load.
             var productsWithMargin = await _context.Products
                 .Where(p =>
                     p.StoreID == storeId &&
                     p.OriginalPrice.HasValue &&
-                    p.OriginalPrice > 0)
+                    p.OriginalPrice > 0 &&
+                    p.Price > 0)
                 .ToListAsync();
 
             if (productsWithMargin.Any())
@@ -225,6 +251,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     p.StoreID == storeId &&
                     p.OriginalPrice.HasValue &&
                     p.OriginalPrice > 0 &&
+                    p.Price > 0 &&
                     ((p.Price - p.OriginalPrice.Value) / p.Price) * 100 < 10);
 
             // =========================
@@ -382,8 +409,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
                 return (available?.Amount ?? 0) / 100m;
             }
-            catch
+            catch (Exception ex)
             {
+                // BUGFIX: previously this exception was silently swallowed, so a
+                // misconfigured Stripe key or a revoked connected account would fail
+                // forever with zero visibility. -1 is used as a sentinel the view
+                // renders as "Unavailable" rather than a misleading "$-1.00".
+                _logger.LogWarning(ex, "Failed to fetch Stripe balance for account {StripeAccountId}.", stripeAccountId);
                 return -1;
             }
         }

@@ -17,12 +17,25 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
     {
         private readonly ApplicationDbContext _context;
         private readonly ICurrentStoreService _currentStoreService;
+        private readonly ILogger<IndexModel> _logger;
 
-        public IndexModel(ApplicationDbContext context, ICurrentStoreService currentStoreService)
+        public IndexModel(
+            ApplicationDbContext context,
+            ICurrentStoreService currentStoreService,
+            ILogger<IndexModel> logger)
         {
             _context = context;
             _currentStoreService = currentStoreService;
+            _logger = logger;
         }
+
+        // Single source of truth for valid order statuses — used for server-side
+        // validation AND to build both dropdowns in the view, so the two can never
+        // drift out of sync with each other or with what's actually accepted here.
+        public static readonly string[] ValidOrderStatuses =
+        {
+            "Pending", "Confirmed", "Preparing", "OutForDelivery", "Delivered", "Cancelled"
+        };
 
         public List<OrderViewModel> Orders { get; set; } = new();
         public int PageIndex { get; set; } = 1;
@@ -33,75 +46,104 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
 
         public async Task<IActionResult> OnGetAsync(int pageIndex = 1, string statusFilter = "", string searchTerm = "")
         {
-            // 1. Check store owner
-            if (!await _currentStoreService.IsStoreOwnerAsync())
-                return RedirectToPage("/Account/AccessDenied");
-
-            var store = await _currentStoreService.GetCurrentStoreAsync();
-            if (store == null)
+            try
             {
-                TempData["ErrorMessage"] = "Store not found.";
-                return Page();
-            }
+                // 1. Check store owner
+                if (!await _currentStoreService.IsStoreOwnerAsync())
+                    return RedirectToPage("/Account/AccessDenied");
 
-            PageIndex = pageIndex;
-            StatusFilter = statusFilter;
-            SearchTerm = searchTerm;
+                var store = await _currentStoreService.GetCurrentStoreAsync();
+                if (store == null)
+                {
+                    TempData["ErrorMessage"] = "Store not found.";
+                    return Page();
+                }
 
-            // 2. Get all order IDs that contain items from this store
-            var orderIdsQuery = _context.OrderItems
-                .Where(oi => oi.StoreID == store.StoreID)
-                .Select(oi => oi.OrderID)
-                .Distinct();
+                PageIndex = pageIndex < 1 ? 1 : pageIndex;
+                StatusFilter = statusFilter ?? string.Empty;
+                SearchTerm = searchTerm ?? string.Empty;
 
-            var ordersQuery = _context.Orders
-                .Include(o => o.Customer)
-                .ThenInclude(c => c.User)
-                .Where(o => orderIdsQuery.Contains(o.OrderID));
+                // 2. Get all order IDs that contain items from this store
+                var orderIdsQuery = _context.OrderItems
+                    .Where(oi => oi.StoreID == store.StoreID)
+                    .Select(oi => oi.OrderID)
+                    .Distinct();
 
-            // 3. Apply filters
-            if (!string.IsNullOrEmpty(StatusFilter))
-                ordersQuery = ordersQuery.Where(o => o.Status == StatusFilter);
+                var ordersQuery = _context.Orders
+                    .Include(o => o.Customer)
+                    .ThenInclude(c => c.User)
+                    .Where(o => orderIdsQuery.Contains(o.OrderID));
 
-            if (!string.IsNullOrEmpty(SearchTerm))
-                ordersQuery = ordersQuery.Where(o =>
-                    o.OrderNumber.Contains(SearchTerm) ||
-                    o.Customer.User.FullName.Contains(SearchTerm));
+                // 3. Apply filters
+                if (!string.IsNullOrEmpty(StatusFilter))
+                    ordersQuery = ordersQuery.Where(o => o.Status == StatusFilter);
 
-            // 4. Pagination
-            var totalCount = await ordersQuery.CountAsync();
-            TotalPages = (int)Math.Ceiling(totalCount / (double)PageSize);
+                if (!string.IsNullOrEmpty(SearchTerm))
+                    ordersQuery = ordersQuery.Where(o =>
+                        o.OrderNumber.Contains(SearchTerm) ||
+                        o.Customer.User.FullName.Contains(SearchTerm));
 
-            var orders = await ordersQuery
-                .OrderByDescending(o => o.OrderDate)
-                .Skip((PageIndex - 1) * PageSize)
-                .Take(PageSize)
-                .ToListAsync();
+                // 4. Pagination
+                var totalCount = await ordersQuery.CountAsync();
+                TotalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)PageSize));
 
-            // 5. Build ViewModel with item counts
-            Orders = new List<OrderViewModel>();
-            foreach (var order in orders)
-            {
-                var itemCount = await _context.OrderItems
-                    .CountAsync(oi => oi.OrderID == order.OrderID && oi.StoreID == store.StoreID);
+                // Guard against requesting a page past the end (e.g. after a filter
+                // shrinks the result set while the user was on a later page).
+                if (PageIndex > TotalPages) PageIndex = TotalPages;
 
-                Orders.Add(new OrderViewModel
+                var orders = await ordersQuery
+                    .OrderByDescending(o => o.OrderDate)
+                    .Skip((PageIndex - 1) * PageSize)
+                    .Take(PageSize)
+                    .ToListAsync();
+
+                // 5. Build ViewModel with item counts
+                // BUGFIX (perf): previously issued one COUNT query per order in a
+                // loop (N+1). Batched into a single grouped query for the whole page.
+                var orderIds = orders.Select(o => o.OrderID).ToList();
+                var itemCounts = await _context.OrderItems
+                    .Where(oi => orderIds.Contains(oi.OrderID) && oi.StoreID == store.StoreID)
+                    .GroupBy(oi => oi.OrderID)
+                    .Select(g => new { OrderID = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(x => x.OrderID, x => x.Count);
+
+                Orders = orders.Select(order => new OrderViewModel
                 {
                     OrderID = order.OrderID,
                     OrderNumber = order.OrderNumber,
-                    CustomerName = order.Customer.User.FullName,
+                    CustomerName = order.Customer?.User?.FullName ?? "Customer",
                     TotalAmount = order.TotalAmount,
                     Status = order.Status,
                     OrderDate = order.OrderDate,
-                    ItemCount = itemCount
-                });
-            }
+                    ItemCount = itemCounts.TryGetValue(order.OrderID, out var count) ? count : 0
+                }).ToList();
 
-            return Page();
+                return Page();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading Store Owner Orders index.");
+                TempData["ErrorMessage"] = "Something went wrong while loading your orders. Please try again.";
+                Orders = new List<OrderViewModel>();
+                return Page();
+            }
         }
 
-        public async Task<IActionResult> OnPostUpdateStatusAsync(int orderId, string newStatus)
+        public async Task<IActionResult> OnPostUpdateStatusAsync(
+            int orderId,
+            string newStatus,
+            int pageIndex = 1,
+            string statusFilter = "",
+            string searchTerm = "")
         {
+            // BUGFIX: previously redirected using this.PageIndex/StatusFilter/SearchTerm,
+            // which are plain properties only ever set inside OnGetAsync — on a POST
+            // they were always at their default (page 1, no filters), so updating a
+            // status from page 2+ (once pagination is reachable at all) silently
+            // bounced the user back to page 1 with filters cleared. Now bound directly
+            // from hidden fields in the update form and used for every redirect below.
+            var routeValues = new { pageIndex, statusFilter, searchTerm };
+
             if (!await _currentStoreService.IsStoreOwnerAsync())
                 return RedirectToPage("/Account/AccessDenied");
 
@@ -109,70 +151,91 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
             if (store == null)
             {
                 TempData["ErrorMessage"] = "Store not found.";
-                return RedirectToPage();
+                return RedirectToPage(routeValues);
             }
 
-            // Verify order belongs to this store
-            var hasStoreItem = await _context.OrderItems
-                .AnyAsync(oi => oi.OrderID == orderId && oi.StoreID == store.StoreID);
-
-            if (!hasStoreItem)
+            // BUGFIX: newStatus was previously written straight to the database with
+            // no validation at all. The <select> in the UI only offers valid values,
+            // but that's not a security boundary — a crafted POST could persist any
+            // string, silently breaking every exact-match status comparison
+            // elsewhere on this page (and likely elsewhere in the app).
+            if (string.IsNullOrWhiteSpace(newStatus) ||
+                !ValidOrderStatuses.Contains(newStatus, StringComparer.OrdinalIgnoreCase))
             {
-                TempData["ErrorMessage"] = "Unauthorized access to this order.";
-                return RedirectToPage();
+                TempData["ErrorMessage"] = "That isn't a valid order status.";
+                return RedirectToPage(routeValues);
             }
 
-            // Switched from FindAsync to a query with Include so we have
-            // order.Customer.UserID available for the notification below.
-            var order = await _context.Orders
-                .Include(o => o.Customer)
-                .FirstOrDefaultAsync(o => o.OrderID == orderId);
-
-            if (order == null)
+            try
             {
-                TempData["ErrorMessage"] = "Order not found.";
-                return RedirectToPage();
-            }
+                // Verify order belongs to this store
+                var hasStoreItem = await _context.OrderItems
+                    .AnyAsync(oi => oi.OrderID == orderId && oi.StoreID == store.StoreID);
 
-            var previousStatus = order.Status;
-            order.Status = newStatus;
-
-            // =====================================================
-            // NOTIFY CUSTOMER — this was the missing piece. A customer
-            // previously had no way to know their order moved to
-            // Confirmed/Preparing/OutForDelivery/Delivered/Cancelled
-            // unless they manually refreshed their order page.
-            // =====================================================
-            if (order.Customer != null &&
-                !string.Equals(previousStatus, newStatus, StringComparison.OrdinalIgnoreCase))
-            {
-                var message = newStatus switch
+                if (!hasStoreItem)
                 {
-                    "Confirmed" => $"Your order {order.OrderNumber} has been confirmed by the store.",
-                    "Preparing" => $"Your order {order.OrderNumber} is being prepared.",
-                    "OutForDelivery" => $"Your order {order.OrderNumber} is out for delivery.",
-                    "Delivered" => $"Your order {order.OrderNumber} has been delivered. Enjoy!",
-                    "Cancelled" => $"Your order {order.OrderNumber} has been cancelled.",
-                    _ => $"Your order {order.OrderNumber} status changed to {newStatus}."
-                };
+                    TempData["ErrorMessage"] = "Unauthorized access to this order.";
+                    return RedirectToPage(routeValues);
+                }
 
-                _context.Notifications.Add(new Notification
+                // Switched from FindAsync to a query with Include so we have
+                // order.Customer.UserID available for the notification below.
+                var order = await _context.Orders
+                    .Include(o => o.Customer)
+                    .FirstOrDefaultAsync(o => o.OrderID == orderId);
+
+                if (order == null)
                 {
-                    UserID = order.Customer.UserID,
-                    Title = "Order status updated",
-                    Message = message,
-                    Type = "OrderStatus",
-                    ReferenceID = order.OrderID,
-                    IsRead = false,
-                    SentAt = DateTime.UtcNow,
-                    SentVia = "System"
-                });
+                    TempData["ErrorMessage"] = "Order not found.";
+                    return RedirectToPage(routeValues);
+                }
+
+                var previousStatus = order.Status;
+                order.Status = newStatus;
+
+                // =====================================================
+                // NOTIFY CUSTOMER — this was the missing piece. A customer
+                // previously had no way to know their order moved to
+                // Confirmed/Preparing/OutForDelivery/Delivered/Cancelled
+                // unless they manually refreshed their order page.
+                // =====================================================
+                if (order.Customer != null &&
+                    !string.Equals(previousStatus, newStatus, StringComparison.OrdinalIgnoreCase))
+                {
+                    var message = newStatus switch
+                    {
+                        "Confirmed" => $"Your order {order.OrderNumber} has been confirmed by the store.",
+                        "Preparing" => $"Your order {order.OrderNumber} is being prepared.",
+                        "OutForDelivery" => $"Your order {order.OrderNumber} is out for delivery.",
+                        "Delivered" => $"Your order {order.OrderNumber} has been delivered. Enjoy!",
+                        "Cancelled" => $"Your order {order.OrderNumber} has been cancelled.",
+                        _ => $"Your order {order.OrderNumber} status changed to {newStatus}."
+                    };
+
+                    _context.Notifications.Add(new Notification
+                    {
+                        UserID = order.Customer.UserID,
+                        Title = "Order status updated",
+                        Message = message,
+                        Type = "OrderStatus",
+                        ReferenceID = order.OrderID,
+                        IsRead = false,
+                        SentAt = DateTime.UtcNow,
+                        SentVia = "System"
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Order #{order.OrderNumber} status updated to {newStatus}.";
+                return RedirectToPage(routeValues);
             }
-
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = $"Order #{order.OrderNumber} status updated to {newStatus}.";
-            return RedirectToPage(new { pageIndex = PageIndex, statusFilter = StatusFilter, searchTerm = SearchTerm });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating status for Order {OrderId}.", orderId);
+                TempData["ErrorMessage"] = "Something went wrong while updating the order. Please try again.";
+                return RedirectToPage(routeValues);
+            }
         }
     }
 

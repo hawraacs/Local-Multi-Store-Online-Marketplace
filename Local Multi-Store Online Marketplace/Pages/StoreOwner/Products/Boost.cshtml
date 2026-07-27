@@ -6,6 +6,7 @@
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --accent: #6d28d9;
@@ -26,10 +27,13 @@
             --radius-sm: 10px;
             --radius-md: 16px;
             --radius-lg: 24px;
+            /* Same display face used across the rest of the Store Owner section. */
+            --font-display: 'Fraunces', 'Georgia', serif;
         }
 
         body {
             background: var(--bg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         .boost-page {
@@ -75,8 +79,9 @@
         }
 
         .boost-header-info h1 {
-            font-size: 18px;
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-size: 19px;
+            font-weight: 600;
             color: var(--text-primary);
             margin: 0 0 4px;
         }
@@ -127,8 +132,9 @@
             }
 
         .boost-status-info h3 {
-            font-size: 15px;
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-size: 16px;
+            font-weight: 600;
             color: var(--text-primary);
             margin: 0 0 4px;
         }
@@ -167,8 +173,9 @@
         }
 
             .boost-form-card h2 {
-                font-size: 16px;
-                font-weight: 800;
+                font-family: var(--font-display);
+                font-size: 17px;
+                font-weight: 600;
                 color: var(--text-primary);
                 margin: 0 0 6px;
             }
@@ -224,6 +231,11 @@
             border-color: var(--accent);
             background: var(--accent-light);
             box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.12);
+        }
+
+        .boost-option input[type="radio"]:focus-visible + .boost-option-label {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
         }
 
         .boost-option-days {
@@ -290,6 +302,19 @@
                 background: #fee2e2;
                 color: var(--error);
             }
+
+        /* ---- Accessibility ---- */
+        a:focus-visible,
+        button:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.001ms !important;
+            }
+        }
     </style>
 }
 
@@ -322,7 +347,9 @@
             <h1>@Model.Product.ProductName</h1>
             <p>Boost this product so it appears higher and marked "Boosted" to customers.</p>
         </div>
-        <div class="boost-header-price">$@Model.Product.Price</div>
+        <!-- BUGFIX: was missing .ToString("N2"), same inconsistency fixed earlier
+             on the Home page — could show "$9.5" instead of "$9.50". -->
+        <div class="boost-header-price">$@Model.Product.Price.ToString("N2")</div>
     </div>
 
     <!-- ========== CURRENT / PENDING BOOST STATUS ========== -->
@@ -338,7 +365,7 @@
                 @if (isActive)
                 {
                     <h3>This product is currently boosted</h3>
-                    <p>Boost ends on @boost.EndDate?.ToString("dd MMM yyyy, h:mm tt")</p>
+                    <p>Boost ends on @(boost.EndDate.HasValue ? boost.EndDate.Value.ToString("dd MMM yyyy, h:mm tt") : "an upcoming date")</p>
                 }
                 else
                 {
@@ -386,7 +413,10 @@
                     @for (int i = 0; i < Model.PricingOptions.Count; i++)
                     {
                         var opt = Model.PricingOptions[i];
-                        var perDay = opt.Price / opt.DurationDays;
+                        // BUGFIX: cheap defensive guard — these are fixed pricing tiers
+                        // so DurationDays should never be 0, but a future config slip
+                        // would otherwise throw DivideByZeroException for the whole page.
+                        var perDay = opt.DurationDays > 0 ? opt.Price / opt.DurationDays : 0;
                         <div class="boost-option">
                             <input type="radio"
                                    id="duration_@opt.DurationDays"

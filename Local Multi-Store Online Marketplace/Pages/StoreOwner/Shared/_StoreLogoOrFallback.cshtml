@@ -1,0 +1,40 @@
+﻿@*
+    Shared store logo / fallback-icon partial.
+
+    Used anywhere a store's logo needs to render with a graceful fallback
+    (an icon in a colored circle) when no LogoURL is set. Previously this
+    exact if/else block was duplicated in three places on the Store Owner
+    Home page (profile header, side panel, post header) — this partial
+    collapses the two truly-identical ones (profile header + side panel)
+    into one place. The post header uses a different fallback pattern
+    (a static placeholder image instead of an icon) so it was left as-is.
+
+    Expected model (anonymous object or dynamic), e.g.:
+
+    <partial name="/Pages/StoreOwner/Shared/_StoreLogoOrFallback"
+             model="new {
+                 LogoUrl = Model.Store?.LogoURL,
+                 AltText = Model.Store?.StoreName,
+                 ImgClass = "profile-avatar",
+                 FallbackClass = "profile-avatar-fallback",
+                 IconClass = "fa-store"
+             }" />
+*@
+@model dynamic
+@{
+    string? logoUrl = Model.LogoUrl;
+    string altText = Model.AltText ?? "Store";
+    string imgClass = Model.ImgClass;
+    string fallbackClass = Model.FallbackClass;
+    string iconClass = Model.IconClass ?? "fa-store";
+}
+@if (!string.IsNullOrWhiteSpace(logoUrl))
+{
+    <img class="@imgClass" src="@logoUrl" alt="@altText Logo" />
+}
+else
+{
+    <div class="@fallbackClass">
+        <i class="fas @iconClass"></i>
+    </div>
+}

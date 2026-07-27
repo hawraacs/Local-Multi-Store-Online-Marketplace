@@ -9,10 +9,11 @@
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
-                   ROOT VARIABLES — consistent brand palette
-                   ============================================================ */
+                           ROOT VARIABLES — consistent brand palette
+                           ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -34,6 +35,8 @@
             --radius-md: 12px;
             --radius-lg: 20px;
             --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            /* Same display face used across the rest of the Store Owner section. */
+            --font-display: 'Fraunces', 'Georgia', serif;
         }
 
         body {
@@ -44,8 +47,8 @@
         }
 
         /* ============================================================
-                   PAGE WRAPPER
-                   ============================================================ */
+                           PAGE WRAPPER
+                           ============================================================ */
         .page-wrapper {
             max-width: 820px;
             margin: 0 auto;
@@ -53,17 +56,18 @@
         }
 
         /* ============================================================
-                   HEADER
-                   ============================================================ */
+                           HEADER
+                           ============================================================ */
         .page-header {
             margin-bottom: 28px;
         }
 
             .page-header h2 {
                 margin: 0;
-                font-size: 26px;
-                font-weight: 800;
-                letter-spacing: -0.4px;
+                font-family: var(--font-display);
+                font-size: 27px;
+                font-weight: 600;
+                letter-spacing: -0.2px;
                 color: var(--text-primary);
                 display: flex;
                 align-items: center;
@@ -81,8 +85,8 @@
             }
 
         /* ============================================================
-                   FORM CARD — matches dashboard/orders card style
-                   ============================================================ */
+                           FORM CARD — matches dashboard/orders card style
+                           ============================================================ */
         .form-card {
             position: relative;
             background: var(--card-bg);
@@ -109,8 +113,8 @@
             }
 
         /* ============================================================
-                   VALIDATION SUMMARY
-                   ============================================================ */
+                           VALIDATION SUMMARY
+                           ============================================================ */
         .validation-summary-errors {
             background: #fef2f2;
             border: 1px solid #fecaca;
@@ -136,8 +140,8 @@
             }
 
         /* ============================================================
-                   FORM ELEMENTS
-                   ============================================================ */
+                           FORM ELEMENTS
+                           ============================================================ */
         .form-section-title {
             font-size: 12px;
             font-weight: 800;
@@ -251,8 +255,8 @@
         }
 
         /* ============================================================
-                   PRICE INPUTS — $ prefix
-                   ============================================================ */
+                           PRICE INPUTS — $ prefix
+                           ============================================================ */
         .price-input-wrapper {
             position: relative;
         }
@@ -274,8 +278,8 @@
             }
 
         /* ============================================================
-                   CATEGORY PICKER
-                   ============================================================ */
+                           CATEGORY PICKER
+                           ============================================================ */
         .category-picker {
             position: relative;
         }
@@ -418,6 +422,12 @@
                 background: var(--accent-light);
             }
 
+            .category-option:focus-visible {
+                outline: 2px solid var(--accent-color);
+                outline-offset: -2px;
+                background: var(--accent-light);
+            }
+
             .category-option.selected {
                 background: var(--accent-light);
                 color: var(--accent-color);
@@ -473,8 +483,8 @@
         }
 
         /* ============================================================
-                   IMAGE UPLOAD
-                   ============================================================ */
+                           IMAGE UPLOAD
+                           ============================================================ */
         .image-upload-area {
             border: 2px dashed var(--border-color);
             border-radius: var(--radius-md);
@@ -581,9 +591,21 @@
                     transform: scale(1.1);
                 }
 
+        .image-count-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-top: 10px;
+            display: block;
+        }
+
+            .image-count-label.at-limit {
+                color: var(--warning-color);
+            }
+
         /* ============================================================
-                   BUTTONS
-                   ============================================================ */
+                           BUTTONS
+                           ============================================================ */
         .form-actions {
             display: flex;
             gap: 14px;
@@ -637,8 +659,26 @@
             }
 
         /* ============================================================
-                   RESPONSIVE
-                   ============================================================ */
+                           ACCESSIBILITY
+                           ============================================================ */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.001ms !important;
+            }
+        }
+
+        /* ============================================================
+                           RESPONSIVE
+                           ============================================================ */
         @@media (max-width: 768px) {
             .page-wrapper {
                 padding: 20px 16px 40px;
@@ -688,7 +728,12 @@
     <!-- ========== FORM CARD ========== -->
     <div class="form-card">
         <form method="post" enctype="multipart/form-data">
-            <div asp-validation-summary="All" class="text-danger" style="margin-bottom:20px;"></div>
+            @* BUGFIX: was "All", which duplicates every field error — once here in
+               the summary, once again inline via each asp-validation-for span below.
+               ModelOnly means this summary only shows errors not tied to a specific
+               field (like the "Selected category is invalid" one added in the
+               code-behind), while field errors stay exactly where the user is looking. *@
+            <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom:20px;"></div>
 
             <!-- ===== PRODUCT DETAILS ===== -->
             <div class="form-section-title"><span class="section-index">1</span> Product Details</div>
@@ -725,7 +770,7 @@
 
                         <div class="category-picker-panel" id="categoryPickerPanel">
                             <input type="text" class="category-picker-search" id="categoryPickerSearch" placeholder="🔍 Search categories...">
-                            <div class="category-picker-tree" id="categoryPickerTree">
+                            <div class="category-picker-tree" id="categoryPickerTree" role="listbox" aria-label="Categories">
                                 @if (Model.CategoryTree.Any())
                                 {
                                     @foreach (var root in Model.CategoryTree)
@@ -819,10 +864,12 @@
                 <div class="image-upload-area" id="imageUploadArea">
                     <i class="fas fa-cloud-upload-alt"></i>
                     <p>Click or drag images here to upload</p>
-                    <span class="sub-text">Supports JPG, PNG, WEBP (max 5 images)</span>
-                    <input asp-for="ProductVM.UploadedImages" type="file" id="imageInput" multiple accept="image/*" style="display: none;" />
+                    <span class="sub-text">Supports JPG, PNG, WEBP · up to 5 images, 5 MB each</span>
+                    <input asp-for="ProductVM.UploadedImages" type="file" id="imageInput" multiple accept="image/jpeg,image/png,image/webp" style="display: none;" />
                 </div>
                 <div class="image-preview" id="imagePreview"></div>
+                <span class="image-count-label" id="imageCountLabel">0 / 5 images selected</span>
+                <span asp-validation-for="ProductVM.UploadedImages" class="text-danger"></span>
                 <span class="help-text">First image will be used as the primary image.</span>
             </div>
 
@@ -865,6 +912,16 @@
                 trigger.classList.remove('open');
             }
 
+            function selectOption(opt) {
+                hiddenInput.value = opt.dataset.id;
+                label.textContent = opt.dataset.path;
+                trigger.classList.add('has-value');
+                options.forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+                closePanel();
+                trigger.focus();
+            }
+
             trigger.addEventListener('click', function(e) {
                 e.stopPropagation();
                 if (panel.classList.contains('open')) {
@@ -874,14 +931,25 @@
                 }
             });
 
+            // BUGFIX: category options were only reachable/operable with a mouse
+            // (click listener only, no tabindex/keyboard handling). Category is a
+            // required field, so a keyboard-only user previously had no way to
+            // complete this form at all. Each option is now a real listbox option:
+            // focusable, announced to screen readers, and selectable with
+            // Enter/Space, matching how the trigger button already behaved.
             options.forEach(opt => {
+                if (!opt.hasAttribute('tabindex')) opt.setAttribute('tabindex', '0');
+                opt.setAttribute('role', 'option');
+
                 opt.addEventListener('click', function() {
-                    hiddenInput.value = this.dataset.id;
-                    label.textContent = this.dataset.path;
-                    trigger.classList.add('has-value');
-                    options.forEach(o => o.classList.remove('selected'));
-                    this.classList.add('selected');
-                    closePanel();
+                    selectOption(this);
+                });
+
+                opt.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        selectOption(this);
+                    }
                 });
             });
 
@@ -922,26 +990,78 @@
             const uploadArea = document.getElementById('imageUploadArea');
             const imageInput = document.getElementById('imageInput');
             const preview = document.getElementById('imagePreview');
+            const countLabel = document.getElementById('imageCountLabel');
+            const MAX_IMAGES = 5;
 
-            function handleFiles(files) {
+            // BUGFIX: previously the "×" button only removed the preview <div> —
+            // it never touched imageInput.files, so a "removed" image was still
+            // uploaded on submit. Selecting files a second time (picker or drag)
+            // also silently replaced the first batch instead of adding to it,
+            // since <input type="file"> can't be mutated directly. Both are fixed
+            // by keeping our own array as the single source of truth and
+            // rebuilding a DataTransfer object to sync it back into the real
+            // input every time it changes.
+            let currentFiles = [];
+
+            function syncInputFiles() {
+                const dt = new DataTransfer();
+                currentFiles.forEach(f => dt.items.add(f));
+                imageInput.files = dt.files;
+            }
+
+            function updateCountLabel() {
+                countLabel.textContent = `${currentFiles.length} / ${MAX_IMAGES} images selected`;
+                countLabel.classList.toggle('at-limit', currentFiles.length >= MAX_IMAGES);
+            }
+
+            function renderPreviews() {
                 preview.innerHTML = '';
-                let index = 0;
-                for (let file of files) {
-                    if (!file.type.startsWith('image/')) continue;
+                currentFiles.forEach((file, index) => {
                     const isPrimary = index === 0;
-                    index++;
                     const reader = new FileReader();
                     reader.onload = function(ev) {
                         const div = document.createElement('div');
                         div.className = 'preview-item';
                         div.innerHTML = `
-                            <img src="${ev.target.result}" alt="Preview" />
+                            <img src="${ev.target.result}" alt="Preview of ${file.name}" />
                             ${isPrimary ? '<span class="primary-badge">Primary</span>' : ''}
-                            <button type="button" class="remove-preview" onclick="this.parentElement.remove()">×</button>
+                            <button type="button" class="remove-preview" aria-label="Remove ${file.name}" data-index="${index}">×</button>
                         `;
                         preview.appendChild(div);
                     };
                     reader.readAsDataURL(file);
+                });
+                updateCountLabel();
+            }
+
+            preview.addEventListener('click', function(e) {
+                const btn = e.target.closest('.remove-preview');
+                if (!btn) return;
+                const index = Number(btn.dataset.index);
+                currentFiles.splice(index, 1);
+                syncInputFiles();
+                renderPreviews();
+            });
+
+            function addFiles(fileList) {
+                const incoming = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+                let skipped = false;
+
+                for (const file of incoming) {
+                    if (currentFiles.length >= MAX_IMAGES) {
+                        skipped = true;
+                        break;
+                    }
+                    currentFiles.push(file);
+                }
+
+                syncInputFiles();
+                renderPreviews();
+
+                if (skipped) {
+                    countLabel.textContent = `You can upload up to ${MAX_IMAGES} images.`;
+                    countLabel.classList.add('at-limit');
+                    setTimeout(updateCountLabel, 2500);
                 }
             }
 
@@ -960,13 +1080,11 @@
             uploadArea.addEventListener('drop', e => {
                 e.preventDefault();
                 uploadArea.classList.remove('drag-active');
-                const files = e.dataTransfer.files;
-                imageInput.files = files;
-                handleFiles(files);
+                addFiles(e.dataTransfer.files);
             });
 
             imageInput.addEventListener('change', e => {
-                handleFiles(e.target.files);
+                addFiles(e.target.files);
             });
         })();
     </script>

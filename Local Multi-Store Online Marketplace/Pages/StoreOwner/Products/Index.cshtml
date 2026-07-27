@@ -7,10 +7,11 @@
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
-           ROOT VARIABLES — consistent brand palette
-           ============================================================ */
+                   ROOT VARIABLES — consistent brand palette (matches Home/Dashboard)
+                   ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -31,11 +32,18 @@
             --radius-md: 12px;
             --radius-lg: 20px;
             --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            /* Same display face used on the Home/profile page, for one
+                       consistent typographic voice across the Store Owner section. */
+            --font-display: 'Fraunces', 'Georgia', serif;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         /* ============================================================
-           HEADER
-           ============================================================ */
+                   HEADER
+                   ============================================================ */
         .products-header {
             display: flex;
             justify-content: space-between;
@@ -45,19 +53,20 @@
             margin-bottom: 24px;
         }
 
-        .products-header h1 {
-            margin: 0;
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: -0.4px;
-            color: var(--text-primary);
-        }
+            .products-header h1 {
+                margin: 0;
+                font-family: var(--font-display);
+                font-size: 28px;
+                font-weight: 600;
+                letter-spacing: -0.3px;
+                color: var(--text-primary);
+            }
 
-        .products-header p {
-            margin: 4px 0 0;
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
+            .products-header p {
+                margin: 4px 0 0;
+                color: var(--text-secondary);
+                font-size: 14px;
+            }
 
         .btn-primary {
             display: inline-flex;
@@ -76,19 +85,19 @@
             cursor: pointer;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-            color: #fff;
-        }
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+                color: #fff;
+            }
 
-        .btn-primary i {
-            font-size: 14px;
-        }
+            .btn-primary i {
+                font-size: 14px;
+            }
 
         /* ============================================================
-           SEARCH / FILTER BAR
-           ============================================================ */
+                   SEARCH / FILTER BAR
+                   ============================================================ */
         .search-filter-bar {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -110,34 +119,34 @@
             min-width: 140px;
         }
 
-        .filter-input input,
-        .filter-input select {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            background: var(--bg-color);
-            font-size: 14px;
-            color: var(--text-primary);
-            transition: var(--transition);
-            font-family: inherit;
-        }
+            .filter-input input,
+            .filter-input select {
+                width: 100%;
+                padding: 10px 14px;
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-md);
+                background: var(--bg-color);
+                font-size: 14px;
+                color: var(--text-primary);
+                transition: var(--transition);
+                font-family: inherit;
+            }
 
-        .filter-input input:focus,
-        .filter-input select:focus {
-            outline: none;
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.15);
-        }
+                .filter-input input:focus,
+                .filter-input select:focus {
+                    outline: none;
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.15);
+                }
 
-        .filter-input button {
-            width: 100%;
-            justify-content: center;
-        }
+            .filter-input button {
+                width: 100%;
+                justify-content: center;
+            }
 
         /* ============================================================
-           ALERT (TempData) — kept for compatibility, but we also use toast
-           ============================================================ */
+                   ALERT (TempData) — kept for compatibility, but we also use toast
+                   ============================================================ */
         .alert {
             padding: 14px 20px;
             border-radius: var(--radius-md);
@@ -166,8 +175,8 @@
         }
 
         /* ============================================================
-           PRODUCT GRID
-           ============================================================ */
+                   PRODUCT GRID
+                   ============================================================ */
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -185,11 +194,22 @@
             flex-direction: column;
         }
 
-        .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-md);
-            border-color: var(--accent-color);
-        }
+            .product-card:hover {
+                transform: translateY(-4px);
+                box-shadow: var(--shadow-md);
+                border-color: var(--accent-color);
+            }
+
+            /* NEW: a deactivated product now actually looks deactivated instead of
+                   being visually identical to an active one — the only prior signal
+                   was the small pill in the corner of the actions row. */
+            .product-card.is-inactive {
+                opacity: 0.6;
+            }
+
+                .product-card.is-inactive:hover {
+                    opacity: 0.85;
+                }
 
         /* ----- Image area ----- */
         .product-image {
@@ -202,12 +222,12 @@
             overflow: hidden;
         }
 
-        .product-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.4s ease;
-        }
+            .product-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.4s ease;
+            }
 
         .product-card:hover .product-image img {
             transform: scale(1.03);
@@ -216,7 +236,6 @@
         .product-badge {
             position: absolute;
             top: 12px;
-            left: 12px;
             padding: 4px 14px;
             border-radius: 30px;
             font-size: 11px;
@@ -228,11 +247,18 @@
             z-index: 2;
         }
 
+        /* BUGFIX: both badges used to sit at the exact same top:12px; left:12px
+                   corner, so a discounted AND out-of-stock product rendered two badges
+                   stacked directly on top of each other — unreadable. Discount stays on
+                   the left, out-of-stock now sits on the right, so both are always
+                   legible even when they both apply at once. */
         .badge-discount {
+            left: 12px;
             background: var(--error-color);
         }
 
         .badge-outstock {
+            right: 12px;
             background: #6b7280;
         }
 
@@ -259,8 +285,9 @@
         }
 
         .product-title {
-            font-size: 17px;
-            font-weight: 700;
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 600;
             color: var(--text-primary);
             margin: 0 0 6px;
             line-height: 1.3;
@@ -310,9 +337,9 @@
             gap: 4px;
         }
 
-        .profit-line i {
-            color: var(--success-color);
-        }
+            .profit-line i {
+                color: var(--success-color);
+            }
 
         .stock-status {
             display: inline-block;
@@ -348,68 +375,68 @@
             padding-top: 14px;
         }
 
-        .product-actions .btn-edit,
-        .product-actions .btn-delete,
-        .product-actions .btn-toggle {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 14px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 700;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            transition: var(--transition);
-        }
+            .product-actions .btn-edit,
+            .product-actions .btn-delete,
+            .product-actions .btn-toggle {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 7px 14px;
+                border-radius: 30px;
+                font-size: 12px;
+                font-weight: 700;
+                text-decoration: none;
+                border: none;
+                cursor: pointer;
+                transition: var(--transition);
+            }
 
         .btn-edit {
             background: var(--accent-light);
             color: var(--accent-color);
         }
 
-        .btn-edit:hover {
-            background: var(--accent-color);
-            color: #fff;
-            transform: translateY(-1px);
-        }
+            .btn-edit:hover {
+                background: var(--accent-color);
+                color: #fff;
+                transform: translateY(-1px);
+            }
 
         .btn-delete {
             background: #fef2f2;
             color: var(--error-color);
         }
 
-        .btn-delete:hover {
-            background: var(--error-color);
-            color: #fff;
-            transform: translateY(-1px);
-        }
+            .btn-delete:hover {
+                background: var(--error-color);
+                color: #fff;
+                transform: translateY(-1px);
+            }
 
         .btn-toggle {
             background: #e5e7eb;
             color: #4b5563;
         }
 
-        .btn-toggle.active {
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
+            .btn-toggle.active {
+                background: #dbeafe;
+                color: #1d4ed8;
+            }
 
-        .btn-toggle:hover {
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-sm);
-        }
+            .btn-toggle:hover {
+                transform: translateY(-1px);
+                box-shadow: var(--shadow-sm);
+            }
 
-        .btn-toggle:disabled {
-            cursor: wait;
-            opacity: 0.65;
-            transform: none;
-        }
+            .btn-toggle:disabled {
+                cursor: wait;
+                opacity: 0.65;
+                transform: none;
+            }
 
         /* ============================================================
-           EMPTY STATE
-           ============================================================ */
+                   EMPTY STATE
+                   ============================================================ */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -418,29 +445,30 @@
             border: 2px dashed var(--border-color);
         }
 
-        .empty-state i {
-            font-size: 48px;
-            color: var(--accent-color);
-            opacity: 0.3;
-            margin-bottom: 16px;
-        }
+            .empty-state i {
+                font-size: 48px;
+                color: var(--accent-color);
+                opacity: 0.3;
+                margin-bottom: 16px;
+            }
 
-        .empty-state h3 {
-            font-size: 20px;
-            font-weight: 800;
-            margin: 0 0 6px;
-            color: var(--text-primary);
-        }
+            .empty-state h3 {
+                font-family: var(--font-display);
+                font-size: 21px;
+                font-weight: 600;
+                margin: 0 0 6px;
+                color: var(--text-primary);
+            }
 
-        .empty-state p {
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin: 0 0 16px;
-        }
+            .empty-state p {
+                color: var(--text-secondary);
+                font-size: 14px;
+                margin: 0 0 16px;
+            }
 
         /* ============================================================
-           TOAST NOTIFICATIONS (refined)
-           ============================================================ */
+                   TOAST NOTIFICATIONS (refined)
+                   ============================================================ */
         .products-toast-container {
             position: fixed;
             top: 24px;
@@ -468,10 +496,10 @@
             pointer-events: auto;
         }
 
-        .products-toast.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
+            .products-toast.show {
+                opacity: 1;
+                transform: translateX(0);
+            }
 
         .products-toast-error {
             background: linear-gradient(135deg, #b91c1c, #dc2626);
@@ -529,13 +557,31 @@
             transition: opacity 0.2s;
         }
 
-        .products-toast-close:hover {
-            opacity: 1;
+            .products-toast-close:hover {
+                opacity: 1;
+            }
+
+        /* ============================================================
+                   ACCESSIBILITY
+                   ============================================================ */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.001ms !important;
+            }
         }
 
         /* ============================================================
-           RESPONSIVE
-           ============================================================ */
+                   RESPONSIVE
+                   ============================================================ */
         @@media (max-width: 768px) {
             .products-grid {
                 grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -574,14 +620,21 @@
                 flex-direction: column;
             }
 
-            .product-actions .btn-edit,
-            .product-actions .btn-delete,
-            .product-actions .btn-toggle {
-                justify-content: center;
-            }
+                .product-actions .btn-edit,
+                .product-actions .btn-delete,
+                .product-actions .btn-toggle {
+                    justify-content: center;
+                }
         }
     </style>
 }
+
+@* Renders the hidden __RequestVerificationToken input the toggle-status fetch()
+   call below reads from the DOM. Without this, the POST handler 400s before it
+   ever reaches OnPostToggleStatusAsync, since Razor Pages auto-validates the
+   anti-forgery token on POST by default and nothing on this page was rendering
+   one (the filter form above is a GET form, which doesn't get one either). *@
+@Html.AntiForgeryToken()
 
 <!-- ========== TOAST CONTAINER ========== -->
 <div id="productsToastContainer" class="products-toast-container" aria-live="polite" aria-atomic="true"></div>
@@ -655,7 +708,7 @@
     <div class="products-grid">
         @foreach (var product in Model.Products)
         {
-            <div class="product-card">
+            <div class="product-card @(product.IsActive ? "" : "is-inactive")" data-product-id="@product.ProductID">
                 <!-- Image -->
                 <div class="product-image">
                     <img src="@(string.IsNullOrEmpty(product.PrimaryImageUrl) ? "/images/no-image.png" : product.PrimaryImageUrl)"
@@ -712,7 +765,7 @@
                         </button>
                         <button type="button" onclick="toggleStatus(@product.ProductID, this)" class="btn-toggle @(product.IsActive ? "active" : "")">
                             <i class="fas @(product.IsActive ? "fa-eye" : "fa-eye-slash")"></i>
-                            @(product.IsActive ? "Active" : "Inactive")
+                            <span class="btn-toggle-label">@(product.IsActive ? "Active" : "Inactive")</span>
                         </button>
                     </div>
                 </div>
@@ -829,7 +882,19 @@ else
                 }
 
                 if (data?.success) {
-                    window.location.reload();
+                    // NEW: update the button + card in place instead of a full page
+                    // reload — same result, without losing scroll position or
+                    // re-fetching every product on the page for one toggle.
+                    const card = button.closest(".product-card");
+                    const label = button.querySelector(".btn-toggle-label");
+                    const icon = button.querySelector("i");
+
+                    button.classList.toggle("active", data.isActive);
+                    if (label) label.textContent = data.isActive ? "Active" : "Inactive";
+                    if (icon) icon.className = `fas ${data.isActive ? "fa-eye" : "fa-eye-slash"}`;
+                    if (card) card.classList.toggle("is-inactive", !data.isActive);
+
+                    showProductsToast(data.message, "success", "Status updated");
                     return;
                 }
 

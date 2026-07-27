@@ -8,8 +8,8 @@
 @section Styles {
     <style>
         /* ============================================================
-                   ROOT VARIABLES — matches brand palette
-                   ============================================================ */
+                           ROOT VARIABLES — matches brand palette
+                           ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -49,8 +49,29 @@
         }
 
         /* ============================================================
-                   WELCOME BANNER
-                   ============================================================ */
+                           ALERTS
+                           ============================================================ */
+        .alert {
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
+            font-size: 13.5px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid transparent;
+        }
+
+        .alert-danger {
+            background: var(--error-bg);
+            color: #991b1b;
+            border-left-color: var(--error-color);
+        }
+
+        /* ============================================================
+                           WELCOME BANNER
+                           ============================================================ */
         .welcome-banner {
             background: var(--accent-gradient);
             color: #ffffff;
@@ -107,8 +128,8 @@
         }
 
         /* ============================================================
-                   SECTION LABELS
-                   ============================================================ */
+                           SECTION LABELS
+                           ============================================================ */
         .section-label {
             font-size: 11.5px;
             font-weight: 700;
@@ -138,8 +159,8 @@
             }
 
         /* ============================================================
-                   STATS GRID
-                   ============================================================ */
+                           STATS GRID
+                           ============================================================ */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -238,6 +259,23 @@
                 color: #fff;
             }
 
+        /* Stripe-balance icon variant — stays a calm slate/steel tone */
+        .stat-icon.balance-icon {
+            background: #e0e7ff;
+        }
+
+            .stat-icon.balance-icon i {
+                color: var(--accent-steel);
+            }
+
+        .stat-card:hover .stat-icon.balance-icon {
+            background: var(--accent-steel);
+        }
+
+            .stat-card:hover .stat-icon.balance-icon i {
+                color: #fff;
+            }
+
         .stat-value {
             font-size: 27px;
             font-weight: 800;
@@ -246,6 +284,12 @@
             margin-bottom: 4px;
             line-height: 1.2;
         }
+
+            .stat-value.unavailable {
+                font-size: 16px;
+                color: var(--text-muted);
+                font-weight: 700;
+            }
 
         .stat-change {
             font-size: 12px;
@@ -262,8 +306,8 @@
         }
 
         /* ============================================================
-                   DASHBOARD ROW — two columns
-                   ============================================================ */
+                           DASHBOARD ROW — two columns
+                           ============================================================ */
         .dashboard-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -390,8 +434,96 @@
             }
 
         /* ============================================================
-                   BOOST PANEL — dedicated card-based layout
-                   ============================================================ */
+                           LOW STOCK LIST — was already being loaded and discarded;
+                           now actually shown so it isn't wasted work.
+                           ============================================================ */
+        .low-stock-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+            .low-stock-row:last-child {
+                border-bottom: none;
+            }
+
+        .low-stock-name {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .low-stock-qty {
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+            .low-stock-qty.is-out {
+                background: var(--error-bg);
+                color: var(--error-color);
+            }
+
+            .low-stock-qty.is-low {
+                background: var(--warning-bg);
+                color: var(--warning-color);
+            }
+
+        /* ============================================================
+                           WEEKLY SALES MINI CHART — same story: the data was
+                           already fetched every page load and never rendered.
+                           ============================================================ */
+        .weekly-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            height: 120px;
+            padding-top: 8px;
+        }
+
+        .weekly-chart-bar-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+            gap: 6px;
+        }
+
+        .weekly-chart-bar {
+            width: 100%;
+            max-width: 34px;
+            border-radius: 6px 6px 3px 3px;
+            background: var(--accent-gradient);
+            min-height: 4px;
+            transition: var(--transition);
+        }
+
+        .weekly-chart-bar-wrap:hover .weekly-chart-bar {
+            filter: brightness(1.08);
+        }
+
+        .weekly-chart-day {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .weekly-chart-value {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================================
+                           BOOST PANEL — dedicated card-based layout
+                           ============================================================ */
         .boost-list {
             display: flex;
             flex-direction: column;
@@ -511,8 +643,23 @@
                 }
 
         /* ============================================================
-                   RESPONSIVE
-                   ============================================================ */
+                           ACCESSIBILITY
+                           ============================================================ */
+        a:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.001ms !important;
+            }
+        }
+
+        /* ============================================================
+                           RESPONSIVE
+                           ============================================================ */
         @@media (max-width: 992px) {
             .dashboard-row {
                 grid-template-columns: 1fr;
@@ -558,6 +705,14 @@
             }
         }
     </style>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <i class="fas fa-triangle-exclamation"></i>
+        @TempData["ErrorMessage"]
+    </div>
 }
 
 <!-- ========== WELCOME BANNER ========== -->
@@ -635,6 +790,29 @@
         <div class="stat-value">@Model.Stats.ActiveBoostsCount</div>
         <div class="stat-change">$@Model.Stats.TotalBoostSpend.ToString("N2") spent total</div>
     </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Store?.StripeAccountId))
+    {
+        <!-- NEW: this was being fetched from Stripe on every page load and never
+             shown anywhere. -1 is the "fetch failed" sentinel from the model,
+             surfaced here as "Unavailable" instead of a misleading "$-1.00". -->
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Stripe Balance</span>
+                <div class="stat-icon balance-icon"><i class="fas fa-wallet"></i></div>
+            </div>
+            @if (Model.StripeBalance >= 0)
+            {
+                <div class="stat-value">$@Model.StripeBalance.ToString("N2")</div>
+                <div class="stat-change">Available for payout</div>
+            }
+            else
+            {
+                <div class="stat-value unavailable">Unavailable</div>
+                <div class="stat-change">Couldn't reach Stripe right now</div>
+            }
+        </div>
+    }
 
 </div>
 
@@ -772,6 +950,75 @@
 
 </div>
 
+<!-- ========== LOW STOCK + WEEKLY SALES ========== -->
+<div class="dashboard-row" style="margin-bottom: 20px;">
+
+    <!-- NEW: Low Stock list — the data was already being loaded every page
+         load and simply never shown anywhere in the old markup. -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3><i class="fas fa-triangle-exclamation"></i> Low Stock</h3>
+            <a href="/StoreOwner/Products" class="view-all">Manage Products <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        @if (Model.LowStockProducts.Any())
+        {
+            foreach (var lp in Model.LowStockProducts)
+            {
+                <div class="low-stock-row">
+                    <span class="low-stock-name">@lp.ProductName</span>
+                    @if (lp.CurrentStock <= 0)
+                    {
+                        <span class="low-stock-qty is-out">Out of stock</span>
+                    }
+                    else
+                    {
+                        <span class="low-stock-qty is-low">@lp.CurrentStock left</span>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-row">
+                <i class="fas fa-circle-check"></i>
+                All products are well stocked.
+            </div>
+        }
+    </div>
+
+    <!-- NEW: 7-day sales trend — same story, WeeklySales was computed and discarded. -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3><i class="fas fa-chart-column"></i> Last 7 Days</h3>
+        </div>
+
+        @if (Model.WeeklySales.Any())
+        {
+            var maxRevenue = Model.WeeklySales.Max(w => w.Revenue);
+            <div class="weekly-chart">
+                @foreach (var day in Model.WeeklySales)
+                {
+                    var heightPercent = maxRevenue > 0 ? (double)(day.Revenue / maxRevenue) * 100 : 0;
+                    <div class="weekly-chart-bar-wrap" title="@day.DayName: $@day.Revenue.ToString("N2")">
+                        <span class="weekly-chart-value">$@day.Revenue.ToString("N0")</span>
+                        <div class="weekly-chart-bar" style="height: @(Math.Max(heightPercent, 3).ToString("F0"))%;"></div>
+                        <span class="weekly-chart-day">@day.DayName</span>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-row">
+                <i class="fas fa-chart-column"></i>
+                No sales in the last 7 days.
+            </div>
+        }
+    </div>
+
+</div>
+
 <!-- ========== ACTIVE BOOSTS ========== -->
 <div class="dashboard-card">
     <div class="card-header">
@@ -795,7 +1042,8 @@
                             @if (isActive)
                             {
                                 <span class="boost-badge is-active">
-                                    <i class="fas fa-circle-check"></i> Ends @boost.EndDate?.ToString("dd MMM")
+                                    <i class="fas fa-circle-check"></i>
+                                    @(boost.EndDate.HasValue ? $"Ends {boost.EndDate.Value:dd MMM}" : "Active")
                                 </span>
                             }
                             else
