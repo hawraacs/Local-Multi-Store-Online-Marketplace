@@ -1,15 +1,25 @@
 ﻿@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.CategoryTreeItem
 
+@* BUGFIX: role="option", tabindex="0", and aria-label were all missing — these
+   were plain, mouse-only <div>s with just a click handler attached from the
+   parent page's script. That's now patched defensively from Create.cshtml's
+   JS too, but baking it in here means it works even if that script changes or
+   this partial is ever reused somewhere without that patch. aria-label uses
+   the full breadcrumb Path rather than just Name, so a screen reader announces
+   "Electronics > Phones" instead of just "Phones" with no context. *@
 <div class="category-option@(Model.Children.Any() ? " has-children" : "")"
      data-id="@Model.CategoryId"
      data-name="@Model.Name"
      data-path="@Model.Path"
+     role="option"
+     tabindex="0"
+     aria-label="@Model.Path"
      style="padding-left: @(14 + Model.Depth * 22)px;">
     @if (Model.Depth > 0)
     {
-        <i class="fas fa-level-down-alt option-connector-icon"></i>
+        <i class="fas fa-level-down-alt option-connector-icon" aria-hidden="true"></i>
     }
-    <i class="fas @(Model.Children.Any() ? "fa-folder-open" : "fa-tag") option-branch-icon@(Model.Depth == 0 ? " option-root-icon" : "")"></i>
+    <i class="fas @(Model.Children.Any() ? "fa-folder-open" : "fa-tag") option-branch-icon@(Model.Depth == 0 ? " option-root-icon" : "")" aria-hidden="true"></i>
     <span class="option-name">@Model.Name</span>
     @if (Model.Children.Any())
     {
@@ -20,4 +30,3 @@
 {
     <partial name="_CategoryOption" model="child" />
 }
-

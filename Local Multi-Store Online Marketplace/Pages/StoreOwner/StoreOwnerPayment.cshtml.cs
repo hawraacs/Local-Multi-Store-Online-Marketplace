@@ -100,7 +100,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
             if (string.IsNullOrWhiteSpace(store.StripeAccountId))
             {
-                CurrentBalance = 9999; // dummy for demo
+                // BUGFIX: previously set to 9999 with a "dummy for demo" comment,
+                // which the view then displayed as a real, seemingly-valid Stripe
+                // balance (and even compared against the payment amount to decide
+                // whether to show it in green as "sufficient"!) — fabricated
+                // financial information on an actual payment/checkout page. -1 is
+                // the same sentinel already used on a fetch failure below, and the
+                // view already has a graceful "Balance check: Unavailable" path
+                // built specifically for this case — it just wasn't being used.
+                CurrentBalance = -1;
             }
             else
             {
@@ -177,65 +185,117 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 return Page();
             }
 
-            await using var transaction = await _context.Database.BeginTransactionAsync();
+            // BUGFIX (defense in depth): re-check the payment's current status
+            // fresh from the database immediately before mutating it, narrowing
+            // the window where two concurrent submissions (e.g. a scripted double
+            // POST, bypassing the client-side "disable button after click" guard)
+            // could both pass the earlier check and both attempt to process the
+            // same payment. This doesn't fully close the race without a DB-level
+            // concurrency token or unique constraint on StripeTransferId, but it
+            // meaningfully narrows it without requiring a schema change.
+            var stillPending = await _context.StorePayments
+                .AsNoTracking()
+                .Where(sp => sp.StorePaymentId == payment.StorePaymentId)
+                .Select(sp => sp.Status)
+                .FirstOrDefaultAsync();
 
+            if (string.Equals(stillPending, "Paid", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["Success"] = "This payment has already been completed.";
+                return RedirectToLocalOrDashboard();
+            }
+
+            string? transferId = null;
+            bool isSubscriptionPayment = false;
+
+            await using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    transferId = $"TRANSFER-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}";
+
+                    payment.Status = "Paid";
+                    payment.PaidAt = DateTime.UtcNow;
+                    payment.StripeTransferId = transferId;
+
+                    isSubscriptionPayment = payment.Description?.Equals("Monthly Subscription Fee", StringComparison.OrdinalIgnoreCase) == true;
+
+                    if (isSubscriptionPayment)
+                    {
+                        DateTime newExpiry = DateTime.UtcNow.AddMonths(1);
+                        if (store.SubscriptionExpiryDate.HasValue && store.SubscriptionExpiryDate.Value > DateTime.UtcNow)
+                            newExpiry = store.SubscriptionExpiryDate.Value.AddMonths(1);
+
+                        store.SubscriptionStatus = "Active";
+                        store.SubscriptionExpiryDate = newExpiry;
+                        store.LastPaymentDate = DateTime.UtcNow;
+                        store.LastPaymentAmount = payment.Amount;
+
+                        var subscriptionPayment = new SubscriptionPayment
+                        {
+                            StoreId = store.StoreID,
+                            Amount = payment.Amount,
+                            PaymentDate = DateTime.UtcNow,
+                            Reference = $"Subscription renewal - {transferId}"
+                        };
+                        _context.SubscriptionPayments.Add(subscriptionPayment);
+                    }
+
+                    // Activate the boost tied to this payment, if any.
+                    // Only trust BoostId if it actually belongs to this StorePayment,
+                    // so a tampered/stale query param can't activate an unrelated boost.
+                    if (BoostId.HasValue)
+                    {
+                        var boostBelongsToThisPayment = await _context.ProductBoosts
+                            .AnyAsync(b => b.ProductBoostID == BoostId.Value
+                                        && b.StorePaymentId == payment.StorePaymentId
+                                        && b.StoreID == store.StoreID);
+
+                        if (boostBelongsToThisPayment)
+                        {
+                            await _boostManager.ActivateBoostAsync(BoostId.Value);
+                        }
+                        else
+                        {
+                            _logger.LogWarning(
+                                "BoostId {BoostId} did not match payment {PaymentId} for store {StoreId}; skipping activation.",
+                                BoostId.Value, payment.StorePaymentId, store.StoreID);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    // BUGFIX: this rollback previously lived in a scope that could
+                    // also be reached from failures AFTER a successful commit (see
+                    // below) — calling RollbackAsync on an already-committed
+                    // transaction throws, which would crash this request with a
+                    // *second*, unrelated exception even though the payment itself
+                    // had already succeeded. Scoped tightly now to only the work
+                    // that happens before CommitAsync, so rollback is only ever
+                    // reached while the transaction is still actually rollback-able.
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Store owner payment failed for payment {PaymentId}.", PaymentId);
+                    ErrorMessage = "An error occurred while processing your payment. Please try again.";
+                    await PrepareStripeSetupAsync(store);
+                    return Page();
+                }
+            }
+
+            // BUGFIX: the admin notification previously lived INSIDE the same
+            // try/catch as the transaction above. If SendToAllAdminsAsync threw
+            // (e.g. a transient notification-service hiccup) AFTER the transaction
+            // had already committed, the catch block would call
+            // transaction.RollbackAsync() on an already-completed transaction —
+            // which itself throws, crashing the whole request with an unhandled
+            // exception despite the payment having genuinely succeeded. The
+            // notification is now outside that scope entirely, with its own
+            // isolated try/catch: a failure here is logged but never prevents the
+            // store owner from seeing their payment succeeded.
             try
             {
-                var transferId = $"TRANSFER-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}";
-
-                payment.Status = "Paid";
-                payment.PaidAt = DateTime.UtcNow;
-                payment.StripeTransferId = transferId;
-
-                bool isSubscriptionPayment = payment.Description?.Equals("Monthly Subscription Fee", StringComparison.OrdinalIgnoreCase) == true;
-
-                if (isSubscriptionPayment)
-                {
-                    DateTime newExpiry = DateTime.UtcNow.AddMonths(1);
-                    if (store.SubscriptionExpiryDate.HasValue && store.SubscriptionExpiryDate.Value > DateTime.UtcNow)
-                        newExpiry = store.SubscriptionExpiryDate.Value.AddMonths(1);
-
-                    store.SubscriptionStatus = "Active";
-                    store.SubscriptionExpiryDate = newExpiry;
-                    store.LastPaymentDate = DateTime.UtcNow;
-                    store.LastPaymentAmount = payment.Amount;
-
-                    var subscriptionPayment = new SubscriptionPayment
-                    {
-                        StoreId = store.StoreID,
-                        Amount = payment.Amount,
-                        PaymentDate = DateTime.UtcNow,
-                        Reference = $"Subscription renewal - {transferId}"
-                    };
-                    _context.SubscriptionPayments.Add(subscriptionPayment);
-                }
-
-                // NEW — activate the boost tied to this payment, if any.
-                // Only trust BoostId if it actually belongs to this StorePayment,
-                // so a tampered/stale query param can't activate an unrelated boost.
-                if (BoostId.HasValue)
-                {
-                    var boostBelongsToThisPayment = await _context.ProductBoosts
-                        .AnyAsync(b => b.ProductBoostID == BoostId.Value
-                                    && b.StorePaymentId == payment.StorePaymentId
-                                    && b.StoreID == store.StoreID);
-
-                    if (boostBelongsToThisPayment)
-                    {
-                        await _boostManager.ActivateBoostAsync(BoostId.Value);
-                    }
-                    else
-                    {
-                        _logger.LogWarning(
-                            "BoostId {BoostId} did not match payment {PaymentId} for store {StoreId}; skipping activation.",
-                            BoostId.Value, payment.StorePaymentId, store.StoreID);
-                    }
-                }
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                // NEW — notify admins that a store payment came in
                 await _notifications.SendToAllAdminsAsync(
                     title: "Store Payment Received",
                     message: $"{store.StoreName} paid ${payment.Amount:F2}" +
@@ -245,21 +305,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     type: "Payment",
                     referenceId: payment.StorePaymentId
                 );
-
-                TempData["Success"] = BoostId.HasValue
-                    ? $"Payment of ${payment.Amount:F2} was processed — your boost is now active."
-                    : $"Payment of ${payment.Amount:F2} was successfully processed.";
-
-                return RedirectToLocalOrDashboard();
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
-                _logger.LogError(ex, "Store owner payment failed for payment {PaymentId}.", PaymentId);
-                ErrorMessage = "An error occurred while processing your payment. Please try again.";
-                await PrepareStripeSetupAsync(store);
-                return Page();
+                _logger.LogWarning(ex, "Payment {PaymentId} succeeded but notifying admins failed.", payment.StorePaymentId);
             }
+
+            TempData["Success"] = BoostId.HasValue
+                ? $"Payment of ${payment.Amount:F2} was processed — your boost is now active."
+                : $"Payment of ${payment.Amount:F2} was successfully processed.";
+
+            return RedirectToLocalOrDashboard();
         }
 
         // -------------------------------------------------------------

@@ -15,6 +15,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         private readonly StoryManager _storyManager;
         private readonly MessagingManager _messagingManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ILogger<HomeModel> _logger;
 
         private static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
         private static readonly string[] AllowedImageMimeTypes = { "image/jpeg", "image/png", "image/webp" };
@@ -22,13 +23,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         private static readonly string[] AllowedVideoMimeTypes = { "video/mp4", "video/webm", "video/quicktime" };
         private const long MaxStoryFileSizeBytes = 25 * 1024 * 1024; // 25 MB (higher than images alone, to allow short video clips)
 
+        // Story duration is read client-side from video.duration and sent back to us —
+        // clamp it server-side so a tampered/bogus value can't be persisted.
+        private const int MinStoryDurationSeconds = 1;
+        private const int MaxStoryDurationSeconds = 120;
+
         public HomeModel(
             StoreManager storeManager,
             CustomerManager customerManager,
             UserManager<User> userManager,
             StoryManager storyManager,
             MessagingManager messagingManager,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            ILogger<HomeModel> logger)
         {
             _storeManager = storeManager;
             _customerManager = customerManager;
@@ -36,13 +43,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             _storyManager = storyManager;
             _messagingManager = messagingManager;
             _webHostEnvironment = webHostEnvironment;
+            _logger = logger;
         }
+
         [BindProperty(SupportsGet = true)]
         public int? ProductId { get; set; }
         public Store Store { get; set; }
         public List<Product> Products { get; set; } = new();
 
         public int FollowersCount { get; set; }
+
+        // Moved out of the .cshtml — this is business logic, not presentation.
+        public int TotalReviews { get; set; }
+        public double AverageRating { get; set; }
 
         // New: this Store Owner's own active (non-expired) stories, for the story bar at the top of Home
         public List<Story> OwnStories { get; set; } = new();
@@ -64,46 +77,76 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         [TempData]
         public string? StoryUploadError { get; set; }
 
+        // General page-load error surfaced to the view (e.g. a manager call failing),
+        // so the Store Owner sees a friendly message instead of an unhandled exception page.
+        public string? ErrorMessage { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToPage("/Login");
-
-            // ?? get store of current owner
-            Store = await _storeManager.GetByUserIdAsync(user.Id);
-
-            if (Store == null)
-                return RedirectToPage("/StoreOwner/Dashboard");
-
-            Products = await _storeManager.GetStoreProductsAsync(Store.StoreID);
-            FollowersCount = await _storeManager.GetFollowersCountAsync(Store.StoreID);
-            OwnStories = await _storyManager.GetOwnStoriesAsync(Store.StoreID);
-
-            OwnStoriesWithStats = new List<StoryDTO>();
-            foreach (var story in OwnStories)
+            try
             {
-                var views = await _storyManager.GetViewsForStoryAsync(story.StoryID);
-                var likeCount = await _storyManager.GetLikeCountAsync(story.StoryID);
-                var replies = await _messagingManager.GetStoryRepliesAsync(story.StoryID);
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return RedirectToPage("/Login");
 
-                OwnStoriesWithStats.Add(new StoryDTO
+                // ?? get store of current owner
+                Store = await _storeManager.GetByUserIdAsync(user.Id);
+
+                if (Store == null)
+                    return RedirectToPage("/StoreOwner/Dashboard");
+
+                Products = await _storeManager.GetStoreProductsAsync(Store.StoreID);
+                FollowersCount = await _storeManager.GetFollowersCountAsync(Store.StoreID);
+                OwnStories = await _storyManager.GetOwnStoriesAsync(Store.StoreID);
+
+                OwnStoriesWithStats = new List<StoryDTO>();
+                foreach (var story in OwnStories)
                 {
-                    StoryID = story.StoryID,
-                    StoreID = story.StoreID,
-                    MediaType = story.MediaType,
-                    ImageUrl = story.ImageUrl,
-                    VideoUrl = story.VideoUrl,
-                    DurationSeconds = story.DurationSeconds,
-                    Caption = story.Caption,
-                    CreatedAt = story.CreatedAt,
-                    ViewCount = views.Count,
-                    LikeCount = likeCount,
-                    ReplyCount = replies.Count
-                });
-            }
+                    // NOTE (perf): this issues 3 separate awaited queries per story (N+1).
+                    // For a store with many active stories this adds up fast. Consider
+                    // adding a single batch method, e.g.
+                    //   StoryManager.GetStatsForStoriesAsync(IEnumerable<int> storyIds)
+                    // that returns view/like/reply counts for all of them in one query
+                    // (a GROUP BY on storyId), then map the results here instead of
+                    // awaiting three calls per story in the loop.
+                    var views = await _storyManager.GetViewsForStoryAsync(story.StoryID);
+                    var likeCount = await _storyManager.GetLikeCountAsync(story.StoryID);
+                    var replies = await _messagingManager.GetStoryRepliesAsync(story.StoryID);
 
-            return Page();
+                    OwnStoriesWithStats.Add(new StoryDTO
+                    {
+                        StoryID = story.StoryID,
+                        StoreID = story.StoreID,
+                        MediaType = story.MediaType,
+                        ImageUrl = story.ImageUrl,
+                        VideoUrl = story.VideoUrl,
+                        DurationSeconds = story.DurationSeconds,
+                        Caption = story.Caption,
+                        CreatedAt = story.CreatedAt,
+                        ViewCount = views.Count,
+                        LikeCount = likeCount,
+                        ReplyCount = replies.Count
+                    });
+                }
+
+                TotalReviews = Products.Sum(p => p.Reviews?.Count ?? 0);
+                var totalRatingSum = Products.Sum(p => p.Reviews?.Sum(r => r.Rating) ?? 0);
+                AverageRating = TotalReviews > 0 ? (double)totalRatingSum / TotalReviews : 0;
+
+                return Page();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading Store Owner Home page for user {UserId}.", User?.Identity?.Name);
+
+                Products ??= new List<Product>();
+                OwnStories ??= new List<Story>();
+                OwnStoriesWithStats ??= new List<StoryDTO>();
+                ErrorMessage = "Something went wrong while loading your store. Please refresh the page or try again shortly.";
+
+                return Page();
+            }
         }
+
         public async Task<IActionResult> OnPostDeleteReviewAsync(
     int reviewId)
         {
@@ -153,6 +196,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 return RedirectToPage();
             }
 
+            // Extension + declared Content-Type are both client-supplied and can be
+            // spoofed (e.g. renaming a .exe to .jpg). Peek at the actual file header
+            // (magic bytes) so we're not trusting the client's word for it.
+            if (!await HasValidFileSignatureAsync(StoryMedia, isVideo))
+            {
+                StoryUploadError = "That file doesn't look like a valid image or video. Please try a different file.";
+                return RedirectToPage();
+            }
+
+            // Clamp the client-reported duration instead of trusting it outright.
+            int? clampedDuration = null;
+            if (isVideo && StoryDurationSeconds.HasValue)
+            {
+                clampedDuration = Math.Clamp(StoryDurationSeconds.Value, MinStoryDurationSeconds, MaxStoryDurationSeconds);
+            }
+
             var mediaType = isVideo ? "Video" : "Image";
             var savedUrl = await SaveStoryMediaAsync(store.StoreID, StoryMedia);
 
@@ -161,7 +220,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 mediaType,
                 imageUrl: isImage ? savedUrl : null,
                 videoUrl: isVideo ? savedUrl : null,
-                durationSeconds: isVideo ? StoryDurationSeconds : null,
+                durationSeconds: isVideo ? clampedDuration : null,
                 caption: StoryCaption);
 
             return RedirectToPage();
@@ -240,6 +299,52 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             return messageText.StartsWith(prefix, StringComparison.Ordinal)
                 ? messageText.Substring(prefix.Length)
                 : messageText;
+        }
+
+        // Checks the first bytes of the uploaded file against known magic numbers for
+        // the formats we claim to accept, instead of trusting the file extension and
+        // the browser-reported Content-Type alone (both are easily spoofed).
+        private static async Task<bool> HasValidFileSignatureAsync(IFormFile file, bool isVideo)
+        {
+            var buffer = new byte[12];
+            int bytesRead;
+
+            using (var stream = file.OpenReadStream())
+            {
+                bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
+            }
+
+            if (bytesRead < 4) return false;
+
+            bool StartsWith(byte[] signature, int offset = 0)
+            {
+                if (buffer.Length < offset + signature.Length) return false;
+                for (int i = 0; i < signature.Length; i++)
+                {
+                    if (buffer[offset + i] != signature[i]) return false;
+                }
+                return true;
+            }
+
+            if (!isVideo)
+            {
+                if (StartsWith(new byte[] { 0xFF, 0xD8, 0xFF })) return true;                 // JPEG
+                if (StartsWith(new byte[] { 0x89, 0x50, 0x4E, 0x47 })) return true;            // PNG
+                if (bytesRead >= 12 &&
+                    StartsWith(new byte[] { 0x52, 0x49, 0x46, 0x46 }, 0) &&                    // "RIFF"
+                    StartsWith(new byte[] { 0x57, 0x45, 0x42, 0x50 }, 8))                       // "WEBP"
+                    return true;
+
+                return false;
+            }
+            else
+            {
+                if (StartsWith(new byte[] { 0x1A, 0x45, 0xDF, 0xA3 })) return true;            // WEBM/MKV (EBML header)
+                if (bytesRead >= 8 && StartsWith(new byte[] { 0x66, 0x74, 0x79, 0x70 }, 4))     // "ftyp" — MP4 and most modern MOV files
+                    return true;
+
+                return false;
+            }
         }
 
         private async Task<string> SaveStoryMediaAsync(int storeId, IFormFile mediaFile)

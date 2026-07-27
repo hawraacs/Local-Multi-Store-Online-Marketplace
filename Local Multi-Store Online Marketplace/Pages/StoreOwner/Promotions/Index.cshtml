@@ -6,6 +6,7 @@
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
            ROOT VARIABLES — consistent brand palette
@@ -29,6 +30,8 @@
             --radius-md: 12px;
             --radius-lg: 20px;
             --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            /* Same display face used across the rest of the Store Owner section. */
+            --font-display: 'Fraunces', 'Georgia', serif;
         }
 
         body {
@@ -52,9 +55,10 @@
 
         .promotions-header h2 {
             margin: 0;
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: -0.4px;
+            font-family: var(--font-display);
+            font-size: 27px;
+            font-weight: 600;
+            letter-spacing: -0.2px;
             color: var(--text-primary);
             display: flex;
             align-items: center;
@@ -169,6 +173,16 @@
 
         .alert-success i {
             color: var(--success-color);
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .alert-danger i {
+            color: var(--error-color);
         }
 
         .alert-info {
@@ -323,7 +337,9 @@
         }
 
         .empty-state h4 {
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-size: 19px;
+            font-weight: 600;
             color: var(--text-primary);
             margin: 0 0 4px;
         }
@@ -331,6 +347,21 @@
         .empty-state p {
             margin: 0 0 16px;
             font-size: 14px;
+        }
+
+        /* ============================================================
+           ACCESSIBILITY
+           ============================================================ */
+        a:focus-visible,
+        button:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.001ms !important;
+            }
         }
 
         /* ============================================================
@@ -410,11 +441,18 @@
         </div>
     </div>
 
-    <!-- ========== TEMPDATA ALERTS ========== -->
+    <!-- ========== TEMPDATA / MODEL ALERTS ========== -->
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success">
             <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
         </div>
     }
 
@@ -454,7 +492,20 @@
                             {
                                 <tr>
                                     <td><strong>@promotion.Title</strong></td>
-                                    <td>@(promotion.Message.Length > 60 ? promotion.Message.Substring(0, 60) + "…" : promotion.Message)</td>
+                                    <td>
+                                        @{
+                                            // BUGFIX: previously called promotion.Message.Length
+                                            // directly with no null-guard — a single promotion
+                                            // with a null Message would throw a
+                                            // NullReferenceException and take down the entire
+                                            // list, not just that row.
+                                            var message = promotion.Message ?? "";
+                                            var displayMessage = message.Length > 60
+                                                ? message.Substring(0, 60) + "…"
+                                                : message;
+                                        }
+                                        @displayMessage
+                                    </td>
                                     <td>
                                         @if (string.IsNullOrWhiteSpace(promotion.CouponCode))
                                         {

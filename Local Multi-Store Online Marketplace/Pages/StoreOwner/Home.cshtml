@@ -4,11 +4,9 @@
     ViewData["Title"] = "Home";
     ViewData["HideTopbar"] = true;
     Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
-    var totalReviews = Model.Products.Sum(p => p.Reviews?.Count ?? 0);
-    var totalRatingSum = Model.Products.Sum(p => p.Reviews?.Sum(r => r.Rating) ?? 0);
-    var avgRating = totalReviews > 0 ? (double)totalRatingSum / totalReviews : 0;
 }
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --accent: #6d28d9;
@@ -35,6 +33,16 @@
             --boost-color: #f59e0b;
             --boost-hover: #d97706;
             --boost-light: #fef3c7;
+            /* Display face for the store name and section headings — was referenced
+                       elsewhere in this file (.profile-username, .stat-count) but never
+                       actually defined, so it silently fell back to the body font. Fraunces
+                       pairs a storefront/boutique warmth with the existing Inter body copy. */
+            --font-display: 'Fraunces', 'Georgia', serif;
+            /* Signature "awning stripe" motif — used sparingly, only where it encodes
+                       something real (the storefront header, and stock-level flags). */
+            --awning-a: var(--accent);
+            --awning-b: var(--accent-dark);
+            --focus-ring: 0 0 0 3px rgba(109, 40, 217, 0.28);
             --shadow-xs: 0 1px 3px rgba(30,27,46,.04);
             --shadow-sm: 0 4px 12px rgba(109,40,217,.06);
             --shadow-md: 0 10px 30px rgba(109,40,217,.10);
@@ -48,9 +56,9 @@
         }
 
         /* Hide the store-owner bottom nav/toggle while the product feed overlay is
-           open — it was rendering on top of the post card (stacking context issue).
-           Targeting a few likely selectors since the exact bottom-nav class in
-           _StoreOwnerLayout.cshtml wasn't confirmed; safe to trim once verified. */
+                   open — it was rendering on top of the post card (stacking context issue).
+                   Targeting a few likely selectors since the exact bottom-nav class in
+                   _StoreOwnerLayout.cshtml wasn't confirmed; safe to trim once verified. */
         body.feed-open .mobile-bottom-nav,
         body.feed-open .owner-bottom-nav,
         body.feed-open .bottom-nav,
@@ -123,8 +131,8 @@
         }
 
         /* ============================================================
-                   PAGE SHELL — main content + toggleable slide-in side panel
-                   ============================================================ */
+                           PAGE SHELL — main content + toggleable slide-in side panel
+                           ============================================================ */
         .page-shell {
             max-width: 1010px;
             margin: 0 auto;
@@ -345,12 +353,20 @@
                 box-shadow: 0 12px 40px rgba(109, 40, 217, 0.32);
             }
 
+        .empty-add-headline {
+            margin-top: 22px;
+            font-family: var(--font-display);
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
         .empty-add-label {
-            margin-top: 18px;
+            margin-top: 6px;
             font-size: 13.5px;
-            font-weight: 700;
+            font-weight: 600;
             color: var(--text-secondary);
-            letter-spacing: 0.2px;
+            letter-spacing: 0.1px;
         }
 
         /* ---- Per-product Boost button ---- */
@@ -378,15 +394,15 @@
                 color: #fff;
             }
 
-        .product-boost-btn.is-boosted {
-            background: var(--boost-light);
-            color: var(--boost-hover);
-        }
-
-            .product-boost-btn.is-boosted:hover {
-                background: var(--boost-color);
-                color: #fff;
+            .product-boost-btn.is-boosted {
+                background: var(--boost-light);
+                color: var(--boost-hover);
             }
+
+                .product-boost-btn.is-boosted:hover {
+                    background: var(--boost-color);
+                    color: #fff;
+                }
 
         .profile-header {
             display: flex;
@@ -407,9 +423,9 @@
                 top: 0;
                 left: 40px;
                 right: 40px;
-                height: 3px;
-                background: var(--accent);
-                border-radius: 0 0 3px 3px;
+                height: 5px;
+                background: repeating-linear-gradient( 115deg, var(--awning-a) 0 16px, var(--awning-b) 16px 32px );
+                border-radius: 0 0 4px 4px;
             }
 
         .profile-avatar-container {
@@ -553,6 +569,7 @@
             font-family: var(--font-display);
             font-weight: 600;
             font-size: 19px;
+            font-variant-numeric: tabular-nums;
             color: var(--text-primary);
         }
 
@@ -703,12 +720,12 @@
             border-radius: 3px;
         }
 
-        .product-badge.boosted-badge {
-            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
+            .product-badge.boosted-badge {
+                background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
 
         .image-count-badge {
             position: absolute;
@@ -796,8 +813,8 @@
         }
 
         /* ============================================================
-           INSTAGRAM-STYLE FEED — redesigned viewer
-           ============================================================ */
+                   INSTAGRAM-STYLE FEED — redesigned viewer
+                   ============================================================ */
         .feed-overlay {
             display: none;
             position: fixed;
@@ -1064,6 +1081,19 @@
             border-radius: 20px;
         }
 
+            /* NEW: previously this badge always said "In Stock" regardless of real
+                       inventory. It now reflects Product.Quantity / LowStockThreshold /
+                       IsOutOfStock. */
+            .post-stock-badge.low-stock {
+                color: var(--warning);
+                background: #fffbeb;
+            }
+
+            .post-stock-badge.out-of-stock {
+                color: var(--error);
+                background: var(--error-bg);
+            }
+
         .post-description {
             font-size: 13px;
             color: var(--text-secondary);
@@ -1204,6 +1234,50 @@
                 border: none;
             }
         }
+
+        /* ============================================================
+                   STOCK FLAG — a strip across the bottom of the product image,
+                   shown only when a product needs attention (low/out of stock).
+                   Healthy stock gets no flag at all, so the signal stays meaningful
+                   instead of decorating every card. Colors echo the header stripe.
+                   ============================================================ */
+        .stock-strip {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 6px 10px;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-align: center;
+            color: #fff;
+            background: rgba(220, 38, 38, 0.90);
+        }
+
+            .stock-strip.low-stock {
+                background: rgba(245, 158, 11, 0.92);
+            }
+
+        /* ---- Accessibility: visible keyboard focus everywhere on this page ---- */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        .tab-btn:focus-visible,
+        .product-grid-item:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring);
+            border-radius: var(--radius-sm);
+        }
+
+        /* ---- Respect reduced-motion preferences ---- */
+        @@media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+            }
+        }
     </style>
 }
 
@@ -1211,6 +1285,11 @@
 @{
     ViewData["OwnerStoreLogo"] = Model.Store?.LogoURL;
     ViewData["OwnerStoreName"] = Model.Store?.StoreName;
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" style="max-width:980px;margin:12px auto;">@Model.ErrorMessage</div>
 }
 
 @if (!string.IsNullOrEmpty(Model.StoryUploadError))
@@ -1233,19 +1312,18 @@
                     <div class="story-ring-wrapper @(hasActiveStories ? "active-story" : "")"
                          onclick="@(hasActiveStories ? "RealNestStories.openOwn(0)" : "RealNestStories.openUploadStoryModal()")">
 
-                        @if (!string.IsNullOrWhiteSpace(Model.Store?.LogoURL))
-                        {
-                            <img class="profile-avatar" src="@Model.Store.LogoURL" alt="@Model.Store.StoreName Logo" />
-                        }
-                        else
-                        {
-                            <div class="profile-avatar-fallback">
-                                <i class="fas fa-store"></i>
-                            </div>
-                        }
-                    </div>
+                        <partial name='/Pages/StoreOwner/Shared/_StoreLogoOrFallback.cshtml'
+                                 model='new
+                                 {
+                                     LogoUrl = Model.Store?.LogoURL,
+                                     AltText = Model.Store?.StoreName,
+                                     ImgClass = "profile-avatar",
+                                     FallbackClass = "profile-avatar-fallback",
+                                     IconClass = "fa-store"
+                                 }' />
+</div>
 
-                    <div class="avatar-add-story-btn" onclick="event.stopPropagation(); RealNestStories.openUploadStoryModal()" title="Add Story">
+                    <div class="avatar-add-story-btn" onclick="event.stopPropagation(); RealNestStories.openUploadStoryModal()" title="Add Story" aria-label="Add Story" role="button">
                         <i class="fas fa-plus"></i>
                     </div>
 
@@ -1270,13 +1348,13 @@
                         </div>
                         <div class="stat-item">
                             <span class="stat-icon"><i class="fas fa-star"></i></span>
-                            <span class="stat-count">@totalReviews</span> reviews
+                            <span class="stat-count">@Model.TotalReviews</span> reviews
                         </div>
-                        @if (totalReviews > 0)
+                        @if (Model.TotalReviews > 0)
                         {
                             <div class="stat-item">
                                 <span class="stat-icon"><i class="fas fa-medal"></i></span>
-                                <span class="stat-count">@avgRating.ToString("0.0")</span> avg rating
+                                <span class="stat-count">@Model.AverageRating.ToString("0.0")</span> avg rating
                             </div>
                         }
                     </div>
@@ -1302,10 +1380,11 @@
             @if (!Model.Products.Any())
             {
                 <div class="add-hero">
-                    <a asp-page="/StoreOwner/Products/Create" class="empty-add-btn" title="Add Product">
+                    <a asp-page="/StoreOwner/Products/Create" class="empty-add-btn" title="Add your first product" aria-label="Add your first product">
                         <i class="fas fa-plus"></i>
                     </a>
-                    <span class="empty-add-label">Add Product</span>
+                    <span class="empty-add-headline">Your shelves are empty</span>
+                    <span class="empty-add-label">List your first product to start selling</span>
                 </div>
             }
 
@@ -1319,6 +1398,8 @@
                         var img = orderedImages.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
                         var imageCount = orderedImages.Count;
                         var reviewCount = p.Reviews?.Count ?? 0;
+                        var isOutOfStock = p.IsOutOfStock;
+                        var isLowStock = !isOutOfStock && p.Quantity <= p.LowStockThreshold;
                         <div class="product-grid-item" data-product-id="@p.ProductID">
                             <div class="image-wrap" onclick="openProductModal(@p.ProductID)">
                                 <img src="@img" alt="@p.ProductName" loading="lazy" />
@@ -1327,8 +1408,14 @@
                                 {
                                     <span class="image-count-badge"><i class="fas fa-images"></i> @imageCount</span>
                                 }
+                                @if (isOutOfStock || isLowStock)
+                                {
+                                    <div class="stock-strip @(isLowStock ? "low-stock" : "")">
+                                        @(isOutOfStock ? "Out of Stock" : $"Only {p.Quantity} left")
+                                    </div>
+                                }
                                 <div class="product-quick-actions">
-                                    <button onclick="event.stopPropagation(); openProductModal(@p.ProductID)" title="Quick view">
+                                    <button onclick="event.stopPropagation(); openProductModal(@p.ProductID)" title="Quick view" aria-label="Quick view @p.ProductName">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -1336,7 +1423,7 @@
                             <div class="product-details">
                                 <span class="product-name">@p.ProductName</span>
                                 <div class="product-meta">
-                                    <span class="price">$@p.Price</span>
+                                    <span class="price">$@p.Price.ToString("0.00")</span>
                                     <span class="review-count"><i class="fas fa-star"></i> @reviewCount review@(reviewCount != 1 ? "s" : "")</span>
                                 </div>
                                 <a class="product-boost-btn" href="/StoreOwner/Products/Boost?productId=@p.ProductID">
@@ -1351,7 +1438,7 @@
     </div>
 
     <!-- ========== SIDE PANEL TOGGLE + BACKDROP ========== -->
-    <button type="button" class="side-panel-toggle" id="sidePanelToggle" onclick="toggleSidePanel()" title="Menu">
+    <button type="button" class="side-panel-toggle" id="sidePanelToggle" onclick="toggleSidePanel()" title="Menu" aria-label="Toggle menu">
         <i class="fas fa-bars"></i>
     </button>
     <div class="side-panel-backdrop" id="sidePanelBackdrop" onclick="closeSidePanel()"></div>
@@ -1359,15 +1446,16 @@
     <aside class="side-panel" id="sidePanel">
         <div class="side-panel-card">
             <div class="side-panel-store">
-                @if (!string.IsNullOrWhiteSpace(Model.Store?.LogoURL))
-                {
-                    <img class="side-panel-avatar" src="@Model.Store.LogoURL" alt="@Model.Store.StoreName" />
-                }
-                else
-                {
-                    <div class="side-panel-avatar-fallback"><i class="fas fa-store"></i></div>
-                }
-                <div>
+                <partial name='/Pages/StoreOwner/Shared/_StoreLogoOrFallback.cshtml'
+                         model='new
+                         {
+                             LogoUrl = Model.Store?.LogoURL,
+                             AltText = Model.Store?.StoreName,
+                             ImgClass = "side-panel-avatar",
+                             FallbackClass = "side-panel-avatar-fallback",
+                             IconClass = "fa-store"
+                         }' />
+<div>
                     <div class="side-panel-name">@Model.Store?.StoreName</div>
                     <div class="side-panel-role">Store Owner</div>
                 </div>
@@ -1404,8 +1492,14 @@
         var orderedImages = (p.Images?.OrderByDescending(im => im.IsPrimary).ThenBy(im => im.DisplayOrder).ToList()) ?? new();
         var reviewCount = p.Reviews?.Count ?? 0;
         var imageCount = orderedImages.Count;
+
+        var isOutOfStock = p.IsOutOfStock;
+        var isLowStock = !isOutOfStock && p.Quantity <= p.LowStockThreshold;
+        var stockLabel = isOutOfStock ? "Out of Stock" : (isLowStock ? $"Low Stock · {p.Quantity} left" : "In Stock");
+        var stockCssClass = isOutOfStock ? "out-of-stock" : (isLowStock ? "low-stock" : "");
+
         <section id="feed-@p.ProductID" class="product-feed-item" data-product-id="@p.ProductID">
-            <div class="product-post-card">
+            <div class="product-post-card" role="dialog" aria-modal="true" aria-label="@p.ProductName details" tabindex="-1">
 
                 <!-- ===== Store header, ALWAYS on top of the post ===== -->
                 <div class="post-header">
@@ -1429,12 +1523,15 @@
                     {
                         for (int idx = 0; idx < orderedImages.Count; idx++)
                         {
-                            <img src="@orderedImages[idx].ImageUrl" style="display:@(idx == 0 ? "block" : "none")" draggable="false" />
+                            <img src="@orderedImages[idx].ImageUrl"
+                                 style="display:@(idx == 0 ? "block" : "none")"
+                                 draggable="false"
+                                 alt="@p.ProductName — photo @(idx + 1) of @orderedImages.Count" />
                         }
                     }
                     else
                     {
-                        <img src="/images/no-image.png" draggable="false" />
+                        <img src="/images/no-image.png" draggable="false" alt="No image available for @p.ProductName" />
                     }
                     @if (imageCount > 1)
                     {
@@ -1455,8 +1552,8 @@
                     <div class="post-meta">
                         <h3>@p.ProductName</h3>
                         <div class="post-price-row">
-                            <span class="post-price">$@p.Price</span>
-                            <span class="post-stock-badge">In Stock</span>
+                            <span class="post-price">$@p.Price.ToString("0.00")</span>
+                            <span class="post-stock-badge @stockCssClass">@stockLabel</span>
                         </div>
                         <p class="post-description">@p.Description</p>
                     </div>
@@ -1474,8 +1571,13 @@
                                         <strong>@review.Customer?.User?.FullName</strong>
                                     </div>
                                     <p>@review.Comment</p>
-                                    <form method="post" asp-page-handler="DeleteReview" asp-route-reviewId="@review.ReviewID">
-                                        <button type="submit" class="delete-review-btn"><i class="fa-solid fa-trash-can"></i> Remove</button>
+                                    <form method="post"
+                                          asp-page-handler="DeleteReview"
+                                          asp-route-reviewId="@review.ReviewID"
+                                          onsubmit="return confirm('Remove this review? This cannot be undone.');">
+                                        <button type="submit" class="delete-review-btn" aria-label="Remove review by @review.Customer?.User?.FullName">
+                                            <i class="fa-solid fa-trash-can"></i> Remove
+                                        </button>
                                     </form>
                                 </div>
                             }
@@ -1518,107 +1620,120 @@
 </script>
 
 <script>
-    const productOrder = [@Html.Raw(string.Join(",", Model.Products.Select(p => p.ProductID)))];
-let currentProductId = null;
-const feedOverlay = document.getElementById('feedOverlay');
+        // Server-rendered initial product id (from Model.ProductId) is more reliable
+        // than re-parsing the URL query string client-side — it falls back to the
+        // query string only if the server didn't bind a value.
+        window.__initialProductId = @(Model.ProductId.HasValue ? Model.ProductId.Value.ToString() : "null");
 
-// Move the overlay to be a direct child of <body>, escaping any stacking
-// context created by wrapper elements in the layout (e.g. transformed
-// containers) that were letting the bottom nav paint on top despite our
-// very high z-index. This guarantees the overlay is always on top.
-if (feedOverlay && feedOverlay.parentElement !== document.body) {
-    document.body.appendChild(feedOverlay);
-}
+        const productOrder = [@Html.Raw(string.Join(",", Model.Products.Select(p => p.ProductID)))];
+    let currentProductId = null;
+    let lastFocusedElement = null;
+    const feedOverlay = document.getElementById('feedOverlay');
 
-    function sectionFor(id) {
-        return document.getElementById('feed-' + id);
+    // Move the overlay to be a direct child of <body>, escaping any stacking
+    // context created by wrapper elements in the layout (e.g. transformed
+    // containers) that were letting the bottom nav paint on top despite our
+    // very high z-index. This guarantees the overlay is always on top.
+    if (feedOverlay && feedOverlay.parentElement !== document.body) {
+        document.body.appendChild(feedOverlay);
     }
 
-    function openProductModal(id) {
-        if (!feedOverlay) return;
-        feedOverlay.classList.add('open');
-        document.body.style.overflow = 'hidden';
-        document.body.classList.add('feed-open');
-        currentProductId = id;
+        function sectionFor(id) {
+            return document.getElementById('feed-' + id);
+        }
 
-        const sec = sectionFor(id);
-        if (!sec) return;
+        function openProductModal(id) {
+            if (!feedOverlay) return;
+            lastFocusedElement = document.activeElement;
+            feedOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            document.body.classList.add('feed-open');
+            currentProductId = id;
 
-        // scrollIntoView is far more reliable than computing offsetTop manually —
-        // it always aligns to the actual rendered position, regardless of any
-        // layout timing quirks from the overlay just becoming visible.
-        requestAnimationFrame(function () {
+            const sec = sectionFor(id);
+            if (!sec) return;
+
+            // scrollIntoView is far more reliable than computing offsetTop manually —
+            // it always aligns to the actual rendered position, regardless of any
+            // layout timing quirks from the overlay just becoming visible.
             requestAnimationFrame(function () {
-                sec.scrollIntoView({ behavior: 'auto', block: 'start' });
-            });
-        });
-    }
-
-    function closeProductModal() {
-        if (!feedOverlay) return;
-        feedOverlay.classList.remove('open');
-        document.body.style.overflow = '';
-        document.body.classList.remove('feed-open');
-        currentProductId = null;
-    }
-
-    // Keep currentProductId in sync as the user swipes/scrolls/drags
-    let scrollRAF = null;
-    if (feedOverlay) {
-        feedOverlay.addEventListener('scroll', function () {
-            if (scrollRAF) return;
-            scrollRAF = requestAnimationFrame(function () {
-                scrollRAF = null;
-                const scrollCenter = feedOverlay.scrollTop + feedOverlay.clientHeight / 2;
-                let closestId = currentProductId;
-                let closestDist = Infinity;
-                productOrder.forEach(function (id) {
-                    const sec = sectionFor(id);
-                    if (!sec) return;
-                    const center = sec.offsetTop + sec.offsetHeight / 2;
-                    const dist = Math.abs(center - scrollCenter);
-                    if (dist < closestDist) { closestDist = dist; closestId = id; }
+                requestAnimationFrame(function () {
+                    sec.scrollIntoView({ behavior: 'auto', block: 'start' });
+                    // Move focus into the opened dialog for keyboard/screen-reader users.
+                    const closeBtn = sec.querySelector('.post-close-btn');
+                    if (closeBtn) closeBtn.focus();
                 });
-                if (closestId !== currentProductId) {
-                    currentProductId = closestId;
-                }
             });
+        }
+
+        function closeProductModal() {
+            if (!feedOverlay) return;
+            feedOverlay.classList.remove('open');
+            document.body.style.overflow = '';
+            document.body.classList.remove('feed-open');
+            currentProductId = null;
+            if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+                lastFocusedElement.focus();
+            }
+        }
+
+        // Keep currentProductId in sync as the user swipes/scrolls/drags
+        let scrollRAF = null;
+        if (feedOverlay) {
+            feedOverlay.addEventListener('scroll', function () {
+                if (scrollRAF) return;
+                scrollRAF = requestAnimationFrame(function () {
+                    scrollRAF = null;
+                    const scrollCenter = feedOverlay.scrollTop + feedOverlay.clientHeight / 2;
+                    let closestId = currentProductId;
+                    let closestDist = Infinity;
+                    productOrder.forEach(function (id) {
+                        const sec = sectionFor(id);
+                        if (!sec) return;
+                        const center = sec.offsetTop + sec.offsetHeight / 2;
+                        const dist = Math.abs(center - scrollCenter);
+                        if (dist < closestDist) { closestDist = dist; closestId = id; }
+                    });
+                    if (closestId !== currentProductId) {
+                        currentProductId = closestId;
+                    }
+                });
+            });
+        }
+
+        function changeModalImage(productId, direction) {
+            const sec = sectionFor(productId);
+            if (!sec) return;
+            const imgs = sec.querySelectorAll('.post-media img');
+            const dots = sec.querySelectorAll('.gallery-dots span');
+            const media = sec.querySelector('.post-media');
+            const counter = sec.querySelector('.gallery-counter-current');
+            let current = parseInt(media.dataset.currentImage);
+            imgs[current].style.display = 'none';
+            if (dots[current]) dots[current].classList.remove('active');
+            current = (current + direction + imgs.length) % imgs.length;
+            imgs[current].style.display = 'block';
+            if (dots[current]) dots[current].classList.add('active');
+            if (counter) counter.textContent = current + 1;
+            media.dataset.currentImage = current;
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (currentProductId === null) return;
+            if (e.key === 'Escape') { closeProductModal(); return; }
+            if (e.key === 'ArrowLeft') changeModalImage(currentProductId, -1);
+            if (e.key === 'ArrowRight') changeModalImage(currentProductId, 1);
         });
-    }
 
-    function changeModalImage(productId, direction) {
-        const sec = sectionFor(productId);
-        if (!sec) return;
-        const imgs = sec.querySelectorAll('.post-media img');
-        const dots = sec.querySelectorAll('.gallery-dots span');
-        const media = sec.querySelector('.post-media');
-        const counter = sec.querySelector('.gallery-counter-current');
-        let current = parseInt(media.dataset.currentImage);
-        imgs[current].style.display = 'none';
-        if (dots[current]) dots[current].classList.remove('active');
-        current = (current + direction + imgs.length) % imgs.length;
-        imgs[current].style.display = 'block';
-        if (dots[current]) dots[current].classList.add('active');
-        if (counter) counter.textContent = current + 1;
-        media.dataset.currentImage = current;
-    }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && currentProductId === null) closeSidePanel();
+        });
 
-    document.addEventListener('keydown', function (e) {
-        if (currentProductId === null) return;
-        if (e.key === 'Escape') { closeProductModal(); return; }
-        if (e.key === 'ArrowLeft') changeModalImage(currentProductId, -1);
-        if (e.key === 'ArrowRight') changeModalImage(currentProductId, 1);
-    });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && currentProductId === null) closeSidePanel();
-    });
-
-    window.onload = function () {
-        const params = new URLSearchParams(window.location.search);
-        const productId = params.get('productId');
-        if (productId) openProductModal(Number(productId));
-    };
+        document.addEventListener('DOMContentLoaded', function () {
+            const fallbackParam = new URLSearchParams(window.location.search).get('productId');
+            const productId = window.__initialProductId ?? (fallbackParam ? Number(fallbackParam) : null);
+            if (productId) openProductModal(productId);
+        });
 </script>
 
 <script>

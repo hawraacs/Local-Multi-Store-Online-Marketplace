@@ -55,7 +55,8 @@ namespace Multi_Store.Infrastructure.Repositories
                 .FirstOrDefaultAsync(a =>
                     a.OrderID == orderId &&
                     a.Status != "Delivered" &&
-                    a.Status != "Cancelled");
+                    a.Status != "Cancelled" &&
+                    a.Status != "Failed");
         }
 
         public async Task<IReadOnlyList<DeliveryAssignment>> GetTodayAssignmentsAsync(int deliveryPersonId)

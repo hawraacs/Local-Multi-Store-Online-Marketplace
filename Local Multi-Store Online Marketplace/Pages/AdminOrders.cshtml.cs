@@ -285,18 +285,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 {
                     order.DeliveryAssignment.Status =
                         "Cancelled";
-
-                    if (order.DeliveryAssignment.DeliveryPerson != null &&
-                        string.Equals(
-                            order.DeliveryAssignment.DeliveryPerson.Status,
-                            "Busy",
-                            StringComparison.OrdinalIgnoreCase))
-                    {
-                        order.DeliveryAssignment
-                            .DeliveryPerson
-                            .Status =
-                                "Available";
-                    }
                 }
 
                 order.Status =

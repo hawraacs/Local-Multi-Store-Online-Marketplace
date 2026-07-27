@@ -6,10 +6,11 @@
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
-                   ROOT VARIABLES — consistent brand palette
-                   ============================================================ */
+                                   ROOT VARIABLES — consistent brand palette
+                                   ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -29,6 +30,8 @@
             --radius-md: 12px;
             --radius-lg: 20px;
             --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            /* Same display face used across the rest of the Store Owner section. */
+            --font-display: 'Fraunces', 'Georgia', serif;
         }
 
         body {
@@ -39,8 +42,38 @@
         }
 
         /* ============================================================
-                   HEADER
-                   ============================================================ */
+                                   ALERTS
+                                   ============================================================ */
+        .alert {
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+
+        .alert-success {
+            background: #ecfdf5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .alert i {
+            font-size: 18px;
+        }
+
+        /* ============================================================
+                                   HEADER
+                                   ============================================================ */
         .orders-header {
             display: flex;
             justify-content: space-between;
@@ -52,9 +85,10 @@
 
             .orders-header h1 {
                 margin: 0;
-                font-size: 26px;
-                font-weight: 800;
-                letter-spacing: -0.4px;
+                font-family: var(--font-display);
+                font-size: 27px;
+                font-weight: 600;
+                letter-spacing: -0.2px;
                 color: var(--text-primary);
             }
 
@@ -70,8 +104,8 @@
             }
 
         /* ============================================================
-                   STATS ROW
-                   ============================================================ */
+                                   STATS ROW
+                                   ============================================================ */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -118,8 +152,74 @@
             }
 
         /* ============================================================
-                   CARD
-                   ============================================================ */
+                                   SEARCH / FILTER BAR — was fully supported server-side
+                                   (StatusFilter/SearchTerm query params) but had no UI at all.
+                                   ============================================================ */
+        .search-filter-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .filter-input {
+            flex: 1 1 200px;
+            min-width: 160px;
+        }
+
+            .filter-input input,
+            .filter-input select {
+                width: 100%;
+                padding: 10px 14px;
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-md);
+                background: var(--bg-color);
+                font-size: 14px;
+                color: var(--text-primary);
+                font-family: inherit;
+                transition: var(--transition);
+            }
+
+                .filter-input input:focus,
+                .filter-input select:focus {
+                    outline: none;
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.15);
+                }
+
+        .btn-filter-submit {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background: var(--accent-gradient);
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+            .btn-filter-submit:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+            }
+
+        /* ============================================================
+                                   CARD
+                                   ============================================================ */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -156,8 +256,8 @@
         }
 
         /* ============================================================
-                   TABLE
-                   ============================================================ */
+                                   TABLE
+                                   ============================================================ */
         .table {
             font-size: 14px;
             color: var(--text-primary);
@@ -193,6 +293,30 @@
 
             .table tbody tr:last-child td {
                 border-bottom: none;
+            }
+
+        /* ----- Empty state ----- */
+        .empty-row td {
+            padding: 48px 18px !important;
+        }
+
+        .empty-state-inline {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+        }
+
+            .empty-state-inline i {
+                font-size: 28px;
+                color: var(--border-color);
+            }
+
+            .empty-state-inline strong {
+                font-size: 14.5px;
+                color: var(--text-secondary);
+                font-weight: 700;
             }
 
         /* ----- Status dropdown ----- */
@@ -253,8 +377,72 @@
             }
 
         /* ============================================================
-                   RESPONSIVE
-                   ============================================================ */
+                                   PAGINATION — the model already computed PageIndex/TotalPages;
+                                   there was simply no control anywhere to use them.
+                                   ============================================================ */
+        .pagination-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 18px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-color);
+        }
+
+        .page-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--accent-color);
+            background: var(--accent-light);
+            transition: var(--transition);
+        }
+
+            .page-btn:hover {
+                background: var(--accent-color);
+                color: #fff;
+            }
+
+            .page-btn.disabled {
+                color: var(--text-muted);
+                background: var(--bg-color);
+                pointer-events: none;
+                cursor: default;
+            }
+
+        .page-info {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================================
+                                   ACCESSIBILITY
+                                   ============================================================ */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.001ms !important;
+            }
+        }
+
+        /* ============================================================
+                                   RESPONSIVE
+                                   ============================================================ */
         @@media (max-width: 768px) {
             .orders-header {
                 flex-direction: column;
@@ -268,6 +456,16 @@
 
             .stat-mini .number {
                 font-size: 20px;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-input {
+                flex: 1 1 auto;
+                min-width: unset;
             }
 
             .table thead th,
@@ -287,6 +485,11 @@
                 padding: 4px 12px;
                 font-size: 12px;
             }
+
+            .pagination-wrap {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
 
         @@media (max-width: 480px) {
@@ -295,6 +498,20 @@
             }
         }
     </style>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+    </div>
 }
 
 <!-- ========== HEADER ========== -->
@@ -329,6 +546,31 @@
     </div>
 </div>
 
+<!-- ========== SEARCH & FILTER ========== -->
+<div class="search-filter-bar">
+    <form method="get" id="orderFilterForm">
+        <div class="filter-group">
+            <div class="filter-input">
+                <input type="text" name="searchTerm" placeholder="Search order # or customer..." value="@Model.SearchTerm" />
+            </div>
+            <div class="filter-input">
+                <select name="statusFilter" id="statusFilterSelect">
+                    <option value="">All Statuses</option>
+                    @foreach (var status in Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order.IndexModel.ValidOrderStatuses)
+                    {
+                        <option value="@status" selected="@(Model.StatusFilter == status)">@status</option>
+                    }
+                </select>
+            </div>
+            <div class="filter-input" style="flex:0 0 auto;">
+                <button type="submit" class="btn-filter-submit">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
 <!-- ========== ORDERS TABLE ========== -->
 <div class="card">
     <div class="card-header">
@@ -348,35 +590,99 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var order in Model.Orders)
+                @if (Model.Orders.Any())
                 {
-                    <tr>
-                        <td><strong>@order.OrderNumber</strong></td>
-                        <td>@order.CustomerName</td>
-                        <td>@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td>@order.ItemCount</td>
-                        <td><strong>$@order.TotalAmount.ToString("N2")</strong></td>
-                        <td>
-                            <form method="post" asp-page-handler="UpdateStatus" class="d-inline">
-                                <input type="hidden" name="orderId" value="@order.OrderID" />
-                                <select name="newStatus" class="status-select" onchange="this.form.submit()">
-                                    <option value="Pending" selected="@(order.Status == "Pending")">Pending</option>
-                                    <option value="Confirmed" selected="@(order.Status == "Confirmed")">Confirmed</option>
-                                    <option value="Preparing" selected="@(order.Status == "Preparing")">Preparing</option>
-                                    <option value="OutForDelivery" selected="@(order.Status == "OutForDelivery")">Out for Delivery</option>
-                                    <option value="Delivered" selected="@(order.Status == "Delivered")">Delivered</option>
-                                    <option value="Cancelled" selected="@(order.Status == "Cancelled")">Cancelled</option>
-                                </select>
-                            </form>
-                        </td>
-                        <td class="text-center">
-                            <a href="/StoreOwner/Order/Details?id=@order.OrderID" class="btn-view">
-                                <i class="fas fa-eye"></i> View
-                            </a>
+                    @foreach (var order in Model.Orders)
+                    {
+                        <tr>
+                            <td><strong>@order.OrderNumber</strong></td>
+                            <td>@order.CustomerName</td>
+                            <td>@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@order.ItemCount</td>
+                            <td><strong>$@order.TotalAmount.ToString("N2")</strong></td>
+                            <td>
+                                <form method="post" asp-page-handler="UpdateStatus" class="d-inline">
+                                    <input type="hidden" name="orderId" value="@order.OrderID" />
+                                    @* BUGFIX: these three hidden fields didn't exist before — the
+                                       redirect after updating status always reset to page 1 with no
+                                       filters, since the handler had nothing to read them from. *@
+                                    <input type="hidden" name="pageIndex" value="@Model.PageIndex" />
+                                    <input type="hidden" name="statusFilter" value="@Model.StatusFilter" />
+                                    <input type="hidden" name="searchTerm" value="@Model.SearchTerm" />
+                                    <select name="newStatus" class="status-select" onchange="this.form.submit()">
+                                        @foreach (var status in Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order.IndexModel.ValidOrderStatuses)
+                                        {
+                                            var isTerminal = status == "Delivered" || status == "Cancelled";
+                                            if (!(order.IsMultiVendor && isTerminal))
+                                            {
+                                                <option value="@status" selected="@(order.Status == status)">
+                                                    @(status == "OutForDelivery" ? "Out for Delivery" : status)
+                                                </option>
+                                            }
+                                        }
+                                    </select>
+                                </form>
+                            </td>
+                            <td class="text-center">
+                                <a href="/StoreOwner/Order/Details?id=@order.OrderID" class="btn-view">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr class="empty-row">
+                        <td colspan="7">
+                            <div class="empty-state-inline">
+                                <i class="fas fa-inbox"></i>
+                                <strong>No orders found</strong>
+                                <span>@(string.IsNullOrEmpty(Model.SearchTerm) && string.IsNullOrEmpty(Model.StatusFilter) ? "Orders will appear here once customers start buying." : "Try a different search term or status filter.")</span>
+                            </div>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div class="pagination-wrap">
+                @if (Model.PageIndex > 1)
+                {
+                    <a class="page-btn" asp-page="./Index" asp-route-pageIndex="@(Model.PageIndex - 1)" asp-route-statusFilter="@Model.StatusFilter" asp-route-searchTerm="@Model.SearchTerm">
+                        <i class="fas fa-chevron-left"></i> Prev
+                    </a>
+                }
+                else
+                {
+                    <span class="page-btn disabled"><i class="fas fa-chevron-left"></i> Prev</span>
+                }
+
+                <span class="page-info">Page @Model.PageIndex of @Model.TotalPages</span>
+
+                @if (Model.PageIndex < Model.TotalPages)
+                {
+                    <a class="page-btn" asp-page="./Index" asp-route-pageIndex="@(Model.PageIndex + 1)" asp-route-statusFilter="@Model.StatusFilter" asp-route-searchTerm="@Model.SearchTerm">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                }
+                else
+                {
+                    <span class="page-btn disabled">Next <i class="fas fa-chevron-right"></i></span>
+                }
+            </div>
+        }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Auto-submit the filter form when the status dropdown changes, matching
+        // the pattern used on the Products page.
+        document.getElementById('statusFilterSelect')?.addEventListener('change', function () {
+            document.getElementById('orderFilterForm')?.submit();
+        });
+    </script>
+}

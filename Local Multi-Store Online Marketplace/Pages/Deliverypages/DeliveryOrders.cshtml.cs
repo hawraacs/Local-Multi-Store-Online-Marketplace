@@ -18,9 +18,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
 
-    public DeliveryOrdersModel(
-        ApplicationDbContext context,
-        UserManager<User> userManager)
+        public DeliveryOrdersModel(
+            ApplicationDbContext context,
+            UserManager<User> userManager)
         {
             _context = context;
             _userManager = userManager;
@@ -91,6 +91,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                     .AsNoTracking()
                     .Include(a => a.Order)
                         .ThenInclude(o => o.Address)
+                    .Include(a => a.Order)
+                        .ThenInclude(o => o.OrderItems)
+                            .ThenInclude(oi => oi.Store)
                     .Where(a =>
                         a.DeliveryPersonID ==
                         deliveryPerson.DeliveryPersonID)
@@ -127,9 +130,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
             // ==========================================
             // FILTER
+            // (Counts above are based on the FULL assignment list,
+            // including hidden ones, so KPI statistics always
+            // reflect the delivery person's real history.
+            // The visible list below excludes hidden assignments.)
             // ==========================================
             IEnumerable<DeliveryAssignment> filteredAssignments =
-                assignments;
+                assignments.Where(a => !a.IsHiddenByDeliveryPerson);
 
             if (!string.IsNullOrWhiteSpace(StatusFilter) &&
                 !StatusEquals(StatusFilter, "All"))
@@ -234,11 +241,74 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                             a.PickupTime,
 
                         DeliveryTime =
-                            a.DeliveryTime
+                            a.DeliveryTime,
+
+                        StoreNames =
+                            a.Order != null &&
+                            a.Order.OrderItems != null
+                                ? string.Join(", ",
+                                    a.Order.OrderItems
+                                        .Where(i => i != null && i.Store != null)
+                                        .Select(i => i.Store.StoreName)
+                                        .Distinct())
+                                : "N/A"
                     })
                 .ToList();
 
             return Page();
+        }
+
+        // ==========================================
+        // HIDE ORDER FROM DELIVERY PERSON'S LIST ONLY
+        // (Does NOT delete anything. Does NOT affect the Order,
+        // Admin views, Customer views, reports, or analytics.
+        // Only allowed for Delivered / Cancelled / Failed assignments,
+        // enforced server-side regardless of what the UI sent.)
+        // ==========================================
+        public async Task<IActionResult> OnPostHideOrderAsync(int assignmentId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
+            }
+
+            var deliveryPerson =
+                await _context.DeliveryPersons
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(d =>
+                        d.UserID == user.Id &&
+                        d.IsActive &&
+                        d.Status == "Approved");
+
+            if (deliveryPerson == null)
+            {
+                return RedirectToPage(new { StatusFilter });
+            }
+
+            var assignment =
+                await _context.DeliveryAssignments
+                    .FirstOrDefaultAsync(a =>
+                        a.AssignmentID == assignmentId &&
+                        a.DeliveryPersonID ==
+                        deliveryPerson.DeliveryPersonID);
+
+            if (assignment != null &&
+                (StatusEquals(assignment.Status, "Delivered") ||
+                 StatusEquals(assignment.Status, "Cancelled") ||
+                 StatusEquals(assignment.Status, "Failed")))
+            {
+                assignment.IsHiddenByDeliveryPerson = true;
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Order hidden from your list.";
+            }
+
+            return RedirectToPage(new { StatusFilter });
         }
 
         // ==========================================
@@ -353,5 +423,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         public DateTime? PickupTime { get; set; }
 
         public DateTime? DeliveryTime { get; set; }
+
+        public string StoreNames { get; set; }
+            = string.Empty;
     }
 }

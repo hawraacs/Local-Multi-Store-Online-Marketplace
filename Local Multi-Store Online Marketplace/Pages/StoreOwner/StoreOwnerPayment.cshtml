@@ -908,7 +908,7 @@
 
                     @if (Model.Payment == null)
                     {
-                        <div class="message error">Payment request not found.</div>
+                        <div class="message error">@(string.IsNullOrWhiteSpace(Model.ErrorMessage) ? "Payment request not found." : Model.ErrorMessage)</div>
                         <div class="actions">
                             <a href="/StoreOwner/Dashboard" class="btn back-btn">← Back to Dashboard</a>
                         </div>
@@ -1263,15 +1263,43 @@
     }
     else if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
+      
+        <div id="serverPaymentErrorFallback" data-message="@Model.ErrorMessage" style="display:none;"></div>
         <script>
             (function() {
             document.addEventListener('DOMContentLoaded', function() {
             var container = document.getElementById('paymentToastContainer');
-            if (!container) return;
+            var source = document.getElementById('serverPaymentErrorFallback');
+            if (!container || !source) return;
+
+            var message = source.dataset.message || '';
+            if (!message) return;
+
             var toast = document.createElement('div');
             toast.className = 'payment-toast';
-            toast.innerHTML = '<span class="payment-toast-icon">!</span><span class="payment-toast-content"><span class="payment-toast-title">Payment was not completed</span><span class="payment-toast-message">@Html.Raw(System.Text.Json.JsonEncodedText.Encode(Model.ErrorMessage ?? string.Empty))</span></span>';
+            toast.setAttribute('role', 'alert');
+
+            var icon = document.createElement('span');
+            icon.className = 'payment-toast-icon';
+            icon.textContent = '!';
+
+            var content = document.createElement('span');
+            content.className = 'payment-toast-content';
+
+            var title = document.createElement('span');
+            title.className = 'payment-toast-title';
+            title.textContent = 'Payment was not completed';
+
+            var msg = document.createElement('span');
+            msg.className = 'payment-toast-message';
+            msg.textContent = message;
+
+            content.appendChild(title);
+            content.appendChild(msg);
+            toast.appendChild(icon);
+            toast.appendChild(content);
             container.appendChild(toast);
+
             requestAnimationFrame(function() { toast.classList.add('show'); });
             });
             })();

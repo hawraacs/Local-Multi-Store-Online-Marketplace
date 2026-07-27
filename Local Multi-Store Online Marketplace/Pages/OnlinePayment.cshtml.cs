@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+ï»¿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -34,7 +34,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public string? ErrorMessage { get; set; }
 
         // Exposed to the view so Stripe.js can initialize client-side.
-        // This is the publishable key — safe to expose in the browser.
+        // This is the publishable key ï¿½ safe to expose in the browser.
         public string StripePublishableKey =>
             _configuration["Stripe:PublishableKey"] ?? string.Empty;
 
@@ -43,7 +43,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         // Populated client-side by Stripe.js after it tokenizes the
         // card entered into the Stripe Card Element. The raw card
-        // number/expiry/CVC are never sent to or seen by this server —
+        // number/expiry/CVC are never sent to or seen by this server ï¿½
         // only this opaque PaymentMethod ID is.
         [BindProperty]
         public string StripePaymentMethodId { get; set; } = string.Empty;
@@ -140,8 +140,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             StripeConfiguration.ApiKey = secretKey;
 
-            await using var transaction = await _context.Database.BeginTransactionAsync();
-
             PaymentIntent intent;
 
             try
@@ -157,7 +155,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     PaymentMethodTypes = new List<string> { "card" },
                     Description = $"Order {order.OrderNumber}",
                     // No 3D Secure redirect flow in this simplified
-                    // integration — a card that requires additional
+                    // integration ï¿½ a card that requires additional
                     // authentication is treated as a failed attempt
                     // below rather than sent through a challenge step.
                     ErrorOnRequiresAction = true
@@ -167,8 +165,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
             catch (StripeException exception)
             {
-                await transaction.RollbackAsync();
-
                 _logger.LogWarning(
                     exception,
                     "Stripe payment declined or failed for order {OrderId}.",
@@ -184,8 +180,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (intent.Status != "succeeded")
             {
-                await transaction.RollbackAsync();
-
                 _logger.LogWarning(
                     "Stripe PaymentIntent {IntentId} for order {OrderId} ended with status {Status}.",
                     intent.Id,
@@ -198,6 +192,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     reason = "Payment could not be completed. No amount was charged."
                 });
             }
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {

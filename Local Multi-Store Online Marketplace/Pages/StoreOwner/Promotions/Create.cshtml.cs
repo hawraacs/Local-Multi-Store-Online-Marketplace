@@ -32,8 +32,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
             {
                 AudienceType = "AllCustomers",
 
-                // Safe default: coupon expires after 7 days.
-                CouponEndDate = DateTime.Today.AddDays(7)
+                // BUGFIX: was DateTime.Today (local server time) — every other date
+                // calculation in this app uses DateTime.UtcNow. On a server not
+                // running in UTC, "today" here could silently disagree by up to a
+                // day with "today" as understood everywhere else (including the
+                // "cannot be in the past" check below, which had the same issue).
+                CouponEndDate = DateTime.UtcNow.Date.AddDays(7)
             };
         }
 
@@ -86,6 +90,34 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
                         "Percentage discount cannot exceed 100%.");
                 }
 
+                // BUGFIX: none of these three optional fields were ever checked for
+                // sane values — a negative minimum order, a negative or zero max
+                // discount, or a negative usage limit could all be submitted with
+                // no server-side pushback.
+                if (Promotion.MinimumOrderAmount.HasValue &&
+                    Promotion.MinimumOrderAmount.Value < 0)
+                {
+                    ModelState.AddModelError(
+                        "Promotion.MinimumOrderAmount",
+                        "Minimum order amount cannot be negative.");
+                }
+
+                if (Promotion.MaximumDiscountAmount.HasValue &&
+                    Promotion.MaximumDiscountAmount.Value <= 0)
+                {
+                    ModelState.AddModelError(
+                        "Promotion.MaximumDiscountAmount",
+                        "Maximum discount amount must be greater than zero.");
+                }
+
+                if (Promotion.UsageLimit.HasValue &&
+                    Promotion.UsageLimit.Value <= 0)
+                {
+                    ModelState.AddModelError(
+                        "Promotion.UsageLimit",
+                        "Usage limit must be greater than zero.");
+                }
+
                 // CouponEndDate is nullable DateTime?.
                 if (!Promotion.CouponEndDate.HasValue)
                 {
@@ -94,12 +126,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
                         "Coupon end date is required when creating a coupon.");
                 }
                 else if (Promotion.CouponEndDate.Value.Date <
-                         DateTime.Today)
+                         DateTime.UtcNow.Date)
                 {
                     ModelState.AddModelError(
                         "Promotion.CouponEndDate",
                         "Coupon end date cannot be in the past.");
                 }
+            }
+            else
+            {
+                // BUGFIX: if a store owner checks "Create a coupon", fills in some
+                // fields, then unchecks it before submitting, those values were
+                // previously still bound on the DTO and passed straight through to
+                // SendPromotionAsync — CreateCoupon being false didn't actually
+                // guarantee no coupon data went along with it. Cleared explicitly
+                // here so the DTO unambiguously means "no coupon" downstream,
+                // regardless of what IPromotionManager does or doesn't check itself.
+                Promotion.CouponCode = null;
+                Promotion.MinimumOrderAmount = null;
+                Promotion.MaximumDiscountAmount = null;
+                Promotion.UsageLimit = null;
+                Promotion.CouponEndDate = null;
             }
 
             if (!ModelState.IsValid)
@@ -133,8 +180,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
                     User.FindFirstValue(
                         ClaimTypes.NameIdentifier));
 
+                // BUGFIX: previously showed exception.Message directly to the user —
+                // that can leak internal details (stack/provider-specific error text)
+                // and usually isn't meaningful to a store owner anyway. The full
+                // exception is still logged above for diagnosis.
                 ErrorMessage =
-                    exception.Message;
+                    "Something went wrong while sending this promotion. Please try again.";
 
                 return Page();
             }
@@ -165,4 +216,3 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
         }
     }
 }
-

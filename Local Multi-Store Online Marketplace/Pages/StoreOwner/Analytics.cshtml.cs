@@ -13,13 +13,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
+        private readonly ILogger<AnalyticsModel> _logger;
 
         public AnalyticsModel(
             ApplicationDbContext context,
-            UserManager<User> userManager)
+            UserManager<User> userManager,
+            ILogger<AnalyticsModel> logger)
         {
             _context = context;
             _userManager = userManager;
+            _logger = logger;
         }
 
         [BindProperty(SupportsGet = true)]
@@ -79,152 +82,161 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
         public async Task<IActionResult> OnGetAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
-
-            if (user == null)
+            try
             {
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                var user = await _userManager.GetUserAsync(User);
+
+                if (user == null)
+                {
+                    return RedirectToPage("/Account/Login", new { area = "Identity" });
+                }
+
+                var store = await _context.Stores
+                    .FirstOrDefaultAsync(s => s.OwnerUserID == user.Id);
+
+                if (store == null)
+                {
+                    TempData["Error"] = "No store is connected to your account.";
+                    return RedirectToPage("/StoreOwner/Dashboard");
+                }
+
+                StoreName = store.StoreName;
+
+                var dateRange = GetDateRange();
+
+                ReportStartDate = dateRange.StartDate;
+                ReportEndDate = dateRange.EndDate;
+
+                var storeOrderItems = await _context.OrderItems
+                    .Include(oi => oi.Order)
+                    .Where(oi =>
+                        oi.StoreID == store.StoreID &&
+                        oi.Order != null &&
+                        oi.Order.OrderDate >= ReportStartDate &&
+                        oi.Order.OrderDate <= ReportEndDate)
+                    .ToListAsync();
+
+                var storeOrderIds = storeOrderItems
+                    .Select(oi => oi.OrderID)
+                    .Distinct()
+                    .ToList();
+
+                var storeOrders = await _context.Orders
+                    .Where(o => storeOrderIds.Contains(o.OrderID))
+                    .OrderByDescending(o => o.OrderDate)
+                    .ToListAsync();
+
+                var deliveredOrdersList = storeOrders
+                    .Where(o => IsDelivered(o.Status))
+                    .ToList();
+
+                var deliveredOrderIds = deliveredOrdersList
+                    .Select(o => o.OrderID)
+                    .ToList();
+
+                var activeOrderIds = storeOrders
+                    .Where(o => IsActiveOrder(o.Status))
+                    .Select(o => o.OrderID)
+                    .ToList();
+
+                var deliveredOrderItems = storeOrderItems
+                    .Where(oi => deliveredOrderIds.Contains(oi.OrderID))
+                    .ToList();
+
+                var activeOrderItems = storeOrderItems
+                    .Where(oi => activeOrderIds.Contains(oi.OrderID))
+                    .ToList();
+
+                TotalRevenue = deliveredOrderItems.Sum(oi => oi.TotalPrice);
+
+                PendingRevenue = activeOrderItems.Sum(oi => oi.TotalPrice);
+
+                TotalOrders = storeOrders.Count;
+
+                DeliveredOrdersCount = deliveredOrdersList.Count;
+
+                TotalItemsSold = deliveredOrderItems.Sum(oi => oi.Quantity);
+
+                UniqueCustomers = storeOrders
+                    .Select(o => o.CustomerID)
+                    .Distinct()
+                    .Count();
+
+                AverageOrderValue = DeliveredOrdersCount > 0
+                    ? Math.Round(TotalRevenue / DeliveredOrdersCount, 2)
+                    : 0;
+
+                EstimatedCommission = Math.Round(TotalRevenue * (store.CommissionRate / 100m), 2);
+
+                EstimatedNetEarnings = TotalRevenue - EstimatedCommission;
+
+                PendingOrders = storeOrders.Count(o => IsPending(o.Status));
+
+                PreparingOrders = storeOrders.Count(o => IsPreparing(o.Status));
+
+                OutForDeliveryOrders = storeOrders.Count(o => IsOutForDelivery(o.Status));
+
+                DeliveredOrders = storeOrders.Count(o => IsDelivered(o.Status));
+
+                CancelledOrders = storeOrders.Count(o => IsCancelled(o.Status));
+
+                BestSellingProducts = deliveredOrderItems
+                    .GroupBy(oi => new
+                    {
+                        oi.ProductID,
+                        oi.ProductName
+                    })
+                    .Select(g => new BestSellingProductViewModel
+                    {
+                        ProductID = g.Key.ProductID,
+                        ProductName = g.Key.ProductName,
+                        QuantitySold = g.Sum(x => x.Quantity),
+                        Revenue = g.Sum(x => x.TotalPrice)
+                    })
+                    .OrderByDescending(x => x.QuantitySold)
+                    .ThenByDescending(x => x.Revenue)
+                    .Take(6)
+                    .ToList();
+
+                DailyRevenue = deliveredOrderItems
+                    .Where(oi => oi.Order != null)
+                    .GroupBy(oi => oi.Order.OrderDate.Date)
+                    .Select(g => new DailyRevenueViewModel
+                    {
+                        Date = g.Key,
+                        Revenue = g.Sum(x => x.TotalPrice),
+                        Orders = g.Select(x => x.OrderID).Distinct().Count(),
+                        ItemsSold = g.Sum(x => x.Quantity)
+                    })
+                    .OrderBy(x => x.Date)
+                    .ToList();
+
+                RecentOrders = storeOrders
+                    .Take(8)
+                    .Select(order => new RecentOrderViewModel
+                    {
+                        OrderID = order.OrderID,
+                        OrderNumber = order.OrderNumber,
+                        OrderDate = order.OrderDate,
+                        Status = order.Status,
+                        PaymentStatus = order.PaymentStatus,
+                        Amount = storeOrderItems
+                            .Where(oi => oi.OrderID == order.OrderID)
+                            .Sum(oi => oi.TotalPrice)
+                    })
+                    .ToList();
+
+                // ── BOOST ANALYTICS (NEW) ──
+                await LoadBoostAnalyticsAsync(store.StoreID, deliveredOrderItems);
+
+                return Page();
             }
-
-            var store = await _context.Stores
-                .FirstOrDefaultAsync(s => s.OwnerUserID == user.Id);
-
-            if (store == null)
+            catch (Exception ex)
             {
-                TempData["Error"] = "No store is connected to your account.";
+                _logger.LogError(ex, "Error loading Analytics page.");
+                TempData["Error"] = "Something went wrong while loading your analytics. Please try again.";
                 return RedirectToPage("/StoreOwner/Dashboard");
             }
-
-            StoreName = store.StoreName;
-
-            var dateRange = GetDateRange();
-
-            ReportStartDate = dateRange.StartDate;
-            ReportEndDate = dateRange.EndDate;
-
-            var storeOrderItems = await _context.OrderItems
-                .Include(oi => oi.Order)
-                .Where(oi =>
-                    oi.StoreID == store.StoreID &&
-                    oi.Order != null &&
-                    oi.Order.OrderDate >= ReportStartDate &&
-                    oi.Order.OrderDate <= ReportEndDate)
-                .ToListAsync();
-
-            var storeOrderIds = storeOrderItems
-                .Select(oi => oi.OrderID)
-                .Distinct()
-                .ToList();
-
-            var storeOrders = await _context.Orders
-                .Where(o => storeOrderIds.Contains(o.OrderID))
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
-
-            var deliveredOrdersList = storeOrders
-                .Where(o => IsDelivered(o.Status))
-                .ToList();
-
-            var deliveredOrderIds = deliveredOrdersList
-                .Select(o => o.OrderID)
-                .ToList();
-
-            var activeOrderIds = storeOrders
-                .Where(o => IsActiveOrder(o.Status))
-                .Select(o => o.OrderID)
-                .ToList();
-
-            var deliveredOrderItems = storeOrderItems
-                .Where(oi => deliveredOrderIds.Contains(oi.OrderID))
-                .ToList();
-
-            var activeOrderItems = storeOrderItems
-                .Where(oi => activeOrderIds.Contains(oi.OrderID))
-                .ToList();
-
-            TotalRevenue = deliveredOrderItems.Sum(oi => oi.TotalPrice);
-
-            PendingRevenue = activeOrderItems.Sum(oi => oi.TotalPrice);
-
-            TotalOrders = storeOrders.Count;
-
-            DeliveredOrdersCount = deliveredOrdersList.Count;
-
-            TotalItemsSold = deliveredOrderItems.Sum(oi => oi.Quantity);
-
-            UniqueCustomers = storeOrders
-                .Select(o => o.CustomerID)
-                .Distinct()
-                .Count();
-
-            AverageOrderValue = DeliveredOrdersCount > 0
-                ? Math.Round(TotalRevenue / DeliveredOrdersCount, 2)
-                : 0;
-
-            EstimatedCommission = Math.Round(TotalRevenue * (store.CommissionRate / 100m), 2);
-
-            EstimatedNetEarnings = TotalRevenue - EstimatedCommission;
-
-            PendingOrders = storeOrders.Count(o => IsPending(o.Status));
-
-            PreparingOrders = storeOrders.Count(o => IsPreparing(o.Status));
-
-            OutForDeliveryOrders = storeOrders.Count(o => IsOutForDelivery(o.Status));
-
-            DeliveredOrders = storeOrders.Count(o => IsDelivered(o.Status));
-
-            CancelledOrders = storeOrders.Count(o => IsCancelled(o.Status));
-
-            BestSellingProducts = deliveredOrderItems
-                .GroupBy(oi => new
-                {
-                    oi.ProductID,
-                    oi.ProductName
-                })
-                .Select(g => new BestSellingProductViewModel
-                {
-                    ProductID = g.Key.ProductID,
-                    ProductName = g.Key.ProductName,
-                    QuantitySold = g.Sum(x => x.Quantity),
-                    Revenue = g.Sum(x => x.TotalPrice)
-                })
-                .OrderByDescending(x => x.QuantitySold)
-                .ThenByDescending(x => x.Revenue)
-                .Take(6)
-                .ToList();
-
-            DailyRevenue = deliveredOrderItems
-                .Where(oi => oi.Order != null)
-                .GroupBy(oi => oi.Order.OrderDate.Date)
-                .Select(g => new DailyRevenueViewModel
-                {
-                    Date = g.Key,
-                    Revenue = g.Sum(x => x.TotalPrice),
-                    Orders = g.Select(x => x.OrderID).Distinct().Count(),
-                    ItemsSold = g.Sum(x => x.Quantity)
-                })
-                .OrderBy(x => x.Date)
-                .ToList();
-
-            RecentOrders = storeOrders
-                .Take(8)
-                .Select(order => new RecentOrderViewModel
-                {
-                    OrderID = order.OrderID,
-                    OrderNumber = order.OrderNumber,
-                    OrderDate = order.OrderDate,
-                    Status = order.Status,
-                    PaymentStatus = order.PaymentStatus,
-                    Amount = storeOrderItems
-                        .Where(oi => oi.OrderID == order.OrderID)
-                        .Sum(oi => oi.TotalPrice)
-                })
-                .ToList();
-
-            // ── BOOST ANALYTICS (NEW) ──
-            await LoadBoostAnalyticsAsync(store.StoreID, deliveredOrderItems);
-
-            return Page();
         }
 
         private async Task LoadBoostAnalyticsAsync(int storeId, List<OrderItem> deliveredOrderItemsInRange)
@@ -302,7 +314,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
         private (DateTime StartDate, DateTime EndDate) GetDateRange()
         {
-            var today = DateTime.Today;
+            // BUGFIX: was DateTime.Today (local server time). Everything else in
+            // this app — including how Order.OrderDate gets stamped in the first
+            // place — uses DateTime.UtcNow. On a server not running in UTC, "today"
+            // here could silently disagree with "today" everywhere else, shifting
+            // which orders fall in or out of the selected range by up to a day.
+            var today = DateTime.UtcNow.Date;
             var startDate = today.AddDays(-30);
             var endDate = today.AddDays(1).AddTicks(-1);
 
@@ -352,7 +369,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
         private static bool IsOutForDelivery(string? status)
         {
-            return string.Equals(status, "Out for Delivery", StringComparison.OrdinalIgnoreCase);
+            // BUGFIX: previously only checked "Out for Delivery" (with spaces), but
+            // the Orders module canonically stores "OutForDelivery" (no spaces) —
+            // confirmed by this very file's own view, which matches
+            // order.Status.ToLower() against "outfordelivery". Orders actually out
+            // for delivery were silently omitted from this count. Checked both
+            // variants defensively, matching the same precedent already used in
+            // DashboardModel.cs for this exact status.
+            return string.Equals(status, "OutForDelivery", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(status, "Out for Delivery", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsDelivered(string? status)

@@ -18,19 +18,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IConfiguration _configuration;
         private readonly IAuditLogRepository _auditLogRepository;
+        private readonly ILogger<CreateModel> _logger;
+
+        private static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
+        private static readonly string[] AllowedImageMimeTypes = { "image/jpeg", "image/png", "image/webp" };
+        private const long MaxImageSizeBytes = 5 * 1024 * 1024; // 5 MB per image
+        private const int MaxImageCount = 5;
 
         public CreateModel(
             ApplicationDbContext context,
             ICurrentStoreService currentStoreService,
             IWebHostEnvironment webHostEnvironment,
             IConfiguration configuration,
-            IAuditLogRepository auditLogRepository)
+            IAuditLogRepository auditLogRepository,
+            ILogger<CreateModel> logger)
         {
             _context = context;
             _currentStoreService = currentStoreService;
             _webHostEnvironment = webHostEnvironment;
             _configuration = configuration;
             _auditLogRepository = auditLogRepository;
+            _logger = logger;
         }
 
         [BindProperty]
@@ -46,44 +54,53 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
         // =============================================================
         public async Task<IActionResult> OnGetAsync()
         {
-            if (!await _currentStoreService.IsStoreOwnerAsync())
-                return RedirectToPage("/Account/AccessDenied");
-
-            var store = await _currentStoreService.GetCurrentStoreAsync();
-            if (store == null)
+            try
             {
-                TempData["ErrorMessage"] = "Store not found. Please ensure your store is approved.";
-                return RedirectToPage("/StoreOwner/Dashboard");
-            }
+                if (!await _currentStoreService.IsStoreOwnerAsync())
+                    return RedirectToPage("/Account/AccessDenied");
 
-            // ✅ Check if subscription is active (trial or paid)
-            if (!IsSubscriptionActive(store))
-            {
-                // Create or get a pending payment record for monthly subscription
-                var pendingPayment = await GetOrCreatePendingSubscriptionPaymentAsync(store.StoreID);
-
-                if (pendingPayment == null)
+                var store = await _currentStoreService.GetCurrentStoreAsync();
+                if (store == null)
                 {
-                    TempData["ErrorMessage"] = "Unable to create payment request. Please try again.";
-                    return RedirectToPage("/StoreOwner/Products/Index");
+                    TempData["ErrorMessage"] = "Store not found. Please ensure your store is approved.";
+                    return RedirectToPage("/StoreOwner/Dashboard");
                 }
 
-                // Redirect to the payment page with the payment ID
-                // After successful payment, return to this page.
-                return RedirectToPage("/StoreOwner/StoreOwnerPayment", new
+                // ✅ Check if subscription is active (trial or paid)
+                if (!IsSubscriptionActive(store))
                 {
-                    paymentId = pendingPayment.StorePaymentId,
-                    returnUrl = Url.Page("/StoreOwner/Products/Create")
-                });
+                    // Create or get a pending payment record for monthly subscription
+                    var pendingPayment = await GetOrCreatePendingSubscriptionPaymentAsync(store.StoreID);
+
+                    if (pendingPayment == null)
+                    {
+                        TempData["ErrorMessage"] = "Unable to create payment request. Please try again.";
+                        return RedirectToPage("/StoreOwner/Products/Index");
+                    }
+
+                    // Redirect to the payment page with the payment ID
+                    // After successful payment, return to this page.
+                    return RedirectToPage("/StoreOwner/StoreOwnerPayment", new
+                    {
+                        paymentId = pendingPayment.StorePaymentId,
+                        returnUrl = Url.Page("/StoreOwner/Products/Create")
+                    });
+                }
+
+                // ✅ Subscription active – allowed to create product
+                ViewData["StoreName"] = store.StoreName;
+                ViewData["StoreId"] = store.StoreID;
+
+                await LoadCategories();
+
+                return Page();
             }
-
-            // ✅ Subscription active – allowed to create product
-            ViewData["StoreName"] = store.StoreName;
-            ViewData["StoreId"] = store.StoreID;
-
-            await LoadCategories();
-
-            return Page();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading Create Product page for user {UserId}.", User?.Identity?.Name);
+                TempData["ErrorMessage"] = "Something went wrong while loading this page. Please try again.";
+                return RedirectToPage("/StoreOwner/Products/Index");
+            }
         }
 
         // =============================================================
@@ -120,10 +137,28 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
                 ModelState.AddModelError("ProductVM.Price", "Price must be greater than 0.");
             if (ProductVM.Quantity < 0)
                 ModelState.AddModelError("ProductVM.Quantity", "Quantity cannot be negative.");
+
+            // BUGFIX: the form marks "Your Cost Price" as required (red asterisk) but
+            // nothing ever enforced that server-side — OriginalPrice has no [Required]
+            // attribute, and the two checks below only fire when a value IS present.
+            // Leaving it blank silently created products with OriginalPrice == null,
+            // permanently breaking profit/margin tracking for that product.
+            if (!ProductVM.OriginalPrice.HasValue)
+                ModelState.AddModelError("ProductVM.OriginalPrice", "Cost price is required.");
             if (ProductVM.OriginalPrice.HasValue && ProductVM.OriginalPrice.Value < 0)
                 ModelState.AddModelError("ProductVM.OriginalPrice", "Cost price cannot be negative.");
             if (ProductVM.OriginalPrice.HasValue && ProductVM.Price < ProductVM.OriginalPrice.Value)
                 ModelState.AddModelError("ProductVM.OriginalPrice", "Selling price should be higher than cost price.");
+
+            // BUGFIX: previously there was no validation at all on uploaded images —
+            // any file type, any size, any count could be posted directly (the "max 5
+            // images" text was decorative only). Validated here, before the product is
+            // ever created, so a bad upload doesn't leave an orphaned product behind.
+            var imageError = await ValidateUploadedImagesAsync(ProductVM.UploadedImages);
+            if (imageError != null)
+            {
+                ModelState.AddModelError("ProductVM.UploadedImages", imageError);
+            }
 
             if (!ModelState.IsValid)
             {
@@ -132,70 +167,94 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
                 return Page();
             }
 
-            var category = await _context.Categories
-                .FirstOrDefaultAsync(c => c.CategoryID == ProductVM.CategoryID && c.IsActive);
-
-            if (category == null)
+            try
             {
-                ModelState.AddModelError("", "Selected category is invalid.");
+                var category = await _context.Categories
+                    .FirstOrDefaultAsync(c => c.CategoryID == ProductVM.CategoryID && c.IsActive);
+
+                if (category == null)
+                {
+                    ModelState.AddModelError("", "Selected category is invalid.");
+                    await LoadCategories();
+                    return Page();
+                }
+
+                // Generate unique slug
+                string slug = GenerateSlug(ProductVM.ProductName);
+                string originalSlug = slug;
+                int counter = 1;
+                while (await _context.Products.AnyAsync(p => p.ProductSlug == slug && p.StoreID == store.StoreID))
+                    slug = $"{originalSlug}-{counter++}";
+
+                var product = new Product
+                {
+                    StoreID = store.StoreID,
+                    CategoryID = category.CategoryID,
+                    ProductName = ProductVM.ProductName,
+                    ProductSlug = slug,
+                    Description = ProductVM.Description,
+                    Price = ProductVM.Price,
+                    CompareAtPrice = ProductVM.CompareAtPrice,
+                    OriginalPrice = ProductVM.OriginalPrice,
+                    Quantity = ProductVM.Quantity,
+                    LowStockThreshold = ProductVM.LowStockThreshold > 0 ? ProductVM.LowStockThreshold : 5,
+                    Weight = ProductVM.Weight,
+                    IsActive = ProductVM.IsActive,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.Products.Add(product);
+                await _context.SaveChangesAsync();
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var userAgent = Request.Headers.UserAgent.ToString();
+                if (string.IsNullOrWhiteSpace(userAgent))
+                {
+                    userAgent = "Unknown";
+                }
+
+                await _auditLogRepository.AddAsync(new AuditLog
+                {
+                    UserID = store.OwnerUserID,
+                    Action = "CreateProduct",
+                    EntityName = "Product",
+                    EntityID = product.ProductID.ToString(),
+                    OldValue = null,
+                    NewValue = $"Product created: {product.ProductName}",
+                    IPAddress = ipAddress,
+                    UserAgent = userAgent,
+                    ActionDate = DateTime.UtcNow
+                });
+
+                // Save images — already validated above, but the actual file I/O can
+                // still fail (disk, permissions, etc.), so it's wrapped separately:
+                // the product itself is already safely created at this point, so a
+                // storage failure shouldn't surface as an unhandled exception page.
+                if (ProductVM.UploadedImages != null && ProductVM.UploadedImages.Any())
+                {
+                    try
+                    {
+                        await SaveProductImages(product.ProductID, ProductVM.UploadedImages);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Product {ProductId} was created but its images failed to save.", product.ProductID);
+                        TempData["SuccessMessage"] = $"Product '{product.ProductName}' was created, but its images couldn't be uploaded. You can add them from the Edit page.";
+                        return RedirectToPage("/StoreOwner/Products/Index");
+                    }
+                }
+
+                TempData["SuccessMessage"] = $"Product '{product.ProductName}' has been created successfully!";
+                return RedirectToPage("/StoreOwner/Products/Index");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating product for Store {StoreId}.", store.StoreID);
+                ModelState.AddModelError("", "Something went wrong while creating the product. Please try again.");
                 await LoadCategories();
                 return Page();
             }
-
-            // Generate unique slug
-            string slug = GenerateSlug(ProductVM.ProductName);
-            string originalSlug = slug;
-            int counter = 1;
-            while (await _context.Products.AnyAsync(p => p.ProductSlug == slug && p.StoreID == store.StoreID))
-                slug = $"{originalSlug}-{counter++}";
-
-            var product = new Product
-            {
-                StoreID = store.StoreID,
-                CategoryID = category.CategoryID,
-                ProductName = ProductVM.ProductName,
-                ProductSlug = slug,
-                Description = ProductVM.Description,
-                Price = ProductVM.Price,
-                CompareAtPrice = ProductVM.CompareAtPrice,
-                OriginalPrice = ProductVM.OriginalPrice,
-                Quantity = ProductVM.Quantity,
-                LowStockThreshold = ProductVM.LowStockThreshold > 0 ? ProductVM.LowStockThreshold : 5,
-                Weight = ProductVM.Weight,
-                IsActive = ProductVM.IsActive,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            _context.Products.Add(product);
-            await _context.SaveChangesAsync();
-
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
-            var userAgent = Request.Headers.UserAgent.ToString();
-            if (string.IsNullOrWhiteSpace(userAgent))
-            {
-                userAgent = "Unknown";
-            }
-
-            await _auditLogRepository.AddAsync(new AuditLog
-            {
-                UserID = store.OwnerUserID,
-                Action = "CreateProduct",
-                EntityName = "Product",
-                EntityID = product.ProductID.ToString(),
-                OldValue = null,
-                NewValue = $"Product created: {product.ProductName}",
-                IPAddress = ipAddress,
-                UserAgent = userAgent,
-                ActionDate = DateTime.UtcNow
-            });
-
-            // Save images
-            if (ProductVM.UploadedImages != null && ProductVM.UploadedImages.Any())
-                await SaveProductImages(product.ProductID, ProductVM.UploadedImages);
-
-            TempData["SuccessMessage"] = $"Product '{product.ProductName}' has been created successfully!";
-            return RedirectToPage("/StoreOwner/Products/Index");
         }
 
         // =============================================================
@@ -258,6 +317,72 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Validates uploaded product images: count, size, extension/MIME type, and
+        /// the actual file signature (magic bytes) — extension and Content-Type are
+        /// both client-supplied and easily spoofed (e.g. renaming a script to .jpg),
+        /// so the header bytes are checked too before anything is trusted or saved.
+        /// </summary>
+        private static async Task<string?> ValidateUploadedImagesAsync(List<IFormFile>? images)
+        {
+            if (images == null || images.Count == 0)
+                return null; // images are optional
+
+            if (images.Count > MaxImageCount)
+                return $"You can upload at most {MaxImageCount} images.";
+
+            foreach (var image in images)
+            {
+                if (image.Length == 0) continue;
+
+                if (image.Length > MaxImageSizeBytes)
+                    return $"'{image.FileName}' is too large. Maximum size per image is 5 MB.";
+
+                var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+                var contentType = image.ContentType?.ToLowerInvariant();
+
+                if (!AllowedImageExtensions.Contains(extension) || !AllowedImageMimeTypes.Contains(contentType))
+                    return $"'{image.FileName}' isn't a supported image type. Use JPG, PNG, or WEBP.";
+
+                if (!await HasValidImageSignatureAsync(image))
+                    return $"'{image.FileName}' doesn't look like a valid image file.";
+            }
+
+            return null;
+        }
+
+        private static async Task<bool> HasValidImageSignatureAsync(IFormFile file)
+        {
+            var buffer = new byte[12];
+            int bytesRead;
+
+            using (var stream = file.OpenReadStream())
+            {
+                bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
+            }
+
+            if (bytesRead < 4) return false;
+
+            bool StartsWith(byte[] signature, int offset = 0)
+            {
+                if (buffer.Length < offset + signature.Length) return false;
+                for (int i = 0; i < signature.Length; i++)
+                {
+                    if (buffer[offset + i] != signature[i]) return false;
+                }
+                return true;
+            }
+
+            if (StartsWith(new byte[] { 0xFF, 0xD8, 0xFF })) return true;                 // JPEG
+            if (StartsWith(new byte[] { 0x89, 0x50, 0x4E, 0x47 })) return true;            // PNG
+            if (bytesRead >= 12 &&
+                StartsWith(new byte[] { 0x52, 0x49, 0x46, 0x46 }, 0) &&                    // "RIFF"
+                StartsWith(new byte[] { 0x57, 0x45, 0x42, 0x50 }, 8))                       // "WEBP"
+                return true;
+
+            return false;
         }
 
         private async Task SaveProductImages(int productId, List<IFormFile> images)
