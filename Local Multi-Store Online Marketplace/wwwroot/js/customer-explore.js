@@ -481,6 +481,8 @@
 
                 grid.appendChild(fragment);
                 emptyState?.classList.add("hidden");
+
+                appendReelsFromNewItems(newItems);
             }
 
             currentPage = Number(data.page || nextPage);
@@ -669,6 +671,11 @@
 
             <video class="reel-video" loop playsinline preload="metadata" muted></video>
 
+            <div class="reel-video-error hidden">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>This video couldn't be loaded.</span>
+            </div>
+
             <button type="button" class="reel-mute-toggle" aria-label="Toggle sound">
                 <i class="fa-solid fa-volume-xmark"></i>
             </button>
@@ -763,12 +770,18 @@
         slide.dataset.storeId = String(details.storeID);
 
         const video = slide.querySelector(".reel-video");
+        const errorOverlay = slide.querySelector(".reel-video-error");
         const media = (details.media || []).find(
             m => String(m.mediaType).toLowerCase() === "video"
         ) || details.media?.[0];
 
         if (video && media) {
             video.src = media.mediaUrl;
+
+            video.addEventListener("error", () => {
+                errorOverlay?.classList.remove("hidden");
+                slide.querySelector(".reel-loading")?.remove();
+            });
         }
 
         slide.querySelector(".reel-loading")?.remove();
@@ -1099,6 +1112,36 @@
         });
     }
 
+    // Adds any freshly-loaded Reel grid items to an already-open Reels
+    // player's swipe queue, so scrolling the underlying grid (or the
+    // near-end trigger below) keeps the Reels player from running out of
+    // content before the grid itself would have.
+    function appendReelsFromNewItems(newItems) {
+        if (!reelsTrack || !reelsPlayer?.classList.contains("open")) {
+            return;
+        }
+
+        const existingIds = new Set(
+            Array.from(reelsTrack.children).map(
+                slide => slide.dataset.postId
+            )
+        );
+
+        newItems
+            .filter(item => String(item.postType).toLowerCase() === "reel")
+            .forEach(item => {
+                const id = String(item.explorePostID);
+
+                if (!id || existingIds.has(id)) {
+                    return;
+                }
+
+                const slide = createReelSlide(item.explorePostID);
+                reelsTrack.appendChild(slide);
+                reelsObserver?.observe(slide);
+            });
+    }
+
     async function activateReelSlide(slide) {
         if (activeReelSlide === slide) {
             return;
@@ -1111,6 +1154,17 @@
         });
 
         activeReelSlide = slide;
+
+        // Proactively ask the main grid for more content once we're near
+        // the end of what's currently in the Reels queue — same
+        // loadMoreItems() the grid's own infinite scroll uses, so it's
+        // naturally guarded against duplicate/overlapping calls.
+        const slides = Array.from(reelsTrack?.children || []);
+        const currentIndex = slides.indexOf(slide);
+
+        if (currentIndex >= slides.length - 2) {
+            loadMoreItems();
+        }
 
         const postId = Number(slide.dataset.postId);
 
@@ -1174,6 +1228,8 @@
         );
 
         slides.forEach(slide => reelsObserver.observe(slide));
+
+        window.setTimeout(() => reelsCloseButton?.focus(), 50);
     }
 
     function closeReelsPlayer() {
@@ -1201,9 +1257,72 @@
 
     reelsCloseButton?.addEventListener("click", closeReelsPlayer);
 
+    function showAdjacentReelSlide(direction) {
+        if (!reelsTrack || !activeReelSlide) {
+            return;
+        }
+
+        const slides = Array.from(reelsTrack.children);
+        const currentIndex = slides.indexOf(activeReelSlide);
+        const targetIndex = currentIndex + direction;
+        const target = slides[targetIndex];
+
+        target?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
+
+    function getReelsFocusableElements() {
+        if (!reelsPlayer) {
+            return [];
+        }
+
+        return Array.from(
+            reelsPlayer.querySelectorAll(
+                "button, a[href], video, [tabindex]:not([tabindex='-1'])"
+            )
+        ).filter(el => el.offsetParent !== null);
+    }
+
     document.addEventListener("keydown", event => {
-        if (event.key === "Escape" && reelsPlayer?.classList.contains("open")) {
+        if (!reelsPlayer?.classList.contains("open")) {
+            return;
+        }
+
+        if (event.key === "Escape") {
             closeReelsPlayer();
+            return;
+        }
+
+        if (event.key === "ArrowUp") {
+            event.preventDefault();
+            showAdjacentReelSlide(-1);
+            return;
+        }
+
+        if (event.key === "ArrowDown") {
+            event.preventDefault();
+            showAdjacentReelSlide(1);
+            return;
+        }
+
+        // Basic focus trap: keep Tab cycling within the Reels player
+        // instead of leaking focus into the page behind it.
+        if (event.key === "Tab") {
+            const focusable = getReelsFocusableElements();
+
+            if (focusable.length === 0) {
+                return;
+            }
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
         }
     });
 
@@ -2176,6 +2295,7 @@
             button.className = "related-item";
             button.dataset.itemType =
                 item.gridItemType || "Post";
+            button.dataset.postType = item.postType || "";
 
             if (item.explorePostID) {
                 button.dataset.postId =
@@ -2229,11 +2349,19 @@
             return;
         }
 
-        if (
-            String(item.dataset.itemType).toLowerCase() ===
-            "post" &&
-            item.dataset.postId
-        ) {
+        const isPost =
+            String(item.dataset.itemType).toLowerCase() === "post";
+
+        const isReel =
+            String(item.dataset.postType).toLowerCase() === "reel";
+
+        if (isPost && isReel && item.dataset.postId) {
+            closeExploreModal();
+            openReelsPlayer([Number(item.dataset.postId)], 0);
+            return;
+        }
+
+        if (isPost && item.dataset.postId) {
             openExplorePost(Number(item.dataset.postId));
             return;
         }
