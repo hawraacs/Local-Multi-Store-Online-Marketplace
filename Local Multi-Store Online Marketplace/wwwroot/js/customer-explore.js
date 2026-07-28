@@ -696,7 +696,45 @@
             </div>
 
             <div class="reel-caption"></div>
+
+            <button type="button" class="reel-product-chip hidden" aria-label="View linked product">
+                <img class="reel-product-chip-img" src="" alt="" />
+                <span class="reel-product-chip-text">
+                    <strong class="reel-product-chip-name"></strong>
+                    <span class="reel-product-chip-price"></span>
+                </span>
+                <i class="fa-solid fa-chevron-up"></i>
+            </button>
+
+            <div class="reel-product-sheet">
+                <button type="button" class="reel-product-sheet-close" aria-label="Close product card">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <button type="button" class="reel-product-sheet-main">
+                    <img class="reel-product-sheet-img" src="/images/product-placeholder.svg" alt="" />
+                    <span class="reel-product-sheet-info">
+                        <small class="reel-product-sheet-category"></small>
+                        <strong class="reel-product-sheet-name"></strong>
+                        <span class="reel-product-sheet-price"></span>
+                    </span>
+                </button>
+
+                <div class="reel-product-sheet-actions">
+                    <button type="button" class="reel-product-save">
+                        <i class="fa-regular fa-heart"></i> Save
+                    </button>
+                    <button type="button" class="reel-product-cart">
+                        <i class="fa-solid fa-bag-shopping"></i> Add to cart
+                    </button>
+                </div>
+
+                <button type="button" class="reel-product-sheet-details">
+                    See full details
+                </button>
+            </div>
         `;
+
 
         return slide;
     }
@@ -764,6 +802,52 @@
 
         slide.querySelector(".reel-comment-count").textContent =
             Number(details.commentCount || 0).toLocaleString();
+
+        populateReelProduct(slide, details);
+    }
+
+    function populateReelProduct(slide, details) {
+        const chip = slide.querySelector(".reel-product-chip");
+        const sheet = slide.querySelector(".reel-product-sheet");
+
+        const hasProduct =
+            details.productID !== null && details.productID !== undefined;
+
+        if (!hasProduct) {
+            chip?.classList.add("hidden");
+            return;
+        }
+
+        const imageUrl = details.productImageUrl || "/images/product-placeholder.svg";
+
+        chip?.classList.remove("hidden");
+        chip.querySelector(".reel-product-chip-img").src = imageUrl;
+        chip.querySelector(".reel-product-chip-name").textContent =
+            details.productName || "Product";
+        chip.querySelector(".reel-product-chip-price").textContent =
+            formatMoney(details.productPrice);
+
+        sheet.querySelector(".reel-product-sheet-img").src = imageUrl;
+        sheet.querySelector(".reel-product-sheet-category").textContent =
+            details.categoryName || "Product";
+        sheet.querySelector(".reel-product-sheet-name").textContent =
+            details.productName || "Product";
+        sheet.querySelector(".reel-product-sheet-price").textContent =
+            formatMoney(details.productPrice);
+
+        const saveButton = sheet.querySelector(".reel-product-save");
+        const saved = details.isInWishlist === true;
+        saveButton.classList.toggle("saved", saved);
+        saveButton.innerHTML = saved
+            ? '<i class="fa-solid fa-heart"></i> Saved'
+            : '<i class="fa-regular fa-heart"></i> Save';
+
+        const cartButton = sheet.querySelector(".reel-product-cart");
+        const isOutOfStock = details.isOutOfStock === true;
+        cartButton.disabled = isOutOfStock;
+        cartButton.innerHTML = isOutOfStock
+            ? '<i class="fa-solid fa-ban"></i> Out of stock'
+            : '<i class="fa-solid fa-bag-shopping"></i> Add to cart';
     }
 
     function updateMuteIcon(button, muted) {
@@ -783,6 +867,8 @@
         const shareButton = slide.querySelector(".reel-share");
         const commentButton = slide.querySelector(".reel-comment");
         const followButton = slide.querySelector(".reel-follow-button");
+
+        wireReelProductActions(slide, postId);
 
         video.muted = reelsMuted;
         updateMuteIcon(muteToggle, reelsMuted);
@@ -902,6 +988,117 @@
         });
     }
 
+    // Slide-up "buy it now" card for a Reel's linked product — opens over
+    // the bottom of the video without leaving the Reel or pausing it.
+    function wireReelProductActions(slide, postId) {
+        const chip = slide.querySelector(".reel-product-chip");
+        const sheet = slide.querySelector(".reel-product-sheet");
+        const closeButton = slide.querySelector(".reel-product-sheet-close");
+        const saveButton = slide.querySelector(".reel-product-save");
+        const cartButton = slide.querySelector(".reel-product-cart");
+        const sheetMainButton = slide.querySelector(".reel-product-sheet-main");
+        const sheetDetailsButton = slide.querySelector(".reel-product-sheet-details");
+
+        chip?.addEventListener("click", event => {
+            event.stopPropagation();
+            sheet?.classList.add("open");
+        });
+
+        closeButton?.addEventListener("click", event => {
+            event.stopPropagation();
+            sheet?.classList.remove("open");
+        });
+
+        // Opens the SAME in-app quick-view modal every other product tile on
+        // this page uses — not a separate page — so a Reel's linked product
+        // behaves identically to tapping a plain product tile in the grid.
+        function openLinkedProductModal(event) {
+            event.stopPropagation();
+
+            const cached = reelsDetailsCache.get(postId);
+            const productId = cached?.productID;
+
+            if (productId === null || productId === undefined) {
+                return;
+            }
+
+            closeReelsPlayer();
+            openExploreProduct(productId);
+        }
+
+        sheetMainButton?.addEventListener("click", openLinkedProductModal);
+        sheetDetailsButton?.addEventListener("click", openLinkedProductModal);
+
+        saveButton?.addEventListener("click", async event => {
+            event.stopPropagation();
+
+            const cached = reelsDetailsCache.get(postId);
+            const productId = cached?.productID;
+
+            if (productId === null || productId === undefined) {
+                return;
+            }
+
+            saveButton.disabled = true;
+
+            try {
+                const data = await postForm(
+                    "ToggleExploreWishlist",
+                    { productId }
+                );
+
+                const saved = data.saved === true;
+                saveButton.classList.toggle("saved", saved);
+                saveButton.innerHTML = saved
+                    ? '<i class="fa-solid fa-heart"></i> Saved'
+                    : '<i class="fa-regular fa-heart"></i> Save';
+
+                if (cached) {
+                    cached.isInWishlist = saved;
+                }
+
+                showToast(data.message, "success");
+            } catch (error) {
+                showToast(error.message, "error");
+            } finally {
+                saveButton.disabled = false;
+            }
+        });
+
+        cartButton?.addEventListener("click", async event => {
+            event.stopPropagation();
+
+            if (cartButton.disabled) {
+                return;
+            }
+
+            const cached = reelsDetailsCache.get(postId);
+            const productId = cached?.productID;
+
+            if (productId === null || productId === undefined) {
+                return;
+            }
+
+            cartButton.disabled = true;
+
+            try {
+                const data = await postForm(
+                    "ExploreAddToCart",
+                    { productId }
+                );
+
+                cartButton.innerHTML =
+                    '<i class="fa-solid fa-check"></i> Added';
+
+                showToast(data.message, "success");
+                refreshCartBadge();
+            } catch (error) {
+                showToast(error.message, "error");
+                cartButton.disabled = false;
+            }
+        });
+    }
+
     async function activateReelSlide(slide) {
         if (activeReelSlide === slide) {
             return;
@@ -954,6 +1151,7 @@
         reelsPlayer.classList.add("open");
         reelsPlayer.setAttribute("aria-hidden", "false");
         document.body.classList.add("modal-open");
+        document.body.classList.add("reels-open");
         document.documentElement.style.overflow = "hidden";
         document.body.style.overflow = "hidden";
 
@@ -992,6 +1190,7 @@
         reelsPlayer?.classList.remove("open");
         reelsPlayer?.setAttribute("aria-hidden", "true");
         document.body.classList.remove("modal-open");
+        document.body.classList.remove("reels-open");
         document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
 

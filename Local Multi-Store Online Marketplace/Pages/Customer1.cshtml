@@ -973,12 +973,17 @@
         /* =====================================================
            REELS PLAYER (full-screen, Instagram-Reels-style)
            ===================================================== */
+        /* Hide the bottom nav completely while a Reel is playing, so the
+           video gets the full screen (Instagram/TikTok-style) instead of
+           sharing space with it. */
+        body.reels-open .mobile-bottom-nav {
+            display: none !important;
+        }
+
         .reels-player {
             position: fixed;
             inset: 0;
-            /* Below .mobile-bottom-nav's z-index (200) so the nav bar stays
-               visible and usable while a reel is playing. */
-            z-index: 150;
+            z-index: 500;
             background: #000;
             display: none;
         }
@@ -1106,9 +1111,9 @@
         .reel-overlay-side {
             position: absolute;
             right: 12px;
-            /* Raised so it clears the bottom nav bar (~70px incl. safe area)
-               that now shows on top of the reel. */
-            bottom: calc(160px + env(safe-area-inset-bottom));
+            /* Nav is hidden while a Reel plays (not overlaid), so this can
+               sit close to the bottom edge again. */
+            bottom: calc(30px + env(safe-area-inset-bottom));
             z-index: 10;
             display: flex;
             flex-direction: column;
@@ -1157,8 +1162,9 @@
             position: absolute;
             left: 16px;
             right: 76px;
-            /* Raised so it clears the bottom nav bar that now shows on top. */
-            bottom: calc(96px + env(safe-area-inset-bottom));
+            /* Nav is hidden while a Reel plays, so this can sit close to
+               the bottom edge again. */
+            bottom: max(20px, env(safe-area-inset-bottom));
             z-index: 10;
             color: #fff;
             font-size: 13px;
@@ -1186,6 +1192,211 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+        }
+
+        /* =====================================================
+           REEL LINKED-PRODUCT CHIP + SLIDE-UP BUY CARD
+           Tapping the chip slides a compact product card up over
+           the bottom of the video (which keeps playing behind it)
+           instead of navigating away from the Reel.
+           ===================================================== */
+        .reel-product-chip {
+            position: absolute;
+            left: 16px;
+            right: 76px;
+            /* Sits just above the caption with a small gap. */
+            bottom: calc(70px + env(safe-area-inset-bottom));
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 14px;
+            background: rgba(20, 14, 32, 0.55);
+            backdrop-filter: blur(6px);
+            color: #fff;
+            cursor: pointer;
+            text-align: left;
+        }
+
+            .reel-product-chip.hidden {
+                display: none;
+            }
+
+            .reel-product-chip .reel-product-chip-img {
+                width: 34px;
+                height: 34px;
+                border-radius: 8px;
+                object-fit: cover;
+                flex-shrink: 0;
+                background: #241c33;
+            }
+
+        .reel-product-chip-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .reel-product-chip-name {
+            font-size: 12.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .reel-product-chip-price {
+            font-size: 11.5px;
+            color: #d8cef0;
+            font-weight: 700;
+        }
+
+        .reel-product-chip i.fa-chevron-up {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            flex-shrink: 0;
+        }
+
+        .reel-product-sheet {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 20;
+            background: linear-gradient(180deg, rgba(23, 18, 31, 0) 0%, #17121f 26%);
+            padding: 46px 16px calc(20px + env(safe-area-inset-bottom));
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+            .reel-product-sheet.open {
+                transform: translateY(0);
+            }
+
+        .reel-product-sheet-close {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .reel-product-sheet-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            margin-bottom: 12px;
+            width: 100%;
+            border: none;
+            background: transparent;
+            padding: 0;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .reel-product-sheet-img {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #241c33;
+            flex-shrink: 0;
+        }
+
+        .reel-product-sheet-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .reel-product-sheet-category {
+            color: #b9aee0;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .reel-product-sheet-name {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .reel-product-sheet-price {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 800;
+            margin-top: 2px;
+        }
+
+        .reel-product-sheet-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .reel-product-save,
+        .reel-product-cart {
+            flex: 1;
+            min-height: 42px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+        }
+
+        .reel-product-save {
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+        }
+
+            .reel-product-save.saved {
+                background: rgba(237, 73, 86, 0.22);
+                color: #ff8a94;
+            }
+
+        .reel-product-cart {
+            background: var(--accent-gradient);
+            color: #fff;
+        }
+
+            .reel-product-cart:disabled {
+                opacity: 0.6;
+                cursor: default;
+            }
+
+        .reel-product-sheet-details {
+            display: block;
+            width: 100%;
+            text-align: center;
+            color: #cabdf0;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            border: none;
+            background: transparent;
+            padding: 4px 0 0;
             cursor: pointer;
         }
     </style>
