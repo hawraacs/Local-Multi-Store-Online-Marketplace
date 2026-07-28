@@ -1,0 +1,68 @@
+@* Shared tab strip for the three faces of "Products": the catalog itself,
+   the Explore-style content that promotes it, and paid Boost campaigns.
+   Usage: <partial name="_ProductsNav" model="@("Catalog")" /> — pass
+   "Catalog", "Promote", or "Boost" as the active tab. *@
+@model string
+@{
+    var active = Model ?? "Catalog";
+}
+<div class="products-tabs" role="tablist" aria-label="Products sections">
+    <a href="/StoreOwner/Products/Index"
+       class="products-tab @(active == "Catalog" ? "active" : "")"
+       role="tab" aria-selected="@(active == "Catalog" ? "true" : "false")">
+        <i class="fas fa-cube"></i> Catalog
+    </a>
+    <a href="/StoreOwner/Products/Promote/Index"
+       class="products-tab @(active == "Promote" ? "active" : "")"
+       role="tab" aria-selected="@(active == "Promote" ? "true" : "false")">
+        <i class="fas fa-photo-film"></i> Promote
+    </a>
+    @* Boost has no standalone list page — it's launched per-product from a
+       Catalog product card — so it's only ever "active" (highlighted, not a
+       link) when this partial is included on the Boost page itself. *@
+    <span class="products-tab @(active == "Boost" ? "active" : "disabled")"
+          role="tab" aria-selected="@(active == "Boost" ? "true" : "false")"
+          title="Boost a product from its card in Catalog">
+        <i class="fas fa-bolt"></i> Boost
+    </span>
+</div>
+
+<style>
+    .products-tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 24px;
+        border-bottom: 1px solid #ece8f6;
+    }
+
+    .products-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #6b6478;
+        text-decoration: none;
+        border-bottom: 3px solid transparent;
+        transition: color 0.2s ease, border-color 0.2s ease;
+    }
+
+        .products-tab:hover {
+            color: #6d28d9;
+        }
+
+        .products-tab.active {
+            color: #6d28d9;
+            border-bottom-color: #6d28d9;
+        }
+
+        .products-tab.disabled {
+            color: #c9c4d6;
+            cursor: default;
+        }
+
+            .products-tab.disabled:hover {
+                color: #c9c4d6;
+            }
+</style>

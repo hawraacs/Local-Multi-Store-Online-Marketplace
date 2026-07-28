@@ -161,6 +161,50 @@
             color: var(--accent-color) !important;
         }
 
+        /* NEW — the grid-legend items (All / Reel / Carousel / Product) are now
+           real filter links instead of static labels. */
+        .grid-legend {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .legend-filter {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            border: 1.5px solid var(--border-color, #ece8f6);
+            background: var(--card-bg, #ffffff);
+            color: var(--text-secondary, #6b6478);
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+            .legend-filter i {
+                font-size: 12px;
+                color: inherit !important;
+            }
+
+            .legend-filter:hover {
+                border-color: var(--accent-color);
+                color: var(--accent-color) !important;
+            }
+
+            .legend-filter.active {
+                background: var(--accent-color);
+                border-color: var(--accent-color);
+                color: #ffffff !important;
+            }
+
+                .legend-filter.active i {
+                    color: #ffffff !important;
+                }
+
         .modal-action-button.active,
         .modal-action-button.liked,
         .modal-action-button[aria-pressed="true"] {
@@ -839,10 +883,316 @@
                 padding: 2px 8px;
                 margin-left: 6px;
             }
+
+        /* =====================================================
+           MERGED STATS + ACTIONS ROW
+           One row: views (icon+count, not clickable), Like and
+           Comment (icon+count, clickable), Share (icon only,
+           clickable). Replaces the old two-row layout that showed
+           counts on top and duplicate icons/labels underneath.
+           ===================================================== */
+        .modal-stats {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 10px 0;
+            border-top: 1px solid #f1eef8;
+            border-bottom: 1px solid #f1eef8;
+            margin: 8px 0 4px;
+        }
+
+            .modal-stats .stat-item {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                color: #6b6478;
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+                .modal-stats .stat-item i {
+                    font-size: 18px;
+                }
+
+        .modal-action-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none !important;
+            background: transparent !important;
+            padding: 4px;
+            cursor: pointer;
+            color: #6b6478;
+            font-size: 13px;
+            font-weight: 700;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+            .modal-action-button i {
+                font-size: 20px;
+                transition: transform 0.15s ease, color 0.15s ease;
+            }
+
+            .modal-action-button:active i {
+                transform: scale(0.82);
+            }
+
+            .modal-action-button:hover i {
+                opacity: 0.72;
+            }
+
+        /* Heart: fills red when liked (independent of the purple accent theme
+           used for the rest of the modal actions) */
+        #modalLikeButton.liked i {
+            color: #ed4956 !important;
+        }
+
+        #modalLikeButton.liked i.fa-heart {
+            animation: heartPop 0.32s ease;
+        }
+
+        @@keyframes heartPop {
+            0% {
+                transform: scale(1);
+            }
+
+            35% {
+                transform: scale(1.35);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Share: brief green checkmark confirmation after sharing/copying */
+        #modalShareButton.shared i {
+            color: #16a34a !important;
+        }
+
+        /* =====================================================
+           REELS PLAYER (full-screen, Instagram-Reels-style)
+           ===================================================== */
+        .reels-player {
+            position: fixed;
+            inset: 0;
+            /* Below .mobile-bottom-nav's z-index (200) so the nav bar stays
+               visible and usable while a reel is playing. */
+            z-index: 150;
+            background: #000;
+            display: none;
+        }
+
+            .reels-player.open {
+                display: block;
+            }
+
+        .reels-close {
+            position: fixed;
+            top: max(16px, env(safe-area-inset-top));
+            right: 16px;
+            z-index: 30;
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.45);
+            color: #fff;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .reels-track {
+            height: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: auto;
+            overscroll-behavior-y: contain;
+        }
+
+            .reels-track::-webkit-scrollbar {
+                display: none;
+            }
+
+        .reel-slide {
+            position: relative;
+            height: 100%;
+            width: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .reel-video {
+            max-height: 100%;
+            max-width: 100%;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .reel-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 22px;
+        }
+
+        .reel-overlay-top {
+            position: absolute;
+            top: max(18px, env(safe-area-inset-top));
+            left: 16px;
+            /* Widened from 70px to clear both the mute toggle and the close
+               button now that they sit side by side instead of stacked. */
+            right: 104px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .reel-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 800;
+            font-size: 13px;
+            flex-shrink: 0;
+            border: 1.5px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .reel-store-name {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 800;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+            flex-shrink: 0;
+        }
+
+        .reel-follow-button {
+            border: 1.5px solid rgba(255, 255, 255, 0.7);
+            background: transparent;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+            .reel-follow-button.following {
+                border-color: rgba(255, 255, 255, 0.35);
+                color: rgba(255, 255, 255, 0.75);
+            }
+
+        .reel-overlay-side {
+            position: absolute;
+            right: 12px;
+            /* Raised so it clears the bottom nav bar (~70px incl. safe area)
+               that now shows on top of the reel. */
+            bottom: calc(160px + env(safe-area-inset-bottom));
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .reel-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            border: none;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+            .reel-action i {
+                font-size: 26px;
+                filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5));
+                transition: transform 0.15s ease, color 0.15s ease;
+            }
+
+            .reel-action span {
+                font-size: 11px;
+                font-weight: 700;
+                text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+            }
+
+            .reel-action:active i {
+                transform: scale(0.82);
+            }
+
+            .reel-like.liked i {
+                color: #ed4956;
+                animation: heartPop 0.32s ease;
+            }
+
+            .reel-share.shared i {
+                color: #16a34a;
+            }
+
+        .reel-caption {
+            position: absolute;
+            left: 16px;
+            right: 76px;
+            /* Raised so it clears the bottom nav bar that now shows on top. */
+            bottom: calc(96px + env(safe-area-inset-bottom));
+            z-index: 10;
+            color: #fff;
+            font-size: 13px;
+            line-height: 1.4;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+            max-height: 4.2em;
+            overflow: hidden;
+        }
+
+        .reel-mute-toggle {
+            position: absolute;
+            top: max(16px, env(safe-area-inset-top));
+            /* Sits just left of the close (X) button — close is right:16px,
+               width:38px (ends at ~54px from the edge), so this starts past
+               that with an 8px gap instead of sitting on top of it. */
+            right: 62px;
+            z-index: 10;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.45);
+            color: #fff;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
     </style>
 </head>
 
 <body>
+
     <form id="antiForgeryForm" method="post" class="hidden-antiforgery-form">
         @Html.AntiForgeryToken()
     </form>
@@ -856,6 +1206,7 @@
           data-area="@(Model.Area ?? string.Empty)"
           data-min-price="@(Model.MinPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
           data-max-price="@(Model.MaxPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
+          data-type-filter="@(Model.TypeFilter ?? string.Empty)"
           data-current-page="1"
           data-has-more="@Model.HasMoreItems.ToString().ToLowerInvariant()">
 
@@ -1054,20 +1405,60 @@
             </div>
 
             <div class="grid-legend">
-                <span>
+                <a asp-page="/Customer1"
+                   asp-route-category="@Model.SelectedCategory"
+                   asp-route-searchTerm="@Model.SearchTerm"
+                   asp-route-categoryId="@Model.CategoryId"
+                   asp-route-storeId="@Model.StoreId"
+                   asp-route-area="@Model.Area"
+                   asp-route-minPrice="@Model.MinPrice"
+                   asp-route-maxPrice="@Model.MaxPrice"
+                   class="legend-filter @(string.IsNullOrWhiteSpace(Model.TypeFilter) ? "active" : "")">
+                    <i class="fa-solid fa-layer-group"></i>
+                    All
+                </a>
+
+                <a asp-page="/Customer1"
+                   asp-route-category="@Model.SelectedCategory"
+                   asp-route-searchTerm="@Model.SearchTerm"
+                   asp-route-categoryId="@Model.CategoryId"
+                   asp-route-storeId="@Model.StoreId"
+                   asp-route-area="@Model.Area"
+                   asp-route-minPrice="@Model.MinPrice"
+                   asp-route-maxPrice="@Model.MaxPrice"
+                   asp-route-typeFilter="Reel"
+                   class="legend-filter @(string.Equals(Model.TypeFilter, "Reel", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                     <i class="fa-solid fa-play"></i>
                     Reel
-                </span>
+                </a>
 
-                <span>
+                <a asp-page="/Customer1"
+                   asp-route-category="@Model.SelectedCategory"
+                   asp-route-searchTerm="@Model.SearchTerm"
+                   asp-route-categoryId="@Model.CategoryId"
+                   asp-route-storeId="@Model.StoreId"
+                   asp-route-area="@Model.Area"
+                   asp-route-minPrice="@Model.MinPrice"
+                   asp-route-maxPrice="@Model.MaxPrice"
+                   asp-route-typeFilter="Carousel"
+                   class="legend-filter @(string.Equals(Model.TypeFilter, "Carousel", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                     <i class="fa-regular fa-images"></i>
                     Carousel
-                </span>
+                </a>
 
-                <span>
+                <a asp-page="/Customer1"
+                   asp-route-category="@Model.SelectedCategory"
+                   asp-route-searchTerm="@Model.SearchTerm"
+                   asp-route-categoryId="@Model.CategoryId"
+                   asp-route-storeId="@Model.StoreId"
+                   asp-route-area="@Model.Area"
+                   asp-route-minPrice="@Model.MinPrice"
+                   asp-route-maxPrice="@Model.MaxPrice"
+                   asp-route-typeFilter="Product"
+                   class="legend-filter @(string.Equals(Model.TypeFilter, "Product", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                     <i class="fa-solid fa-bag-shopping"></i>
                     Product
-                </span>
+                </a>
             </div>
         </section>
 
@@ -1103,6 +1494,7 @@
                         data-item-type="@item.GridItemType"
                         data-post-id="@item.ExplorePostID"
                         data-product-id="@item.ProductID"
+                        data-post-type="@item.PostType"
                         aria-label="@(isPost
                             ? $"Open post from {item.StoreName}"
                             : $"Open product {item.ProductName}")">
@@ -1321,44 +1713,31 @@
                            class="modal-caption"></p>
 
                         <div id="modalStats" class="modal-stats">
-                            <span>
+                            <span id="modalViewStat" class="stat-item">
                                 <i class="fa-regular fa-eye"></i>
                                 <strong id="modalViewCount">0</strong>
                             </span>
 
-                            <span>
+                            <button id="modalLikeButton"
+                                    type="button"
+                                    class="modal-action-button">
                                 <i class="fa-regular fa-heart"></i>
                                 <strong id="modalLikeCount">0</strong>
-                            </span>
+                            </button>
 
-                            <span>
+                            <button id="focusCommentButton"
+                                    type="button"
+                                    class="modal-action-button">
                                 <i class="fa-regular fa-comment"></i>
                                 <strong id="modalCommentCount">0</strong>
-                            </span>
+                            </button>
+
+                            <button id="modalShareButton"
+                                    type="button"
+                                    class="modal-action-button">
+                                <i class="fa-regular fa-paper-plane"></i>
+                            </button>
                         </div>
-                    </section>
-
-                    <section id="modalPrimaryActions" class="modal-primary-actions">
-                        <button id="modalLikeButton"
-                                type="button"
-                                class="modal-action-button">
-                            <i class="fa-regular fa-heart"></i>
-                            <span>Like</span>
-                        </button>
-
-                        <button id="focusCommentButton"
-                                type="button"
-                                class="modal-action-button">
-                            <i class="fa-regular fa-comment"></i>
-                            <span>Comment</span>
-                        </button>
-
-                        <button id="modalShareButton"
-                                type="button"
-                                class="modal-action-button">
-                            <i class="fa-regular fa-paper-plane"></i>
-                            <span>Share</span>
-                        </button>
                     </section>
 
                     <section id="linkedProductSection"
@@ -1540,6 +1919,20 @@
                 </div>
             </aside>
         </div>
+    </div>
+
+    <!-- =========================================================
+         REELS PLAYER — full-screen, Instagram-Reels-style vertical
+         swipe viewer. Only Reel posts open here; every other tile
+         (Image/Carousel posts and plain products) still opens the
+         quick-view modal above.
+         ========================================================= -->
+    <div id="reelsPlayer" class="reels-player" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Reels">
+        <button type="button" id="reelsCloseButton" class="reels-close" aria-label="Close reels">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <div id="reelsTrack" class="reels-track"></div>
     </div>
 
     <div id="toastContainer"

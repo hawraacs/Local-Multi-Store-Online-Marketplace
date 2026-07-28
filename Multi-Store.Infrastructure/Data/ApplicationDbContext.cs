@@ -56,6 +56,7 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<ExploreMedia> ExploreMedia { get; set; }
         public DbSet<ExploreLike> ExploreLikes { get; set; }
         public DbSet<ExploreComment> ExploreComments { get; set; }
+        public DbSet<ExploreView> ExploreViews { get; set; }
         public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; }
         public DbSet<OtpCode> OtpCodes { get; set; }
         public DbSet<StorePayment> StorePayments { get; set; }
@@ -167,6 +168,29 @@ namespace Multi_Store.Infrastructure.Data
                       .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasIndex(e => new { e.StoryID, e.CustomerID }).IsUnique();
+            });
+
+            // ================= EXPLORE VIEWS =================
+            // New, additive block — same shape/pattern as STORY VIEWS above.
+            // One row per (Customer, ExplorePost) that has ever been viewed;
+            // existence of a row is what makes ExplorePost.ViewCount count
+            // unique viewers instead of raw opens (see Customer1.cshtml.cs,
+            // OnGetExplorePostDetailsAsync).
+            modelBuilder.Entity<ExploreView>(entity =>
+            {
+                entity.HasKey(e => e.ExploreViewID);
+
+                entity.HasOne(e => e.ExplorePost)
+                      .WithMany()
+                      .HasForeignKey(e => e.ExplorePostID)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Customer)
+                      .WithMany()
+                      .HasForeignKey(e => e.CustomerID)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.ExplorePostID, e.CustomerID }).IsUnique();
             });
 
             modelBuilder.Entity<StorePayment>(entity =>

@@ -7,6 +7,7 @@ using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
 using Multi_Store.Core.ViewModels.StoreOwner;
 using Multi_Store.Infrastructure.Data;
+using Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.Shared;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 {
@@ -18,12 +19,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILogger<EditModel> _logger;
 
-        // NOTE: duplicated from CreateModel.cs — both pages need identical image
-        // validation and there's currently no shared service to put this in.
-        // Worth extracting into something like an IProductImageValidator if a
-        // third place ever needs the same rules.
-        private static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
-        private static readonly string[] AllowedImageMimeTypes = { "image/jpeg", "image/png", "image/webp" };
+        // Image validation itself now lives in ProductMediaValidator (shared with
+        // CreateModel.cs and Promote/Create.cshtml.cs) — this page just applies
+        // its own size/count policy on top of it.
         private const long MaxImageSizeBytes = 5 * 1024 * 1024; // 5 MB per image
         private const int MaxImageCount = 5; // total, existing + new combined
 
@@ -338,10 +336,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
         }
 
         /// <summary>
-        /// Validates newly uploaded product images: count, size, extension/MIME type,
-        /// and the actual file signature (magic bytes) — extension and Content-Type
-        /// are both client-supplied and easily spoofed, so the header bytes are
-        /// checked too before anything is trusted or saved to disk.
+        /// Validates newly uploaded product images. Per-file rules (extension,
+        /// MIME type, size, magic-byte signature) are delegated to the shared
+        /// <see cref="ProductMediaValidator"/> so Create and Edit can never drift
+        /// apart on what counts as a valid image.
         /// </summary>
         private static async Task<string?> ValidateUploadedImagesAsync(List<IFormFile>? images)
         {
@@ -352,52 +350,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
             {
                 if (image.Length == 0) continue;
 
-                if (image.Length > MaxImageSizeBytes)
-                    return $"'{image.FileName}' is too large. Maximum size per image is 5 MB.";
+                var basicError = ProductMediaValidator.ValidateImageBasics(image, MaxImageSizeBytes);
+                if (basicError != null) return basicError;
 
-                var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
-                var contentType = image.ContentType?.ToLowerInvariant();
-
-                if (!AllowedImageExtensions.Contains(extension) || !AllowedImageMimeTypes.Contains(contentType))
-                    return $"'{image.FileName}' isn't a supported image type. Use JPG, PNG, or WEBP.";
-
-                if (!await HasValidImageSignatureAsync(image))
+                if (!await ProductMediaValidator.HasValidImageSignatureAsync(image))
                     return $"'{image.FileName}' doesn't look like a valid image file.";
             }
 
             return null;
-        }
-
-        private static async Task<bool> HasValidImageSignatureAsync(IFormFile file)
-        {
-            var buffer = new byte[12];
-            int bytesRead;
-
-            using (var stream = file.OpenReadStream())
-            {
-                bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
-            }
-
-            if (bytesRead < 4) return false;
-
-            bool StartsWith(byte[] signature, int offset = 0)
-            {
-                if (buffer.Length < offset + signature.Length) return false;
-                for (int i = 0; i < signature.Length; i++)
-                {
-                    if (buffer[offset + i] != signature[i]) return false;
-                }
-                return true;
-            }
-
-            if (StartsWith(new byte[] { 0xFF, 0xD8, 0xFF })) return true;                 // JPEG
-            if (StartsWith(new byte[] { 0x89, 0x50, 0x4E, 0x47 })) return true;            // PNG
-            if (bytesRead >= 12 &&
-                StartsWith(new byte[] { 0x52, 0x49, 0x46, 0x46 }, 0) &&                    // "RIFF"
-                StartsWith(new byte[] { 0x57, 0x45, 0x42, 0x50 }, 8))                       // "WEBP"
-                return true;
-
-            return false;
         }
 
         private string GenerateSlug(string name)

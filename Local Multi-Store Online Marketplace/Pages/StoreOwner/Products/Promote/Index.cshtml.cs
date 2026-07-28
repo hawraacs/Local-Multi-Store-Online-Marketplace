@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
 using Multi_Store.Infrastructure.Data;
 
-namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
+namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.Promote
 {
     [Authorize(Roles = "StoreOwner")]
     public class IndexModel : PageModel
@@ -27,6 +28,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
         public List<ExplorePostListViewModel> Posts { get; set; } = new();
 
         public string StoreName { get; set; } = string.Empty;
+
+        // NEW — lets the view tell "you've never posted anything" apart from
+        // "nothing matches your current filter", so the empty state can show
+        // the right message and the right call to action for each case.
+        public bool HasAnyPosts { get; set; }
 
         [BindProperty(SupportsGet = true)]
         public string? TypeFilter { get; set; }
@@ -62,8 +68,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
                 .Include(post => post.Media)
                 .Include(post => post.Product)
                 .Include(post => post.Likes)
+                    .ThenInclude(like => like.Customer)
+                        .ThenInclude(customer => customer.User)
                 .Include(post => post.Comments)
+                    .ThenInclude(comment => comment.Customer)
+                        .ThenInclude(customer => customer.User)
                 .AsQueryable();
+
+            // NEW — checked before any filter is applied, so the empty state
+            // can tell "no posts exist yet" apart from "no posts match the
+            // current filter" (previously both showed the same "create your
+            // first post" message, which was misleading once a filter had
+            // simply excluded everything).
+            HasAnyPosts = await query.AnyAsync();
 
             if (!string.IsNullOrWhiteSpace(TypeFilter) &&
                 TypeFilter != "All")
@@ -118,11 +135,49 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
                     LikeCount = post.Likes.Count,
 
                     CommentCount = post.Comments.Count(comment =>
-                        !comment.IsDeleted)
+                        !comment.IsDeleted),
+
+                    // NEW — the actual likers and comments, not just counts.
+                    Likes = post.Likes
+                        .OrderByDescending(like => like.CreatedAt)
+                        .Select(like => new PostLikeViewModel
+                        {
+                            CustomerName = GetCustomerDisplayName(like.Customer),
+                            CreatedAt = like.CreatedAt
+                        })
+                        .ToList(),
+
+                    Comments = post.Comments
+                        .Where(comment => !comment.IsDeleted)
+                        .OrderByDescending(comment => comment.CreatedAt)
+                        .Select(comment => new PostCommentViewModel
+                        {
+                            CustomerName = GetCustomerDisplayName(comment.Customer),
+                            CommentText = comment.CommentText,
+                            CreatedAt = comment.CreatedAt
+                        })
+                        .ToList()
                 };
             }).ToList();
 
             return Page();
+        }
+
+        // NEW — same display-name convention used on the customer-facing
+        // Explore page: prefer the account's full name, fall back to
+        // username, fall back to a generic "Customer" if neither is set.
+        private static string GetCustomerDisplayName(Customer? customer)
+        {
+            if (customer?.User == null)
+                return "Customer";
+
+            if (!string.IsNullOrWhiteSpace(customer.User.FullName))
+                return customer.User.FullName;
+
+            if (!string.IsNullOrWhiteSpace(customer.User.UserName))
+                return customer.User.UserName;
+
+            return "Customer";
         }
 
         public async Task<IActionResult> OnPostToggleStatusAsync(int postId)
@@ -157,7 +212,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
                 ? "Explore post activated successfully."
                 : "Explore post deactivated successfully.";
 
-            return RedirectToPage();
+            // CHANGED — preserve whatever filter the owner had active
+            // instead of always bouncing them back to the unfiltered list.
+            return RedirectToPage(new { TypeFilter, StatusFilter });
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(int postId)
@@ -212,7 +269,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
             TempData["SuccessMessage"] =
                 "Explore post deleted successfully.";
 
-            return RedirectToPage();
+            // CHANGED — preserve whatever filter the owner had active.
+            return RedirectToPage(new { TypeFilter, StatusFilter });
         }
     }
 
@@ -250,5 +308,28 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
         public int LikeCount { get; set; }
 
         public int CommentCount { get; set; }
+
+        // NEW — the actual people, not just counts.
+        public List<PostLikeViewModel> Likes { get; set; } = new();
+
+        public List<PostCommentViewModel> Comments { get; set; } = new();
+    }
+
+    // NEW
+    public class PostLikeViewModel
+    {
+        public string CustomerName { get; set; } = "Customer";
+
+        public DateTime CreatedAt { get; set; }
+    }
+
+    // NEW
+    public class PostCommentViewModel
+    {
+        public string CustomerName { get; set; } = "Customer";
+
+        public string CommentText { get; set; } = string.Empty;
+
+        public DateTime CreatedAt { get; set; }
     }
 }

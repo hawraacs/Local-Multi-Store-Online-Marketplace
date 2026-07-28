@@ -54,6 +54,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         [BindProperty(SupportsGet = true)] public decimal? MinPrice { get; set; }
         [BindProperty(SupportsGet = true)] public decimal? MaxPrice { get; set; }
 
+        // NEW — "Reel" / "Carousel" / "Product", or null/empty for "All".
+        // Drives the three legend clicks in the grid heading.
+        [BindProperty(SupportsGet = true)] public string? TypeFilter { get; set; }
+
         // =====================================================
         // INITIAL PAGE
         // =====================================================
@@ -90,7 +94,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 storeId: StoreId,
                 area: Area,
                 minPrice: MinPrice,
-                maxPrice: MaxPrice);
+                maxPrice: MaxPrice,
+                typeFilter: TypeFilter);
 
             InitialItems = pageResult.Items;
             HasMoreItems = pageResult.HasMore;
@@ -102,28 +107,38 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // INFINITE SCROLL PAGE
         // GET /Customer1?handler=ExplorePage&page=2&category=Fashion
         // =====================================================
+        // NOTE: this parameter is named "pageNumber", not "page" — Razor
+        // Pages internally reserves "page" as a route value used to select
+        // *which page* to route to (how "/Customer1" itself resolves). A
+        // handler parameter also named "page" collides with that and
+        // silently binds to the wrong thing — the querystring's page=2
+        // never actually reaches this parameter, it always defaults back to
+        // 1, which is exactly why every "page 2" request was quietly
+        // re-returning page 1's items forever.
         public async Task<IActionResult> OnGetExplorePageAsync(
-            int page = 1,
+            int pageNumber = 1,
             string? category = null,
             string? searchTerm = null,
             int? categoryId = null,
             int? storeId = null,
             string? area = null,
             decimal? minPrice = null,
-            decimal? maxPrice = null)
+            decimal? maxPrice = null,
+            string? typeFilter = null)
         {
-            if (page < 1) page = 1;
+            if (pageNumber < 1) pageNumber = 1;
 
             var result = await LoadExplorePageAsync(
-                page, NormalizeCategory(category), searchTerm, categoryId,
-                storeId, area, minPrice, maxPrice);
+                pageNumber, NormalizeCategory(category), searchTerm, categoryId,
+                storeId, area, minPrice, maxPrice, typeFilter);
 
             return new JsonResult(new
             {
                 success = true,
                 items = result.Items,
                 hasMore = result.HasMore,
-                page
+                page = pageNumber,
+                typeFilter
             });
         }
 
@@ -213,7 +228,29 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     StatusCodes.Status404NotFound);
             }
 
-            post.ViewCount += 1;
+            // CHANGED — view count is now unique per customer, not raw opens.
+            // Previously this line ran unconditionally on every single open,
+            // so the same customer reopening a post 10 times added +10. Now it
+            // only increments the first time this customer ever views this
+            // post, tracked via ExploreViews (same pattern already used for
+            // ExploreLikes below).
+            var alreadyViewed = await _context.ExploreViews
+                .AnyAsync(v =>
+                    v.CustomerID == customerId.Value &&
+                    v.ExplorePostID == post.ExplorePostID);
+
+            if (!alreadyViewed)
+            {
+                _context.ExploreViews.Add(new ExploreView
+                {
+                    ExplorePostID = post.ExplorePostID,
+                    CustomerID = customerId.Value,
+                    ViewedAt = DateTime.UtcNow
+                });
+
+                post.ViewCount += 1;
+            }
+
             await _context.SaveChangesAsync();
 
             var isFollowing = await _context.StoreFollows
@@ -1144,11 +1181,35 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // =====================================================
         private async Task<ExplorePageResult> LoadExplorePageAsync(
             int page, string? category, string? searchTerm, int? categoryId,
-            int? storeId, string? area, decimal? minPrice, decimal? maxPrice)
+            int? storeId, string? area, decimal? minPrice, decimal? maxPrice,
+            string? typeFilter = null)
         {
             var normalizedCategory = NormalizeCategory(category);
             var normalizedSearch = searchTerm?.Trim();
             var normalizedArea = area?.Trim();
+
+            // NEW — drives the three grid-legend clicks (Reel / Carousel / Product).
+            // "Reel"/"Carousel" only ever apply to Explore posts (post.PostType),
+            // and "Product" here means the plain-catalog-product tiles that have
+            // no active Explore post at all — matching exactly what the three
+            // legend badges in the grid actually represent. Anything else
+            // (null/empty, or an unrecognized value) means "All" — no filtering.
+            var normalizedTypeFilter = typeFilter?.Trim();
+            var includePosts = true;
+            var includeProducts = true;
+
+            if (string.Equals(normalizedTypeFilter, "Product", StringComparison.OrdinalIgnoreCase))
+            {
+                includePosts = false;
+            }
+            else if (string.Equals(normalizedTypeFilter, "Reel", StringComparison.OrdinalIgnoreCase))
+            {
+                includeProducts = false;
+            }
+            else if (string.Equals(normalizedTypeFilter, "Carousel", StringComparison.OrdinalIgnoreCase))
+            {
+                includeProducts = false;
+            }
 
             // NEW — expire due boosts and grab currently-active boosted product IDs,
             // so both posts and plain products can be flagged/sorted below.
@@ -1193,51 +1254,61 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (maxPrice.HasValue)
                 postsQuery = postsQuery.Where(post => post.Product != null && post.Product.Price <= maxPrice.Value);
 
-            var postItems = await postsQuery
-                .Select(post => new ExploreGridItemViewModel
-                {
-                    GridItemType = "Post",
-                    ExplorePostID = post.ExplorePostID,
-                    ProductID = post.ProductID,
-                    StoreID = post.StoreID,
-                    StoreName = post.Store.StoreName,
-                    StoreLogoUrl = post.Store.LogoURL,
-                    PostType = post.PostType,
-                    MediaType = post.Media
-                        .OrderBy(m => m.DisplayOrder)
-                        .Select(m => m.MediaType)
-                        .FirstOrDefault() ?? "Image",
-                    MediaUrl = post.Media
-                        .OrderBy(m => m.DisplayOrder)
-                        .Select(m => m.MediaUrl)
-                        .FirstOrDefault() ?? "/images/product-placeholder.svg",
-                    ThumbnailUrl = post.Media
-                        .OrderBy(m => m.DisplayOrder)
-                        .Select(m => m.ThumbnailUrl)
-                        .FirstOrDefault(),
-                    MediaCount = post.Media.Count,
-                    ProductName = post.Product != null &&
-                                  post.Product.IsActive
-                        ? post.Product.ProductName
-                        : null,
-                    ProductPrice = post.Product != null &&
-                                   post.Product.IsActive
-                        ? post.Product.Price
-                        : null,
-                    CategoryName = post.Product != null &&
-                                   post.Product.IsActive &&
-                                   post.Product.Category != null
-                        ? post.Product.Category.CategoryName
-                        : null,
-                    SortDate = post.CreatedAt
-                })
-                .ToListAsync();
+            // NEW — narrow to just Reels or just Carousels when that legend item was clicked.
+            if (string.Equals(normalizedTypeFilter, "Reel", StringComparison.OrdinalIgnoreCase))
+                postsQuery = postsQuery.Where(post => post.PostType == "Reel");
+            else if (string.Equals(normalizedTypeFilter, "Carousel", StringComparison.OrdinalIgnoreCase))
+                postsQuery = postsQuery.Where(post => post.PostType == "Carousel");
 
-            // NEW — stamp IsBoosted onto posts (post.ProductID may be null for pure image posts)
-            foreach (var item in postItems)
+            // CHANGED — real database-level pagination instead of pulling
+            // every matching post AND every matching product into memory on
+            // every single scroll request. Both sides are projected into the
+            // same view-model shape without executing yet, concatenated into
+            // one query, ordered, and only THEN sliced with Skip/Take — so
+            // the database does the filtering/sorting/paging and only
+            // ExplorePageSize+1 rows ever come back, on every page, not just
+            // page 1. (Previously: postsQuery and productsQuery were each
+            // fully materialized with ToListAsync — i.e. the entire matching
+            // table, unbounded — before combining and paging in C# memory.)
+            var postsProjected = postsQuery.Select(post => new ExploreGridItemViewModel
             {
-                item.IsBoosted = item.ProductID.HasValue && boostedIds.Contains(item.ProductID.Value);
-            }
+                GridItemType = "Post",
+                ExplorePostID = post.ExplorePostID,
+                ProductID = post.ProductID,
+                StoreID = post.StoreID,
+                StoreName = post.Store.StoreName,
+                StoreLogoUrl = post.Store.LogoURL,
+                PostType = post.PostType,
+                MediaType = post.Media
+                    .OrderBy(m => m.DisplayOrder)
+                    .Select(m => m.MediaType)
+                    .FirstOrDefault() ?? "Image",
+                MediaUrl = post.Media
+                    .OrderBy(m => m.DisplayOrder)
+                    .Select(m => m.MediaUrl)
+                    .FirstOrDefault() ?? "/images/product-placeholder.svg",
+                ThumbnailUrl = post.Media
+                    .OrderBy(m => m.DisplayOrder)
+                    .Select(m => m.ThumbnailUrl)
+                    .FirstOrDefault(),
+                MediaCount = post.Media.Count,
+                ProductName = post.Product != null &&
+                              post.Product.IsActive
+                    ? post.Product.ProductName
+                    : null,
+                ProductPrice = post.Product != null &&
+                               post.Product.IsActive
+                    ? post.Product.Price
+                    : null,
+                CategoryName = post.Product != null &&
+                               post.Product.IsActive &&
+                               post.Product.Category != null
+                    ? post.Product.Category.CategoryName
+                    : null,
+                SortDate = post.CreatedAt,
+                SortId = post.ExplorePostID,
+                IsBoosted = post.ProductID.HasValue && boostedIds.Contains(post.ProductID.Value)
+            });
 
             var productsQuery = _context.Products
                 .AsNoTracking()
@@ -1275,51 +1346,72 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (maxPrice.HasValue)
                 productsQuery = productsQuery.Where(product => product.Price <= maxPrice.Value);
 
-            var productItems = await productsQuery
-                .Select(product => new ExploreGridItemViewModel
-                {
-                    GridItemType = "Product",
-                    ExplorePostID = null,
-                    ProductID = product.ProductID,
-                    StoreID = product.StoreID,
-                    StoreName = product.Store.StoreName,
-                    StoreLogoUrl = product.Store.LogoURL,
-                    PostType = "Product",
-                    MediaType = "Image",
-                    MediaUrl = product.Images
-                        .OrderByDescending(i => i.IsPrimary)
-                        .ThenBy(i => i.DisplayOrder)
-                        .Select(i => i.ImageUrl)
-                        .FirstOrDefault() ?? "/images/product-placeholder.svg",
-                    ThumbnailUrl = null,
-                    MediaCount = product.Images.Count,
-                    ProductName = product.ProductName,
-                    ProductPrice = product.Price,
-                    CategoryName = product.Category != null
-                        ? product.Category.CategoryName
-                        : null,
-                    SortDate = product.CreatedAt
-                })
-                .ToListAsync();
-
-            // NEW — stamp IsBoosted onto plain products
-            foreach (var item in productItems)
+            var productsProjected = productsQuery.Select(product => new ExploreGridItemViewModel
             {
-                item.IsBoosted = item.ProductID.HasValue && boostedIds.Contains(item.ProductID.Value);
+                GridItemType = "Product",
+                ExplorePostID = null,
+                ProductID = product.ProductID,
+                StoreID = product.StoreID,
+                StoreName = product.Store.StoreName,
+                StoreLogoUrl = product.Store.LogoURL,
+                PostType = "Product",
+                MediaType = "Image",
+                MediaUrl = product.Images
+                    .OrderByDescending(i => i.IsPrimary)
+                    .ThenBy(i => i.DisplayOrder)
+                    .Select(i => i.ImageUrl)
+                    .FirstOrDefault() ?? "/images/product-placeholder.svg",
+                ThumbnailUrl = null,
+                MediaCount = product.Images.Count,
+                ProductName = product.ProductName,
+                ProductPrice = product.Price,
+                CategoryName = product.Category != null
+                    ? product.Category.CategoryName
+                    : null,
+                SortDate = product.CreatedAt,
+                SortId = product.ProductID,
+                IsBoosted = boostedIds.Contains(product.ProductID)
+            });
+
+            // Only build the side(s) the active type filter actually needs —
+            // same behavior as before (Reel/Carousel => posts only,
+            // Product => products only, otherwise both, combined via a SQL
+            // UNION ALL rather than two separate round trips).
+            IQueryable<ExploreGridItemViewModel> combinedQuery;
+
+            if (!includePosts)
+            {
+                combinedQuery = productsProjected;
+            }
+            else if (!includeProducts)
+            {
+                combinedQuery = postsProjected;
+            }
+            else
+            {
+                combinedQuery = postsProjected.Concat(productsProjected);
             }
 
             var skip = (page - 1) * ExplorePageSize;
 
-            // CHANGED — boosted items float to the top, then existing date/id ordering
-            var pageItems = postItems
-                .Concat(productItems)
+            // CHANGED — boosted items float to the top, then by date, then by
+            // SortId as a final deterministic tie-breaker. SortId (unlike
+            // ExplorePostID/ProductID individually) is always a real column
+            // value on both sides of the union, so it's safe to ORDER BY —
+            // and it's needed: without a fully deterministic sort, SQL Server
+            // isn't guaranteed to return rows in the same order across
+            // repeated Skip/Take calls when many rows share an identical
+            // SortDate (e.g. seed/demo data inserted in the same batch),
+            // which was causing "page 2" to silently re-return items already
+            // shown on page 1 — no error, just an infinite scroll that never
+            // actually produced anything new.
+            var pageItems = await combinedQuery
                 .OrderByDescending(item => item.IsBoosted)
                 .ThenByDescending(item => item.SortDate)
-                .ThenByDescending(item => item.ExplorePostID ?? 0)
-                .ThenByDescending(item => item.ProductID ?? 0)
+                .ThenByDescending(item => item.SortId)
                 .Skip(skip)
                 .Take(ExplorePageSize + 1)
-                .ToList();
+                .ToListAsync();
 
             var hasMore = pageItems.Count > ExplorePageSize;
 
@@ -1717,6 +1809,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public int? ExplorePostID { get; set; }
 
         public int? ProductID { get; set; }
+
+        // NEW — used ONLY as a pagination tie-breaker. Unlike ExplorePostID
+        // (null for products) and ProductID (null for posts with no linked
+        // product), this is always a real column value on both sides of the
+        // Post/Product union — never a hardcoded literal — so it's safe to
+        // ORDER BY without SQL Server rejecting it as a constant expression.
+        public int SortId { get; set; }
 
         public int StoreID { get; set; }
 

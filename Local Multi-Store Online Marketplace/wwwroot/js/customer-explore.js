@@ -39,7 +39,11 @@
     const focusCommentButton = document.getElementById("focusCommentButton");
     const modalShareButton = document.getElementById("modalShareButton");
     const modalStats = document.getElementById("modalStats");
-    const modalPrimaryActions = document.getElementById("modalPrimaryActions");
+    const modalViewStat = document.getElementById("modalViewStat");
+
+    const reelsPlayer = document.getElementById("reelsPlayer");
+    const reelsTrack = document.getElementById("reelsTrack");
+    const reelsCloseButton = document.getElementById("reelsCloseButton");
 
     const linkedProductSection = document.getElementById("linkedProductSection");
     const linkedProductLabel = document.getElementById("linkedProductLabel");
@@ -280,6 +284,7 @@
         button.className = "explore-tile";
         button.dataset.gridItem = "";
         button.dataset.itemType = item.gridItemType || "Post";
+        button.dataset.postType = item.postType || "";
 
         if (item.explorePostID) {
             button.dataset.postId = String(item.explorePostID);
@@ -422,17 +427,19 @@
             const area = app.dataset.area || "";
             const minPrice = app.dataset.minPrice || "";
             const maxPrice = app.dataset.maxPrice || "";
+            const typeFilter = app.dataset.typeFilter || "";
 
             const response = await fetch(
                 `${pageUrl}?handler=ExplorePage` +
-                `&page=${encodeURIComponent(nextPage)}` +
+                `&pageNumber=${encodeURIComponent(nextPage)}` +
                 `&category=${encodeURIComponent(category)}` +
                 `&searchTerm=${encodeURIComponent(searchTerm)}` +
                 `&categoryId=${encodeURIComponent(categoryId)}` +
                 `&storeId=${encodeURIComponent(storeId)}` +
                 `&area=${encodeURIComponent(area)}` +
                 `&minPrice=${encodeURIComponent(minPrice)}` +
-                `&maxPrice=${encodeURIComponent(maxPrice)}`,
+                `&maxPrice=${encodeURIComponent(maxPrice)}` +
+                `&typeFilter=${encodeURIComponent(typeFilter)}`,
                 {
                     method: "GET",
                     credentials: "same-origin",
@@ -595,6 +602,15 @@
             tile.dataset.itemType || ""
         ).toLowerCase();
 
+        const postType = String(
+            tile.dataset.postType || ""
+        ).toLowerCase();
+
+        if (itemType === "post" && postType === "reel" && tile.dataset.postId) {
+            openReelsPlayerFromTile(tile);
+            return;
+        }
+
         if (itemType === "post" && tile.dataset.postId) {
             openExplorePost(Number(tile.dataset.postId));
             return;
@@ -602,6 +618,393 @@
 
         if (tile.dataset.productId) {
             openExploreProduct(Number(tile.dataset.productId));
+        }
+    });
+
+    // =========================================================
+    // REELS PLAYER (full-screen, Instagram-Reels-style)
+    // Only Reel-type posts open here. Comment taps close this
+    // player and reopen the normal quick-view modal focused on the
+    // comment box, reusing all of its existing comment logic
+    // instead of duplicating a second comments UI.
+    // =========================================================
+    const reelsDetailsCache = new Map();
+    let reelsMuted = true;
+    let reelsObserver = null;
+    let activeReelSlide = null;
+
+    function buildReelsQueueFromGrid() {
+        const tiles = grid
+            ? Array.from(grid.querySelectorAll("[data-grid-item]"))
+            : [];
+
+        return tiles
+            .filter(tile => String(tile.dataset.postType || "").toLowerCase() === "reel")
+            .map(tile => Number(tile.dataset.postId))
+            .filter(id => Number.isFinite(id) && id > 0);
+    }
+
+    function openReelsPlayerFromTile(tile) {
+        const queue = buildReelsQueueFromGrid();
+        const startId = Number(tile.dataset.postId);
+        let startIndex = queue.indexOf(startId);
+
+        if (startIndex === -1) {
+            queue.unshift(startId);
+            startIndex = 0;
+        }
+
+        openReelsPlayer(queue, startIndex);
+    }
+
+    function createReelSlide(postId) {
+        const slide = document.createElement("div");
+        slide.className = "reel-slide";
+        slide.dataset.postId = String(postId);
+
+        slide.innerHTML = `
+            <div class="reel-loading">
+                <span class="loader-spinner large"></span>
+            </div>
+
+            <video class="reel-video" loop playsinline preload="metadata" muted></video>
+
+            <button type="button" class="reel-mute-toggle" aria-label="Toggle sound">
+                <i class="fa-solid fa-volume-xmark"></i>
+            </button>
+
+            <div class="reel-overlay-top">
+                <span class="reel-avatar"></span>
+                <strong class="reel-store-name"></strong>
+                <button type="button" class="reel-follow-button">Follow</button>
+            </div>
+
+            <div class="reel-overlay-side">
+                <button type="button" class="reel-action reel-like" aria-label="Like">
+                    <i class="fa-regular fa-heart"></i>
+                    <span class="reel-like-count">0</span>
+                </button>
+
+                <button type="button" class="reel-action reel-comment" aria-label="Comment">
+                    <i class="fa-regular fa-comment"></i>
+                    <span class="reel-comment-count">0</span>
+                </button>
+
+                <button type="button" class="reel-action reel-share" aria-label="Share">
+                    <i class="fa-regular fa-paper-plane"></i>
+                </button>
+            </div>
+
+            <div class="reel-caption"></div>
+        `;
+
+        return slide;
+    }
+
+    async function fetchReelDetails(postId) {
+        if (reelsDetailsCache.has(postId)) {
+            return reelsDetailsCache.get(postId);
+        }
+
+        const response = await fetch(
+            `${pageUrl}?handler=ExplorePostDetails&id=${postId}`,
+            {
+                method: "GET",
+                credentials: "same-origin",
+                cache: "no-store",
+                headers: { Accept: "application/json" }
+            }
+        );
+
+        const data = await readJsonResponse(response);
+        reelsDetailsCache.set(postId, data.post);
+        return data.post;
+    }
+
+    function populateReelSlide(slide, details) {
+        slide.dataset.storeId = String(details.storeID);
+
+        const video = slide.querySelector(".reel-video");
+        const media = (details.media || []).find(
+            m => String(m.mediaType).toLowerCase() === "video"
+        ) || details.media?.[0];
+
+        if (video && media) {
+            video.src = media.mediaUrl;
+        }
+
+        slide.querySelector(".reel-loading")?.remove();
+
+        const avatar = slide.querySelector(".reel-avatar");
+
+        if (details.storeLogoUrl) {
+            avatar.style.backgroundImage =
+                `url("${String(details.storeLogoUrl).replaceAll('"', '\\"')}")`;
+            avatar.textContent = "";
+        } else {
+            avatar.textContent = getInitial(details.storeName);
+        }
+
+        slide.querySelector(".reel-store-name").textContent =
+            details.storeName || "Store";
+        slide.querySelector(".reel-caption").textContent =
+            details.caption || "";
+
+        const followButton = slide.querySelector(".reel-follow-button");
+        followButton.classList.toggle("following", details.isFollowingStore === true);
+        followButton.textContent = details.isFollowingStore ? "Following" : "Follow";
+
+        const likeButton = slide.querySelector(".reel-like");
+        likeButton.classList.toggle("liked", details.isLikedByCurrentCustomer === true);
+        likeButton.querySelector("i").className = details.isLikedByCurrentCustomer
+            ? "fa-solid fa-heart"
+            : "fa-regular fa-heart";
+        likeButton.querySelector(".reel-like-count").textContent =
+            Number(details.likeCount || 0).toLocaleString();
+
+        slide.querySelector(".reel-comment-count").textContent =
+            Number(details.commentCount || 0).toLocaleString();
+    }
+
+    function updateMuteIcon(button, muted) {
+        const icon = button.querySelector("i");
+
+        if (icon) {
+            icon.className = muted
+                ? "fa-solid fa-volume-xmark"
+                : "fa-solid fa-volume-high";
+        }
+    }
+
+    function wireReelSlideActions(slide, postId) {
+        const video = slide.querySelector(".reel-video");
+        const muteToggle = slide.querySelector(".reel-mute-toggle");
+        const likeButton = slide.querySelector(".reel-like");
+        const shareButton = slide.querySelector(".reel-share");
+        const commentButton = slide.querySelector(".reel-comment");
+        const followButton = slide.querySelector(".reel-follow-button");
+
+        video.muted = reelsMuted;
+        updateMuteIcon(muteToggle, reelsMuted);
+
+        video.addEventListener("click", () => {
+            if (video.paused) {
+                video.play().catch(() => { });
+            } else {
+                video.pause();
+            }
+        });
+
+        muteToggle.addEventListener("click", event => {
+            event.stopPropagation();
+            reelsMuted = !reelsMuted;
+            video.muted = reelsMuted;
+            updateMuteIcon(muteToggle, reelsMuted);
+        });
+
+        likeButton.addEventListener("click", async event => {
+            event.stopPropagation();
+            likeButton.disabled = true;
+
+            try {
+                const data = await postForm("ToggleExploreLike", { postId });
+
+                likeButton.classList.toggle("liked", data.liked === true);
+                likeButton.querySelector("i").className = data.liked
+                    ? "fa-solid fa-heart"
+                    : "fa-regular fa-heart";
+                likeButton.querySelector(".reel-like-count").textContent =
+                    Number(data.likeCount || 0).toLocaleString();
+
+                const cached = reelsDetailsCache.get(postId);
+
+                if (cached) {
+                    cached.isLikedByCurrentCustomer = data.liked === true;
+                    cached.likeCount = data.likeCount;
+                }
+            } catch (error) {
+                showToast(error.message, "error");
+            } finally {
+                likeButton.disabled = false;
+            }
+        });
+
+        commentButton.addEventListener("click", event => {
+            event.stopPropagation();
+            closeReelsPlayer();
+
+            openExplorePost(postId).then(() => {
+                focusCommentButton?.click();
+            });
+        });
+
+        shareButton.addEventListener("click", async event => {
+            event.stopPropagation();
+
+            const shareUrl = `${window.location.origin}${pageUrl}#post-${postId}`;
+            const cached = reelsDetailsCache.get(postId);
+
+            const shareData = {
+                title: `${cached?.storeName || "Store"} on realnest`,
+                text: cached?.caption || "See this reel on realnest.",
+                url: shareUrl
+            };
+
+            try {
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                } else {
+                    await navigator.clipboard.writeText(shareUrl);
+                    showToast("Item link copied.", "success");
+                }
+
+                const icon = shareButton.querySelector("i");
+                shareButton.classList.add("shared");
+                icon.className = "fa-solid fa-check";
+
+                window.setTimeout(() => {
+                    shareButton.classList.remove("shared");
+                    icon.className = "fa-regular fa-paper-plane";
+                }, 1500);
+            } catch (error) {
+                if (error?.name !== "AbortError") {
+                    showToast(
+                        "The item link could not be shared.",
+                        "error"
+                    );
+                }
+            }
+        });
+
+        followButton.addEventListener("click", async event => {
+            event.stopPropagation();
+            const storeId = Number(slide.dataset.storeId);
+
+            if (!Number.isFinite(storeId)) {
+                return;
+            }
+
+            followButton.disabled = true;
+
+            try {
+                const data = await postForm(
+                    "ToggleExploreStoreFollow",
+                    { storeId }
+                );
+
+                followButton.classList.toggle("following", data.following === true);
+                followButton.textContent = data.following ? "Following" : "Follow";
+            } catch (error) {
+                showToast(error.message, "error");
+            } finally {
+                followButton.disabled = false;
+            }
+        });
+    }
+
+    async function activateReelSlide(slide) {
+        if (activeReelSlide === slide) {
+            return;
+        }
+
+        reelsTrack?.querySelectorAll("video").forEach(video => {
+            if (video !== slide.querySelector("video")) {
+                video.pause();
+            }
+        });
+
+        activeReelSlide = slide;
+
+        const postId = Number(slide.dataset.postId);
+
+        if (slide.dataset.loaded !== "true") {
+            slide.dataset.loaded = "true";
+
+            try {
+                const details = await fetchReelDetails(postId);
+                populateReelSlide(slide, details);
+                wireReelSlideActions(slide, postId);
+            } catch (error) {
+                showToast(
+                    error.message || "Could not load this reel.",
+                    "error"
+                );
+            }
+        }
+
+        const video = slide.querySelector("video");
+
+        if (video) {
+            video.muted = reelsMuted;
+            video.play().catch(() => { });
+        }
+    }
+
+    function openReelsPlayer(postIds, startIndex) {
+        if (!reelsPlayer || !reelsTrack || !postIds.length) {
+            return;
+        }
+
+        reelsTrack.innerHTML = "";
+
+        postIds.forEach(id => {
+            reelsTrack.appendChild(createReelSlide(id));
+        });
+
+        reelsPlayer.classList.add("open");
+        reelsPlayer.setAttribute("aria-hidden", "false");
+        document.body.classList.add("modal-open");
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+
+        const slides = Array.from(reelsTrack.children);
+        const startSlide = slides[startIndex] || slides[0];
+
+        startSlide.scrollIntoView({ block: "start" });
+        activateReelSlide(startSlide);
+
+        reelsObserver?.disconnect();
+        reelsObserver = new IntersectionObserver(
+            entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
+                        activateReelSlide(entry.target);
+                    }
+                });
+            },
+            { root: reelsTrack, threshold: [0, 0.6, 1] }
+        );
+
+        slides.forEach(slide => reelsObserver.observe(slide));
+    }
+
+    function closeReelsPlayer() {
+        reelsObserver?.disconnect();
+        reelsObserver = null;
+        activeReelSlide = null;
+
+        reelsTrack?.querySelectorAll("video").forEach(video => {
+            video.pause();
+            video.removeAttribute("src");
+            video.load();
+        });
+
+        reelsPlayer?.classList.remove("open");
+        reelsPlayer?.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+        document.documentElement.style.overflow = "";
+        document.body.style.overflow = "";
+
+        if (reelsTrack) {
+            reelsTrack.innerHTML = "";
+        }
+    }
+
+    reelsCloseButton?.addEventListener("click", closeReelsPlayer);
+
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && reelsPlayer?.classList.contains("open")) {
+            closeReelsPlayer();
         }
     });
 
@@ -770,10 +1173,9 @@
 
         modalCaption.classList.toggle("empty", !caption);
 
-        modalStats?.classList.toggle("hidden", !isPost);
+        modalViewStat?.classList.toggle("hidden", !isPost);
         modalLikeButton?.classList.toggle("hidden", !isPost);
         focusCommentButton?.classList.toggle("hidden", !isPost);
-        modalPrimaryActions?.classList.toggle("product-mode", !isPost);
         commentsSection?.classList.toggle("hidden", !isPost);
 
         if (isPost) {
@@ -833,16 +1235,11 @@
         modalLikeButton.classList.toggle("liked", liked);
 
         const icon = modalLikeButton.querySelector("i");
-        const textElement = modalLikeButton.querySelector("span");
 
         if (icon) {
             icon.className = liked
                 ? "fa-solid fa-heart"
                 : "fa-regular fa-heart";
-        }
-
-        if (textElement) {
-            textElement.textContent = liked ? "Liked" : "Like";
         }
 
         if (currentPost) {
@@ -1678,11 +2075,13 @@
         try {
             if (navigator.share) {
                 await navigator.share(shareData);
+                showShareConfirmation();
                 return;
             }
 
             await navigator.clipboard.writeText(shareUrl);
             showToast("Item link copied.", "success");
+            showShareConfirmation();
         } catch (error) {
             if (error?.name !== "AbortError") {
                 showToast(
@@ -1692,6 +2091,28 @@
             }
         }
     });
+
+    // Briefly swaps the Share icon to a green checkmark to confirm the
+    // share/copy actually happened, then reverts it back automatically.
+    let shareConfirmationTimer = null;
+
+    function showShareConfirmation() {
+        const icon = modalShareButton?.querySelector("i");
+
+        if (!icon) {
+            return;
+        }
+
+        window.clearTimeout(shareConfirmationTimer);
+
+        icon.className = "fa-solid fa-check";
+        modalShareButton.classList.add("shared");
+
+        shareConfirmationTimer = window.setTimeout(() => {
+            icon.className = "fa-regular fa-paper-plane";
+            modalShareButton.classList.remove("shared");
+        }, 1500);
+    }
 
     // =========================================================
     // OPTIONAL HASH SUPPORT
