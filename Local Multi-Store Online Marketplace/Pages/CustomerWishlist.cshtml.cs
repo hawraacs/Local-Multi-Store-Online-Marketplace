@@ -64,7 +64,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostMoveToCartAsync(int productId)
+        public async Task<IActionResult> OnPostMoveToCartAsync(int productId, int quantity = 1)
         {
             var customerId = await GetCurrentCustomerIdAsync();
 
@@ -72,6 +72,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 TempData["Error"] = "Please login as a customer first.";
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            if (quantity < 1)
+            {
+                quantity = 1;
             }
 
             var product = await _context.Products
@@ -84,6 +89,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 TempData["Error"] = "Product is not available.";
                 return RedirectToPage();
+            }
+
+            if (quantity > product.Quantity)
+            {
+                quantity = product.Quantity;
             }
 
             var cart = await _context.Carts
@@ -111,11 +121,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (existingItem != null)
             {
+                // Product is already in the cart — increase its
+                // quantity by the amount chosen on the wishlist page,
+                // capped at available stock, instead of creating a
+                // duplicate row or silently dropping the request.
+                existingItem.Quantity = Math.Min(
+                    existingItem.Quantity + quantity,
+                    product.Quantity);
+
+                cart.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
                 await _wishlistManager.RemoveFromWishlistAsync(
                     customerId.Value,
                     productId);
 
-                TempData["Success"] = "Product is already in your cart, so it was removed from your wishlist.";
+                TempData["Success"] = $"{product.ProductName} quantity updated in your cart.";
 
                 return RedirectToPage();
             }
@@ -124,7 +146,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 CartID = cart.CartID,
                 ProductID = productId,
-                Quantity = 1,
+                Quantity = quantity,
                 PriceAtAddTime = product.Price,
                 AddedAt = DateTime.UtcNow
             };

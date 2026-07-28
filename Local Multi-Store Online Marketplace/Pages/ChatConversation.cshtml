@@ -4,6 +4,10 @@
 @{
     Layout = null;
 
+    var isStoreOwner = User.IsInRole("StoreOwner");
+    var isDelivery = User.IsInRole("Delivery");
+    var chatRole = isStoreOwner ? "store" : (isDelivery ? "delivery" : "customer");
+
     var displayName = Model.OtherUser?.FullName
         ?? Model.OtherUser?.UserName
         ?? "User";
@@ -19,861 +23,894 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #fdfbf7; /* Cozy warm white canvas */
-            --card-bg: #ffffff;
-            --border-color: #f3ece3; /* Soft warm borders */
-            --text-primary: #1c1917; /* Slate dark brown/black */
-            --text-secondary: #78716c; /* Elegant muted stone gray */
-            /* White & Orange Sunset Palette */
-            --accent-color: #6d28d9; /* Radiant bright orange */
-            --accent-hover: #5b21b6; /* Rich dark orange */
-            --accent-light: #f3effe; /* Pastel orange tint */
-            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%); /* Orange-to-coral punch */
-            --error-color: #dc2626;
-            --online-color: #10b981; /* Active green */
-            --offline-color: #78716c; /* Offline grey */
-            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --shadow-sm: 0 4px 12px rgba(255, 107, 53, 0.04);
-            --shadow-md: 0 10px 30px rgba(255, 107, 53, 0.08);
-            --shadow-lg: 0 20px 40px rgba(255, 107, 53, 0.12);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: var(--font-family);
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            min-height: 100vh;
-            background: linear-gradient( 135deg, #e8eef8 0%, #f7fafc 45%, #e8f1ff 100%);
-        }
-
-        .page-shell {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 18px;
-        }
-
-        .wrapper {
-            width: 100%;
-            max-width: 900px;
-            height: calc(100vh - 36px);
-            display: flex;
-            flex-direction: column;
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid var(--border-color);
-            border-radius: 28px;
-            overflow: hidden;
-            box-shadow: var(--shadow-lg);
-            backdrop-filter: blur(18px);
-        }
-
-        /* HEADER TOPBAR */
-        .topbar {
-            padding: 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.9);
-            z-index: 10;
-        }
-
-        .user {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            min-width: 0;
-        }
-
-        .avatar {
-            width: 46px;
-            height: 46px;
-            border-radius: 16px;
-            background: var(--accent-gradient);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 18px;
-            box-shadow: 0 4px 14px rgba(255, 107, 53, 0.25);
-            border: 1.5px solid rgba(255, 255, 255, 0.8);
-        }
-
-        .user-meta {
-            min-width: 0;
-        }
-
-        .user-name {
-            font-weight: 800;
-            color: var(--text-primary);
-            max-width: 320px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 16px;
-        }
-
-        .online {
-            color: var(--online-color);
-            font-size: 12px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .offline {
-            color: var(--offline-color);
-            font-size: 12px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .delete {
-            background: #fff5f5;
-            border: 1px solid #ffd1cc;
-            color: var(--error-color);
-            padding: 10px 18px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 13px;
-            transition: all 0.2s ease;
-        }
-
-            .delete:hover {
-                background: #e11d48;
-                color: white;
+            :root {
+                --bg-color: #faf9fc;
+                --card-bg: #ffffff;
+                --border-color: #ece8f6;
+                --text-primary: #1e1b2e;
+                --text-secondary: #6b6478;
+                --accent-color: #6d28d9;
+                --accent-hover: #5b21b6;
+                --accent-light: #f3effe;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                --error-color: #dc2626;
+                --online-color: #10b981;
+                --offline-color: #94a3b8;
+                --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.05);
+                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.09);
+                --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.14);
             }
 
-        /* MESSAGES STREAM */
-        .messages {
-            flex: 1;
-            padding: 18px;
-            overflow: auto;
-            background: radial-gradient( circle at top left, rgba(37,99,235,.08), transparent 35%), radial-gradient( circle at bottom right, rgba(14,165,233,.08), transparent 35%), #f8fafc;
-        }
-
-        .msg {
-            display: flex;
-            width: 100%;
-        }
-
-        .me {
-            justify-content: flex-end;
-        }
-
-        .other {
-            justify-content: flex-start;
-        }
-
-        .bubble {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            line-height: 1.5;
-            word-break: break-word;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .me .bubble {
-            background: var(--accent-gradient);
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-
-        .other .bubble {
-            background: white;
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            border-bottom-left-radius: 4px;
-        }
-
-        .time {
-            font-size: 10px;
-            opacity: 0.8;
-            margin-top: 6px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 4px;
-        }
-
-        .other .time {
-            justify-content: flex-start;
-        }
-
-        .seen-status {
-            font-weight: 800;
-            font-size: 10px;
-        }
-
-        .me .seen-status.sent {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .me .seen-status.seen {
-            color: rgba(255, 255, 255, 0.95);
-        }
-
-        .delete-message-btn {
-            background: none;
-            border: none;
-            color: #ffcbd1;
-            font-size: 10px;
-            margin-top: 6px;
-            cursor: pointer;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: color 0.2s ease;
-            display: block;
-            margin-left: auto;
-        }
-
-        .other .delete-message-btn {
-            color: var(--error-color);
-            margin-left: 0;
-            margin-right: auto;
-        }
-
-        .me .delete-message-btn:hover {
-            color: #ffffff;
-        }
-
-        /* PRODUCT CARD INSIDE CHAT */
-        .product-card {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            width: 260px;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            box-shadow: var(--shadow-sm);
-        }
-
-            .product-card img {
-                width: 100%;
-                height: 160px;
-                object-fit: cover;
-            }
-
-        .product-body {
-            padding: 12px;
-        }
-
-        .product-title {
-            font-weight: 800;
-            margin-bottom: 4px;
-            font-size: 14px;
-        }
-
-        .product-price {
-            color: var(--accent-color);
-            font-weight: 800;
-            font-size: 15px;
-        }
-
-        .product-desc {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 6px;
-            line-height: 1.4;
-        }
-
-        .product-link {
-            display: inline-block;
-            margin-top: 10px;
-            color: var(--accent-color);
-            font-weight: 800;
-            font-size: 13px;
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-
-            .product-link:hover {
-                color: var(--accent-hover);
-            }
-
-        .chat-image {
-            max-width: 260px;
-            border-radius: 12px;
-            display: block;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .file-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: white;
-            color: var(--accent-color);
-            padding: 10px 14px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            font-weight: 800;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            font-size: 13px;
-        }
-
-            .file-link:hover {
-                border-color: var(--accent-color);
-                background: var(--accent-light);
-            }
-
-        audio {
-            max-width: 260px;
-            width: 100%;
-            border-radius: 50px;
-        }
-
-        /* COMPOSER FIELD */
-        .composer-area {
-            border-top: 1px solid var(--border-color);
-            background: #ffffff;
-        }
-
-        .attach-preview {
-            display: none;
-            padding: 10px 18px;
-            border-bottom: 1px solid var(--border-color);
-            background: var(--accent-light);
-            color: var(--accent-color);
-            font-size: 13px;
-            font-weight: 800;
-        }
-
-        .preview-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .preview-text {
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .preview-remove {
-            background: var(--error-color);
-            color: white;
-            border: none;
-            width: 26px;
-            height: 26px;
-            flex: 0 0 26px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-weight: 900;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            line-height: 1;
-            transition: background 0.2s ease, transform 0.2s ease;
-        }
-
-            .preview-remove:hover {
-                background: #b91c1c;
-                transform: scale(1.05);
-            }
-
-        /* VOICE COMPONENT */
-        .voice-panel {
-            display: none;
-            padding: 12px 18px;
-            border-bottom: 1px solid var(--border-color);
-            background: #fff5f5;
-        }
-
-        .voice-recording-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--error-color);
-            font-weight: 800;
-            font-size: 13px;
-        }
-
-        .record-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--error-color);
-            animation: pulse 1s infinite;
-        }
-
-        @@keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.35;
-            }
-
-            100% {
-                opacity: 1;
-            }
-        }
-
-        .voice-ready-row {
-            display: none;
-            align-items: center;
-            gap: 12px;
-        }
-
-            .voice-ready-row audio {
-                flex: 1;
-                width: 100%;
-            }
-
-        /* IOS VIRTUAL KEYBOARD PANEL */
-        .ios-keyboard {
-            display: none;
-            padding: 12px 14px 16px;
-            background: #ebe6db;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-            .ios-keyboard.show {
-                display: block;
-            }
-
-        .suggestions {
-            display: flex;
-            justify-content: flex-start; /* Aligns chips nicely from the left */
-            gap: 8px;
-            padding: 10px 18px 10px;
-            overflow-x: auto;
-            scrollbar-width: none;
-            background: #ffffff;
-            border-top: 1px solid var(--border-color);
-        }
-
-            .suggestions::-webkit-scrollbar {
-                display: none;
-            }
-
-        .suggestion-chip {
-            flex-shrink: 0;
-            height: 32px;
-            padding: 0 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 50px;
-            background: #ffffff;
-            color: var(--text-primary);
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-
-            .suggestion-chip:hover {
-                background: white;
-                border-color: var(--accent-color);
-                transform: translateY(-1px);
-            }
-
-            .suggestion-chip:active {
-                transform: translateY(0);
-                background: #e0ecff;
-            }
-
-        .key-row {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-
-        .middle-row {
-            padding: 0 20px;
-        }
-
-        .key-btn {
-            min-width: 32px;
-            flex-grow: 1;
-            height: 42px;
-            border: none;
-            border-radius: 8px;
-            background: #ffffff;
-            color: var(--text-primary);
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 2px 0 #cfc7ba;
-            transition: background 0.1s ease, transform 0.1s ease;
-        }
-
-            .key-btn:active {
-                background: #e5e7eb;
-                transform: translateY(1px);
-                box-shadow: none;
-            }
-
-        .special-key {
-            min-width: 54px;
-            background: #c5bdae;
-            font-size: 13px;
-            color: #44403c;
-        }
-
-        .space-key {
-            flex-grow: 8;
-            max-width: 300px;
-            font-size: 13px;
-        }
-
-        .emoji-key {
-            min-width: 44px;
-            background: #c5bdae;
-            font-size: 16px;
-        }
-
-        .bottom-row {
-            padding: 0 4px;
-        }
-
-        .keyboard-toggle-active {
-            background: var(--accent-color) !important;
-            color: white !important;
-        }
-
-        /* EMOJI COMPONENT */
-        .emoji-panel {
-            display: none;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 8px;
-            padding: 12px 6px 4px;
-            max-height: 180px;
-            overflow-y: auto;
-            border-top: 1px solid var(--border-color);
-            margin-top: 10px;
-        }
-
-            .emoji-panel.show {
-                display: grid;
-            }
-
-        .emoji-btn {
-            height: 38px;
-            border: none;
-            border-radius: 8px;
-            background: #ffffff;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: var(--shadow-sm);
-            transition: transform 0.1s ease;
-        }
-
-            .emoji-btn:active {
-                background: #e5e7eb;
-                transform: translateY(1px);
-            }
-
-        /* COMPOSER FORM */
-        .composer {
-            display: flex;
-            padding: 14px 18px;
-            gap: 10px;
-            align-items: flex-end;
-            background: #ffffff;
-        }
-
-        .message-input {
-            flex: 1;
-            min-height: 42px;
-            max-height: 98px;
-            padding: 11px 18px;
-            border-radius: 24px;
-            border: 1px solid var(--border-color);
-            outline: none;
-            resize: none;
-            font-size: 14px;
-            background: var(--bg-color);
-            transition: all 0.25s ease;
-            font-family: var(--font-family);
-        }
-
-            .message-input:focus {
-                background: white;
-                border-color: #93c5fd;
-                box-shadow: 0 0 0 4px rgba(147,197,253,.25);
-            }
-
-        .send,
-        .icon-btn {
-            background: var(--accent-color);
-            border: none;
-            color: white;
-            height: 42px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-weight: 800;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .send {
-            padding: 0 20px;
-            border-radius: 24px;
-            box-shadow: 0 4px 10px rgba(255, 107, 53, 0.2);
-            font-size: 14px;
-        }
-
-            .send:hover,
-            .icon-btn:hover {
-                background: var(--accent-gradient);
-            }
-
-        .icon-btn {
-            width: 42px;
-            padding: 0;
-            font-size: 16px;
-            box-shadow: var(--shadow-sm);
-            background: #f5f2eb;
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-
-            .icon-btn i {
-                font-size: 16px;
-                line-height: 1;
-                pointer-events: none;
-            }
-
-        .recording-btn {
-            background: #ef4444 !important;
-        }
-
-        .product-card {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            width: 270px;
-            border: 1px solid #e2e8f0;
-            color: #111827;
-        }
-
-            .product-card img {
-                width: 100%;
-                height: 175px;
-                object-fit: cover;
-            }
-
-        .product-body {
-            padding: 11px;
-        }
-
-        .product-title {
-            font-weight: 900;
-            margin-bottom: 5px;
-        }
-
-        .product-price {
-            color: #ff6600;
-            font-weight: 900;
-        }
-
-        .product-desc {
-            font-size: 13px;
-            color: #64748b;
-            margin-top: 5px;
-        }
-
-        .product-link {
-            display: inline-block;
-            margin-top: 8px;
-            color: #2563eb;
-            font-weight: 900;
-        }
-
-        .chat-image {
-            max-width: 270px;
-            border-radius: 14px;
-            display: block;
-        }
-
-        .file-link {
-            display: inline-block;
-            background: white;
-            color: #2563eb;
-            padding: 11px;
-            border-radius: 12px;
-            border: 1px solid #dbe3ef;
-            font-weight: 900;
-            text-decoration: none;
-        }
-
-        audio {
-            max-width: 270px;
-            width: 100%;
-        }
-
-        /* =====================================================
-                   CHAT TOAST NOTIFICATIONS
-                   ===================================================== */
-
-        .chat-toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 999999;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            pointer-events: none;
-        }
-
-        .chat-toast {
-            width: min(390px, calc(100vw - 40px));
-            padding: 15px 16px;
-            border-radius: 15px;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            color: #ffffff;
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.28);
-            opacity: 0;
-            transform: translateX(45px);
-            transition: opacity 0.28s ease, transform 0.28s ease;
-            pointer-events: auto;
-        }
-
-            .chat-toast.show {
-                opacity: 1;
-                transform: translateX(0);
-            }
-
-        .chat-toast-error {
-            background: linear-gradient(135deg, #b91c1c, #dc2626);
-        }
-
-        .chat-toast-warning {
-            background: linear-gradient(135deg, #b45309, #d97706);
-        }
-
-        .chat-toast-info {
-            background: linear-gradient(135deg, #1d4ed8, #2563eb);
-        }
-
-        .chat-toast-icon {
-            width: 34px;
-            height: 34px;
-            flex: 0 0 34px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.18);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 17px;
-            font-weight: 900;
-        }
-
-        .chat-toast-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .chat-toast-title {
-            display: block;
-            margin-bottom: 3px;
-            font-size: 14px;
-            font-weight: 900;
-        }
-
-        .chat-toast-message {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            line-height: 1.5;
-        }
-
-        .chat-toast-close {
-            border: none;
-            background: transparent;
-            color: #ffffff;
-            padding: 0;
-            font-size: 23px;
-            line-height: 1;
-            cursor: pointer;
-        }
-
-        @@media (max-width: 680px) {
-            .page-shell {
+            * {
+                box-sizing: border-box;
+                margin: 0;
                 padding: 0;
             }
 
+            body {
+                font-family: var(--font-family);
+                background-color: var(--bg-color);
+                color: var(--text-primary);
+                line-height: 1.5;
+                -webkit-font-smoothing: antialiased;
+                min-height: 100vh;
+                background: linear-gradient(135deg, #f3effe 0%, #faf9fc 45%, #ece8f6 100%);
+            }
+
+            .page-shell {
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 18px;
+            }
+
             .wrapper {
-                height: 100vh;
-                border-radius: 0;
-                max-width: none;
+                width: 100%;
+                max-width: 900px;
+                height: calc(100vh - 36px);
+                display: flex;
+                flex-direction: column;
+                background: rgba(255, 255, 255, 0.97);
+                border: 1px solid var(--border-color);
+                border-radius: 28px;
+                overflow: hidden;
+                box-shadow: var(--shadow-lg);
+                backdrop-filter: blur(18px);
+            }
+
+            /* HEADER TOPBAR */
+            .topbar {
+                padding: 18px 26px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid var(--border-color);
+                background: rgba(255, 255, 255, 0.95);
+                z-index: 10;
+            }
+
+            .user {
+                display: flex;
+                gap: 14px;
+                align-items: center;
+                min-width: 0;
+            }
+
+            .avatar {
+                width: 48px;
+                height: 48px;
+                border-radius: 16px;
+                background: var(--accent-gradient);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 800;
+                font-size: 18px;
+                box-shadow: 0 4px 14px rgba(109, 40, 217, 0.28);
+                border: 1.5px solid rgba(255, 255, 255, 0.85);
+            }
+
+            .user-meta {
+                min-width: 0;
+            }
+
+            .user-name {
+                font-family: 'Playfair Display', Georgia, serif;
+                font-weight: 800;
+                color: var(--text-primary);
+                max-width: 320px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 17px;
+            }
+
+            .online {
+                color: var(--online-color);
+                font-size: 12px;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                margin-top: 2px;
+            }
+
+            .offline {
+                color: var(--offline-color);
+                font-size: 12px;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                margin-top: 2px;
+            }
+
+            .status-indicator {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: currentColor;
+                display: inline-block;
+            }
+
+            .delete {
+                background: #fff5f5;
+                border: 1px solid #ffd1cc;
+                color: var(--error-color);
+                padding: 10px 18px;
+                border-radius: 50px;
+                cursor: pointer;
+                font-weight: 800;
+                font-size: 13px;
+                font-family: var(--font-family);
+                transition: all 0.2s ease;
+            }
+
+                .delete:hover {
+                    background: var(--error-color);
+                    color: white;
+                    border-color: var(--error-color);
+                }
+
+            /* MESSAGES STREAM */
+            .messages {
+                flex: 1;
+                padding: 22px;
+                overflow: auto;
+                background: radial-gradient(circle at top left, rgba(124, 58, 237, 0.06), transparent 38%), radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.06), transparent 38%), var(--bg-color);
+            }
+
+            .msg {
+                display: flex;
+                width: 100%;
+            }
+
+            .me {
+                justify-content: flex-end;
+            }
+
+            .other {
+                justify-content: flex-start;
             }
 
             .bubble {
-                max-width: 84%;
+                max-width: 70%;
+                padding: 13px 17px;
+                border-radius: 20px;
+                font-size: 14px;
+                line-height: 1.55;
+                word-break: break-word;
+                box-shadow: var(--shadow-sm);
             }
 
-            .send {
-                padding: 0 16px;
+            .me .bubble {
+                background: var(--accent-gradient);
+                color: white;
+                border-bottom-right-radius: 4px;
             }
 
-            .icon-btn {
-                width: 38px;
-                height: 38px;
+            .other .bubble {
+                background: white;
+                color: var(--text-primary);
+                border: 1px solid var(--border-color);
+                border-bottom-left-radius: 4px;
+            }
+
+            /* Product bubbles need to sit flush (no colored bubble
+                       padding fighting with the card's own background/shadow) */
+            .msg .bubble:has(.product-card) {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0;
+            }
+
+            .time {
+                font-size: 10.5px;
+                opacity: 0.85;
+                margin-top: 7px;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                gap: 5px;
+            }
+
+            .other .time {
+                justify-content: flex-start;
+                color: var(--text-secondary);
+            }
+
+            .seen-status {
+                font-weight: 800;
+                font-size: 10.5px;
+            }
+
+            .me .seen-status.sent {
+                color: rgba(255, 255, 255, 0.72);
+            }
+
+            .me .seen-status.seen {
+                color: rgba(255, 255, 255, 0.98);
+            }
+
+            .delete-message-btn {
+                background: none;
+                border: none;
+                color: rgba(255, 255, 255, 0.65);
+                font-size: 10.5px;
+                margin-top: 7px;
+                cursor: pointer;
+                font-weight: 800;
+                font-family: var(--font-family);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                transition: color 0.2s ease;
+                display: block;
+                margin-left: auto;
+            }
+
+            .other .delete-message-btn {
+                color: var(--error-color);
+                margin-left: 0;
+                margin-right: auto;
+            }
+
+            .me .delete-message-btn:hover {
+                color: #ffffff;
+            }
+
+            /* ============================================================
+                       SHARED PRODUCT CARD — redesigned. Now a distinct, self-
+                       contained card (not squeezed inside a message bubble),
+                       with a "Shared product" eyebrow badge, bigger image, price
+                       pill, and a proper button instead of a bare text link.
+                       ============================================================ */
+            .product-card {
+                background: var(--card-bg);
+                border-radius: 20px;
+                overflow: hidden;
+                width: 290px;
+                border: 1px solid var(--border-color);
+                color: var(--text-primary);
+                box-shadow: var(--shadow-md);
+            }
+
+            .product-card-media {
+                position: relative;
+            }
+
+                .product-card-media img {
+                    width: 100%;
+                    height: 190px;
+                    object-fit: cover;
+                    display: block;
+                    background: var(--accent-light);
+                }
+
+            .product-card-eyebrow {
+                position: absolute;
+                top: 12px;
+                left: 12px;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: rgba(30, 27, 46, 0.55);
+                backdrop-filter: blur(6px);
+                color: #ffffff;
+                font-size: 10.5px;
+                font-weight: 800;
+                letter-spacing: 0.3px;
+                text-transform: uppercase;
+                padding: 5px 10px;
+                border-radius: 50px;
+            }
+
+            .product-card-price-badge {
+                position: absolute;
+                bottom: 12px;
+                right: 12px;
+                background: var(--accent-gradient);
+                color: #ffffff;
+                font-weight: 800;
+                font-size: 14px;
+                padding: 6px 12px;
+                border-radius: 50px;
+                box-shadow: 0 6px 16px rgba(109, 40, 217, 0.35);
+            }
+
+            .product-body {
+                padding: 16px;
+            }
+
+            .product-title {
+                font-weight: 800;
+                font-size: 15px;
+                margin-bottom: 6px;
+                line-height: 1.3;
+            }
+
+            .product-price {
+                display: none; /* price now lives in the badge over the image */
+            }
+
+            .product-desc {
+                font-size: 12.5px;
+                color: var(--text-secondary);
+                line-height: 1.5;
+                margin-bottom: 12px;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .product-link {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                width: 100%;
+                padding: 10px 14px;
+                background: var(--accent-gradient);
+                color: #ffffff !important;
+                border-radius: 12px;
+                font-weight: 800;
+                font-size: 13px;
+                text-decoration: none;
+                box-shadow: 0 6px 16px rgba(109, 40, 217, 0.22);
+                transition: all 0.2s ease;
+            }
+
+                .product-link:hover {
+                    opacity: 0.95;
+                    transform: translateY(-1px);
+                    box-shadow: 0 8px 20px rgba(109, 40, 217, 0.3);
+                }
+
+                .product-link::after {
+                    content: "\2192";
+                    font-weight: 900;
+                }
+
+            .chat-image {
+                max-width: 260px;
+                border-radius: 14px;
+                display: block;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .file-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: white;
+                color: var(--accent-color);
+                padding: 11px 16px;
+                border-radius: 12px;
+                border: 1px solid var(--border-color);
+                font-weight: 800;
+                text-decoration: none;
+                transition: all 0.2s ease;
+                font-size: 13px;
+            }
+
+                .file-link:hover {
+                    border-color: var(--accent-color);
+                    background: var(--accent-light);
+                }
+
+            audio {
+                max-width: 260px;
+                width: 100%;
+                border-radius: 50px;
+            }
+
+            /* COMPOSER FIELD */
+            .composer-area {
+                border-top: 1px solid var(--border-color);
+                background: #ffffff;
+            }
+
+            .attach-preview {
+                display: none;
+                padding: 11px 20px;
+                border-bottom: 1px solid var(--border-color);
+                background: var(--accent-light);
+                color: var(--accent-color);
+                font-size: 13px;
+                font-weight: 800;
+            }
+
+            .preview-row {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .preview-text {
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .preview-remove {
+                background: var(--error-color);
+                color: white;
+                border: none;
+                width: 26px;
+                height: 26px;
+                flex: 0 0 26px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-weight: 900;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 15px;
+                line-height: 1;
+                transition: background 0.2s ease, transform 0.2s ease;
+            }
+
+                .preview-remove:hover {
+                    background: #b91c1c;
+                    transform: scale(1.05);
+                }
+
+            /* VOICE COMPONENT */
+            .voice-panel {
+                display: none;
+                padding: 13px 20px;
+                border-bottom: 1px solid var(--border-color);
+                background: #fff5f5;
+            }
+
+            .voice-recording-row {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                color: var(--error-color);
+                font-weight: 800;
+                font-size: 13px;
+            }
+
+            .record-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: var(--error-color);
+                animation: pulse 1s infinite;
+            }
+
+            @@keyframes pulse {
+                0% {
+                    opacity: 1;
+                }
+
+                50% {
+                    opacity: 0.35;
+                }
+
+                100% {
+                    opacity: 1;
+                }
+            }
+
+            .voice-ready-row {
+                display: none;
+                align-items: center;
+                gap: 12px;
+            }
+
+                .voice-ready-row audio {
+                    flex: 1;
+                    width: 100%;
+                }
+
+            /* IOS VIRTUAL KEYBOARD PANEL */
+            .ios-keyboard {
+                display: none;
+                padding: 12px 14px 16px;
+                background: var(--accent-light);
+                border-bottom: 1px solid var(--border-color);
+            }
+
+                .ios-keyboard.show {
+                    display: block;
+                }
+
+            .suggestions {
+                display: flex;
+                justify-content: flex-start;
+                gap: 8px;
+                padding: 12px 20px 12px;
+                overflow-x: auto;
+                scrollbar-width: none;
+                background: #ffffff;
+                border-top: 1px solid var(--border-color);
+            }
+
+                .suggestions::-webkit-scrollbar {
+                    display: none;
+                }
+
+            .suggestion-chip {
+                flex-shrink: 0;
+                height: 34px;
+                padding: 0 18px;
+                border: 1px solid var(--border-color);
+                border-radius: 50px;
+                background: #ffffff;
+                color: var(--text-primary);
+                font-family: var(--font-family);
+                font-size: 12.5px;
+                font-weight: 700;
+                cursor: pointer;
+                box-shadow: var(--shadow-sm);
+                transition: all 0.2s ease;
+                white-space: nowrap;
+            }
+
+                .suggestion-chip:hover {
+                    background: var(--accent-light);
+                    border-color: var(--accent-color);
+                    color: var(--accent-color);
+                    transform: translateY(-1px);
+                }
+
+                .suggestion-chip:active {
+                    transform: translateY(0);
+                    background: var(--accent-light);
+                }
+
+            .key-row {
+                display: flex;
+                justify-content: center;
+                gap: 6px;
+                margin-bottom: 8px;
+            }
+
+            .middle-row {
+                padding: 0 20px;
             }
 
             .key-btn {
-                min-width: 25px;
-                height: 38px;
-                font-size: 14px;
+                min-width: 32px;
+                flex-grow: 1;
+                height: 42px;
+                border: none;
+                border-radius: 10px;
+                background: #ffffff;
+                color: var(--text-primary);
+                font-family: var(--font-family);
+                font-size: 16px;
+                font-weight: 700;
+                cursor: pointer;
+                box-shadow: 0 2px 0 var(--border-color);
+                transition: background 0.1s ease, transform 0.1s ease;
             }
+
+                .key-btn:active {
+                    background: var(--accent-light);
+                    transform: translateY(1px);
+                    box-shadow: none;
+                }
 
             .special-key {
-                min-width: 42px;
+                min-width: 54px;
+                background: #ded8f0;
+                font-size: 13px;
+                color: var(--text-primary);
             }
 
-            .emoji-panel {
-                grid-template-columns: repeat(7, 1fr);
+            .space-key {
+                flex-grow: 8;
+                max-width: 300px;
+                font-size: 13px;
             }
+
+            .emoji-key {
+                min-width: 44px;
+                background: #ded8f0;
+                font-size: 16px;
+            }
+
+            .bottom-row {
+                padding: 0 4px;
+            }
+
+            .keyboard-toggle-active {
+                background: var(--accent-color) !important;
+                color: white !important;
+            }
+
+            /* EMOJI COMPONENT */
+            .emoji-panel {
+                display: none;
+                grid-template-columns: repeat(8, 1fr);
+                gap: 8px;
+                padding: 12px 6px 4px;
+                max-height: 180px;
+                overflow-y: auto;
+                border-top: 1px solid var(--border-color);
+                margin-top: 10px;
+            }
+
+                .emoji-panel.show {
+                    display: grid;
+                }
+
+            .emoji-btn {
+                height: 38px;
+                border: none;
+                border-radius: 10px;
+                background: #ffffff;
+                font-size: 20px;
+                cursor: pointer;
+                box-shadow: var(--shadow-sm);
+                transition: transform 0.1s ease;
+            }
+
+                .emoji-btn:active {
+                    background: var(--accent-light);
+                    transform: translateY(1px);
+                }
+
+            /* COMPOSER FORM */
+            .composer {
+                display: flex;
+                padding: 16px 20px;
+                gap: 10px;
+                align-items: flex-end;
+                background: #ffffff;
+            }
+
+            .message-input {
+                flex: 1;
+                min-height: 42px;
+                max-height: 98px;
+                padding: 11px 18px;
+                border-radius: 24px;
+                border: 1px solid var(--border-color);
+                outline: none;
+                resize: none;
+                font-size: 14px;
+                background: var(--bg-color);
+                transition: all 0.25s ease;
+                font-family: var(--font-family);
+            }
+
+                .message-input:focus {
+                    background: white;
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.1);
+                }
+
+            .send,
+            .icon-btn {
+                background: var(--accent-color);
+                border: none;
+                color: white;
+                height: 42px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-weight: 800;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .send {
+                padding: 0 22px;
+                border-radius: 24px;
+                box-shadow: 0 8px 18px rgba(109, 40, 217, 0.28);
+                font-size: 14px;
+                font-family: var(--font-family);
+                background: var(--accent-gradient);
+            }
+
+                .send:hover {
+                    opacity: 0.95;
+                    transform: translateY(-1px);
+                    box-shadow: 0 10px 22px rgba(109, 40, 217, 0.35);
+                }
+
+            .icon-btn:hover {
+                background: var(--accent-gradient);
+                color: #ffffff;
+                border-color: transparent;
+            }
+
+            .icon-btn {
+                width: 42px;
+                padding: 0;
+                font-size: 16px;
+                box-shadow: var(--shadow-sm);
+                background: var(--bg-color);
+                color: var(--text-primary);
+                border: 1px solid var(--border-color);
+            }
+
+                .icon-btn i {
+                    font-size: 16px;
+                    line-height: 1;
+                    pointer-events: none;
+                }
+
+            .recording-btn {
+                background: var(--error-color) !important;
+                color: #ffffff !important;
+                border-color: var(--error-color) !important;
+            }
+
+            /* =====================================================
+                       CHAT TOAST NOTIFICATIONS
+                       ===================================================== */
 
             .chat-toast-container {
-                top: 12px;
-                right: 12px;
-                left: 12px;
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 999999;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                pointer-events: none;
             }
 
             .chat-toast {
-                width: 100%;
+                width: min(390px, calc(100vw - 40px));
+                padding: 15px 16px;
+                border-radius: 15px;
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                color: #ffffff;
+                font-family: var(--font-family);
+                box-shadow: 0 18px 45px rgba(30, 27, 46, 0.28);
+                opacity: 0;
+                transform: translateX(45px);
+                transition: opacity 0.28s ease, transform 0.28s ease;
+                pointer-events: auto;
             }
-        }
+
+                .chat-toast.show {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+
+            .chat-toast-error {
+                background: linear-gradient(135deg, #b91c1c, #dc2626);
+            }
+
+            .chat-toast-warning {
+                background: linear-gradient(135deg, #b45309, #d97706);
+            }
+
+            .chat-toast-info {
+                background: var(--accent-gradient);
+            }
+
+            .chat-toast-icon {
+                width: 34px;
+                height: 34px;
+                flex: 0 0 34px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 17px;
+                font-weight: 900;
+            }
+
+            .chat-toast-content {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .chat-toast-title {
+                display: block;
+                margin-bottom: 3px;
+                font-size: 14px;
+                font-weight: 900;
+            }
+
+            .chat-toast-message {
+                display: block;
+                font-size: 13px;
+                font-weight: 600;
+                line-height: 1.5;
+            }
+
+            .chat-toast-close {
+                border: none;
+                background: transparent;
+                color: #ffffff;
+                padding: 0;
+                font-size: 23px;
+                line-height: 1;
+                cursor: pointer;
+            }
+
+            @@media (max-width: 680px) {
+                .page-shell {
+                    padding: 0;
+                }
+
+                .wrapper {
+                    height: 100vh;
+                    border-radius: 0;
+                    max-width: none;
+                }
+
+                .bubble {
+                    max-width: 84%;
+                }
+
+                .send {
+                    padding: 0 16px;
+                }
+
+                .icon-btn {
+                    width: 38px;
+                    height: 38px;
+                }
+
+                .key-btn {
+                    min-width: 25px;
+                    height: 38px;
+                    font-size: 14px;
+                }
+
+                .special-key {
+                    min-width: 42px;
+                }
+
+                .emoji-panel {
+                    grid-template-columns: repeat(7, 1fr);
+                }
+
+                .chat-toast-container {
+                    top: 12px;
+                    right: 12px;
+                    left: 12px;
+                }
+
+                .chat-toast {
+                    width: 100%;
+                }
+            }
     </style>
 </head>
-<body>
+<body data-chat-role="@chatRole">
 
     <div class="chat-toast-container" id="chatToastContainer"></div>
 
@@ -936,7 +973,18 @@
 
                                 <div class="product-card">
 
-                                    <img src="@image" alt="Product Image" />
+                                    <div class="product-card-media">
+                                        <img src="@image" alt="Product Image" />
+
+                                        <span class="product-card-eyebrow">
+                                            <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+                                            Shared product
+                                        </span>
+
+                                        <span class="product-card-price-badge">
+                                            $@msg.Product.Price.ToString("N2")
+                                        </span>
+                                    </div>
 
                                     <div class="product-body">
 
@@ -944,30 +992,26 @@
                                             @msg.Product.ProductName
                                         </div>
 
-                                        <div class="product-price">
-                                            $@msg.Product.Price.ToString("N2")
-                                        </div>
-
                                         <div class="product-desc">
                                             @msg.Product.Description
                                         </div>
-@if (User.IsInRole("StoreOwner"))
-{
-    <a asp-page="/StoreOwner/Home"
-       asp-route-productId="@msg.Product.ProductID"
-       class="product-link">
-        View Product
-    </a>
-}
-else
-{
-    <a asp-page="/StoreCustomerProfile"
-       asp-route-id="@msg.Product.StoreID"
-       asp-route-productId="@msg.Product.ProductID"
-       class="product-link">
-        View Product
-    </a>
-}
+                                        @if (User.IsInRole("StoreOwner"))
+                                        {
+                                            <a asp-page="/StoreOwner/Home"
+                                               asp-route-productId="@msg.Product.ProductID"
+                                               class="product-link">
+                                                View Product
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-page="/StoreCustomerProfile"
+                                               asp-route-id="@msg.Product.StoreID"
+                                               asp-route-productId="@msg.Product.ProductID"
+                                               class="product-link">
+                                                View Product
+                                            </a>
+                                        }
 
                                     </div>
 
@@ -983,7 +1027,7 @@ else
                                     if (msg.MessageText == "[VOICE]")
                                     {
                                         <audio src="@msg.ImageUrl" controls></audio>
-                                        
+
                                     }
                                     else if (
                                     msg.MessageText == "[IMAGE]" ||
@@ -1196,7 +1240,6 @@ else
                         <button type="button" class="emoji-btn" data-emoji="😂">😂</button>
                         <button type="button" class="emoji-btn" data-emoji="🤣">🤣</button>
                         <button type="button" class="emoji-btn" data-emoji="😊">😊</button>
-                        <button type="button" class="emoji-btn" data-emoji="😍">😍</button>
                         <button type="button" class="emoji-btn" data-emoji="🥰">🥰</button>
                         <button type="button" class="emoji-btn" data-emoji="😘">😘</button>
                         <button type="button" class="emoji-btn" data-emoji="😎">😎</button>
@@ -1232,11 +1275,11 @@ else
 
                 </div>
 
-                <!-- SUGGESTED MESSAGES (Always visible directly above the inputs, similar to Messenger) -->
+                <!-- SUGGESTED MESSAGES — role-specific, filled in by JS on load -->
                 <div class="suggestions">
-                    <button type="button" class="suggestion-chip" data-suggestion="hello">hello</button>
-                    <button type="button" class="suggestion-chip" data-suggestion="is this available">is this available</button>
-                    <button type="button" class="suggestion-chip" data-suggestion="how much">how much</button>
+                    <button type="button" class="suggestion-chip" data-suggestion=""></button>
+                    <button type="button" class="suggestion-chip" data-suggestion=""></button>
+                    <button type="button" class="suggestion-chip" data-suggestion=""></button>
                 </div>
 
                 <form id="chatForm" method="post" asp-page-handler="Send" asp-route-receiverId="@Model.OtherUser?.Id" enctype="multipart/form-data">
@@ -1272,1198 +1315,1279 @@ else
     </div>
 
     <script>
-        function showChatToast(
-            message,
-            type = "error",
-            title = "Unable to continue") {
+            function showChatToast(
+                message,
+                type = "error",
+                title = "Unable to continue") {
 
-            const container =
-                document.getElementById(
-                    "chatToastContainer");
+                const container =
+                    document.getElementById(
+                        "chatToastContainer");
 
-            if (!container || !message) {
-                return;
-            }
-
-            const existingToast =
-                container.querySelector(
-                    ".chat-toast");
-
-            if (existingToast) {
-                existingToast.remove();
-            }
-
-            const toast =
-                document.createElement("div");
-
-            const safeType =
-                type === "warning" ||
-                type === "info"
-                    ? type
-                    : "error";
-
-            toast.className =
-                `chat-toast chat-toast-${safeType}`;
-
-            toast.setAttribute(
-                "role",
-                safeType === "error"
-                    ? "alert"
-                    : "status");
-
-            const icon =
-                document.createElement("span");
-
-            icon.className =
-                "chat-toast-icon";
-
-            icon.textContent =
-                safeType === "warning"
-                    ? "!"
-                    : safeType === "info"
-                        ? "i"
-                        : "×";
-
-            const content =
-                document.createElement("div");
-
-            content.className =
-                "chat-toast-content";
-
-            const titleElement =
-                document.createElement("span");
-
-            titleElement.className =
-                "chat-toast-title";
-
-            titleElement.textContent =
-                title;
-
-            const messageElement =
-                document.createElement("span");
-
-            messageElement.className =
-                "chat-toast-message";
-
-            messageElement.textContent =
-                message;
-
-            const closeButton =
-                document.createElement("button");
-
-            closeButton.type =
-                "button";
-
-            closeButton.className =
-                "chat-toast-close";
-
-            closeButton.setAttribute(
-                "aria-label",
-                "Close notification");
-
-            closeButton.innerHTML =
-                "&times;";
-
-            content.appendChild(
-                titleElement);
-
-            content.appendChild(
-                messageElement);
-
-            toast.appendChild(icon);
-            toast.appendChild(content);
-            toast.appendChild(closeButton);
-
-            container.appendChild(toast);
-
-            window.requestAnimationFrame(
-                function () {
-                    toast.classList.add(
-                        "show");
-                });
-
-            const closeTimer =
-                window.setTimeout(
-                    removeToast,
-                    5000);
-
-            function removeToast() {
-                if (!toast.isConnected) {
+                if (!container || !message) {
                     return;
                 }
 
-                window.clearTimeout(
-                    closeTimer);
+                const existingToast =
+                    container.querySelector(
+                        ".chat-toast");
 
-                toast.classList.remove(
-                    "show");
+                if (existingToast) {
+                    existingToast.remove();
+                }
 
-                window.setTimeout(
-                    function () {
-                        toast.remove();
-                    },
-                    280);
-            }
+                const toast =
+                    document.createElement("div");
 
-            closeButton.addEventListener(
-                "click",
-                removeToast);
-        }
+                const safeType =
+                    type === "warning" ||
+                        type === "info"
+                        ? type
+                        : "error";
 
-        const messagesBox =
-            document.getElementById(
-                "messagesBox");
+                toast.className =
+                    `chat-toast chat-toast-${safeType}`;
 
-        const chatForm =
-            document.getElementById(
-                "chatForm");
+                toast.setAttribute(
+                    "role",
+                    safeType === "error"
+                        ? "alert"
+                        : "status");
 
-        const messageInput =
-            document.getElementById(
-                "messageInput");
+                const icon =
+                    document.createElement("span");
 
-        const attachmentFile =
-            document.getElementById(
-                "attachmentFile");
+                icon.className =
+                    "chat-toast-icon";
 
-        const attachPreview =
-            document.getElementById(
-                "attachPreview");
+                icon.textContent =
+                    safeType === "warning"
+                        ? "!"
+                        : safeType === "info"
+                            ? "i"
+                            : "×";
 
-        const previewText =
-            document.getElementById(
-                "previewText");
+                const content =
+                    document.createElement("div");
 
-        const clearAttachmentBtn =
-            document.getElementById(
-                "clearAttachmentBtn");
+                content.className =
+                    "chat-toast-content";
 
-        const recordBtn =
-            document.getElementById(
-                "recordBtn");
+                const titleElement =
+                    document.createElement("span");
 
-        const voicePanel =
-            document.getElementById(
-                "voicePanel");
+                titleElement.className =
+                    "chat-toast-title";
 
-        const voiceRecordingRow =
-            document.getElementById(
-                "voiceRecordingRow");
+                titleElement.textContent =
+                    title;
 
-        const voiceReadyRow =
-            document.getElementById(
-                "voiceReadyRow");
+                const messageElement =
+                    document.createElement("span");
 
-        const recordTimer =
-            document.getElementById(
-                "recordTimer");
+                messageElement.className =
+                    "chat-toast-message";
 
-        const cancelVoiceBtn =
-            document.getElementById(
-                "cancelVoiceBtn");
+                messageElement.textContent =
+                    message;
 
-        const removeVoiceBtn =
-            document.getElementById(
-                "removeVoiceBtn");
+                const closeButton =
+                    document.createElement("button");
 
-        const voiceAudio =
-            document.getElementById(
-                "voiceAudio");
+                closeButton.type =
+                    "button";
 
-        const iosKeyboard =
-            document.getElementById(
-                "iosKeyboard");
+                closeButton.className =
+                    "chat-toast-close";
 
-        const keyboardToggleBtn =
-            document.getElementById(
-                "keyboardToggleBtn");
+                closeButton.setAttribute(
+                    "aria-label",
+                    "Close notification");
 
-        const keyButtons =
-            document.querySelectorAll(
-                ".key-btn[data-key]");
+                closeButton.innerHTML =
+                    "&times;";
 
-        const letterKeys =
-            document.querySelectorAll(
-                ".letter-key");
+                content.appendChild(
+                    titleElement);
 
-        const backspaceKey =
-            document.getElementById(
-                "backspaceKey");
+                content.appendChild(
+                    messageElement);
 
-        const spaceKey =
-            document.getElementById(
-                "spaceKey");
+                toast.appendChild(icon);
+                toast.appendChild(content);
+                toast.appendChild(closeButton);
 
-        const returnKey =
-            document.getElementById(
-                "returnKey");
+                container.appendChild(toast);
 
-        const shiftKey =
-            document.getElementById(
-                "shiftKey");
-
-        const numbersKey =
-            document.getElementById(
-                "numbersKey");
-
-        const emojiKey =
-            document.getElementById(
-                "emojiKey");
-
-        const emojiPanel =
-            document.getElementById(
-                "emojiPanel");
-
-        const emojiButtons =
-            document.querySelectorAll(
-                ".emoji-btn");
-
-        const suggestionChips =
-            document.querySelectorAll(
-                ".suggestion-chip");
-
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-        let timerInterval;
-        let seconds = 0;
-        let currentStream = null;
-        let cancelVoice = false;
-
-        let uppercaseMode = false;
-        let numbersMode = false;
-
-        const letterValues = [
-            "q", "w", "e", "r", "t", "y",
-            "u", "i", "o", "p",
-            "a", "s", "d", "f", "g", "h",
-            "j", "k", "l",
-            "z", "x", "c", "v", "b", "n", "m"
-        ];
-
-        const numberValues = [
-            "1", "2", "3", "4", "5", "6",
-            "7", "8", "9", "0",
-            ".", "?", "!",  "#", "$",
-            "%", "&", "-",
-            "+", "(", ")", "/", "'", ":", ";"
-        ];
-
-        const smartSuggestions = [
-            "hello",
-            "hi",
-            "how are you",
-            "how much",
-            "how much is delivery",
-            "is this available",
-            "available",
-            "price",
-            "discount",
-            "delivery",
-            "delivery fee",
-            "delivery time",
-            "when will it arrive",
-            "order",
-            "order status",
-            "order number",
-            "my order",
-            "track order",
-            "payment",
-            "cash on delivery",
-            "online payment",
-            "address",
-            "change address",
-            "thank you",
-            "thanks",
-            "okay",
-            "yes",
-            "no",
-            "please",
-            "can you help me",
-            "I want this product",
-            "send me details"
-        ];
-
-        if (messagesBox) {
-            messagesBox.scrollTop =
-                messagesBox.scrollHeight;
-        }
-
-        if (messageInput) {
-            messageInput.focus();
-
-            messageInput.addEventListener(
-                "input",
-                function () {
-                    resizeMessageInput();
-                    updateSmartSuggestions();
-                });
-
-            messageInput.addEventListener(
-                "keydown",
-                function (event) {
-                    if (event.key === "Enter" &&
-                        !event.shiftKey) {
-
-                        event.preventDefault();
-
-                        if (chatForm) {
-                            chatForm.requestSubmit();
-                        }
-                    }
-                });
-        }
-
-        function formatMessageTime(date) {
-            const now =
-                new Date();
-
-            const today =
-                new Date(
-                    now.getFullYear(),
-                    now.getMonth(),
-                    now.getDate());
-
-            const messageDay =
-                new Date(
-                    date.getFullYear(),
-                    date.getMonth(),
-                    date.getDate());
-
-            const diffDays =
-                Math.floor(
-                    (today - messageDay) /
-                    86400000);
-
-            const timeText =
-                date.toLocaleTimeString(
-                    [],
-                    {
-                        hour: "2-digit",
-                        minute: "2-digit"
+                window.requestAnimationFrame(
+                    function() {
+                        toast.classList.add(
+                            "show");
                     });
 
-            if (diffDays === 0) {
-                return "Today " + timeText;
-            }
+                const closeTimer =
+                    window.setTimeout(
+                        removeToast,
+                        5000);
 
-            if (diffDays === 1) {
-                return "Yesterday " + timeText;
-            }
-
-            return date.toLocaleDateString(
-                [],
-                {
-                    day: "2-digit",
-                    month: "short"
-                }) +
-                " " +
-                timeText;
-        }
-
-        function updateMessageTimes() {
-            const timeElements =
-                document.querySelectorAll(
-                    ".message-time");
-
-            timeElements.forEach(
-                function (element) {
-                    const utcValue =
-                        element.getAttribute(
-                            "data-utc");
-
-                    if (!utcValue) {
+                function removeToast() {
+                    if (!toast.isConnected) {
                         return;
                     }
 
-                    const date =
-                        new Date(utcValue);
+                    window.clearTimeout(
+                        closeTimer);
 
-                    if (isNaN(date.getTime())) {
-                        return;
-                    }
+                    toast.classList.remove(
+                        "show");
 
-                    element.innerText =
-                        formatMessageTime(date);
-                });
-        }
+                    window.setTimeout(
+                        function() {
+                            toast.remove();
+                        },
+                        280);
+                }
 
-        function resizeMessageInput() {
-            if (!messageInput) {
-                return;
-            }
-
-            messageInput.style.height =
-                "40px";
-
-            messageInput.style.height =
-                Math.min(
-                    messageInput.scrollHeight,
-                    98) +
-                "px";
-        }
-
-        function updateSmartSuggestions() {
-            if (!messageInput ||
-                suggestionChips.length === 0) {
-                return;
-            }
-
-            const text =
-                messageInput.value
-                    .trim()
-                    .toLowerCase();
-
-            const words =
-                text.split(/\s+/);
-
-            const lastWord =
-                words[words.length - 1] || "";
-
-            let results = [];
-
-            if (lastWord.length === 0) {
-                results = [
-                    "hello",
-                    "is this available",
-                    "how much"
-                ];
-            }
-            else {
-                results =
-                    smartSuggestions
-                        .filter(item =>
-                            item
-                                .toLowerCase()
-                                .startsWith(lastWord))
-                        .slice(0, 3);
-            }
-
-            if (results.length === 0 &&
-                text.length > 0) {
-
-                results =
-                    smartSuggestions
-                        .filter(item =>
-                            item
-                                .toLowerCase()
-                                .includes(lastWord))
-                        .slice(0, 3);
-            }
-
-            if (results.length === 0) {
-                results = [
-                    "okay",
-                    "thanks",
-                    "please"
-                ];
-            }
-
-            suggestionChips.forEach(
-                function (chip, index) {
-                    const value =
-                        results[index] || "";
-
-                    if (value) {
-                        chip.innerText =
-                            value;
-
-                        chip.setAttribute(
-                            "data-suggestion",
-                            value);
-
-                        chip.style.visibility =
-                            "visible";
-                    }
-                    else {
-                        chip.innerText = "";
-
-                        chip.setAttribute(
-                            "data-suggestion",
-                            "");
-
-                        chip.style.visibility =
-                            "hidden";
-                    }
-                });
-        }
-
-        function insertIntoMessage(text) {
-            if (!messageInput || !text) {
-                return;
-            }
-
-            const start =
-                messageInput.selectionStart;
-
-            const end =
-                messageInput.selectionEnd;
-
-            const value =
-                messageInput.value;
-
-            messageInput.value =
-                value.substring(0, start) +
-                text +
-                value.substring(end);
-
-            const newPosition =
-                start + text.length;
-
-            messageInput.focus();
-
-            messageInput.setSelectionRange(
-                newPosition,
-                newPosition);
-
-            resizeMessageInput();
-            updateSmartSuggestions();
-        }
-
-        suggestionChips.forEach(
-            function (chip) {
-                chip.addEventListener(
+                closeButton.addEventListener(
                     "click",
-                    function () {
-                        const suggestion =
-                            chip.getAttribute(
-                                "data-suggestion");
+                    removeToast);
+            }
 
-                        if (!suggestion ||
-                            !messageInput) {
-                            return;
-                        }
+            const messagesBox =
+                document.getElementById(
+                    "messagesBox");
 
-                        // Populate the suggestion directly into the input
-                        messageInput.value = suggestion;
+            const chatForm =
+                document.getElementById(
+                    "chatForm");
 
-                        // Send immediately by programmatically clicking the "Send" button
-                        if (chatForm) {
-                            const sendButton = chatForm.querySelector('button[type="submit"]') || chatForm.querySelector('.send');
-                            if (sendButton) {
-                                sendButton.click();
-                            } else {
+            const messageInput =
+                document.getElementById(
+                    "messageInput");
+
+            const attachmentFile =
+                document.getElementById(
+                    "attachmentFile");
+
+            const attachPreview =
+                document.getElementById(
+                    "attachPreview");
+
+            const previewText =
+                document.getElementById(
+                    "previewText");
+
+            const clearAttachmentBtn =
+                document.getElementById(
+                    "clearAttachmentBtn");
+
+            const recordBtn =
+                document.getElementById(
+                    "recordBtn");
+
+            const voicePanel =
+                document.getElementById(
+                    "voicePanel");
+
+            const voiceRecordingRow =
+                document.getElementById(
+                    "voiceRecordingRow");
+
+            const voiceReadyRow =
+                document.getElementById(
+                    "voiceReadyRow");
+
+            const recordTimer =
+                document.getElementById(
+                    "recordTimer");
+
+            const cancelVoiceBtn =
+                document.getElementById(
+                    "cancelVoiceBtn");
+
+            const removeVoiceBtn =
+                document.getElementById(
+                    "removeVoiceBtn");
+
+            const voiceAudio =
+                document.getElementById(
+                    "voiceAudio");
+
+            const iosKeyboard =
+                document.getElementById(
+                    "iosKeyboard");
+
+            const keyboardToggleBtn =
+                document.getElementById(
+                    "keyboardToggleBtn");
+
+            const keyButtons =
+                document.querySelectorAll(
+                    ".key-btn[data-key]");
+
+            const letterKeys =
+                document.querySelectorAll(
+                    ".letter-key");
+
+            const backspaceKey =
+                document.getElementById(
+                    "backspaceKey");
+
+            const spaceKey =
+                document.getElementById(
+                    "spaceKey");
+
+            const returnKey =
+                document.getElementById(
+                    "returnKey");
+
+            const shiftKey =
+                document.getElementById(
+                    "shiftKey");
+
+            const numbersKey =
+                document.getElementById(
+                    "numbersKey");
+
+            const emojiKey =
+                document.getElementById(
+                    "emojiKey");
+
+            const emojiPanel =
+                document.getElementById(
+                    "emojiPanel");
+
+            const emojiButtons =
+                document.querySelectorAll(
+                    ".emoji-btn");
+
+            const suggestionChips =
+                document.querySelectorAll(
+                    ".suggestion-chip");
+
+            let mediaRecorder;
+            let audioChunks = [];
+            let isRecording = false;
+            let timerInterval;
+            let seconds = 0;
+            let currentStream = null;
+            let cancelVoice = false;
+
+            let uppercaseMode = false;
+            let numbersMode = false;
+
+            const letterValues = [
+                "q", "w", "e", "r", "t", "y",
+                "u", "i", "o", "p",
+                "a", "s", "d", "f", "g", "h",
+                "j", "k", "l",
+                "z", "x", "c", "v", "b", "n", "m"
+            ];
+
+            const numberValues = [
+                "1", "2", "3", "4", "5", "6",
+                "7", "8", "9", "0",
+                ".", "?", "!", "#", "$",
+                "%", "&", "-",
+                "+", "(", ")", "/", "'", ":", ";"
+            ];
+
+            // =====================================================
+            // ROLE-SPECIFIC SUGGESTED MESSAGES
+            // Each role gets its own realistic phrase bank + its own
+            // default (empty-input) trio of chips. Chosen automatically
+            // from the body's data-chat-role attribute set server-side.
+            // =====================================================
+            const chatRole =
+                document.body.getAttribute("data-chat-role") || "customer";
+
+            const suggestionBanks = {
+                customer: {
+                    defaults: ["hello", "is this available", "how much"],
+                    phrases: [
+                        "hello",
+                        "hi",
+                        "how are you",
+                        "how much",
+                        "how much is delivery",
+                        "is this available",
+                        "available",
+                        "price",
+                        "discount",
+                        "can you offer a discount",
+                        "delivery",
+                        "delivery fee",
+                        "delivery time",
+                        "when will it arrive",
+                        "order",
+                        "order status",
+                        "order number",
+                        "my order",
+                        "track order",
+                        "payment",
+                        "cash on delivery",
+                        "online payment",
+                        "address",
+                        "change address",
+                        "do you have other sizes",
+                        "do you have other colors",
+                        "is this authentic",
+                        "can I return this",
+                        "thank you",
+                        "thanks",
+                        "okay",
+                        "yes",
+                        "no",
+                        "please",
+                        "can you help me",
+                        "I want this product",
+                        "send me details"
+                    ]
+                },
+                store: {
+                    defaults: ["thanks for reaching out", "yes it's available", "here's the price"],
+                    phrases: [
+                        "thanks for reaching out",
+                        "hello, how can I help",
+                        "yes it's available",
+                        "here's the price",
+                        "sorry, that item is out of stock",
+                        "we'll have more stock soon",
+                        "here's a discount for you",
+                        "the delivery fee is",
+                        "it usually arrives within",
+                        "your order has been confirmed",
+                        "your order has shipped",
+                        "your order is being prepared",
+                        "could you confirm your delivery address",
+                        "we accept cash on delivery",
+                        "we accept online payment",
+                        "sorry for the delay",
+                        "thanks for your patience",
+                        "let me check and get back to you",
+                        "yes, we offer returns",
+                        "yes, we have other colors",
+                        "yes, we have other sizes",
+                        "thank you for your order",
+                        "thank you for shopping with us",
+                        "is there anything else I can help with",
+                        "okay",
+                        "yes",
+                        "no",
+                        "you're welcome"
+                    ]
+                },
+                delivery: {
+                    defaults: ["I'm on my way", "I've arrived", "please confirm delivery"],
+                    phrases: [
+                        "I'm on my way",
+                        "I've arrived",
+                        "please confirm delivery",
+                        "please confirm your address",
+                        "running a bit late",
+                        "I'm nearby",
+                        "could not reach you, please call back",
+                        "delivered successfully",
+                        "please come down to collect your order",
+                        "leaving the package at the door",
+                        "do you have exact change",
+                        "cash on delivery accepted",
+                        "thank you for your order",
+                        "have a great day",
+                        "okay",
+                        "yes",
+                        "no",
+                        "please",
+                        "thank you",
+                        "thanks",
+                        "sorry for the delay",
+                        "on the way now"
+                    ]
+                }
+            };
+
+            const activeBank =
+                suggestionBanks[chatRole] || suggestionBanks.customer;
+
+            const smartSuggestions =
+                activeBank.phrases;
+
+            if (messagesBox) {
+                messagesBox.scrollTop =
+                    messagesBox.scrollHeight;
+            }
+
+            if (messageInput) {
+                messageInput.focus();
+
+                messageInput.addEventListener(
+                    "input",
+                    function() {
+                        resizeMessageInput();
+                        updateSmartSuggestions();
+                    });
+
+                messageInput.addEventListener(
+                    "keydown",
+                    function(event) {
+                        if (event.key === "Enter" &&
+                            !event.shiftKey) {
+
+                            event.preventDefault();
+
+                            if (chatForm) {
                                 chatForm.requestSubmit();
                             }
                         }
                     });
-            });
-
-        function backspaceMessage() {
-            if (!messageInput) {
-                return;
             }
 
-            const start =
-                messageInput.selectionStart;
+            function formatMessageTime(date) {
+                const now =
+                    new Date();
 
-            const end =
-                messageInput.selectionEnd;
+                const today =
+                    new Date(
+                        now.getFullYear(),
+                        now.getMonth(),
+                        now.getDate());
 
-            const value =
-                messageInput.value;
+                const messageDay =
+                    new Date(
+                        date.getFullYear(),
+                        date.getMonth(),
+                        date.getDate());
 
-            if (start !== end) {
+                const diffDays =
+                    Math.floor(
+                        (today - messageDay) /
+                        86400000);
+
+                const timeText =
+                    date.toLocaleTimeString(
+                        [],
+                        {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        });
+
+                if (diffDays === 0) {
+                    return "Today " + timeText;
+                }
+
+                if (diffDays === 1) {
+                    return "Yesterday " + timeText;
+                }
+
+                return date.toLocaleDateString(
+                    [],
+                    {
+                        day: "2-digit",
+                        month: "short"
+                    }) +
+                    " " +
+                    timeText;
+            }
+
+            function updateMessageTimes() {
+                const timeElements =
+                    document.querySelectorAll(
+                        ".message-time");
+
+                timeElements.forEach(
+                    function(element) {
+                        const utcValue =
+                            element.getAttribute(
+                                "data-utc");
+
+                        if (!utcValue) {
+                            return;
+                        }
+
+                        const date =
+                            new Date(utcValue);
+
+                        if (isNaN(date.getTime())) {
+                            return;
+                        }
+
+                        element.innerText =
+                            formatMessageTime(date);
+                    });
+            }
+
+            function resizeMessageInput() {
+                if (!messageInput) {
+                    return;
+                }
+
+                messageInput.style.height =
+                    "40px";
+
+                messageInput.style.height =
+                    Math.min(
+                        messageInput.scrollHeight,
+                        98) +
+                    "px";
+            }
+
+            function updateSmartSuggestions() {
+                if (!messageInput ||
+                    suggestionChips.length === 0) {
+                    return;
+                }
+
+                const text =
+                    messageInput.value
+                        .trim()
+                        .toLowerCase();
+
+                const words =
+                    text.split(/\s+/);
+
+                const lastWord =
+                    words[words.length - 1] || "";
+
+                let results = [];
+
+                if (lastWord.length === 0) {
+                    results = activeBank.defaults;
+                }
+                else {
+                    results =
+                        smartSuggestions
+                            .filter(item =>
+                                item
+                                    .toLowerCase()
+                                    .startsWith(lastWord))
+                            .slice(0, 3);
+                }
+
+                if (results.length === 0 &&
+                    text.length > 0) {
+
+                    results =
+                        smartSuggestions
+                            .filter(item =>
+                                item
+                                    .toLowerCase()
+                                    .includes(lastWord))
+                            .slice(0, 3);
+                }
+
+                if (results.length === 0) {
+                    results = [
+                        "okay",
+                        "thanks",
+                        "please"
+                    ];
+                }
+
+                suggestionChips.forEach(
+                    function(chip, index) {
+                        const value =
+                            results[index] || "";
+
+                        if (value) {
+                            chip.innerText =
+                                value;
+
+                            chip.setAttribute(
+                                "data-suggestion",
+                                value);
+
+                            chip.style.visibility =
+                                "visible";
+                        }
+                        else {
+                            chip.innerText = "";
+
+                            chip.setAttribute(
+                                "data-suggestion",
+                                "");
+
+                            chip.style.visibility =
+                                "hidden";
+                        }
+                    });
+            }
+
+            function insertIntoMessage(text) {
+                if (!messageInput || !text) {
+                    return;
+                }
+
+                const start =
+                    messageInput.selectionStart;
+
+                const end =
+                    messageInput.selectionEnd;
+
+                const value =
+                    messageInput.value;
+
                 messageInput.value =
                     value.substring(0, start) +
+                    text +
                     value.substring(end);
 
-                messageInput.setSelectionRange(
-                    start,
-                    start);
-            }
-            else if (start > 0) {
-                messageInput.value =
-                    value.substring(0, start - 1) +
-                    value.substring(start);
+                const newPosition =
+                    start + text.length;
+
+                messageInput.focus();
 
                 messageInput.setSelectionRange(
-                    start - 1,
-                    start - 1);
+                    newPosition,
+                    newPosition);
+
+                resizeMessageInput();
+                updateSmartSuggestions();
             }
 
-            messageInput.focus();
-            resizeMessageInput();
-            updateSmartSuggestions();
-        }
+            suggestionChips.forEach(
+                function(chip) {
+                    chip.addEventListener(
+                        "click",
+                        function() {
+                            const suggestion =
+                                chip.getAttribute(
+                                    "data-suggestion");
 
-        function setLetterKeyboard() {
-            numbersMode = false;
+                            if (!suggestion ||
+                                !messageInput) {
+                                return;
+                            }
 
-            letterKeys.forEach(
-                function (button, index) {
-                    const value =
-                        letterValues[index];
+                            // Populate the suggestion directly into the input
+                            messageInput.value = suggestion;
 
-                    if (value) {
-                        const finalValue =
-                            uppercaseMode
-                                ? value.toUpperCase()
-                                : value;
-
-                        button.setAttribute(
-                            "data-key",
-                            finalValue);
-
-                        button.innerText =
-                            finalValue;
-
-                        button.style.visibility =
-                            "visible";
-                    }
+                            // Send immediately by programmatically clicking the "Send" button
+                            if (chatForm) {
+                                const sendButton = chatForm.querySelector('button[type="submit"]') || chatForm.querySelector('.send');
+                                if (sendButton) {
+                                    sendButton.click();
+                                } else {
+                                    chatForm.requestSubmit();
+                                }
+                            }
+                        });
                 });
 
-            if (numbersKey) {
-                numbersKey.innerText =
-                    "123";
+            function backspaceMessage() {
+                if (!messageInput) {
+                    return;
+                }
+
+                const start =
+                    messageInput.selectionStart;
+
+                const end =
+                    messageInput.selectionEnd;
+
+                const value =
+                    messageInput.value;
+
+                if (start !== end) {
+                    messageInput.value =
+                        value.substring(0, start) +
+                        value.substring(end);
+
+                    messageInput.setSelectionRange(
+                        start,
+                        start);
+                }
+                else if (start > 0) {
+                    messageInput.value =
+                        value.substring(0, start - 1) +
+                        value.substring(start);
+
+                    messageInput.setSelectionRange(
+                        start - 1,
+                        start - 1);
+                }
+
+                messageInput.focus();
+                resizeMessageInput();
+                updateSmartSuggestions();
             }
-        }
 
-        function setNumberKeyboard() {
-            numbersMode = true;
+            function setLetterKeyboard() {
+                numbersMode = false;
 
-            letterKeys.forEach(
-                function (button, index) {
-                    const value =
-                        numberValues[index];
+                letterKeys.forEach(
+                    function(button, index) {
+                        const value =
+                            letterValues[index];
 
-                    if (value) {
-                        button.setAttribute(
-                            "data-key",
-                            value);
+                        if (value) {
+                            const finalValue =
+                                uppercaseMode
+                                    ? value.toUpperCase()
+                                    : value;
 
-                        button.innerText =
-                            value;
+                            button.setAttribute(
+                                "data-key",
+                                finalValue);
 
-                        button.style.visibility =
-                            "visible";
-                    }
-                    else {
-                        button.style.visibility =
-                            "hidden";
-                    }
-                });
+                            button.innerText =
+                                finalValue;
 
-            if (numbersKey) {
-                numbersKey.innerText =
-                    "ABC";
-            }
-        }
-
-        if (keyboardToggleBtn &&
-            iosKeyboard) {
-
-            keyboardToggleBtn.addEventListener(
-                "click",
-                function () {
-                    iosKeyboard.classList.toggle(
-                        "show");
-
-                    keyboardToggleBtn.classList.toggle(
-                        "keyboard-toggle-active");
-
-                    if (messageInput) {
-                        messageInput.focus();
-                    }
-                });
-        }
-
-        keyButtons.forEach(
-            function (button) {
-                button.addEventListener(
-                    "click",
-                    function () {
-                        const key =
-                            button.getAttribute(
-                                "data-key");
-
-                        insertIntoMessage(key);
+                            button.style.visibility =
+                                "visible";
+                        }
                     });
-            });
 
-        if (backspaceKey) {
-            backspaceKey.addEventListener(
-                "click",
-                backspaceMessage);
-        }
+                if (numbersKey) {
+                    numbersKey.innerText =
+                        "123";
+                }
+            }
 
-        if (spaceKey) {
-            spaceKey.addEventListener(
-                "click",
-                function () {
-                    insertIntoMessage(" ");
-                });
-        }
+            function setNumberKeyboard() {
+                numbersMode = true;
 
-        if (returnKey) {
-            returnKey.addEventListener(
-                "click",
-                function () {
-                    insertIntoMessage("\n");
-                });
-        }
+                letterKeys.forEach(
+                    function(button, index) {
+                        const value =
+                            numberValues[index];
 
-        if (shiftKey) {
-            shiftKey.addEventListener(
-                "click",
-                function () {
-                    uppercaseMode =
-                        !uppercaseMode;
+                        if (value) {
+                            button.setAttribute(
+                                "data-key",
+                                value);
 
-                    shiftKey.classList.toggle(
-                        "keyboard-toggle-active");
+                            button.innerText =
+                                value;
 
-                    if (!numbersMode) {
-                        setLetterKeyboard();
-                    }
-                });
-        }
+                            button.style.visibility =
+                                "visible";
+                        }
+                        else {
+                            button.style.visibility =
+                                "hidden";
+                        }
+                    });
 
-        if (numbersKey) {
-            numbersKey.addEventListener(
-                "click",
-                function () {
-                    if (numbersMode) {
-                        setLetterKeyboard();
-                    }
-                    else {
-                        setNumberKeyboard();
-                    }
+                if (numbersKey) {
+                    numbersKey.innerText =
+                        "ABC";
+                }
+            }
 
-                    if (emojiPanel) {
-                        emojiPanel.classList.remove(
+            if (keyboardToggleBtn &&
+                iosKeyboard) {
+
+                keyboardToggleBtn.addEventListener(
+                    "click",
+                    function() {
+                        iosKeyboard.classList.toggle(
                             "show");
-                    }
-                });
-        }
 
-        if (emojiKey &&
-            emojiPanel) {
+                        keyboardToggleBtn.classList.toggle(
+                            "keyboard-toggle-active");
 
-            emojiKey.addEventListener(
-                "click",
-                function () {
-                    emojiPanel.classList.toggle(
-                        "show");
-
-                    if (messageInput) {
-                        messageInput.focus();
-                    }
-                });
-        }
-
-        emojiButtons.forEach(
-            function (button) {
-                button.addEventListener(
-                    "click",
-                    function () {
-                        const emoji =
-                            button.getAttribute(
-                                "data-emoji");
-
-                        if (emoji) {
-                            insertIntoMessage(
-                                emoji);
+                        if (messageInput) {
+                            messageInput.focus();
                         }
                     });
-            });
-
-        function showAttachPreview(text) {
-            if (attachPreview &&
-                previewText) {
-
-                attachPreview.style.display =
-                    "block";
-
-                previewText.innerText =
-                    text;
-            }
-        }
-
-        function hideAttachPreview() {
-            if (attachPreview &&
-                previewText) {
-
-                attachPreview.style.display =
-                    "none";
-
-                previewText.innerText =
-                    "";
-            }
-        }
-
-        function clearAttachment() {
-            if (attachmentFile) {
-                attachmentFile.value =
-                    "";
             }
 
-            hideAttachPreview();
+            keyButtons.forEach(
+                function(button) {
+                    button.addEventListener(
+                        "click",
+                        function() {
+                            const key =
+                                button.getAttribute(
+                                    "data-key");
 
-            if (voicePanel) {
-                voicePanel.style.display =
-                    "none";
-            }
-
-            if (voiceRecordingRow) {
-                voiceRecordingRow.style.display =
-                    "none";
-            }
-
-            if (voiceReadyRow) {
-                voiceReadyRow.style.display =
-                    "none";
-            }
-
-            if (voiceAudio) {
-                voiceAudio.removeAttribute(
-                    "src");
-
-                voiceAudio.load();
-            }
-        }
-
-        if (attachmentFile) {
-            attachmentFile.addEventListener(
-                "change",
-                function () {
-                    if (this.files &&
-                        this.files.length > 0) {
-
-                        if (voicePanel) {
-                            voicePanel.style.display =
-                                "none";
-                        }
-
-                        showAttachPreview(
-                            "Attached: " +
-                            this.files[0].name);
-                    }
+                            insertIntoMessage(key);
+                        });
                 });
-        }
 
-        if (clearAttachmentBtn) {
-            clearAttachmentBtn.addEventListener(
-                "click",
-                clearAttachment);
-        }
-
-        if (removeVoiceBtn) {
-            removeVoiceBtn.addEventListener(
-                "click",
-                clearAttachment);
-        }
-
-        function formatTime(totalSeconds) {
-            const minutes =
-                Math.floor(
-                    totalSeconds / 60)
-                    .toString()
-                    .padStart(2, "0");
-
-            const sec =
-                (totalSeconds % 60)
-                    .toString()
-                    .padStart(2, "0");
-
-            return minutes +
-                ":" +
-                sec;
-        }
-
-        function startTimer() {
-            seconds = 0;
-
-            if (recordTimer) {
-                recordTimer.innerText =
-                    "00:00";
+            if (backspaceKey) {
+                backspaceKey.addEventListener(
+                    "click",
+                    backspaceMessage);
             }
 
-            timerInterval =
-                setInterval(
-                    function () {
-                        seconds++;
+            if (spaceKey) {
+                spaceKey.addEventListener(
+                    "click",
+                    function() {
+                        insertIntoMessage(" ");
+                    });
+            }
 
-                        if (recordTimer) {
-                            recordTimer.innerText =
-                                formatTime(seconds);
+            if (returnKey) {
+                returnKey.addEventListener(
+                    "click",
+                    function() {
+                        insertIntoMessage("\n");
+                    });
+            }
+
+            if (shiftKey) {
+                shiftKey.addEventListener(
+                    "click",
+                    function() {
+                        uppercaseMode =
+                            !uppercaseMode;
+
+                        shiftKey.classList.toggle(
+                            "keyboard-toggle-active");
+
+                        if (!numbersMode) {
+                            setLetterKeyboard();
                         }
-                    },
-                    1000);
-        }
-
-        function stopTimer() {
-            clearInterval(
-                timerInterval);
-        }
-
-        function stopMicrophone() {
-            if (currentStream) {
-                currentStream
-                    .getTracks()
-                    .forEach(
-                        track =>
-                            track.stop());
-
-                currentStream =
-                    null;
-            }
-        }
-
-        function setRecordButtonNormal() {
-            if (!recordBtn) {
-                return;
+                    });
             }
 
-            recordBtn.innerHTML =
-                '🎤';
+            if (numbersKey) {
+                numbersKey.addEventListener(
+                    "click",
+                    function() {
+                        if (numbersMode) {
+                            setLetterKeyboard();
+                        }
+                        else {
+                            setNumberKeyboard();
+                        }
 
-            recordBtn.classList.remove(
-                "recording-btn");
-
-            recordBtn.style.background = "";
-        }
-
-        function setRecordButtonRecording() {
-            if (!recordBtn) {
-                return;
+                        if (emojiPanel) {
+                            emojiPanel.classList.remove(
+                                "show");
+                        }
+                    });
             }
 
-            recordBtn.innerHTML =
-                '⏹';
+            if (emojiKey &&
+                emojiPanel) {
 
-            recordBtn.classList.add(
-                "recording-btn");
+                emojiKey.addEventListener(
+                    "click",
+                    function() {
+                        emojiPanel.classList.toggle(
+                            "show");
 
-            recordBtn.style.background = "";
-        }
+                        if (messageInput) {
+                            messageInput.focus();
+                        }
+                    });
+            }
 
-        if (recordBtn) {
-            recordBtn.addEventListener(
-                "click",
-                async function () {
-                    if (!isRecording) {
-                        try {
-                            clearAttachment();
+            emojiButtons.forEach(
+                function(button) {
+                    button.addEventListener(
+                        "click",
+                        function() {
+                            const emoji =
+                                button.getAttribute(
+                                    "data-emoji");
 
-                            cancelVoice =
-                                false;
+                            if (emoji) {
+                                insertIntoMessage(
+                                    emoji);
+                            }
+                        });
+                });
 
-                            currentStream =
-                                await navigator
-                                    .mediaDevices
-                                    .getUserMedia({
-                                        audio: true
-                                    });
+            function showAttachPreview(text) {
+                if (attachPreview &&
+                    previewText) {
 
-                            mediaRecorder =
-                                new MediaRecorder(
-                                    currentStream);
+                    attachPreview.style.display =
+                        "block";
 
-                            audioChunks = [];
+                    previewText.innerText =
+                        text;
+                }
+            }
 
-                            mediaRecorder.ondataavailable =
-                                function (event) {
-                                    if (event.data &&
-                                        event.data.size > 0) {
+            function hideAttachPreview() {
+                if (attachPreview &&
+                    previewText) {
 
-                                        audioChunks.push(
-                                            event.data);
-                                    }
-                                };
+                    attachPreview.style.display =
+                        "none";
 
-                            mediaRecorder.onstop =
-                                function () {
-                                    stopTimer();
-                                    stopMicrophone();
-                                    setRecordButtonNormal();
+                    previewText.innerText =
+                        "";
+                }
+            }
 
-                                    isRecording =
-                                        false;
+            function clearAttachment() {
+                if (attachmentFile) {
+                    attachmentFile.value =
+                        "";
+                }
 
-                                    if (cancelVoice) {
-                                        clearAttachment();
-                                        return;
-                                    }
+                hideAttachPreview();
 
-                                    if (!audioChunks ||
-                                        audioChunks.length === 0) {
+                if (voicePanel) {
+                    voicePanel.style.display =
+                        "none";
+                }
 
-                                        clearAttachment();
-                                        return;
-                                    }
+                if (voiceRecordingRow) {
+                    voiceRecordingRow.style.display =
+                        "none";
+                }
 
-                                    const audioBlob =
-                                        new Blob(
-                                            audioChunks,
-                                            {
-                                                type:
-                                                    "audio/webm"
-                                            });
+                if (voiceReadyRow) {
+                    voiceReadyRow.style.display =
+                        "none";
+                }
 
-                                    const audioFile =
-                                        new File(
-                                            [audioBlob],
-                                            "voice-message.webm",
-                                            {
-                                                type:
-                                                    "audio/webm"
-                                            });
+                if (voiceAudio) {
+                    voiceAudio.removeAttribute(
+                        "src");
 
-                                    const dataTransfer =
-                                        new DataTransfer();
+                    voiceAudio.load();
+                }
+            }
 
-                                    dataTransfer.items.add(
-                                        audioFile);
-
-                                    if (attachmentFile) {
-                                        attachmentFile.files =
-                                            dataTransfer.files;
-                                    }
-
-                                    const audioUrl =
-                                        URL.createObjectURL(
-                                            audioBlob);
-
-                                    if (voiceAudio) {
-                                        voiceAudio.src =
-                                            audioUrl;
-
-                                        voiceAudio.load();
-                                    }
-
-                                    if (voicePanel) {
-                                        voicePanel.style.display =
-                                            "block";
-                                    }
-
-                                    if (voiceRecordingRow) {
-                                        voiceRecordingRow.style.display =
-                                            "none";
-                                    }
-
-                                    if (voiceReadyRow) {
-                                        voiceReadyRow.style.display =
-                                            "flex";
-                                    }
-
-                                    showAttachPreview(
-                                        "Voice ready: " +
-                                        formatTime(seconds) +
-                                        " — press Send.");
-                                };
-
-                            mediaRecorder.start();
-
-                            isRecording =
-                                true;
+            if (attachmentFile) {
+                attachmentFile.addEventListener(
+                    "change",
+                    function() {
+                        if (this.files &&
+                            this.files.length > 0) {
 
                             if (voicePanel) {
                                 voicePanel.style.display =
-                                    "block";
-                            }
-
-                            if (voiceRecordingRow) {
-                                voiceRecordingRow.style.display =
-                                    "flex";
-                            }
-
-                            if (voiceReadyRow) {
-                                voiceReadyRow.style.display =
                                     "none";
                             }
 
-                            setRecordButtonRecording();
-                            startTimer();
+                            showAttachPreview(
+                                "Attached: " +
+                                this.files[0].name);
                         }
-                        catch (error) {
-                            console.error(
-                                "Microphone access failed:",
-                                error);
+                    });
+            }
 
-                            showChatToast(
-                                "Please allow microphone access in your browser settings, then try again.",
-                                "error",
-                                "Microphone permission required");
+            if (clearAttachmentBtn) {
+                clearAttachmentBtn.addEventListener(
+                    "click",
+                    clearAttachment);
+            }
+
+            if (removeVoiceBtn) {
+                removeVoiceBtn.addEventListener(
+                    "click",
+                    clearAttachment);
+            }
+
+            function formatTime(totalSeconds) {
+                const minutes =
+                    Math.floor(
+                        totalSeconds / 60)
+                        .toString()
+                        .padStart(2, "0");
+
+                const sec =
+                    (totalSeconds % 60)
+                        .toString()
+                        .padStart(2, "0");
+
+                return minutes +
+                    ":" +
+                    sec;
+            }
+
+            function startTimer() {
+                seconds = 0;
+
+                if (recordTimer) {
+                    recordTimer.innerText =
+                        "00:00";
+                }
+
+                timerInterval =
+                    setInterval(
+                        function() {
+                            seconds++;
+
+                            if (recordTimer) {
+                                recordTimer.innerText =
+                                    formatTime(seconds);
+                            }
+                        },
+                        1000);
+            }
+
+            function stopTimer() {
+                clearInterval(
+                    timerInterval);
+            }
+
+            function stopMicrophone() {
+                if (currentStream) {
+                    currentStream
+                        .getTracks()
+                        .forEach(
+                            track =>
+                                track.stop());
+
+                    currentStream =
+                        null;
+                }
+            }
+
+            function setRecordButtonNormal() {
+                if (!recordBtn) {
+                    return;
+                }
+
+                recordBtn.innerHTML =
+                    '🎤';
+
+                recordBtn.classList.remove(
+                    "recording-btn");
+
+                recordBtn.style.background = "";
+            }
+
+            function setRecordButtonRecording() {
+                if (!recordBtn) {
+                    return;
+                }
+
+                recordBtn.innerHTML =
+                    '⏹';
+
+                recordBtn.classList.add(
+                    "recording-btn");
+
+                recordBtn.style.background = "";
+            }
+
+            if (recordBtn) {
+                recordBtn.addEventListener(
+                    "click",
+                    async function() {
+                        if (!isRecording) {
+                            try {
+                                clearAttachment();
+
+                                cancelVoice =
+                                    false;
+
+                                currentStream =
+                                    await navigator
+                                        .mediaDevices
+                                        .getUserMedia({
+                                            audio: true
+                                        });
+
+                                mediaRecorder =
+                                    new MediaRecorder(
+                                        currentStream);
+
+                                audioChunks = [];
+
+                                mediaRecorder.ondataavailable =
+                                    function(event) {
+                                        if (event.data &&
+                                            event.data.size > 0) {
+
+                                            audioChunks.push(
+                                                event.data);
+                                        }
+                                    };
+
+                                mediaRecorder.onstop =
+                                    function() {
+                                        stopTimer();
+                                        stopMicrophone();
+                                        setRecordButtonNormal();
+
+                                        isRecording =
+                                            false;
+
+                                        if (cancelVoice) {
+                                            clearAttachment();
+                                            return;
+                                        }
+
+                                        if (!audioChunks ||
+                                            audioChunks.length === 0) {
+
+                                            clearAttachment();
+                                            return;
+                                        }
+
+                                        const audioBlob =
+                                            new Blob(
+                                                audioChunks,
+                                                {
+                                                    type:
+                                                        "audio/webm"
+                                                });
+
+                                        const audioFile =
+                                            new File(
+                                                [audioBlob],
+                                                "voice-message.webm",
+                                                {
+                                                    type:
+                                                        "audio/webm"
+                                                });
+
+                                        const dataTransfer =
+                                            new DataTransfer();
+
+                                        dataTransfer.items.add(
+                                            audioFile);
+
+                                        if (attachmentFile) {
+                                            attachmentFile.files =
+                                                dataTransfer.files;
+                                        }
+
+                                        const audioUrl =
+                                            URL.createObjectURL(
+                                                audioBlob);
+
+                                        if (voiceAudio) {
+                                            voiceAudio.src =
+                                                audioUrl;
+
+                                            voiceAudio.load();
+                                        }
+
+                                        if (voicePanel) {
+                                            voicePanel.style.display =
+                                                "block";
+                                        }
+
+                                        if (voiceRecordingRow) {
+                                            voiceRecordingRow.style.display =
+                                                "none";
+                                        }
+
+                                        if (voiceReadyRow) {
+                                            voiceReadyRow.style.display =
+                                                "flex";
+                                        }
+
+                                        showAttachPreview(
+                                            "Voice ready: " +
+                                            formatTime(seconds) +
+                                            " — press Send.");
+                                    };
+
+                                mediaRecorder.start();
+
+                                isRecording =
+                                    true;
+
+                                if (voicePanel) {
+                                    voicePanel.style.display =
+                                        "block";
+                                }
+
+                                if (voiceRecordingRow) {
+                                    voiceRecordingRow.style.display =
+                                        "flex";
+                                }
+
+                                if (voiceReadyRow) {
+                                    voiceReadyRow.style.display =
+                                        "none";
+                                }
+
+                                setRecordButtonRecording();
+                                startTimer();
+                            }
+                            catch (error) {
+                                console.error(
+                                    "Microphone access failed:",
+                                    error);
+
+                                showChatToast(
+                                    "Please allow microphone access in your browser settings, then try again.",
+                                    "error",
+                                    "Microphone permission required");
+                            }
                         }
-                    }
-                    else {
+                        else {
+                            cancelVoice =
+                                false;
+
+                            if (mediaRecorder &&
+                                mediaRecorder.state !==
+                                "inactive") {
+
+                                mediaRecorder.stop();
+                            }
+                        }
+                    });
+            }
+
+            if (cancelVoiceBtn) {
+                cancelVoiceBtn.addEventListener(
+                    "click",
+                    function() {
                         cancelVoice =
-                            false;
+                            true;
 
                         if (mediaRecorder &&
                             mediaRecorder.state !==
-                                "inactive") {
+                            "inactive") {
 
                             mediaRecorder.stop();
                         }
-                    }
-                });
-        }
+                        else {
+                            clearAttachment();
+                            stopTimer();
+                            stopMicrophone();
+                            setRecordButtonNormal();
 
-        if (cancelVoiceBtn) {
-            cancelVoiceBtn.addEventListener(
-                "click",
-                function () {
-                    cancelVoice =
-                        true;
+                            isRecording =
+                                false;
+                        }
+                    });
+            }
 
-                    if (mediaRecorder &&
-                        mediaRecorder.state !==
-                            "inactive") {
+            if (chatForm) {
+                chatForm.addEventListener(
+                    "submit",
+                    function(event) {
+                        if (isRecording) {
+                            event.preventDefault();
 
-                        mediaRecorder.stop();
-                    }
-                    else {
-                        clearAttachment();
-                        stopTimer();
-                        stopMicrophone();
-                        setRecordButtonNormal();
+                            showChatToast(
+                                "Stop the voice recording first, then press Send.",
+                                "warning",
+                                "Recording is still active");
 
-                        isRecording =
-                            false;
-                    }
-                });
-        }
+                            return;
+                        }
 
-        if (chatForm) {
-            chatForm.addEventListener(
-                "submit",
-                function (event) {
-                    if (isRecording) {
-                        event.preventDefault();
+                        const hasText =
+                            messageInput &&
+                            messageInput.value &&
+                            messageInput.value
+                                .trim()
+                                .length > 0;
 
-                        showChatToast(
-                            "Stop the voice recording first, then press Send.",
-                            "warning",
-                            "Recording is still active");
+                        const hasFile =
+                            attachmentFile &&
+                            attachmentFile.files &&
+                            attachmentFile.files.length > 0;
 
-                        return;
-                    }
+                        if (!hasText &&
+                            !hasFile) {
 
-                    const hasText =
-                        messageInput &&
-                        messageInput.value &&
-                        messageInput.value
-                            .trim()
-                            .length > 0;
+                            event.preventDefault();
+                            return;
+                        }
+                    });
+            }
 
-                    const hasFile =
-                        attachmentFile &&
-                        attachmentFile.files &&
-                        attachmentFile.files.length > 0;
-
-                    if (!hasText &&
-                        !hasFile) {
-
-                        event.preventDefault();
-                        return;
-                    }
-                });
-        }
-
-        updateMessageTimes();
-        updateSmartSuggestions();
+            updateMessageTimes();
+            updateSmartSuggestions();
     </script>
 </body>
 </html>
