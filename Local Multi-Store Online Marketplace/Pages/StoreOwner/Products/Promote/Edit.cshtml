@@ -1,0 +1,541 @@
+﻿@page "{id:int}"
+@model Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.Promote.EditModel
+
+@{
+    ViewData["Title"] = "Edit Post";
+    Layout = "/Pages/StoreOwner/Shared/_StoreOwnerLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            --bg-color: #f8f7fc;
+            --card-bg: #ffffff;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            --text-muted: #9691a4;
+            --border-color: #ece8f6;
+            --error-color: #dc2626;
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+        }
+
+        .edit-post-page {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .edit-post-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            text-decoration: none;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+            .back-link:hover {
+                color: var(--accent-color);
+                border-color: var(--accent-color);
+            }
+
+        .edit-post-header h1 {
+            margin: 0 0 2px;
+            color: var(--text-primary);
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .edit-post-header p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 13.5px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 14px 17px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .message-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .edit-post-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .media-preview-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .media-preview-stage {
+            position: relative;
+            height: 340px;
+            background: #000;
+        }
+
+            .media-preview-stage img,
+            .media-preview-stage video {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                background: #000;
+            }
+
+        .media-preview-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 2;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(30, 27, 46, 0.82);
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .media-preview-strip {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            overflow-x: auto;
+        }
+
+            .media-preview-strip img {
+                width: 56px;
+                height: 56px;
+                border-radius: 10px;
+                object-fit: cover;
+                border: 2px solid transparent;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+
+                .media-preview-strip img.active {
+                    border-color: var(--accent-color);
+                }
+
+        .media-preview-note {
+            padding: 0 14px 14px;
+            color: var(--text-muted);
+            font-size: 11.5px;
+            line-height: 1.5;
+        }
+
+        .edit-form-card {
+            padding: 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 8px;
+                color: var(--text-primary);
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            .form-group textarea,
+            .form-group select {
+                width: 100%;
+                padding: 12px 14px;
+                border: 1.5px solid var(--border-color);
+                border-radius: 12px;
+                background: var(--bg-color);
+                color: var(--text-primary);
+                font: inherit;
+                font-size: 14px;
+                transition: all 0.2s ease;
+            }
+
+            .form-group textarea {
+                min-height: 110px;
+                resize: vertical;
+            }
+
+                .form-group textarea:focus,
+                .form-group select:focus {
+                    outline: none;
+                    border-color: var(--accent-color);
+                    background: var(--card-bg);
+                    box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.10);
+                }
+
+        .char-count {
+            margin-top: 6px;
+            text-align: right;
+            color: var(--text-muted);
+            font-size: 11.5px;
+        }
+
+        .field-error {
+            margin-top: 6px;
+            color: var(--error-color);
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 14px;
+            margin-bottom: 14px;
+        }
+
+        .toggle-row-label strong {
+            display: block;
+            color: var(--text-primary);
+            font-size: 13.5px;
+            font-weight: 700;
+        }
+
+        .toggle-row-label span {
+            display: block;
+            margin-top: 2px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+        .switch-track {
+            position: absolute;
+            inset: 0;
+            background: #ded8eb;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+            .switch-track::before {
+                content: "";
+                position: absolute;
+                left: 3px;
+                top: 3px;
+                width: 20px;
+                height: 20px;
+                background: white;
+                border-radius: 50%;
+                transition: transform 0.2s ease;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            }
+
+        .switch input:checked + .switch-track {
+            background: var(--accent-gradient);
+        }
+
+            .switch input:checked + .switch-track::before {
+                transform: translateX(18px);
+            }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-cancel {
+            min-height: 46px;
+            padding: 0 22px;
+            border-radius: 30px;
+            border: 1.5px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+            .btn-cancel:hover {
+                border-color: var(--accent-color);
+                color: var(--accent-color);
+            }
+
+        .btn-save {
+            min-height: 46px;
+            padding: 0 26px;
+            border: none;
+            border-radius: 30px;
+            background: var(--accent-gradient);
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            box-shadow: 0 10px 24px rgba(109, 40, 217, 0.25);
+            transition: all 0.25s ease;
+        }
+
+            .btn-save:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 30px rgba(109, 40, 217, 0.32);
+            }
+
+        @@media (max-width: 800px) {
+            .edit-post-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .btn-cancel,
+            .btn-save {
+                width: 100%;
+            }
+        }
+    </style>
+}
+
+<div class="edit-post-page">
+
+    <partial name="_ProductsNav" model="@("Promote")" />
+
+    <div class="edit-post-header">
+        <a asp-page="/StoreOwner/Products/Promote/Index" class="back-link" aria-label="Back to Promote">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+
+        <div>
+            <h1>Edit Post</h1>
+            <p>Update the caption, linked product, and visibility for this post.</p>
+        </div>
+    </div>
+
+    @if (!ModelState.IsValid)
+    {
+        <div class="message message-error">
+            <i class="fas fa-circle-exclamation"></i>
+            Please fix the highlighted field below and try again.
+        </div>
+    }
+
+    <form method="post">
+        <input type="hidden" asp-for="ExplorePostID" />
+
+        <div class="edit-post-layout">
+
+            <div class="media-preview-card">
+                <div class="media-preview-stage">
+                    <span class="media-preview-badge">
+                        @if (Model.PostType == "Reel")
+                        {
+                            <i class="fas fa-video"></i>
+                        }
+                        else if (Model.PostType == "Carousel")
+                        {
+                            <i class="fas fa-images"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-image"></i>
+                        }
+                        @Model.PostType
+                    </span>
+
+                    @{
+                        var mainMedia = Model.Media.FirstOrDefault();
+                    }
+
+                    @if (mainMedia != null)
+                    {
+                        @if (mainMedia.MediaType == "Video")
+                        {
+                            <video id="editMediaStage" controls muted playsinline
+                                   poster="@mainMedia.ThumbnailUrl">
+                                <source src="@mainMedia.MediaUrl" />
+                            </video>
+                        }
+                        else
+                        {
+                            <img id="editMediaStage"
+                                 src="@mainMedia.MediaUrl"
+                                 alt="Post media"
+                                 onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                        }
+                    }
+                </div>
+
+                @if (Model.Media.Count > 1)
+                {
+                    <div class="media-preview-strip">
+                        @foreach (var (media, index) in Model.Media.Select((m, i) => (m, i)))
+                        {
+                            <img src="@(media.MediaType == "Video" ? media.ThumbnailUrl : media.MediaUrl)"
+                                 data-full-url="@media.MediaUrl"
+                                 data-media-type="@media.MediaType"
+                                 data-thumbnail="@media.ThumbnailUrl"
+                                 class="strip-thumb @(index == 0 ? "active" : "")"
+                                 onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                        }
+                    </div>
+                }
+
+                <p class="media-preview-note">
+                    <i class="fas fa-circle-info"></i>
+                    Media can't be swapped after a post is created — delete
+                    this post and create a new one if you need different
+                    photos or video.
+                </p>
+            </div>
+
+            <div class="edit-form-card">
+
+                <div class="form-group">
+                    <label asp-for="Input.Caption">Caption</label>
+
+                    <textarea asp-for="Input.Caption"
+                              maxlength="2200"
+                              placeholder="Write a caption for this post..."
+                              oninput="document.getElementById('captionCharCount').textContent = this.value.length;"></textarea>
+
+                    <div class="char-count">
+                        <span id="captionCharCount">@(Model.Input.Caption?.Length ?? 0)</span>/2200
+                    </div>
+
+                    <span asp-validation-for="Input.Caption" class="field-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Input.ProductID">Linked product</label>
+
+                    <select asp-for="Input.ProductID" asp-items="Model.ProductOptions">
+                        <option value="">No product linked</option>
+                    </select>
+
+                    <span asp-validation-for="Input.ProductID" class="field-error"></span>
+                </div>
+
+                <div class="toggle-row">
+                    <div class="toggle-row-label">
+                        <strong>Active</strong>
+                        <span>Visible to customers in Explore.</span>
+                    </div>
+
+                    <label class="switch">
+                        <input type="checkbox" asp-for="Input.IsActive" />
+                        <span class="switch-track"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div class="toggle-row-label">
+                        <strong>Featured</strong>
+                        <span>Highlighted with a "Featured" badge in Explore.</span>
+                    </div>
+
+                    <label class="switch">
+                        <input type="checkbox" asp-for="Input.IsFeatured" />
+                        <span class="switch-track"></span>
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <a asp-page="/StoreOwner/Products/Promote/Index" class="btn-cancel">
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-check"></i>
+                        Save changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // Clicking a thumbnail in the strip swaps the main preview stage —
+        // preview-only, doesn't change what actually gets saved.
+        (function () {
+            document.querySelectorAll('.strip-thumb').forEach(function (thumb) {
+                thumb.addEventListener('click', function () {
+                    document.querySelectorAll('.strip-thumb').forEach(function (t) {
+                        t.classList.remove('active');
+                    });
+                    thumb.classList.add('active');
+
+                    var stage = document.getElementById('editMediaStage');
+                    if (!stage) return;
+
+                    var fullUrl = thumb.getAttribute('data-full-url');
+                    var mediaType = thumb.getAttribute('data-media-type');
+
+                    if (mediaType === 'Video' && stage.tagName === 'VIDEO') {
+                        stage.querySelector('source').setAttribute('src', fullUrl);
+                        stage.load();
+                    } else if (mediaType !== 'Video' && stage.tagName === 'IMG') {
+                        stage.setAttribute('src', fullUrl);
+                    }
+                });
+            });
+        })();
+    </script>
+}

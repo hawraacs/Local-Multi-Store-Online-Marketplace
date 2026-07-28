@@ -7,24 +7,15 @@ using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
 using Multi_Store.Infrastructure.Data;
 using System.ComponentModel.DataAnnotations;
+using Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.Shared;
 
-namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
+namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.Promote
 {
     [Authorize(Roles = "StoreOwner")]
     public class CreateModel : PageModel
     {
         private const long MaxImageSize = 8 * 1024 * 1024;   // 8 MB
         private const long MaxVideoSize = 25 * 1024 * 1024;  // 25 MB
-
-        private static readonly string[] AllowedImageExtensions =
-        {
-            ".jpg", ".jpeg", ".png", ".webp"
-        };
-
-        private static readonly string[] AllowedVideoExtensions =
-        {
-            ".mp4", ".webm"
-        };
 
         private readonly ApplicationDbContext _context;
         private readonly ICurrentStoreService _currentStoreService;
@@ -97,7 +88,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
 
             ValidatePostType();
             await ValidateProductAsync(store.StoreID);
-            ValidateMedia(mediaFiles);
+            await ValidateMediaAsync(mediaFiles);
 
             if (!ModelState.IsValid)
             {
@@ -180,7 +171,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
                         ? "Reel published successfully."
                         : "Explore post published successfully.";
 
-                return RedirectToPage("/StoreOwner/Explore/Index");
+                return RedirectToPage("/StoreOwner/Products/Promote/Index");
             }
             catch (Exception)
             {
@@ -239,7 +230,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
             }
         }
 
-        private void ValidateMedia(List<IFormFile> mediaFiles)
+        private async Task ValidateMediaAsync(List<IFormFile> mediaFiles)
         {
             if (!mediaFiles.Any())
             {
@@ -261,7 +252,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
 
                 foreach (var file in mediaFiles)
                 {
-                    ValidateImage(file, "Input.UploadedMedia");
+                    await ValidateImageAsync(file, "Input.UploadedMedia");
                 }
             }
 
@@ -276,7 +267,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
 
                 foreach (var file in mediaFiles)
                 {
-                    ValidateImage(file, "Input.UploadedMedia");
+                    await ValidateImageAsync(file, "Input.UploadedMedia");
                 }
             }
 
@@ -296,66 +287,43 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Explore
                 if (Input.ReelThumbnail != null &&
                     Input.ReelThumbnail.Length > 0)
                 {
-                    ValidateImage(
+                    await ValidateImageAsync(
                         Input.ReelThumbnail,
                         "Input.ReelThumbnail");
                 }
             }
         }
 
-        private void ValidateImage(IFormFile file, string key)
+        /// <summary>
+        /// Extension/MIME/size checks are delegated to the shared
+        /// ProductMediaValidator (see Products/Shared/ProductMediaValidator.cs).
+        /// BUGFIX (carried over from the merge): the original Explore validation
+        /// never checked the file's actual magic bytes, only its extension —
+        /// Products/Create and Products/Edit always did. Post media now gets the
+        /// same signature check, so a renamed non-image can't slip past here
+        /// either.
+        /// </summary>
+        private async Task ValidateImageAsync(IFormFile file, string key)
         {
-            var extension = Path
-                .GetExtension(file.FileName)
-                .ToLowerInvariant();
-
-            if (!AllowedImageExtensions.Contains(extension))
+            var basicError = ProductMediaValidator.ValidateImageBasics(file, MaxImageSize);
+            if (basicError != null)
             {
-                ModelState.AddModelError(
-                    key,
-                    $"{file.FileName}: only JPG, JPEG, PNG, and WEBP images are allowed.");
+                ModelState.AddModelError(key, basicError);
+                return;
             }
 
-            if (file.Length > MaxImageSize)
+            if (!await ProductMediaValidator.HasValidImageSignatureAsync(file))
             {
-                ModelState.AddModelError(
-                    key,
-                    $"{file.FileName}: image size cannot exceed 8 MB.");
-            }
-
-            if (file.Length <= 0)
-            {
-                ModelState.AddModelError(
-                    key,
-                    $"{file.FileName}: the image is empty.");
+                ModelState.AddModelError(key, $"{file.FileName}: doesn't look like a valid image file.");
             }
         }
 
         private void ValidateVideo(IFormFile file, string key)
         {
-            var extension = Path
-                .GetExtension(file.FileName)
-                .ToLowerInvariant();
-
-            if (!AllowedVideoExtensions.Contains(extension))
+            var basicError = ProductMediaValidator.ValidateVideoBasics(file, MaxVideoSize);
+            if (basicError != null)
             {
-                ModelState.AddModelError(
-                    key,
-                    $"{file.FileName}: only MP4 and WEBM videos are allowed.");
-            }
-
-            if (file.Length > MaxVideoSize)
-            {
-                ModelState.AddModelError(
-                    key,
-                    $"{file.FileName}: video size cannot exceed 25 MB.");
-            }
-
-            if (file.Length <= 0)
-            {
-                ModelState.AddModelError(
-                    key,
-                    $"{file.FileName}: the video is empty.");
+                ModelState.AddModelError(key, basicError);
             }
         }
 
