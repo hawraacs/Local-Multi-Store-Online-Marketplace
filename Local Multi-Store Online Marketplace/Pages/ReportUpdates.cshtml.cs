@@ -17,6 +17,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
 
+        private static readonly string[] VisibleNotificationTypes =
+        {
+            "ReportUpdate",
+            "AdminWarning",
+            "OrderUpdate",
+            "PaymentUpdate",
+            "DeliveryRequest",
+            "Promotion",
+            "StoreRequest"
+        };
+
         public ReportUpdatesModel(UserManager<User> userManager, ApplicationDbContext context)
         {
             _userManager = userManager;
@@ -25,7 +36,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public List<Notification> NotificationsList { get; set; } = new();
 
-        // Tells the view which role's chrome/back-link to render
         public bool IsStoreOwner { get; set; }
         public bool IsDeliveryPerson { get; set; }
 
@@ -39,7 +49,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             IsDeliveryPerson = await _userManager.IsInRoleAsync(user, "Delivery");
 
             NotificationsList = await _context.Notifications
-                .Where(n => n.UserID == user.Id && (n.Type == "ReportUpdate" || n.Type == "AdminWarning"))
+                .Where(n => n.UserID == user.Id && VisibleNotificationTypes.Contains(n.Type))
                 .OrderByDescending(n => n.SentAt)
                 .ToListAsync();
 

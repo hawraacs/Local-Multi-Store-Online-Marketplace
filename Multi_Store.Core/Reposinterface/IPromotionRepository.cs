@@ -19,6 +19,7 @@ namespace Multi_Store.Core.Interfaces
         Task MarkAsReadAsync(int promotionRecipientId, int userId);
 
         Task<bool> CouponCodeExistsAsync(string couponCode);
+        Task<List<int>> GetUserIdsByCustomerIdsAsync(List<int> customerIds);
 
         Task AddCouponAsync(Coupon coupon);
     }

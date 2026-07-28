@@ -24,19 +24,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly DeliveryManager _deliveryManager;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<AdminDeliveryModel> _logger;
+        private readonly NotificationManager _notifications;
 
         public AdminDeliveryModel(
         ApplicationDbContext context,
         UserManager<User> userManager,
         DeliveryManager deliveryManager,
         IEmailSender emailSender,
-        ILogger<AdminDeliveryModel> logger)
+        ILogger<AdminDeliveryModel> logger,
+        NotificationManager notifications)
         {
             _context = context;
             _userManager = userManager;
             _deliveryManager = deliveryManager;
             _emailSender = emailSender;
             _logger = logger;
+            _notifications = notifications;
         }
 
         public List<AdminDeliveryViewModel> Deliveries { get; set; }
@@ -59,8 +62,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             try
             {
-                // Load the request before DeliveryManager replaces
-                // UserID with the generated Delivery account ID.
                 var deliveryRequest =
                     await _context.DeliveryPersons
                         .AsNoTracking()
@@ -89,9 +90,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     return RedirectToPage();
                 }
 
-                // RequestedByUserID permanently points to
-                // the original Customer account.
-                // UserID is a fallback for older pending requests.
                 var originalCustomerUserId =
                     deliveryRequest.RequestedByUserID
                     ?? deliveryRequest.UserID;
@@ -117,9 +115,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     return RedirectToPage();
                 }
 
-                // Creates the separate Delivery account:
-                // deliveryX@gmail.com
-                // Delivery@12345
                 var result =
                     await _deliveryManager
                         .ApproveDeliveryPersonAsync(id);
@@ -145,6 +140,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 var safeDeliveryPassword =
                     WebUtility.HtmlEncode(
                         result.password);
+
+                // In-app notification — fires regardless of email outcome below.
+                await _notifications.SendAsync(
+                    userId: originalCustomer.Id,
+                    title: "Your delivery staff request has been approved!",
+                    message: $"Your request for \"{safeDeliveryName}\" was approved. Check your email for the Delivery login details.",
+                    type: "DeliveryRequest",
+                    referenceId: id);
 
                 var emailBody = $@"
 <div style='background:#f3f4f6;padding:30px;
@@ -275,8 +278,30 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             try
             {
+                var deliveryRequest =
+                    await _context.DeliveryPersons
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(d =>
+                            d.DeliveryPersonID == id);
+
                 await _deliveryManager
                     .RejectDeliveryPersonAsync(id, reason);
+
+                if (deliveryRequest != null)
+                {
+                    var requesterId =
+                        deliveryRequest.RequestedByUserID
+                        ?? deliveryRequest.UserID;
+
+                    await _notifications.SendAsync(
+                        userId: requesterId,
+                        title: "Your delivery staff request was rejected",
+                        message: string.IsNullOrWhiteSpace(reason)
+                            ? "Your delivery request was not approved. Contact support for more details."
+                            : $"Your delivery request was not approved: {reason}",
+                        type: "DeliveryRequest",
+                        referenceId: id);
+                }
 
                 TempData["Success"] =
                     "Delivery request rejected successfully.";
@@ -467,4 +492,3 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public User? RequestedByUser { get; set; }
     }
 }
-

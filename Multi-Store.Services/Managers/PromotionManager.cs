@@ -1,16 +1,21 @@
 ﻿using Multi_Store.Core.DTOs;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
+using Multi_Store.Services.Managers;
 
 namespace Multi_Store.Core.Managers
 {
     public class PromotionManager : IPromotionManager
     {
         private readonly IPromotionRepository _promotionRepository;
+        private readonly NotificationManager _notifications;
 
-        public PromotionManager(IPromotionRepository promotionRepository)
+        public PromotionManager(
+            IPromotionRepository promotionRepository,
+            NotificationManager notifications)
         {
             _promotionRepository = promotionRepository;
+            _notifications = notifications;
         }
 
         public async Task<int> SendPromotionAsync(PromotionDTO dto, int currentUserId)
@@ -97,6 +102,24 @@ namespace Multi_Store.Core.Managers
             };
 
             await _promotionRepository.AddPromotionWithRecipientsAsync(promotion, customerIds);
+
+            // customerIds are Customer.CustomerID values. Notification.UserID needs
+            // the Identity User.Id, so map CustomerID -> UserID before sending.
+            var recipientUserIds = await _promotionRepository.GetUserIdsByCustomerIdsAsync(customerIds);
+
+            var notificationMessage = string.IsNullOrWhiteSpace(cleanCouponCode)
+                ? promotion.Message
+                : $"{promotion.Message} Use code {cleanCouponCode} at checkout.";
+
+            foreach (var recipientUserId in recipientUserIds)
+            {
+                await _notifications.SendAsync(
+                    userId: recipientUserId,
+                    title: $"New promotion: {promotion.Title}",
+                    message: notificationMessage,
+                    type: "Promotion",
+                    referenceId: promotion.PromotionID);
+            }
 
             return customerIds.Count;
         }

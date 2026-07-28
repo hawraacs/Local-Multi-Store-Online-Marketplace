@@ -131,6 +131,17 @@ namespace Multi_Store.Infrastructure.Repositories
             return await _context.Coupons
                 .AnyAsync(c => c.CouponCode.ToUpper() == cleanCode);
         }
+        public async Task<List<int>> GetUserIdsByCustomerIdsAsync(List<int> customerIds)
+        {
+            if (customerIds == null || customerIds.Count == 0)
+                return new List<int>();
+
+            return await _context.Customers
+                .Where(c => customerIds.Contains(c.CustomerID))
+                .Select(c => c.UserID)
+                .Distinct()
+                .ToListAsync();
+        }
 
         public async Task AddCouponAsync(Coupon coupon)
         {
