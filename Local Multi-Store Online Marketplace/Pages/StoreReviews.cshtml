@@ -95,6 +95,20 @@
             gap: 16px;
         }
 
+        .toast {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            background: #22c55e;
+            color: white;
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 9999;
+        }
+
         .review-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -338,7 +352,7 @@
                 </div>
 
                 <div class="review-footer">
-                    <form method="post" asp-page-handler="Delete" onsubmit="return confirm('Are you sure you want to delete this review?');">
+                    <form method="post" asp-page-handler="Delete">
                         <input type="hidden" name="reviewId" value="@r.ReviewID" />
                         <button type="submit" class="btn-delete-review">
                             <i class="fa-solid fa-trash-can"></i>
@@ -350,3 +364,19 @@
         }
     }
 </div>
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="toast" class="toast">
+        @TempData["SuccessMessage"]
+    </div>
+
+    <script>
+        let toast = document.getElementById("toast");
+
+        toast.style.display = "block";
+
+        setTimeout(() => {
+            toast.style.display = "none";
+        }, 3000);
+    </script>
+}

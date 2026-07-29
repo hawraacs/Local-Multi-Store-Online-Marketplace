@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
 {
@@ -39,7 +40,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
                 Promotions = new List<Promotion>();
             }
         }
+        public async Task<IActionResult> OnPostDeleteAsync(int id)
+        {
+            try
+            {
+                await _promotionManager.DeletePromotionAsync(id);
 
+                TempData["Success"] = "Promotion deleted successfully.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting promotion {PromotionId}", id);
+                TempData["Error"] = "Unable to delete promotion.";
+            }
+
+            return RedirectToPage();
+        }
         private int GetCurrentUserId()
         {
             // BUGFIX: previously used a bare int.Parse(userIdValue), which throws

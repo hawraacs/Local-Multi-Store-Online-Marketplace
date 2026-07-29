@@ -394,6 +394,30 @@
                 grid-template-columns: 1fr 1fr;
             }
         }
+        /* Delete Promotion Button */
+        .btn-delete-promotion {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #fee2e2;
+            color: #dc2626;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+            .btn-delete-promotion:hover {
+                background: #dc2626;
+                color: white;
+                transform: translateY(-2px);
+            }
+
+            .btn-delete-promotion i {
+                font-size: 14px;
+            }
     </style>
 }
 
@@ -485,6 +509,7 @@
                                 <th>Recipients</th>
                                 <th>Status</th>
                                 <th>Sent At</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -532,6 +557,18 @@
                                     </td>
                                     <td>
                                         @(promotion.SentAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-")
+                                    </td>
+
+                                    <td>
+                                        <form method="post"
+                                              asp-page-handler="Delete"
+                                              asp-route-id="@promotion.PromotionID">
+
+                                            <button type="submit" class="btn-delete-promotion" title="Delete Promotion">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+
+                                        </form>
                                     </td>
                                 </tr>
                             }

@@ -59,7 +59,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 Request.Headers["User-Agent"].ToString()
             );
-
+            TempData["SuccessMessage"] = "Review deleted successfully!";
             _logger.LogInformation("REVIEW DELETED SUCCESSFULLY. ReviewId = {ReviewId}", reviewId);
 
             return RedirectToPage(new { storeId = StoreId });
