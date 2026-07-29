@@ -148,5 +148,17 @@ namespace Multi_Store.Infrastructure.Repositories
             await _context.Coupons.AddAsync(coupon);
             await _context.SaveChangesAsync();
         }
+        public async Task DeletePromotionAsync(int id)
+        {
+            var promotion = await _context.Promotions
+                .FirstOrDefaultAsync(p => p.PromotionID == id);
+
+            if (promotion == null)
+                throw new Exception("Promotion not found");
+
+            _context.Promotions.Remove(promotion);
+
+            await _context.SaveChangesAsync();
+        }
     }
 }

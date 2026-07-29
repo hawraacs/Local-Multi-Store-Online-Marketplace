@@ -22,5 +22,6 @@ namespace Multi_Store.Core.Interfaces
         Task<List<int>> GetUserIdsByCustomerIdsAsync(List<int> customerIds);
 
         Task AddCouponAsync(Coupon coupon);
+        Task DeletePromotionAsync(int id);
     }
 }

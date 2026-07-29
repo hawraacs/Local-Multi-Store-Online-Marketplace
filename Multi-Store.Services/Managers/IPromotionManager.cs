@@ -12,5 +12,6 @@ namespace Multi_Store.Core.Interfaces
         Task<List<PromotionRecipient>> GetCustomerPromotionsAsync(int currentUserId);
 
         Task MarkAsReadAsync(int promotionRecipientId, int currentUserId);
+        Task DeletePromotionAsync(int id);
     }
 }

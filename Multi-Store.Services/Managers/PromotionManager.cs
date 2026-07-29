@@ -5,7 +5,7 @@ using Multi_Store.Services.Managers;
 
 namespace Multi_Store.Core.Managers
 {
-    public class PromotionManager : IPromotionManager
+    public class PromotionManager :IPromotionManager
     {
         private readonly IPromotionRepository _promotionRepository;
         private readonly NotificationManager _notifications;
@@ -142,6 +142,10 @@ namespace Multi_Store.Core.Managers
         public async Task MarkAsReadAsync(int promotionRecipientId, int currentUserId)
         {
             await _promotionRepository.MarkAsReadAsync(promotionRecipientId, currentUserId);
+        }
+        public async Task DeletePromotionAsync(int id)
+        {
+            await _promotionRepository.DeletePromotionAsync(id);
         }
     }
 }
