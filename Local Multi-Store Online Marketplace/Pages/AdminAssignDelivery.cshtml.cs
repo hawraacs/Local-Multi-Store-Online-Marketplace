@@ -80,6 +80,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 return RedirectToPage();
             }
+            if (!StatusEquals(order.Status, "Confirmed"))
+            {
+                TempData["Error"] =
+                    "This order must be confirmed by the store owner before assigning a delivery person.";
+
+                return RedirectToPage();
+            }
 
             if (order.Customer == null)
             {
@@ -203,7 +210,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             // Admin assigns the order only.
             // Delivery starts later from DeliveryDashboard.
-            order.Status = "Assigned";
+            order.Status = "Preparing";
 
             // ==========================================
             // DELIVERY NOTIFICATION

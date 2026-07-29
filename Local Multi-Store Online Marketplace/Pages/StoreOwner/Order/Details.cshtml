@@ -6,11 +6,10 @@
 }
 
 @section Styles {
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
-                           ROOT VARIABLES — consistent brand palette
-                           ============================================================ */
+                   ROOT VARIABLES — consistent brand palette
+                   ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -30,8 +29,6 @@
             --radius-md: 12px;
             --radius-lg: 20px;
             --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-            /* Same display face used across the rest of the Store Owner section. */
-            --font-display: 'Fraunces', 'Georgia', serif;
         }
 
         body {
@@ -42,8 +39,8 @@
         }
 
         /* ============================================================
-                           HEADER
-                           ============================================================ */
+                   HEADER
+                   ============================================================ */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -55,7 +52,6 @@
 
             .page-header h1 {
                 margin: 0;
-                font-family: var(--font-display);
                 font-size: 26px;
                 font-weight: 800;
                 letter-spacing: -0.4px;
@@ -163,8 +159,8 @@
         }
 
         /* ============================================================
-                           ALERTS
-                           ============================================================ */
+                   ALERTS
+                   ============================================================ */
         .alert {
             border-radius: var(--radius-md);
             padding: 14px 18px;
@@ -191,8 +187,8 @@
         }
 
         /* ============================================================
-                           CARDS
-                           ============================================================ */
+                   CARDS
+                   ============================================================ */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -250,8 +246,8 @@
             }
 
         /* ============================================================
-                           TABLE
-                           ============================================================ */
+                   TABLE
+                   ============================================================ */
         .table-wrap {
             overflow-x: auto;
         }
@@ -301,15 +297,9 @@
             text-align: right;
         }
 
-        .empty-row td {
-            text-align: center;
-            padding: 32px 16px !important;
-            color: var(--text-muted);
-        }
-
         /* ============================================================
-                           STATUS UPDATE FORM
-                           ============================================================ */
+                   STATUS UPDATE FORM
+                   ============================================================ */
         .status-form {
             display: flex;
             flex-wrap: wrap;
@@ -320,16 +310,6 @@
             .status-form .form-group {
                 flex: 1 1 200px;
             }
-
-        .form-select-label {
-            display: block;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-        }
 
         .form-select {
             width: 100%;
@@ -397,24 +377,8 @@
             }
 
         /* ============================================================
-                           ACCESSIBILITY
-                           ============================================================ */
-        a:focus-visible,
-        button:focus-visible,
-        select:focus-visible {
-            outline: 2px solid var(--accent-color);
-            outline-offset: 2px;
-        }
-
-        @@media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                transition-duration: 0.001ms !important;
-            }
-        }
-
-        /* ============================================================
-                           RESPONSIVE
-                           ============================================================ */
+                   RESPONSIVE
+                   ============================================================ */
         @@media (max-width: 768px) {
             .page-header {
                 flex-direction: column;
@@ -522,24 +486,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model.OrderItems.Any())
+                    @foreach (var item in Model.OrderItems)
                     {
-                        @foreach (var item in Model.OrderItems)
-                        {
-                            <tr>
-                                <td>@item.ProductName</td>
-                                <td>@item.Quantity</td>
-                                <td>$@item.Price.ToString("N2")</td>
-                                <td class="text-end">$@item.TotalPrice.ToString("N2")</td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr class="empty-row">
-                            <td colspan="4">
-                                <i class="fas fa-inbox"></i> No items found for this order.
-                            </td>
+                        <tr>
+                            <td>@item.ProductName</td>
+                            <td>@item.Quantity</td>
+                            <td>$@item.Price.ToString("N2")</td>
+                            <td class="text-end">$@item.TotalPrice.ToString("N2")</td>
                         </tr>
                     }
                 </tbody>
@@ -570,16 +523,18 @@
             <input type="hidden" name="orderId" value="@Model.Order?.OrderID" />
             <div class="status-form">
                 <div class="form-group">
-                    <label class="form-select-label" for="newStatusSelect">Order status</label>
-                    <select name="newStatus" id="newStatusSelect" class="form-select">
-                        @foreach (var status in Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order.IndexModel.ValidOrderStatuses)
+                    <select name="newStatus" class="form-select">
+                        <option value="Pending" selected="@(Model.Order?.Status == "Pending")">Pending</option>
+                        <option value="Confirmed" selected="@(Model.Order?.Status == "Confirmed")">Confirmed</option>
+                        <option value="Preparing" selected="@(Model.Order?.Status == "Preparing")">Preparing</option>
+                        <option value="OutForDelivery" selected="@(Model.Order?.Status == "OutForDelivery")" disabled>Out for Delivery</option>
+                        @if (Model.Order?.IsMultiVendor != true)
                         {
-                            var isTerminal = status == "Delivered" || status == "Cancelled";
-                            if (!(Model.Order?.IsMultiVendor == true && isTerminal))
+                            <option value="Delivered" selected="@(Model.Order?.Status == "Delivered")" disabled>Delivered</option>
+
+                            @if (Model.Order?.Status != "Out for Delivery" && Model.Order?.Status != "OutForDelivery" && Model.Order?.Status != "Delivered")
                             {
-                                <option value="@status" selected="@(Model.Order?.Status == status)">
-                                    @(status == "OutForDelivery" ? "Out for Delivery" : status)
-                                </option>
+                                <option value="Cancelled" selected="@(Model.Order?.Status == "Cancelled")">Cancelled</option>
                             }
                         }
                     </select>
