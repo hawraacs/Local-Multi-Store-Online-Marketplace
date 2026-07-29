@@ -154,8 +154,11 @@ document.addEventListener('submit', (event) => {
    priority beat any external stylesheet rule, full stop.
    ============================================================= */
 (function enforceStoryRingColors() {
-    const UNVIEWED_GRADIENT = 'linear-gradient(135deg, #ffd166 0%, #f59e0b 45%, #ea580c 100%)';
-    const VIEWED_GRADIENT = 'linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%)';
+    const UNVIEWED_GRADIENT =
+        'linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%)';
+
+    const VIEWED_GRADIENT =
+        'linear-gradient(135deg, #d7d7dc 0%, #b9b9c4 100%)';
 
     function styleRing(ring) {
         const isViewed = ring.classList.contains('story-ring--viewed');

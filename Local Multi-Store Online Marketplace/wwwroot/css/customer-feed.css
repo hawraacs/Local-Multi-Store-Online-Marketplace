@@ -59,10 +59,10 @@
     --shadow-md: 0 12px 28px rgba(38, 20, 71, 0.08);
     --shadow-lg: 0 24px 48px rgba(38, 20, 71, 0.14);
     /* NEW — shared page width so Feed matches Customer1/Explore */
-    --page-max-width: 1400px;
+    --page-max-width: 1100px;
     /* NEW — story ring states (Instagram-style) */
-    --story-ring-unviewed: linear-gradient(135deg, #ffd166 0%, #f59e0b 45%, #ea580c 100%);
-    --story-ring-viewed: var(--accent-gradient);
+    --story-ring-unviewed: var(--accent-gradient);
+    --story-ring-viewed: linear-gradient(135deg, #d7d7dc 0%, #b9b9c4 100%);
 }
 
 /* -------------------------------------------------------------
@@ -182,6 +182,14 @@ body {
      unviewed  -> warm orange ring  (--story-ring-unviewed)
      viewed    -> brand purple ring (--story-ring-viewed)
    ------------------------------------------------------------- */
+/* -------------------------------------------------------------
+   4. STORY BAR
+   Matches _StoryBarCustomer.cshtml: .story-bar .story-circle
+   .story-ring(--active|--viewed) .story-img .story-label
+
+   Before opening  -> Purple ring
+   After opening   -> Gray ring
+   ------------------------------------------------------------- */
 #customerStoryBar.story-bar {
     display: flex;
     padding: 26px 24px 28px !important;
@@ -206,15 +214,15 @@ body {
     cursor: pointer;
 }
 
-/* Default / unviewed ring = orange, Instagram-style "new story" state.
-   IMPORTANT: width/height here MUST equal story-img size + (2 x padding),
-   otherwise the image overflows past the ring and hides the colored
-   border completely (this was the actual bug). */
+/* -------------------------------------------------------------
+   BEFORE OPENING (Unviewed)
+   Purple ring
+   ------------------------------------------------------------- */
 #customerStoryBar .story-ring,
 #customerStoryBar .story-ring--active {
     width: 130px !important;
     height: 130px !important;
-    background: var(--story-ring-unviewed) !important;
+    background: var(--accent-gradient) !important;
     padding: 6px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
@@ -223,25 +231,30 @@ body {
     transition: transform .2s ease;
 }
 
-/* Once opened, the ring turns brand purple instead of flat grey */
+/* -------------------------------------------------------------
+   AFTER OPENING (Viewed)
+   Gray ring
+   ------------------------------------------------------------- */
 #customerStoryBar .story-ring--viewed {
     width: 130px !important;
     height: 130px !important;
-    background: var(--story-ring-viewed) !important;
+    background: linear-gradient(135deg, #d7d7dc 0%, #b9b9c4 100%) !important;
     padding: 6px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    opacity: .92;
+    transition: transform .2s ease;
 }
 
+/* Hover animation */
 #customerStoryBar .story-circle:hover .story-ring,
 #customerStoryBar .story-circle:hover .story-ring--active,
 #customerStoryBar .story-circle:hover .story-ring--viewed {
     transform: scale(1.04);
 }
 
+/* Story image */
 #customerStoryBar .story-img {
     width: 118px !important;
     height: 118px !important;
@@ -251,6 +264,7 @@ body {
     object-fit: cover !important;
 }
 
+/* Story label */
 #customerStoryBar .story-label {
     font-size: 15px !important;
     font-weight: 600 !important;
