@@ -2,6 +2,7 @@
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface;
 using Multi_Store.Services.Dtos;
+using Multi_Store.Infrastructure.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,51 +15,38 @@ namespace Multi_Store.Services.Managers
         private readonly IReviewRepository _reviewRepository;
         private readonly IAuditLogRepository _auditLogRepository;
         private readonly IMapper _mapper;
+        private readonly ApplicationDbContext _context; // NEW — store owner lookup + notification write
 
         public ReviewManager(
             IReviewRepository reviewRepository,
             IAuditLogRepository auditLogRepository,
-            IMapper mapper)
+            IMapper mapper,
+            ApplicationDbContext context)
         {
             _reviewRepository = reviewRepository;
             _auditLogRepository = auditLogRepository;
             _mapper = mapper;
+            _context = context;
         }
 
-        // =========================================================
-        // 1. GET METHODS
-        // =========================================================
-
-        /// <summary>
-        /// Get all reviews
-        /// </summary>
         public async Task<IEnumerable<ReviewDTO>> GetAllReviewsAsync()
         {
             var reviews = await _reviewRepository.GetAllAsync();
             return _mapper.Map<IEnumerable<ReviewDTO>>(reviews);
         }
 
-        /// <summary>
-        /// Get review by ID
-        /// </summary>
         public async Task<ReviewDTO?> GetReviewByIdAsync(int reviewId)
         {
             var review = await _reviewRepository.GetByIdAsync(reviewId);
             return _mapper.Map<ReviewDTO?>(review);
         }
 
-        /// <summary>
-        /// Get reviews by product
-        /// </summary>
         public async Task<IEnumerable<ReviewDTO>> GetReviewsByProductAsync(int productId)
         {
             var reviews = await _reviewRepository.GetByProductAsync(productId);
             return _mapper.Map<IEnumerable<ReviewDTO>>(reviews);
         }
 
-        /// <summary>
-        /// Get reviews by store
-        /// </summary>
         public async Task<IEnumerable<ReviewDTO>> GetReviewsByStoreAsync(int storeId)
         {
             var reviews = await _reviewRepository.GetByStoreAsync(storeId);
@@ -69,37 +57,23 @@ namespace Multi_Store.Services.Managers
             return _mapper.Map<IEnumerable<ReviewDTO>>(reviews);
         }
 
-        /// <summary>
-        /// Get reviews by customer
-        /// </summary>
         public async Task<IEnumerable<ReviewDTO>> GetReviewsByCustomerAsync(int customerId)
         {
             var reviews = await _reviewRepository.GetByCustomerAsync(customerId);
             return _mapper.Map<IEnumerable<ReviewDTO>>(reviews);
         }
 
-        /// <summary>
-        /// Get reviews by status
-        /// </summary>
         public async Task<IEnumerable<ReviewDTO>> GetReviewsByStatusAsync(string status)
         {
             var reviews = await _reviewRepository.GetByStatusAsync(status);
             return _mapper.Map<IEnumerable<ReviewDTO>>(reviews);
         }
 
-        // =========================================================
-        // 2. CREATE REVIEW
-        // =========================================================
-
-        /// <summary>
-        /// Add review
-        /// </summary>
         public async Task<int> AddReviewAsync(
             ReviewDTO reviewDTO,
             string ipAddress,
             string userAgent)
         {
-            // Validation
             if (reviewDTO.CustomerID <= 0)
                 throw new Exception("Invalid customer.");
 
@@ -116,7 +90,6 @@ namespace Multi_Store.Services.Managers
             if (reviewDTO.Rating < 1 || reviewDTO.Rating > 5)
                 throw new Exception("Rating must be between 1 and 5.");
 
-            // Check if review already exists
             if (reviewDTO.OrderItemID.HasValue)
             {
                 var exists = await _reviewRepository
@@ -136,7 +109,6 @@ namespace Multi_Store.Services.Managers
 
             await _reviewRepository.AddAsync(review);
 
-            // Audit Log
             await _auditLogRepository.AddAsync(new AuditLog
             {
                 UserID = review.CustomerID,
@@ -150,16 +122,32 @@ namespace Multi_Store.Services.Managers
                 ActionDate = DateTime.UtcNow
             });
 
+            // NEW — notify the store owner about the new review.
+            var store = await _context.Stores.FindAsync(review.StoreID);
+            if (store != null)
+            {
+                var isProductReview = review.ProductID.HasValue;
+
+                _context.Notifications.Add(new Notification
+                {
+                    UserID = store.OwnerUserID,
+                    Title = isProductReview ? "New product review" : "New store review",
+                    Message = isProductReview
+                        ? $"A customer left a {review.Rating}-star review on one of your products."
+                        : $"A customer left a {review.Rating}-star review on your store.",
+                    Type = isProductReview ? "ProductReview" : "StoreReview",
+                    ReferenceID = review.ReviewID,
+                    IsRead = false,
+                    SentAt = DateTime.UtcNow,
+                    SentVia = "System"
+                });
+
+                await _context.SaveChangesAsync();
+            }
+
             return review.ReviewID;
         }
 
-        // =========================================================
-        // 3. UPDATE REVIEW
-        // =========================================================
-
-        /// <summary>
-        /// Update review
-        /// </summary>
         public async Task UpdateReviewAsync(
             ReviewDTO reviewDTO,
             string ipAddress,
@@ -201,13 +189,6 @@ namespace Multi_Store.Services.Managers
             });
         }
 
-        // =========================================================
-        // 4. DELETE REVIEW
-        // =========================================================
-
-        /// <summary>
-        /// Delete review
-        /// </summary>
         public async Task DeleteReviewAsync(
             int reviewId,
             string ipAddress,
@@ -234,13 +215,6 @@ namespace Multi_Store.Services.Managers
             });
         }
 
-        // =========================================================
-        // 5. REVIEW STATUS MANAGEMENT
-        // =========================================================
-
-        /// <summary>
-        /// Approve review
-        /// </summary>
         public async Task ApproveReviewAsync(
             int reviewId,
             string ipAddress,
@@ -272,9 +246,6 @@ namespace Multi_Store.Services.Managers
             });
         }
 
-        /// <summary>
-        /// Reject review
-        /// </summary>
         public async Task RejectReviewAsync(
             int reviewId,
             string reason,
@@ -307,44 +278,24 @@ namespace Multi_Store.Services.Managers
             });
         }
 
-        // =========================================================
-        // 6. CHECK METHODS
-        // =========================================================
-
-        /// <summary>
-        /// Check if review exists
-        /// </summary>
         public async Task<bool> ReviewExistsAsync(int reviewId)
         {
             var review = await _reviewRepository.GetByIdAsync(reviewId);
             return review != null;
         }
 
-        /// <summary>
-        /// Check if order item already reviewed
-        /// </summary>
         public async Task<bool> IsOrderItemReviewedAsync(int orderItemId)
         {
             return await _reviewRepository
                 .ExistsForOrderItemAsync(orderItemId);
         }
 
-        // =========================================================
-        // 7. COUNT METHODS
-        // =========================================================
-
-        /// <summary>
-        /// Get total reviews count
-        /// </summary>
         public async Task<int> GetTotalReviewsCountAsync()
         {
             var reviews = await _reviewRepository.GetAllAsync();
             return reviews.Count();
         }
 
-        /// <summary>
-        /// Get approved reviews count
-        /// </summary>
         public async Task<int> GetApprovedReviewsCountAsync()
         {
             var reviews = await _reviewRepository
@@ -353,9 +304,6 @@ namespace Multi_Store.Services.Managers
             return reviews.Count;
         }
 
-        /// <summary>
-        /// Get pending reviews count
-        /// </summary>
         public async Task<int> GetPendingReviewsCountAsync()
         {
             var reviews = await _reviewRepository
@@ -364,9 +312,6 @@ namespace Multi_Store.Services.Managers
             return reviews.Count;
         }
 
-        /// <summary>
-        /// Get rejected reviews count
-        /// </summary>
         public async Task<int> GetRejectedReviewsCountAsync()
         {
             var reviews = await _reviewRepository
@@ -375,13 +320,6 @@ namespace Multi_Store.Services.Managers
             return reviews.Count;
         }
 
-        // =========================================================
-        // 8. RATING METHODS
-        // =========================================================
-
-        /// <summary>
-        /// Get average product rating
-        /// </summary>
         public async Task<double> GetAverageProductRatingAsync(int productId)
         {
             var reviews = await _reviewRepository
@@ -397,9 +335,6 @@ namespace Multi_Store.Services.Managers
             return approvedReviews.Average(r => r.Rating);
         }
 
-        /// <summary>
-        /// Get average store rating
-        /// </summary>
         public async Task<double> GetAverageStoreRatingAsync(int storeId)
         {
             var reviews = await _reviewRepository
@@ -415,13 +350,6 @@ namespace Multi_Store.Services.Managers
             return approvedReviews.Average(r => r.Rating);
         }
 
-        // =========================================================
-        // 9. SEARCH METHODS
-        // =========================================================
-
-        /// <summary>
-        /// Search reviews by comment
-        /// </summary>
         public async Task<IEnumerable<ReviewDTO>> SearchReviewsAsync(string searchTerm)
         {
             if (string.IsNullOrWhiteSpace(searchTerm))
@@ -440,13 +368,6 @@ namespace Multi_Store.Services.Managers
             return _mapper.Map<IEnumerable<ReviewDTO>>(filteredReviews);
         }
 
-        // =========================================================
-        // 10. DASHBOARD METHODS
-        // =========================================================
-
-        /// <summary>
-        /// Get review dashboard summary
-        /// </summary>
         public async Task<object> GetReviewDashboardAsync()
         {
             var allReviews = await _reviewRepository.GetAllAsync();

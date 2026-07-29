@@ -20,7 +20,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly WishlistManager _wishlistManager;
         private readonly ApplicationDbContext _context;
         private readonly StoryManager _storyManager;
-        private readonly BoostManager _boostManager;   // ADD THIS
+        private readonly BoostManager _boostManager;
 
         public CustomerFeedModel(
             StoreManager storeManager,
@@ -30,7 +30,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             WishlistManager wishlistManager,
             ApplicationDbContext context,
             StoryManager storyManager,
-            BoostManager boostManager)                  // ADD THIS
+            BoostManager boostManager)
         {
             _storeManager = storeManager;
             _userManager = userManager;
@@ -39,7 +39,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _wishlistManager = wishlistManager;
             _context = context;
             _storyManager = storyManager;
-            _boostManager = boostManager;                // ADD THIS
+            _boostManager = boostManager;
         }
 
         public List<string> NavbarCategories { get; set; } = new();
@@ -51,15 +51,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public List<FeedStoreFilterViewModel> FilterStores { get; set; } = new();
         public List<string> FilterAreas { get; set; } = new();
 
-        // NEW — active-boosted product IDs, used by the view to show the "Boosted" badge
         public HashSet<int> BoostedProductIds { get; set; } = new();
 
-        // NEW — the logged-in customer's own CustomerID, exposed so the view can
-        // decide whether to show a "delete" button on a given review (only the
-        // customer who wrote it should be able to remove it).
         public int CurrentCustomerId { get; set; }
 
-        // New: story circles for the top of the Feed - only from stores this customer follows
         public List<StoryGroupDTO> FollowedStoryGroups { get; set; } = new();
 
         [BindProperty(SupportsGet = true)] public string ViewMode { get; set; } = "Following";
@@ -80,7 +75,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
             if (customer == null) return;
 
-            // NEW — exposed to the view for the "delete my review" button check.
             CurrentCustomerId = customer.CustomerID;
 
             var followedStories = await _storyManager.GetFollowedStoriesAsync(customer.CustomerID);
@@ -100,7 +94,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     StoreID = g.Key,
                     StoreName = g.First().Store.StoreName,
                     StoreLogoUrl = g.First().Store.LogoURL,
-                    // g is already ordered oldest -> newest by the repository - keep that order for correct playback
                     Stories = g.Select(s => new StoryDTO
                     {
                         StoryID = s.StoryID,
@@ -121,7 +114,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     group.HasUnviewedStories = group.Stories.Any(s => !s.IsViewed);
                     return group;
                 })
-                // Which STORE's circle shows first: newest story per store, descending
                 .OrderByDescending(g => g.Stories.Max(s => s.CreatedAt))
                 .ToList();
 
@@ -209,13 +201,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (MaxPrice.HasValue)
                 query = query.Where(p => p.Price <= MaxPrice.Value);
 
-            // NEW — expire any due boosts, then fetch active boosted product IDs
             await _boostManager.ExpireDueBoostsAsync();
             BoostedProductIds = await _boostManager.GetActiveBoostedProductIdsAsync();
 
             var unordered = await query.ToListAsync();
 
-            // NEW — boosted products first, then newest first (same as before)
             Products = unordered
                 .OrderByDescending(p => BoostedProductIds.Contains(p.ProductID))
                 .ThenByDescending(p => p.CreatedAt)
@@ -274,6 +264,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     StoreID = storeId,
                     FollowedAt = DateTime.UtcNow
                 });
+
+                // NEW — notify the store owner about the new follower.
+                var ownerUserId = await _context.Stores
+                    .Where(s => s.StoreID == storeId)
+                    .Select(s => (int?)s.OwnerUserID)
+                    .FirstOrDefaultAsync();
+
+                if (ownerUserId.HasValue)
+                {
+                    _context.Notifications.Add(new Notification
+                    {
+                        UserID = ownerUserId.Value,
+                        Title = "New follower",
+                        Message = "A customer started following your store.",
+                        Type = "Follow",
+                        ReferenceID = storeId,
+                        IsRead = false,
+                        SentAt = DateTime.UtcNow,
+                        SentVia = "System"
+                    });
+                }
 
                 await _context.SaveChangesAsync();
             }
@@ -424,15 +435,36 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage();
             }
 
-            _context.Reviews.Add(new Review
+            var review = new Review
             {
                 ProductID = productId,
-                StoreID = product.StoreID,   // required FK - pulled from the product being reviewed
+                StoreID = product.StoreID,
                 CustomerID = customer.CustomerID,
                 Rating = rating,
                 Comment = comment.Trim(),
-                Status = "Approved",          // matches your existing .Where(r => r.Status == "Approved") filter
+                Status = "Approved",
                 CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Reviews.Add(review);
+            await _context.SaveChangesAsync(); // saved first so review.ReviewID is populated below
+
+            // NEW — notify the store owner about the new review.
+            var ownerUserId = await _context.Stores
+                .Where(s => s.StoreID == product.StoreID)
+                .Select(s => s.OwnerUserID)
+                .FirstOrDefaultAsync();
+
+            _context.Notifications.Add(new Notification
+            {
+                UserID = ownerUserId,
+                Title = "New product review",
+                Message = $"A customer left a {rating}-star review on one of your products.",
+                Type = "ProductReview",
+                ReferenceID = review.ReviewID,
+                IsRead = false,
+                SentAt = DateTime.UtcNow,
+                SentVia = "System"
             });
 
             await _context.SaveChangesAsync();
@@ -442,10 +474,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         // ================= DELETE REVIEW (NEW) =================
-        // Lets a customer remove ONLY their own review. The ownership check
-        // (review.CustomerID == customer.CustomerID) is what stops anyone
-        // from deleting someone else's review by guessing/tampering with
-        // the reviewId in the posted form.
         public async Task<IActionResult> OnPostDeleteReviewAsync(int reviewId)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -508,7 +536,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return new JsonResult(new { success = true, liked = !alreadyLiked, likeCount });
         }
 
-        // ================= STORY REPLY (NEW) - reuses the existing chat system =================
+        // ================= STORY REPLY (parked — reuses the existing chat system) =================
         public async Task<IActionResult> OnPostReplyToStoryAsync(int storyId, string replyText)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -524,8 +552,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (story == null)
                 return new JsonResult(new { success = false, error = "Story not found." });
 
-            // A customer replying to their own store's story would be a Store Owner
-            // replying to themselves - not a valid customer action.
             if (story.Store.OwnerUserID == user.Id)
                 return new JsonResult(new { success = false, error = "You cannot reply to your own story." });
 

@@ -12,7 +12,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-// Alias to avoid conflict with your SubscriptionService
 using MySubscriptionService = Multi_Store.Services.SubscriptionService;
 using StripeCustomer = Stripe.Customer;
 
@@ -24,9 +23,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         private readonly ApplicationDbContext _context;
         private readonly ICurrentStoreService _currentStoreService;
         private readonly UserManager<User> _userManager;
-        private readonly MySubscriptionService _subscriptionService;  // alias used
+        private readonly MySubscriptionService _subscriptionService;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<AccountStatementModel> _logger;   // ✅ added
+        private readonly ILogger<AccountStatementModel> _logger;
 
         public AccountStatementModel(
             ApplicationDbContext context,
@@ -34,24 +33,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             UserManager<User> userManager,
             MySubscriptionService subscriptionService,
             IConfiguration configuration,
-            ILogger<AccountStatementModel> logger)   // ✅ injected
+            ILogger<AccountStatementModel> logger)
         {
             _context = context;
             _currentStoreService = currentStoreService;
             _userManager = userManager;
             _subscriptionService = subscriptionService;
             _configuration = configuration;
-            _logger = logger;   // ✅ assigned
+            _logger = logger;
         }
 
         public Store Store { get; set; } = null!;
         public StatementSummary Summary { get; set; } = new();
         public List<StatementLine> Lines { get; set; } = new();
-
-        // NEW — exposed to the view so the "Renew Subscription" button shows the
-        // real configured amount instead of a hardcoded "$20" label that could
-        // silently drift out of sync with the actual charge (see bugfix note in
-        // OnPostRenewAsync below).
         public decimal MonthlySubscriptionFee { get; set; }
 
         public async Task<IActionResult> OnGetAsync()
@@ -75,24 +69,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             }
         }
 
-        // =============================================================
-        // Renew Subscription – try auto-charge with saved card, else manual
-        // =============================================================
         public async Task<IActionResult> OnPostRenewAsync()
         {
             var store = await GetStoreAsync();
             if (store == null)
                 return RedirectToPage("/StoreOwner/Dashboard");
 
-            // BUGFIX: previously ChargeSavedCardAsync was called with a hardcoded
-            // 20.00m, while GetOrCreatePendingSubscriptionPaymentAsync (the manual
-            // fallback below) correctly read the fee from configuration. If that
-            // config value was ever changed, the two payment paths would charge
-            // DIFFERENT amounts for the same renewal depending on which one fired.
-            // Read once here and used consistently for both paths.
             var monthlyFee = GetMonthlyFee();
 
-            // If we have saved card, attempt auto-charge
             if (!string.IsNullOrEmpty(store.StripeCustomerId) && !string.IsNullOrEmpty(store.StripePaymentMethodId))
             {
                 var result = await ChargeSavedCardAsync(store, monthlyFee);
@@ -104,24 +88,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                         return RedirectToPage();
 
                     case ChargeResult.ErrorAfterCharge:
-                        // BUGFIX: this outcome didn't exist before. Previously, any
-                        // non-StripeException thrown after a successful charge (e.g.
-                        // a DB failure while recording the payment) propagated as an
-                        // unhandled exception — or, if it had been caught generically,
-                        // would have fallen through below and created a SECOND pending
-                        // payment for a renewal the store owner was already charged for.
                         TempData["ErrorMessage"] =
                             "Your payment went through, but we couldn't finish recording the renewal. " +
                             "Please contact support — you will not be charged again.";
                         return RedirectToPage();
 
                     case ChargeResult.Declined:
-                        // fall through to manual payment
                         break;
                 }
             }
 
-            // Manual: create pending payment and redirect to payment page
             var pendingPayment = await GetOrCreatePendingSubscriptionPaymentAsync(store.StoreID, monthlyFee);
             if (pendingPayment == null)
             {
@@ -136,10 +112,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             });
         }
 
-        // =============================================================
-        // Helpers
-        // =============================================================
-
         private decimal GetMonthlyFee() =>
             _configuration.GetValue<decimal>("StoreSettings:MonthlySubscriptionFee", 20.00m);
 
@@ -147,10 +119,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         {
             Succeeded,
             Declined,
-            // BUGFIX: represents "Stripe charged the card successfully, but our own
-            // follow-up processing failed" — previously indistinguishable from a
-            // plain decline, which is a materially different (and much more urgent)
-            // situation: the customer has already paid.
             ErrorAfterCharge
         }
 
@@ -185,15 +153,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 return ChargeResult.Declined;
             }
 
-            // BUGFIX: everything past this point runs AFTER Stripe has already
-            // confirmed the charge succeeded. Previously, the transaction below had
-            // its own try/catch that rolled back and re-threw on any failure — but
-            // that re-thrown exception (e.g. a DbUpdateException) is not a
-            // StripeException, so it was NOT caught by the outer catch above and
-            // propagated as an unhandled exception, with the store owner's card
-            // already charged. Now caught here specifically and logged at Critical
-            // severity, since "charged but not recorded" needs a person to notice
-            // and reconcile, not just a retry.
             try
             {
                 await using var transaction = await _context.Database.BeginTransactionAsync();
@@ -218,6 +177,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                         Reference = $"Auto-renewal - {transferId}"
                     };
                     _context.SubscriptionPayments.Add(subscriptionPayment);
+
+                    _context.Notifications.Add(new Notification
+                    {
+                        UserID = store.OwnerUserID,
+                        Title = "Subscription renewed",
+                        Message = $"Your subscription was automatically renewed for ${amount:F2}.",
+                        Type = "AccountStatement",
+                        ReferenceID = store.StoreID,
+                        IsRead = false,
+                        SentAt = DateTime.UtcNow,
+                        SentVia = "System"
+                    });
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
@@ -270,12 +241,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     OrderNumber = g.First().Order.OrderNumber,
                     OrderDate = g.First().Order.OrderDate,
                     GrossAmount = g.Sum(oi => oi.TotalPrice),
-                    // BUGFIX: previously hardcoded * 0.05m regardless of the store's
-                    // actual configured commission rate. AnalyticsModel (and the
-                    // Settings page) both treat CommissionRate as a real per-store,
-                    // admin-configurable value — a store whose real rate isn't
-                    // exactly 5% would see a DIFFERENT commission figure here than
-                    // on the Analytics page for the exact same orders.
                     Commission = g.Sum(oi => oi.TotalPrice * (store.CommissionRate / 100m))
                 })
                 .ToList();
@@ -285,9 +250,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 .OrderBy(sp => sp.PaymentDate)
                 .ToListAsync();
 
-            // Boost payments (NEW) — counted the same way as elsewhere in the app:
-            // booked once actually paid for (Active or Expired), using CreatedAt as the
-            // transaction date since that's when the store owner's card was charged.
             var boostPayments = await _context.ProductBoosts
                 .Include(b => b.Product)
                 .Where(b => b.StoreID == store.StoreID && (b.Status == "Active" || b.Status == "Expired"))
@@ -324,7 +286,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 });
             }
 
-            // NEW — one line per paid boost
             foreach (var b in boostPayments)
             {
                 var productName = b.Product?.ProductName ?? "Product";
@@ -345,8 +306,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             Summary.TotalGrossRevenue = orderGroups.Sum(o => o.GrossAmount);
             Summary.TotalCommission = orderGroups.Sum(o => o.Commission);
             Summary.TotalSubscriptionFees = subscriptionPayments.Sum(p => p.Amount);
-            Summary.TotalBoostFees = boostPayments.Sum(b => b.AmountPaid);   // NEW
-            Summary.NetRevenue = Summary.TotalGrossRevenue - Summary.TotalCommission - Summary.TotalSubscriptionFees - Summary.TotalBoostFees;   // CHANGED
+            Summary.TotalBoostFees = boostPayments.Sum(b => b.AmountPaid);
+            Summary.NetRevenue = Summary.TotalGrossRevenue - Summary.TotalCommission - Summary.TotalSubscriptionFees - Summary.TotalBoostFees;
             Summary.OutstandingBalance = store.OutstandingBalance;
         }
 
@@ -383,7 +344,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public decimal TotalGrossRevenue { get; set; }
         public decimal TotalCommission { get; set; }
         public decimal TotalSubscriptionFees { get; set; }
-        public decimal TotalBoostFees { get; set; }   // NEW
+        public decimal TotalBoostFees { get; set; }
         public decimal NetRevenue { get; set; }
         public decimal OutstandingBalance { get; set; }
     }
@@ -395,15 +356,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public decimal GrossRevenue { get; set; }
         public decimal Commission { get; set; }
         public decimal SubscriptionFee { get; set; }
-        public decimal BoostFee { get; set; }   // NEW
+        public decimal BoostFee { get; set; }
         public LineType Type { get; set; }
-        public decimal NetEffect => GrossRevenue - Commission - SubscriptionFee - BoostFee;   // CHANGED
+        public decimal NetEffect => GrossRevenue - Commission - SubscriptionFee - BoostFee;
     }
 
     public enum LineType
     {
         Order,
         Subscription,
-        Boost   // NEW
+        Boost
     }
 }

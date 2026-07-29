@@ -21,11 +21,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         {
             "ReportUpdate",
             "AdminWarning",
-            "OrderUpdate",
+            "OrderStatus",      // BUGFIX: was "OrderUpdate" — IndexModel.OnPostUpdateStatusAsync
+                    "NewOrder",                // actually writes Type = "OrderStatus", so this never matched
+                                 // and order-status notifications never showed up here.
             "PaymentUpdate",
             "DeliveryRequest",
             "Promotion",
-            "StoreRequest"
+            "StoreRequest",
+
+            // NEW — store-owner side notification types
+            "Like",             // customer liked store/product content
+            "Comment",          // customer commented
+            "ProductReview",    // new review on a product
+            "StoreReview",      // new review on a store
+            "StoryLike",        // customer liked a story
+            "StoryReply",       // customer replied to a story
+            "AccountStatement", // subscription/boost/payment processed
+            "Follow"            // customer followed the store
         };
 
         public ReportUpdatesModel(UserManager<User> userManager, ApplicationDbContext context)

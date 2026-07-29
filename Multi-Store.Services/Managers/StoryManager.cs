@@ -1,5 +1,8 @@
 ﻿using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface;
+using Multi_Store.Infrastructure.Data;
+using System;
+using System.Threading.Tasks;
 
 namespace Multi_Store.Services.Managers
 {
@@ -8,20 +11,19 @@ namespace Multi_Store.Services.Managers
         private readonly IStoryRepository _storyRepository;
         private readonly IStoryViewRepository _storyViewRepository;
         private readonly IStoryLikeRepository _storyLikeRepository;
+        private readonly ApplicationDbContext _context; // NEW — like notification write
 
         public StoryManager(
             IStoryRepository storyRepository,
             IStoryViewRepository storyViewRepository,
-            IStoryLikeRepository storyLikeRepository)
+            IStoryLikeRepository storyLikeRepository,
+            ApplicationDbContext context)
         {
             _storyRepository = storyRepository;
             _storyViewRepository = storyViewRepository;
             _storyLikeRepository = storyLikeRepository;
+            _context = context;
         }
-
-        // =====================
-        // READ
-        // =====================
 
         public Task<List<Story>> GetOwnStoriesAsync(int storeId)
             => _storyRepository.GetActiveStoriesByStoreAsync(storeId);
@@ -38,16 +40,6 @@ namespace Multi_Store.Services.Managers
         public Task<Story?> GetByIdWithStoreAsync(int storyId)
             => _storyRepository.GetByIdWithStoreAsync(storyId);
 
-        // =====================
-        // CREATE
-        // =====================
-
-        /*
-         * The media file itself is validated and saved to disk by the calling page
-         * (same convention as StoreProfileModel.SaveStoreLogoAsync) - this method
-         * only creates the Story record once a relative Url already exists, and owns
-         * the business rule that every Story expires exactly 24 hours after creation.
-         */
         public async Task<Story> CreateStoryAsync(
             int storeId,
             string mediaType,
@@ -74,16 +66,8 @@ namespace Multi_Store.Services.Managers
             return await _storyRepository.AddAsync(story);
         }
 
-        // =====================
-        // SOFT DELETE
-        // =====================
-
         public Task DeactivateStoryAsync(int storyId, int storeOwnerId)
             => _storyRepository.DeactivateStoryAsync(storyId, storeOwnerId);
-
-        // =====================
-        // VIEWED STATE (DB-backed)
-        // =====================
 
         public Task<List<int>> GetViewedStoryIdsAsync(int customerId)
             => _storyViewRepository.GetViewedStoryIdsAsync(customerId);
@@ -94,10 +78,6 @@ namespace Multi_Store.Services.Managers
         public Task MarkStoryViewedAsync(int storyId, int customerId)
             => _storyViewRepository.MarkViewedAsync(storyId, customerId);
 
-        // =====================
-        // LIKES (NEW)
-        // =====================
-
         public Task<bool> IsLikedByCustomerAsync(int storyId, int customerId)
             => _storyLikeRepository.IsLikedByCustomerAsync(storyId, customerId);
 
@@ -107,8 +87,29 @@ namespace Multi_Store.Services.Managers
         public Task<List<StoryLike>> GetLikesForStoryAsync(int storyId)
             => _storyLikeRepository.GetLikesForStoryAsync(storyId);
 
-        public Task LikeStoryAsync(int storyId, int customerId)
-            => _storyLikeRepository.LikeAsync(storyId, customerId);
+        public async Task LikeStoryAsync(int storyId, int customerId)
+        {
+            await _storyLikeRepository.LikeAsync(storyId, customerId);
+
+            // NEW — notify the store owner about the like.
+            var story = await _storyRepository.GetByIdWithStoreAsync(storyId);
+            if (story?.Store != null)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    UserID = story.Store.OwnerUserID,
+                    Title = "Someone liked your story",
+                    Message = "A customer liked your story.",
+                    Type = "StoryLike",
+                    ReferenceID = storyId,
+                    IsRead = false,
+                    SentAt = DateTime.UtcNow,
+                    SentVia = "System"
+                });
+
+                await _context.SaveChangesAsync();
+            }
+        }
 
         public Task UnlikeStoryAsync(int storyId, int customerId)
             => _storyLikeRepository.UnlikeAsync(storyId, customerId);

@@ -41,7 +41,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public Store Store { get; set; } = null!;
         public List<Product> Products { get; set; } = new();
 
-        // New: this store's own active stories, for the ring around its avatar
         public List<StoryDTO> StoreStories { get; set; } = new();
 
         public int FollowersCount { get; set; }
@@ -49,6 +48,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public bool IsBlocked { get; set; }
         [BindProperty(SupportsGet = true)]
         public int? ProductId { get; set; }
+
         public async Task<IActionResult> OnGetAsync(int id)
         {
             var store = await _storeManager.GetStoreByIdAsync(id);
@@ -86,7 +86,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 }
             }
 
-            // storeStories is already ordered oldest -> newest by the repository - correct playback order, keep it
             StoreStories = storeStories
                 .Select(s => new StoryDTO
                 {
@@ -126,7 +125,37 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (customer == null)
                 return RedirectToLogin();
 
+            // NEW — checked first so we only notify on an actual new follow,
+            // not on every click of an already-following button.
+            var alreadyFollowing = await _storeManager.IsFollowingAsync(customer.CustomerID, storeId);
+
             await _storeManager.FollowStoreAsync(customer.CustomerID, storeId);
+
+            if (!alreadyFollowing)
+            {
+                var ownerUserId = await _context.Stores
+                    .Where(s => s.StoreID == storeId)
+                    .Select(s => (int?)s.OwnerUserID)
+                    .FirstOrDefaultAsync();
+
+                if (ownerUserId.HasValue)
+                {
+                    _context.Notifications.Add(new Notification
+                    {
+                        UserID = ownerUserId.Value,
+                        Title = "New follower",
+                        Message = "A customer started following your store.",
+                        Type = "Follow",
+                        ReferenceID = storeId,
+                        IsRead = false,
+                        SentAt = DateTime.UtcNow,
+                        SentVia = "System"
+                    });
+
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             TempData["Success"] = "Store followed successfully.";
             return RedirectToPage(new { id = storeId });
         }
@@ -320,7 +349,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage(new { id = product.StoreID });
             }
 
-            _context.Reviews.Add(new Review
+            var review = new Review
             {
                 CustomerID = customer.CustomerID,
                 ProductID = productId,
@@ -329,9 +358,31 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 Comment = cleanComment,
                 Status = "Approved",
                 CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Reviews.Add(review);
+            await _context.SaveChangesAsync(); // saved first so review.ReviewID is populated below
+
+            // NEW — notify the store owner about the new review.
+            var ownerUserId = await _context.Stores
+                .Where(s => s.StoreID == product.StoreID)
+                .Select(s => s.OwnerUserID)
+                .FirstOrDefaultAsync();
+
+            _context.Notifications.Add(new Notification
+            {
+                UserID = ownerUserId,
+                Title = "New product review",
+                Message = $"A customer left a {rating}-star review on one of your products.",
+                Type = "ProductReview",
+                ReferenceID = review.ReviewID,
+                IsRead = false,
+                SentAt = DateTime.UtcNow,
+                SentVia = "System"
             });
 
             await _context.SaveChangesAsync();
+
             TempData["Success"] = "Review posted.";
             return RedirectToPage(new { id = product.StoreID });
         }
@@ -468,7 +519,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return new JsonResult(new { success = true, liked = !alreadyLiked, likeCount });
         }
 
-        // ================= STORY REPLY (NEW) - reuses the existing chat system =================
+        // ================= STORY REPLY (parked — reuses the existing chat system) =================
         public async Task<IActionResult> OnPostReplyToStoryAsync(int storyId, string replyText)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -503,10 +554,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private IActionResult RedirectToLogin() =>
             RedirectToPage("/Account/Login", new { area = "Identity" });
 
-        // =====================================================
-        // NOTIFY ADMINS OF A NEW REPORT (store or product report,
-        // both stored as Complaint records in this file specifically)
-        // =====================================================
         private async Task NotifyAdminsOfReportAsync(string message, int complaintId)
         {
             var admins = await _userManager.GetUsersInRoleAsync("Admin");

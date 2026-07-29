@@ -11,7 +11,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-// Alias to avoid ambiguity with your Customer entity
 using StripeCustomer = Stripe.Customer;
 using StripePaymentMethod = Stripe.PaymentMethod;
 
@@ -46,13 +45,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         public StorePayment? Payment { get; set; }
         public string? ErrorMessage { get; set; }
         public decimal CurrentBalance { get; set; } = -1;
-
-        // Sent to the browser so Stripe.js can tokenize the card client-side.
-        // Safe to expose publicly.
         public string? StripePublishableKey { get; set; }
-
-        // Client secret for the SetupIntent used to verify the card with the
-        // issuer via Stripe.js. Single-use and scoped to this SetupIntent only.
         public string? ClientSecret { get; set; }
 
         [BindProperty]
@@ -61,17 +54,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
         [BindProperty]
         public string CardholderName { get; set; } = string.Empty;
 
-        // The ONLY card-related value that ever reaches our server. It is a
-        // reference to a Stripe SetupIntent that Stripe.js already confirmed
-        // in the browser — the raw card number never touches this server.
         [BindProperty]
         public string SetupIntentId { get; set; } = string.Empty;
 
         [BindProperty(SupportsGet = true)]
         public string? ReturnUrl { get; set; }
 
-        // NEW — carries the pending ProductBoost through GET -> form -> POST
-        // so we know which boost to activate once payment succeeds.
         [BindProperty(SupportsGet = true)]
         public int? BoostId { get; set; }
 
@@ -100,14 +88,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
             if (string.IsNullOrWhiteSpace(store.StripeAccountId))
             {
-                // BUGFIX: previously set to 9999 with a "dummy for demo" comment,
-                // which the view then displayed as a real, seemingly-valid Stripe
-                // balance (and even compared against the payment amount to decide
-                // whether to show it in green as "sufficient"!) — fabricated
-                // financial information on an actual payment/checkout page. -1 is
-                // the same sentinel already used on a fetch failure below, and the
-                // view already has a graceful "Balance check: Unavailable" path
-                // built specifically for this case — it just wasn't being used.
                 CurrentBalance = -1;
             }
             else
@@ -115,9 +95,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 await FetchStripeBalance(store.StripeAccountId);
             }
 
-            // Prepare Stripe.js: a customer + SetupIntent so the browser can
-            // verify the card directly with Stripe/the issuing bank without
-            // ever sending the card number to this server.
             await PrepareStripeSetupAsync(store);
 
             return Page();
@@ -159,8 +136,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 return Page();
             }
 
-            // Confirm — server-side — that Stripe actually verified this card
-            // with the issuer. Never trust the client's word alone.
             var attachResult = await ConfirmAndAttachPaymentMethodAsync(store, SetupIntentId);
             if (!attachResult.Success)
             {
@@ -171,7 +146,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
             await _context.SaveChangesAsync();
 
-            // Check balance (if Stripe account linked)
             bool balanceSufficient = true;
             if (!string.IsNullOrWhiteSpace(store.StripeAccountId))
             {
@@ -185,14 +159,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 return Page();
             }
 
-            // BUGFIX (defense in depth): re-check the payment's current status
-            // fresh from the database immediately before mutating it, narrowing
-            // the window where two concurrent submissions (e.g. a scripted double
-            // POST, bypassing the client-side "disable button after click" guard)
-            // could both pass the earlier check and both attempt to process the
-            // same payment. This doesn't fully close the race without a DB-level
-            // concurrency token or unique constraint on StripeTransferId, but it
-            // meaningfully narrows it without requiring a schema change.
             var stillPending = await _context.StorePayments
                 .AsNoTracking()
                 .Where(sp => sp.StorePaymentId == payment.StorePaymentId)
@@ -241,9 +207,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                         _context.SubscriptionPayments.Add(subscriptionPayment);
                     }
 
-                    // Activate the boost tied to this payment, if any.
-                    // Only trust BoostId if it actually belongs to this StorePayment,
-                    // so a tampered/stale query param can't activate an unrelated boost.
                     if (BoostId.HasValue)
                     {
                         var boostBelongsToThisPayment = await _context.ProductBoosts
@@ -263,19 +226,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                         }
                     }
 
+                    _context.Notifications.Add(new Notification
+                    {
+                        UserID = store.OwnerUserID,
+                        Title = isSubscriptionPayment ? "Subscription renewed" : "Payment processed",
+                        Message = isSubscriptionPayment
+                            ? $"Your subscription payment of ${payment.Amount:F2} was processed successfully."
+                            : BoostId.HasValue
+                                ? $"Your boost payment of ${payment.Amount:F2} was processed — the boost is now active."
+                                : $"Your payment of ${payment.Amount:F2} for \"{payment.Description}\" was processed successfully.",
+                        Type = "AccountStatement",
+                        ReferenceID = payment.StorePaymentId,
+                        IsRead = false,
+                        SentAt = DateTime.UtcNow,
+                        SentVia = "System"
+                    });
+
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
                 }
                 catch (Exception ex)
                 {
-                    // BUGFIX: this rollback previously lived in a scope that could
-                    // also be reached from failures AFTER a successful commit (see
-                    // below) — calling RollbackAsync on an already-committed
-                    // transaction throws, which would crash this request with a
-                    // *second*, unrelated exception even though the payment itself
-                    // had already succeeded. Scoped tightly now to only the work
-                    // that happens before CommitAsync, so rollback is only ever
-                    // reached while the transaction is still actually rollback-able.
                     await transaction.RollbackAsync();
                     _logger.LogError(ex, "Store owner payment failed for payment {PaymentId}.", PaymentId);
                     ErrorMessage = "An error occurred while processing your payment. Please try again.";
@@ -284,16 +255,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 }
             }
 
-            // BUGFIX: the admin notification previously lived INSIDE the same
-            // try/catch as the transaction above. If SendToAllAdminsAsync threw
-            // (e.g. a transient notification-service hiccup) AFTER the transaction
-            // had already committed, the catch block would call
-            // transaction.RollbackAsync() on an already-completed transaction —
-            // which itself throws, crashing the whole request with an unhandled
-            // exception despite the payment having genuinely succeeded. The
-            // notification is now outside that scope entirely, with its own
-            // isolated try/catch: a failure here is logged but never prevents the
-            // store owner from seeing their payment succeeded.
             try
             {
                 await _notifications.SendToAllAdminsAsync(
@@ -318,11 +279,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             return RedirectToLocalOrDashboard();
         }
 
-        // -------------------------------------------------------------
-        // Stripe.js bootstrap: create/reuse a Customer and issue a fresh
-        // SetupIntent so the browser can verify a card without ever
-        // exposing the raw PAN to our server.
-        // -------------------------------------------------------------
         private async Task PrepareStripeSetupAsync(Store store)
         {
             try
@@ -352,8 +308,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             {
                 _logger.LogError(ex, "Failed to prepare Stripe SetupIntent for store {StoreId}.", store.StoreID);
                 ClientSecret = null;
-                // Surfacing the actual Stripe error (not just a generic message) makes this
-                // debuggable during setup. Stripe's own error messages don't leak secrets.
                 ErrorMessage = $"Card verification is temporarily unavailable ({ex.StripeError?.Message ?? ex.Message}).";
             }
             catch (Exception ex)
@@ -376,7 +330,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 }
                 catch (StripeException)
                 {
-                    // Fall through and create a new customer if the stored ID is no longer valid.
                 }
             }
 
@@ -392,12 +345,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             return customer;
         }
 
-        // -------------------------------------------------------------
-        // Verifies — server-side — that the SetupIntent the client claims
-        // to have completed really did succeed with Stripe, then attaches
-        // the resulting PaymentMethod (a token) as the customer's default.
-        // At no point does this server see or store the card number.
-        // -------------------------------------------------------------
         private async Task<(bool Success, string? ErrorMessage)> ConfirmAndAttachPaymentMethodAsync(Store store, string setupIntentId)
         {
             try
@@ -419,8 +366,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
                 var customer = await GetOrCreateCustomerAsync(store);
 
-                // Defense in depth: confirm the SetupIntent actually belongs
-                // to this store's customer, not one supplied by a tampered request.
                 if (!string.Equals(setupIntent.CustomerId, customer.Id, StringComparison.Ordinal))
                 {
                     _logger.LogWarning(
@@ -449,9 +394,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             }
         }
 
-        // -------------------------------------------------------------
-        // Helpers
-        // -------------------------------------------------------------
         private IActionResult RedirectToLocalOrDashboard()
         {
             if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))

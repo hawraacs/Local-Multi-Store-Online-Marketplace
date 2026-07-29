@@ -196,6 +196,31 @@ namespace Multi_Store.Services.Managers
                 }
             }
 
+            // NEW — notify each involved store owner that a new order came in.
+            // One notification per store, not per item, since a multi-vendor
+            // order should only ping each store owner once, not once per line.
+            var notifiedStoreIds = new HashSet<int>();
+
+            foreach (var item in cart.CartItems)
+            {
+                if (item.Product == null || notifiedStoreIds.Contains(item.Product.StoreID))
+                    continue;
+
+                notifiedStoreIds.Add(item.Product.StoreID);
+
+                var store = await _storeRepository.GetByIdAsync(item.Product.StoreID);
+                if (store == null || store.OwnerUserID <= 0)
+                    continue;
+
+                await _notificationManager.SendAsync(
+                    userId: store.OwnerUserID,
+                    title: "New order received",
+                    message: $"You received a new order (#{order.OrderNumber}).",
+                    type: "OrderStatus",
+                    referenceId: order.OrderID,
+                    sentVia: "System");
+            }
+
             // Save stock changes
             await _orderRepository.UpdateAsync(order);
 
@@ -235,17 +260,12 @@ namespace Multi_Store.Services.Managers
             if (order == null)
                 throw new Exception("Order not found");
 
-            // Now also blocks "Out for Delivery" (previously only Shipped/Delivered),
-            // matching AdminOrders.OnPostCancelAsync's stricter rule.
             if (order.Status == "Shipped" ||
                 order.Status == "Delivered" ||
                 order.Status == "Out for Delivery" ||
                 order.Status == "OutForDelivery")
                 throw new Exception("Cannot cancel an order that is out for delivery or delivered");
 
-            // Blocks cancelling an already-paid order without a refund first,
-            // matching AdminOrders.OnPostCancelAsync's rule. Payment flow itself
-            // (creating/confirming/refunding payments) is untouched — this only reads.
             var hasPaidPayment =
                 string.Equals(order.PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase) ||
                 (order.Payments != null && order.Payments.Any(p =>
@@ -256,8 +276,6 @@ namespace Multi_Store.Services.Managers
 
             var oldStatus = order.Status;
 
-            // Cascade cancellation to any active delivery assignment so it is not
-            // left dangling/active after the order itself is cancelled.
             if (order.DeliveryAssignment != null &&
                 !string.Equals(order.DeliveryAssignment.Status, "Delivered", StringComparison.OrdinalIgnoreCase) &&
                 !string.Equals(order.DeliveryAssignment.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))

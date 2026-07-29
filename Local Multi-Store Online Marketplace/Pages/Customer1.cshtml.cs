@@ -19,20 +19,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly UserManager<User> _userManager;
         private readonly WishlistManager _wishlistManager;
         private readonly MessagingManager _messagingManager;
-        private readonly BoostManager _boostManager;   // ADD THIS
+        private readonly BoostManager _boostManager;
 
         public Customer1Model(
             ApplicationDbContext context,
             UserManager<User> userManager,
             WishlistManager wishlistManager,
             MessagingManager messagingManager,
-            BoostManager boostManager)                  // ADD THIS
+            BoostManager boostManager)
         {
             _context = context;
             _userManager = userManager;
             _wishlistManager = wishlistManager;
             _messagingManager = messagingManager;
-            _boostManager = boostManager;                // ADD THIS
+            _boostManager = boostManager;
         }
 
         public List<ExploreGridItemViewModel> InitialItems { get; set; } = new();
@@ -54,8 +54,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         [BindProperty(SupportsGet = true)] public decimal? MinPrice { get; set; }
         [BindProperty(SupportsGet = true)] public decimal? MaxPrice { get; set; }
 
-        // NEW — "Reel" / "Carousel" / "Product", or null/empty for "All".
-        // Drives the three legend clicks in the grid heading.
         [BindProperty(SupportsGet = true)] public string? TypeFilter { get; set; }
 
         // =====================================================
@@ -105,16 +103,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         // =====================================================
         // INFINITE SCROLL PAGE
-        // GET /Customer1?handler=ExplorePage&page=2&category=Fashion
         // =====================================================
-        // NOTE: this parameter is named "pageNumber", not "page" — Razor
-        // Pages internally reserves "page" as a route value used to select
-        // *which page* to route to (how "/Customer1" itself resolves). A
-        // handler parameter also named "page" collides with that and
-        // silently binds to the wrong thing — the querystring's page=2
-        // never actually reaches this parameter, it always defaults back to
-        // 1, which is exactly why every "page 2" request was quietly
-        // re-returning page 1's items forever.
         public async Task<IActionResult> OnGetExplorePageAsync(
             int pageNumber = 1,
             string? category = null,
@@ -143,11 +132,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         // =====================================================
-        // STORE SEARCH AUTOCOMPLETE (search toolbar)
-        // GET /Customer1?handler=SearchStores&term=abc
-        // Matches on Store.StoreName ("username" of the store).
-        // Only approved stores are returned, same rule used
-        // everywhere else on this page.
+        // STORE SEARCH AUTOCOMPLETE
         // =====================================================
         public async Task<IActionResult> OnGetSearchStoresAsync(string? term)
         {
@@ -187,7 +172,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         // =====================================================
         // OPEN ONE EXISTING EXPLORE POST IN THE SHARED MODAL
-        // Existing post likes/comments remain unchanged.
         // =====================================================
         public async Task<IActionResult> OnGetExplorePostDetailsAsync(int id)
         {
@@ -228,12 +212,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     StatusCodes.Status404NotFound);
             }
 
-            // CHANGED — view count is now unique per customer, not raw opens.
-            // Previously this line ran unconditionally on every single open,
-            // so the same customer reopening a post 10 times added +10. Now it
-            // only increments the first time this customer ever views this
-            // post, tracked via ExploreViews (same pattern already used for
-            // ExploreLikes below).
             var alreadyViewed = await _context.ExploreViews
                 .AnyAsync(v =>
                     v.CustomerID == customerId.Value &&
@@ -376,8 +354,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 });
             }
 
-            // CHANGED — related items are now matched on Category/Name
-            // similarity instead of the current post's store.
             details.RelatedItems = await LoadRelatedItemsAsync(
                 currentPostId: post.ExplorePostID,
                 currentProductId: post.ProductID,
@@ -394,8 +370,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         // =====================================================
         // OPEN A NORMAL PRODUCT IN THE SAME SHEIN-STYLE MODAL
-        // A store owner only creates a normal product. It appears
-        // automatically in Customer Explore without another post.
         // =====================================================
         public async Task<IActionResult> OnGetExploreProductDetailsAsync(int id)
         {
@@ -494,8 +468,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 Reviews = MapProductReviews(product)
             };
 
-            // CHANGED — related items are now matched on Category/Name
-            // similarity instead of the current product's store.
             details.RelatedItems = await LoadRelatedItemsAsync(
                 currentPostId: 0,
                 currentProductId: product.ProductID,
@@ -524,13 +496,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     StatusCodes.Status401Unauthorized);
             }
 
-            var postExists = await _context.ExplorePosts
-                .AnyAsync(p =>
+            var postInfo = await _context.ExplorePosts
+                .Where(p =>
                     p.ExplorePostID == postId &&
                     p.IsActive &&
-                    p.Store.Status == "Approved");
+                    p.Store.Status == "Approved")
+                .Select(p => new { p.StoreID, OwnerUserID = p.Store.OwnerUserID })
+                .FirstOrDefaultAsync();
 
-            if (!postExists)
+            if (postInfo == null)
             {
                 return JsonError(
                     "Explore post is no longer available.",
@@ -554,6 +528,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 });
 
                 liked = true;
+
+                _context.Notifications.Add(new Notification
+                {
+                    UserID = postInfo.OwnerUserID,
+                    Title = "New like on your post",
+                    Message = "A customer liked one of your posts.",
+                    Type = "Like",
+                    ReferenceID = postId,
+                    IsRead = false,
+                    SentAt = DateTime.UtcNow,
+                    SentVia = "System"
+                });
             }
             else
             {
@@ -606,13 +592,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     StatusCodes.Status400BadRequest);
             }
 
-            var postExists = await _context.ExplorePosts
-                .AnyAsync(p =>
+            var postInfo = await _context.ExplorePosts
+                .Where(p =>
                     p.ExplorePostID == postId &&
                     p.IsActive &&
-                    p.Store.Status == "Approved");
+                    p.Store.Status == "Approved")
+                .Select(p => new { OwnerUserID = p.Store.OwnerUserID })
+                .FirstOrDefaultAsync();
 
-            if (!postExists)
+            if (postInfo == null)
             {
                 return JsonError(
                     "Explore post is no longer available.",
@@ -630,6 +618,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             };
 
             _context.ExploreComments.Add(comment);
+
+            _context.Notifications.Add(new Notification
+            {
+                UserID = postInfo.OwnerUserID,
+                Title = "New comment on your post",
+                Message = "A customer commented on one of your posts.",
+                Type = "Comment",
+                ReferenceID = postId,
+                IsRead = false,
+                SentAt = DateTime.UtcNow,
+                SentVia = "System"
+            });
+
             await _context.SaveChangesAsync();
 
             var commentCount = await _context.ExploreComments
@@ -717,12 +718,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     StatusCodes.Status401Unauthorized);
             }
 
-            var storeExists = await _context.Stores
-                .AnyAsync(s =>
+            var storeInfo = await _context.Stores
+                .Where(s =>
                     s.StoreID == storeId &&
-                    s.Status == "Approved");
+                    s.Status == "Approved")
+                .Select(s => new { OwnerUserID = s.OwnerUserID })
+                .FirstOrDefaultAsync();
 
-            if (!storeExists)
+            if (storeInfo == null)
             {
                 return JsonError(
                     "Store was not found.",
@@ -746,6 +749,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 });
 
                 following = true;
+
+                _context.Notifications.Add(new Notification
+                {
+                    UserID = storeInfo.OwnerUserID,
+                    Title = "New follower",
+                    Message = "A customer started following your store.",
+                    Type = "Follow",
+                    ReferenceID = storeId,
+                    IsRead = false,
+                    SentAt = DateTime.UtcNow,
+                    SentVia = "System"
+                });
             }
             else
             {
@@ -899,8 +914,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         // =====================================================
         // ADD PRODUCT REVIEW DIRECTLY FROM EXPLORE MODAL
-        // (no redirect to /CreateProductReview) — mirrors the
-        // inline review composer already used on CustomerFeed.
         // =====================================================
         public async Task<IActionResult> OnPostAddExploreProductReviewAsync(
             int productId,
@@ -939,7 +952,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     StatusCodes.Status400BadRequest);
             }
 
+            // BUGFIX: was missing .Include(p => p.Store). p.Store.Status
+            // below only filters via a SQL join — it does NOT populate
+            // product.Store on the returned entity. Without this Include,
+            // product.Store was null, and the notification code further
+            // down threw a NullReferenceException on
+            // product.Store.OwnerUserID — AFTER the review had already been
+            // saved successfully. That's why review submissions looked like
+            // they silently failed: the row existed, but the request
+            // crashed with an unhandled 500 before returning success to
+            // the client, so the modal never updated.
             var product = await _context.Products
+                .Include(p => p.Store)
                 .FirstOrDefaultAsync(p =>
                     p.ProductID == productId &&
                     p.IsActive &&
@@ -966,9 +990,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _context.Reviews.Add(review);
             await _context.SaveChangesAsync();
 
-            // Recompute this product's aggregate rating/total from all
-            // non-rejected reviews so the summary shown in the modal
-            // (stars + count) stays in sync immediately.
             var approvedReviews = await _context.Reviews
                 .Where(r =>
                     r.ProductID == productId &&
@@ -982,6 +1003,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             product.Rating = averageRating;
             product.TotalRatings = totalRatings;
+
+            _context.Notifications.Add(new Notification
+            {
+                UserID = product.Store.OwnerUserID,
+                Title = "New product review",
+                Message = $"A customer left a {review.Rating}-star review on one of your products.",
+                Type = "ProductReview",
+                ReferenceID = review.ReviewID,
+                IsRead = false,
+                SentAt = DateTime.UtcNow,
+                SentVia = "System"
+            });
 
             await _context.SaveChangesAsync();
 
@@ -1100,6 +1133,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     FollowedAt = DateTime.UtcNow
                 });
 
+                var ownerUserId = await _context.Stores
+                    .Where(s => s.StoreID == storeId)
+                    .Select(s => (int?)s.OwnerUserID)
+                    .FirstOrDefaultAsync();
+
+                if (ownerUserId.HasValue)
+                {
+                    _context.Notifications.Add(new Notification
+                    {
+                        UserID = ownerUserId.Value,
+                        Title = "New follower",
+                        Message = "A customer started following your store.",
+                        Type = "Follow",
+                        ReferenceID = storeId,
+                        IsRead = false,
+                        SentAt = DateTime.UtcNow,
+                        SentVia = "System"
+                    });
+                }
+
                 await _context.SaveChangesAsync();
             }
 
@@ -1176,8 +1229,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         // =====================================================
-        // PAGINATED UNIFIED GRID:
-        // Explore posts + products that do not already have an active post
+        // PAGINATED UNIFIED GRID
         // =====================================================
         private async Task<ExplorePageResult> LoadExplorePageAsync(
             int page, string? category, string? searchTerm, int? categoryId,
@@ -1188,12 +1240,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var normalizedSearch = searchTerm?.Trim();
             var normalizedArea = area?.Trim();
 
-            // NEW — drives the three grid-legend clicks (Reel / Carousel / Product).
-            // "Reel"/"Carousel" only ever apply to Explore posts (post.PostType),
-            // and "Product" here means the plain-catalog-product tiles that have
-            // no active Explore post at all — matching exactly what the three
-            // legend badges in the grid actually represent. Anything else
-            // (null/empty, or an unrecognized value) means "All" — no filtering.
             var normalizedTypeFilter = typeFilter?.Trim();
             var includePosts = true;
             var includeProducts = true;
@@ -1211,8 +1257,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 includeProducts = false;
             }
 
-            // NEW — expire due boosts and grab currently-active boosted product IDs,
-            // so both posts and plain products can be flagged/sorted below.
             await _boostManager.ExpireDueBoostsAsync();
             var boostedIds = await _boostManager.GetActiveBoostedProductIdsAsync();
 
@@ -1254,22 +1298,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (maxPrice.HasValue)
                 postsQuery = postsQuery.Where(post => post.Product != null && post.Product.Price <= maxPrice.Value);
 
-            // NEW — narrow to just Reels or just Carousels when that legend item was clicked.
             if (string.Equals(normalizedTypeFilter, "Reel", StringComparison.OrdinalIgnoreCase))
                 postsQuery = postsQuery.Where(post => post.PostType == "Reel");
             else if (string.Equals(normalizedTypeFilter, "Carousel", StringComparison.OrdinalIgnoreCase))
                 postsQuery = postsQuery.Where(post => post.PostType == "Carousel");
 
-            // CHANGED — real database-level pagination instead of pulling
-            // every matching post AND every matching product into memory on
-            // every single scroll request. Both sides are projected into the
-            // same view-model shape without executing yet, concatenated into
-            // one query, ordered, and only THEN sliced with Skip/Take — so
-            // the database does the filtering/sorting/paging and only
-            // ExplorePageSize+1 rows ever come back, on every page, not just
-            // page 1. (Previously: postsQuery and productsQuery were each
-            // fully materialized with ToListAsync — i.e. the entire matching
-            // table, unbounded — before combining and paging in C# memory.)
             var postsProjected = postsQuery.Select(post => new ExploreGridItemViewModel
             {
                 GridItemType = "Post",
@@ -1373,10 +1406,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 IsBoosted = boostedIds.Contains(product.ProductID)
             });
 
-            // Only build the side(s) the active type filter actually needs —
-            // same behavior as before (Reel/Carousel => posts only,
-            // Product => products only, otherwise both, combined via a SQL
-            // UNION ALL rather than two separate round trips).
             IQueryable<ExploreGridItemViewModel> combinedQuery;
 
             if (!includePosts)
@@ -1394,17 +1423,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var skip = (page - 1) * ExplorePageSize;
 
-            // CHANGED — boosted items float to the top, then by date, then by
-            // SortId as a final deterministic tie-breaker. SortId (unlike
-            // ExplorePostID/ProductID individually) is always a real column
-            // value on both sides of the union, so it's safe to ORDER BY —
-            // and it's needed: without a fully deterministic sort, SQL Server
-            // isn't guaranteed to return rows in the same order across
-            // repeated Skip/Take calls when many rows share an identical
-            // SortDate (e.g. seed/demo data inserted in the same batch),
-            // which was causing "page 2" to silently re-return items already
-            // shown on page 1 — no error, just an infinite scroll that never
-            // actually produced anything new.
             var pageItems = await combinedQuery
                 .OrderByDescending(item => item.IsBoosted)
                 .ThenByDescending(item => item.SortDate)
@@ -1429,11 +1447,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         // =====================================================
         // RELATED POSTS / PRODUCTS INSIDE MODAL
-        // CHANGED — "Familiar products" are now matched by
-        // Category match OR Product-Name keyword similarity.
-        // Store is no longer used as a matching criterion (it is
-        // kept as a parameter only for backward compatibility with
-        // callers, but is unused in the query below).
         // =====================================================
         private async Task<List<ExploreGridItemViewModel>>
             LoadRelatedItemsAsync(
@@ -1443,14 +1456,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 int? categoryId,
                 string? currentProductName)
         {
-            // Extract meaningful keywords (longer than 2 chars) from the
-            // current product's name to use for a "similar name" match.
             var nameKeywords = (currentProductName ?? string.Empty)
                 .Split(new[] { ' ', '-', '_', ',', '.', '/' },
                     StringSplitOptions.RemoveEmptyEntries)
                 .Where(word => word.Length > 2)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Take(6) // cap keyword count to keep the generated SQL sane
+                .Take(6)
                 .ToList();
 
             var relatedPostsQuery = _context.ExplorePosts
@@ -1810,11 +1821,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public int? ProductID { get; set; }
 
-        // NEW — used ONLY as a pagination tie-breaker. Unlike ExplorePostID
-        // (null for products) and ProductID (null for posts with no linked
-        // product), this is always a real column value on both sides of the
-        // Post/Product union — never a hardcoded literal — so it's safe to
-        // ORDER BY without SQL Server rejecting it as a constant expression.
         public int SortId { get; set; }
 
         public int StoreID { get; set; }
@@ -1842,7 +1848,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public DateTime SortDate { get; set; }
 
-        // NEW — true when this item's linked product has an active boost
         public bool IsBoosted { get; set; }
     }
 
