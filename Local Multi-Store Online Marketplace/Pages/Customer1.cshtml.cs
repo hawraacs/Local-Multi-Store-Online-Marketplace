@@ -487,9 +487,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // =====================================================
         public async Task<IActionResult> OnPostToggleExploreLikeAsync(int postId)
         {
-            var customerId = await GetCurrentCustomerIdAsync();
+            var customer = await GetCurrentCustomerAsync();
 
-            if (customerId == null)
+            if (customer == null)
             {
                 return JsonError(
                     "Please login as a customer first.",
@@ -514,7 +514,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var existingLike = await _context.ExploreLikes
                 .FirstOrDefaultAsync(l =>
                     l.ExplorePostID == postId &&
-                    l.CustomerID == customerId.Value);
+                    l.CustomerID == customer.CustomerID);
 
             bool liked;
 
@@ -523,7 +523,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 _context.ExploreLikes.Add(new ExploreLike
                 {
                     ExplorePostID = postId,
-                    CustomerID = customerId.Value,
+                    CustomerID = customer.CustomerID,
                     CreatedAt = DateTime.UtcNow
                 });
 
@@ -533,7 +533,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 {
                     UserID = postInfo.OwnerUserID,
                     Title = "New like on your post",
-                    Message = "A customer liked one of your posts.",
+                    Message = $"{GetCustomerDisplayName(customer)} liked one of your posts.",
                     Type = "Like",
                     ReferenceID = postId,
                     IsRead = false,
@@ -623,7 +623,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 UserID = postInfo.OwnerUserID,
                 Title = "New comment on your post",
-                Message = "A customer commented on one of your posts.",
+                Message = $"{GetCustomerDisplayName(customer)} commented: \"{cleanComment}\"",
                 Type = "Comment",
                 ReferenceID = postId,
                 IsRead = false,
@@ -709,9 +709,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public async Task<IActionResult> OnPostToggleExploreStoreFollowAsync(
             int storeId)
         {
-            var customerId = await GetCurrentCustomerIdAsync();
+            var customer = await GetCurrentCustomerAsync();
 
-            if (customerId == null)
+            if (customer == null)
             {
                 return JsonError(
                     "Please login as a customer first.",
@@ -734,7 +734,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var follow = await _context.StoreFollows
                 .FirstOrDefaultAsync(f =>
-                    f.CustomerID == customerId.Value &&
+                    f.CustomerID == customer.CustomerID &&
                     f.StoreID == storeId);
 
             bool following;
@@ -743,7 +743,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 _context.StoreFollows.Add(new StoreFollow
                 {
-                    CustomerID = customerId.Value,
+                    CustomerID = customer.CustomerID,
                     StoreID = storeId,
                     FollowedAt = DateTime.UtcNow
                 });
@@ -754,7 +754,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 {
                     UserID = storeInfo.OwnerUserID,
                     Title = "New follower",
-                    Message = "A customer started following your store.",
+                    Message = $"{GetCustomerDisplayName(customer)} started following your store.",
                     Type = "Follow",
                     ReferenceID = storeId,
                     IsRead = false,
@@ -1008,7 +1008,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 UserID = product.Store.OwnerUserID,
                 Title = "New product review",
-                Message = $"A customer left a {review.Rating}-star review on one of your products.",
+                Message = $"{GetCustomerDisplayName(customer)} left a {review.Rating}-star review on {product.ProductName}: \"{review.Comment}\"",
                 Type = "ProductReview",
                 ReferenceID = review.ReviewID,
                 IsRead = false,
@@ -1108,9 +1108,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public async Task<IActionResult> OnPostFollowStoreAsync(int storeId)
         {
-            var customerId = await GetCurrentCustomerIdAsync();
+            var customer = await GetCurrentCustomerAsync();
 
-            if (customerId == null)
+            if (customer == null)
             {
                 TempData["Error"] = "Please login as a customer first.";
 
@@ -1121,14 +1121,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var exists = await _context.StoreFollows
                 .AnyAsync(f =>
-                    f.CustomerID == customerId.Value &&
+                    f.CustomerID == customer.CustomerID &&
                     f.StoreID == storeId);
 
             if (!exists)
             {
                 _context.StoreFollows.Add(new StoreFollow
                 {
-                    CustomerID = customerId.Value,
+                    CustomerID = customer.CustomerID,
                     StoreID = storeId,
                     FollowedAt = DateTime.UtcNow
                 });
@@ -1144,7 +1144,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     {
                         UserID = ownerUserId.Value,
                         Title = "New follower",
-                        Message = "A customer started following your store.",
+                        Message = $"{GetCustomerDisplayName(customer)} started following your store.",
                         Type = "Follow",
                         ReferenceID = storeId,
                         IsRead = false,

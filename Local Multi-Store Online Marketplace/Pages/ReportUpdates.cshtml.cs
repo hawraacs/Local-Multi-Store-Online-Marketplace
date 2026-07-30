@@ -103,5 +103,33 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             return RedirectToPage();
         }
+
+        // Maps a Notification.Type to the icon (Font Awesome class) and
+        // color-tint CSS class used in the store-owner notification list,
+        // so replies, likes, comments, etc. are visually distinguishable
+        // instead of all sharing the same generic flag icon.
+        public static (string IconClass, string CssClass) GetNotificationIcon(string type)
+        {
+            return type switch
+            {
+                "Like" => ("fas fa-heart", "type-like"),
+                "Comment" => ("fas fa-comment", "type-comment"),
+                "ProductReview" => ("fas fa-star", "type-review"),
+                "StoreReview" => ("fas fa-star", "type-review"),
+                "StoryLike" => ("fas fa-circle-play", "type-story-like"),
+                "StoryReply" => ("fas fa-reply", "type-story-reply"),
+                "Follow" => ("fas fa-user-plus", "type-follow"),
+                "AccountStatement" => ("fas fa-file-invoice-dollar", ""),
+                "OrderStatus" => ("fas fa-box", ""),
+                "NewOrder" => ("fas fa-box", ""),
+                "PaymentUpdate" => ("fas fa-credit-card", ""),
+                "DeliveryRequest" => ("fas fa-truck", ""),
+                "Promotion" => ("fas fa-bullhorn", ""),
+                "StoreRequest" => ("fas fa-store", ""),
+                "AdminWarning" => ("fas fa-triangle-exclamation", ""),
+                "ReportUpdate" => ("fas fa-flag", ""),
+                _ => ("fas fa-bell", "")
+            };
+        }
     }
 }

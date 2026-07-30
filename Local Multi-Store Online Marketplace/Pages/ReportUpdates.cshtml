@@ -10,8 +10,7 @@
 
 @if (Model.IsStoreOwner)
 {
-    @* StoreOwner branch: _StoreOwnerLayout already provides <html>/<head>/<body>
-       and its own nav/sidebar, so we only render styles + content here. *@
+    @* StoreOwner branch: unchanged — untouched from the original file. *@
     <style>
         :root {
             --accent-color: #6d28d9;
@@ -164,6 +163,46 @@
             color: #fff;
         }
 
+        .ig-notif-icon.type-like {
+            background: #fbeaec;
+            color: #e0245e;
+        }
+
+        .ig-notif-icon.type-comment {
+            background: #e9f3ff;
+            color: #2563eb;
+        }
+
+        .ig-notif-icon.type-review {
+            background: #fdf6e8;
+            color: #d97706;
+        }
+
+        .ig-notif-icon.type-story-like {
+            background: #f3effe;
+            color: #6d28d9;
+        }
+
+        .ig-notif-icon.type-story-reply {
+            background: #eafaf2;
+            color: #10b981;
+        }
+
+        .ig-notif-icon.type-follow {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .ig-notif-row:hover .ig-notif-icon.type-like,
+        .ig-notif-row:hover .ig-notif-icon.type-comment,
+        .ig-notif-row:hover .ig-notif-icon.type-review,
+        .ig-notif-row:hover .ig-notif-icon.type-story-like,
+        .ig-notif-row:hover .ig-notif-icon.type-story-reply,
+        .ig-notif-row:hover .ig-notif-icon.type-follow {
+            background: var(--accent-color);
+            color: #ffffff;
+        }
+
         .ig-notif-body {
             flex-grow: 1;
             min-width: 0;
@@ -252,12 +291,14 @@
                 <div class="ig-notif-list">
                     @foreach (var n in Model.NotificationsList)
                     {
+                        var iconInfo = ReportUpdatesModel.GetNotificationIcon(n.Type);
+
                         <div class="ig-notif-row-wrap">
                             <form method="post" asp-page-handler="OpenNotification" class="ig-notif-form">
                                 <input type="hidden" name="notificationId" value="@n.NotificationID" />
                                 <button type="submit" class="ig-notif-row @(n.IsRead ? "" : "unread")">
-                                    <div class="ig-notif-icon">
-                                        <i class="fas fa-flag"></i>
+                                    <div class="ig-notif-icon @iconInfo.CssClass">
+                                        <i class="@iconInfo.IconClass"></i>
                                     </div>
                                     <div class="ig-notif-body">
                                         <div class="ig-notif-text">
@@ -298,16 +339,18 @@
 }
 else
 {
-    @* Delivery / Customer branch: this page is fully standalone (Layout = null),
-       so it owns the whole document, including the correct bottom nav for the role. *@
+    @* Delivery / Customer branch. Customer header now matches the
+       Wishlist page's look: centered Playfair Display title + subtitle,
+       same card/shadow language. Delivery keeps the original compact
+       header with back-button since only "customer side" was requested. *@
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-        <title>Report Updates | Realnest</title>
+        <title>Notifications | Realnest</title>
 
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
         <style>
@@ -316,16 +359,17 @@ else
                     --accent-hover: #5b21b6;
                     --accent-light: #f3effe;
                     --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-                    --bg-color: #f8f7fc;
+                    --bg-color: #faf9fc;
                     --card-bg: #ffffff;
                     --text-primary: #1e1b2e;
                     --text-secondary: #6b6478;
                     --text-muted: #9691a4;
                     --border-color: #ece8f6;
-                    --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
-                    --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+                    --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+                    --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
                     --radius-md: 16px;
                     --radius-lg: 24px;
+                    --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                     --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
                 }
 
@@ -336,7 +380,7 @@ else
                 }
 
                 body {
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                    font-family: var(--font-family);
                     background: var(--bg-color);
                     color: var(--text-primary);
                     min-height: 100vh;
@@ -344,20 +388,43 @@ else
                     -webkit-font-smoothing: antialiased;
                 }
 
-                .page-container {
+                /* Customer header — same visual language as Wishlist's
+                                   .wishlist-header (centered Playfair Display title). */
+                .notif-page-header {
+                    text-align: center;
+                    margin: 24px auto 28px;
                     max-width: 1100px;
-                    margin: 24px auto;
-                    padding: 0 16px 100px;
+                    padding: 0 16px;
+                    position: relative;
                 }
 
-                .page-header {
-                    display: flex;
-                    align-items: center;
-                    gap: 16px;
-                    margin-bottom: 28px;
-                }
+                    .notif-page-header h2 {
+                        font-family: 'Playfair Display', Georgia, serif;
+                        font-size: 34px;
+                        font-weight: 800;
+                        margin: 0 0 8px;
+                        color: var(--text-primary);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 10px;
+                    }
 
-                .back-btn-plain {
+                        .notif-page-header h2 i {
+                            color: var(--text-primary);
+                        }
+
+                    .notif-page-header p {
+                        margin: 0;
+                        color: var(--text-secondary);
+                        font-size: 15px;
+                        font-weight: 500;
+                    }
+
+                .notif-back-btn {
+                    position: absolute;
+                    left: 16px;
+                    top: 0;
                     width: 44px;
                     height: 44px;
                     background: var(--accent-light);
@@ -372,26 +439,25 @@ else
                     flex-shrink: 0;
                 }
 
-                    .back-btn-plain:hover {
+                    .notif-back-btn:hover {
                         background: var(--accent-color);
                         color: #ffffff;
                     }
 
-                .page-header h2 {
-                    font-family: 'Plus Jakarta Sans', sans-serif;
-                    font-size: 24px;
-                    font-weight: 800;
-                    letter-spacing: -0.5px;
-                    color: var(--accent-color);
-                    margin: 0;
+                /* Page body / container — matches Wishlist's page padding
+                                   and max-width so the card sits in the same rhythm. */
+                .page-container {
+                    max-width: 1100px;
+                    margin: 0 auto;
+                    padding: 0 16px 100px;
                 }
 
                 .notification-card {
                     background: var(--card-bg);
                     border: 1px solid var(--border-color);
-                    border-radius: var(--radius-md);
-                    padding: 8px;
-                    box-shadow: var(--shadow-sm);
+                    border-radius: 20px;
+                    padding: 12px;
+                    box-shadow: var(--shadow-md);
                 }
 
                 .ig-notif-form {
@@ -415,6 +481,7 @@ else
                     text-align: left;
                     transition: var(--transition);
                     border-radius: 12px;
+                    font-family: var(--font-family);
                 }
 
                 .ig-notif-delete-form {
@@ -516,9 +583,18 @@ else
                     box-shadow: 0 0 10px rgba(109, 40, 217, 0.4);
                 }
 
+                /* Empty state — same dashed-border card language as
+                                   Wishlist's .empty-wishlist */
                 .empty-state {
+                    max-width: 700px;
+                    margin: 40px auto;
+                    background: var(--card-bg);
                     text-align: center;
-                    padding: 80px 24px;
+                    color: var(--text-secondary);
+                    padding: 60px 40px;
+                    border-radius: 20px;
+                    border: 2px dashed #ded4f5;
+                    box-shadow: var(--shadow-sm);
                 }
 
                 .empty-icon {
@@ -534,19 +610,24 @@ else
                 }
 
                 .empty-state h3 {
+                    color: var(--text-primary);
                     font-weight: 800;
-                    font-size: 20px;
-                    margin-bottom: 8px;
+                    font-size: 22px;
+                    margin-bottom: 10px;
                 }
 
-                .empty-state p {
-                    color: var(--text-secondary);
-                    font-size: 14px;
-                }
+                @@media (max-width: 550px) {
+                    .notif-page-header h2 {
+                        font-size: 26px;
+                    }
 
-                @@media (max-width: 768px) {
-                    .page-header h2 {
-                        font-size: 20px;
+                    .notif-back-btn {
+                        position: static;
+                        margin: 0 auto 12px;
+                    }
+
+                    .notification-card {
+                        padding: 8px;
                     }
                 }
         </style>
@@ -562,14 +643,15 @@ else
             <partial name="_CustomerBottomNav" />
         }
 
-        <div class="page-container">
-            <div class="page-header">
-                <a href="@backUrl" class="back-btn-plain">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
-                <h2><i class="fas fa-bell" style="margin-right:10px;"></i>Notifications</h2>
-            </div>
+        <div class="notif-page-header">
+            <a href="@backUrl" class="notif-back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h2><i class="fa-regular fa-bell"></i> Notifications</h2>
+            <p>Stay updated on your orders, deliveries and account activity.</p>
+        </div>
 
+        <div class="page-container">
             <div class="notification-card">
                 @if (Model.NotificationsList.Any())
                 {

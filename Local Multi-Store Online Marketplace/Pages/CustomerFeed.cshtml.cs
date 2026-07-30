@@ -244,6 +244,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .ToListAsync();
         }
 
+        // Returns the best available name to show the store owner in a
+        // notification: full name, falling back to username, falling back
+        // to a generic "A customer" if neither is set.
+        private static string GetDisplayName(User user)
+        {
+            if (!string.IsNullOrWhiteSpace(user.FullName)) return user.FullName;
+            if (!string.IsNullOrWhiteSpace(user.UserName)) return user.UserName;
+            return "A customer";
+        }
+
         // ================= FOLLOW =================
         public async Task<IActionResult> OnPostFollowStoreAsync(int storeId)
         {
@@ -277,7 +287,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     {
                         UserID = ownerUserId.Value,
                         Title = "New follower",
-                        Message = "A customer started following your store.",
+                        Message = $"{GetDisplayName(user)} started following your store.",
                         Type = "Follow",
                         ReferenceID = storeId,
                         IsRead = false,
@@ -459,7 +469,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 UserID = ownerUserId,
                 Title = "New product review",
-                Message = $"A customer left a {rating}-star review on one of your products.",
+                Message = $"{GetDisplayName(user)} left a {rating}-star review on {product.ProductName}: \"{review.Comment}\"",
                 Type = "ProductReview",
                 ReferenceID = review.ReviewID,
                 IsRead = false,
@@ -526,10 +536,39 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var alreadyLiked = await _storyManager.IsLikedByCustomerAsync(storyId, customer.CustomerID);
 
+            var story = await _storyManager.GetByIdWithStoreAsync(storyId);
+
             if (alreadyLiked)
+            {
                 await _storyManager.UnlikeStoryAsync(storyId, customer.CustomerID);
+            }
             else
+            {
                 await _storyManager.LikeStoryAsync(storyId, customer.CustomerID);
+
+                // FIX: liking a story never notified the store owner — every
+                // other social action (Follow, Review, Comment, and now
+                // StoryReply below) creates a Notification at the point of
+                // the action, but this one didn't, so "StoryLike" rows never
+                // existed for the store owner's Report Updates page to show,
+                // even though "StoryLike" was already a recognized type there.
+                if (story != null && story.Store != null && story.Store.OwnerUserID != user.Id)
+                {
+                    _context.Notifications.Add(new Notification
+                    {
+                        UserID = story.Store.OwnerUserID,
+                        Title = "New story like",
+                        Message = $"{GetDisplayName(user)} liked your story.",
+                        Type = "StoryLike",
+                        ReferenceID = storyId,
+                        IsRead = false,
+                        SentAt = DateTime.UtcNow,
+                        SentVia = "System"
+                    });
+
+                    await _context.SaveChangesAsync();
+                }
+            }
 
             var likeCount = await _storyManager.GetLikeCountAsync(storyId);
 
@@ -556,6 +595,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return new JsonResult(new { success = false, error = "You cannot reply to your own story." });
 
             await _messagingManager.SendStoryReplyAsync(user.Id, story.Store.OwnerUserID, storyId, replyText);
+
+            // FIX: this is the actual bug — every sibling action (Follow,
+            // Review, Comment, Like above) creates a Notification row right
+            // here at the handler, but this one only sent the chat message
+            // and returned. Since the store-owner Report Updates page reads
+            // exclusively from the Notifications table (not from chat), a
+            // "StoryReply" notification row needs to exist here or a reply
+            // will never show up there no matter how many customers send one.
+            _context.Notifications.Add(new Notification
+            {
+                UserID = story.Store.OwnerUserID,
+                Title = "New story reply",
+                Message = $"{GetDisplayName(user)} replied to your story: \"{replyText.Trim()}\"",
+                Type = "StoryReply",
+                ReferenceID = storyId,
+                IsRead = false,
+                SentAt = DateTime.UtcNow,
+                SentVia = "System"
+            });
+
+            await _context.SaveChangesAsync();
 
             return new JsonResult(new { success = true });
         }
