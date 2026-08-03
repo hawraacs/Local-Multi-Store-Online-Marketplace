@@ -64,6 +64,8 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<Story> Stories { get; set; }
         public DbSet<StoryView> StoryViews { get; set; }
         public DbSet<StoryLike> StoryLikes { get; set; }
+        public DbSet<DeliveryReview> DeliveryReviews { get; set; }
+        public DbSet<DeliveryFollow> DeliveryFollows { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -414,6 +416,29 @@ namespace Multi_Store.Infrastructure.Data
                 .HasOne(d => d.DeliveryPerson)
                 .WithMany(dp => dp.Assignments)
                 .HasForeignKey(d => d.DeliveryPersonID)
+                .OnDelete(DeleteBehavior.Restrict);
+            // ================= DELIVERY REVIEWS =================
+            // New, additive block - same one-directional style as the
+            // STORIES block above. Customer.cs, DeliveryPerson.cs, and
+            // DeliveryAssignment.cs are left untouched (no inverse
+            // collection navigation added back on any of them), so
+            // WithMany()/WithOne() have no back-reference argument.
+            modelBuilder.Entity<DeliveryReview>()
+                .HasOne(dr => dr.Assignment)
+                .WithOne()
+                .HasForeignKey<DeliveryReview>(dr => dr.AssignmentID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DeliveryReview>()
+                .HasOne(dr => dr.Customer)
+                .WithMany()
+                .HasForeignKey(dr => dr.CustomerID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DeliveryReview>()
+                .HasOne(dr => dr.DeliveryPerson)
+                .WithMany()
+                .HasForeignKey(dr => dr.DeliveryPersonID)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<AuditLog>()

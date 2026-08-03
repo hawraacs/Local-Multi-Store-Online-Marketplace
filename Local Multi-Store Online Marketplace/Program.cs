@@ -115,6 +115,8 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<ICustomerAddressRepository, CustomerAddressRepository>();
 builder.Services.AddScoped<IDeliveryAreaRepository, DeliveryAreaRepository>();
 builder.Services.AddScoped<IDeliveryAssignmentRepository, DeliveryAssignmentRepository>();
+builder.Services.AddScoped<IDeliveryFollowRepository, DeliveryFollowRepository>();
+builder.Services.AddScoped<IDeliveryReviewRepository, DeliveryReviewRepository>();
 builder.Services.AddScoped<IDeliveryPaymentCollectionRepository, DeliveryPaymentCollectionRepository>();
 builder.Services.AddScoped<IDeliveryPersonRepository, DeliveryPersonRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
@@ -147,6 +149,7 @@ builder.Services.AddScoped<SubscriptionService>();
 // Broadcasts a Notification row to every user in the "Admin" role
 // (new complaints, store/delivery signup requests, orders, etc.).
 // See Infrastructure/Services/AdminNotificationService.cs
+builder.Services.AddScoped<IAdminNotificationService, AdminNotificationService>();
 builder.Services.AddScoped<IAdminNotificationService, AdminNotificationService>();
 
 // ===============================
