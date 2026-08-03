@@ -43,6 +43,7 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<Complaint> Complaints { get; set; }
         public DbSet<DeliveryPerson> DeliveryPersons { get; set; }
         public DbSet<DeliveryAssignment> DeliveryAssignments { get; set; }
+        public DbSet<DeliveryReview> DeliveryReviews { get; set; }
         public DbSet<DeliveryPaymentCollection> DeliveryPaymentCollections { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<SystemConfig> SystemConfigs { get; set; }
@@ -247,6 +248,7 @@ namespace Multi_Store.Infrastructure.Data
             modelBuilder.Entity<ProductImage>().HasKey(e => e.ImageID);
             modelBuilder.Entity<RefundRequest>().HasKey(e => e.RefundRequestID);
             modelBuilder.Entity<Review>().HasKey(e => e.ReviewID);
+            modelBuilder.Entity<DeliveryReview>().HasKey(e => e.DeliveryReviewID);
             modelBuilder.Entity<Session>().HasKey(e => e.SessionID);
             modelBuilder.Entity<Store>().HasKey(e => e.StoreID);
             modelBuilder.Entity<SystemConfig>().HasKey(e => e.ConfigID);
@@ -415,6 +417,35 @@ namespace Multi_Store.Infrastructure.Data
                 .WithMany(dp => dp.Assignments)
                 .HasForeignKey(d => d.DeliveryPersonID)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // ================= DELIVERY REVIEWS =================
+            // New, additive block — independent of the Review entity's
+            // relationships above. One review per order, enforced both
+            // here (unique index) and in DeliveryReviewManager.
+            modelBuilder.Entity<DeliveryReview>()
+                .HasOne(r => r.Order)
+                .WithMany()
+                .HasForeignKey(r => r.OrderID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DeliveryReview>()
+                .HasOne(r => r.Customer)
+                .WithMany()
+                .HasForeignKey(r => r.CustomerID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DeliveryReview>()
+                .HasOne(r => r.DeliveryPerson)
+                .WithMany()
+                .HasForeignKey(r => r.DeliveryPersonID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DeliveryReview>()
+                .HasIndex(r => r.OrderID)
+                .IsUnique();
+
+            modelBuilder.Entity<DeliveryReview>()
+                .ToTable(t => t.HasCheckConstraint("CK_DeliveryReview_Rating", "Rating >= 1 AND Rating <= 5"));
 
             modelBuilder.Entity<AuditLog>()
                 .HasOne(a => a.User)

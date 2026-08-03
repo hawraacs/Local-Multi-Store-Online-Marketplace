@@ -1,0 +1,336 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.DeliveryCustomerProfileModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Delivery Partner | realnest</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #faf9fc;
+            --card-bg: #ffffff;
+            --border-color: #ece8f6;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            --text-muted: #9691a4;
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            --star-color: #f59e0b;
+            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
+            --radius-md: 16px;
+            --radius-lg: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 100px;
+        }
+
+        .profile-page {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 28px 16px 20px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+            .back-link:hover {
+                color: var(--accent-color);
+            }
+
+        .profile-hero {
+            background: var(--accent-gradient);
+            color: #fff;
+            border-radius: var(--radius-lg);
+            padding: 28px 24px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+        }
+
+        .profile-avatar-lg {
+            width: 68px;
+            height: 68px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .profile-hero-text h1 {
+            font-size: 21px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .profile-hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 13px;
+            opacity: 0.92;
+        }
+
+            .profile-hero-meta span {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+        .profile-rating-summary {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            font-weight: 700;
+            font-size: 14.5px;
+        }
+
+            .profile-rating-summary i {
+                color: #fbbf24;
+            }
+
+            .profile-rating-summary small {
+                font-weight: 500;
+                opacity: 0.85;
+            }
+
+        .reviews-section-label {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            color: var(--text-primary);
+        }
+
+        .reviews-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .review-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .customer-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .customer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--accent-gradient);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .customer-name {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 14.5px;
+        }
+
+        .review-date {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .stars-container {
+            color: var(--star-color);
+            font-size: 13px;
+        }
+
+        .review-body {
+            color: var(--text-secondary);
+            font-size: 14px;
+            padding-left: 52px;
+        }
+
+        .empty-state {
+            background: var(--card-bg);
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 48px 20px;
+            text-align: center;
+        }
+
+            .empty-state i {
+                font-size: 40px;
+                color: var(--accent-light);
+                margin-bottom: 14px;
+                display: block;
+            }
+
+            .empty-state h3 {
+                margin-bottom: 6px;
+            }
+
+            .empty-state p {
+                color: var(--text-muted);
+                font-size: 13.5px;
+            }
+
+        @@media (max-width: 500px) {
+            .review-body {
+                padding-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <partial name="_CustomerBottomNav" />
+
+    <div class="profile-page">
+
+        <a href="/CustomerOrders" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Back to My Orders
+        </a>
+
+        @if (Model.Profile == null)
+        {
+            <div class="empty-state">
+                <i class="fa-solid fa-user-slash"></i>
+                <h3>Delivery partner not found</h3>
+                <p>This delivery partner's profile is not available.</p>
+            </div>
+        }
+        else
+        {
+            <div class="profile-hero">
+                <div class="profile-avatar-lg">@Model.Profile.Initial</div>
+                <div class="profile-hero-text">
+                    <h1>@Model.Profile.FullName</h1>
+                    <div class="profile-hero-meta">
+                        @if (!string.IsNullOrWhiteSpace(Model.Profile.VehicleType))
+                        {
+                            <span><i class="fa-solid fa-truck"></i> @Model.Profile.VehicleType</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Profile.Area))
+                        {
+                            <span><i class="fa-solid fa-location-dot"></i> @Model.Profile.Area</span>
+                        }
+                    </div>
+                    <div class="profile-rating-summary">
+                        <i class="fa-solid fa-star"></i>
+                        @Model.Profile.Rating.ToString("0.0")
+                        <small>(@Model.ReviewCount review@(Model.ReviewCount == 1 ? "" : "s"))</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reviews-section-label">Customer Reviews</div>
+
+            <div class="reviews-container">
+                @if (!Model.Reviews.Any())
+                {
+                    <div class="empty-state">
+                        <i class="fa-solid fa-comment-slash"></i>
+                        <h3>No Reviews Yet</h3>
+                        <p>This delivery partner hasn't been reviewed yet.</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var review in Model.Reviews)
+                    {
+                        var reviewerName = review.CustomerName ?? "Verified Customer";
+                        var initial = reviewerName.Length > 0 ? reviewerName.Substring(0, 1).ToUpper() : "?";
+
+                        <div class="review-card">
+                            <div class="review-header">
+                                <div class="customer-info">
+                                    <div class="customer-avatar">@initial</div>
+                                    <div>
+                                        <div class="customer-name">@reviewerName</div>
+                                        <span class="review-date">@review.CreatedAt.ToString("MMMM dd, yyyy")</span>
+                                    </div>
+                                </div>
+
+                                <div class="stars-container">
+                                    @for (var s = 0; s < 5; s++)
+                                    {
+                                        if (s < review.Rating)
+                                        {
+                                            <i class="fa-solid fa-star"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa-regular fa-star" style="opacity: 0.3;"></i>
+                                        }
+                                    }
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(review.Comment))
+                            {
+                                <div class="review-body">@review.Comment</div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        }
+
+    </div>
+
+</body>
+</html>

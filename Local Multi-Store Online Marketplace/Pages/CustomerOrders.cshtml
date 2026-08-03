@@ -16,606 +16,868 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Bootstrap — added for the Delivery Review modal only. This page
+         is Layout=null / a self-contained document, so this cannot
+         affect any other page in the app. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
     <style>
-            :root {
-                --bg-color: #faf9fc;
-                --card-bg: #ffffff;
-                --border-color: #ece8f6;
-                --text-primary: #1e1b2e;
-                --text-secondary: #6b6478;
-                /* Purple / Indigo palette — same tokens as the Cart page */
-                --accent-color: #6d28d9;
-                --accent-hover: #5b21b6;
-                --accent-light: #f3effe;
-                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-                --like-color: #ef4444;
-                --success-color: #10b981;
-                --error-color: #dc2626;
-                --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
-                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
-                --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
-            }
+        :root {
+            --bg-color: #faf9fc;
+            --card-bg: #ffffff;
+            --border-color: #ece8f6;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            /* Purple / Indigo palette — same tokens as the Cart page */
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            --like-color: #ef4444;
+            --success-color: #10b981;
+            --error-color: #dc2626;
+            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
+            --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
+        }
 
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-            }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-            body {
-                font-family: var(--font-family);
-                background-color: var(--bg-color);
-                color: var(--text-primary);
-                line-height: 1.6;
-                -webkit-font-smoothing: antialiased;
-                padding-bottom: 100px; /* Offset to prevent overlap with the bottom nav */
-            }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 100px; /* Offset to prevent overlap with the bottom nav */
+        }
 
-            /* ============================================================
-                                   BOTTOM NAV — rendered by the shared _CustomerBottomNav
-                                   partial. Styles below match Customer1/Chat/Feed/Cart
-                                   exactly (same class names).
-                                   ============================================================ */
-            .mobile-bottom-nav {
-                display: flex !important;
-                position: fixed;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 200;
-                background: #ffffff;
-                border-top: 1px solid #ece8f6;
-                justify-content: space-between;
+        /* ============================================================
+                               BOTTOM NAV — rendered by the shared _CustomerBottomNav
+                               partial. Styles below match Customer1/Chat/Feed/Cart
+                               exactly (same class names).
+                               ============================================================ */
+        .mobile-bottom-nav {
+            display: flex !important;
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 200;
+            background: #ffffff;
+            border-top: 1px solid #ece8f6;
+            justify-content: space-between;
+            gap: 2px;
+            padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+            overflow-x: auto;
+            box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
+        }
+
+            .mobile-bottom-nav a {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
                 gap: 2px;
-                padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
-                overflow-x: auto;
-                box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
-            }
-
-                .mobile-bottom-nav a {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 2px;
-                    font-size: 10.5px;
-                    color: #6b6478;
-                    text-decoration: none;
-                    padding: 4px 6px;
-                    flex-shrink: 0;
-                    position: relative;
-                    border-radius: 12px;
-                    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
-                }
-
-                    .mobile-bottom-nav a i {
-                        font-size: 17px;
-                        transition: transform 0.2s ease;
-                    }
-
-                    .mobile-bottom-nav a:hover {
-                        background: var(--accent-light);
-                        color: var(--accent-color);
-                    }
-
-                    .mobile-bottom-nav a.active {
-                        color: var(--accent-color) !important;
-                        background: var(--accent-light) !important;
-                        font-weight: 700;
-                        transform: translateY(-2px);
-                    }
-
-                        .mobile-bottom-nav a.active i {
-                            transform: scale(1.12);
-                        }
-
-            /* Cart badge (used by _CartCountBadge partial inside _CustomerBottomNav) */
-            .unread-nav-badge {
-                position: absolute;
-                top: 2px;
-                right: 18px;
-                background: var(--accent-gradient);
-                color: #fff;
-                font-size: 10px;
-                font-weight: 800;
-                min-width: 16px;
-                height: 16px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0 4px;
-                box-shadow: 0 3px 8px rgba(109, 40, 217, 0.3);
-            }
-
-            /* Chat unread dot (used inside _CustomerBottomNav) */
-            .chat-icon-wrap {
-                position: relative;
-                display: inline-flex;
-            }
-
-                .chat-icon-wrap .chat-nav-dot {
-                    position: absolute;
-                    top: -2px;
-                    right: -4px;
-                    width: 9px;
-                    height: 9px;
-                    background: #ed4956;
-                    border: 2px solid #fff;
-                    border-radius: 50%;
-                    box-sizing: content-box;
-                }
-
-            /* PAGE CONTENT — header treatment matches the Cart page's
-                           .cart-header (Playfair title + secondary subtitle). */
-            .orders-page {
-                min-height: 100vh;
-                padding: 32px 16px 20px;
-            }
-
-            .orders-header {
-                text-align: center;
-                margin-bottom: 20px;
-                max-width: 1100px;
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-                .orders-header h2 {
-                    font-family: 'Playfair Display', Georgia, serif;
-                    font-size: 34px;
-                    font-weight: 800;
-                    margin: 0 0 8px;
-                    color: var(--text-primary);
-                }
-
-                .orders-header p {
-                    margin: 0;
-                    color: var(--text-secondary);
-                    font-size: 15px;
-                    font-weight: 500;
-                }
-
-            .orders-box {
-                max-width: 1100px;
-                margin: auto;
-                padding: 28px;
-                background: var(--card-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 24px;
-                box-shadow: var(--shadow-lg);
-            }
-
-            /* TABLES — a single, predictable grid: fixed column
-                           widths (via <colgroup>), a sticky header so long order
-                           histories stay readable, top-aligned cells so rows of
-                           different heights (multi-product orders) still line up
-                           cleanly, and subtle zebra striping to help the eye track
-                           across a row. */
-            .table-wrapper {
-                width: 100%;
-                overflow: auto;
-                max-height: 640px;
-                border-radius: 16px;
-                border: 1px solid var(--border-color);
-            }
-
-            table {
-                width: 100%;
-                min-width: 1320px;
-                border-collapse: separate;
-                border-spacing: 0;
-                table-layout: fixed;
-            }
-
-            thead tr {
-                position: sticky;
-                top: 0;
-                z-index: 2;
-                background: var(--accent-gradient);
-            }
-
-            th {
-                padding: 24px 12px;
-                background: transparent;
-                color: white;
-                font-size: 12px;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.6px;
-                text-align: left;
-                vertical-align: middle;
-                white-space: normal;
-                line-height: 1.35;
-                box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.15);
-            }
-
-                th.col-status,
-                th.col-pay-status,
-                th.col-total,
-                th.col-tracking,
-                th.col-invoice {
-                    text-align: center;
-                }
-
-                th.col-total {
-                    text-align: right;
-                }
-
-            td {
-                padding: 16px;
-                border-bottom: 1px solid var(--border-color);
-                color: var(--text-secondary);
-                font-size: 13.5px;
-                vertical-align: top;
-            }
-
-            tbody tr:last-child td {
-                border-bottom: none;
-            }
-
-            tbody tr:nth-child(even) {
-                background: #fcfbff;
-            }
-
-            tbody tr:hover {
-                background: var(--accent-light);
-            }
-
-            /* Column widths — keeps every row aligned to the same grid
-                           regardless of content length. Products is deliberately
-                           narrower now; the space goes to Payment Method/Status so
-                           values like "Cash On Delivery" have room to breathe. */
-            .col-order {
-                width: 11%;
-            }
-
-            .col-store {
-                width: 9%;
-            }
-
-            .col-products {
-                width: 13%;
-            }
-
-            .col-date {
-                width: 9%;
-            }
-
-            .col-status {
-                width: 9%;
-            }
-
-            .col-pay-method {
-                width: 12%;
-            }
-
-            .col-pay-status {
-                width: 11%;
-            }
-
-            .col-total {
-                width: 9%;
-            }
-
-            .col-tracking {
-                width: 9%;
-            }
-
-            .col-invoice {
-                width: 8%;
-            }
-
-            .order-number {
-                min-width: 120px;
-                color: var(--accent-color);
-                font-weight: 800;
-                font-size: 14px;
-                word-break: break-word;
-            }
-
-            .store-cell {
-                min-width: 120px;
-                color: var(--text-primary);
-                font-weight: 700;
-                font-size: 13px;
-            }
-
-                .store-cell i {
-                    color: var(--accent-color);
-                    margin-right: 6px;
-                }
-
-            .products-cell {
-                min-width: 150px;
-            }
-
-            .date-cell {
-                white-space: nowrap;
-                font-weight: 600;
-                color: var(--text-secondary);
-            }
-
-            .pay-method-cell {
-                min-width: 115px;
-                font-weight: 600;
-                color: var(--text-primary);
-                word-break: break-word;
-            }
-
-            .product-line {
-                display: flex;
-                align-items: flex-start;
-                justify-content: space-between;
-                gap: 10px;
-                margin-bottom: 7px;
-                padding-bottom: 7px;
-                border-bottom: 1px dashed var(--border-color);
-            }
-
-                .product-line:last-child {
-                    margin-bottom: 0;
-                    padding-bottom: 0;
-                    border-bottom: none;
-                }
-
-            .product-name {
-                color: var(--text-primary);
-                font-weight: 700;
-                line-height: 1.35;
-                word-break: break-word;
-            }
-
-            .product-quantity {
+                font-size: 10.5px;
+                color: #6b6478;
+                text-decoration: none;
+                padding: 4px 6px;
                 flex-shrink: 0;
-                padding: 2px 8px;
-                background: var(--accent-light);
-                color: var(--accent-color);
-                border-radius: 999px;
-                font-size: 11px;
-                font-weight: 800;
-                white-space: nowrap;
+                position: relative;
+                border-radius: 12px;
+                transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
             }
 
-            .no-products {
-                color: var(--text-secondary);
-                font-size: 12px;
-                font-weight: 600;
-            }
-
-            /* STATUS CELL */
-            .status-cell {
-                min-width: 100px;
-                text-align: center;
-            }
-
-            /* BADGES — one consistent shape (pill) across the page,
-                           but the COLOR now carries meaning: amber = waiting,
-                           blue = in progress, purple = out for delivery,
-                           green = completed/paid, red = cancelled/unpaid. This
-                           keeps the palette purposeful instead of every status
-                           looking the same. */
-            .status-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 6px 12px;
-                border-radius: 999px;
-                font-size: 11.5px;
-                font-weight: 800;
-                white-space: nowrap;
-                background: #f3effe;
-                color: var(--accent-color);
-                border: 1px solid #e4d9fb;
-            }
-
-                .status-badge.status-pending {
-                    background: #fff7ed;
-                    color: #c2410c;
-                    border-color: #fed7aa;
+                .mobile-bottom-nav a i {
+                    font-size: 17px;
+                    transition: transform 0.2s ease;
                 }
 
-                .status-badge.status-processing {
-                    background: #eff6ff;
-                    color: #1d4ed8;
-                    border-color: #bfdbfe;
-                }
-
-                .status-badge.status-outfordelivery {
+                .mobile-bottom-nav a:hover {
                     background: var(--accent-light);
                     color: var(--accent-color);
-                    border-color: #e4d9fb;
                 }
 
-                .status-badge.status-delivered {
-                    background: #dcfce7;
-                    color: #166534;
-                    border-color: #86efac;
+                .mobile-bottom-nav a.active {
+                    color: var(--accent-color) !important;
+                    background: var(--accent-light) !important;
+                    font-weight: 700;
+                    transform: translateY(-2px);
                 }
 
-                .status-badge.status-cancelled {
-                    background: #fef2f2;
-                    color: var(--error-color);
-                    border-color: #fee2e2;
-                }
+                    .mobile-bottom-nav a.active i {
+                        transform: scale(1.12);
+                    }
 
-            .paid-badge {
-                display: inline-block;
-                padding: 5px 11px;
-                background: #dcfce7;
-                color: #166534;
-                border: 1px solid #86efac;
-                border-radius: 999px;
-                font-size: 11px;
-                font-weight: 800;
-                white-space: nowrap;
+        /* Cart badge (used by _CartCountBadge partial inside _CustomerBottomNav) */
+        .unread-nav-badge {
+            position: absolute;
+            top: 2px;
+            right: 18px;
+            background: var(--accent-gradient);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            box-shadow: 0 3px 8px rgba(109, 40, 217, 0.3);
+        }
+
+        /* Chat unread dot (used inside _CustomerBottomNav) */
+        .chat-icon-wrap {
+            position: relative;
+            display: inline-flex;
+        }
+
+            .chat-icon-wrap .chat-nav-dot {
+                position: absolute;
+                top: -2px;
+                right: -4px;
+                width: 9px;
+                height: 9px;
+                background: #ed4956;
+                border: 2px solid #fff;
+                border-radius: 50%;
+                box-sizing: content-box;
             }
 
-            .pending-badge {
-                display: inline-block;
-                padding: 5px 11px;
-                background: #fef2f2;
-                color: var(--error-color);
-                border: 1px solid #fee2e2;
-                border-radius: 999px;
-                font-size: 11px;
+        /* PAGE CONTENT — header treatment matches the Cart page's
+                       .cart-header (Playfair title + secondary subtitle). */
+        .orders-page {
+            min-height: 100vh;
+            padding: 32px 16px 20px;
+        }
+
+        .orders-header {
+            text-align: center;
+            margin-bottom: 20px;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+            .orders-header h2 {
+                font-family: 'Playfair Display', Georgia, serif;
+                font-size: 34px;
                 font-weight: 800;
-                white-space: nowrap;
+                margin: 0 0 8px;
+                color: var(--text-primary);
             }
 
-            .pay-status-cell {
-                min-width: 110px;
+            .orders-header p {
+                margin: 0;
+                color: var(--text-secondary);
+                font-size: 15px;
+                font-weight: 500;
+            }
+
+        .orders-box {
+            max-width: 1100px;
+            margin: auto;
+            padding: 28px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* TABLES — a single, predictable grid: fixed column
+                       widths (via <colgroup>), a sticky header so long order
+                       histories stay readable, top-aligned cells so rows of
+                       different heights (multi-product orders) still line up
+                       cleanly, and subtle zebra striping to help the eye track
+                       across a row. */
+        .table-wrapper {
+            width: 100%;
+            overflow: auto;
+            max-height: 640px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            min-width: 1320px;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: fixed;
+        }
+
+        thead tr {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: var(--accent-gradient);
+        }
+
+        th {
+            padding: 24px 12px;
+            background: transparent;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            text-align: left;
+            vertical-align: middle;
+            white-space: normal;
+            line-height: 1.35;
+            box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+            th.col-status,
+            th.col-pay-status,
+            th.col-total,
+            th.col-tracking,
+            th.col-invoice {
                 text-align: center;
             }
 
-            /* TOTAL CELL — right-aligned so figures line up like a
-                           ledger, with the order's total emphasized. */
-            .total-cell {
-                min-width: 90px;
+            th.col-total {
                 text-align: right;
             }
 
-            .total-amount {
-                display: block;
-                color: var(--text-primary);
-                font-weight: 800;
-                font-size: 15px;
-                white-space: nowrap;
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 13.5px;
+            vertical-align: top;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fcfbff;
+        }
+
+        tbody tr:hover {
+            background: var(--accent-light);
+        }
+
+        /* Column widths — keeps every row aligned to the same grid
+                       regardless of content length. Products is deliberately
+                       narrower now; the space goes to Payment Method/Status so
+                       values like "Cash On Delivery" have room to breathe. */
+        .col-order {
+            width: 11%;
+        }
+
+        .col-store {
+            width: 9%;
+        }
+
+        .col-products {
+            width: 13%;
+        }
+
+        .col-date {
+            width: 9%;
+        }
+
+        .col-status {
+            width: 9%;
+        }
+
+        .col-pay-method {
+            width: 12%;
+        }
+
+        .col-pay-status {
+            width: 11%;
+        }
+
+        .col-total {
+            width: 9%;
+        }
+
+        .col-tracking {
+            width: 9%;
+        }
+
+        .col-invoice {
+            width: 8%;
+        }
+
+        .order-number {
+            min-width: 120px;
+            color: var(--accent-color);
+            font-weight: 800;
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        .store-cell {
+            min-width: 120px;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+            .store-cell i {
+                color: var(--accent-color);
+                margin-right: 6px;
             }
 
-            /* TRACKING / INVOICE CELLS — centered single-action
-                           columns matching the Cart page's pill buttons. */
-            .tracking-cell,
-            .invoice-cell {
-                min-width: 130px;
-                text-align: center;
+        .products-cell {
+            min-width: 150px;
+        }
+
+        .date-cell {
+            white-space: nowrap;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .pay-method-cell {
+            min-width: 115px;
+            font-weight: 600;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+
+        .product-line {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 7px;
+            padding-bottom: 7px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+            .product-line:last-child {
+                margin-bottom: 0;
+                padding-bottom: 0;
+                border-bottom: none;
             }
 
-            .track-btn,
-            .invoice-btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                width: 100%;
-                padding: 9px 14px;
+        .product-name {
+            color: var(--text-primary);
+            font-weight: 700;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        .product-quantity {
+            flex-shrink: 0;
+            padding: 2px 8px;
+            background: var(--accent-light);
+            color: var(--accent-color);
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .no-products {
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* STATUS CELL */
+        .status-cell {
+            min-width: 100px;
+            text-align: center;
+        }
+
+        /* BADGES — one consistent shape (pill) across the page,
+                       but the COLOR now carries meaning: amber = waiting,
+                       blue = in progress, purple = out for delivery,
+                       green = completed/paid, red = cancelled/unpaid. This
+                       keeps the palette purposeful instead of every status
+                       looking the same. */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 800;
+            white-space: nowrap;
+            background: #f3effe;
+            color: var(--accent-color);
+            border: 1px solid #e4d9fb;
+        }
+
+            .status-badge.status-pending {
+                background: #fff7ed;
+                color: #c2410c;
+                border-color: #fed7aa;
+            }
+
+            .status-badge.status-processing {
+                background: #eff6ff;
+                color: #1d4ed8;
+                border-color: #bfdbfe;
+            }
+
+            .status-badge.status-outfordelivery {
                 background: var(--accent-light);
                 color: var(--accent-color);
-                border: 1px solid var(--border-color);
-                border-radius: 50px;
-                text-decoration: none;
-                font-size: 12.5px;
-                font-weight: 700;
-                white-space: nowrap;
-                transition: all 0.2s ease;
+                border-color: #e4d9fb;
             }
 
-            .invoice-btn {
-                background: var(--accent-gradient);
-                color: white;
-                border: none;
-                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.2);
+            .status-badge.status-delivered {
+                background: #dcfce7;
+                color: #166534;
+                border-color: #86efac;
             }
 
-            .track-btn:hover {
-                background: var(--accent-color);
-                color: white;
-                border-color: var(--accent-color);
-                transform: translateY(-1px);
-            }
-
-            .invoice-btn:hover {
-                opacity: 0.95;
-                box-shadow: 0 6px 14px rgba(109, 40, 217, 0.3);
-                transform: translateY(-1px);
-            }
-
-            .disabled-track {
-                display: block;
-                color: var(--text-secondary);
-                font-size: 11.5px;
-                font-weight: 700;
-                line-height: 1.4;
-                text-align: center;
-            }
-
-            /* EMPTY STATES — matches Cart's .empty-cart card exactly. */
-            .empty-box {
-                max-width: 700px;
-                margin: 40px auto 0;
-                padding: 60px 40px;
-                color: var(--text-secondary);
-                text-align: center;
-                border: 2px dashed #ded4f5;
-                border-radius: 20px;
-                background: var(--card-bg);
-                box-shadow: var(--shadow-sm);
-            }
-
-                .empty-box h3 {
-                    color: var(--text-primary);
-                    font-size: 22px;
-                    font-weight: 800;
-                    margin-bottom: 10px;
-                }
-
-            .shop-link {
-                display: inline-block;
-                margin-top: 20px;
-                padding: 12px 28px;
-                background: var(--accent-gradient);
-                color: white;
-                border-radius: 50px;
-                text-decoration: none;
-                font-weight: 800;
-                box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
-                transition: all 0.25s ease;
-            }
-
-                .shop-link:hover {
-                    opacity: 0.95;
-                    box-shadow: 0 6px 15px rgba(109, 40, 217, 0.35);
-                }
-
-            /* ALERTS */
-            .message {
-                max-width: 700px;
-                margin: 0 auto 25px auto;
-                padding: 14px 18px;
-                border-radius: 12px;
-                font-weight: 700;
-                text-align: center;
-                font-size: 14px;
-            }
-
-            .success-message {
-                background: #ecfdf5;
-                color: var(--success-color);
-                border: 1px solid #d1fae5;
-            }
-
-            .error-message {
+            .status-badge.status-cancelled {
                 background: #fef2f2;
                 color: var(--error-color);
-                border: 1px solid #fee2e2;
+                border-color: #fee2e2;
             }
 
-            @@media (max-width: 850px) {
-                .orders-page {
-                    padding: 20px 12px;
-                }
+        .paid-badge {
+            display: inline-block;
+            padding: 5px 11px;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
 
-                .orders-box {
-                    padding: 18px;
-                }
+        .pending-badge {
+            display: inline-block;
+            padding: 5px 11px;
+            background: #fef2f2;
+            color: var(--error-color);
+            border: 1px solid #fee2e2;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
 
-                table {
-                    min-width: 1320px;
-                }
+        .pay-status-cell {
+            min-width: 110px;
+            text-align: center;
+        }
 
-                .table-wrapper {
-                    max-height: 520px;
-                }
+        /* TOTAL CELL — right-aligned so figures line up like a
+                       ledger, with the order's total emphasized. */
+        .total-cell {
+            min-width: 90px;
+            text-align: right;
+        }
+
+        .total-amount {
+            display: block;
+            color: var(--text-primary);
+            font-weight: 800;
+            font-size: 15px;
+            white-space: nowrap;
+        }
+
+        /* TRACKING / INVOICE CELLS — centered single-action
+                       columns matching the Cart page's pill buttons. */
+        .tracking-cell,
+        .invoice-cell {
+            min-width: 130px;
+            text-align: center;
+        }
+
+        .track-btn,
+        .invoice-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 9px 14px;
+            background: var(--accent-light);
+            color: var(--accent-color);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 12.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .invoice-btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 10px rgba(109, 40, 217, 0.2);
+        }
+
+        .track-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+
+        .invoice-btn:hover {
+            opacity: 0.95;
+            box-shadow: 0 6px 14px rgba(109, 40, 217, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .disabled-track {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 11.5px;
+            font-weight: 700;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        /* EMPTY STATES — matches Cart's .empty-cart card exactly. */
+        .empty-box {
+            max-width: 700px;
+            margin: 40px auto 0;
+            padding: 60px 40px;
+            color: var(--text-secondary);
+            text-align: center;
+            border: 2px dashed #ded4f5;
+            border-radius: 20px;
+            background: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+        }
+
+            .empty-box h3 {
+                color: var(--text-primary);
+                font-size: 22px;
+                font-weight: 800;
+                margin-bottom: 10px;
+            }
+
+        .shop-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 28px;
+            background: var(--accent-gradient);
+            color: white;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 800;
+            box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
+            transition: all 0.25s ease;
+        }
+
+            .shop-link:hover {
+                opacity: 0.95;
+                box-shadow: 0 6px 15px rgba(109, 40, 217, 0.35);
+            }
+
+        /* ALERTS */
+        .message {
+            max-width: 700px;
+            margin: 0 auto 25px auto;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #ecfdf5;
+            color: var(--success-color);
+            border: 1px solid #d1fae5;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: var(--error-color);
+            border: 1px solid #fee2e2;
+        }
+
+        @@media (max-width: 850px) {
+            .orders-page {
+                padding: 20px 12px;
+            }
+
+            .orders-box {
+                padding: 18px;
+            }
+
+            table {
+                min-width: 1450px; /* +130px for the new Delivery column */
+            }
+
+            .table-wrapper {
+                max-height: 520px;
+            }
+        }
+
+        /* ============================================================
+           DELIVERY REVIEW (NEW) — card inside the new "Delivery"
+           column, rating modal, star picker, and toast. Uses only
+           the CSS variables already defined at the top of this file.
+           ============================================================ */
+        .col-delivery {
+            width: 220px;
+        }
+
+        .delivery-cell {
+            vertical-align: top;
+            padding-top: 14px;
+            padding-bottom: 14px;
+        }
+
+        .delivery-card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 190px;
+        }
+
+        .delivery-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .driver-avatar-sm {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: var(--accent-gradient);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .delivery-card-identity {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .delivery-name {
+            font-weight: 700;
+            font-size: 13.5px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        .delivery-rating {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+            .delivery-rating i {
+                color: #f59e0b;
+            }
+
+            .delivery-rating small {
+                font-weight: 500;
+                color: var(--text-secondary);
+            }
+
+        .delivery-card-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 11.5px;
+            color: var(--text-secondary);
+        }
+
+            .delivery-card-meta i {
+                width: 14px;
+                color: var(--accent-color);
+            }
+
+        .delivery-card-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .delivery-view-profile {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+            .delivery-view-profile:hover {
+                color: var(--accent-hover);
+                text-decoration: underline;
+            }
+
+        .delivery-rate-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: center;
+            background: var(--accent-light);
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+            .delivery-rate-btn:hover {
+                background: var(--accent-color);
+                color: #fff;
+            }
+
+        .delivery-reviewed-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ecfdf5;
+            color: var(--success-color);
+            border: 1px solid #d1fae5;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .delivery-reviewed-stars i {
+            color: #f59e0b;
+            font-size: 11px;
+        }
+
+        /* --- Star picker (interactive, inside the modal) --- */
+        .star-rating-picker {
+            display: flex;
+            gap: 8px;
+            font-size: 30px;
+            color: #f59e0b;
+            cursor: pointer;
+            margin: 10px 0 4px;
+        }
+
+            .star-rating-picker i {
+                transition: transform 0.15s ease;
+            }
+
+            .star-rating-picker i:hover {
+                transform: scale(1.15);
+            }
+
+        .delivery-review-hint {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .delivery-review-partner-name {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+            .delivery-review-partner-name strong {
+                color: var(--text-primary);
+            }
+
+        .delivery-review-comment {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-family: var(--font-family);
+            font-size: 13.5px;
+            resize: vertical;
+        }
+
+            .delivery-review-comment:focus {
+                outline: none;
+                border-color: var(--accent-color);
+            }
+
+        .delivery-review-error {
+            margin-top: 10px;
+            background: #fef2f2;
+            color: var(--error-color);
+            border: 1px solid #fee2e2;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 12.5px;
+        }
+
+        .delivery-review-modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-cancel-review {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .btn-submit-review {
+            background: var(--accent-gradient);
+            border: none;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+            .btn-submit-review:disabled {
+                opacity: 0.7;
+            }
+
+        /* --- Toast (self-contained, scoped to this feature) --- */
+        .delivery-toast {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            background: var(--success-color);
+            color: #fff;
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 13.5px;
+            box-shadow: var(--shadow-md);
+            z-index: 99999;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+            .delivery-toast.show {
+                opacity: 1;
+                transform: translateY(0);
             }
     </style>
 </head>
@@ -679,6 +941,7 @@
                             <col class="col-pay-status" />
                             <col class="col-total" />
                             <col class="col-tracking" />
+                            <col class="col-delivery" />
                             <col class="col-invoice" />
                         </colgroup>
 
@@ -693,6 +956,7 @@
                                 <th class="col-pay-status">Payment Status</th>
                                 <th class="col-total">Total</th>
                                 <th class="col-tracking">Tracking</th>
+                                <th class="col-delivery">Delivery</th>
                                 <th class="col-invoice">Invoice</th>
                             </tr>
                         </thead>
@@ -799,6 +1063,78 @@
                                         }
                                     </td>
 
+                                    <td class="delivery-cell">
+                                        @if (order.DeliveryPersonID.HasValue)
+                                        {
+                                            <div class="delivery-card" data-order-id="@order.OrderID">
+                                                <div class="delivery-card-header">
+                                                    <div class="driver-avatar-sm">@order.DeliveryPersonInitial</div>
+                                                    <div class="delivery-card-identity">
+                                                        <span class="delivery-name">@order.DeliveryPersonName</span>
+                                                        @if (order.DeliveryPersonAverageRating.HasValue)
+                                                        {
+                                                            <span class="delivery-rating">
+                                                                <i class="fa-solid fa-star"></i> @order.DeliveryPersonAverageRating.Value.ToString("0.0")
+                                                                <small>(@order.DeliveryPersonReviewCount review@(order.DeliveryPersonReviewCount == 1 ? "" : "s"))</small>
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                </div>
+
+                                                <div class="delivery-card-meta">
+                                                    @if (!string.IsNullOrWhiteSpace(order.DeliveryPersonVehicleType))
+                                                    {
+                                                        <span><i class="fa-solid fa-truck"></i>@order.DeliveryPersonVehicleType</span>
+                                                    }
+                                                    @if (!string.IsNullOrWhiteSpace(order.DeliveryPersonArea))
+                                                    {
+                                                        <span><i class="fa-solid fa-location-dot"></i>@order.DeliveryPersonArea</span>
+                                                    }
+                                                </div>
+
+                                                <div class="delivery-card-actions">
+                                                    <a class="delivery-view-profile" href="/DeliveryCustomerProfile?id=@order.DeliveryPersonID">
+                                                        View Profile
+                                                    </a>
+
+                                                    @if (order.IsDeliveryReviewed)
+                                                    {
+                                                        <span class="delivery-reviewed-badge">
+                                                            <i class="fa-solid fa-circle-check"></i> Delivery Rated
+                                                            <span class="delivery-reviewed-stars">
+                                                                @for (var s = 0; s < 5; s++)
+                                                                {
+                                                                    if (s < (order.MyDeliveryReviewRating ?? 0))
+                                                                    {
+                                                                        <i class="fa-solid fa-star"></i>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <i class="fa-regular fa-star"></i>
+                                                                    }
+                                                                }
+                                                            </span>
+                                                        </span>
+                                                    }
+                                                    else if (order.CanReviewDelivery)
+                                                    {
+                                                        <button type="button"
+                                                                class="delivery-rate-btn"
+                                                                data-rate-delivery
+                                                                data-order-id="@order.OrderID"
+                                                                data-delivery-name="@order.DeliveryPersonName">
+                                                            <i class="fa-regular fa-star"></i> Rate Delivery
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="disabled-track">Not yet assigned</span>
+                                        }
+                                    </td>
+
                                     <td class="invoice-cell">
                                         @if (order.CanViewInvoice)
                                         {
@@ -823,5 +1159,232 @@
             </div>
         }
     </div>
+
+    <!-- ============================================================
+         DELIVERY REVIEW MODAL (NEW) — one shared instance, reused for
+         whichever order's "Rate Delivery" button was clicked.
+         ============================================================ -->
+    <div class="modal fade" id="deliveryReviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content delivery-review-modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rate your delivery experience</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="delivery-review-partner-name">
+                        Delivery partner: <strong id="deliveryReviewPartnerName">—</strong>
+                    </p>
+
+                    <div class="star-rating-picker" id="deliveryStarPicker">
+                        <i class="fa-regular fa-star" data-star="1"></i>
+                        <i class="fa-regular fa-star" data-star="2"></i>
+                        <i class="fa-regular fa-star" data-star="3"></i>
+                        <i class="fa-regular fa-star" data-star="4"></i>
+                        <i class="fa-regular fa-star" data-star="5"></i>
+                    </div>
+                    <div class="delivery-review-hint" id="deliveryReviewHint">Tap a star</div>
+
+                    <textarea id="deliveryReviewComment"
+                              class="delivery-review-comment"
+                              rows="3"
+                              placeholder="Optional comment about your delivery..."></textarea>
+
+                    <div id="deliveryReviewError" class="delivery-review-error" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel-review" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-submit-review" id="deliveryReviewSubmitBtn">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Antiforgery token for the AJAX submit below — rendered outside
+         a visible form since this page has no other forms/scripts. -->
+    <form id="deliveryReviewAntiforgeryForm" style="display:none;">
+        @Html.AntiForgeryToken()
+    </form>
+
+    <!-- Bootstrap JS — only for the modal above. -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ============================================================
+        // DELIVERY REVIEW (NEW) — self-contained, scoped to this page.
+        // Two small pieces: (1) the interactive star picker, (2) the
+        // modal wiring + AJAX submit + no-reload UI update.
+        // ============================================================
+        (function () {
+            var picker = document.getElementById('deliveryStarPicker');
+            var stars = picker.querySelectorAll('i');
+            var hint = document.getElementById('deliveryReviewHint');
+            var hintLabels = { 1: 'Poor', 2: 'Fair', 3: 'Good', 4: 'Very Good', 5: 'Excellent' };
+            var selectedRating = 0;
+
+            function paintStars(uptoValue) {
+                stars.forEach(function (star) {
+                    var starValue = parseInt(star.getAttribute('data-star'), 10);
+                    if (starValue <= uptoValue) {
+                        star.classList.remove('fa-regular');
+                        star.classList.add('fa-solid');
+                    } else {
+                        star.classList.remove('fa-solid');
+                        star.classList.add('fa-regular');
+                    }
+                });
+            }
+
+            stars.forEach(function (star) {
+                star.addEventListener('mouseenter', function () {
+                    var hoverValue = parseInt(star.getAttribute('data-star'), 10);
+                    paintStars(hoverValue);
+                    hint.textContent = hintLabels[hoverValue] || 'Tap a star';
+                });
+
+                star.addEventListener('click', function () {
+                    selectedRating = parseInt(star.getAttribute('data-star'), 10);
+                    paintStars(selectedRating);
+                    hint.textContent = hintLabels[selectedRating] || 'Tap a star';
+                });
+            });
+
+            picker.addEventListener('mouseleave', function () {
+                paintStars(selectedRating);
+                hint.textContent = selectedRating > 0
+                    ? (hintLabels[selectedRating] || 'Tap a star')
+                    : 'Tap a star';
+            });
+
+            window.getSelectedDeliveryRating = function () {
+                return selectedRating;
+            };
+
+            window.resetDeliveryStarPicker = function () {
+                selectedRating = 0;
+                paintStars(0);
+                hint.textContent = 'Tap a star';
+            };
+        })();
+
+        (function () {
+            var currentOrderId = null;
+            var modalEl = document.getElementById('deliveryReviewModal');
+            var bsModal = new bootstrap.Modal(modalEl);
+            var partnerNameEl = document.getElementById('deliveryReviewPartnerName');
+            var commentEl = document.getElementById('deliveryReviewComment');
+            var errorEl = document.getElementById('deliveryReviewError');
+            var submitBtn = document.getElementById('deliveryReviewSubmitBtn');
+
+            document.querySelectorAll('[data-rate-delivery]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    currentOrderId = btn.getAttribute('data-order-id');
+                    partnerNameEl.textContent = btn.getAttribute('data-delivery-name') || 'your delivery partner';
+                    commentEl.value = '';
+                    errorEl.style.display = 'none';
+                    window.resetDeliveryStarPicker();
+                    bsModal.show();
+                });
+            });
+
+            submitBtn.addEventListener('click', function () {
+                var rating = window.getSelectedDeliveryRating();
+
+                if (!rating) {
+                    errorEl.textContent = 'Please select a star rating.';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+
+                var token = document
+                    .querySelector('#deliveryReviewAntiforgeryForm input[name="__RequestVerificationToken"]')
+                    .value;
+
+                var formData = new FormData();
+                formData.append('orderId', currentOrderId);
+                formData.append('rating', rating);
+                formData.append('comment', commentEl.value);
+                formData.append('__RequestVerificationToken', token);
+
+                fetch('/CustomerOrders?handler=SubmitDeliveryReview', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(function (response) {
+                        return response.json().then(function (data) {
+                            return { ok: response.ok, data: data };
+                        });
+                    })
+                    .then(function (result) {
+                        if (!result.ok || !result.data.success) {
+                            errorEl.textContent = result.data.message || 'Something went wrong. Please try again.';
+                            errorEl.style.display = 'block';
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'Submit';
+                            return;
+                        }
+
+                        bsModal.hide();
+                        showDeliveryReviewToast(result.data.message || 'Thanks for your review!');
+                        replaceRateButtonWithBadge(currentOrderId, result.data.rating);
+
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Submit';
+                    })
+                    .catch(function () {
+                        errorEl.textContent = 'Network error. Please try again.';
+                        errorEl.style.display = 'block';
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Submit';
+                    });
+            });
+
+            function replaceRateButtonWithBadge(orderId, rating) {
+                var btn = document.querySelector(
+                    '[data-rate-delivery][data-order-id="' + orderId + '"]'
+                );
+
+                if (!btn) {
+                    return;
+                }
+
+                var starsHtml = '';
+                for (var i = 1; i <= 5; i++) {
+                    starsHtml += i <= rating
+                        ? '<i class="fa-solid fa-star"></i>'
+                        : '<i class="fa-regular fa-star"></i>';
+                }
+
+                var badge = document.createElement('span');
+                badge.className = 'delivery-reviewed-badge';
+                badge.innerHTML =
+                    '<i class="fa-solid fa-circle-check"></i> Delivery Rated' +
+                    '<span class="delivery-reviewed-stars">' + starsHtml + '</span>';
+
+                btn.replaceWith(badge);
+            }
+
+            function showDeliveryReviewToast(message) {
+                var toast = document.createElement('div');
+                toast.className = 'delivery-toast';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                requestAnimationFrame(function () {
+                    toast.classList.add('show');
+                });
+
+                setTimeout(function () {
+                    toast.classList.remove('show');
+                    setTimeout(function () {
+                        toast.remove();
+                    }, 300);
+                }, 3000);
+            }
+        })();
+    </script>
 </body>
 </html>
