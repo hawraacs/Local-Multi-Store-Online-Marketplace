@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Reposinterface;
 using Multi_Store.Services.Dtos;
@@ -929,13 +930,30 @@ namespace Multi_Store.Services.Managers
             order.PaymentStatus = "Paid";
             await _orderRepository.UpdateAsync(order);
 
-            await _collectionRepository.AddAsync(new DeliveryPaymentCollection
+            try
             {
-                OrderID = order.OrderID,
-                DeliveryPersonID = deliveryPersonId,
-                CollectedAmount = order.TotalAmount,
-                CollectionDate = DateTime.UtcNow
-            });
+                await _collectionRepository.AddAsync(new DeliveryPaymentCollection
+                {
+                    OrderID = order.OrderID,
+                    DeliveryPersonID = deliveryPersonId,
+                    CollectedAmount = order.TotalAmount,
+                    CollectionDate = DateTime.UtcNow
+                });
+            }
+            catch (DbUpdateException)
+            {
+                // The existingCollection/PaymentStatus checks above close
+                // the normal double-click path, but two near-simultaneous
+                // requests for the same order can both read "not yet
+                // collected" before either one saves. The unique index on
+                // DeliveryPaymentCollection.OrderID (ApplicationDbContext)
+                // is what actually stops the duplicate row in that race —
+                // this just turns the resulting DbUpdateException into the
+                // same business message the normal path already throws,
+                // instead of an unhandled 500.
+                throw new InvalidOperationException(
+                    "Cash for this order was already collected.");
+            }
 
             return order.TotalAmount;
         }
