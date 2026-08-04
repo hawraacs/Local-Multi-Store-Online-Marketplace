@@ -20,26 +20,32 @@
 
     <style>
         :root {
-            --primary: #6D28D9;
+            --primary: #5B21B6;
+            --primary-2: #6D28D9;
+            --primary-3: #4C1D95;
+            --primary-gradient: linear-gradient(135deg, #5B21B6, #6D28D9, #4C1D95);
             --primary-hover: #4C1D95;
-            --primary-light: #EDE9FE;
-            --secondary: #8B5CF6;
-            --bg: #f8fafc;
-            --bg-2: #eef2f7;
-            --surface: #ffffff;
-            --ink-900: #0f172a;
-            --ink-600: #64748b;
-            --ink-400: #94a3b8;
-            --border: #e2e8f0;
-            --success: #22c55e;
-            --success-bg: #dcfce7;
-            --warning: #f59e0b;
-            --warning-bg: #fef3c7;
-            --danger: #ef4444;
-            --danger-bg: #fee2e2;
+            --primary-light: #F3E8FF;
+            --bg: #F7F8FC;
+            --surface: #FFFFFF;
+            --ink-900: #1E293B;
+            --ink-600: #64748B;
+            --ink-400: #94A3B8;
+            --border: #E2E8F0;
+            --success: #22C55E;
+            --success-bg: #DCFCE7;
+            --warning: #F59E0B;
+            --warning-bg: #FEF3C7;
+            --danger: #EF4444;
+            --danger-bg: #FEE2E2;
+            --info: #2563EB;
+            --info-bg: #DBEAFE;
             --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
             --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.16);
+            --shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.14);
+            --radius-lg: 20px;
+            --radius-md: 16px;
+            --radius-sm: 14px;
         }
 
         * {
@@ -51,11 +57,13 @@
             background: var(--bg);
             font-family: 'Inter', Arial, sans-serif;
             color: var(--ink-900);
+            -webkit-font-smoothing: antialiased;
         }
 
         .page {
             min-height: 100vh;
-            padding: 28px 20px 60px;
+            padding: 24px 20px 60px;
+            overflow-x: hidden;
         }
 
         .container {
@@ -68,7 +76,7 @@
             color: #991b1b;
             border: 1px solid #fca5a5;
             padding: 14px 16px;
-            border-radius: 14px;
+            border-radius: var(--radius-sm);
             margin-bottom: 18px;
             font-weight: 700;
             font-size: 13.5px;
@@ -79,370 +87,19 @@
             color: #166534;
             border: 1px solid #86efac;
             padding: 14px 16px;
-            border-radius: 14px;
+            border-radius: var(--radius-sm);
             margin-bottom: 18px;
             font-weight: 700;
             line-height: 1.5;
             font-size: 13.5px;
         }
 
-        /* ================= DRIVER PROFILE CARD ================= */
-        .driver-card {
-            background: var(--surface);
-            border-radius: 26px;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border);
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .driver-card-header {
-            background: linear-gradient(135deg, var(--primary), #4C1D95);
-            padding: 30px 28px 60px;
-            position: relative;
-            color: white;
-        }
-
-            .driver-card-header::before {
-                content: "";
-                position: absolute;
-                top: -50px;
-                right: -50px;
-                width: 200px;
-                height: 200px;
-                border-radius: 50%;
-                background: rgba(139, 92, 246, 0.18);
-            }
-
-        .driver-header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            position: relative;
-            z-index: 1;
-        }
-
-        .driver-brand {
-            font-family: 'Sora', sans-serif;
-            font-weight: 700;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .status-pill {
-            padding: 7px 14px;
-            border-radius: 999px;
-            font-size: 11.5px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-            .status-pill.online {
-                background: rgba(34, 197, 94, 0.18);
-                color: #ffffff;
-            }
-
-            .status-pill.offline {
-                background: rgba(239, 68, 68, 0.18);
-                color: #ffffff;
-            }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-            .status-dot.online {
-                background: #4ade80;
-                box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.3);
-            }
-
-            .status-dot.offline {
-                background: #f87171;
-            }
-
-        .driver-identity-row {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-top: 22px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .driver-avatar {
-            width: 76px;
-            height: 76px;
-            border-radius: 22px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            font-weight: 700;
-            font-family: 'Sora', sans-serif;
-            flex-shrink: 0;
-        }
-
-        .driver-identity-text h1 {
-            margin: 0;
-            font-size: 22px;
-            font-family: 'Sora', sans-serif;
-            font-weight: 700;
-        }
-
-        .driver-identity-text p {
-            margin: 6px 0 0;
-            color: #EDE9FE;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        /* Stats row floats over the header bottom edge */
-        .driver-stats-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin: -40px 24px 24px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .stat-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 16px;
-            box-shadow: var(--shadow-md);
-            text-align: center;
-        }
-
-            .stat-card .stat-icon {
-                font-size: 18px;
-                margin-bottom: 8px;
-            }
-
-            .stat-card span {
-                display: block;
-                color: var(--ink-400);
-                font-size: 11px;
-                font-weight: 600;
-                margin-bottom: 4px;
-            }
-
-            .stat-card strong {
-                font-size: 20px;
-                font-family: 'Sora', sans-serif;
-                font-weight: 700;
-            }
-
-        /* ================= UNIFIED TAB MODULE ================= */
-        .profile-module {
-            background: var(--surface);
-            border-radius: 24px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--border);
-            padding: 28px;
-            max-width: 100%;
-        }
-
-        .profile-tabs {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .tab-btn {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 12px 20px;
-            font-weight: 700;
-            font-size: 13px;
-            font-family: 'Inter', sans-serif;
-            color: var(--ink-900);
-            cursor: pointer;
-            box-shadow: var(--shadow-sm);
-            transition: all .25s ease;
-        }
-
-            .tab-btn:hover {
-                transform: translateY(-2px);
-            }
-
-            .tab-btn.active {
-                background: var(--primary);
-                color: white;
-                border-color: var(--primary);
-                box-shadow: 0 10px 25px rgba(109, 40, 217, 0.35);
-            }
-
-        .profile-section {
-            animation: sectionFadeIn .25s ease;
-        }
-
-        @@keyframes sectionFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(6px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .section-inner h2 {
-            margin: 0 0 16px;
-            font-size: 16.5px;
-            font-family: 'Sora', sans-serif;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* ================= INFO ROWS (vehicle / location / rating) ================= */
-        .info-list {
-            display: grid;
-            gap: 10px;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 14px;
-            padding: 13px 14px;
-            background: var(--bg);
-            border-radius: 13px;
-            border: 1px solid #eef2f7;
-            transition: background .15s ease;
-        }
-
-            .info-row:hover {
-                background: var(--bg-2);
-            }
-
-            .info-row label {
-                color: var(--ink-400);
-                font-weight: 600;
-                font-size: 12.5px;
-            }
-
-            .info-row span.value {
-                color: var(--ink-900);
-                font-weight: 700;
-                text-align: right;
-                font-family: 'JetBrains Mono', monospace;
-                font-size: 13px;
-            }
-
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .badge-approved {
-            background: var(--success-bg);
-            color: #166534;
-        }
-
-        .badge-off {
-            background: var(--danger-bg);
-            color: #991b1b;
-        }
-
-        .badge-busy {
-            background: var(--warning-bg);
-            color: #92400e;
-        }
-
-        .id-link {
-            color: var(--primary);
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-            .id-link:hover {
-                text-decoration: underline;
-            }
-
-        /* ================= ACTIVE DELIVERIES ================= */
-        .assignment {
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 16px;
-            background: var(--bg);
-            margin-bottom: 12px;
-            transition: all .2s ease;
-        }
-
-            .assignment:hover {
-                box-shadow: var(--shadow-sm);
-            }
-
-            .assignment h3 {
-                margin: 0 0 10px;
-                font-size: 15px;
-                font-family: 'Sora', sans-serif;
-            }
-
-            .assignment p {
-                margin: 6px 0;
-                color: var(--ink-600);
-                font-weight: 500;
-                font-size: 13.5px;
-            }
-
-        .empty {
-            text-align: center;
-            padding: 30px;
-            color: var(--ink-400);
-            font-weight: 600;
-        }
-
-        .btn {
-            border: none;
-            border-radius: 12px;
-            padding: 11px 16px;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 13.5px;
-            transition: all .18s ease;
-        }
-
-        .btn-orange {
-            background: var(--primary);
-            color: white;
-        }
-
-            .btn-orange:hover {
-                background: var(--primary-hover);
-                transform: translateY(-1px);
-            }
-
-        /* ================= FORM (edit profile) ================= */
         .validation-summary-errors {
             background: var(--danger-bg);
             color: #991b1b;
             border: 1px solid #fca5a5;
             padding: 14px 16px;
-            border-radius: 14px;
+            border-radius: var(--radius-sm);
             margin-bottom: 18px;
             font-weight: 600;
             line-height: 1.5;
@@ -469,11 +126,805 @@
             display: none;
         }
 
+        svg.icon {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        /* ================= HERO ================= */
+        .hero {
+            position: relative;
+            background: var(--primary-gradient);
+            border-radius: var(--radius-lg);
+            padding: 32px 30px 30px;
+            color: #fff;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+            .hero::before {
+                content: "";
+                position: absolute;
+                top: -70px;
+                right: -60px;
+                width: 260px;
+                height: 260px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.08);
+            }
+
+            .hero::after {
+                content: "";
+                position: absolute;
+                bottom: -90px;
+                right: 120px;
+                width: 200px;
+                height: 200px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.06);
+            }
+
+        .hero-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+            font-size: 12.5px;
+        }
+
+        .hero-status-block {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .status-pill {
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .status-pill.online {
+                background: rgba(34, 197, 94, 0.22);
+                color: #ffffff;
+            }
+
+            .status-pill.offline {
+                background: rgba(239, 68, 68, 0.22);
+                color: #ffffff;
+            }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+            .status-dot.online {
+                background: #4ade80;
+                box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.3);
+            }
+
+            .status-dot.offline {
+                background: #f87171;
+            }
+
+        .hero-online-text {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.85);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hero-identity-row {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-top: 26px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-avatar-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .hero-avatar {
+            width: 78px;
+            height: 78px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 700;
+            font-family: 'Sora', sans-serif;
+        }
+
+        .hero-avatar-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 3px solid var(--primary-3);
+        }
+
+            .hero-avatar-dot.online {
+                background: #4ade80;
+            }
+
+            .hero-avatar-dot.offline {
+                background: #f87171;
+            }
+
+        .hero-identity-text h1 {
+            margin: 0;
+            font-size: 23px;
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+        }
+
+        .hero-identity-text p.since {
+            margin: 5px 0 12px;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .hero-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* ================= STATS CARD (overlaps hero) ================= */
+        .stats-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            margin: -34px 18px 0;
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 6px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 16px;
+            border-right: 1px solid var(--border);
+        }
+
+            .stat-item:last-child {
+                border-right: none;
+            }
+
+        .stat-icon-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+            .stat-icon-circle.purple {
+                background: var(--primary-light);
+                color: var(--primary);
+            }
+
+            .stat-icon-circle.amber {
+                background: var(--warning-bg);
+                color: #b45309;
+            }
+
+            .stat-icon-circle.green {
+                background: var(--success-bg);
+                color: #15803d;
+            }
+
+            .stat-icon-circle.blue {
+                background: var(--info-bg);
+                color: var(--info);
+            }
+
+        .stat-text strong {
+            display: block;
+            font-size: 21px;
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+            line-height: 1.15;
+        }
+
+        .stat-text span {
+            display: block;
+            color: var(--ink-400);
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        /* ================= SECTION HEADINGS ================= */
+        .section-title {
+            margin: 36px 0 14px;
+            font-size: 15.5px;
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+            color: var(--ink-900);
+        }
+
+        /* ================= QUICK ACTIONS ================= */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .action-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-sm);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            transition: all .22s ease;
+            position: relative;
+        }
+
+            .action-card:hover {
+                transform: translateY(-3px);
+                box-shadow: var(--shadow-md);
+                border-color: #ddd6fe;
+            }
+
+        .action-icon-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .action-card-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+            .action-card-body strong {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 13.5px;
+                font-family: 'Sora', sans-serif;
+                font-weight: 700;
+            }
+
+            .action-card-body span {
+                display: block;
+                margin-top: 2px;
+                color: var(--ink-400);
+                font-size: 11.5px;
+                font-weight: 500;
+            }
+
+        .action-count {
+            background: var(--primary);
+            color: #fff;
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 999px;
+        }
+
+        .action-arrow {
+            color: var(--ink-400);
+            flex-shrink: 0;
+        }
+
+        /* ================= INFO CARDS (vehicle / location) ================= */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            padding: 22px;
+        }
+
+        .card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-head-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+        }
+
+        .card-head-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-mini {
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--ink-900);
+            font-weight: 700;
+            font-size: 12px;
+            padding: 7px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all .2s ease;
+        }
+
+            .btn-mini:hover {
+                background: var(--primary-light);
+                border-color: #ddd6fe;
+                color: var(--primary);
+            }
+
+        .info-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            background: var(--bg);
+            border-radius: 12px;
+            border: 1px solid #eef2f7;
+            transition: background .15s ease;
+        }
+
+            .info-row:hover {
+                background: #eef1f8;
+            }
+
+            .info-row label {
+                color: var(--ink-600);
+                font-weight: 600;
+                font-size: 12.5px;
+            }
+
+            .info-row span.value {
+                color: var(--ink-900);
+                font-weight: 700;
+                text-align: right;
+                font-size: 13px;
+            }
+
+        .id-link {
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+            .id-link:hover {
+                text-decoration: underline;
+            }
+
+        /* ================= RATINGS & ACCOUNT OVERVIEW ================= */
+        .perf-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .rating-summary {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 16px;
+        }
+
+        .rating-big {
+            font-size: 40px;
+            font-family: 'Sora', sans-serif;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .rating-stars {
+            color: var(--warning);
+            font-size: 15px;
+            letter-spacing: 2px;
+            margin: 6px 0 2px;
+        }
+
+        .rating-caption {
+            color: var(--ink-400);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .rating-note {
+            margin-top: 14px;
+            background: var(--success-bg);
+            color: #166534;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 12.5px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .overview-list {
+            display: grid;
+            gap: 4px;
+        }
+
+        .overview-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 2px;
+            border-bottom: 1px solid #f0f2f7;
+            font-size: 13px;
+        }
+
+            .overview-row:last-child {
+                border-bottom: none;
+            }
+
+            .overview-row label {
+                color: var(--ink-600);
+                font-weight: 600;
+            }
+
+            .overview-row span {
+                color: var(--ink-900);
+                font-weight: 700;
+            }
+
+        /* ================= ACTIVE DELIVERIES ================= */
+        .deliveries-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 36px 0 14px;
+        }
+
+        .deliveries-head-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15.5px;
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+        }
+
+        .deliveries-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .assignment-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-sm);
+            padding: 16px;
+            transition: box-shadow .2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .assignment-card:hover {
+                box-shadow: var(--shadow-md);
+            }
+
+        .assignment-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .assignment-order-no {
+            font-size: 11.5px;
+            color: var(--ink-400);
+            font-weight: 700;
+        }
+
+        .assignment-customer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            font-size: 13.5px;
+            font-family: 'Sora', sans-serif;
+            margin-bottom: 6px;
+        }
+
+        .assignment-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--ink-600);
+            font-size: 12.5px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .assignment-amount-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0 12px;
+        }
+
+        .assignment-amount {
+            font-size: 17px;
+            font-weight: 800;
+            font-family: 'Sora', sans-serif;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 11px;
+            border-radius: 999px;
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+
+        .badge-approved {
+            background: var(--success-bg);
+            color: #166534;
+        }
+
+        .badge-off {
+            background: var(--danger-bg);
+            color: #991b1b;
+        }
+
+        .badge-busy {
+            background: var(--warning-bg);
+            color: #92400e;
+        }
+
+        .badge-info {
+            background: var(--info-bg);
+            color: #1d4ed8;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 34px;
+            color: var(--ink-400);
+            font-weight: 600;
+            background: var(--surface);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-sm);
+        }
+
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 11px 16px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 13px;
+            transition: all .2s ease;
+        }
+
+        .btn-orange {
+            background: var(--primary);
+            color: white;
+        }
+
+            .btn-orange:hover {
+                background: var(--primary-hover);
+                transform: translateY(-1px);
+            }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--ink-900);
+            border: 1px solid var(--border);
+        }
+
+            .btn-secondary:hover {
+                background: var(--bg);
+            }
+
+        /* ================= SECURITY / EDIT PROFILE ROW ================= */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 36px;
+        }
+
+        .security-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+            .security-card::after {
+                content: "";
+                position: absolute;
+                right: -20px;
+                bottom: -20px;
+                width: 100px;
+                height: 100px;
+                border-radius: 50%;
+                background: var(--primary-light);
+                opacity: .5;
+                z-index: 0;
+            }
+
+        .security-inner {
+            position: relative;
+            z-index: 1;
+        }
+
+        .security-desc {
+            color: var(--ink-600);
+            font-size: 12.5px;
+            line-height: 1.5;
+            margin: 0 0 16px;
+        }
+
+        .phone-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .badge-verified {
+            background: var(--success-bg);
+            color: #166534;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .security-btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .checklist {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 14px 0 18px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--ink-900);
+        }
+
+            .checklist-item svg {
+                color: var(--success);
+                flex-shrink: 0;
+            }
+
+        .edit-desc {
+            color: var(--ink-600);
+            font-size: 12.5px;
+            line-height: 1.5;
+            margin: 0 0 4px;
+        }
+
+        /* ================= EDIT FORM CARD ================= */
+        .edit-form-card {
+            margin-top: 16px;
+            scroll-margin-top: 20px;
+        }
+
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 14px;
-            max-width: 640px;
         }
 
         .form-group {
@@ -526,11 +977,10 @@
         .save-btn {
             margin-top: 16px;
             width: 100%;
-            max-width: 640px;
             padding: 14px;
             border: none;
             border-radius: 13px;
-            background: var(--primary);
+            background: var(--primary-gradient);
             color: white;
             font-size: 14.5px;
             font-weight: 700;
@@ -539,21 +989,21 @@
         }
 
             .save-btn:hover {
-                background: var(--primary-hover);
-                box-shadow: 0 8px 20px rgba(109, 40, 217, 0.3);
+                filter: brightness(1.05);
+                box-shadow: 0 8px 20px rgba(91, 33, 182, 0.3);
             }
 
         .phone-divider {
             margin: 24px 0;
             border: none;
             border-top: 1px solid var(--border);
-            max-width: 640px;
         }
 
         .phone-section-title {
-            font-size: 16px !important;
-            margin-bottom: 8px !important;
+            font-size: 15.5px !important;
+            margin: 0 0 8px !important;
             font-family: 'Sora', sans-serif;
+            font-weight: 700;
         }
 
         .phone-description {
@@ -561,20 +1011,101 @@
             color: var(--ink-400);
             font-size: 13px;
             line-height: 1.5;
-            max-width: 640px;
         }
 
         .otp-form {
             margin-top: 16px;
             padding-top: 16px;
             border-top: 1px dashed #d1d5db;
-            max-width: 640px;
         }
 
-        @@media (max-width: 900px) {
-            .driver-stats-row {
+        /* ================= HELP FOOTER ================= */
+        .help-footer {
+            margin-top: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .help-footer-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--ink-600);
+            font-size: 13px;
+        }
+
+            .help-footer-left strong {
+                color: var(--ink-900);
+                font-weight: 700;
+            }
+
+        .help-icon-circle {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .help-footer-link {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 13px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+            .help-footer-link:hover {
+                text-decoration: underline;
+            }
+
+        /* ================= RESPONSIVE ================= */
+        @@media (max-width: 980px) {
+            .quick-actions-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .info-grid,
+            .perf-grid,
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .deliveries-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @@media (max-width: 700px) {
+            .stats-card {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-item {
+                border-right: 1px solid var(--border);
+            }
+
+                .stat-item:nth-child(2n) {
+                    border-right: none;
+                }
+
+                .stat-item:nth-child(-n+2) {
+                    border-bottom: 1px solid var(--border);
+                }
         }
 
         @@media (max-width: 600px) {
@@ -582,32 +1113,40 @@
                 padding: 16px;
             }
 
+            .hero {
+                padding: 26px 20px 24px;
+                border-radius: var(--radius-md);
+            }
+
+            .hero-top {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 14px;
+            }
+
+            .hero-status-block {
+                align-items: flex-start;
+            }
+
+            .stats-card {
+                grid-template-columns: 1fr 1fr;
+                margin: -28px 8px 0;
+            }
+
+            .quick-actions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .deliveries-grid {
+                grid-template-columns: 1fr;
+            }
+
             .form-grid {
                 grid-template-columns: 1fr;
             }
 
-            .driver-card-header {
-                padding: 24px 20px 56px;
-            }
-
-            .driver-stats-row {
-                margin: -36px 14px 20px;
-            }
-
-            .profile-module {
-                padding: 18px;
-                border-radius: 20px;
-            }
-
-            .profile-tabs {
-                gap: 8px;
-            }
-
-            .tab-btn {
-                padding: 10px 14px;
-                font-size: 12px;
-                flex: 1 1 calc(50% - 8px);
-                text-align: center;
+            .checklist {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -637,21 +1176,21 @@
 
                 <div asp-validation-summary="All"></div>
 
-                <!-- ================= DRIVER PROFILE CARD ================= -->
-                <div class="driver-card">
+                <!-- ================= HERO ================= -->
+                <div class="hero">
 
-                    <div class="driver-card-header">
+                    <div class="hero-top">
+                        <div class="hero-brand-badge">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M10 17h4V5H2v12h3" /><path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1" /><circle cx="7.5" cy="17.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" /></svg>
+                            Delivery Partner
+                        </div>
 
-                        <div class="driver-header-top">
-                            <div class="driver-brand">
-                                🚚 Delivery Partner
-                            </div>
-
+                        <div class="hero-status-block">
                             @if (Model.Profile.IsActive &&
                            Model.Profile.Status == "Approved")
                             {
                                 <span class="status-pill online">
-                                    <span class="status-dot online"></span>
+                                    <svg class="icon" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></svg>
                                     Approved &amp; Active
                                 </span>
                             }
@@ -662,526 +1201,474 @@
                                     @Model.Profile.Status
                                 </span>
                             }
+
+                            <span class="hero-online-text">
+                                @if (Model.Profile.IsActive)
+                                {
+                                    @:You are online
+                                    <span class="status-dot online"></span>
+                                }
+                                else
+                                {
+                                    @:You are offline
+                                    <span class="status-dot offline"></span>
+                                }
+                            </span>
                         </div>
+                    </div>
 
-                        <div class="driver-identity-row">
+                    <div class="hero-identity-row">
 
-                            <div class="driver-avatar">
+                        <div class="hero-avatar-wrap">
+                            <div class="hero-avatar">
                                 @(string.IsNullOrWhiteSpace(Model.Profile.FullName)
                                     ? "D"
                                     : Model.Profile.FullName
                                     .Substring(0, 1)
                                     .ToUpper())
                             </div>
+                            <span class="hero-avatar-dot @(Model.Profile.IsActive ? "online" : "offline")"></span>
+                        </div>
 
-                            <div class="driver-identity-text">
-                                <h1>@Model.Profile.FullName</h1>
-                                <p>@Model.Profile.Area &bull; @Model.Profile.PhoneNumber</p>
+                        <div class="hero-identity-text">
+                            <h1>@Model.Profile.FullName</h1>
+                            <p class="since">
+                                Delivery Partner since @Model.FormatLocalTime(Model.Profile.ApprovedAt)
+                            </p>
+
+                            <div class="hero-tags">
+                                <span class="hero-tag">
+                                    <svg class="icon" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                                    @Model.Profile.Area
+                                </span>
+
+                                <span class="hero-tag">
+                                    <svg class="icon" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z" /></svg>
+                                    @Model.Profile.PhoneNumber
+                                </span>
                             </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="driver-stats-row">
-
-                        <div class="stat-card">
-                            <div class="stat-icon">📦</div>
-                            <span>Total</span>
-                            <strong>@Model.Profile.TotalAssignments</strong>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-icon">📅</div>
-                            <span>Today</span>
-                            <strong>@Model.Profile.TodayAssignments</strong>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-icon">✅</div>
-                            <span>Completed</span>
-                            <strong>@Model.Profile.CompletedDeliveries</strong>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-icon">🚚</div>
-                            <span>Active</span>
-                            <strong>@Model.Profile.ActiveDeliveries</strong>
                         </div>
 
                     </div>
 
                 </div>
 
-                <!-- ================= UNIFIED TAB MODULE ================= -->
-                <div class="profile-module">
+                <!-- ================= STATS CARD ================= -->
+                <div class="stats-card">
 
-                    <div class="profile-tabs">
-
-                        <button type="button"
-                                class="tab-btn active"
-                                onclick="showProfileTab('vehicle', this)">
-                            🚗 Vehicle Information
-                        </button>
-
-                        <button type="button"
-                                class="tab-btn"
-                                onclick="showProfileTab('location', this)">
-                            📍 Location Information
-                        </button>
-
-                        <button type="button"
-                                class="tab-btn"
-                                onclick="showProfileTab('ratings', this)">
-                            ⭐ Ratings
-                        </button>
-
-                        <button type="button"
-                                class="tab-btn"
-                                onclick="showProfileTab('deliveries', this)">
-                            📦 Active Deliveries
-                        </button>
-
-                        <button type="button"
-                                class="tab-btn"
-                                onclick="showProfileTab('editprofile', this)">
-                            ✏️ Edit Profile
-                        </button>
-
-                    </div>
-
-                    <!-- ================= VEHICLE INFORMATION ================= -->
-                    <div id="vehicle" class="profile-section">
-                        <div class="section-inner">
-                            <h2>🚗 Vehicle Information</h2>
-
-                            <div class="info-list">
-
-                                <div class="info-row">
-                                    <label>Vehicle Type</label>
-                                    <span class="value">@Model.Profile.VehicleType</span>
-                                </div>
-
-                                <div class="info-row">
-                                    <label>Vehicle Number</label>
-                                    <span class="value">@Model.Profile.VehicleNumber</span>
-                                </div>
-
-                                <div class="info-row">
-                                    <label>License Number</label>
-                                    <span class="value">@Model.Profile.DrivingLicenseNumber</span>
-                                </div>
-
-                                <div class="info-row">
-                                    <label>ID Proof</label>
-                                    <span class="value">
-                                        @if (!string.IsNullOrWhiteSpace(
-                                       Model.Profile.IDProofURL))
-                                        {
-                                            <a class="id-link"
-                                               href="@Model.Profile.IDProofURL"
-                                               target="_blank"
-                                               rel="noopener noreferrer">
-                                                View File
-                                            </a>
-                                        }
-                                        else
-                                        {
-                                            @("Not uploaded")
-                                        }
-                                    </span>
-                                </div>
-
-                            </div>
+                    <div class="stat-item">
+                        <div class="stat-icon-circle purple">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5M12 22V12" /></svg>
+                        </div>
+                        <div class="stat-text">
+                            <strong>@Model.Profile.TotalAssignments</strong>
+                            <span>Total Deliveries</span>
                         </div>
                     </div>
 
-                    <!-- ================= LOCATION INFORMATION ================= -->
-                    <div id="location" class="profile-section" style="display:none;">
-                        <div class="section-inner">
-                            <h2>📍 Location Information</h2>
-
-                            <div class="info-list">
-
-                                <div class="info-row">
-                                    <label>Working Area</label>
-                                    <span class="value">@Model.Profile.Area</span>
-                                </div>
-
-                                <div class="info-row">
-                                    <label>Last Location</label>
-                                    <span class="value">
-                                        @if (Model.Profile.CurrentLatitude.HasValue &&
-                                       Model.Profile.CurrentLongitude.HasValue)
-                                        {
-                                            @($"{Model.Profile.CurrentLatitude.Value:0.000000}, {Model.Profile.CurrentLongitude.Value:0.000000}")
-                                        }
-                                        else
-                                        {
-                                            @("Not available")
-                                        }
-                                    </span>
-                                </div>
-
-                                <div class="info-row">
-                                    <label>Location Updated</label>
-                                    <span class="value">
-                                        @Model.FormatLocalTime(
-                                                 Model.Profile.LastLocationUpdate)
-                                    </span>
-                                </div>
-
-                                <div class="info-row">
-                                    <label>Approved At</label>
-                                    <span class="value">
-                                        @Model.FormatLocalTime(
-                                                 Model.Profile.ApprovedAt)
-                                    </span>
-                                </div>
-
-                            </div>
+                    <div class="stat-item">
+                        <div class="stat-icon-circle amber">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14 2 9.27l6.91-1.01Z" /></svg>
+                        </div>
+                        <div class="stat-text">
+                            <strong>@Model.Profile.Rating.ToString("0.0")</strong>
+                            <span>Customer Rating</span>
                         </div>
                     </div>
 
-                    <!-- ================= RATINGS ================= -->
-                    <div id="ratings" class="profile-section" style="display:none;">
-                        <div class="section-inner">
-                            <h2>⭐ Ratings</h2>
-
-                            <div class="info-list">
-                                <div class="info-row">
-                                    <label>Customer Rating</label>
-                                    <span class="value">
-                                        ⭐ @Model.Profile.Rating.ToString("0.0") / 5.0
-                                    </span>
-                                </div>
-                            </div>
+                    <div class="stat-item">
+                        <div class="stat-icon-circle green">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M10 17h4V5H2v12h3" /><path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1" /><circle cx="7.5" cy="17.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" /></svg>
+                        </div>
+                        <div class="stat-text">
+                            <strong>@Model.Profile.ActiveDeliveries</strong>
+                            <span>Active Deliveries</span>
                         </div>
                     </div>
 
-                    <!-- ================= ACTIVE DELIVERIES ================= -->
-                    <div id="deliveries" class="profile-section" style="display:none;">
-                        <div class="section-inner">
-                            <h2>📦 Active Deliveries</h2>
+                    <div class="stat-item">
+                        <div class="stat-icon-circle blue">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></svg>
+                        </div>
+                        <div class="stat-text">
+                            <strong>@Model.Profile.CompletedDeliveries</strong>
+                            <span>Completed</span>
+                        </div>
+                    </div>
 
-                            @if (Model.ActiveAssignments == null ||
-                           !Model.ActiveAssignments.Any())
-                            {
-                                <div class="empty">
-                                    No active deliveries right now.
-                                </div>
-                            }
-                            else
-                            {
-                                @foreach (var item in
-                               Model.ActiveAssignments)
+                </div>
+
+                <!-- ================= QUICK ACTIONS ================= -->
+                <div class="section-title">Quick Actions</div>
+
+                <div class="quick-actions-grid">
+
+                    <a href="#editprofile-form" class="action-card">
+                        <div class="action-icon-circle">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
+                        </div>
+                        <div class="action-card-body">
+                            <strong>Edit Profile</strong>
+                            <span>Update your information</span>
+                        </div>
+                        <svg class="icon action-arrow" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+                    </a>
+
+                    <a href="/DeliveryDashboard" class="action-card">
+                        <div class="action-icon-circle">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg>
+                        </div>
+                        <div class="action-card-body">
+                            <strong>Delivery History</strong>
+                            <span>View past deliveries</span>
+                        </div>
+                        <svg class="icon action-arrow" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+                    </a>
+
+                    <a href="#active-deliveries" class="action-card">
+                        <div class="action-icon-circle">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5M12 22V12" /></svg>
+                        </div>
+                        <div class="action-card-body">
+                            <strong>
+                                Active Orders
+                                @if (Model.Profile.ActiveDeliveries > 0)
                                 {
-                                    <div class="assignment">
-
-                                        <h3>
-                                            Order @item.OrderNumber
-                                        </h3>
-
-                                        <p>
-                                            <strong>
-                                                Assignment:
-                                            </strong>
-
-                                            <span class="badge badge-busy">
-                                                @item.AssignmentStatus
-                                            </span>
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Order Status:
-                                            </strong>
-
-                                            @item.OrderStatus
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Address:
-                                            </strong>
-
-                                            @item.CustomerAddress
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Total:
-                                            </strong>
-
-                                            $@item.TotalAmount.ToString("N2")
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Payment:
-                                            </strong>
-
-                                            @item.PaymentMethod
-                                            -
-                                            @item.PaymentStatus
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Assigned:
-                                            </strong>
-
-                                            @Model.FormatLocalTime(
-                                                     item.AssignedAt)
-                                        </p>
-
-                                        <a href="/DeliveryDashboard"
-                                           class="btn btn-orange">
-                                            Manage Delivery
-                                        </a>
-
-                                    </div>
+                                    <span class="action-count">@Model.Profile.ActiveDeliveries</span>
                                 }
-                            }
+                            </strong>
+                            <span>View current orders</span>
+                        </div>
+                        <svg class="icon action-arrow" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+                    </a>
+
+                    <a href="#location-card" class="action-card">
+                        <div class="action-icon-circle">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" /></svg>
+                        </div>
+                        <div class="action-card-body">
+                            <strong>Availability</strong>
+                            <span>Go online / offline</span>
+                        </div>
+                        <svg class="icon action-arrow" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+                    </a>
+
+                </div>
+
+                <!-- ================= VEHICLE / LOCATION ================= -->
+                <div class="info-grid" style="margin-top: 30px;">
+
+                    <div class="card">
+                        <div class="card-head">
+                            <div class="card-head-title">
+                                <span class="card-head-icon">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2" /><circle cx="6.5" cy="16.5" r="2.5" /><circle cx="16.5" cy="16.5" r="2.5" /></svg>
+                                </span>
+                                Vehicle Information
+                            </div>
+                            <a href="#editprofile-form" class="btn-mini">
+                                <svg class="icon" style="width:13px;height:13px" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
+                                Edit
+                            </a>
+                        </div>
+
+                        <div class="info-list">
+
+                            <div class="info-row">
+                                <label>Vehicle Type</label>
+                                <span class="value">@Model.Profile.VehicleType</span>
+                            </div>
+
+                            <div class="info-row">
+                                <label>Plate Number</label>
+                                <span class="value">@Model.Profile.VehicleNumber</span>
+                            </div>
+
+                            <div class="info-row">
+                                <label>License Number</label>
+                                <span class="value">@Model.Profile.DrivingLicenseNumber</span>
+                            </div>
+
+                            <div class="info-row">
+                                <label>ID Proof</label>
+                                <span class="value">
+                                    @if (!string.IsNullOrWhiteSpace(
+                                   Model.Profile.IDProofURL))
+                                    {
+                                        <a class="id-link"
+                                           href="@Model.Profile.IDProofURL"
+                                           target="_blank"
+                                           rel="noopener noreferrer">
+                                            View Document
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        @("Not uploaded")
+                                    }
+                                </span>
+                            </div>
+
                         </div>
                     </div>
 
-                    <!-- ================= EDIT PROFILE ================= -->
-                    <div id="editprofile" class="profile-section" style="display:none;">
-                        <div class="section-inner">
-                            <h2>✏️ Edit Delivery Profile</h2>
+                    <div class="card" id="location-card">
+                        <div class="card-head">
+                            <div class="card-head-title">
+                                <span class="card-head-icon">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                                </span>
+                                Location Information
+                            </div>
+                            <a href="#editprofile-form" class="btn-mini">
+                                <svg class="icon" style="width:13px;height:13px" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
+                                Edit
+                            </a>
+                        </div>
 
-                            @* ==========================================
-                               FORM 1: UPDATE NORMAL PROFILE INFORMATION
-                               ========================================== *@
+                        <div class="info-list">
 
-                            <form method="post"
-                                  asp-page-handler="Update">
+                            <div class="info-row">
+                                <label>Working Area</label>
+                                <span class="value">@Model.Profile.Area</span>
+                            </div>
 
-                                <div class="form-grid">
+                            <div class="info-row">
+                                <label>Last Location Update</label>
+                                <span class="value">
+                                    @Model.FormatLocalTime(
+                                             Model.Profile.LastLocationUpdate)
+                                </span>
+                            </div>
 
-                                    <div class="form-group full">
+                            <div class="info-row">
+                                <label>Current Coordinates</label>
+                                <span class="value">
+                                    @if (Model.Profile.CurrentLatitude.HasValue &&
+                                   Model.Profile.CurrentLongitude.HasValue)
+                                    {
+                                        @($"{Model.Profile.CurrentLatitude.Value:0.000000}, {Model.Profile.CurrentLongitude.Value:0.000000}")
+                                    }
+                                    else
+                                    {
+                                        @("Not available")
+                                    }
+                                </span>
+                            </div>
 
-                                        <label asp-for="Input.FullName">
-                                            Full Name
-                                        </label>
+                            <div class="info-row">
+                                <label>Approved At</label>
+                                <span class="value">
+                                    @Model.FormatLocalTime(
+                                             Model.Profile.ApprovedAt)
+                                </span>
+                            </div>
 
-                                        <input asp-for="Input.FullName"
-                                               maxlength="100"
-                                               placeholder="Enter full name" />
+                        </div>
+                    </div>
 
-                                        <span asp-validation-for="Input.FullName"
-                                              class="field-validation-error">
-                                        </span>
+                </div>
 
-                                    </div>
+                <!-- ================= RATINGS / ACCOUNT OVERVIEW ================= -->
+                <div class="perf-grid" style="margin-top: 16px;">
 
-                                    <div class="form-group full">
-                                        <label asp-for="Input.PhoneNumber">
-                                            Current Phone Number
-                                        </label>
+                    <div class="card">
+                        <div class="card-head">
+                            <div class="card-head-title">
+                                <span class="card-head-icon">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14 2 9.27l6.91-1.01Z" /></svg>
+                                </span>
+                                Ratings &amp; Performance
+                            </div>
+                        </div>
 
-                                        @if (Model.CanEditPhoneNumber)
+                        <div class="rating-summary">
+                            <div>
+                                <div class="rating-big">@Model.Profile.Rating.ToString("0.0")</div>
+                                <div class="rating-caption">out of 5.0</div>
+                            </div>
+                            <div>
+                                <div class="rating-stars">
+                                    @{
+                                        var fullStars = (int)Math.Round(
+                                        (double)Model.Profile.Rating);
+                                    }
+                                    @for (int s = 1; s <= 5; s++)
+                                    {
+                                        if (s <= fullStars)
                                         {
-                                            <input asp-for="Input.PhoneNumber"
-                                                   type="tel"
-                                                   inputmode="tel"
-                                                   autocomplete="tel"
-                                                   maxlength="20"
-                                                   placeholder="+96176123456" />
-
-                                            <span asp-validation-for="Input.PhoneNumber"
-                                                  class="field-validation-error">
-                                            </span>
-
-                                            <span class="hint">
-                                                Current phone verified.
-                                                You can edit this number
-                                                and click Save Changes
-                                                within 10 minutes.
-                                            </span>
+                                            @:★
                                         }
                                         else
                                         {
-                                            <input asp-for="Input.PhoneNumber"
-                                                   class="readonly-input"
-                                                   readonly
-                                                   aria-readonly="true" />
-
-                                            <span class="hint">
-                                                Verify your current phone
-                                                below before editing this
-                                                number.
-                                            </span>
+                                            @:☆
                                         }
-                                    </div>
+                                    }
+                                </div>
+                                <div class="rating-caption">
+                                    Based on @Model.Profile.CompletedDeliveries completed deliveries
+                                </div>
+                            </div>
+                        </div>
 
-                                    <div class="form-group">
-                                        <label asp-for="Input.VehicleType">
-                                            Vehicle Type
-                                        </label>
+                        <div class="rating-note">
+                            <svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M7 10v12" /><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" /></svg>
+                            Great job! Keep delivering excellent service.
+                        </div>
+                    </div>
 
-                                        <select asp-for="Input.VehicleType"
-                                                id="profileVehicleType"
-                                                onchange="updateProfileVehicleFields()">
+                    <div class="card">
+                        <div class="card-head">
+                            <div class="card-head-title">
+                                <span class="card-head-icon">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg>
+                                </span>
+                                Account Overview
+                            </div>
+                        </div>
 
-                                            <option value="">
-                                                Select vehicle type
-                                            </option>
+                        <div class="overview-list">
 
-                                            <option value="Motorcycle">
-                                                Motorcycle
-                                            </option>
+                            <div class="overview-row">
+                                <label>Member Since</label>
+                                <span>@Model.FormatLocalTime(Model.Profile.ApprovedAt)</span>
+                            </div>
 
-                                            <option value="Car">
-                                                Car
-                                            </option>
+                            <div class="overview-row">
+                                <label>Total Deliveries</label>
+                                <span>@Model.Profile.TotalAssignments</span>
+                            </div>
 
-                                            <option value="Van">
-                                                Van
-                                            </option>
+                            <div class="overview-row">
+                                <label>Today's Deliveries</label>
+                                <span>@Model.Profile.TodayAssignments</span>
+                            </div>
 
-                                            <option value="Bicycle">
-                                                Bicycle
-                                            </option>
-                                        </select>
+                            <div class="overview-row">
+                                <label>Completed</label>
+                                <span>@Model.Profile.CompletedDeliveries</span>
+                            </div>
 
-                                        <span asp-validation-for="Input.VehicleType"
-                                              class="field-validation-error">
-                                        </span>
-                                    </div>
+                            <div class="overview-row">
+                                <label>Active</label>
+                                <span>@Model.Profile.ActiveDeliveries</span>
+                            </div>
 
-                                    <div class="form-group"
-                                         id="profileVehicleNumberGroup">
+                        </div>
+                    </div>
 
-                                        <label asp-for="Input.VehicleNumber">
-                                            Vehicle Number
-                                        </label>
+                </div>
 
-                                        <input asp-for="Input.VehicleNumber"
-                                               id="profileVehicleNumber"
-                                               maxlength="20"
-                                               placeholder="Example: B 123456" />
+                <!-- ================= ACTIVE DELIVERIES ================= -->
+                <div class="deliveries-head" id="active-deliveries">
+                    <div class="deliveries-head-title">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5M12 22V12" /></svg>
+                        Active Deliveries (@Model.Profile.ActiveDeliveries)
+                    </div>
+                    <a href="/DeliveryDashboard" class="btn-mini">
+                        View All Orders
+                        <svg class="icon" style="width:13px;height:13px" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+                    </a>
+                </div>
 
-                                        <span asp-validation-for="Input.VehicleNumber"
-                                              class="field-validation-error">
-                                        </span>
-                                    </div>
+                @if (Model.ActiveAssignments == null ||
+               !Model.ActiveAssignments.Any())
+                {
+                    <div class="empty">
+                        No active deliveries right now.
+                    </div>
+                }
+                else
+                {
+                    <div class="deliveries-grid">
+                        @foreach (var item in
+                       Model.ActiveAssignments)
+                        {
+                            <div class="assignment-card">
 
-                                    <div class="form-group">
-                                        <label asp-for="Input.Area">
-                                            Working Area
-                                        </label>
-
-                                        <select asp-for="Input.Area">
-
-                                            <option value="">
-                                                Select your area
-                                            </option>
-
-                                            <option value="Beirut">
-                                                Beirut
-                                            </option>
-
-                                            <option value="Mount Lebanon">
-                                                Mount Lebanon
-                                            </option>
-
-                                            <option value="Tripoli">
-                                                Tripoli
-                                            </option>
-
-                                            <option value="Saida">
-                                                Saida
-                                            </option>
-
-                                            <option value="Tyre">
-                                                Tyre
-                                            </option>
-
-                                            <option value="Zahle">
-                                                Zahle
-                                            </option>
-
-                                            <option value="Bekaa">
-                                                Bekaa
-                                            </option>
-
-                                            <option value="Jounieh">
-                                                Jounieh
-                                            </option>
-
-                                            <option value="Byblos">
-                                                Byblos
-                                            </option>
-
-                                            <option value="Nabatieh">
-                                                Nabatieh
-                                            </option>
-
-                                        </select>
-
-                                        <span asp-validation-for="Input.Area"
-                                              class="field-validation-error">
-                                        </span>
-                                    </div>
-
-                                    <div class="form-group"
-                                         id="profileLicenseGroup">
-
-                                        <label asp-for="Input.DrivingLicenseNumber">
-                                            Driving License Number
-                                        </label>
-
-                                        <input asp-for="Input.DrivingLicenseNumber"
-                                               id="profileLicenseNumber"
-                                               maxlength="25"
-                                               placeholder="Enter license number" />
-
-                                        <span asp-validation-for="Input.DrivingLicenseNumber"
-                                              class="field-validation-error">
-                                        </span>
-                                    </div>
-
+                                <div class="assignment-top">
+                                    <span class="badge badge-busy">@item.AssignmentStatus</span>
+                                    <span class="assignment-order-no">#@item.OrderNumber</span>
                                 </div>
 
-                                <button type="submit"
-                                        class="save-btn">
-                                    Save Changes
-                                </button>
+                                <div class="assignment-customer">
+                                    <svg class="icon" style="width:14px;height:14px;color:var(--ink-400)" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                    Order Status: @item.OrderStatus
+                                </div>
 
-                            </form>
+                                <div class="assignment-meta">
+                                    <svg class="icon" style="width:14px;height:14px;color:var(--ink-400)" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                                    @item.CustomerAddress
+                                </div>
 
-                            <hr class="phone-divider" />
+                                <div class="assignment-meta">
+                                    <svg class="icon" style="width:14px;height:14px;color:var(--ink-400)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                    Assigned @Model.FormatLocalTime(item.AssignedAt)
+                                </div>
+
+                                <div class="assignment-amount-row">
+                                    <span class="assignment-amount">$@item.TotalAmount.ToString("N2")</span>
+                                    <span class="badge badge-info">@item.PaymentMethod &middot; @item.PaymentStatus</span>
+                                </div>
+
+                                <a href="/DeliveryDashboard" class="btn btn-orange btn-block">
+                                    Manage Delivery
+                                    <svg class="icon" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+                                </a>
+
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- ================= SECURITY + EDIT PROFILE SUMMARY ================= -->
+                <div class="bottom-grid">
+
+                    <div class="card security-card">
+                        <div class="security-inner">
+                            <div class="card-head-title" style="margin-bottom: 10px;">
+                                <span class="card-head-icon">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /></svg>
+                                </span>
+                                Security &amp; Phone Verification
+                            </div>
+
+                            <p class="security-desc">
+                                For security reasons, verify your current phone number
+                                before changing it.
+                            </p>
+
+                            <div class="phone-row">
+                                <svg class="icon" style="width:16px;height:16px;color:var(--ink-400)" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z" /></svg>
+                                @Model.Profile.PhoneNumber
+                                @if (!Model.CanEditPhoneNumber)
+                                {
+                                    <span class="badge-verified">Verified</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-verified" style="background:var(--warning-bg);color:#92400e;">Editable</span>
+                                }
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(Model.PhoneMessage))
+                            {
+                                <div class="success">
+                                    @Model.PhoneMessage
+                                </div>
+                            }
 
                             @if (!Model.CanEditPhoneNumber)
                             {
-                                <h2 class="phone-section-title">
-                                    Verify Current Phone
-                                </h2>
-
-                                <p class="phone-description">
-                                    For security, a verification code will be
-                                    sent by SMS to your current phone number:
-                                    <strong>@Model.Profile.PhoneNumber</strong>.
-                                </p>
-
-                                @if (!string.IsNullOrWhiteSpace(
-                               Model.PhoneMessage))
-                                {
-                                    <div class="success">
-                                        @Model.PhoneMessage
+                                <form method="post" asp-page-handler="SendPhoneOtp">
+                                    <div class="security-btn-row">
+                                        <button type="submit" class="btn btn-orange">
+                                            Send OTP
+                                        </button>
+                                        <a href="#editprofile-form" class="btn btn-secondary">
+                                            Learn More
+                                        </a>
                                     </div>
-                                }
-
-                                <form method="post"
-                                      asp-page-handler="SendPhoneOtp">
-
-                                    <button type="submit"
-                                            class="save-btn">
-                                        Send OTP to Current Phone
-                                    </button>
-
                                 </form>
 
                                 @if (Model.ShowPhoneOtpForm)
@@ -1212,8 +1699,7 @@
                                             </span>
                                         </div>
 
-                                        <button type="submit"
-                                                class="save-btn">
+                                        <button type="submit" class="save-btn">
                                             Verify Current Phone
                                         </button>
 
@@ -1222,50 +1708,279 @@
                             }
                             else
                             {
-                                <h2 class="phone-section-title">
-                                    Phone Editing Enabled
-                                </h2>
-
                                 <div class="success">
-                                    Your current phone was verified.
-                                    Edit the Current Phone Number field above,
-                                    then click Save Changes. Editing remains
-                                    available for 10 minutes.
+                                    Your current phone was verified. Edit the Current
+                                    Phone Number field in the Edit Profile form below,
+                                    then click Save Changes. Editing remains available
+                                    for 10 minutes.
                                 </div>
                             }
-
                         </div>
                     </div>
 
+                    <div class="card">
+                        <div class="card-head-title" style="margin-bottom: 10px;">
+                            <span class="card-head-icon">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                            </span>
+                            Edit Delivery Profile
+                        </div>
+
+                        <p class="edit-desc">
+                            Update your personal information, vehicle details,
+                            and working area.
+                        </p>
+
+                        <div class="checklist">
+                            <div class="checklist-item">
+                                <svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></svg>
+                                Personal Information
+                            </div>
+                            <div class="checklist-item">
+                                <svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></svg>
+                                License Details
+                            </div>
+                            <div class="checklist-item">
+                                <svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></svg>
+                                Vehicle Information
+                            </div>
+                            <div class="checklist-item">
+                                <svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></svg>
+                                ID Documents
+                            </div>
+                            <div class="checklist-item">
+                                <svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></svg>
+                                Working Area
+                            </div>
+                        </div>
+
+                        <a href="#editprofile-form" class="save-btn" style="display:block; text-align:center; text-decoration:none;">
+                            Edit Profile
+                        </a>
+                    </div>
+
                 </div>
+
+                <!-- ================= FULL EDIT FORM ================= -->
+                <div class="card edit-form-card" id="editprofile-form">
+                    <div class="card-head-title" style="margin-bottom: 18px;">
+                        <span class="card-head-icon">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
+                        </span>
+                        Edit Delivery Profile
+                    </div>
+
+                    @* ==========================================
+                       FORM 1: UPDATE NORMAL PROFILE INFORMATION
+                       ========================================== *@
+
+                    <form method="post"
+                          asp-page-handler="Update">
+
+                        <div class="form-grid">
+
+                            <div class="form-group full">
+
+                                <label asp-for="Input.FullName">
+                                    Full Name
+                                </label>
+
+                                <input asp-for="Input.FullName"
+                                       maxlength="100"
+                                       placeholder="Enter full name" />
+
+                                <span asp-validation-for="Input.FullName"
+                                      class="field-validation-error">
+                                </span>
+
+                            </div>
+
+                            <div class="form-group full">
+                                <label asp-for="Input.PhoneNumber">
+                                    Current Phone Number
+                                </label>
+
+                                @if (Model.CanEditPhoneNumber)
+                                {
+                                    <input asp-for="Input.PhoneNumber"
+                                           type="tel"
+                                           inputmode="tel"
+                                           autocomplete="tel"
+                                           maxlength="20"
+                                           placeholder="+96176123456" />
+
+                                    <span asp-validation-for="Input.PhoneNumber"
+                                          class="field-validation-error">
+                                    </span>
+
+                                    <span class="hint">
+                                        Current phone verified.
+                                        You can edit this number
+                                        and click Save Changes
+                                        within 10 minutes.
+                                    </span>
+                                }
+                                else
+                                {
+                                    <input asp-for="Input.PhoneNumber"
+                                           class="readonly-input"
+                                           readonly
+                                           aria-readonly="true" />
+
+                                    <span class="hint">
+                                        Verify your current phone
+                                        in the Security card above
+                                        before editing this number.
+                                    </span>
+                                }
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Input.VehicleType">
+                                    Vehicle Type
+                                </label>
+
+                                <select asp-for="Input.VehicleType"
+                                        id="profileVehicleType"
+                                        onchange="updateProfileVehicleFields()">
+
+                                    <option value="">
+                                        Select vehicle type
+                                    </option>
+
+                                    <option value="Motorcycle">
+                                        Motorcycle
+                                    </option>
+
+                                    <option value="Car">
+                                        Car
+                                    </option>
+
+                                    <option value="Van">
+                                        Van
+                                    </option>
+
+                                    <option value="Bicycle">
+                                        Bicycle
+                                    </option>
+                                </select>
+
+                                <span asp-validation-for="Input.VehicleType"
+                                      class="field-validation-error">
+                                </span>
+                            </div>
+
+                            <div class="form-group"
+                                 id="profileVehicleNumberGroup">
+
+                                <label asp-for="Input.VehicleNumber">
+                                    Vehicle Number
+                                </label>
+
+                                <input asp-for="Input.VehicleNumber"
+                                       id="profileVehicleNumber"
+                                       maxlength="20"
+                                       placeholder="Example: B 123456" />
+
+                                <span asp-validation-for="Input.VehicleNumber"
+                                      class="field-validation-error">
+                                </span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Input.Area">
+                                    Working Area
+                                </label>
+
+                                <select asp-for="Input.Area">
+
+                                    <option value="">
+                                        Select your area
+                                    </option>
+
+                                    <option value="Beirut">
+                                        Beirut
+                                    </option>
+
+                                    <option value="Mount Lebanon">
+                                        Mount Lebanon
+                                    </option>
+
+                                    <option value="Tripoli">
+                                        Tripoli
+                                    </option>
+
+                                    <option value="Saida">
+                                        Saida
+                                    </option>
+
+                                    <option value="Tyre">
+                                        Tyre
+                                    </option>
+
+                                    <option value="Zahle">
+                                        Zahle
+                                    </option>
+
+                                    <option value="Bekaa">
+                                        Bekaa
+                                    </option>
+
+                                    <option value="Jounieh">
+                                        Jounieh
+                                    </option>
+
+                                    <option value="Byblos">
+                                        Byblos
+                                    </option>
+
+                                    <option value="Nabatieh">
+                                        Nabatieh
+                                    </option>
+
+                                </select>
+
+                                <span asp-validation-for="Input.Area"
+                                      class="field-validation-error">
+                                </span>
+                            </div>
+
+                            <div class="form-group"
+                                 id="profileLicenseGroup">
+
+                                <label asp-for="Input.DrivingLicenseNumber">
+                                    Driving License Number
+                                </label>
+
+                                <input asp-for="Input.DrivingLicenseNumber"
+                                       id="profileLicenseNumber"
+                                       maxlength="25"
+                                       placeholder="Enter license number" />
+
+                                <span asp-validation-for="Input.DrivingLicenseNumber"
+                                      class="field-validation-error">
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <button type="submit"
+                                class="save-btn">
+                            Save Changes
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+
             }
 
         </div>
     </div>
 
     <script>
-        function showProfileTab(id, buttonEl) {
-            document.querySelectorAll(".profile-section")
-                .forEach(function (section) {
-                    section.style.display = "none";
-                });
-
-            document.querySelectorAll(".tab-btn")
-                .forEach(function (btn) {
-                    btn.classList.remove("active");
-                });
-
-            var target = document.getElementById(id);
-
-            if (target) {
-                target.style.display = "block";
-            }
-
-            if (buttonEl) {
-                buttonEl.classList.add("active");
-            }
-        }
-
         function updateProfileVehicleFields() {
             const vehicleType =
                 document.getElementById(
