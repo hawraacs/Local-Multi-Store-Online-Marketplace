@@ -26,6 +26,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                                  // and order-status notifications never showed up here.
             "PaymentUpdate",
             "DeliveryRequest",
+            "DeliveryAssignment",       // NEW — order assigned to a delivery person (AdminAssignDelivery.cshtml.cs)
+            "DeliveryReview",           // NEW — customer rated a completed delivery (DeliveryReviewManager.cs)
+            "DeliveryReadyForPickup",   // NEW — store finished preparing the order (Details.cshtml.cs)
             "Promotion",
             "StoreRequest",
 
@@ -124,6 +127,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 "NewOrder" => ("fas fa-box", ""),
                 "PaymentUpdate" => ("fas fa-credit-card", ""),
                 "DeliveryRequest" => ("fas fa-truck", ""),
+                "DeliveryAssignment" => ("fas fa-truck", ""),
+                "DeliveryReview" => ("fas fa-star", "type-review"),
+                "DeliveryReadyForPickup" => ("fas fa-box-open", ""),
                 "Promotion" => ("fas fa-bullhorn", ""),
                 "StoreRequest" => ("fas fa-store", ""),
                 "AdminWarning" => ("fas fa-triangle-exclamation", ""),
