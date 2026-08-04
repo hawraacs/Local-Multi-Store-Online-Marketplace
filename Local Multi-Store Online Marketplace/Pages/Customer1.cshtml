@@ -971,6 +971,179 @@
         }
 
         /* =====================================================
+           FIX — the Follow button (right-aligned in modal-store-header)
+           was sitting right next to / overlapping the modal's X close
+           button, since the close button floats top-right over the card
+           and the header didn't reserve any space for it. Pin the close
+           button's exact position and give the header matching right
+           padding so Follow always clears it.
+           ===================================================== */
+        .explore-modal-card {
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute !important;
+            top: 14px !important;
+            right: 14px !important;
+            left: auto !important;
+            z-index: 20 !important;
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 50% !important;
+            background: rgba(30, 27, 46, 0.06) !important;
+            color: var(--text-primary) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: none !important;
+            cursor: pointer;
+            font-size: 14px !important;
+        }
+
+            .modal-close:hover {
+                background: rgba(30, 27, 46, 0.12) !important;
+            }
+
+        .modal-store-header {
+            padding-right: 54px !important;
+            box-sizing: border-box;
+        }
+
+        /* =====================================================
+           MODAL 3-DOT MENU (Instagram-style: "Not interested",
+           "Block store", "Report") — lives in the modal header next
+           to Follow, not on the grid tiles.
+           ===================================================== */
+        .modal-header-actions {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .tile-menu-trigger {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+
+        /* Base .tile-menu-trigger above is written generically; the modal
+           is the only place it's used now, so this gives it the actual
+           look — a plain circle button that fits a white header, not the
+           translucent dark corner-of-an-image style it originally had. */
+        .modal-menu-trigger {
+            background: var(--accent-light);
+            color: var(--accent-color);
+        }
+
+            .modal-menu-trigger:hover {
+                background: var(--accent-color);
+                color: #ffffff;
+            }
+
+        .tile-menu-dropdown {
+            position: absolute;
+            top: 40px;
+            right: 0;
+            z-index: 30;
+            min-width: 190px;
+            background: #ffffff;
+            border: 1px solid #ece7f6;
+            border-radius: 14px;
+            box-shadow: 0 16px 36px rgba(67, 46, 110, 0.18);
+            padding: 6px;
+            display: none;
+            animation: fadeSlideUp 0.15s ease both;
+        }
+
+            .tile-menu-dropdown.open {
+                display: block;
+            }
+
+        .tile-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            border: none;
+            background: transparent;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            cursor: pointer;
+            text-align: left;
+        }
+
+            .tile-menu-item i {
+                width: 16px;
+                text-align: center;
+                color: #8d859c;
+                font-size: 13px;
+            }
+
+            .tile-menu-item:hover {
+                background: var(--accent-light);
+            }
+
+            .tile-menu-item.danger {
+                color: #dc2626;
+            }
+
+                .tile-menu-item.danger i {
+                    color: #dc2626;
+                }
+
+                .tile-menu-item.danger:hover {
+                    background: #fdeeec;
+                }
+
+        .tile-menu-toast {
+            position: fixed;
+            left: 50%;
+            bottom: max(90px, calc(70px + env(safe-area-inset-bottom)));
+            transform: translateX(-50%) translateY(12px);
+            background: #1e1b2e;
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+            z-index: 900;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+            .tile-menu-toast.visible {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+                pointer-events: auto;
+            }
+
+        .explore-tile.tile-removed {
+            animation: tileFadeOut 0.25s ease forwards;
+        }
+
+        @@keyframes tileFadeOut {
+            to {
+                opacity: 0;
+                transform: scale(0.94);
+            }
+        }
+
+        /* =====================================================
            REELS PLAYER (full-screen, Instagram-Reels-style)
            ===================================================== */
         /* Hide the bottom nav completely while a Reel is playing, so the
@@ -1735,6 +1908,8 @@
                         data-post-id="@item.ExplorePostID"
                         data-product-id="@item.ProductID"
                         data-post-type="@item.PostType"
+                        data-store-id="@item.StoreID"
+                        data-store-name="@item.StoreName"
                         aria-label="@(isPost
                             ? $"Open post from {item.StoreName}"
                             : $"Open product {item.ProductName}")">
@@ -1904,11 +2079,40 @@
                     </span>
                 </a>
 
-                <button id="modalFollowButton"
-                        type="button"
-                        class="follow-button">
-                    Follow
-                </button>
+                <div class="modal-header-actions">
+                    <button id="modalFollowButton"
+                            type="button"
+                            class="follow-button">
+                        Follow
+                    </button>
+
+                    <!-- Instagram-style 3-dot menu: Not interested / Block store / Report.
+                         Lives here (inside the modal, next to Follow) rather than on each
+                         grid tile, so it's only visible once a product/post is opened. -->
+                    <button type="button"
+                            id="modalMenuTrigger"
+                            class="tile-menu-trigger modal-menu-trigger"
+                            aria-label="More options"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            onclick="event.stopPropagation(); toggleTileMenu(this)">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+
+                    <div class="tile-menu-dropdown modal-menu-dropdown" id="modalMenuDropdown">
+                        <button type="button" class="tile-menu-item" onclick="event.stopPropagation(); handleModalNotInterested()">
+                            <i class="fa-regular fa-eye-slash"></i> Not interested
+                        </button>
+
+                        <button type="button" class="tile-menu-item" onclick="event.stopPropagation(); handleModalBlockStore()">
+                            <i class="fa-solid fa-ban"></i> <span id="modalBlockLabel">Block store</span>
+                        </button>
+
+                        <button type="button" class="tile-menu-item danger" onclick="event.stopPropagation(); handleModalReport()">
+                            <i class="fa-regular fa-flag"></i> Report
+                        </button>
+                    </div>
+                </div>
             </header>
 
             <section class="modal-media-pane">
@@ -2180,6 +2384,8 @@
          aria-live="polite"
          aria-atomic="true"></div>
 
+    <div id="tileMenuToast" class="tile-menu-toast" role="status" aria-live="polite"></div>
+
     <script src="~/js/customer-explore.js"
             asp-append-version="true"></script>
     <script src="~/js/customer-explore-fixes.js"
@@ -2290,6 +2496,199 @@
                     resultsBox.classList.remove('hidden');
                 }
             });
+        })();
+    </script>
+
+    <script>
+        // =====================================================
+        // MODAL 3-DOT MENU (Instagram-style: Not interested / Block
+        // store / Report). Self-contained — doesn't rely on any function
+        // from customer-explore.js, since that file's contents weren't
+        // available to build against.
+        //
+        // The menu now lives inside the modal (next to Follow), not on
+        // each grid tile, so there's no per-item dropdown to read data
+        // from anymore. Instead, every click on a tile is captured to
+        // remember which item is being opened (storeId/storeName/
+        // productId/postId), and the modal menu's actions use that
+        // "currently open" context.
+        // =====================================================
+        (function () {
+            var openDropdown = null;
+            var currentModalContext = { storeId: null, storeName: null, productId: null, postId: null };
+
+            document.addEventListener('click', function (event) {
+                var tile = event.target.closest('.explore-tile');
+                if (!tile) return;
+
+                currentModalContext = {
+                    storeId: tile.dataset.storeId || null,
+                    storeName: tile.dataset.storeName || null,
+                    productId: tile.dataset.productId || null,
+                    postId: tile.dataset.postId || null
+                };
+
+                var blockLabel = document.getElementById('modalBlockLabel');
+                if (blockLabel) {
+                    blockLabel.textContent = 'Block ' + (currentModalContext.storeName || 'store');
+                }
+            });
+
+            function getAntiForgeryToken() {
+                var input = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
+                return input ? input.value : '';
+            }
+
+            function postForm(url, fields) {
+                var body = new URLSearchParams();
+                body.set('__RequestVerificationToken', getAntiForgeryToken());
+
+                Object.keys(fields).forEach(function (key) {
+                    if (fields[key] !== null && fields[key] !== undefined && fields[key] !== '') {
+                        body.set(key, fields[key]);
+                    }
+                });
+
+                return fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: body.toString()
+                }).then(function (res) { return res.json(); });
+            }
+
+            window.toggleTileMenu = function (triggerButton) {
+                var dropdown = triggerButton.nextElementSibling;
+                if (!dropdown || !dropdown.classList.contains('tile-menu-dropdown')) return;
+
+                var isOpen = dropdown.classList.contains('open');
+
+                closeOpenTileMenu();
+
+                if (!isOpen) {
+                    dropdown.classList.add('open');
+                    triggerButton.setAttribute('aria-expanded', 'true');
+                    openDropdown = { dropdown: dropdown, trigger: triggerButton };
+                }
+            };
+
+            function closeOpenTileMenu() {
+                if (openDropdown) {
+                    openDropdown.dropdown.classList.remove('open');
+                    openDropdown.trigger.setAttribute('aria-expanded', 'false');
+                    openDropdown = null;
+                }
+            }
+
+            document.addEventListener('click', function (event) {
+                if (openDropdown && !openDropdown.dropdown.contains(event.target) && event.target !== openDropdown.trigger) {
+                    closeOpenTileMenu();
+                }
+            });
+
+            function showTileToast(message) {
+                var toast = document.getElementById('tileMenuToast');
+                if (!toast) return;
+
+                toast.textContent = message;
+                toast.classList.add('visible');
+
+                window.clearTimeout(showTileToast._timer);
+                showTileToast._timer = window.setTimeout(function () {
+                    toast.classList.remove('visible');
+                }, 2600);
+            }
+
+            // Removes the matching tile(s) from the grid behind the modal,
+            // fading them out first.
+            function removeTileFromGrid(selector) {
+                document.querySelectorAll(selector).forEach(function (tile) {
+                    tile.classList.add('tile-removed');
+                    window.setTimeout(function () {
+                        tile.remove();
+                    }, 260);
+                });
+            }
+
+            // Closes the explore modal by clicking its existing close
+            // button, so whatever logic customer-explore.js already has
+            // bound to it (state cleanup, video pause, etc.) still runs
+            // normally instead of being bypassed.
+            function closeExploreModal() {
+                var closeBtn = document.querySelector('#exploreModal .modal-close[data-close-explore-modal]');
+                if (closeBtn) {
+                    closeBtn.click();
+                }
+            }
+
+            window.handleModalNotInterested = function () {
+                closeOpenTileMenu();
+
+                var context = currentModalContext;
+
+                postForm('/Customer1?handler=ExploreNotInterested', {
+                    productId: context.productId,
+                    postId: context.postId
+                }).then(function (data) {
+                    if (data && data.success) {
+                        if (context.productId) {
+                            removeTileFromGrid('.explore-tile[data-product-id="' + context.productId + '"]');
+                        } else if (context.postId) {
+                            removeTileFromGrid('.explore-tile[data-post-id="' + context.postId + '"]');
+                        }
+                        closeExploreModal();
+                        showTileToast(data.message || "We'll show fewer items like this.");
+                    } else {
+                        showTileToast((data && data.message) || 'Something went wrong.');
+                    }
+                }).catch(function () {
+                    showTileToast('Something went wrong.');
+                });
+            };
+
+            window.handleModalBlockStore = function () {
+                closeOpenTileMenu();
+
+                var context = currentModalContext;
+                var storeName = context.storeName || 'this store';
+
+                if (!context.storeId) {
+                    showTileToast('Could not determine which store to block.');
+                    return;
+                }
+
+                if (!window.confirm('Block ' + storeName + '? You will not see their posts or products until you unblock them from your profile.')) {
+                    return;
+                }
+
+                postForm('/Customer1?handler=ExploreBlockStore', {
+                    storeId: context.storeId
+                }).then(function (data) {
+                    if (data && data.success) {
+                        removeTileFromGrid('.explore-tile[data-store-id="' + context.storeId + '"]');
+                        closeExploreModal();
+                        showTileToast(data.message || (storeName + ' blocked.'));
+                    } else {
+                        showTileToast((data && data.message) || 'Something went wrong.');
+                    }
+                }).catch(function () {
+                    showTileToast('Something went wrong.');
+                });
+            };
+
+            window.handleModalReport = function () {
+                closeOpenTileMenu();
+
+                var context = currentModalContext;
+
+                postForm('/Customer1?handler=ExploreReport', {
+                    productId: context.productId,
+                    postId: context.postId
+                }).then(function (data) {
+                    showTileToast((data && data.message) || 'Report submitted.');
+                }).catch(function () {
+                    showTileToast('Something went wrong.');
+                });
+            };
         })();
     </script>
 </body>

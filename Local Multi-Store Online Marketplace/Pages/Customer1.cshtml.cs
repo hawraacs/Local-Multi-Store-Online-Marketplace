@@ -84,6 +84,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .Distinct()
                 .ToListAsync();
 
+            var blockedOwnerUserIds = await GetBlockedOwnerUserIdsAsync();
+            var hiddenProductIds = await GetHiddenProductIdsAsync();
+
             var pageResult = await LoadExplorePageAsync(
                 page: 1,
                 category: SelectedCategory,
@@ -93,7 +96,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 area: Area,
                 minPrice: MinPrice,
                 maxPrice: MaxPrice,
-                typeFilter: TypeFilter);
+                typeFilter: TypeFilter,
+                blockedOwnerUserIds: blockedOwnerUserIds,
+                hiddenProductIds: hiddenProductIds);
 
             InitialItems = pageResult.Items;
             HasMoreItems = pageResult.HasMore;
@@ -117,9 +122,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         {
             if (pageNumber < 1) pageNumber = 1;
 
+            // FIX: infinite-scroll pages never filtered out blocked stores —
+            // only the very first page (OnGetAsync) had a chance to (and
+            // didn't, until now). A customer scrolling further would start
+            // seeing a blocked store's products/posts again a page or two in.
+            var blockedOwnerUserIds = await GetBlockedOwnerUserIdsAsync();
+            var hiddenProductIds = await GetHiddenProductIdsAsync();
+
             var result = await LoadExplorePageAsync(
                 pageNumber, NormalizeCategory(category), searchTerm, categoryId,
-                storeId, area, minPrice, maxPrice, typeFilter);
+                storeId, area, minPrice, maxPrice, typeFilter, blockedOwnerUserIds, hiddenProductIds);
 
             return new JsonResult(new
             {
@@ -147,11 +159,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 });
             }
 
+            // FIX: this search never excluded blocked stores at all — a
+            // customer could block a store from their feed and then just
+            // find it again immediately through the search box.
+            var blockedOwnerUserIds = await GetBlockedOwnerUserIdsAsync();
+
             var stores = await _context.Stores
                 .AsNoTracking()
                 .Where(s =>
                     s.Status == "Approved" &&
-                    s.StoreName.Contains(cleanTerm))
+                    s.StoreName.Contains(cleanTerm) &&
+                    !blockedOwnerUserIds.Contains(s.OwnerUserID))
                 .OrderBy(s => s.StoreName)
                 .Take(8)
                 .Select(s => new
@@ -704,6 +722,128 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         // =====================================================
+        // EXPLORE TILE 3-DOT MENU: NOT INTERESTED / BLOCK / REPORT
+        // (CustomerFeedModel already has equivalent handlers, but that's a
+        // different page — Explore's grid interactions are all AJAX/JSON,
+        // so these mirror the same logic but return JsonResult instead of
+        // redirecting, so the tile can be removed from the grid in place.)
+        // =====================================================
+        public async Task<IActionResult> OnPostExploreNotInterestedAsync(int? productId, int? postId)
+        {
+            var customer = await GetCurrentCustomerAsync();
+
+            if (customer == null)
+            {
+                return JsonError(
+                    "Please login as a customer first.",
+                    StatusCodes.Status401Unauthorized);
+            }
+
+            // Posts aren't always linked to a product (ProductID is
+            // nullable on ExploreGridItemViewModel). Hiding is keyed by
+            // ProductID (the same ProductHide table CustomerFeedModel
+            // already uses) — for a post with no linked product, there's
+            // nothing persistable to hide it by, so this just acknowledges
+            // and lets the tile disappear from the current view only.
+            if (productId.HasValue && productId.Value > 0)
+            {
+                var alreadyHidden = await _context.ProductHides
+                    .AnyAsync(x =>
+                        x.CustomerId == customer.CustomerID &&
+                        x.ProductId == productId.Value);
+
+                if (!alreadyHidden)
+                {
+                    _context.ProductHides.Add(new ProductHide
+                    {
+                        CustomerId = customer.CustomerID,
+                        ProductId = productId.Value,
+                        CreatedAt = DateTime.UtcNow
+                    });
+
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return new JsonResult(new
+            {
+                success = true,
+                message = "We'll show fewer items like this."
+            });
+        }
+
+        public async Task<IActionResult> OnPostExploreBlockStoreAsync(int storeId)
+        {
+            var customer = await GetCurrentCustomerAsync();
+
+            if (customer == null)
+            {
+                return JsonError(
+                    "Please login as a customer first.",
+                    StatusCodes.Status401Unauthorized);
+            }
+
+            var store = await _context.Stores
+                .FirstOrDefaultAsync(s => s.StoreID == storeId);
+
+            if (store == null)
+            {
+                return JsonError(
+                    "Store was not found.",
+                    StatusCodes.Status404NotFound);
+            }
+
+            var alreadyBlocked = await _context.BlockRelations
+                .AnyAsync(x =>
+                    x.BlockerUserId == customer.UserID &&
+                    x.BlockedUserId == store.OwnerUserID &&
+                    x.BlockerRole == "Customer");
+
+            if (!alreadyBlocked)
+            {
+                _context.BlockRelations.Add(new BlockRelation
+                {
+                    BlockerUserId = customer.UserID,
+                    BlockedUserId = store.OwnerUserID,
+                    BlockerRole = "Customer",
+                    BlockedRole = "Store"
+                });
+
+                await _context.SaveChangesAsync();
+            }
+
+            return new JsonResult(new
+            {
+                success = true,
+                storeId,
+                message = $"{store.StoreName} is now blocked and hidden from your feed."
+            });
+        }
+
+        public async Task<IActionResult> OnPostExploreReportAsync(int? postId, int? productId)
+        {
+            var customer = await GetCurrentCustomerAsync();
+
+            if (customer == null)
+            {
+                return JsonError(
+                    "Please login as a customer first.",
+                    StatusCodes.Status401Unauthorized);
+            }
+
+            // NOTE: mirrors CustomerFeedModel.OnPostReportPost — no
+            // dedicated Report/Complaint entity was available for Explore
+            // items, so like that handler this acknowledges the report
+            // without persisting it yet. Wire this to a real table if/when
+            // one exists for Explore-item reports specifically.
+            return new JsonResult(new
+            {
+                success = true,
+                message = "Report submitted. Our team will review it."
+            });
+        }
+
+        // =====================================================
         // FOLLOW / UNFOLLOW STORE FROM MODAL
         // =====================================================
         public async Task<IActionResult> OnPostToggleExploreStoreFollowAsync(
@@ -777,6 +917,111 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 message = following
                     ? "Store followed successfully."
                     : "Store unfollowed successfully."
+            });
+        }
+
+        // =====================================================
+        // TILE "..." MENU — Not Interested / Block Store / Report
+        // (Instagram-style overflow menu on each Explore tile)
+        // =====================================================
+        public async Task<IActionResult> OnPostNotInterestedExploreAsync(int productId)
+        {
+            var customer = await GetCurrentCustomerAsync();
+
+            if (customer == null)
+            {
+                return JsonError(
+                    "Please login as a customer first.",
+                    StatusCodes.Status401Unauthorized);
+            }
+
+            if (productId <= 0)
+            {
+                return JsonError(
+                    "There's no product linked to this item to hide.",
+                    StatusCodes.Status400BadRequest);
+            }
+
+            var exists = await _context.ProductHides
+                .AnyAsync(x =>
+                    x.CustomerId == customer.CustomerID &&
+                    x.ProductId == productId);
+
+            if (!exists)
+            {
+                _context.ProductHides.Add(new ProductHide
+                {
+                    CustomerId = customer.CustomerID,
+                    ProductId = productId,
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                await _context.SaveChangesAsync();
+            }
+
+            return new JsonResult(new
+            {
+                success = true,
+                message = "We'll show fewer things like this."
+            });
+        }
+
+        public async Task<IActionResult> OnPostBlockExploreStoreAsync(int storeId)
+        {
+            var customer = await GetCurrentCustomerAsync();
+
+            if (customer == null)
+            {
+                return JsonError(
+                    "Please login as a customer first.",
+                    StatusCodes.Status401Unauthorized);
+            }
+
+            var store = await _context.Stores
+                .FirstOrDefaultAsync(s => s.StoreID == storeId);
+
+            if (store == null)
+            {
+                return JsonError(
+                    "Store was not found.",
+                    StatusCodes.Status404NotFound);
+            }
+
+            var exists = await _context.BlockRelations
+                .AnyAsync(x =>
+                    x.BlockerUserId == customer.UserID &&
+                    x.BlockedUserId == store.OwnerUserID);
+
+            if (!exists)
+            {
+                _context.BlockRelations.Add(new BlockRelation
+                {
+                    BlockerUserId = customer.UserID,
+                    BlockedUserId = store.OwnerUserID,
+                    BlockerRole = "Customer",
+                    BlockedRole = "Store"
+                });
+
+                await _context.SaveChangesAsync();
+            }
+
+            return new JsonResult(new
+            {
+                success = true,
+                message = "Store blocked. You can unblock it later from your profile."
+            });
+        }
+
+        // NOTE: mirrors CustomerFeedModel.OnPostReportPost — that handler
+        // also doesn't persist a Report record (no Report entity was
+        // confirmed anywhere in this app), it just acknowledges the report.
+        // If a Reports table/entity gets added later, write it here too.
+        public IActionResult OnPostReportExploreItemAsync(int postId, int productId)
+        {
+            return new JsonResult(new
+            {
+                success = true,
+                message = "Report submitted. Our team will review it."
             });
         }
 
@@ -1234,11 +1479,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private async Task<ExplorePageResult> LoadExplorePageAsync(
             int page, string? category, string? searchTerm, int? categoryId,
             int? storeId, string? area, decimal? minPrice, decimal? maxPrice,
-            string? typeFilter = null)
+            string? typeFilter = null,
+            List<int>? blockedOwnerUserIds = null,
+            List<int>? hiddenProductIds = null)
         {
             var normalizedCategory = NormalizeCategory(category);
             var normalizedSearch = searchTerm?.Trim();
             var normalizedArea = area?.Trim();
+            var blockedOwners = blockedOwnerUserIds ?? new List<int>();
+            var hiddenProducts = hiddenProductIds ?? new List<int>();
 
             var normalizedTypeFilter = typeFilter?.Trim();
             var includePosts = true;
@@ -1266,6 +1515,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     post.IsActive &&
                     post.Store != null &&
                     post.Store.Status == "Approved" &&
+                    !blockedOwners.Contains(post.Store.OwnerUserID) &&
+                    (!post.ProductID.HasValue || !hiddenProducts.Contains(post.ProductID.Value)) &&
                     post.Media.Any());
 
             if (!string.IsNullOrWhiteSpace(normalizedCategory))
@@ -1349,6 +1600,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     product.IsActive &&
                     product.Store != null &&
                     product.Store.Status == "Approved" &&
+                    !blockedOwners.Contains(product.Store.OwnerUserID) &&
+                    !hiddenProducts.Contains(product.ProductID) &&
                     !product.ExplorePosts.Any(post =>
                         post.IsActive &&
                         post.Media.Any()));
@@ -1757,6 +2010,42 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .Where(c => c.UserID == user.Id)
                 .Select(c => (int?)c.CustomerID)
                 .FirstOrDefaultAsync();
+        }
+
+        // Returns the UserID of every store owner this customer has
+        // blocked (BlockRelation.BlockedUserId), so both the explore grid
+        // and the store search box can exclude that content until the
+        // customer unblocks the store. Mirrors the block-creation logic in
+        // CustomerFeedModel.OnPostBlockPostAsync (BlockerRole = "Customer").
+        private async Task<List<int>> GetBlockedOwnerUserIdsAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return new List<int>();
+
+            return await _context.BlockRelations
+                .Where(b =>
+                    b.BlockerUserId == user.Id &&
+                    b.BlockerRole == "Customer")
+                .Select(b => b.BlockedUserId)
+                .ToListAsync();
+        }
+
+        // Returns every ProductID this customer has marked "Not Interested"
+        // in (ProductHide), so the explore grid can exclude them the same
+        // way blocked stores are excluded above.
+        private async Task<List<int>> GetHiddenProductIdsAsync()
+        {
+            var customerId = await GetCurrentCustomerIdAsync();
+
+            if (customerId == null)
+                return new List<int>();
+
+            return await _context.ProductHides
+                .Where(x => x.CustomerId == customerId.Value)
+                .Select(x => x.ProductId)
+                .ToListAsync();
         }
 
         private static string GetCustomerDisplayName(Customer? customer)

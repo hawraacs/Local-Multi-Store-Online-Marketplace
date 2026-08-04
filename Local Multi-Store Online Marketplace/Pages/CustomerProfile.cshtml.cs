@@ -95,12 +95,35 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // ==========================================
         public int LoyaltyPoints { get; set; }
         public bool IsVerified { get; set; }
+
+        // Gender and DateOfBirth are now [BindProperty] so the full
+        // Edit Profile page can post updated values back for these —
+        // both map directly to real columns on the Customer entity
+        // (see Customer.cs: Gender, DateOfBirth).
+        [BindProperty]
         public string Gender { get; set; } = "Not Specified";
+
+        [BindProperty]
         public DateTime? DateOfBirth { get; set; }
+
         public bool CODBlocked { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        // The customer's saved addresses (Customer.Addresses) and which one
+        // is currently the default (Customer.DefaultAddressID), so the full
+        // Edit Profile page can offer a "default address" dropdown.
+        public List<CustomerAddress> AddressesList { get; set; } = new();
+
+        [BindProperty]
+        public int? SelectedDefaultAddressId { get; set; }
+
         public List<StoreFollow> FollowedStoresList { get; set; } = new();
+
+        // Stores this customer has blocked. BlockRelation stores the
+        // relationship by user id, not store id (BlockerUserId = this
+        // customer's UserID, BlockedUserId = the store owner's UserID), so
+        // this is resolved to actual Store rows by matching Store.OwnerUserID.
+        public List<Store> BlockedStoresList { get; set; } = new();
         public List<Wishlist> WishlistList { get; set; } = new();
         public List<Review> ReviewsList { get; set; } = new();
 
@@ -258,6 +281,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return Page();
         }
 
+        // Handles both the legacy quick-edit (name/phone only) and, now,
+        // the full Edit Profile page's fuller form (name, phone, gender,
+        // date of birth, default address). Any of these fields left
+        // unposted (null) simply won't overwrite the existing value.
         public async Task<IActionResult> OnPostAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -282,6 +309,44 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 }
 
                 return Page();
+            }
+
+            // NEW — persist Gender / DateOfBirth / DefaultAddressID onto the
+            // Customer entity itself (these live on Customer, not User).
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer != null)
+            {
+                if (!string.IsNullOrWhiteSpace(Gender))
+                {
+                    customer.Gender = Gender.Trim();
+                }
+
+                customer.DateOfBirth = DateOfBirth;
+
+                // Only reassign the default address if the posted value is a
+                // real address belonging to this customer, so a tampered or
+                // stale form value can't point DefaultAddressID at someone
+                // else's address.
+                if (SelectedDefaultAddressId.HasValue)
+                {
+                    var ownsAddress = await _context.CustomerAddresses
+                        .AnyAsync(a =>
+                            a.AddressID == SelectedDefaultAddressId.Value &&
+                            a.CustomerID == customer.CustomerID);
+
+                    if (ownsAddress)
+                    {
+                        customer.DefaultAddressID = SelectedDefaultAddressId.Value;
+                    }
+                }
+                else
+                {
+                    customer.DefaultAddressID = null;
+                }
+
+                await _context.SaveChangesAsync();
             }
 
             TempData["Success"] = "Profile updated successfully.";
@@ -624,6 +689,411 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
+        // Removes the BlockRelation row so the store shows up again in the
+        // customer's feed/search/recommendations (see the block logic in
+        // CustomerFeedModel.OnPostBlockPostAsync — this is the reverse of
+        // that). Takes the store owner's UserID, since that's how
+        // BlockRelation actually stores the relationship (BlockedUserId),
+        // not a StoreID.
+        public async Task<IActionResult> OnPostUnblockStoreAsync(int blockedUserId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var relation = await _context.BlockRelations
+                .FirstOrDefaultAsync(b =>
+                    b.BlockerUserId == user.Id &&
+                    b.BlockedUserId == blockedUserId &&
+                    b.BlockerRole == "Customer");
+
+            if (relation != null)
+            {
+                _context.BlockRelations.Remove(relation);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Shop unblocked. It will start appearing in your feed again.";
+            }
+
+            return RedirectToPage();
+        }
+
+        // ==========================================
+        // Delete Review(s) / Comment(s) — from the Activity tab's
+        // swipeable panel (trash icon on a single item, or "Delete
+        // Selected" after checking several). Both scoped to the
+        // signed-in customer's own CustomerID so one customer can't
+        // delete another's review/comment by guessing an id.
+        // ==========================================
+        public async Task<IActionResult> OnPostDeleteReviewAsync(int reviewId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+                return RedirectToPage();
+
+            var review = await _context.Reviews
+                .FirstOrDefaultAsync(r => r.ReviewID == reviewId && r.CustomerID == customer.CustomerID);
+
+            if (review != null)
+            {
+                _context.Reviews.Remove(review);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Review deleted.";
+            }
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeleteReviewsAsync(int[] reviewIds)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            if (reviewIds == null || reviewIds.Length == 0)
+                return RedirectToPage();
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+                return RedirectToPage();
+
+            var reviewsToDelete = await _context.Reviews
+                .Where(r => reviewIds.Contains(r.ReviewID) && r.CustomerID == customer.CustomerID)
+                .ToListAsync();
+
+            if (reviewsToDelete.Any())
+            {
+                _context.Reviews.RemoveRange(reviewsToDelete);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"{reviewsToDelete.Count} review(s) deleted.";
+            }
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeleteCommentAsync(int commentId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+                return RedirectToPage();
+
+            // Comments are soft-deleted (IsDeleted flag), matching the same
+            // pattern already used by Customer1Model.OnPostDeleteExploreCommentAsync.
+            var comment = await _context.ExploreComments
+                .FirstOrDefaultAsync(c =>
+                    c.ExploreCommentID == commentId &&
+                    c.CustomerID == customer.CustomerID &&
+                    !c.IsDeleted);
+
+            if (comment != null)
+            {
+                comment.IsDeleted = true;
+                comment.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Comment deleted.";
+            }
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeleteCommentsAsync(int[] commentIds)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            if (commentIds == null || commentIds.Length == 0)
+                return RedirectToPage();
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+                return RedirectToPage();
+
+            var commentsToDelete = await _context.ExploreComments
+                .Where(c =>
+                    commentIds.Contains(c.ExploreCommentID) &&
+                    c.CustomerID == customer.CustomerID &&
+                    !c.IsDeleted)
+                .ToListAsync();
+
+            if (commentsToDelete.Any())
+            {
+                var now = DateTime.UtcNow;
+
+                foreach (var comment in commentsToDelete)
+                {
+                    comment.IsDeleted = true;
+                    comment.UpdatedAt = now;
+                }
+
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"{commentsToDelete.Count} comment(s) deleted.";
+            }
+
+            return RedirectToPage();
+        }
+
+        // ==========================================
+        // Delete Like(s) — ExploreLike is a real, confirmed entity, so this
+        // works the same reliable way as the review/comment deletes above.
+        // There's no confirmed "ExploreLikeID" property, so the row is
+        // identified by (CustomerID, ExplorePostID) instead, which is
+        // exactly how the row was created in the first place (see
+        // Customer1Model.OnPostToggleExploreLikeAsync).
+        // ==========================================
+        public async Task<IActionResult> OnPostDeleteLikeAsync(int postId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+                return RedirectToPage();
+
+            var like = await _context.ExploreLikes
+                .FirstOrDefaultAsync(l => l.ExplorePostID == postId && l.CustomerID == customer.CustomerID);
+
+            if (like != null)
+            {
+                _context.ExploreLikes.Remove(like);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Like removed.";
+            }
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeleteLikesAsync(int[] postIds)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            if (postIds == null || postIds.Length == 0)
+                return RedirectToPage();
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+                return RedirectToPage();
+
+            var likesToDelete = await _context.ExploreLikes
+                .Where(l => postIds.Contains(l.ExplorePostID) && l.CustomerID == customer.CustomerID)
+                .ToListAsync();
+
+            if (likesToDelete.Any())
+            {
+                _context.ExploreLikes.RemoveRange(likesToDelete);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"{likesToDelete.Count} like(s) removed.";
+            }
+
+            return RedirectToPage();
+        }
+
+        // ==========================================
+        // Delete Story Like(s) / Story Repl(y/ies) — BEST-EFFORT.
+        // Same unverified-schema situation as reading these lists (see
+        // LoadActivityListsAsync): there's no confirmed StoryLike/
+        // StoryReply/Message entity, so these run raw SQL DELETEs against
+        // the same guessed table/column shapes used for reading, wrapped in
+        // try/catch per statement. A guess that doesn't match the real
+        // schema just deletes 0 rows silently — harmless — so it's safe to
+        // attempt every candidate rather than only the first match.
+        // ==========================================
+        public async Task<IActionResult> OnPostDeleteStoryLikeAsync(int storyId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+                return RedirectToPage();
+
+            await DeleteStoryLikeBestEffortAsync(customer.CustomerID, storyId);
+            TempData["Success"] = "Story like removed.";
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeleteStoryLikesAsync(int[] storyIds)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            if (storyIds == null || storyIds.Length == 0)
+                return RedirectToPage();
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+                return RedirectToPage();
+
+            foreach (var storyId in storyIds)
+            {
+                await DeleteStoryLikeBestEffortAsync(customer.CustomerID, storyId);
+            }
+
+            TempData["Success"] = $"{storyIds.Length} story like(s) removed.";
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeleteStoryReplyAsync(int storyId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+                return RedirectToPage();
+
+            await DeleteStoryReplyBestEffortAsync(user.Id, customer.CustomerID, storyId);
+            TempData["Success"] = "Story reply removed.";
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeleteStoryRepliesAsync(int[] storyIds)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            if (storyIds == null || storyIds.Length == 0)
+                return RedirectToPage();
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserID == user.Id);
+
+            if (customer == null)
+                return RedirectToPage();
+
+            foreach (var storyId in storyIds)
+            {
+                await DeleteStoryReplyBestEffortAsync(user.Id, customer.CustomerID, storyId);
+            }
+
+            TempData["Success"] = $"{storyIds.Length} story repl(y/ies) removed.";
+
+            return RedirectToPage();
+        }
+
+        private async Task DeleteStoryLikeBestEffortAsync(int customerId, int storyId)
+        {
+            await TryExecuteActivityDeleteAsync(
+                "DELETE FROM StoryLikes WHERE StoryID = @StoryId AND CustomerID = @CustomerId",
+                ("@StoryId", storyId), ("@CustomerId", customerId));
+        }
+
+        private async Task DeleteStoryReplyBestEffortAsync(int userId, int customerId, int storyId)
+        {
+            // Mirrors the candidate shapes tried in LoadActivityListsAsync —
+            // ChatMessages (confirmed table name, guessed extra columns),
+            // then the older Messages/StoryReplies guesses as fallbacks.
+            await TryExecuteActivityDeleteAsync(
+                "DELETE FROM ChatMessages WHERE StoryID = @StoryId AND SenderID = @UserId",
+                ("@StoryId", storyId), ("@UserId", userId));
+
+            await TryExecuteActivityDeleteAsync(
+                "DELETE FROM ChatMessages WHERE StoryId = @StoryId AND SenderID = @UserId",
+                ("@StoryId", storyId), ("@UserId", userId));
+
+            await TryExecuteActivityDeleteAsync(
+                "DELETE FROM Messages WHERE StoryID = @StoryId AND SenderUserID = @UserId",
+                ("@StoryId", storyId), ("@UserId", userId));
+
+            await TryExecuteActivityDeleteAsync(
+                "DELETE FROM StoryReplies WHERE StoryID = @StoryId AND SenderUserID = @UserId",
+                ("@StoryId", storyId), ("@UserId", userId));
+
+            await TryExecuteActivityDeleteAsync(
+                "DELETE FROM StoryReplies WHERE StoryID = @StoryId AND CustomerID = @CustomerId",
+                ("@StoryId", storyId), ("@CustomerId", customerId));
+        }
+
+        // Runs a raw SQL DELETE and returns the affected row count. Never
+        // throws — a wrong guess at table/column names just deletes 0 rows,
+        // same safety approach as TryLoadActivityRowsAsync above.
+        private async Task<int> TryExecuteActivityDeleteAsync(string sql, params (string Name, object Value)[] parameters)
+        {
+            try
+            {
+                var connection = _context.Database.GetDbConnection();
+                var shouldClose = connection.State != System.Data.ConnectionState.Open;
+
+                if (shouldClose)
+                {
+                    await connection.OpenAsync();
+                }
+
+                try
+                {
+                    using var command = connection.CreateCommand();
+                    command.CommandText = sql;
+
+                    foreach (var (name, value) in parameters)
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = name;
+                        parameter.Value = value ?? DBNull.Value;
+                        command.Parameters.Add(parameter);
+                    }
+
+                    return await command.ExecuteNonQueryAsync();
+                }
+                finally
+                {
+                    if (shouldClose)
+                    {
+                        await connection.CloseAsync();
+                    }
+                }
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
 
         private async Task<bool> LoadCustomerProfileAsync()
         {
@@ -651,7 +1121,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             await LoadDeliveryAccessStatusAsync(user);
             await LoadStoreAccessStatusAsync(user);
 
-            // Safe lookup with robust try-catches around navigation inclusions
+            // Safe lookup with robust try-catches around navigation inclusions.
+            // Addresses is now included too (Customer.Addresses, confirmed
+            // real navigation property) so the full Edit Profile page can
+            // offer a "default address" picker.
             Customer? customer = null;
             try
             {
@@ -663,6 +1136,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                             .ThenInclude(p => p.Images)
                     .Include(c => c.Reviews)
                         .ThenInclude(r => r.Product)
+                    .Include(c => c.Addresses)
                     .FirstOrDefaultAsync(c => c.UserID == user.Id);
             }
             catch
@@ -673,6 +1147,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         .Include("FollowedStores")
                         .Include("Wishlists.Product.Images")
                         .Include("Reviews")
+                        .Include("Addresses")
                         .FirstOrDefaultAsync(c => c.UserID == user.Id);
                 }
                 catch
@@ -704,18 +1179,52 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             FollowedStoresList = customer.FollowedStores?.ToList() ?? new List<StoreFollow>();
             WishlistList = customer.Wishlists?.ToList() ?? new List<Wishlist>();
             ReviewsList = customer.Reviews?.ToList() ?? new List<Review>();
+            AddressesList = customer.Addresses?.ToList() ?? new List<CustomerAddress>();
+            SelectedDefaultAddressId = customer.DefaultAddressID;
 
             OrdersCount = await _context.Orders
                 .CountAsync(o => o.CustomerID == customer.CustomerID);
 
             WishlistCount = WishlistList.Count;
 
-            AddressesCount = await _context.CustomerAddresses
-                .CountAsync(a => a.CustomerID == customer.CustomerID);
+            AddressesCount = AddressesList.Count;
 
             await LoadActivityListsAsync(customer.CustomerID, customer.UserID);
 
+            await LoadBlockedStoresAsync(customer.UserID);
+
             return true;
+        }
+
+        // Resolves this customer's BlockRelation rows (keyed by user id) into
+        // actual Store entities, so the Blocked Shops section on the
+        // Activity tab has something real to render instead of always
+        // showing the empty state.
+        private async Task LoadBlockedStoresAsync(int customerUserId)
+        {
+            try
+            {
+                var blockedOwnerUserIds = await _context.BlockRelations
+                    .Where(b =>
+                        b.BlockerUserId == customerUserId &&
+                        b.BlockerRole == "Customer")
+                    .Select(b => b.BlockedUserId)
+                    .ToListAsync();
+
+                if (blockedOwnerUserIds.Count == 0)
+                {
+                    BlockedStoresList = new List<Store>();
+                    return;
+                }
+
+                BlockedStoresList = await _context.Stores
+                    .Where(s => blockedOwnerUserIds.Contains(s.OwnerUserID))
+                    .ToListAsync();
+            }
+            catch
+            {
+                BlockedStoresList = new List<Store>();
+            }
         }
 
         // ==========================================
@@ -782,22 +1291,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             // ==========================================
             // Story Likes / Story Replies — BEST-EFFORT (unverified schema)
             // ==========================================
-            // No StoryLike/StoryReply/Message entity or DbSet was available
-            // when this was wired up — only StoryManager's per-story check
-            // methods (IsLikedByCustomerAsync, LikeStoryAsync, etc.) were
-            // visible, not a way to fetch a customer's full history. Rather
-            // than reference an unconfirmed DbSet/entity type at compile
-            // time (which would fail to *build* rather than just fail at
-            // runtime), this runs raw SQL against guessed table/column
-            // names using the same naming conventions as your confirmed
-            // tables (ExploreLikes, ExploreComments, StoreFollows, etc.).
-            //
-            // If a guess is wrong, the query throws, is caught, and the
-            // list just stays empty — same as it does today. If it comes
-            // back empty and you want it working, the fix is almost always
-            // just correcting the table/column names in the SQL strings
-            // below to match your actual schema (StoryLikes/Messages, or
-            // whatever they're really called).
             StoryLikesList = await TryLoadActivityRowsAsync(
                 @"SELECT sl.StoryID, sl.CreatedAt, st.StoreName
                   FROM StoryLikes sl
@@ -807,21 +1300,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                   ORDER BY sl.CreatedAt DESC",
                 ("@CustomerId", customerId));
 
-            // Story Replies — you confirmed the real chat schema uses
-            // ChatMessageDTO/IChatMessageRepository, with SenderID,
-            // MessageText, and SentAt as real column/property names (from
-            // ChatConversationModel). Story replies are sent through the
-            // same MessagingManager pipeline as regular chat, so the top
-            // candidates now assume they land in a "ChatMessages" table
-            // with those exact columns plus a StoryID reference. Older,
-            // lower-confidence guesses are kept further down as fallbacks.
             var storyReplyCandidates = new (string Sql, (string, object)[] Parameters)[]
             {
-                // 1) Confirmed schema from ChatConversationModel/ChatMessageDTO:
-                //    SenderID, MessageText, SentAt are real column/property
-                //    names used for regular chat. Story replies go through
-                //    the same messaging pipeline, so this assumes they land
-                //    in the same table with an added StoryID reference.
                 (@"SELECT cm.StoryID, cm.MessageText AS ReplyText, cm.SentAt AS CreatedAt, st.StoreName
                    FROM ChatMessages cm
                    INNER JOIN Stories s ON s.StoryID = cm.StoryID
@@ -830,7 +1310,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                    ORDER BY cm.SentAt DESC",
                  new (string, object)[] { ("@UserId", userId) }),
 
-                // 2) Same table/columns, but StoryID in camelCase ("StoryId")
                 (@"SELECT cm.StoryId AS StoryID, cm.MessageText AS ReplyText, cm.SentAt AS CreatedAt, st.StoreName
                    FROM ChatMessages cm
                    INNER JOIN Stories s ON s.StoryID = cm.StoryId
@@ -839,9 +1318,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                    ORDER BY cm.SentAt DESC",
                  new (string, object)[] { ("@UserId", userId) }),
 
-                // 3) Same table, reference stored via a generic ReferenceID/
-                //    ReferenceType pair (the same pattern already used for
-                //    Notifications elsewhere in this app)
                 (@"SELECT cm.ReferenceID AS StoryID, cm.MessageText AS ReplyText, cm.SentAt AS CreatedAt, st.StoreName
                    FROM ChatMessages cm
                    INNER JOIN Stories s ON s.StoryID = cm.ReferenceID
@@ -850,8 +1326,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                    ORDER BY cm.SentAt DESC",
                  new (string, object)[] { ("@UserId", userId) }),
 
-                // 4) Generic "Messages" table, in case story replies use a
-                //    different table than regular ChatMessages
                 (@"SELECT m.StoryID, m.Content AS ReplyText, m.SentAt AS CreatedAt, st.StoreName
                    FROM Messages m
                    INNER JOIN Stories s ON s.StoryID = m.StoryID
@@ -860,7 +1334,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                    ORDER BY m.SentAt DESC",
                  new (string, object)[] { ("@UserId", userId) }),
 
-                // 5) Dedicated StoryReplies table, keyed by CustomerID (mirrors StoryLikes)
                 (@"SELECT sr.StoryID, sr.ReplyText, sr.CreatedAt, st.StoreName
                    FROM StoryReplies sr
                    INNER JOIN Stories s ON s.StoryID = sr.StoryID
@@ -869,7 +1342,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                    ORDER BY sr.CreatedAt DESC",
                  new (string, object)[] { ("@CustomerId", customerId) }),
 
-                // 6) Dedicated StoryReplies table, keyed by sender user id instead
                 (@"SELECT sr.StoryID, sr.ReplyText, sr.CreatedAt, st.StoreName
                    FROM StoryReplies sr
                    INNER JOIN Stories s ON s.StoryID = sr.StoryID
@@ -882,12 +1354,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             StoryRepliesList = await TryLoadActivityRowsFromCandidatesAsync(storyReplyCandidates);
         }
 
-        // Tries each candidate (SQL + parameters) in order via
-        // TryLoadActivityRowsAsync, and returns the first one that actually
-        // comes back with rows. If every candidate throws or returns zero
-        // rows, returns an empty list. Used where the exact table/column
-        // shape wasn't confirmed and there's more than one plausible guess
-        // worth trying automatically instead of asking again.
         private async Task<List<object>> TryLoadActivityRowsFromCandidatesAsync(
             (string Sql, (string Name, object Value)[] Parameters)[] candidates)
         {
@@ -903,15 +1369,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return new List<object>();
         }
 
-        // Runs a raw SQL SELECT and returns each row as a
-        // Dictionary<string, object?> (column name -> value), so the caller
-        // doesn't need a compile-time entity/DbSet type for tables whose
-        // exact schema wasn't confirmed. GetSafeString/GetSafeInt/
-        // GetSafeObject/GetSafeDateString all understand these dictionary
-        // rows the same way they understand real entities. Returns an
-        // empty list (never throws) if the SQL doesn't match the real
-        // schema — e.g. wrong table/column name, or a non-relational
-        // provider that doesn't support this SQL dialect.
         private async Task<List<object>> TryLoadActivityRowsAsync(string sql, params (string Name, object Value)[] parameters)
         {
             var results = new List<object>();

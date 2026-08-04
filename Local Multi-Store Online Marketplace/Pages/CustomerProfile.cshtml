@@ -140,7 +140,7 @@
                 }
 
             .profile-container {
-                max-width: 900px;
+                max-width: 1100px;
                 width: 100%;
                 margin: 28px auto;
                 padding: 0 20px;
@@ -921,7 +921,7 @@
                 align-items: center;
                 gap: 8px;
                 background: var(--card-bg);
-                border: 1px solid var(--border-color);
+                border: 2px solid var(--border-color);
                 border-radius: var(--radius-md);
                 padding: 20px 12px;
                 cursor: pointer;
@@ -933,7 +933,11 @@
                 .activity-tile:hover {
                     transform: translateY(-3px);
                     box-shadow: var(--shadow-md);
+                }
+
+                .activity-tile.active {
                     border-color: var(--accent-color);
+                    background: var(--accent-light);
                 }
 
             .activity-tile-icon {
@@ -988,6 +992,128 @@
                 letter-spacing: 0.3px;
             }
 
+            /* ============================================
+                           Swipeable activity detail panel (Likes /
+                           Comments / Story Likes / Story Replies)
+                           ============================================ */
+            .activity-detail-panel {
+                display: none;
+                margin-top: 16px;
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-sm);
+                overflow: hidden;
+                animation: fadeUp 0.25s ease forwards;
+            }
+
+                .activity-detail-panel.open {
+                    display: block;
+                }
+
+            .activity-detail-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 10px 0;
+            }
+
+            .activity-detail-tabs {
+                display: flex;
+                gap: 4px;
+                padding: 4px;
+                background: var(--bg-color);
+                border-radius: 50px;
+                flex-grow: 1;
+                margin-right: 8px;
+                overflow-x: auto;
+            }
+
+            .activity-detail-tab {
+                flex: 1;
+                white-space: nowrap;
+                text-align: center;
+                padding: 8px 12px;
+                border-radius: 50px;
+                border: none;
+                background: transparent;
+                color: var(--text-secondary);
+                font-family: var(--font-family);
+                font-weight: 700;
+                font-size: 12.5px;
+                cursor: pointer;
+                transition: background-color 0.2s ease, color 0.2s ease;
+            }
+
+                .activity-detail-tab.active {
+                    background: var(--card-bg);
+                    color: var(--accent-color);
+                    box-shadow: var(--shadow-sm);
+                }
+
+            .activity-detail-close {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                border: 1px solid var(--border-color);
+                background: var(--bg-color);
+                color: var(--text-secondary);
+                cursor: pointer;
+                font-size: 13px;
+                flex-shrink: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+                .activity-detail-close:hover {
+                    background: var(--accent-color);
+                    color: #ffffff;
+                    border-color: var(--accent-color);
+                }
+
+            .activity-swipe-track {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                scroll-behavior: smooth;
+                -webkit-overflow-scrolling: touch;
+            }
+
+                .activity-swipe-track::-webkit-scrollbar {
+                    display: none;
+                }
+
+            .activity-swipe-page {
+                flex: 0 0 100%;
+                width: 100%;
+                scroll-snap-align: start;
+                max-height: 380px;
+                overflow-y: auto;
+                padding: 14px 18px 18px;
+            }
+
+            .activity-swipe-dots {
+                display: flex;
+                justify-content: center;
+                gap: 6px;
+                padding-bottom: 12px;
+            }
+
+            .activity-swipe-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--border-color);
+                transition: background-color 0.2s ease, width 0.2s ease;
+            }
+
+                .activity-swipe-dot.active {
+                    background: var(--accent-color);
+                    width: 16px;
+                    border-radius: 4px;
+                }
+
             .activity-list-item {
                 display: flex;
                 justify-content: space-between;
@@ -1001,18 +1127,23 @@
                     border-bottom: none;
                 }
 
-            .activity-list-main h4 {
-                font-size: 14px;
-                font-weight: 700;
-                color: var(--text-primary);
-                margin-bottom: 4px;
+            .activity-list-main {
+                flex-grow: 1;
+                min-width: 0;
             }
 
-            .activity-list-main p {
-                font-size: 13px;
-                color: var(--text-secondary);
-                line-height: 1.5;
-            }
+                .activity-list-main h4 {
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                    margin-bottom: 4px;
+                }
+
+                .activity-list-main p {
+                    font-size: 13px;
+                    color: var(--text-secondary);
+                    line-height: 1.5;
+                }
 
             .activity-list-time {
                 font-size: 11.5px;
@@ -1021,6 +1152,112 @@
                 flex-shrink: 0;
                 padding-top: 2px;
             }
+
+            .activity-empty-inline {
+                text-align: center;
+                padding: 30px 10px;
+                color: var(--text-secondary);
+                font-size: 13.5px;
+            }
+
+                .activity-empty-inline i {
+                    display: block;
+                    font-size: 26px;
+                    margin-bottom: 10px;
+                    color: var(--border-color);
+                }
+
+            /* Hidden by default; revealed by the "View N more" button via JS */
+            .extra-item {
+                display: none;
+            }
+
+            .view-more-btn {
+                display: block;
+                width: 100%;
+                margin-top: 10px;
+                padding: 10px;
+                background: var(--accent-light);
+                border: 1px dashed var(--border-color);
+                border-radius: 10px;
+                color: var(--accent-color);
+                font-family: var(--font-family);
+                font-weight: 700;
+                font-size: 12.5px;
+                cursor: pointer;
+                transition: background-color 0.15s ease;
+            }
+
+                .view-more-btn:hover {
+                    background: var(--accent-color);
+                    color: #ffffff;
+                }
+
+            .bulk-actions-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 4px 4px 12px;
+                margin-bottom: 6px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .select-all-label {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 12.5px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                cursor: pointer;
+            }
+
+            .item-checkbox,
+            .select-all-checkbox {
+                width: 16px;
+                height: 16px;
+                accent-color: var(--accent-color);
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+
+            .bulk-delete-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: none;
+                border: 1px solid var(--error-color);
+                color: var(--error-color);
+                font-weight: 700;
+                font-size: 12px;
+                padding: 6px 14px;
+                border-radius: 50px;
+                cursor: pointer;
+                transition: all 0.15s ease;
+            }
+
+                .bulk-delete-btn:hover {
+                    background: var(--error-color);
+                    color: #ffffff;
+                }
+
+            .trash-btn {
+                background: none;
+                border: none;
+                color: var(--text-secondary);
+                font-size: 13px;
+                cursor: pointer;
+                padding: 4px;
+                border-radius: 6px;
+                transition: color 0.15s ease, background-color 0.15s ease;
+                flex-shrink: 0;
+            }
+
+                .trash-btn:hover {
+                    color: var(--error-color);
+                    background: #fdeeec;
+                }
 
             .reviews-container {
                 display: flex;
@@ -1118,28 +1355,6 @@
                 font-weight: 800;
             }
 
-            .modal-form {
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-            }
-
-            .save-btn {
-                background: var(--accent-gradient);
-                color: white;
-                border: none;
-                padding: 12px;
-                border-radius: 50px;
-                font-weight: 700;
-                cursor: pointer;
-                transition: opacity 0.15s ease;
-                box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
-            }
-
-                .save-btn:hover {
-                    opacity: 0.95;
-                }
-
             .following-list-item {
                 display: flex;
                 align-items: center;
@@ -1215,6 +1430,47 @@
                     color: #ffffff;
                 }
 
+            .blocked-shops-list {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .blocked-shop-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 10px 4px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+                .blocked-shop-item:last-child {
+                    border-bottom: none;
+                }
+
+                .blocked-shop-item .following-store-info {
+                    opacity: 0.85;
+                }
+
+            .unblock-btn {
+                background: none;
+                border: 1px solid var(--error-color);
+                color: var(--error-color);
+                font-weight: 700;
+                font-size: 12px;
+                padding: 6px 16px;
+                border-radius: 50px;
+                cursor: pointer;
+                transition: all 0.15s ease;
+                flex-shrink: 0;
+            }
+
+                .unblock-btn:hover {
+                    background-color: var(--error-color);
+                    color: #ffffff;
+                }
+
             @@keyframes fadeUp {
                 from {
                     opacity: 0;
@@ -1258,6 +1514,11 @@
 
                 .ig-avatar {
                     font-size: 30px;
+                }
+
+                .activity-detail-tab {
+                    font-size: 11.5px;
+                    padding: 8px 8px;
                 }
             }
 
@@ -1379,9 +1640,9 @@
                 <div class="sidebar-divider"></div>
                 <div class="sidebar-nav-label">Account</div>
 
-                <button type="button" class="sidebar-link" onclick="openEditModal(); closeSidebar();">
+                <a href="/EditProfile" class="sidebar-link">
                     <i class="fas fa-user-pen"></i> Edit Profile
-                </button>
+                </a>
 
                 <div class="sidebar-divider"></div>
                 <div class="sidebar-nav-label">Support</div>
@@ -1432,7 +1693,7 @@
 
                     <div class="settings-card">
                         <h3><i class="fas fa-sliders-h"></i> Account Settings</h3>
-                        <p>Manage your physical addresses or update your login credentials. Use "Edit Profile" in the menu to change your name or phone number.</p>
+                        <p>Manage your physical addresses or update your login credentials. Use "Edit Profile" in the menu to change your name, phone number, gender, date of birth, or default address.</p>
 
                         <a class="settings-btn" href="/Identity/Account/Manage/ChangePassword">
                             <i class="fas fa-key"></i> Change Password
@@ -1681,46 +1942,376 @@
                     <h3 class="activity-section-title"><i class="fas fa-chart-simple"></i> Activity Overview</h3>
 
                     <div class="activity-tile-grid">
-                        <button type="button" class="activity-tile" onclick="openActivityModal('reviewsModal')">
+                        <button type="button" class="activity-tile" data-tile="reviews" onclick="openActivityPanel('reviews')">
                             <div class="activity-tile-icon reviews-icon"><i class="fas fa-star"></i></div>
                             <span class="activity-tile-count">@Model.ReviewsList.Count</span>
                             <span class="activity-tile-label">Reviews</span>
                         </button>
 
-                        <button type="button" class="activity-tile" onclick="openActivityModal('likesModal')">
+                        <button type="button" class="activity-tile" data-tile="likes" onclick="openActivityPanel('likes')">
                             <div class="activity-tile-icon likes-icon"><i class="fas fa-heart"></i></div>
                             <span class="activity-tile-count">@Model.LikesList.Count</span>
                             <span class="activity-tile-label">Likes</span>
                         </button>
 
-                        <button type="button" class="activity-tile" onclick="openActivityModal('commentsModal')">
+                        <button type="button" class="activity-tile" data-tile="comments" onclick="openActivityPanel('comments')">
                             <div class="activity-tile-icon comments-icon"><i class="fas fa-comment"></i></div>
                             <span class="activity-tile-count">@Model.CommentsList.Count</span>
                             <span class="activity-tile-label">Comments</span>
                         </button>
 
-                        <button type="button" class="activity-tile" onclick="openActivityModal('storyLikesModal')">
+                        <button type="button" class="activity-tile" data-tile="storyLikes" onclick="openActivityPanel('storyLikes')">
                             <div class="activity-tile-icon story-icon"><i class="fas fa-circle-play"></i></div>
                             <span class="activity-tile-count">@Model.StoryLikesList.Count</span>
                             <span class="activity-tile-label">Story Likes</span>
                         </button>
 
-                        <button type="button" class="activity-tile" onclick="openActivityModal('storyRepliesModal')">
+                        <button type="button" class="activity-tile" data-tile="storyReplies" onclick="openActivityPanel('storyReplies')">
                             <div class="activity-tile-icon reply-icon"><i class="fas fa-reply"></i></div>
                             <span class="activity-tile-count">@Model.StoryRepliesList.Count</span>
                             <span class="activity-tile-label">Story Replies</span>
                         </button>
+                    </div>
+
+                    <!-- Swipeable detail panel: Likes / Comments / Story Likes / Story Replies
+                         share this one panel instead of four separate modals. Clicking a tile
+                         opens it on the matching tab; swiping (or tapping a tab) moves between
+                         the four sections via native horizontal scroll-snap. -->
+                    <div id="activityDetailPanel" class="activity-detail-panel">
+                        <div class="activity-detail-head">
+                            <div class="activity-detail-tabs">
+                                <button type="button" class="activity-detail-tab" data-index="0" onclick="goToActivityPage(0)">Reviews</button>
+                                <button type="button" class="activity-detail-tab" data-index="1" onclick="goToActivityPage(1)">Likes</button>
+                                <button type="button" class="activity-detail-tab" data-index="2" onclick="goToActivityPage(2)">Comments</button>
+                                <button type="button" class="activity-detail-tab" data-index="3" onclick="goToActivityPage(3)">Story Likes</button>
+                                <button type="button" class="activity-detail-tab" data-index="4" onclick="goToActivityPage(4)">Story Replies</button>
+                            </div>
+                            <button type="button" class="activity-detail-close" onclick="closeActivityPanel()" aria-label="Close">
+                                <i class="fas fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div class="activity-swipe-track" id="activitySwipeTrack">
+
+                            <div class="activity-swipe-page">
+                                @if (Model.ReviewsList.Any())
+                                {
+                                    <form method="post" asp-page-handler="DeleteReviews" id="reviewsBulkForm">
+                                        <div class="bulk-actions-bar">
+                                            <label class="select-all-label">
+                                                <input type="checkbox" class="select-all-checkbox" onclick="toggleSelectAll(this, 'reviewsBulkForm')" /> Select all
+                                            </label>
+                                            <button type="submit" class="bulk-delete-btn" onclick="return confirmBulkDelete('reviewsBulkForm', 'review')">
+                                                <i class="fas fa-trash"></i> Delete Selected
+                                            </button>
+                                        </div>
+                                        <div class="reviews-container">
+                                            @{
+                                                int reviewIndex = 0;
+                                            }
+                                            @foreach (var r in Model.ReviewsList)
+                                            {
+                                                var productName = CustomerProfileModel.GetSafeString(r.Product, new[] { "ProductName", "Name" }, "Product");
+                                                var rating = CustomerProfileModel.GetSafeInt(r, new[] { "Rating", "Stars", "Score" }, 5);
+                                                var comment = CustomerProfileModel.GetSafeString(r, new[] { "Comment", "Text", "ReviewText", "Description" }, "No feedback left.");
+                                                var extraClass = reviewIndex >= 5 ? "extra-item" : "";
+
+                                                <div class="review-row @extraClass">
+                                                    <input type="checkbox" name="reviewIds" value="@r.ReviewID" class="item-checkbox" />
+                                                    <div class="review-main">
+                                                        <h4>@productName</h4>
+                                                        <p>"@comment"</p>
+                                                    </div>
+                                                    <div class="review-meta">
+                                                        <div class="stars-row">
+                                                            @for (int i = 1; i <= 5; i++)
+                                                            {
+                                                                if (i <= rating)
+                                                                {
+                                                                    <i class="fas fa-star" style="color: #FFC107;"></i>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <i class="far fa-star" style="color: #dbdbdb;"></i>
+                                                                }
+                                                            }
+                                                        </div>
+                                                        <button type="submit" formaction="?handler=DeleteReview" name="reviewId" value="@r.ReviewID" class="trash-btn" title="Delete review" onclick="return confirm('Delete this review?')">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                reviewIndex++;
+                                            }
+                                        </div>
+                                        @if (Model.ReviewsList.Count > 5)
+                                        {
+                                            <button type="button" class="view-more-btn" data-more-label="View @(Model.ReviewsList.Count - 5) more" onclick="toggleViewMore(this)">View @(Model.ReviewsList.Count - 5) more</button>
+                                        }
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="activity-empty-inline">
+                                        <i class="fas fa-star"></i>
+                                        You have not published any reviews yet.
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="activity-swipe-page">
+                                @if (Model.LikesList.Any())
+                                {
+                                    <form method="post" asp-page-handler="DeleteLikes" id="likesBulkForm">
+                                        <div class="bulk-actions-bar">
+                                            <label class="select-all-label">
+                                                <input type="checkbox" class="select-all-checkbox" onclick="toggleSelectAll(this, 'likesBulkForm')" /> Select all
+                                            </label>
+                                            <button type="submit" class="bulk-delete-btn" onclick="return confirmBulkDelete('likesBulkForm', 'like')">
+                                                <i class="fas fa-trash"></i> Delete Selected
+                                            </button>
+                                        </div>
+                                        @{
+                                            int likeIndex = 0;
+                                        }
+                                        @foreach (var like in Model.LikesList)
+                                        {
+                                            var likedPost = CustomerProfileModel.GetSafeObject(like, new[] { "ExplorePost", "Post" });
+                                            var likedProduct = CustomerProfileModel.GetSafeObject(likedPost, new[] { "Product" });
+                                            var postTitle = CustomerProfileModel.GetSafeString(likedPost, new[] { "Caption" },
+                                                              CustomerProfileModel.GetSafeString(likedProduct, new[] { "ProductName", "Name" }, "a post"));
+                                            var likedAt = CustomerProfileModel.GetSafeDateString(like, new[] { "CreatedAt" });
+                                            var likeExtraClass = likeIndex >= 5 ? "extra-item" : "";
+
+                                            <div class="activity-list-item @likeExtraClass">
+                                                <input type="checkbox" name="postIds" value="@like.ExplorePostID" class="item-checkbox" />
+                                                <div class="activity-list-main">
+                                                    <h4><i class="fas fa-heart" style="color:#e0245e; font-size:12px; margin-right:6px;"></i>You liked @postTitle</h4>
+                                                </div>
+                                                <span class="activity-list-time">@likedAt</span>
+                                                <button type="submit" formaction="?handler=DeleteLike" name="postId" value="@like.ExplorePostID" class="trash-btn" title="Remove like" onclick="return confirm('Remove this like?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            likeIndex++;
+                                        }
+                                        @if (Model.LikesList.Count > 5)
+                                        {
+                                            <button type="button" class="view-more-btn" data-more-label="View @(Model.LikesList.Count - 5) more" onclick="toggleViewMore(this)">View @(Model.LikesList.Count - 5) more</button>
+                                        }
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="activity-empty-inline">
+                                        <i class="fas fa-heart"></i>
+                                        You haven't liked any posts yet.
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="activity-swipe-page">
+                                @if (Model.CommentsList.Any())
+                                {
+                                    <form method="post" asp-page-handler="DeleteComments" id="commentsBulkForm">
+                                        <div class="bulk-actions-bar">
+                                            <label class="select-all-label">
+                                                <input type="checkbox" class="select-all-checkbox" onclick="toggleSelectAll(this, 'commentsBulkForm')" /> Select all
+                                            </label>
+                                            <button type="submit" class="bulk-delete-btn" onclick="return confirmBulkDelete('commentsBulkForm', 'comment')">
+                                                <i class="fas fa-trash"></i> Delete Selected
+                                            </button>
+                                        </div>
+                                        @{
+                                            int commentIndex = 0;
+                                        }
+                                        @foreach (var c in Model.CommentsList)
+                                        {
+                                            var commentedPost = CustomerProfileModel.GetSafeObject(c, new[] { "ExplorePost", "Post" });
+                                            var commentedProduct = CustomerProfileModel.GetSafeObject(commentedPost, new[] { "Product" });
+                                            var postTitle = CustomerProfileModel.GetSafeString(commentedPost, new[] { "Caption" },
+                                                              CustomerProfileModel.GetSafeString(commentedProduct, new[] { "ProductName", "Name" }, "a post"));
+                                            var commentText = CustomerProfileModel.GetSafeString(c, new[] { "CommentText", "Comment", "Text" }, "");
+                                            var commentedAt = CustomerProfileModel.GetSafeDateString(c, new[] { "CreatedAt" });
+                                            var commentId = CustomerProfileModel.GetSafeInt(c, new[] { "ExploreCommentID", "CommentID", "Id" }, 0);
+                                            var commentExtraClass = commentIndex >= 5 ? "extra-item" : "";
+
+                                            <div class="activity-list-item @commentExtraClass">
+                                                <input type="checkbox" name="commentIds" value="@commentId" class="item-checkbox" />
+                                                <div class="activity-list-main">
+                                                    <h4>On @postTitle</h4>
+                                                    <p>"@commentText"</p>
+                                                </div>
+                                                <span class="activity-list-time">@commentedAt</span>
+                                                <button type="submit" formaction="?handler=DeleteComment" name="commentId" value="@commentId" class="trash-btn" title="Delete comment" onclick="return confirm('Delete this comment?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            commentIndex++;
+                                        }
+                                        @if (Model.CommentsList.Count > 5)
+                                        {
+                                            <button type="button" class="view-more-btn" data-more-label="View @(Model.CommentsList.Count - 5) more" onclick="toggleViewMore(this)">View @(Model.CommentsList.Count - 5) more</button>
+                                        }
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="activity-empty-inline">
+                                        <i class="fas fa-comment"></i>
+                                        You haven't left any comments yet.
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="activity-swipe-page">
+                                @if (Model.StoryLikesList.Any())
+                                {
+                                    <form method="post" asp-page-handler="DeleteStoryLikes" id="storyLikesBulkForm">
+                                        <div class="bulk-actions-bar">
+                                            <label class="select-all-label">
+                                                <input type="checkbox" class="select-all-checkbox" onclick="toggleSelectAll(this, 'storyLikesBulkForm')" /> Select all
+                                            </label>
+                                            <button type="submit" class="bulk-delete-btn" onclick="return confirmBulkDelete('storyLikesBulkForm', 'story like')">
+                                                <i class="fas fa-trash"></i> Delete Selected
+                                            </button>
+                                        </div>
+                                        @{
+                                            int storyLikeIndex = 0;
+                                        }
+                                        @foreach (var sl in Model.StoryLikesList)
+                                        {
+                                            var storeName = CustomerProfileModel.GetSafeString(sl, new[] { "StoreName" }, "a store");
+                                            var likedAt = CustomerProfileModel.GetSafeDateString(sl, new[] { "CreatedAt" });
+                                            var storyLikeStoryId = CustomerProfileModel.GetSafeInt(sl, new[] { "StoryID", "StoryId" }, 0);
+                                            var storyLikeExtraClass = storyLikeIndex >= 5 ? "extra-item" : "";
+
+                                            <div class="activity-list-item @storyLikeExtraClass">
+                                                <input type="checkbox" name="storyIds" value="@storyLikeStoryId" class="item-checkbox" />
+                                                <div class="activity-list-main">
+                                                    <h4><i class="fas fa-circle-play" style="color:#6d28d9; font-size:12px; margin-right:6px;"></i>Liked a story from @storeName</h4>
+                                                </div>
+                                                <span class="activity-list-time">@likedAt</span>
+                                                <button type="submit" formaction="?handler=DeleteStoryLike" name="storyId" value="@storyLikeStoryId" class="trash-btn" title="Remove story like" onclick="return confirm('Remove this story like?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            storyLikeIndex++;
+                                        }
+                                        @if (Model.StoryLikesList.Count > 5)
+                                        {
+                                            <button type="button" class="view-more-btn" data-more-label="View @(Model.StoryLikesList.Count - 5) more" onclick="toggleViewMore(this)">View @(Model.StoryLikesList.Count - 5) more</button>
+                                        }
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="activity-empty-inline">
+                                        <i class="fas fa-circle-play"></i>
+                                        You haven't liked any stories yet.
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="activity-swipe-page">
+                                @if (Model.StoryRepliesList.Any())
+                                {
+                                    <form method="post" asp-page-handler="DeleteStoryReplies" id="storyRepliesBulkForm">
+                                        <div class="bulk-actions-bar">
+                                            <label class="select-all-label">
+                                                <input type="checkbox" class="select-all-checkbox" onclick="toggleSelectAll(this, 'storyRepliesBulkForm')" /> Select all
+                                            </label>
+                                            <button type="submit" class="bulk-delete-btn" onclick="return confirmBulkDelete('storyRepliesBulkForm', 'story reply')">
+                                                <i class="fas fa-trash"></i> Delete Selected
+                                            </button>
+                                        </div>
+                                        @{
+                                            int storyReplyIndex = 0;
+                                        }
+                                        @foreach (var reply in Model.StoryRepliesList)
+                                        {
+                                            var storeName = CustomerProfileModel.GetSafeString(reply, new[] { "StoreName" }, "a store");
+                                            var replyText = CustomerProfileModel.GetSafeString(reply, new[] { "ReplyText", "Content", "Text", "Message" }, "");
+                                            var repliedAt = CustomerProfileModel.GetSafeDateString(reply, new[] { "CreatedAt" });
+                                            var storyReplyStoryId = CustomerProfileModel.GetSafeInt(reply, new[] { "StoryID", "StoryId" }, 0);
+                                            var storyReplyExtraClass = storyReplyIndex >= 5 ? "extra-item" : "";
+
+                                            <div class="activity-list-item @storyReplyExtraClass">
+                                                <input type="checkbox" name="storyIds" value="@storyReplyStoryId" class="item-checkbox" />
+                                                <div class="activity-list-main">
+                                                    <h4>Replied to a story from @storeName</h4>
+                                                    <p>"@replyText"</p>
+                                                </div>
+                                                <span class="activity-list-time">@repliedAt</span>
+                                                <button type="submit" formaction="?handler=DeleteStoryReply" name="storyId" value="@storyReplyStoryId" class="trash-btn" title="Delete reply" onclick="return confirm('Delete this story reply?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            storyReplyIndex++;
+                                        }
+                                        @if (Model.StoryRepliesList.Count > 5)
+                                        {
+                                            <button type="button" class="view-more-btn" data-more-label="View @(Model.StoryRepliesList.Count - 5) more" onclick="toggleViewMore(this)">View @(Model.StoryRepliesList.Count - 5) more</button>
+                                        }
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="activity-empty-inline">
+                                        <i class="fas fa-reply"></i>
+                                        You haven't replied to any stories yet.
+                                    </div>
+                                }
+                            </div>
+
+                        </div>
+
+                        <div class="activity-swipe-dots">
+                            <span class="activity-swipe-dot" data-dot="0"></span>
+                            <span class="activity-swipe-dot" data-dot="1"></span>
+                            <span class="activity-swipe-dot" data-dot="2"></span>
+                            <span class="activity-swipe-dot" data-dot="3"></span>
+                            <span class="activity-swipe-dot" data-dot="4"></span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="activity-section">
                     <h3 class="activity-section-title"><i class="fas fa-ban"></i> Blocked Shops</h3>
 
-                    <div class="empty-state" style="padding: 40px 20px;">
-                        <div class="empty-icon" style="font-size: 30px;"><i class="fas fa-store-slash"></i></div>
-                        <h3 style="font-size: 16px;">No Blocked Shops</h3>
-                        <p style="font-size: 13px;">Shops you block will stop appearing in your feed, search, and recommendations.</p>
-                    </div>
+                    @if (Model.BlockedStoresList.Any())
+                    {
+                        <div class="blocked-shops-list">
+                            @foreach (var store in Model.BlockedStoresList)
+                            {
+                                var storeName = CustomerProfileModel.GetSafeString(store, new[] { "StoreName", "Name" }, "Local Store");
+                                var storeLogo = CustomerProfileModel.GetSafeString(store, new[] { "LogoURL", "LogoUrl", "Logo", "ImageUrl" }, "https://cdn-icons-png.flaticon.com/512/869/869636.png");
+                                var ownerUserId = CustomerProfileModel.GetSafeInt(store, new[] { "OwnerUserID", "OwnerUserId" }, 0);
+
+                                <div class="blocked-shop-item">
+                                    <div class="following-store-info" style="cursor: default;">
+                                        <img src="@storeLogo" alt="@storeName" class="following-store-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/869/869636.png'" />
+                                        <div class="following-store-names">
+                                            <span class="following-store-name">@storeName</span>
+                                            <span class="following-store-desc">Blocked — hidden from your feed and search</span>
+                                        </div>
+                                    </div>
+                                    <form method="post" asp-page-handler="UnblockStore">
+                                        <input type="hidden" name="blockedUserId" value="@ownerUserId" />
+                                        <button type="submit" class="unblock-btn">Unblock</button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state" style="padding: 40px 20px;">
+                            <div class="empty-icon" style="font-size: 30px;"><i class="fas fa-store-slash"></i></div>
+                            <h3 style="font-size: 16px;">No Blocked Shops</h3>
+                            <p style="font-size: 13px;">Shops you block will stop appearing in your feed, search, and recommendations.</p>
+                        </div>
+                    }
                 </div>
 
                 <div class="activity-section">
@@ -1794,24 +2385,6 @@
         </main>
     </div>
 
-    <div id="editProfileModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeEditModal()">&times;</span>
-            <h3>Edit Profile Details</h3>
-            <form method="post" class="modal-form">
-                <div class="form-group">
-                    <label for="CustomerFullName">Full Name</label>
-                    <input type="text" id="CustomerFullName" name="CustomerFullName" value="@Model.CustomerFullName" required />
-                </div>
-                <div class="form-group">
-                    <label for="CustomerPhone">Phone Number</label>
-                    <input type="text" id="CustomerPhone" name="CustomerPhone" value="@Model.CustomerPhone" required />
-                </div>
-                <button type="submit" class="save-btn">Save Changes</button>
-            </form>
-        </div>
-    </div>
-
     <div id="followingModal" class="modal">
         <div class="modal-content" style="max-width: 400px; padding: 0; overflow: hidden; border-radius: 12px;">
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color);">
@@ -1851,199 +2424,6 @@
         </div>
     </div>
 
-    <div id="reviewsModal" class="modal">
-        <div class="modal-content" style="max-width: 460px; padding: 0; overflow: hidden; border-radius: 12px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color);">
-                <div style="width: 24px;"></div>
-                <h3 style="margin: 0; font-size: 16px; font-weight: 800; text-align: center;">Your Reviews</h3>
-                <span class="close-modal" onclick="closeActivityModal('reviewsModal')" style="font-size: 20px; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
-            </div>
-            <div style="max-height: 420px; overflow-y: auto; padding: 12px 16px;">
-                @if (Model.ReviewsList.Any())
-                {
-                    <div class="reviews-container">
-                        @foreach (var r in Model.ReviewsList)
-                        {
-                            var productName = CustomerProfileModel.GetSafeString(r.Product, new[] { "ProductName", "Name" }, "Product");
-                            var rating = CustomerProfileModel.GetSafeInt(r, new[] { "Rating", "Stars", "Score" }, 5);
-                            var comment = CustomerProfileModel.GetSafeString(r, new[] { "Comment", "Text", "ReviewText", "Description" }, "No feedback left.");
-
-                            <div class="review-row">
-                                <div class="review-main">
-                                    <h4>@productName</h4>
-                                    <p>"@comment"</p>
-                                </div>
-                                <div class="review-meta">
-                                    <div class="stars-row">
-                                        @for (int i = 1; i <= 5; i++)
-                                        {
-                                            if (i <= rating)
-                                            {
-                                                <i class="fas fa-star" style="color: #FFC107;"></i>
-                                            }
-                                            else
-                                            {
-                                                <i class="far fa-star" style="color: #dbdbdb;"></i>
-                                            }
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary); font-size: 14px;">
-                        You have not published any reviews yet.
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div id="likesModal" class="modal">
-        <div class="modal-content" style="max-width: 460px; padding: 0; overflow: hidden; border-radius: 12px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color);">
-                <div style="width: 24px;"></div>
-                <h3 style="margin: 0; font-size: 16px; font-weight: 800; text-align: center;">Your Likes</h3>
-                <span class="close-modal" onclick="closeActivityModal('likesModal')" style="font-size: 20px; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
-            </div>
-            <div style="max-height: 420px; overflow-y: auto; padding: 4px 16px;">
-                @if (Model.LikesList.Any())
-                {
-                    @foreach (var like in Model.LikesList)
-                    {
-                        var likedPost = CustomerProfileModel.GetSafeObject(like, new[] { "ExplorePost", "Post" });
-                        var likedProduct = CustomerProfileModel.GetSafeObject(likedPost, new[] { "Product" });
-                        var postTitle = CustomerProfileModel.GetSafeString(likedPost, new[] { "Caption" },
-                                          CustomerProfileModel.GetSafeString(likedProduct, new[] { "ProductName", "Name" }, "a post"));
-                        var likedAt = CustomerProfileModel.GetSafeDateString(like, new[] { "CreatedAt" });
-
-                        <div class="activity-list-item">
-                            <div class="activity-list-main">
-                                <h4><i class="fas fa-heart" style="color:#e0245e; font-size:12px; margin-right:6px;"></i>You liked @postTitle</h4>
-                            </div>
-                            <span class="activity-list-time">@likedAt</span>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary); font-size: 14px;">
-                        You haven't liked any posts yet.
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div id="commentsModal" class="modal">
-        <div class="modal-content" style="max-width: 460px; padding: 0; overflow: hidden; border-radius: 12px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color);">
-                <div style="width: 24px;"></div>
-                <h3 style="margin: 0; font-size: 16px; font-weight: 800; text-align: center;">Your Comments</h3>
-                <span class="close-modal" onclick="closeActivityModal('commentsModal')" style="font-size: 20px; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
-            </div>
-            <div style="max-height: 420px; overflow-y: auto; padding: 4px 16px;">
-                @if (Model.CommentsList.Any())
-                {
-                    @foreach (var c in Model.CommentsList)
-                    {
-                        var commentedPost = CustomerProfileModel.GetSafeObject(c, new[] { "ExplorePost", "Post" });
-                        var commentedProduct = CustomerProfileModel.GetSafeObject(commentedPost, new[] { "Product" });
-                        var postTitle = CustomerProfileModel.GetSafeString(commentedPost, new[] { "Caption" },
-                                          CustomerProfileModel.GetSafeString(commentedProduct, new[] { "ProductName", "Name" }, "a post"));
-                        var commentText = CustomerProfileModel.GetSafeString(c, new[] { "CommentText", "Comment", "Text" }, "");
-                        var commentedAt = CustomerProfileModel.GetSafeDateString(c, new[] { "CreatedAt" });
-
-                        <div class="activity-list-item">
-                            <div class="activity-list-main">
-                                <h4>On @postTitle</h4>
-                                <p>"@commentText"</p>
-                            </div>
-                            <span class="activity-list-time">@commentedAt</span>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary); font-size: 14px;">
-                        You haven't left any comments yet.
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div id="storyLikesModal" class="modal">
-        <div class="modal-content" style="max-width: 460px; padding: 0; overflow: hidden; border-radius: 12px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color);">
-                <div style="width: 24px;"></div>
-                <h3 style="margin: 0; font-size: 16px; font-weight: 800; text-align: center;">Story Likes</h3>
-                <span class="close-modal" onclick="closeActivityModal('storyLikesModal')" style="font-size: 20px; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
-            </div>
-            <div style="max-height: 420px; overflow-y: auto; padding: 4px 16px;">
-                @if (Model.StoryLikesList.Any())
-                {
-                    @foreach (var sl in Model.StoryLikesList)
-                    {
-                        var storeName = CustomerProfileModel.GetSafeString(sl, new[] { "StoreName" }, "a store");
-                        var likedAt = CustomerProfileModel.GetSafeDateString(sl, new[] { "CreatedAt" });
-
-                        <div class="activity-list-item">
-                            <div class="activity-list-main">
-                                <h4><i class="fas fa-circle-play" style="color:#6d28d9; font-size:12px; margin-right:6px;"></i>Liked a story from @storeName</h4>
-                            </div>
-                            <span class="activity-list-time">@likedAt</span>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary); font-size: 14px;">
-                        You haven't liked any stories yet.
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div id="storyRepliesModal" class="modal">
-        <div class="modal-content" style="max-width: 460px; padding: 0; overflow: hidden; border-radius: 12px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-color);">
-                <div style="width: 24px;"></div>
-                <h3 style="margin: 0; font-size: 16px; font-weight: 800; text-align: center;">Story Replies</h3>
-                <span class="close-modal" onclick="closeActivityModal('storyRepliesModal')" style="font-size: 20px; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1;">&times;</span>
-            </div>
-            <div style="max-height: 420px; overflow-y: auto; padding: 4px 16px;">
-                @if (Model.StoryRepliesList.Any())
-                {
-                    @foreach (var reply in Model.StoryRepliesList)
-                    {
-                        var storeName = CustomerProfileModel.GetSafeString(reply, new[] { "StoreName" }, "a store");
-                        var replyText = CustomerProfileModel.GetSafeString(reply, new[] { "ReplyText", "Content", "Text", "Message" }, "");
-                        var repliedAt = CustomerProfileModel.GetSafeDateString(reply, new[] { "CreatedAt" });
-
-                        <div class="activity-list-item">
-                            <div class="activity-list-main">
-                                <h4>Replied to a story from @storeName</h4>
-                                <p>"@replyText"</p>
-                            </div>
-                            <span class="activity-list-time">@repliedAt</span>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary); font-size: 14px;">
-                        You haven't replied to any stories yet.
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
     <footer>
         <span>Realnest — your local marketplace companion <i class="fas fa-heart"></i></span>
     </footer>
@@ -2064,14 +2444,6 @@
                 }
             };
 
-            function openEditModal() {
-                document.getElementById("editProfileModal").style.display = "block";
-            }
-
-            function closeEditModal() {
-                document.getElementById("editProfileModal").style.display = "none";
-            }
-
             function openFollowingModal() {
                 document.getElementById("followingModal").style.display = "block";
             }
@@ -2080,19 +2452,127 @@
                 document.getElementById("followingModal").style.display = "none";
             }
 
-            function openActivityModal(modalId) {
-                const modal = document.getElementById(modalId);
-                if (modal) {
-                    modal.style.display = "block";
+            // ============================================
+            // Swipeable activity panel (Reviews / Likes / Comments / Story Likes / Story Replies)
+            // ============================================
+            const ACTIVITY_TILE_TO_INDEX = {
+                reviews: 0,
+                likes: 1,
+                comments: 2,
+                storyLikes: 3,
+                storyReplies: 4
+            };
+
+            // ============================================
+            // Select-all / bulk delete (Reviews & Comments)
+            // ============================================
+            function toggleSelectAll(checkbox, formId) {
+                const form = document.getElementById(formId);
+                if (!form) return;
+
+                form.querySelectorAll(".item-checkbox").forEach(function(item) {
+                    item.checked = checkbox.checked;
+                });
+            }
+
+            function confirmBulkDelete(formId, itemLabel) {
+                const form = document.getElementById(formId);
+                if (!form) return false;
+
+                const checkedCount = form.querySelectorAll(".item-checkbox:checked").length;
+
+                if (checkedCount === 0) {
+                    alert("Select at least one " + itemLabel + " to delete.");
+                    return false;
+                }
+
+                return confirm("Delete " + checkedCount + " selected " + itemLabel + (checkedCount === 1 ? "" : "s") + "?");
+            }
+
+            // ============================================
+            // "View N more" — reveals items beyond the first 5 in a list
+            // ============================================
+            function toggleViewMore(button) {
+                const page = button.closest(".activity-swipe-page");
+                if (!page) return;
+
+                const isExpanded = button.dataset.expanded === "true";
+                page.querySelectorAll(".extra-item").forEach(function(item) {
+                    item.style.display = isExpanded ? "none" : "flex";
+                });
+
+                button.dataset.expanded = isExpanded ? "false" : "true";
+                button.textContent = isExpanded ? button.dataset.moreLabel : "Show less";
+            }
+
+            function openActivityPanel(tileKey) {
+                const panel = document.getElementById("activityDetailPanel");
+                if (!panel) return;
+
+                panel.classList.add("open");
+
+                const index = ACTIVITY_TILE_TO_INDEX[tileKey] ?? 0;
+                goToActivityPage(index);
+
+                panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }
+
+            function closeActivityPanel() {
+                const panel = document.getElementById("activityDetailPanel");
+                if (panel) {
+                    panel.classList.remove("open");
                 }
             }
 
-            function closeActivityModal(modalId) {
-                const modal = document.getElementById(modalId);
-                if (modal) {
-                    modal.style.display = "none";
-                }
+            function goToActivityPage(index) {
+                const track = document.getElementById("activitySwipeTrack");
+                if (!track) return;
+
+                const pageWidth = track.clientWidth;
+                track.scrollTo({ left: pageWidth * index, behavior: "smooth" });
+                setActiveActivityIndex(index);
             }
+
+            function setActiveActivityIndex(index) {
+                document.querySelectorAll(".activity-detail-tab").forEach(function(tab) {
+                    tab.classList.toggle("active", Number(tab.dataset.index) === index);
+                });
+
+                document.querySelectorAll(".activity-swipe-dot").forEach(function(dot) {
+                    dot.classList.toggle("active", Number(dot.dataset.dot) === index);
+                });
+
+                document.querySelectorAll(".activity-tile[data-tile]").forEach(function(tile) {
+                    const key = tile.dataset.tile;
+                    const isActiveTile = ACTIVITY_TILE_TO_INDEX[key] === index;
+                    tile.classList.toggle("active", isActiveTile);
+                });
+            }
+
+            (function initActivitySwipeSync() {
+                const track = document.getElementById("activitySwipeTrack");
+                if (!track) return;
+
+                let scrollTimeout = null;
+
+                track.addEventListener("scroll", function() {
+                    if (scrollTimeout) {
+                        window.clearTimeout(scrollTimeout);
+                    }
+
+                    scrollTimeout = window.setTimeout(function() {
+                        const pageWidth = track.clientWidth || 1;
+                        const index = Math.round(track.scrollLeft / pageWidth);
+                        setActiveActivityIndex(index);
+                    }, 80);
+                });
+
+                window.addEventListener("resize", function() {
+                    const pageWidth = track.clientWidth || 1;
+                    const index = Math.round(track.scrollLeft / pageWidth);
+                    track.scrollTo({ left: pageWidth * index });
+                });
+            })();
 
             function saveLanguagePreference() {
                 const select = document.getElementById("languageSelect");
@@ -2102,13 +2582,7 @@
 
             window.onclick = function(event) {
                 const modalsToCheck = [
-                    "editProfileModal",
-                    "followingModal",
-                    "reviewsModal",
-                    "likesModal",
-                    "commentsModal",
-                    "storyLikesModal",
-                    "storyRepliesModal"
+                    "followingModal"
                 ];
 
                 modalsToCheck.forEach(function(id) {

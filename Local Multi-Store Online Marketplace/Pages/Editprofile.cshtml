@@ -1,0 +1,472 @@
+﻿@page
+@model Local_Multi_Store_Online_Marketplace.Pages.CustomerProfileModel
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <title>Edit Profile | Realnest</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+            :root {
+                --bg-color: #faf9fc;
+                --card-bg: #ffffff;
+                --border-color: #ece8f6;
+                --text-primary: #1e1b2e;
+                --text-secondary: #6b6478;
+                --accent-color: #6d28d9;
+                --accent-hover: #5b21b6;
+                --accent-light: #f3effe;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                --success-color: #10b981;
+                --error-color: #dc2626;
+                --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                --font-display: 'Fraunces', Georgia, serif;
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.05);
+                --shadow-md: 0 10px 26px rgba(109, 40, 217, 0.09);
+                --radius-lg: 18px;
+                --radius-md: 12px;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: var(--font-family);
+                background: radial-gradient(ellipse 900px 500px at 15% -5%, rgba(109, 40, 217, 0.06), transparent), radial-gradient(ellipse 700px 500px at 100% 10%, rgba(99, 102, 241, 0.05), transparent), var(--bg-color);
+                background-attachment: fixed;
+                color: var(--text-primary);
+                min-height: 100vh;
+                padding-bottom: 100px;
+            }
+
+            .page-container {
+                max-width: 640px;
+                width: 100%;
+                margin: 28px auto;
+                padding: 0 20px;
+            }
+
+            .page-topbar {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                margin-bottom: 24px;
+            }
+
+            .back-btn {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                color: var(--accent-color);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+                font-size: 15px;
+                box-shadow: var(--shadow-sm);
+                transition: background-color 0.15s ease, color 0.15s ease;
+                flex-shrink: 0;
+            }
+
+                .back-btn:hover {
+                    background: var(--accent-color);
+                    color: #ffffff;
+                }
+
+            .page-topbar h1 {
+                font-family: var(--font-display);
+                font-size: 22px;
+                font-weight: 600;
+                letter-spacing: -0.01em;
+            }
+
+            .page-topbar p {
+                font-size: 13px;
+                color: var(--text-secondary);
+                margin-top: 2px;
+            }
+
+            .avatar-block {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 26px;
+            }
+
+            .avatar-ring {
+                width: 92px;
+                height: 92px;
+                border-radius: 50%;
+                padding: 3px;
+                background: var(--accent-gradient);
+                box-shadow: var(--shadow-md);
+            }
+
+            .avatar-circle {
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                background: var(--accent-gradient);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 34px;
+                color: #ffffff;
+                border: 3px solid #ffffff;
+            }
+
+            .avatar-hint {
+                font-size: 12px;
+                color: var(--text-secondary);
+            }
+
+            .form-card {
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-sm);
+                padding: 26px 26px 8px;
+                margin-bottom: 18px;
+            }
+
+            .form-section-title {
+                font-family: var(--font-display);
+                font-size: 15px;
+                font-weight: 600;
+                color: var(--text-primary);
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                .form-section-title i {
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 8px;
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 13px;
+                }
+
+            .form-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin-bottom: 18px;
+            }
+
+                .form-grid.single {
+                    grid-template-columns: 1fr;
+                }
+
+            .form-group {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+                .form-group.full {
+                    grid-column: 1 / -1;
+                }
+
+                .form-group label {
+                    font-size: 12.5px;
+                    font-weight: 700;
+                    color: var(--text-secondary);
+                }
+
+                .form-group input,
+                .form-group select {
+                    padding: 11px 13px;
+                    border: 1px solid var(--border-color);
+                    border-radius: 10px;
+                    outline: none;
+                    font-size: 14px;
+                    color: var(--text-primary);
+                    width: 100%;
+                    background: var(--bg-color);
+                    font-family: var(--font-family);
+                    transition: border-color 0.15s ease, background-color 0.15s ease;
+                }
+
+                    .form-group input:focus,
+                    .form-group select:focus {
+                        border-color: var(--accent-color);
+                        background: var(--card-bg);
+                    }
+
+                    .form-group input:disabled {
+                        color: var(--text-secondary);
+                        cursor: not-allowed;
+                        opacity: 0.75;
+                    }
+
+                .form-group .hint {
+                    font-size: 11.5px;
+                    color: var(--text-secondary);
+                }
+
+            .no-addresses-note {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                background: var(--accent-light);
+                border: 1px solid var(--border-color);
+                border-radius: 10px;
+                padding: 12px 14px;
+                font-size: 13px;
+                color: var(--text-secondary);
+                margin-bottom: 18px;
+            }
+
+                .no-addresses-note i {
+                    color: var(--accent-color);
+                }
+
+                .no-addresses-note a {
+                    color: var(--accent-color);
+                    font-weight: 700;
+                    text-decoration: none;
+                }
+
+                    .no-addresses-note a:hover {
+                        text-decoration: underline;
+                    }
+
+            .form-actions {
+                display: flex;
+                gap: 10px;
+                padding: 18px 0 22px;
+                border-top: 1px solid var(--border-color);
+                margin-top: 4px;
+            }
+
+            .save-btn {
+                flex-grow: 1;
+                background: var(--accent-gradient);
+                color: #ffffff;
+                border: none;
+                padding: 13px;
+                border-radius: 50px;
+                font-weight: 700;
+                font-size: 14px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(109, 40, 217, 0.22);
+                transition: opacity 0.15s ease;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+                .save-btn:hover {
+                    opacity: 0.94;
+                }
+
+            .cancel-btn {
+                padding: 13px 22px;
+                border-radius: 50px;
+                border: 1px solid var(--border-color);
+                background: var(--card-bg);
+                color: var(--text-secondary);
+                font-weight: 700;
+                font-size: 14px;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                transition: background-color 0.15s ease;
+            }
+
+                .cancel-btn:hover {
+                    background: var(--bg-color);
+                }
+
+            .message {
+                padding: 12px 16px;
+                border-radius: 10px;
+                font-weight: 700;
+                font-size: 13.5px;
+                margin-bottom: 18px;
+            }
+
+            .success-message {
+                background: #eafaf2;
+                color: var(--success-color);
+                border: 1px solid #cdeedd;
+            }
+
+            .error-message {
+                background: #fdeeec;
+                color: var(--error-color);
+                border: 1px solid #f8d7d2;
+            }
+
+            @@media (max-width: 480px) {
+                .form-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .form-card {
+                    padding: 20px 18px 6px;
+                }
+            }
+    </style>
+</head>
+<body>
+
+    <partial name="_CustomerBottomNav" />
+
+    <div class="page-container">
+
+        <div class="page-topbar">
+            <a href="/CustomerProfile" class="back-btn" aria-label="Back to profile">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1>Edit Profile</h1>
+                <p>Update your personal details and default address.</p>
+            </div>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="message success-message">@TempData["Success"]</div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="message error-message">Please check your information and try again.</div>
+        }
+
+        <div class="avatar-block">
+            <div class="avatar-ring">
+                <div class="avatar-circle">
+                    <i class="fas fa-user-astronaut"></i>
+                </div>
+            </div>
+            <span class="avatar-hint">@Model.CustomerEmail</span>
+        </div>
+
+        <form method="post">
+
+            <div class="form-card">
+                <div class="form-section-title"><i class="fas fa-id-card"></i> Personal details</div>
+
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label for="CustomerFullName">Full name</label>
+                        <input type="text" id="CustomerFullName" name="CustomerFullName" value="@Model.CustomerFullName" required />
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="CustomerPhone">Phone number</label>
+                        <input type="text" id="CustomerPhone" name="CustomerPhone" value="@Model.CustomerPhone" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Gender">Gender</label>
+                        <select id="Gender" name="Gender">
+                            @{
+                                var genderOptions = new[] { "Not Specified", "Male", "Female", "Other" };
+                            }
+                            @foreach (var option in genderOptions)
+                            {
+                                if (string.Equals(option, Model.Gender, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <option value="@option" selected>@option</option>
+                                }
+                                else
+                                {
+                                    <option value="@option">@option</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="DateOfBirth">Date of birth</label>
+                        <input type="date"
+                               id="DateOfBirth"
+                               name="DateOfBirth"
+                               value="@(Model.DateOfBirth.HasValue ? Model.DateOfBirth.Value.ToString("yyyy-MM-dd") : "")" />
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="CustomerEmailDisplay">Email address</label>
+                        <input type="email" id="CustomerEmailDisplay" value="@Model.CustomerEmail" disabled />
+                        <span class="hint">Contact support to change the email on your account.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-section-title"><i class="fas fa-location-dot"></i> Default address</div>
+
+                @if (Model.AddressesList.Any())
+                {
+                    <div class="form-grid single">
+                        <div class="form-group">
+                            <label for="SelectedDefaultAddressId">Used for delivery by default</label>
+                            <select id="SelectedDefaultAddressId" name="SelectedDefaultAddressId">
+                                <option value="">No default address</option>
+                                @foreach (var address in Model.AddressesList)
+                                {
+                                    var label = $"{address.AddressLine1}, {address.City}" +
+                                        (string.IsNullOrWhiteSpace(address.Area) ? "" : $" ({address.Area})");
+
+                                    if (Model.SelectedDefaultAddressId.HasValue && Model.SelectedDefaultAddressId.Value == address.AddressID)
+                                    {
+                                        <option value="@address.AddressID" selected>@label</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@address.AddressID">@label</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="no-addresses-note">
+                        <i class="fas fa-circle-info"></i>
+                        <span>You haven't saved any addresses yet. <a href="/CustomerAddresses">Add one</a> to set a default.</span>
+                    </div>
+                }
+            </div>
+
+            <div class="form-actions">
+                <a href="/CustomerProfile" class="cancel-btn">Cancel</a>
+                <button type="submit" class="save-btn">
+                    <i class="fas fa-check"></i> Save changes
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</body>
+</html>
