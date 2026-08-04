@@ -7,9 +7,12 @@
 }
 
 @section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
-                   ROOT VARIABLES — Exactly matching your Dashboard
+                   ROOT VARIABLES — matching the Promotions page exactly, so
+                   this page reads as part of the same design system rather
+                   than a one-off purple-gradient banner.
                    ============================================================ */
         :root {
             --accent-color: #6d28d9;
@@ -23,141 +26,203 @@
             --text-muted: #9691a4;
             --border-color: #ece8f6;
             --star-color: #f59e0b;
+            --success-color: #10b981;
             --error-color: #dc2626;
             --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
             --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
-            --radius-md: 16px;
-            --radius-lg: 24px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
             --transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            --font-display: 'Fraunces', 'Georgia', serif;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
         }
 
         /* ============================================================
-                   HEADER BANNER
+                   HEADER
                    ============================================================ */
-        .reviews-hero {
-            background: var(--accent-gradient);
-            color: #ffffff;
-            padding: 32px 40px;
-            border-radius: var(--radius-lg);
-            margin-bottom: 32px;
-            box-shadow: var(--shadow-md), 0 8px 32px rgba(109, 40, 217, 0.20);
+        .reviews-header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
-        .hero-text h2 {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 4px;
-            letter-spacing: -0.4px;
-        }
-
-        .hero-text p {
-            font-size: 15px;
-            opacity: 0.9;
-            margin: 0;
-        }
-
-        .reviews-stats-summary {
-            display: flex;
-            gap: 20px;
-        }
-
-        .summary-pill {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(8px);
-            padding: 10px 20px;
-            border-radius: 14px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-            .summary-pill span {
-                display: block;
-                font-size: 11px;
-                text-transform: uppercase;
-                font-weight: 700;
-                opacity: 0.8;
+            .reviews-header h2 {
+                margin: 0;
+                font-family: var(--font-display);
+                font-size: 27px;
+                font-weight: 600;
+                letter-spacing: -0.2px;
+                color: var(--text-primary);
+                display: flex;
+                align-items: center;
+                gap: 10px;
             }
 
-            .summary-pill strong {
-                font-size: 20px;
-                font-weight: 800;
+                .reviews-header h2 i {
+                    color: var(--accent-color);
+                }
+
+            .reviews-header p {
+                margin: 4px 0 0;
+                color: var(--text-secondary);
+                font-size: 14px;
             }
 
         /* ============================================================
-                   REVIEW CARDS
+                   STATS ROW
                    ============================================================ */
-        .reviews-container {
-            display: flex;
-            flex-direction: column;
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 16px;
+            margin-bottom: 28px;
         }
 
-        .toast {
-            position: fixed;
-            top: 25px;
-            right: 25px;
-            background: #22c55e;
-            color: white;
-            padding: 14px 22px;
-            border-radius: 12px;
-            font-weight: 600;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            display: none;
-            z-index: 9999;
-        }
-
-        .review-card {
+        .stat-mini {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
-            padding: 24px;
+            padding: 14px 18px;
             box-shadow: var(--shadow-sm);
             transition: var(--transition);
-            position: relative;
-            overflow: hidden;
+            text-align: center;
         }
 
-            .review-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 3px;
-                background: var(--accent-gradient);
-                opacity: 0;
-                transition: var(--transition);
-            }
-
-            .review-card:hover {
+            .stat-mini:hover {
+                border-color: var(--accent-color);
                 transform: translateY(-2px);
                 box-shadow: var(--shadow-md);
-                border-color: var(--accent-color);
             }
 
-                .review-card:hover::before {
-                    opacity: 1;
-                }
+            .stat-mini .number {
+                font-size: 24px;
+                font-weight: 800;
+                color: var(--text-primary);
+                line-height: 1.2;
+            }
 
-        .review-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 16px;
-        }
+            .stat-mini .label {
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+            }
 
-        .customer-info {
+            .stat-mini .icon {
+                color: var(--accent-color);
+                opacity: 0.5;
+                font-size: 18px;
+                margin-right: 4px;
+            }
+
+            .stat-mini.attention .number {
+                color: var(--error-color);
+            }
+
+        /* ============================================================
+                   ALERTS
+                   ============================================================ */
+        .alert {
+            border-radius: var(--radius-md);
+            padding: 14px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid transparent;
+            margin-bottom: 24px;
             display: flex;
             align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: #ecfdf5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+            .alert-success i {
+                color: var(--success-color);
+            }
+
+        /* ============================================================
+                   CARD (reviews list wrapper)
+                   ============================================================ */
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+            .table-card:hover {
+                box-shadow: var(--shadow-md);
+            }
+
+            .table-card .card-header {
+                background: var(--bg-color);
+                border-bottom: 1px solid var(--border-color);
+                padding: 16px 22px;
+                font-weight: 700;
+                font-size: 15px;
+                color: var(--text-primary);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+                .table-card .card-header i {
+                    color: var(--accent-color);
+                    font-size: 18px;
+                }
+
+            .table-card .card-body {
+                padding: 0;
+            }
+
+        /* ============================================================
+                   REVIEW ROWS
+                   ============================================================ */
+        .review-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 22px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s ease;
+        }
+
+            .review-row:last-child {
+                border-bottom: none;
+            }
+
+            .review-row:hover {
+                background-color: var(--accent-light);
+            }
+
+        .review-row-main {
+            display: flex;
+            align-items: flex-start;
             gap: 14px;
+            min-width: 0;
+            flex: 1;
         }
 
         .customer-avatar {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             border-radius: 14px;
             background: var(--accent-gradient);
             color: white;
@@ -165,20 +230,29 @@
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 18px;
+            font-size: 16px;
             box-shadow: 0 4px 10px rgba(109, 40, 217, 0.2);
+            flex-shrink: 0;
         }
 
-        .customer-name-meta {
+        .review-row-content {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .review-row-head {
             display: flex;
-            flex-direction: column;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 4px;
         }
 
         .customer-name {
             font-weight: 700;
             color: var(--text-primary);
             text-decoration: none;
-            font-size: 16px;
+            font-size: 15px;
             transition: var(--transition);
         }
 
@@ -192,191 +266,302 @@
             font-weight: 500;
         }
 
-        /* Star Rating Styling */
         .stars-container {
             display: flex;
             gap: 2px;
             color: var(--star-color);
-            font-size: 14px;
+            font-size: 13px;
+            margin-bottom: 8px;
         }
 
-        .review-body {
+        .review-comment {
             color: var(--text-secondary);
             line-height: 1.6;
-            font-size: 15px;
-            margin-bottom: 20px;
-            padding-left: 62px; /* aligns with the text next to avatar */
+            font-size: 14.5px;
+            margin: 0;
         }
 
-        /* ============================================================
-                   FOOTER / ACTIONS
-                   ============================================================ */
-        .review-footer {
-            display: flex;
-            justify-content: flex-end;
-            padding-top: 16px;
-            border-top: 1px solid var(--border-color);
-        }
-
+        /* ----- Delete button — same circular icon-only style used for
+                   deleting a Promotion, for visual consistency across the
+                   store-owner section. ----- */
         .btn-delete-review {
-            background: #fff1f2;
-            color: var(--error-color);
-            border: 1px solid #fee2e2;
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 700;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #fee2e2;
+            color: #dc2626;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
             transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            flex-shrink: 0;
         }
 
             .btn-delete-review:hover {
-                background: var(--error-color);
+                background: #dc2626;
                 color: white;
-                border-color: var(--error-color);
+                transform: translateY(-2px);
             }
 
+            .btn-delete-review i {
+                font-size: 14px;
+            }
+
+        /* ----- "View N older reviews" — hides everything past the 5th
+                   review by default; the button reveals them via JS. ----- */
+        .extra-review {
+            display: none;
+        }
+
+        .view-older-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: var(--bg-color);
+            border: none;
+            border-top: 1px solid var(--border-color);
+            color: var(--accent-color);
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+            .view-older-btn:hover {
+                background: var(--accent-light);
+            }
+
+
         /* ============================================================
-                   EMPTY STATE
+                   EMPTY STATE — identical pattern to Promotions' empty state
                    ============================================================ */
         .empty-state {
-            background: var(--card-bg);
-            border: 2px dashed var(--border-color);
-            border-radius: var(--radius-lg);
             padding: 60px 20px;
             text-align: center;
+            color: var(--text-secondary);
         }
 
             .empty-state i {
-                font-size: 48px;
-                color: var(--accent-light);
-                margin-bottom: 16px;
+                font-size: 36px;
+                color: var(--accent-color);
+                opacity: 0.3;
+                margin-bottom: 12px;
                 display: block;
             }
 
-            .empty-state h3 {
+            .empty-state h4 {
+                font-family: var(--font-display);
+                font-size: 19px;
+                font-weight: 600;
                 color: var(--text-primary);
-                font-weight: 700;
-                margin-bottom: 8px;
+                margin: 0 0 4px;
             }
 
             .empty-state p {
-                color: var(--text-muted);
+                margin: 0;
+                font-size: 14px;
             }
 
+        /* ============================================================
+                   ACCESSIBILITY
+                   ============================================================ */
+        a:focus-visible,
+        button:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.001ms !important;
+            }
+        }
+
+        /* ============================================================
+                   RESPONSIVE
+                   ============================================================ */
         @@media (max-width: 768px) {
-            .reviews-hero {
+            .reviews-header {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 20px;
-                padding: 24px;
             }
 
-            .review-body {
-                padding-left: 0;
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .stat-mini .number {
+                font-size: 20px;
+            }
+
+            .review-row {
+                padding: 16px;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .review-row-main {
+                gap: 10px;
+            }
+
+            .customer-avatar {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
             }
         }
     </style>
 }
 
-<!-- ========== HERO BANNER ========== -->
-<div class="reviews-hero">
-    <div class="hero-text">
-        <h2>Customer Feedback</h2>
-        <p>Monitor and manage your store's reputation.</p>
-    </div>
-    <div class="reviews-stats-summary">
-        <div class="summary-pill">
-            <span>Total Reviews</span>
-            <strong>@Model.Reviews.Count</strong>
-        </div>
-        @if (Model.Reviews.Any())
-        {
-            <div class="summary-pill">
-                <span>Avg. Rating</span>
-                <strong>@(Model.Reviews.Average(r => r.Rating).ToString("F1")) <i class="fas fa-star" style="font-size: 14px; color: var(--star-color);"></i></strong>
-            </div>
-        }
-    </div>
-</div>
+<div class="container mt-4">
 
-<!-- ========== REVIEWS LIST ========== -->
-<div class="reviews-container">
-    @if (!Model.Reviews.Any())
+    <!-- ========== HEADER ========== -->
+    <div class="reviews-header">
+        <div>
+            <h2><i class="fas fa-comments"></i> Customer Feedback</h2>
+            <p>Monitor and manage your store's reputation.</p>
+        </div>
+    </div>
+
+    <!-- ========== STATS ROW ========== -->
+    @{
+        var totalReviews = Model.Reviews.Count;
+        var avgRating = Model.Reviews.Any()
+            ? Model.Reviews.Average(r => r.Rating).ToString("F1")
+            : "0.0";
+        var positiveCount = Model.Reviews.Count(r => r.Rating >= 4);
+        var attentionCount = Model.Reviews.Count(r => r.Rating <= 2);
+    }
+
+    <div class="stats-row">
+        <div class="stat-mini">
+            <span class="icon"><i class="fas fa-comments"></i></span>
+            <div class="number">@totalReviews</div>
+            <div class="label">Total Reviews</div>
+        </div>
+        <div class="stat-mini">
+            <span class="icon"><i class="fas fa-star"></i></span>
+            <div class="number">@avgRating</div>
+            <div class="label">Avg. Rating</div>
+        </div>
+        <div class="stat-mini">
+            <span class="icon"><i class="fas fa-thumbs-up"></i></span>
+            <div class="number">@positiveCount</div>
+            <div class="label">4–5 Star</div>
+        </div>
+        <div class="stat-mini attention">
+            <span class="icon"><i class="fas fa-triangle-exclamation"></i></span>
+            <div class="number">@attentionCount</div>
+            <div class="label">1–2 Star</div>
+        </div>
+    </div>
+
+    <!-- ========== TEMPDATA ALERT ========== -->
+    @if (TempData["SuccessMessage"] != null)
     {
-        <div class="empty-state">
-            <i class="fas fa-comment-slash"></i>
-            <h3>No Reviews Yet</h3>
-            <p>Customer feedback will appear here once orders are completed.</p>
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
         </div>
     }
-    else
-    {
-        @foreach (var r in Model.Reviews)
-        {
-            var customerName = r.CustomerName ?? "Verified Customer";
-            var initial = customerName.Length > 0 ? customerName.Substring(0, 1).ToUpper() : "?";
 
-            <div class="review-card">
-                <div class="review-header">
-                    <div class="customer-info">
-                        <div class="customer-avatar">@initial</div>
-                        <div class="customer-name-meta">
-                            <a asp-page="/StoreViewCustomer" asp-route-customerId="@r.CustomerID" class="customer-name">
-                                @customerName
-                            </a>
-                            <span class="review-date">@r.CreatedAt.ToString("MMMM dd, yyyy")</span>
+    <!-- ========== REVIEWS CARD ========== -->
+    <div class="table-card">
+        <div class="card-header">
+            <i class="fas fa-comments"></i> Customer Reviews
+        </div>
+        <div class="card-body">
+            @if (!Model.Reviews.Any())
+            {
+                <div class="empty-state">
+                    <i class="fas fa-comment-slash"></i>
+                    <h4>No Reviews Yet</h4>
+                    <p>Customer feedback will appear here once orders are completed.</p>
+                </div>
+            }
+            else
+            {
+                int reviewIndex = 0;
+                @foreach (var r in Model.Reviews)
+                {
+                    var fullName = r.Customer?.User?.FullName;
+                    var userName = r.Customer?.User?.UserName;
+                    var customerName = !string.IsNullOrWhiteSpace(fullName)
+                        ? fullName
+                        : (!string.IsNullOrWhiteSpace(userName) ? userName : "Verified Customer");
+                    var initial = customerName.Length > 0 ? customerName.Substring(0, 1).ToUpper() : "?";
+                    var extraClass = reviewIndex >= 5 ? "extra-review" : "";
+
+                    <div class="review-row @extraClass">
+                        <div class="review-row-main">
+                            <div class="customer-avatar">@initial</div>
+                            <div class="review-row-content">
+                                <div class="review-row-head">
+                                    <a asp-page="/StoreViewCustomer" asp-route-customerId="@r.CustomerID" class="customer-name">
+                                        @customerName
+                                    </a>
+                                    <span class="review-date">@r.CreatedAt.ToString("MMMM dd, yyyy")</span>
+                                </div>
+
+                                <div class="stars-container">
+                                    @for (int i = 0; i < 5; i++)
+                                    {
+                                        if (i < r.Rating)
+                                        {
+                                            <i class="fa-solid fa-star"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa-regular fa-star" style="opacity: 0.3;"></i>
+                                        }
+                                    }
+                                </div>
+
+                                <p class="review-comment">@r.Comment</p>
+                            </div>
                         </div>
+
+                        <form method="post" asp-page-handler="Delete">
+                            <input type="hidden" name="reviewId" value="@r.ReviewID" />
+                            <button type="submit" class="btn-delete-review" title="Delete review">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </form>
                     </div>
+                    reviewIndex++;
+                }
 
-                    <div class="stars-container">
-                        @for (int i = 0; i < 5; i++)
-                        {
-                            if (i < r.Rating)
-                            {
-                                <i class="fa-solid fa-star"></i>
-                            }
-                            else
-                            {
-                                <i class="fa-regular fa-star" style="opacity: 0.3;"></i>
-                            }
-                        }
-                    </div>
-                </div>
-
-                <div class="review-body">
-                    @r.Comment
-                </div>
-
-                <div class="review-footer">
-                    <form method="post" asp-page-handler="Delete">
-                        <input type="hidden" name="reviewId" value="@r.ReviewID" />
-                        <button type="submit" class="btn-delete-review">
-                            <i class="fa-solid fa-trash-can"></i>
-                            Delete Review
-                        </button>
-                    </form>
-                </div>
-            </div>
-        }
-    }
-</div>
-@if (TempData["SuccessMessage"] != null)
-{
-    <div id="toast" class="toast">
-        @TempData["SuccessMessage"]
+                @if (Model.Reviews.Count > 5)
+                {
+                    <button type="button" class="view-older-btn" data-more-label="View @(Model.Reviews.Count - 5) older review@(Model.Reviews.Count - 5 == 1 ? "" : "s")" onclick="toggleOlderReviews(this)">
+                        View @(Model.Reviews.Count - 5) older review@(Model.Reviews.Count - 5 == 1 ? "" : "s")
+                    </button>
+                }
+            }
+        </div>
     </div>
 
-    <script>
-        let toast = document.getElementById("toast");
+</div>
 
-        toast.style.display = "block";
+<script>
+    function toggleOlderReviews(button) {
+        var card = button.closest('.table-card');
+        if (!card) return;
 
-        setTimeout(() => {
-            toast.style.display = "none";
-        }, 3000);
-    </script>
-}
+        var isExpanded = button.dataset.expanded === 'true';
+
+        card.querySelectorAll('.extra-review').forEach(function(row) {
+            row.style.display = isExpanded ? 'none' : 'flex';
+        });
+
+        button.dataset.expanded = isExpanded ? 'false' : 'true';
+        button.textContent = isExpanded ? button.dataset.moreLabel : 'Show fewer reviews';
+    }
+</script>
