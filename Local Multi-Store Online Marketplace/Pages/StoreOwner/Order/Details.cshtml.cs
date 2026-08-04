@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
 using Multi_Store.Infrastructure.Data;
 using System;
@@ -185,6 +186,53 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
             }
 
             order.Status = newStatus;
+
+            // ==========================================
+            // DELIVERY NOTIFICATION — "Ready for Pickup"
+            //
+            // Notifies the delivery person already assigned to this
+            // order (via the existing DeliveryAssignment) that the
+            // store has finished preparing it. Added only — does not
+            // touch the status/guard logic above or the existing
+            // SaveChangesAsync call below.
+            // ==========================================
+            if (string.Equals(newStatus, "Ready for Pickup", StringComparison.OrdinalIgnoreCase))
+            {
+                var assignedDeliveryPerson = await _context.DeliveryAssignments
+                    .Where(a =>
+                        a.OrderID == orderId &&
+                        a.Status != "Delivered" &&
+                        a.Status != "Cancelled" &&
+                        a.Status != "Failed")
+                    .OrderByDescending(a => a.AssignedAt)
+                    .Select(a => a.DeliveryPerson)
+                    .FirstOrDefaultAsync();
+
+                if (assignedDeliveryPerson != null)
+                {
+                    var notificationAlreadyExists = await _context.Notifications
+                        .AnyAsync(n =>
+                            n.UserID == assignedDeliveryPerson.UserID &&
+                            n.Type == "DeliveryReadyForPickup" &&
+                            n.ReferenceID == order.OrderID);
+
+                    if (!notificationAlreadyExists)
+                    {
+                        _context.Notifications.Add(new Notification
+                        {
+                            UserID = assignedDeliveryPerson.UserID,
+                            Title = "Order Ready for Pickup",
+                            Message = $"Order {order.OrderNumber} is ready for pickup at the store.",
+                            Type = "DeliveryReadyForPickup",
+                            ReferenceID = order.OrderID,
+                            IsRead = false,
+                            SentAt = DateTime.UtcNow,
+                            SentVia = "System"
+                        });
+                    }
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"Order #{order.OrderNumber} status updated to {newStatus}.";
