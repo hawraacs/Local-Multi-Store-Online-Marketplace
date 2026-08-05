@@ -959,6 +959,74 @@ namespace Multi_Store.Services.Managers
         }
 
         // =====================================================
+        // PENALIZE DELIVERY PERSON FOR A COMPLAINT-DRIVEN REFUND
+        //
+        // No dedicated ledger table exists for delivery-side
+        // deductions, so this reuses DeliveryPaymentCollection:
+        //   - If this order already has a COD collection row, the
+        //     penalty amount is subtracted from CollectedAmount
+        //     (floored at 0) — that row already represents what this
+        //     delivery person is credited for the order.
+        //   - If no such row exists (order wasn't COD), there is
+        //     nothing to adjust monetarily. The caller is expected to
+        //     notify the delivery person instead (see
+        //     AdminComplaintsModel.OnPostRefundAsync).
+        //
+        // Returns the affected DeliveryPerson (for notification
+        // purposes) and whether a monetary adjustment was made.
+        // =====================================================
+        public async Task<(DeliveryPerson deliveryPerson, bool amountAdjusted)>
+            PenalizeDeliveryPersonForOrderAsync(int orderId, decimal amount)
+        {
+            if (orderId <= 0)
+            {
+                throw new InvalidOperationException("Invalid order.");
+            }
+
+            if (amount <= 0)
+            {
+                throw new InvalidOperationException(
+                    "Penalty amount must be greater than zero.");
+            }
+
+            var assignment =
+                await _assignmentRepository
+                    .GetActiveAssignmentByOrderAsync(orderId);
+
+            if (assignment == null)
+            {
+                throw new InvalidOperationException(
+                    "No delivery assignment was found for this order; the chargeback could not be applied.");
+            }
+
+            var deliveryPerson =
+                await _deliveryPersonRepository
+                    .GetByIdAsync(assignment.DeliveryPersonID);
+
+            if (deliveryPerson == null)
+            {
+                throw new InvalidOperationException(
+                    "The delivery person linked to this order was not found.");
+            }
+
+            var collection =
+                await _collectionRepository.GetByOrderAsync(orderId);
+
+            var amountAdjusted = false;
+
+            if (collection != null)
+            {
+                collection.CollectedAmount =
+                    Math.Max(0, collection.CollectedAmount - amount);
+
+                await _collectionRepository.UpdateAsync(collection);
+                amountAdjusted = true;
+            }
+
+            return (deliveryPerson, amountAdjusted);
+        }
+
+        // =====================================================
         // HELPERS
         // =====================================================
         private async Task<DeliveryPerson>

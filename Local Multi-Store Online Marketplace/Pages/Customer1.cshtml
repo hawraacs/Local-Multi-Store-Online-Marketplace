@@ -971,6 +971,38 @@
         }
 
         /* =====================================================
+           FIX — root cause confirmed from the real customer-explore.css:
+           .modal-media-pane has a FIXED height (58vh, dropping to 52vh
+           and 46vh at smaller breakpoints) that's completely independent
+           of its width. The modal card can be up to 680px wide, so that
+           box ends up landscape-shaped on most screens. Every product
+           image is now a guaranteed 1:1 square at upload
+           (CreateModel.SaveProductImages) — object-fit: cover was
+           cropping the top/bottom off those square images to force them
+           into that wider, non-square box (this is what showed up as
+           "cropped vertically"). object-fit: contain would instead have
+           letterboxed them with black bars on the sides (the original
+           complaint, before cover was added).
+           The actual fix is neither object-fit value — it's making the
+           box itself square, so a square image fills it exactly with
+           nothing left to crop OR pad, at every breakpoint. Reels (the
+           only non-square content) never open this modal; they open the
+           separate full-screen Reels Player, so this doesn't affect them.
+           ===================================================== */
+        .modal-media-pane {
+            height: auto !important;
+            aspect-ratio: 1 / 1 !important;
+            background: #f3f0fa !important;
+        }
+
+        .modal-media-content img,
+        .modal-media-content video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        /* =====================================================
            FIX — the Follow button (right-aligned in modal-store-header)
            was sitting right next to / overlapping the modal's X close
            button, since the close button floats top-right over the card

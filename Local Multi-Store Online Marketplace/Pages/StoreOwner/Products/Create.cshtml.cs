@@ -1,3 +1,5 @@
+using java.awt;
+using Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,7 +9,7 @@ using Multi_Store.Core.Interfaces;
 using Multi_Store.Core.Reposinterface;
 using Multi_Store.Core.ViewModels.StoreOwner;
 using Multi_Store.Infrastructure.Data;
-using Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.Shared;
+using SkiaSharp;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 {
@@ -23,6 +25,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
 
         private const long MaxImageSizeBytes = 5 * 1024 * 1024; // 5 MB per image
         private const int MaxImageCount = 5;
+
+        // Every uploaded product image is center-cropped to a square and
+        // resized to exactly this size, so it always fills a square tile
+        // cleanly (Explore grid/modal, Feed) instead of relying on
+        // whatever raw dimensions the store owner happened to upload.
+        private const int ProductImageTargetSize = 1080;
 
         public CreateModel(
             ApplicationDbContext context,
@@ -345,6 +353,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
             return null;
         }
 
+        /// <summary>
+        /// Saves uploaded product images after center-cropping each one to a
+        /// square and resizing to a fixed size (ProductImageTargetSize).
+        ///
+        /// CHANGED — this previously just copied the raw uploaded file
+        /// straight to disk with no processing at all. Whatever aspect ratio
+        /// a store owner happened to upload (portrait, landscape, odd crops)
+        /// went straight into the grid/feed/modal, which all assume a square
+        /// tile — that mismatch is what caused the black letterboxing in the
+        /// Explore modal (object-fit: contain padding out the gaps with its
+        /// background) and blurry/stretched images in the Feed. Every image
+        /// is now normalized at upload time instead, the same way Instagram
+        /// crops to a fixed square before it's ever stored.
+        ///
+        /// Uses SkiaSharp rather than SixLabors.ImageSharp — ImageSharp's
+        /// newer versions started requiring a commercial license key at
+        /// runtime for some usage tiers, which isn't something to build a
+        /// dependency on here. SkiaSharp is MIT-licensed with no license
+        /// key of any kind required.
+        /// </summary>
         private async Task SaveProductImages(int productId, List<IFormFile> images)
         {
             string folder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "products", productId.ToString());
@@ -355,10 +383,44 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
                 var img = images[i];
                 if (img.Length > 0)
                 {
-                    string fileName = $"{Guid.NewGuid()}_{Path.GetFileName(img.FileName)}";
+                    string fileName = $"{Guid.NewGuid()}.jpg";
                     string filePath = Path.Combine(folder, fileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                        await img.CopyToAsync(stream);
+
+                    using (var inputStream = img.OpenReadStream())
+                    using (var original = SKBitmap.Decode(inputStream))
+                    {
+                        if (original == null)
+                        {
+                            throw new InvalidOperationException($"Could not decode image '{img.FileName}'.");
+                        }
+
+                        var shortestSide = Math.Min(original.Width, original.Height);
+                        var cropX = (original.Width - shortestSide) / 2;
+                        var cropY = (original.Height - shortestSide) / 2;
+
+                        // Crop and resize in one draw call — rather than crop
+                        // then call a separate .Resize(), which depends on
+                        // SKFilterQuality (deprecated/removed across recent
+                        // SkiaSharp versions in favor of SKSamplingOptions).
+                        // Drawing straight from the cropped source rect into a
+                        // destination bitmap already at the target size does
+                        // both steps with one long-stable API.
+                        var sourceRect = new SKRectI(cropX, cropY, cropX + shortestSide, cropY + shortestSide);
+                        var destRect = new SKRect(0, 0, ProductImageTargetSize, ProductImageTargetSize);
+
+                        using var squared = new SKBitmap(ProductImageTargetSize, ProductImageTargetSize);
+                        using (var canvas = new SKCanvas(squared))
+                        {
+                            canvas.Clear(SKColors.White);
+                            canvas.DrawBitmap(original, sourceRect, destRect);
+                        }
+
+                        using var skImage = SKImage.FromBitmap(squared);
+                        using var encodedData = skImage.Encode(SKEncodedImageFormat.Jpeg, 88);
+
+                        using var fileStream = new FileStream(filePath, FileMode.Create);
+                        encodedData.SaveTo(fileStream);
+                    }
 
                     _context.ProductImages.Add(new ProductImage
                     {

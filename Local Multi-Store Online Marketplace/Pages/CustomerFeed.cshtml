@@ -19,33 +19,6 @@
     <link rel="stylesheet" href="~/css/stories.css" />
     <link rel="stylesheet" href="~/css/customer-feed.css" asp-append-version="true" />
 
-    <!-- Boosted badge styles (move into customer-feed.css whenever convenient) -->
-    <style>
-            .store-profile {
-                display: flex;
-                align-items: center;
-                flex-wrap: wrap;
-            }
-
-            .boosted-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
-                color: #fff;
-                font-size: 10.5px;
-                font-weight: 700;
-                padding: 3px 10px;
-                border-radius: 20px;
-                margin-left: 8px;
-                letter-spacing: 0.2px;
-                white-space: nowrap;
-            }
-
-                .boosted-badge i {
-                    font-size: 9.5px;
-                }
-    </style>
 </head>
 <body>
 
@@ -221,7 +194,13 @@
         {
             foreach (var product in Model.Products)
             {
-                var img = product.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+                // CHANGED — was Images?.FirstOrDefault(), which silently
+                // dropped every image after the first. Multi-image products
+                // now get all of them, in upload order, for the swipeable
+                // carousel below.
+                var productImages = (product.Images ?? new List<Multi_Store.Core.Entities.ProductImage>())
+                    .OrderBy(pi => pi.DisplayOrder)
+                    .ToList();
                 var isFollowing = Model.FollowingStoreIds.Contains(product.StoreID);
                 var isBoosted = Model.BoostedProductIds.Contains(product.ProductID);
 
@@ -312,9 +291,43 @@
                         </div>
                     </div>
 
-                    <!-- Post image -->
-                    <div class="post-image-container">
-                        <img class="post-image" src="@img" alt="@product.ProductName" loading="lazy" />
+                    <!-- Post image(s) — swipeable carousel when a product has more than one -->
+                    <div class="post-image-container" data-carousel>
+                        <div class="post-image-track">
+                            @if (productImages.Any())
+                            {
+                                @foreach (var image in productImages)
+                                {
+                                    <div class="post-image-slide">
+                                        <img class="post-image" src="@image.ImageUrl" alt="@product.ProductName" loading="lazy"
+                                             onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="post-image-slide">
+                                    <img class="post-image" src="/images/no-image.png" alt="@product.ProductName" loading="lazy" />
+                                </div>
+                            }
+                        </div>
+
+                        @if (productImages.Count > 1)
+                        {
+                            <button type="button" class="post-image-nav prev" aria-label="Previous image">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <button type="button" class="post-image-nav next" aria-label="Next image">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+
+                            <div class="post-image-dots">
+                                @for (var d = 0; d < productImages.Count; d++)
+                                {
+                                    <span class="post-image-dot @(d == 0 ? "active" : "")"></span>
+                                }
+                            </div>
+                        }
                     </div>
 
                     <div class="post-body">
@@ -512,6 +525,49 @@
     <!-- Page scripts -->
     <script src="~/js/stories.js"></script>
     <script src="~/js/customer-feed.js" asp-append-version="true"></script>
+
+    <script>
+            // =====================================================
+            // MULTI-IMAGE CAROUSEL — swipe (native scroll-snap) + dot sync
+            // + prev/next arrow buttons for products with more than one image.
+            // =====================================================
+            (function() {
+                function initCarousel(container) {
+                    var track = container.querySelector('.post-image-track');
+                    var dots = Array.from(container.querySelectorAll('.post-image-dot'));
+                    var prevBtn = container.querySelector('.post-image-nav.prev');
+                    var nextBtn = container.querySelector('.post-image-nav.next');
+
+                    if (!track) return;
+
+                    function updateActiveDot() {
+                        if (!dots.length || !track.clientWidth) return;
+
+                        var index = Math.round(track.scrollLeft / track.clientWidth);
+
+                        dots.forEach(function(dot, i) {
+                            dot.classList.toggle('active', i === index);
+                        });
+                    }
+
+                    var scrollTimeout = null;
+                    track.addEventListener('scroll', function() {
+                        if (scrollTimeout) window.clearTimeout(scrollTimeout);
+                        scrollTimeout = window.setTimeout(updateActiveDot, 60);
+                    });
+
+                    prevBtn?.addEventListener('click', function() {
+                        track.scrollBy({ left: -track.clientWidth, behavior: 'smooth' });
+                    });
+
+                    nextBtn?.addEventListener('click', function() {
+                        track.scrollBy({ left: track.clientWidth, behavior: 'smooth' });
+                    });
+                }
+
+                document.querySelectorAll('[data-carousel]').forEach(initCarousel);
+            })();
+    </script>
 
 </body>
 </html>

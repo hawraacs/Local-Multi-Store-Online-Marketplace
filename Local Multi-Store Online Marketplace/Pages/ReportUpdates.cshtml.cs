@@ -29,6 +29,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             "DeliveryAssignment",       // NEW — order assigned to a delivery person (AdminAssignDelivery.cshtml.cs)
             "DeliveryReview",           // NEW — customer rated a completed delivery (DeliveryReviewManager.cs)
             "DeliveryReadyForPickup",   // NEW — store finished preparing the order (Details.cshtml.cs)
+            "ComplaintUpdate",         // NEW — a customer's filed complaint was resolved/refunded (AdminComplaintsModel.cs)
             "Promotion",
             "StoreRequest",
 
@@ -130,6 +131,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 "DeliveryAssignment" => ("fas fa-truck", ""),
                 "DeliveryReview" => ("fas fa-star", "type-review"),
                 "DeliveryReadyForPickup" => ("fas fa-box-open", ""),
+                "ComplaintUpdate" => ("fas fa-flag-checkered", "type-review"),
                 "Promotion" => ("fas fa-bullhorn", ""),
                 "StoreRequest" => ("fas fa-store", ""),
                 "AdminWarning" => ("fas fa-triangle-exclamation", ""),
