@@ -102,7 +102,6 @@
                 position: fixed;
                 left: 50%;
                 bottom: 16px;
-                transform: translateX(-50%);
                 width: 90%;
                 max-width: 1180px;
                 min-width: 600px;
@@ -116,6 +115,35 @@
                 z-index: 1000;
                 box-shadow: var(--shadow-lg);
                 gap: 4px;
+                transition: transform 0.25s var(--ease), box-shadow 0.2s var(--ease);
+                /* BUGFIX: the rail is `position: fixed`, so it overlaps whatever page
+                               content happens to be in that spot on screen — including on the
+                               very first paint, with zero scrolling involved, if the viewport is
+                               tall enough to show both the rail and a chunk of the content behind
+                               it at once (this is exactly what was happening: row 1's buttons sat
+                               right underneath the rail immediately on page load). A scroll-based
+                               show/hide can't fix that, since no scroll event ever fires until the
+                               user actually scrolls. Instead, the rail now starts translated fully
+                               off-screen (below the viewport) and only slides into view when the
+                               mouse is actually near the bottom edge of the screen — see the
+                               .rail-visible class and the mousemove listener at the bottom of this
+                               file. That guarantees it never sits on top of something you're
+                               trying to click unless you've moved your cursor toward it on purpose. */
+                transform: translateX(-50%) translateY(140%);
+            }
+
+                .pro-rail.rail-visible {
+                    transform: translateX(-50%) translateY(0);
+                }
+
+            /* Touch devices have no hover/mouse-proximity concept, so keep the
+                               original always-visible behavior there — this is the normal,
+                               expected pattern for a bottom tab bar on mobile, and there's no
+                               "hover near the bottom" gesture to reveal it with. */
+            @@media (hover: none), (pointer: coarse) {
+                .pro-rail {
+                    transform: translateX(-50%) translateY(0);
+                }
             }
 
             .rail-brand {
@@ -140,11 +168,11 @@
                     transform: scale(1.05);
                 }
 
-                .rail-brand-logo {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                }
+            .rail-brand-logo {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
             /* Scrollable nav zone with edge fade so overflow is obvious, not cramped */
             .rail-scroll-wrap {
                 position: relative;
@@ -400,5 +428,78 @@
     <script src="~/js/store-owner.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
+    <script>
+            // BUGFIX: reveal the fixed bottom rail only when the mouse is actually
+            // near the bottom edge of the screen, instead of leaving it permanently
+            // parked on top of page content. The rail starts translated off-screen
+            // (see .pro-rail CSS above) and slides up into view on proximity; it
+            // slides back down a short moment after the mouse moves away. This
+            // fixes it blocking clicks on content that happens to render behind
+            // where the rail sits, including on first page load with no scrolling
+            // involved.
+            (function() {
+                var rail = document.querySelector('.pro-rail');
+                if (!rail) return;
+
+                // Touch devices keep the old always-visible behavior (handled by the
+                // CSS media query above) — skip the mouse-proximity JS entirely there.
+                var isCoarsePointer = window.matchMedia &&
+                    window.matchMedia('(hover: none), (pointer: coarse)').matches;
+                if (isCoarsePointer) return;
+
+                var revealZonePx = 90; // how close to the bottom edge triggers reveal
+                var hideDelayMs = 500; // grace period before hiding, so moving toward
+                // the rail itself doesn't flicker it away
+                var hideTimer = null;
+                var ticking = false;
+
+                function showRail() {
+                    if (hideTimer) {
+                        clearTimeout(hideTimer);
+                        hideTimer = null;
+                    }
+                    rail.classList.add('rail-visible');
+                }
+
+                function scheduleHideRail() {
+                    if (hideTimer) clearTimeout(hideTimer);
+                    hideTimer = setTimeout(function() {
+                        // Don't hide it while focus is inside it (keyboard tabbing
+                        // through the nav items) or while the mouse is over it.
+                        if (rail.contains(document.activeElement)) return;
+                        rail.classList.remove('rail-visible');
+                    }, hideDelayMs);
+                }
+
+                document.addEventListener('mousemove', function(e) {
+                    if (ticking) return;
+                    ticking = true;
+                    window.requestAnimationFrame(function() {
+                        var nearBottom = (window.innerHeight - e.clientY) <= revealZonePx;
+                        if (nearBottom) {
+                            showRail();
+                        } else {
+                            scheduleHideRail();
+                        }
+                        ticking = false;
+                    });
+                }, { passive: true });
+
+                // Keep it visible while the cursor is directly over it (e.g. user is
+                // slowly moving across the nav items).
+                rail.addEventListener('mouseenter', showRail);
+                rail.addEventListener('mouseleave', scheduleHideRail);
+
+                // Keyboard users: reveal it when a rail item receives focus via Tab,
+                // and don't auto-hide while focus stays inside it.
+                rail.addEventListener('focusin', showRail);
+                rail.addEventListener('focusout', scheduleHideRail);
+
+                // Brief "peek" on page load so first-time users notice it's there,
+                // then hide it again if the mouse isn't near it.
+                showRail();
+                scheduleHideRail();
+            })();
+    </script>
 </body>
 </html>

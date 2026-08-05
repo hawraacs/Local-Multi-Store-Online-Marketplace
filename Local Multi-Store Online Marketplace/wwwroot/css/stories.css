@@ -200,10 +200,17 @@
         color: #1a1625;
     }
 
+/* FIX: this panel sits inside a flex column dialog capped at max-height:92vh.
+   A flex item's default min-height is "auto" (its content size), NOT 0 - so
+   without min-height:0 this body refused to shrink below the height of the
+   460px dropzone + caption box, pushed past the dialog's max-height, and got
+   clipped by the dialog's overflow:hidden - taking the footer (Save button)
+   with it. min-height:0 lets this panel actually shrink and scroll instead. */
 .story-upload-dialog-v2__body {
     padding: 26px;
     overflow-y: auto;
     flex: 1;
+    min-height: 0;
 }
 
 .story-upload-columns {
@@ -443,6 +450,16 @@
 @media (max-width: 640px) {
     .story-dropzone {
         height: 260px;
+    }
+}
+
+/* FIX (added): on short/landscape viewports the 640px width breakpoint above
+   never fires, so the dropzone could still be taller than the available
+   screen height. This keeps the whole dialog comfortably visible without
+   depending on scrolling. */
+@media (max-height: 700px) {
+    .story-dropzone {
+        height: 300px;
     }
 }
 
