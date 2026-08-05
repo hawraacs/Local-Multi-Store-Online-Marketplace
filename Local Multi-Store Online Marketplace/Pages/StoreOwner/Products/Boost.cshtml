@@ -8,159 +8,315 @@
 @section Styles {
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* ============================================================
+                   Uses the same purple accent as the rest of the Store Owner
+                   section, for visual consistency across pages. Amber is kept only
+                   for the "payment pending" status indicator, matching the app's
+                   existing warning/pending color used elsewhere.
+                   ============================================================ */
         :root {
+            --ink: #1e1b2e;
+            --ink-soft: #6b6478;
+            --ink-faint: #9691a4;
+            --paper: #f8f7fc;
+            --surface: #ffffff;
+            --border: #ece8f6;
             --accent: #6d28d9;
             --accent-hover: #5b21b6;
             --accent-light: #f3effe;
             --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-            --bg: #f8f7fc;
-            --surface: #ffffff;
-            --text-primary: #1e1b2e;
-            --text-secondary: #6b6478;
-            --text-muted: #9691a4;
-            --border: #ece8f6;
+            --pending-100: #fef3c7;
+            --pending-600: #d97706;
+            --pending-700: #b45309;
             --success: #10b981;
             --success-bg: #dcfce7;
             --error: #dc2626;
+            --error-bg: #fee2e2;
             --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
             --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
             --radius-sm: 10px;
             --radius-md: 16px;
-            --radius-lg: 24px;
-            /* Same display face used across the rest of the Store Owner section. */
+            --radius-lg: 22px;
             --font-display: 'Fraunces', 'Georgia', serif;
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         body {
-            background: var(--bg);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--paper);
+            font-family: var(--font-body);
         }
 
         .boost-page {
-            max-width: 720px;
-            margin: 28px auto;
+            max-width: 640px;
+            margin: 32px auto;
             padding: 0 24px;
         }
 
         .boost-back-link {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             font-size: 13px;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--ink-soft);
             text-decoration: none;
-            margin-bottom: 18px;
+            margin-bottom: 22px;
         }
 
             .boost-back-link:hover {
                 color: var(--accent);
             }
 
+        .boost-eyebrow {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin: 0 0 6px;
+        }
+
+        /* ---- Alerts ---- */
+        .boost-alert {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+            .boost-alert.success {
+                background: var(--success-bg);
+                color: #065f46;
+            }
+
+            .boost-alert.error {
+                background: var(--error-bg);
+                color: #991b1b;
+            }
+
+        /* ---- Product header ---- */
         .boost-header {
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: 16px;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 24px 28px;
+            padding: 20px 22px;
             box-shadow: var(--shadow-sm);
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .boost-product-thumb {
-            width: 72px;
-            height: 72px;
+            width: 60px;
+            height: 60px;
             border-radius: var(--radius-md);
             object-fit: cover;
             border: 1px solid var(--border);
             flex-shrink: 0;
         }
 
-        .boost-header-info h1 {
-            font-family: var(--font-display);
-            font-size: 19px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 0 0 4px;
+        .boost-header-info {
+            min-width: 0;
         }
 
-        .boost-header-info p {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin: 0;
-        }
+            .boost-header-info h1 {
+                font-family: var(--font-display);
+                font-size: 19px;
+                font-weight: 600;
+                color: var(--ink);
+                margin: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
 
-        .boost-header-price {
+        .boost-price-pill {
             margin-left: auto;
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--accent);
             flex-shrink: 0;
+            background: var(--accent-light);
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 14px;
+            padding: 7px 14px;
+            border-radius: 999px;
         }
 
-        /* ---- Active boost status card ---- */
-        .boost-status-card {
+        /* ---- Feed-position preview (signature element) ----
+                   Shows, don't tells: two muted "other listings" rows and, above
+                   them, this product glowing amber with a Boosted tag — the
+                   actual thing being purchased, seen before it's described in
+                   pricing terms. */
+        .boost-preview {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 24px 28px;
+            padding: 22px 24px;
             box-shadow: var(--shadow-sm);
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 18px;
+            margin-bottom: 20px;
         }
 
+            .boost-preview > p.boost-preview-caption {
+                font-size: 13px;
+                color: var(--ink-soft);
+                margin: 12px 0 0;
+            }
+
+        .preview-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .preview-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+        }
+
+            .preview-row.boosted {
+                background: var(--accent-light);
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.14);
+                animation: preview-lift 0.5s cubic-bezier(.2, .8, .2, 1) both;
+            }
+
+            .preview-row.ghost {
+                background: var(--paper);
+            }
+
+        @@keyframes preview-lift {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .preview-thumb {
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+
+        .preview-row.boosted .preview-thumb {
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 11px;
+        }
+
+        .preview-lines {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            min-width: 0;
+        }
+
+            .preview-lines span {
+                display: block;
+                height: 6px;
+                border-radius: 3px;
+                background: var(--border);
+            }
+
+                .preview-lines span:first-child {
+                    width: 58%;
+                }
+
+                .preview-lines span:last-child {
+                    width: 32%;
+                }
+
+        .preview-boosted-label {
+            font-size: 11.5px;
+            font-weight: 800;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        /* ---- Active / pending status card ---- */
+        .boost-status-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--success);
+            border-radius: var(--radius-lg);
+            padding: 20px 22px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .boost-status-card.pending {
+                border-left-color: var(--pending-600);
+            }
+
         .boost-status-icon {
-            width: 52px;
-            height: 52px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
             background: var(--success-bg);
             color: var(--success);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 19px;
             flex-shrink: 0;
         }
 
             .boost-status-icon.pending {
-                background: #fef3c7;
-                color: #d97706;
+                background: var(--pending-100);
+                color: var(--pending-700);
             }
 
         .boost-status-info h3 {
             font-family: var(--font-display);
-            font-size: 16px;
+            font-size: 15.5px;
             font-weight: 600;
-            color: var(--text-primary);
-            margin: 0 0 4px;
+            color: var(--ink);
+            margin: 0 0 3px;
         }
 
         .boost-status-info p {
             font-size: 13px;
-            color: var(--text-secondary);
+            color: var(--ink-soft);
             margin: 0;
         }
 
         .boost-status-badge {
             margin-left: auto;
-            font-size: 11px;
-            font-weight: 700;
+            font-size: 10.5px;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
-            padding: 6px 14px;
+            letter-spacing: 0.5px;
+            padding: 6px 13px;
             border-radius: 20px;
             background: var(--success-bg);
-            color: var(--success);
+            color: #047857;
             flex-shrink: 0;
         }
 
             .boost-status-badge.pending {
-                background: #fef3c7;
-                color: #d97706;
+                background: var(--pending-100);
+                color: var(--pending-700);
             }
 
         /* ---- Duration picker ---- */
@@ -168,32 +324,24 @@
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 28px;
+            padding: 24px;
             box-shadow: var(--shadow-sm);
         }
 
-            .boost-form-card h2 {
-                font-family: var(--font-display);
-                font-size: 17px;
-                font-weight: 600;
-                color: var(--text-primary);
-                margin: 0 0 6px;
-            }
-
-            .boost-form-card > p {
+            .boost-form-card > p.boost-form-sub {
                 font-size: 13.5px;
-                color: var(--text-secondary);
-                margin: 0 0 20px;
+                color: var(--ink-soft);
+                margin: 0 0 18px;
             }
 
         .boost-options-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 10px;
+            margin-bottom: 22px;
         }
 
-        @@media (max-width: 640px) {
+        @@media (max-width: 560px) {
             .boost-options-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -213,12 +361,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             border: 2px solid var(--border);
             border-radius: var(--radius-md);
-            padding: 18px 10px;
+            padding: 16px 8px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
             text-align: center;
         }
 
@@ -230,29 +378,30 @@
         .boost-option input[type="radio"]:checked + .boost-option-label {
             border-color: var(--accent);
             background: var(--accent-light);
-            box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.12);
+            box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.16);
         }
 
         .boost-option input[type="radio"]:focus-visible + .boost-option-label {
-            outline: 2px solid var(--accent);
+            outline: 2px solid var(--accent-hover);
             outline-offset: 2px;
         }
 
         .boost-option-days {
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-size: 21px;
+            font-weight: 600;
+            color: var(--ink);
         }
 
         .boost-option-price {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             color: var(--accent);
         }
 
         .boost-option-perday {
             font-size: 10.5px;
-            color: var(--text-muted);
+            color: var(--ink-faint);
         }
 
         .boost-submit-btn {
@@ -269,7 +418,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: all 0.2s ease;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
 
             .boost-submit-btn:hover {
@@ -280,28 +429,10 @@
 
         .boost-note {
             font-size: 12px;
-            color: var(--text-muted);
+            color: var(--ink-faint);
             text-align: center;
             margin-top: 12px;
         }
-
-        .boost-alert {
-            padding: 12px 16px;
-            border-radius: var(--radius-sm);
-            font-size: 13.5px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-
-            .boost-alert.success {
-                background: var(--success-bg);
-                color: var(--success);
-            }
-
-            .boost-alert.error {
-                background: #fee2e2;
-                color: var(--error);
-            }
 
         /* ---- Accessibility ---- */
         a:focus-visible,
@@ -313,6 +444,7 @@
         @@media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 transition-duration: 0.001ms !important;
+                animation-duration: 0.001ms !important;
             }
         }
     </style>
@@ -320,7 +452,10 @@
 
 <div class="boost-page">
 
-    <partial name="_ProductsNav" model="@("Boost")" />
+    @* Tab strip intentionally not shown on the Boost page — Boost is a
+       focused, single-purpose flow reached from a product card, not one of
+       the tabbed sections itself, so the Catalog/Promote strip is omitted
+       here rather than highlighting either one. *@
 
     <a asp-page="/StoreOwner/Home" class="boost-back-link">
         <i class="fas fa-arrow-left"></i> Back to my products
@@ -346,12 +481,12 @@
         }
         <img class="boost-product-thumb" src="@thumb" alt="@Model.Product.ProductName" />
         <div class="boost-header-info">
+            <p class="boost-eyebrow">Boosting</p>
             <h1>@Model.Product.ProductName</h1>
-            <p>Boost this product so it appears higher and marked "Boosted" to customers.</p>
         </div>
         <!-- BUGFIX: was missing .ToString("N2"), same inconsistency fixed earlier
              on the Home page — could show "$9.5" instead of "$9.50". -->
-        <div class="boost-header-price">$@Model.Product.Price.ToString("N2")</div>
+        <div class="boost-price-pill">$@Model.Product.Price.ToString("N2")</div>
     </div>
 
     <!-- ========== CURRENT / PENDING BOOST STATUS ========== -->
@@ -359,20 +494,20 @@
     {
         var boost = Model.ExistingBoost;
         var isActive = boost.Status == "Active";
-        <div class="boost-status-card">
+        <div class="boost-status-card @(isActive ? "" : "pending")">
             <div class="boost-status-icon @(isActive ? "" : "pending")">
                 <i class="fas @(isActive ? "fa-bolt" : "fa-hourglass-half")"></i>
             </div>
             <div class="boost-status-info">
                 @if (isActive)
                 {
-                    <h3>This product is currently boosted</h3>
-                    <p>Boost ends on @(boost.EndDate.HasValue ? boost.EndDate.Value.ToString("dd MMM yyyy, h:mm tt") : "an upcoming date")</p>
+                    <h3>Boosted right now</h3>
+                    <p>Runs until @(boost.EndDate.HasValue ? boost.EndDate.Value.ToString("dd MMM yyyy, h:mm tt") : "an upcoming date")</p>
                 }
                 else
                 {
-                    <h3>Boost payment pending</h3>
-                    <p>Complete payment to activate this @boost.DurationDays-day boost.</p>
+                    <h3>Payment pending</h3>
+                    <p>Finish paying to activate your @boost.DurationDays-day boost.</p>
                 }
             </div>
             <span class="boost-status-badge @(isActive ? "" : "pending")">@boost.Status</span>
@@ -381,8 +516,10 @@
         @if (!isActive && boost.StorePaymentId.HasValue)
         {
             <div class="boost-form-card">
-                <h2>Finish setting up your boost</h2>
-                <p>Your @boost.DurationDays-day boost for $@boost.AmountPaid.ToString("N2") is waiting on payment.</p>
+                <h2 style="font-family:var(--font-display); font-size:16.5px; font-weight:600; color:var(--ink); margin:0 0 5px;">
+                    Finish setting up your boost
+                </h2>
+                <p class="boost-form-sub">Your @boost.DurationDays-day boost for $@boost.AmountPaid.ToString("N2") is waiting on payment.</p>
 
                 <a class="boost-submit-btn"
                    href="@Url.Page("/StoreOwner/StoreOwnerPayment", new
@@ -392,21 +529,42 @@
                        boostId = boost.ProductBoostID
                    })"
                    style="text-decoration:none;">
-                    <i class="fas fa-credit-card"></i> Continue Payment
+                    <i class="fas fa-credit-card"></i> Continue payment
                 </a>
 
                 <p class="boost-note">
-                    You'll be redirected to a secure payment page to finish activating this boost.
+                    You'll be taken to a secure payment page to finish activating this boost.
                 </p>
             </div>
         }
     }
     else
     {
+        <!-- ========== FEED-POSITION PREVIEW ========== -->
+        <div class="boost-preview" aria-hidden="true">
+            <p class="boost-eyebrow">What boosting does</p>
+            <div class="preview-stack">
+                <div class="preview-row boosted">
+                    <span class="preview-thumb"><i class="fas fa-bolt"></i></span>
+                    <span class="preview-lines"><span></span><span></span></span>
+                    <span class="preview-boosted-label">Boosted</span>
+                </div>
+                <div class="preview-row ghost">
+                    <span class="preview-thumb"></span>
+                    <span class="preview-lines"><span></span><span></span></span>
+                </div>
+                <div class="preview-row ghost">
+                    <span class="preview-thumb"></span>
+                    <span class="preview-lines"><span></span><span></span></span>
+                </div>
+            </div>
+            <p class="boost-preview-caption">Your product moves to the top of the customer feed and carries a Boosted tag for as long as it runs.</p>
+        </div>
+
         <!-- ========== DURATION PICKER FORM (only when no active/pending boost) ========== -->
         <div class="boost-form-card">
-            <h2>Choose a boost duration</h2>
-            <p>Your product will be prioritized in the customer feed and marked "Boosted" for the selected period.</p>
+            <p class="boost-eyebrow">Choose a duration</p>
+            <p class="boost-form-sub">Pick how many days to keep it at the top. Ends automatically — no auto-renewal.</p>
 
             <form method="post" asp-page-handler="StartBoost">
                 <input type="hidden" asp-for="ProductId" />
@@ -426,7 +584,7 @@
                                    value="@opt.DurationDays"
                                    checked="@(i == 0 ? "checked" : null)" />
                             <label class="boost-option-label" for="duration_@opt.DurationDays">
-                                <span class="boost-option-days">@opt.DurationDays days</span>
+                                <span class="boost-option-days">@opt.DurationDays</span>
                                 <span class="boost-option-price">$@opt.Price.ToString("N2")</span>
                                 <span class="boost-option-perday">$@perDay.ToString("N2")/day</span>
                             </label>
@@ -435,11 +593,11 @@
                 </div>
 
                 <button type="submit" class="boost-submit-btn">
-                    <i class="fas fa-bolt"></i> Start Boost
+                    <i class="fas fa-bolt"></i> Start boost
                 </button>
 
                 <p class="boost-note">
-                    Charged to your saved card if available, otherwise you'll be redirected to complete payment.
+                    We'll charge your saved card, or take you to a secure payment page if you don't have one on file.
                 </p>
             </form>
         </div>

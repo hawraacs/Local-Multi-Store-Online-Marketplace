@@ -1,7 +1,15 @@
-@* Shared tab strip for the three faces of "Products": the catalog itself,
-   the Explore-style content that promotes it, and paid Boost campaigns.
-   Usage: <partial name="_ProductsNav" model="@("Catalog")" /> — pass
-   "Catalog", "Promote", or "Boost" as the active tab. *@
+@* Shared tab strip for the two navigable faces of "Products": the catalog
+   itself, and the Explore-style content that promotes it. Usage:
+   <partial name="_ProductsNav" model="@("Catalog")" /> — pass "Catalog" or
+   "Promote" as the active tab.
+
+   REMOVED: the third "Boost" tab. Boost was never a page you navigate to
+   directly — it's a per-product action launched from a button on a product
+   card (on both the Home page and the Catalog page), not a standalone
+   section with its own list view. Keeping a permanently-disabled tab here
+   just to represent that wasn't adding anything — it only ever looked like
+   a broken/unfinished link. If a genuine "all your boosts" list page gets
+   built later, add a real, clickable tab back in for it then. *@
 @model string
 @{
     var active = Model ?? "Catalog";
@@ -17,14 +25,6 @@
        role="tab" aria-selected="@(active == "Promote" ? "true" : "false")">
         <i class="fas fa-photo-film"></i> Promote
     </a>
-    @* Boost has no standalone list page — it's launched per-product from a
-       Catalog product card — so it's only ever "active" (highlighted, not a
-       link) when this partial is included on the Boost page itself. *@
-    <span class="products-tab @(active == "Boost" ? "active" : "disabled")"
-          role="tab" aria-selected="@(active == "Boost" ? "true" : "false")"
-          title="Boost a product from its card in Catalog">
-        <i class="fas fa-bolt"></i> Boost
-    </span>
 </div>
 
 <style>
@@ -56,13 +56,4 @@
             color: #6d28d9;
             border-bottom-color: #6d28d9;
         }
-
-        .products-tab.disabled {
-            color: #c9c4d6;
-            cursor: default;
-        }
-
-            .products-tab.disabled:hover {
-                color: #c9c4d6;
-            }
 </style>
