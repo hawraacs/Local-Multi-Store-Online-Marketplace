@@ -8,8 +8,8 @@
 @section Styles {
     <style>
         /* ============================================================
-                           ROOT VARIABLES — consistent brand palette
-                           ============================================================ */
+                                                   ROOT VARIABLES — consistent brand palette
+                                                   ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -39,8 +39,8 @@
         }
 
         /* ============================================================
-                           HEADER
-                           ============================================================ */
+                                                   HEADER
+                                                   ============================================================ */
         .orders-header {
             display: flex;
             justify-content: space-between;
@@ -70,8 +70,8 @@
             }
 
         /* ============================================================
-                           STATS ROW
-                           ============================================================ */
+                                                   STATS ROW
+                                                   ============================================================ */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -118,8 +118,8 @@
             }
 
         /* ============================================================
-                           CARD
-                           ============================================================ */
+                                                   CARD
+                                                   ============================================================ */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -156,8 +156,8 @@
         }
 
         /* ============================================================
-                           TABLE
-                           ============================================================ */
+                                                   TABLE
+                                                   ============================================================ */
         .table {
             font-size: 14px;
             color: var(--text-primary);
@@ -253,8 +253,8 @@
             }
 
         /* ============================================================
-                           RESPONSIVE
-                           ============================================================ */
+                                                   RESPONSIVE
+                                                   ============================================================ */
         @@media (max-width: 768px) {
             .orders-header {
                 flex-direction: column;
@@ -356,7 +356,7 @@
                         <td>@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
                         <td>@order.ItemCount</td>
                         <td><strong>$@order.TotalAmount.ToString("N2")</strong></td>
-                        <td>
+                        <td id="status-@order.OrderID">
                             @if (order.Status == "Pending")
                             {
                                 <form method="post" asp-page-handler="UpdateStatus" class="d-inline">
@@ -411,3 +411,48 @@
         </table>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
+<script>
+    const orderConnection = new signalR.HubConnectionBuilder()
+        .withUrl("/orderHub")
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 20000])
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+    orderConnection.onreconnecting((err) => {
+        console.warn("[orderHub] reconnecting...", err);
+    });
+
+    orderConnection.onreconnected((id) => {
+        console.log("[orderHub] reconnected", id);
+    });
+
+    orderConnection.onclose(async (err) => {
+        console.warn("[orderHub] connection closed", err);
+        while (true) {
+            try {
+                await orderConnection.start();
+                console.log("[orderHub] reconnected after close");
+                break;
+            } catch {
+                await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+        }
+    });
+
+    orderConnection.on("OrderStatusUpdated", function (orderId, newStatus) {
+        console.log("[orderHub] OrderStatusUpdated received:", orderId, newStatus);
+        const cell = document.getElementById("status-" + orderId);
+        if (cell) {
+            cell.innerHTML = '<span class="status-text">' + newStatus + '</span>';
+            console.log("[orderHub] updated cell status-" + orderId);
+        } else {
+            console.warn("[orderHub] no cell found for status-" + orderId);
+        }
+    });
+
+    orderConnection.start()
+        .then(() => console.log("[orderHub] connection started"))
+        .catch(err => console.error("[orderHub] connection failed:", err.toString()));
+</script>
