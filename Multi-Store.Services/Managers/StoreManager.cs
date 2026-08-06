@@ -130,16 +130,20 @@ namespace Multi_Store.Services.Managers
                     "This phone number is already used by another store.");
             }
 
-            var licenseUsed =
-                await _storeRepository
-                    .IsBusinessLicenseNumberUsedAsync(
-                        dto.BusinessLicenseNumber!,
-                        excludedStoreId);
-
-            if (licenseUsed)
+            if (!string.IsNullOrWhiteSpace(
+                    dto.BusinessLicenseNumber))
             {
-                return StoreRegistrationResult.Failure(
-                    "This business license number is already registered.");
+                var licenseUsed =
+                    await _storeRepository
+                        .IsBusinessLicenseNumberUsedAsync(
+                            dto.BusinessLicenseNumber,
+                            excludedStoreId);
+
+                if (licenseUsed)
+                {
+                    return StoreRegistrationResult.Failure(
+                        "This business license number is already registered.");
+                }
             }
 
             if (existingStore != null)
@@ -626,11 +630,16 @@ namespace Multi_Store.Services.Managers
                 ?? string.Empty;
 
             dto.BusinessLicenseNumber =
-                dto.BusinessLicenseNumber?.Trim()
-                ?? string.Empty;
+                string.IsNullOrWhiteSpace(
+                    dto.BusinessLicenseNumber)
+                    ? null
+                    : dto.BusinessLicenseNumber.Trim();
 
             dto.BusinessLicenseURL =
-                dto.BusinessLicenseURL?.Trim();
+                string.IsNullOrWhiteSpace(
+                    dto.BusinessLicenseURL)
+                    ? null
+                    : dto.BusinessLicenseURL.Trim();
         }
 
         private static string?
@@ -672,22 +681,6 @@ namespace Multi_Store.Services.Managers
             {
                 return
                     "Store address must contain between 5 and 250 characters.";
-            }
-
-            if (string.IsNullOrWhiteSpace(
-                    dto.BusinessLicenseNumber) ||
-                dto.BusinessLicenseNumber.Length < 3 ||
-                dto.BusinessLicenseNumber.Length > 50)
-            {
-                return
-                    "Business license number must contain between 3 and 50 characters.";
-            }
-
-            if (string.IsNullOrWhiteSpace(
-                    dto.BusinessLicenseURL))
-            {
-                return
-                    "Business license document is required.";
             }
 
             if (!IsValidCityArea(
