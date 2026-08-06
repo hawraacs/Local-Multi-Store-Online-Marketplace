@@ -56,13 +56,32 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return NotFound();
 
             Store = store;
+
+            // NEW — resolve the current customer up front so we can filter out
+            // products they've marked "Not interested" on, the same way
+            // CustomerFeedModel does for the main feed.
+            var currentUser = await _userManager.GetUserAsync(User);
+            CustomerDTO? currentCustomer = null;
+            List<int> hiddenProductIds = new();
+            if (currentUser != null)
+            {
+                currentCustomer = await _customerManager.GetCustomerByUserIdAsync(currentUser.Id);
+                if (currentCustomer != null)
+                {
+                    hiddenProductIds = await _context.ProductHides
+                        .Where(x => x.CustomerId == currentCustomer.CustomerID)
+                        .Select(x => x.ProductId)
+                        .ToListAsync();
+                }
+            }
+
             Products = await _context.Products
                 .AsNoTracking()
                 .Include(p => p.Images)
                 .Include(p => p.Reviews)
                     .ThenInclude(r => r.Customer)
                         .ThenInclude(c => c.User)
-                .Where(p => p.StoreID == id && p.IsActive)
+                .Where(p => p.StoreID == id && p.IsActive && !hiddenProductIds.Contains(p.ProductID))
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
 
@@ -71,18 +90,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var storeStories = await _storyManager.GetStoreStoriesAsync(id);
             List<int> viewedStoryIds = new();
             List<int> likedStoryIds = new();
-            var currentUserForStories = await _userManager.GetUserAsync(User);
-            if (currentUserForStories != null)
+            if (currentCustomer != null)
             {
-                var currentCustomerForStories = await _customerManager.GetCustomerByUserIdAsync(currentUserForStories.Id);
-                if (currentCustomerForStories != null)
+                viewedStoryIds = await _storyManager.GetViewedStoryIdsAsync(currentCustomer.CustomerID);
+                foreach (var s in storeStories)
                 {
-                    viewedStoryIds = await _storyManager.GetViewedStoryIdsAsync(currentCustomerForStories.CustomerID);
-                    foreach (var s in storeStories)
-                    {
-                        if (await _storyManager.IsLikedByCustomerAsync(s.StoryID, currentCustomerForStories.CustomerID))
-                            likedStoryIds.Add(s.StoryID);
-                    }
+                    if (await _storyManager.IsLikedByCustomerAsync(s.StoryID, currentCustomer.CustomerID))
+                        likedStoryIds.Add(s.StoryID);
                 }
             }
 
@@ -102,17 +116,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 })
                 .ToList();
 
-            var user = await _userManager.GetUserAsync(User);
-            if (user != null)
+            if (currentUser != null)
             {
-                var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
-                if (customer != null)
+                if (currentCustomer != null)
                 {
-                    IsFollowing = await _storeManager.IsFollowingAsync(customer.CustomerID, id);
+                    IsFollowing = await _storeManager.IsFollowingAsync(currentCustomer.CustomerID, id);
                 }
 
                 IsBlocked = await _context.BlockRelations.AnyAsync(b =>
-                    b.BlockerUserId == user.Id &&
+                    b.BlockerUserId == currentUser.Id &&
                     b.BlockedUserId == store.OwnerUserID);
             }
 
@@ -328,6 +340,43 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 complaint.ComplaintID);
 
             TempData["Success"] = "Product report submitted.";
+            return RedirectToPage(new { id = product.StoreID });
+        }
+
+        // ================= NOT INTERESTED (NEW) =================
+        // Mirrors CustomerFeedModel.OnPostNotInterestedAsync: hides the product
+        // for this customer going forward (OnGetAsync above now filters
+        // ProductHides out of the product list) without touching the product
+        // itself or any other customer's view of it.
+        public async Task<IActionResult> OnPostNotInterestedAsync(int productId)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return RedirectToLogin();
+
+            var product = await _context.Products
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ProductID == productId);
+            if (product == null)
+                return NotFound();
+
+            var exists = await _context.ProductHides.AnyAsync(x =>
+                x.CustomerId == customer.CustomerID &&
+                x.ProductId == productId);
+
+            if (!exists)
+            {
+                _context.ProductHides.Add(new ProductHide
+                {
+                    CustomerId = customer.CustomerID,
+                    ProductId = productId,
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Success"] = "We will show fewer similar items.";
             return RedirectToPage(new { id = product.StoreID });
         }
 
