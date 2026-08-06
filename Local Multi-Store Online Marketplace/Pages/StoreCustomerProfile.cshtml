@@ -11,26 +11,40 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>@Model.Store.StoreName | Store Profile</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
     <link rel="stylesheet" href="~/css/stories.css" />
     <style>
             :root {
-                --accent: #6d28d9;
-                --accent2: #7c3aed;
+                --bg-color: #faf9fc;
+                --card-bg: #ffffff;
+                --border-color: #ece8f6;
+                --text-primary: #1e1b2e;
+                --text-secondary: #6b6478;
+                --text-muted: #9691a4;
+                --accent-color: #6d28d9;
                 --accent-hover: #5b21b6;
                 --accent-light: #f3effe;
+                --accent-dark: #4f46e5;
                 --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-                --text: #1e1b2e;
-                --muted: #6b6478;
-                --line: #ece8f6;
-                --bg: #f8f7fc;
-                --danger: #dc2626;
+                --success-color: #10b981;
+                --success-bg: #ecfdf5;
+                --error-color: #dc2626;
+                --error-bg: #fef2f2;
+                --warning-color: #f59e0b;
+                --warning-bg: #fffbeb;
+                --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                --font-display: 'Playfair Display', Georgia, serif;
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
+                --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
+                --shadow-xl: 0 32px 80px rgba(30, 27, 46, 0.20);
+                --bottom-nav-height: 64px;
+                --content-max-width: 1100px;
+                --content-side-padding: 16px;
             }
 
             * {
@@ -40,9 +54,11 @@
             html, body {
                 margin: 0;
                 min-height: 100%;
-                font-family: Inter,Arial,sans-serif;
-                background: var(--bg);
-                color: var(--text);
+                font-family: var(--font-family);
+                background: var(--bg-color);
+                color: var(--text-primary);
+                -webkit-font-smoothing: antialiased;
+                padding-bottom: calc(var(--bottom-nav-height) + 34px);
             }
 
             button, input, textarea, select {
@@ -53,65 +69,62 @@
                 cursor: pointer;
             }
 
-            .page-shell {
-                width: min(100%,1040px);
-                margin: 0 auto;
-                padding: 24px 18px 110px;
+            /* ============ PAGE SHELL — same footprint as the Wishlist page ============ */
+            .profile-page {
+                padding: 24px var(--content-side-padding) 20px;
             }
 
-            .topbar {
+            .profile-container {
+                max-width: var(--content-max-width);
+                margin: 0 auto;
+            }
+
+            /* ============ PROFILE CARD ============ */
+            .profile-card {
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 20px;
+                padding: 26px 32px 30px;
+                box-shadow: var(--shadow-md);
+                position: relative;
+            }
+
+            .card-topline {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                margin-bottom: 22px;
+                margin-bottom: 18px;
             }
 
-            .back-link {
-                width: 42px;
-                height: 42px;
+            .back-btn {
+                width: 40px;
+                height: 40px;
                 display: grid;
                 place-items: center;
-                border: 1px solid var(--line);
+                border: 1px solid var(--border-color);
                 border-radius: 50%;
                 background: #fff;
-                color: var(--text);
+                color: var(--text-primary);
                 text-decoration: none;
+                flex-shrink: 0;
+                transition: all .2s ease;
             }
 
-            .brand {
-                font-weight: 800;
-                letter-spacing: -.5px;
-            }
-
-            .icon-btn {
-                width: 42px;
-                height: 42px;
-                display: grid;
-                place-items: center;
-                border: 0;
-                border-radius: 50%;
-                background: transparent;
-                color: var(--text);
-                font-size: 20px;
-            }
-
-            .profile-card {
-                background: #fff;
-                border: 1px solid var(--line);
-                border-radius: 24px;
-                padding: 30px;
-            }
+                .back-btn:hover {
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                }
 
             .profile-head {
                 display: grid;
-                grid-template-columns: 150px 1fr auto;
-                gap: 28px;
+                grid-template-columns: 140px 1fr;
+                gap: 30px;
                 align-items: center;
             }
 
             .avatar-ring {
-                width: 142px;
-                height: 142px;
+                width: 128px;
+                height: 128px;
                 border-radius: 50%;
                 padding: 4px;
                 background: #e9e5ee;
@@ -124,6 +137,15 @@
                 border-radius: 50%;
                 border: 5px solid #fff;
                 background: #f4f1f7;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .bio-actions-row {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+                margin-top: 14px;
             }
 
             .name-row {
@@ -134,45 +156,52 @@
             }
 
                 .name-row h1 {
+                    font-family: var(--font-display);
                     margin: 0;
-                    font-size: 25px;
-                    letter-spacing: -.7px;
+                    font-size: 30px;
+                    font-weight: 700;
+                    color: var(--text-primary);
                 }
 
             .verified {
-                color: var(--accent);
+                color: var(--accent-color);
             }
 
             .stats {
                 display: flex;
                 gap: 30px;
-                margin: 20px 0 14px;
+                margin: 16px 0 14px;
+                flex-wrap: wrap;
             }
 
             .stat strong {
+                font-family: var(--font-display);
                 display: block;
-                font-size: 16px;
+                font-size: 19px;
+                font-weight: 700;
             }
 
             .stat span {
-                color: var(--muted);
+                color: var(--text-secondary);
                 font-size: 13px;
+                font-weight: 600;
             }
 
             .bio {
-                max-width: 620px;
-                color: #45404c;
+                max-width: 640px;
+                color: var(--text-secondary);
                 font-size: 14px;
-                line-height: 1.6;
+                line-height: 1.65;
                 margin: 0;
                 white-space: pre-line;
             }
 
+            /* ============ ACTION BUTTONS ============ */
             .profile-actions {
                 display: flex;
-                gap: 9px;
+                gap: 10px;
                 flex-wrap: wrap;
-                margin-top: 20px;
+                flex-shrink: 0;
             }
 
                 .profile-actions form {
@@ -180,180 +209,230 @@
                 }
 
             .btn {
-                height: 40px;
-                border-radius: 10px;
-                border: 1px solid var(--line);
-                padding: 0 17px;
+                height: 42px;
+                border-radius: 50px;
+                border: 1px solid var(--border-color);
+                padding: 0 20px;
                 font-weight: 700;
+                font-size: 13.5px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
                 gap: 8px;
                 text-decoration: none;
+                color: var(--text-primary);
+                background: #fff;
+                transition: all .2s ease;
             }
 
             .btn-primary {
                 background: var(--accent-gradient);
                 border-color: transparent;
                 color: #fff;
-                transition: all .2s ease;
+                box-shadow: 0 8px 18px rgba(109, 40, 217, 0.25);
             }
 
                 .btn-primary:hover {
-                    filter: brightness(1.05);
+                    opacity: .95;
+                    transform: translateY(-1px);
                 }
 
             .btn-soft {
-                background: #f1eef5;
-                color: var(--text);
+                background: var(--bg-color);
             }
+
+                .btn-soft:hover {
+                    border-color: var(--accent-color);
+                    color: var(--accent-color);
+                    background: var(--accent-light);
+                }
 
             .btn-green {
                 background: var(--accent-gradient);
                 border-color: transparent;
                 color: #fff;
-                transition: all .2s ease;
+                box-shadow: 0 8px 18px rgba(109, 40, 217, 0.25);
             }
 
                 .btn-green:hover {
-                    filter: brightness(1.05);
+                    opacity: .95;
+                    transform: translateY(-1px);
                 }
 
-            .more-wrap {
+            /* ============ GENERIC DROPDOWN (store kebab, Share, per-post kebab) ============ */
+            .menu-wrap {
                 position: relative;
-                align-self: start;
             }
 
-            .menu {
+            .dropdown {
                 position: absolute;
                 right: 0;
-                top: 48px;
-                width: 240px;
+                top: calc(100% + 8px);
+                width: 232px;
                 background: #fff;
-                border: 1px solid var(--line);
-                border-radius: 16px;
-                box-shadow: 0 18px 50px rgba(24,16,32,.14);
+                border: 1px solid var(--border-color);
+                border-radius: 14px;
+                box-shadow: var(--shadow-lg);
                 overflow: hidden;
-                z-index: 50;
+                z-index: 200000;
                 display: none;
             }
 
-                .menu.open {
+                .dropdown.open {
                     display: block;
                 }
 
-                .menu button {
+                .dropdown form {
+                    margin: 0;
+                }
+
+                .dropdown button, .dropdown .dropdown-item {
                     width: 100%;
                     border: 0;
                     background: #fff;
-                    padding: 14px 16px;
+                    padding: 12px 15px;
                     text-align: left;
                     display: flex;
                     align-items: center;
-                    gap: 12px;
-                    color: var(--text);
+                    gap: 11px;
+                    color: var(--text-primary);
+                    font-size: 13.5px;
+                    font-weight: 600;
                 }
 
-                    .menu button:hover {
-                        background: #f8f6fa;
+                    .dropdown button:hover, .dropdown .dropdown-item:hover {
+                        background: var(--bg-color);
                     }
 
-                .menu .danger {
-                    color: var(--danger);
+                .dropdown .danger {
+                    color: var(--error-color);
                 }
 
-            .tabs {
+            .kebab-btn {
+                width: 40px;
+                height: 40px;
+                display: grid;
+                place-items: center;
+                border: 1px solid var(--border-color);
+                border-radius: 50%;
+                background: #fff;
+                color: var(--text-primary);
+                font-size: 16px;
+                flex-shrink: 0;
+                transition: all .2s ease;
+            }
+
+                .kebab-btn:hover {
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                }
+
+            /* ============ TABS / FEED HEADING ============ */
+            .profile-tabs {
                 display: flex;
                 justify-content: center;
-                gap: 54px;
-                margin-top: 22px;
-                border-top: 1px solid var(--line);
+                gap: 28px;
+                margin: 26px 0 20px;
+                border-bottom: 1px solid var(--border-color);
             }
 
-            .tab {
-                border: 0;
+            .tab-btn {
                 background: transparent;
-                padding: 16px 4px 13px;
-                border-top: 2px solid transparent;
-                margin-top: -1px;
+                border: none;
+                color: var(--text-muted);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 12px;
                 font-weight: 700;
-                color: var(--muted);
+                letter-spacing: .6px;
+                padding: 12px 2px;
+                text-transform: uppercase;
+                position: relative;
             }
 
-                .tab.active {
-                    color: var(--text);
-                    border-top-color: var(--text);
+                .tab-btn.active {
+                    color: var(--text-primary);
                 }
 
-            .product-grid {
+                    .tab-btn.active::after {
+                        content: '';
+                        position: absolute;
+                        left: 0;
+                        right: 0;
+                        bottom: -1px;
+                        height: 2px;
+                        background: var(--accent-color);
+                    }
+
+            /* ============ INSTAGRAM-STYLE GRID ============ */
+            .instagram-grid {
                 display: grid;
-                grid-template-columns: repeat(3,1fr);
-                gap: 4px;
-                margin-top: 4px;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 22px;
             }
 
-            .tile {
-                position: relative;
-                aspect-ratio: 1/1;
-                border: 0;
-                padding: 0;
+            .product-grid-item {
+                background: var(--card-bg);
+                border-radius: 16px;
                 overflow: hidden;
-                background: #eee;
+                display: flex;
+                flex-direction: column;
+                cursor: pointer;
+                border: 1px solid var(--border-color);
+                transition: all .35s cubic-bezier(.22,1,.36,1);
+                position: relative;
             }
 
-                .tile img {
+                .product-grid-item:hover {
+                    transform: translateY(-4px);
+                    box-shadow: var(--shadow-md);
+                }
+
+            .image-wrap {
+                position: relative;
+                overflow: hidden;
+                background: var(--bg-color);
+                aspect-ratio: 1/1;
+            }
+
+                .image-wrap img {
                     width: 100%;
                     height: 100%;
                     object-fit: cover;
                     display: block;
-                    transition: transform .25s ease;
+                    transition: transform .6s cubic-bezier(.22,1,.36,1);
                 }
 
-                .tile:hover img {
-                    transform: scale(1.03);
-                }
+            .product-grid-item:hover .image-wrap img {
+                transform: scale(1.05);
+            }
 
-            .tile-overlay {
+            .image-count-badge {
                 position: absolute;
-                inset: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 22px;
-                background: rgba(0,0,0,.35);
+                top: 12px;
+                right: 12px;
+                background: rgba(23,24,29,.65);
                 color: #fff;
-                opacity: 0;
-                transition: .2s;
+                font-size: 10.5px;
                 font-weight: 700;
-            }
-
-            .tile:hover .tile-overlay {
-                opacity: 1;
-            }
-
-            .stock-badge {
-                position: absolute;
-                top: 10px;
-                left: 10px;
-                border-radius: 999px;
-                padding: 6px 9px;
-                background: rgba(255,255,255,.93);
-                font-size: 11px;
-                font-weight: 800;
+                padding: 4px 10px;
+                border-radius: 20px;
+                backdrop-filter: blur(3px);
             }
 
             .repost-badge {
                 position: absolute;
-                top: 10px;
-                right: 10px;
-                width: 32px;
-                height: 32px;
+                top: 12px;
+                left: 12px;
+                width: 30px;
+                height: 30px;
                 display: none;
                 place-items: center;
                 border-radius: 50%;
-                background: var(--accent);
+                background: var(--accent-color);
                 color: #fff;
-                font-size: 14px;
+                font-size: 13px;
                 box-shadow: 0 6px 18px rgba(0,0,0,.18);
                 z-index: 2;
             }
@@ -362,27 +441,584 @@
                     display: grid;
                 }
 
-            .action.reposted {
-                color: var(--accent);
-                border-color: var(--accent2);
-                background: var(--accent-light);
+            .stock-strip {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                padding: 6px 10px;
+                font-size: 10.5px;
+                font-weight: 700;
+                letter-spacing: .3px;
+                text-align: center;
+                color: #fff;
+                background: rgba(220,38,38,.90);
+            }
+
+                .stock-strip.low-stock {
+                    background: rgba(245,158,11,.92);
+                }
+
+            .product-quick-actions {
+                position: absolute;
+                inset: 0;
+                background: rgba(23,24,29,.32);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 16px;
+                opacity: 0;
+                transition: opacity .3s ease;
+            }
+
+            .product-grid-item:hover .product-quick-actions {
+                opacity: 1;
+            }
+
+            .product-quick-actions button {
+                background: #fff;
+                border: none;
+                border-radius: 50%;
+                width: 42px;
+                height: 42px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: var(--shadow-md);
+            }
+
+                .product-quick-actions button:hover {
+                    background: var(--accent-color);
+                    color: #fff;
+                }
+
+            .product-details {
+                padding: 14px 16px 16px;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .product-name {
+                font-size: 14.5px;
+                font-weight: 700;
+                margin-bottom: 4px;
+                display: -webkit-box;
+                -webkit-line-clamp: 1;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .product-meta {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 8px;
+                padding-top: 9px;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .price {
+                font-size: 16px;
+                font-weight: 700;
+                color: var(--accent-color);
+            }
+
+            .review-count {
+                font-size: 11px;
+                color: var(--text-muted);
+                display: flex;
+                align-items: center;
+                gap: 4px;
             }
 
             .empty {
-                background: #fff;
-                border: 1px solid var(--line);
+                background: var(--card-bg);
+                border: 2px dashed #ded4f5;
                 border-radius: 20px;
                 text-align: center;
                 padding: 70px 20px;
-                margin-top: 12px;
-                color: var(--muted);
+                color: var(--text-secondary);
+                box-shadow: var(--shadow-sm);
             }
 
+            /* ============================================================
+                           INSTAGRAM-STYLE FEED OVERLAY — tap a post, then keep scrolling
+                           vertically through the rest of the store's posts, same
+                           experience as the store-owner home feed.
+                           ============================================================ */
+            .feed-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                z-index: 100000;
+                background: rgba(15,13,26,.55);
+                backdrop-filter: blur(6px);
+                overflow-y: scroll;
+                scroll-snap-type: y mandatory;
+                scroll-behavior: smooth;
+                -webkit-overflow-scrolling: touch;
+                opacity: 0;
+                transition: opacity .25s ease;
+            }
+
+                .feed-overlay.open {
+                    display: block;
+                    opacity: 1;
+                }
+
+                .feed-overlay.dragging {
+                    scroll-snap-type: none;
+                    scroll-behavior: auto;
+                }
+
+            .product-feed-item {
+                height: 100vh;
+                width: 100%;
+                scroll-snap-align: start;
+                scroll-snap-stop: always;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 40px 20px;
+                box-sizing: border-box;
+            }
+
+            .product-post-card {
+                background: var(--card-bg);
+                border-radius: 24px;
+                width: 100%;
+                max-width: 460px;
+                height: 100%;
+                max-height: 800px;
+                box-shadow: 0 40px 100px rgba(0,0,0,.45);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                border: 1px solid rgba(255,255,255,.08);
+            }
+
+            .post-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 16px;
+                border-bottom: 1px solid var(--border-color);
+                flex-shrink: 0;
+                background: var(--card-bg);
+                gap: 8px;
+            }
+
+            .post-header-store {
+                display: flex;
+                align-items: center;
+                gap: 11px;
+                min-width: 0;
+            }
+
+                .post-header-store img {
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    border: 1.5px solid var(--border-color);
+                    flex-shrink: 0;
+                }
+
+            .post-header-store-name {
+                font-size: 14px;
+                font-weight: 700;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .post-header-store-sub {
+                font-size: 11px;
+                color: var(--text-muted);
+            }
+
+            .post-header-actions {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                flex-shrink: 0;
+            }
+
+            .post-close-btn {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: var(--bg-color);
+                border: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 15px;
+                color: var(--text-secondary);
+                transition: all .2s ease;
+            }
+
+                .post-close-btn:hover {
+                    background: var(--border-color);
+                    color: var(--text-primary);
+                    transform: rotate(90deg);
+                }
+
+            .post-media {
+                background: #0d0b17;
+                width: 100%;
+                aspect-ratio: 1/1;
+                flex-shrink: 0;
+                position: relative;
+                cursor: grab;
+                overflow: hidden;
+            }
+
+                .post-media:active {
+                    cursor: grabbing;
+                }
+
+                .post-media img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                    user-select: none;
+                    -webkit-user-drag: none;
+                }
+
+            .gallery-nav {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                background: rgba(255,255,255,.92);
+                color: var(--text-primary);
+                border: none;
+                z-index: 3;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 14px rgba(0,0,0,.25);
+                transition: all .2s ease;
+            }
+
+                .gallery-nav:hover {
+                    background: #fff;
+                    transform: translateY(-50%) scale(1.08);
+                }
+
+                .gallery-nav.prev {
+                    left: 12px;
+                }
+
+                .gallery-nav.next {
+                    right: 12px;
+                }
+
+            .gallery-counter {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                background: rgba(0,0,0,.55);
+                color: #fff;
+                font-size: 11px;
+                font-weight: 700;
+                padding: 4px 11px;
+                border-radius: 20px;
+                backdrop-filter: blur(3px);
+                z-index: 3;
+            }
+
+            .gallery-dots {
+                position: absolute;
+                bottom: 12px;
+                left: 0;
+                right: 0;
+                display: flex;
+                justify-content: center;
+                gap: 6px;
+                z-index: 3;
+            }
+
+                .gallery-dots span {
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                    background: rgba(255,255,255,.4);
+                    transition: all .2s ease;
+                }
+
+                    .gallery-dots span.active {
+                        background: #fff;
+                        width: 16px;
+                        border-radius: 4px;
+                    }
+
+            .post-stock-badge-media {
+                position: absolute;
+                top: 12px;
+                left: 12px;
+                font-size: 10.5px;
+                font-weight: 700;
+                padding: 4px 11px;
+                border-radius: 20px;
+                z-index: 3;
+                color: #fff;
+                background: rgba(220,38,38,.9);
+            }
+
+                .post-stock-badge-media.low-stock {
+                    background: rgba(245,158,11,.92);
+                }
+
+            .post-body {
+                flex: 1;
+                min-height: 0;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+            }
+
+            .post-meta {
+                padding: 16px 18px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+                .post-meta h3 {
+                    font-size: 16.5px;
+                    font-weight: 700;
+                    margin: 0 0 8px;
+                }
+
+            .post-price-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 12px;
+            }
+
+            .post-price {
+                font-size: 18px;
+                font-weight: 800;
+                color: var(--accent-color);
+            }
+
+            .post-stock-badge {
+                font-size: 10.5px;
+                font-weight: 700;
+                color: var(--success-color);
+                background: var(--success-bg);
+                padding: 3px 11px;
+                border-radius: 20px;
+            }
+
+                .post-stock-badge.low-stock {
+                    color: var(--warning-color);
+                    background: var(--warning-bg);
+                }
+
+                .post-stock-badge.out-of-stock {
+                    color: var(--error-color);
+                    background: var(--error-bg);
+                }
+
+            .post-description {
+                font-size: 13px;
+                color: var(--text-secondary);
+                line-height: 1.65;
+                white-space: pre-line;
+                margin: 0 0 14px;
+            }
+
+            .post-actions {
+                display: grid;
+                grid-template-columns: repeat(3,1fr);
+                gap: 8px;
+            }
+
+                .post-actions form {
+                    margin: 0;
+                }
+
+            .btn-action {
+                width: 100%;
+                min-height: 42px;
+                border: 1px solid var(--border-color);
+                background: #fff;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--text-primary);
+            }
+
+                .btn-action:disabled {
+                    opacity: .48;
+                    cursor: not-allowed;
+                }
+
+            .post-reviews {
+                padding: 16px 18px 22px;
+            }
+
+            .post-reviews-title {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: .6px;
+                color: var(--text-muted);
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .review-form {
+                display: grid;
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+
+            .star-pick-row {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+                .star-pick-row button {
+                    border: 0;
+                    background: transparent;
+                    color: #cbc5d6;
+                    font-size: 16px;
+                    padding: 2px;
+                }
+
+                    .star-pick-row button.active {
+                        color: var(--warning-color);
+                    }
+
+                .star-pick-row span {
+                    color: var(--text-muted);
+                    font-size: 11.5px;
+                    margin-left: 6px;
+                }
+
+            .review-form-row {
+                display: flex;
+                gap: 8px;
+            }
+
+                .review-form-row input {
+                    flex: 1;
+                    border: 1px solid var(--border-color);
+                    border-radius: 10px;
+                    padding: 10px 12px;
+                    background: var(--bg-color);
+                }
+
+                .review-form-row button {
+                    border: 0;
+                    border-radius: 10px;
+                    padding: 0 16px;
+                    background: var(--accent-color);
+                    color: #fff;
+                    font-weight: 700;
+                }
+
+            .post-reviews-empty {
+                text-align: center;
+                padding: 24px 12px;
+                color: var(--text-muted);
+                font-size: 12.5px;
+                background: var(--bg-color);
+                border-radius: 12px;
+                border: 1px dashed var(--border-color);
+            }
+
+                .post-reviews-empty i {
+                    display: block;
+                    font-size: 22px;
+                    margin-bottom: 8px;
+                    color: var(--border-color);
+                }
+
+            .review-row {
+                background: var(--bg-color);
+                border-radius: 12px;
+                padding: 11px 14px;
+                margin-bottom: 10px;
+                border: 1px solid var(--border-color);
+            }
+
+                .review-row.review-hidden {
+                    display: none;
+                }
+
+            .reviewer-info {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                margin-bottom: 6px;
+            }
+
+            .reviewer-left {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                min-width: 0;
+            }
+
+            .reviewer-avatar {
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                background: var(--accent-dark);
+                color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 11px;
+                font-weight: 700;
+                flex-shrink: 0;
+            }
+
+            .review-row strong {
+                font-size: 12.5px;
+            }
+
+            .review-row .stars {
+                color: var(--warning-color);
+                font-size: 12px;
+            }
+
+            .review-row p {
+                font-size: 12.5px;
+                color: var(--text-secondary);
+                margin: 0;
+                line-height: 1.55;
+            }
+
+            .show-more-btn {
+                border: 0;
+                background: transparent;
+                color: var(--accent-color);
+                font-weight: 700;
+                font-size: 12.5px;
+                padding: 6px 0 0;
+            }
+
+            /* ============ DIALOGS / TOASTS ============ */
             .modal-backdrop {
                 position: fixed;
                 inset: 0;
                 background: rgba(10,7,13,.68);
-                z-index: 100;
+                z-index: 200001;
                 display: none;
                 align-items: center;
                 justify-content: center;
@@ -392,175 +1028,6 @@
                 .modal-backdrop.open {
                     display: flex;
                 }
-
-            .product-modal {
-                width: min(1100px,96vw);
-                height: min(720px,92vh);
-                background: #fff;
-                border-radius: 18px;
-                overflow: hidden;
-                display: grid;
-                grid-template-columns: minmax(0,1.25fr) minmax(350px,.75fr);
-                position: relative;
-            }
-
-            .media-pane {
-                background: #0f0f10;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 0;
-            }
-
-                .media-pane img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: contain;
-                }
-
-            .details-pane {
-                display: flex;
-                flex-direction: column;
-                min-height: 0;
-            }
-
-            .modal-head {
-                display: flex;
-                align-items: center;
-                gap: 11px;
-                padding: 15px;
-                border-bottom: 1px solid var(--line);
-            }
-
-            .mini-avatar {
-                width: 38px;
-                height: 38px;
-                border-radius: 50%;
-                object-fit: cover;
-            }
-
-            .modal-head strong {
-                flex: 1;
-            }
-
-            .close-btn {
-                border: 0;
-                background: transparent;
-                font-size: 22px;
-            }
-
-            .modal-scroll {
-                overflow: auto;
-                padding: 18px;
-            }
-
-            .product-title {
-                margin: 0;
-                font-size: 21px;
-            }
-
-            .price {
-                color: #ea580c;
-                font-size: 22px;
-                font-weight: 800;
-                margin: 8px 0;
-            }
-
-            .description {
-                color: #514b58;
-                line-height: 1.6;
-                font-size: 14px;
-            }
-
-            .action-row {
-                display: grid;
-                grid-template-columns: repeat(4,1fr);
-                gap: 8px;
-                margin: 18px 0;
-            }
-
-                .action-row form {
-                    margin: 0;
-                }
-
-            .action {
-                width: 100%;
-                min-height: 48px;
-                border: 1px solid var(--line);
-                background: #fff;
-                border-radius: 12px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 4px;
-                font-size: 11px;
-                color: var(--text);
-            }
-
-                .action i {
-                    font-size: 18px;
-                }
-
-                .action:disabled {
-                    opacity: .48;
-                    cursor: not-allowed;
-                }
-
-            .review-box {
-                border-top: 1px solid var(--line);
-                padding-top: 16px;
-            }
-
-            .review-form {
-                display: grid;
-                grid-template-columns: 90px 1fr auto;
-                gap: 8px;
-            }
-
-                .review-form input, .review-form select, .report-form textarea, .report-form select {
-                    border: 1px solid var(--line);
-                    border-radius: 10px;
-                    padding: 10px;
-                    background: #fff;
-                }
-
-                .review-form button {
-                    border: 0;
-                    border-radius: 10px;
-                    padding: 0 15px;
-                    background: var(--accent);
-                    color: #fff;
-                    font-weight: 700;
-                }
-
-            .reviews {
-                margin-top: 15px;
-                display: grid;
-                gap: 12px;
-            }
-
-            .review {
-                background: #faf9fc;
-                border-radius: 12px;
-                padding: 12px;
-                font-size: 13px;
-            }
-
-            .review-top {
-                display: flex;
-                justify-content: space-between;
-                gap: 12px;
-            }
-
-            .stars {
-                color: #f59e0b;
-            }
-
-            .review p {
-                margin: 8px 0 0;
-                color: #4b4551;
-            }
 
             .dialog {
                 width: min(460px,94vw);
@@ -575,14 +1042,27 @@
                 }
 
                 .dialog p {
-                    color: var(--muted);
+                    color: var(--text-secondary);
                     font-size: 14px;
                 }
+
+            .close-btn {
+                border: 0;
+                background: transparent;
+                font-size: 22px;
+            }
 
             .report-form {
                 display: grid;
                 gap: 12px;
             }
+
+                .report-form textarea, .report-form select {
+                    border: 1px solid var(--border-color);
+                    border-radius: 10px;
+                    padding: 10px;
+                    background: #fff;
+                }
 
                 .report-form textarea {
                     min-height: 120px;
@@ -596,7 +1076,7 @@
             }
 
             .danger-submit {
-                background: var(--danger);
+                background: var(--error-color);
                 color: #fff;
                 border: 0;
                 border-radius: 10px;
@@ -610,11 +1090,11 @@
                 right: 22px;
                 width: min(390px, calc(100vw - 32px));
                 background: #fff;
-                border: 1px solid var(--line);
+                border: 1px solid var(--border-color);
                 border-radius: 16px;
-                box-shadow: 0 18px 55px rgba(24,16,32,.20);
+                box-shadow: var(--shadow-xl);
                 padding: 16px;
-                z-index: 9999;
+                z-index: 200002;
                 display: none;
                 animation: toastSlideIn .22s ease;
             }
@@ -632,12 +1112,12 @@
             }
 
                 .block-confirm-title i {
-                    color: var(--danger);
+                    color: var(--error-color);
                 }
 
             .block-confirm-toast p {
                 margin: 0;
-                color: var(--muted);
+                color: var(--text-secondary);
                 font-size: 13px;
                 line-height: 1.5;
             }
@@ -657,12 +1137,12 @@
                 }
 
             .block-confirm-cancel {
-                background: #f1eef5;
-                color: var(--text);
+                background: var(--bg-color);
+                color: var(--text-primary);
             }
 
             .block-confirm-submit {
-                background: var(--danger);
+                background: var(--error-color);
                 color: #fff;
             }
 
@@ -678,231 +1158,374 @@
                 }
             }
 
-            @@media(max-width:760px) {
-                .page-shell {
-                    padding: 12px 0 100px;
-                }
+            /* ---- Accessibility ---- */
+            a:focus-visible, button:focus-visible, input:focus-visible,
+            .tab-btn:focus-visible, .product-grid-item:focus-visible {
+                outline: none;
+                box-shadow: 0 0 0 3px rgba(109,40,217,.28);
+                border-radius: 10px;
+            }
 
-                .topbar {
-                    padding: 0 14px;
+            @@media (prefers-reduced-motion: reduce) {
+                *, *::before, *::after {
+                    animation-duration: .001ms !important;
+                    animation-iteration-count: 1 !important;
+                    transition-duration: .001ms !important;
+                }
+            }
+
+            @@media(max-width:760px) {
+                .profile-page {
+                    padding: 16px 10px 16px;
                 }
 
                 .profile-card {
-                    border-radius: 0;
-                    border-left: 0;
-                    border-right: 0;
-                    padding: 22px 16px 0;
+                    border-radius: 16px;
+                    padding: 18px 16px 22px;
                 }
 
                 .profile-head {
-                    grid-template-columns: 88px 1fr auto;
+                    grid-template-columns: 86px 1fr;
                     gap: 14px;
-                    align-items: start;
                 }
 
                 .avatar-ring {
-                    width: 84px;
-                    height: 84px;
+                    width: 82px;
+                    height: 82px;
                 }
 
                 .name-row h1 {
-                    font-size: 19px;
+                    font-size: 20px;
+                }
+
+                .bio-actions-row {
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 12px;
                 }
 
                 .stats {
-                    gap: 18px;
-                    margin: 14px 0 10px;
-                }
-
-                .bio {
-                    grid-column: 1/-1;
+                    gap: 16px;
+                    margin: 12px 0 10px;
                 }
 
                 .profile-actions {
-                    grid-column: 1/-1;
                     display: grid;
                     grid-template-columns: repeat(3,1fr);
                 }
 
-                    .profile-actions .btn {
+                    .profile-actions .btn, .profile-actions .menu-wrap .btn {
                         width: 100%;
-                        padding: 0 8px;
                     }
 
-                .tabs {
-                    margin-top: 18px;
+                .instagram-grid {
+                    grid-template-columns: repeat(2,1fr);
+                    gap: 10px;
                 }
 
-                .product-grid {
-                    gap: 2px;
+                .product-feed-item {
+                    padding: 0;
                 }
 
-                .product-modal {
-                    height: 94vh;
-                    grid-template-columns: 1fr;
-                    grid-template-rows: 46% 54%;
-                    border-radius: 14px;
+                .product-post-card {
+                    max-width: 100%;
+                    max-height: 100%;
+                    border-radius: 0;
+                    border: none;
                 }
-
-                .action-row {
-                    grid-template-columns: repeat(4,1fr);
-                }
-
-                .review-form {
-                    grid-template-columns: 1fr;
-                }
-
-                    .review-form button {
-                        min-height: 42px;
-                    }
             }
     </style>
 </head>
 <body>
     <partial name="_StoryViewer" />
-    <div class="page-shell">
-        <div class="topbar">
-            <a class="back-link" asp-page="/Customer1" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></a>
-            <div class="brand">realnest</div>
-            <div style="width:42px"></div>
+
+    <div class="profile-page">
+        <div class="profile-container">
+
+            <!-- ============ PROFILE CARD ============ -->
+            <section class="profile-card">
+                <div class="card-topline">
+                    <a class="back-btn" asp-page="/Customer1" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></a>
+                    <div class="menu-wrap">
+                        <button class="kebab-btn" type="button" onclick="toggleMenu(this)" aria-label="More options"><i class="fa-solid fa-ellipsis"></i></button>
+                        <div class="dropdown">
+                            <button type="button" onclick="shareProfileWhatsApp()"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</button>
+                            <button type="button" onclick="copyCurrentUrl()"><i class="fa-regular fa-copy"></i> Copy profile link</button>
+                            <button type="button" onclick="openReportDialog()"><i class="fa-regular fa-flag"></i> Report store</button>
+                            @if (Model.IsBlocked)
+                            {
+                                <form method="post" asp-page-handler="UnblockStore" asp-route-storeId="@Model.Store.StoreID"><button type="submit"><i class="fa-solid fa-user-check"></i> Unblock</button></form>
+                            }
+                            else
+                            {
+                                <form method="post" asp-page-handler="BlockStore" asp-route-storeId="@Model.Store.StoreID" id="blockStoreForm">
+                                    <button type="button" class="danger" onclick="showBlockConfirmation()"><i class="fa-solid fa-ban"></i> Block store</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-head">
+                    @{
+                        var hasActiveStories = Model.StoreStories.Any();
+                        var hasUnviewed = Model.StoreStories.Any(s => !s.IsViewed);
+                        var ringClass = !hasActiveStories ? "" : (hasUnviewed ? "story-ring--active" : "story-ring--viewed");
+                    }
+                    @if (hasActiveStories)
+                    {
+                        <div class="avatar-ring @ringClass" data-group-index="0" onclick="RealNestStories.open(0,0)" role="button" style="cursor:pointer;">
+                            <img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="avatar-ring" data-group-index="0">
+                            <img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" />
+                        </div>
+                    }
+                    <div>
+                        <div class="name-row"><h1>@Model.Store.StoreName</h1><i class="fa-solid fa-circle-check verified" title="Approved store"></i></div>
+                        <div class="stats">
+                            <div class="stat"><strong>@Model.Products.Count</strong><span>posts</span></div>
+                            <div class="stat"><strong>@Model.FollowersCount</strong><span>followers</span></div>
+                            <div class="stat"><strong>@Model.Store.Rating.ToString("0.0")</strong><span>rating</span></div>
+                        </div>
+                        <div class="bio-actions-row">
+                            <p class="bio">@Model.Store.Description</p>
+                            <div class="profile-actions">
+                                @if (Model.IsFollowing)
+                                {
+                                    <form method="post" asp-page-handler="Unfollow" asp-route-storeId="@Model.Store.StoreID"><button class="btn btn-soft" type="submit"><i class="fa-solid fa-user-check"></i> Following</button></form>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-page-handler="Follow" asp-route-storeId="@Model.Store.StoreID"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-user-plus"></i> Follow</button></form>
+                                }
+                                <a class="btn btn-soft" asp-page="/ChatConversation" asp-route-userId="@Model.Store.OwnerUserID"><i class="fa-regular fa-paper-plane"></i> Message</a>
+                                <a class="btn btn-green" asp-page="/CreateReview" asp-route-storeId="@Model.Store.StoreID"><i class="fa-regular fa-star"></i> Review</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="profile-tabs">
+                <button class="tab-btn active"><i class="fas fa-table-cells"></i> Posts</button>
+            </div>
+
+            @if (Model.Products.Any())
+            {
+                <div class="instagram-grid">
+                    @foreach (var p in Model.Products)
+                    {
+                        var images = (p.Images ?? new List<Multi_Store.Core.Entities.ProductImage>())
+                            .OrderByDescending(i => i.IsPrimary).ThenBy(i => i.DisplayOrder).ToList();
+                        var img = images.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+                        var imageCount = images.Count;
+                        var reviewCount = p.Reviews?.Count(r => r.Status == "Approved") ?? 0;
+                        var isOutOfStock = p.IsOutOfStock;
+                        var isLowStock = !isOutOfStock && p.Quantity <= p.LowStockThreshold;
+
+                        <div class="product-grid-item" data-product-id="@p.ProductID">
+                            <div class="image-wrap" onclick="openProductModal(@p.ProductID)">
+                                <img src="@img" alt="@p.ProductName" loading="lazy" />
+                                <span class="repost-badge" id="repostBadge-@p.ProductID" title="Reposted"><i class="fa-solid fa-retweet"></i></span>
+                                @if (imageCount > 1)
+                                {
+                                    <span class="image-count-badge"><i class="fas fa-images"></i> @imageCount</span>
+                                }
+                                @if (isOutOfStock || isLowStock)
+                                {
+                                    <div class="stock-strip @(isLowStock ? "low-stock" : "")">
+                                        @(isOutOfStock ? "Out of Stock" : $"Only {p.Quantity} left")
+                                    </div>
+                                }
+                                <div class="product-quick-actions">
+                                    <button onclick="event.stopPropagation(); openProductModal(@p.ProductID)" title="Quick view" aria-label="Quick view @p.ProductName">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="product-details">
+                                <span class="product-name">@p.ProductName</span>
+                                <div class="product-meta">
+                                    <span class="price">$@p.Price.ToString("0.00")</span>
+                                    <span class="review-count"><i class="fas fa-star"></i> @reviewCount review@(reviewCount != 1 ? "s" : "")</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty"><i class="fa-regular fa-images" style="font-size:44px"></i><h3>No products yet</h3><p>This store has not published any active products.</p></div>
+            }
         </div>
-
-        <section class="profile-card">
-            <div class="profile-head">
-                @{
-                    var hasActiveStories = Model.StoreStories.Any();
-                    var hasUnviewed = Model.StoreStories.Any(s => !s.IsViewed);
-                    var ringClass = !hasActiveStories ? "" : (hasUnviewed ? "story-ring--active" : "story-ring--viewed");
-                }
-                @if (hasActiveStories)
-                {
-                    <div class="avatar-ring @ringClass" data-group-index="0" onclick="RealNestStories.open(0,0)" role="button" style="cursor:pointer;">
-                        <img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" />
-                    </div>
-                }
-                else
-                {
-                    <div class="avatar-ring" data-group-index="0">
-                        <img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" />
-                    </div>
-                }
-                <div>
-                    <div class="name-row"><h1>@Model.Store.StoreName</h1><i class="fa-solid fa-circle-check verified" title="Approved store"></i></div>
-                    <div class="stats">
-                        <div class="stat"><strong>@Model.Products.Count</strong><span>posts</span></div>
-                        <div class="stat"><strong>@Model.FollowersCount</strong><span>followers</span></div>
-                        <div class="stat"><strong>@Model.Store.Rating.ToString("0.0")</strong><span>rating</span></div>
-                    </div>
-                    <p class="bio">@Model.Store.Description</p>
-                    <div class="profile-actions">
-                        @if (Model.IsFollowing)
-                        {
-                            <form method="post" asp-page-handler="Unfollow" asp-route-storeId="@Model.Store.StoreID"><button class="btn btn-soft" type="submit"><i class="fa-solid fa-user-check"></i> Following</button></form>
-                        }
-                        else
-                        {
-                            <form method="post" asp-page-handler="Follow" asp-route-storeId="@Model.Store.StoreID"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-user-plus"></i> Follow</button></form>
-                        }
-                        <a class="btn btn-soft" asp-page="/ChatConversation" asp-route-userId="@Model.Store.OwnerUserID"><i class="fa-regular fa-paper-plane"></i> Message</a>
-                        <a class="btn btn-green" asp-page="/CreateReview" asp-route-storeId="@Model.Store.StoreID"><i class="fa-regular fa-star"></i> Review</a>
-                    </div>
-                </div>
-                <div class="more-wrap">
-                    <button class="icon-btn" id="profileMoreButton" type="button" aria-label="More options"><i class="fa-solid fa-ellipsis"></i></button>
-                    <div class="menu" id="profileMenu">
-                        <button type="button" onclick="shareProfile()"><i class="fa-solid fa-share-nodes"></i> Share profile</button>
-                        <button type="button" onclick="shareProfileWhatsApp()"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</button>
-                        <button type="button" onclick="copyCurrentUrl()"><i class="fa-regular fa-copy"></i> Copy profile link</button>
-                        <button type="button" onclick="openReportDialog()"><i class="fa-regular fa-flag"></i> Report</button>
-                        @if (Model.IsBlocked)
-                        {
-                            <form method="post" asp-page-handler="UnblockStore" asp-route-storeId="@Model.Store.StoreID"><button type="submit"><i class="fa-solid fa-user-check"></i> Unblock</button></form>
-                        }
-                        else
-                        {
-                            <form method="post"
-                                  asp-page-handler="BlockStore"
-                                  asp-route-storeId="@Model.Store.StoreID"
-                                  id="blockStoreForm">
-                                <button type="button"
-                                        class="danger"
-                                        onclick="showBlockConfirmation()">
-                                    <i class="fa-solid fa-ban"></i> Block
-                                </button>
-                            </form>
-                        }
-                    </div>
-                </div>
-            </div>
-            <div class="tabs"><button class="tab active" type="button"><i class="fa-solid fa-table-cells"></i> POSTS</button></div>
-        </section>
-
-        @if (Model.Products.Any())
-        {
-            <div class="product-grid">
-                @foreach (var p in Model.Products)
-                {
-                    var image = p.Images?.OrderByDescending(i => i.IsPrimary).ThenBy(i => i.DisplayOrder).FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
-                    var approvedReviews = p.Reviews?.Where(r => r.Status == "Approved").ToList() ?? new List<Multi_Store.Core.Entities.Review>();
-                    <button class="tile" type="button"
-                            data-product-id="@p.ProductID"
-                            data-product-name="@p.ProductName"
-                            data-description="@p.Description"
-                            data-price="@p.Price.ToString("0.00")"
-                            data-quantity="@p.Quantity"
-                            data-image="@image"
-                            onclick="openProduct(this)">
-                        <img src="@image" alt="@p.ProductName" loading="lazy" />
-                        @if (p.Quantity <= 0)
-                        {
-                            <span class="stock-badge">OUT OF STOCK</span>
-                        }
-                        <span class="repost-badge" id="repostBadge-@p.ProductID" title="Reposted"><i class="fa-solid fa-retweet"></i></span>
-                        <span class="tile-overlay"><span><i class="fa-regular fa-star"></i> @approvedReviews.Count</span><span><i class="fa-solid fa-bag-shopping"></i> View</span></span>
-                    </button>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="empty"><i class="fa-regular fa-images" style="font-size:44px"></i><h3>No products yet</h3><p>This store has not published any active products.</p></div>
-        }
     </div>
 
-    <div class="modal-backdrop" id="productBackdrop" onclick="backdropClose(event,'productBackdrop')">
-        <article class="product-modal">
-            <div class="media-pane"><img id="modalImage" src="" alt="" /></div>
-            <div class="details-pane">
-                <header class="modal-head"><img class="mini-avatar" src="@storeLogo" alt="" /><strong>@Model.Store.StoreName</strong><button class="close-btn" type="button" onclick="closeProduct()">&times;</button></header>
-                <div class="modal-scroll">
-                    <h2 class="product-title" id="modalName"></h2>
-                    <div class="price" id="modalPrice"></div>
-                    <p class="description" id="modalDescription"></p>
-                    <div class="action-row">
-                        <form method="post" asp-page-handler="AddToCart" id="cartForm"><input type="hidden" name="productId" id="cartProductId" /><button class="action" id="cartButton" type="submit"><i class="fa-solid fa-bag-shopping"></i><span>Add</span></button></form>
-                        <form method="post" asp-page-handler="AddWishlist" id="wishlistForm"><input type="hidden" name="productId" id="wishlistProductId" /><button class="action" type="submit"><i class="fa-regular fa-bookmark"></i><span>Save</span></button></form>
-                        <button class="action" type="button" onclick="shareCurrentProduct()"><i class="fa-regular fa-paper-plane"></i><span>Share</span></button>
-                        <button class="action" id="repostButton" type="button" onclick="repostCurrentProduct()"><i class="fa-solid fa-retweet"></i><span id="repostButtonText">Repost</span></button>
+    <!-- ============ INSTAGRAM-STYLE FEED OVERLAY — tap a post, keep scrolling ============ -->
+    <div id="feedOverlay" class="feed-overlay">
+        @foreach (var p in Model.Products)
+        {
+            var images = (p.Images ?? new List<Multi_Store.Core.Entities.ProductImage>())
+                .OrderByDescending(i => i.IsPrimary).ThenBy(i => i.DisplayOrder).ToList();
+            var imageCount = images.Count;
+            var approvedReviews = (p.Reviews ?? new List<Multi_Store.Core.Entities.Review>())
+                .Where(r => r.Status == "Approved").OrderByDescending(r => r.CreatedAt).ToList();
+            var reviewCount = approvedReviews.Count;
+            var visibleReviewCount = 2;
+
+            var isOutOfStock = p.IsOutOfStock;
+            var isLowStock = !isOutOfStock && p.Quantity <= p.LowStockThreshold;
+            var stockLabel = isOutOfStock ? "Out of Stock" : (isLowStock ? $"Low stock · {p.Quantity} left" : "In Stock");
+            var stockCssClass = isOutOfStock ? "out-of-stock" : (isLowStock ? "low-stock" : "");
+
+            <section id="feed-@p.ProductID" class="product-feed-item"
+                     data-product-id="@p.ProductID"
+                     data-product-name="@p.ProductName"
+                     data-price="@p.Price.ToString("0.00")">
+                <div class="product-post-card" role="dialog" aria-modal="true" aria-label="@p.ProductName details" tabindex="-1">
+
+                    <div class="post-header">
+                        <div class="post-header-store">
+                            <img src="@storeLogo" alt="@Model.Store.StoreName" />
+                            <div>
+                                <div class="post-header-store-name">@Model.Store.StoreName</div>
+                                <div class="post-header-store-sub">Official Store</div>
+                            </div>
+                        </div>
+                        <div class="post-header-actions">
+                            <div class="menu-wrap">
+                                <button class="kebab-btn" type="button" onclick="toggleMenu(this)" aria-label="More options"><i class="fa-solid fa-ellipsis"></i></button>
+                                <div class="dropdown">
+                                    <button type="button" class="repost-item" onclick="repostToggle(this)"><i class="fa-solid fa-retweet"></i> <span class="repost-item-text">Repost</span></button>
+                                    <form method="post" asp-page-handler="NotInterested">
+                                        <input type="hidden" name="productId" value="@p.ProductID" />
+                                        <button type="submit"><i class="fa-regular fa-eye-slash"></i> Not interested</button>
+                                    </form>
+                                    <button type="button" onclick="openProductReportDialog(this)"><i class="fa-regular fa-flag"></i> Report product</button>
+                                </div>
+                            </div>
+                            <button class="post-close-btn" onclick="closeProductModal()" aria-label="Close"><i class="fas fa-xmark"></i></button>
+                        </div>
                     </div>
-                    <div class="action-row">
-                        <button class="action" type="button" onclick="shareCurrentProductWhatsApp()"><i class="fa-brands fa-whatsapp"></i><span>WhatsApp</span></button>
-                        <button class="action" type="button" onclick="copyCurrentProductLink()"><i class="fa-regular fa-copy"></i><span>Copy link</span></button>
-                        <form method="post" asp-page-handler="ShareToStore" id="chatShareForm"><input type="hidden" name="productId" id="chatProductId" /><input type="hidden" name="storeOwnerId" value="@Model.Store.OwnerUserID" /><button class="action" type="submit"><i class="fa-regular fa-message"></i><span>Send in chat</span></button></form>
-                        <button class="action" type="button" onclick="openProductReportDialog()"><i class="fa-regular fa-flag"></i><span>Report</span></button>
+
+                    <div class="post-media" data-current-image="0">
+                        @if (images.Any())
+                        {
+                            for (int idx = 0; idx < images.Count; idx++)
+                            {
+                                <img src="@images[idx].ImageUrl" style="display:@(idx == 0 ? "block" : "none")" draggable="false" alt="@p.ProductName — photo @(idx + 1) of @images.Count" />
+                            }
+                        }
+                        else
+                        {
+                            <img src="/images/no-image.png" draggable="false" alt="No image available for @p.ProductName" />
+                        }
+                        @if (isOutOfStock || isLowStock)
+                        {
+                            <span class="post-stock-badge-media @(isLowStock ? "low-stock" : "")">@(isOutOfStock ? "Out of stock" : $"Only {p.Quantity} left")</span>
+                        }
+                        @if (imageCount > 1)
+                        {
+                            <span class="gallery-counter"><span class="gallery-counter-current">1</span>/@imageCount</span>
+                            <button class="gallery-nav prev" onclick="changeModalImage(@p.ProductID, -1)" aria-label="Previous image"><i class="fas fa-chevron-left"></i></button>
+                            <button class="gallery-nav next" onclick="changeModalImage(@p.ProductID, 1)" aria-label="Next image"><i class="fas fa-chevron-right"></i></button>
+                            <div class="gallery-dots">
+                                @for (int d = 0; d < imageCount; d++)
+                                {
+                                    <span class="@(d == 0 ? "active" : "")"></span>
+                                }
+                            </div>
+                        }
                     </div>
-                    <section class="review-box">
-                        <h3>Ratings &amp; reviews</h3>
-                        <form method="post" asp-page-handler="AddReview" class="review-form">
-                            <input type="hidden" name="productId" id="reviewProductId" />
-                            <select name="rating" required><option value="">Rating</option><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select>
-                            <input type="text" name="comment" placeholder="Write a review..." maxlength="1000" required />
-                            <button type="submit">Post</button>
-                        </form>
-                        <div class="reviews" id="modalReviews"></div>
-                    </section>
+
+                    <div class="post-body">
+                        <div class="post-meta">
+                            <h3>@p.ProductName</h3>
+                            <div class="post-price-row">
+                                <span class="post-price">$@p.Price.ToString("0.00")</span>
+                                <span class="post-stock-badge @stockCssClass">@stockLabel</span>
+                            </div>
+                            <p class="post-description">@p.Description</p>
+
+                            <div class="post-actions">
+                                <form method="post" asp-page-handler="AddToCart">
+                                    <input type="hidden" name="productId" value="@p.ProductID" />
+                                    <button class="btn-action" type="submit" @(p.Quantity <= 0 ? "disabled" : "")>
+                                        <i class="fa-solid fa-bag-shopping"></i> @(p.Quantity <= 0 ? "Out of stock" : "Add")
+                                    </button>
+                                </form>
+                                <form method="post" asp-page-handler="AddWishlist">
+                                    <input type="hidden" name="productId" value="@p.ProductID" />
+                                    <button class="btn-action" type="submit"><i class="fa-regular fa-bookmark"></i> Save</button>
+                                </form>
+                                <div class="menu-wrap">
+                                    <button class="btn-action" type="button" onclick="toggleMenu(this)" style="width:100%"><i class="fa-regular fa-paper-plane"></i> Share</button>
+                                    <div class="dropdown">
+                                        <button type="button" onclick="shareProductWhatsApp(this)"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</button>
+                                        <button type="button" onclick="copyProductLink(this)"><i class="fa-regular fa-copy"></i> Copy link</button>
+                                        <form method="post" asp-page-handler="ShareToStore">
+                                            <input type="hidden" name="productId" value="@p.ProductID" />
+                                            <input type="hidden" name="storeOwnerId" value="@Model.Store.OwnerUserID" />
+                                            <button type="submit"><i class="fa-regular fa-message"></i> Send in chat</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-reviews">
+                            <div class="post-reviews-title"><i class="fas fa-comments"></i> @reviewCount Review@(reviewCount != 1 ? "s" : "")</div>
+
+                            <form method="post" asp-page-handler="AddReview" class="review-form">
+                                <input type="hidden" name="productId" value="@p.ProductID" />
+                                <input type="hidden" name="rating" class="rating-input" value="0" />
+                                <div class="star-pick-row">
+                                    @for (var s = 1; s <= 5; s++)
+                                    {
+                                        <button type="button" class="star-pick" data-star="@s" onclick="pickStar(this,@s)"><i class="fa-solid fa-star"></i></button>
+                                    }
+                                    <span>Tap a star</span>
+                                </div>
+                                <div class="review-form-row">
+                                    <input type="text" name="comment" maxlength="1000" placeholder="Write a review..." required />
+                                    <button type="submit">Post</button>
+                                </div>
+                            </form>
+
+                            @if (reviewCount > 0)
+                            {
+                                for (var i = 0; i < approvedReviews.Count; i++)
+                                {
+                                    var review = approvedReviews[i];
+                                    <div class="review-row @(i >= visibleReviewCount ? "review-hidden" : "")">
+                                        <div class="reviewer-info">
+                                            <div class="reviewer-left">
+                                                <div class="reviewer-avatar">@((review.Customer?.User?.FullName ?? "C").Substring(0, 1).ToUpper())</div>
+                                                <strong>@(review.Customer?.User?.FullName ?? "Customer")</strong>
+                                            </div>
+                                            <span class="stars">@(new string('★', review.Rating))@(new string('☆', 5 - review.Rating))</span>
+                                        </div>
+                                        <p>@review.Comment</p>
+                                    </div>
+                                }
+                                if (reviewCount > visibleReviewCount)
+                                {
+                                    <button type="button" class="show-more-btn" data-toggle-reviews data-expanded="false" data-show-label="Show all @reviewCount reviews">Show all @reviewCount reviews</button>
+                                }
+                            }
+                            else
+                            {
+                                <div class="post-reviews-empty"><i class="fas fa-comment-slash"></i> No reviews yet for this product.</div>
+                            }
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </article>
+            </section>
+        }
     </div>
 
     <div class="modal-backdrop" id="reportBackdrop" onclick="backdropClose(event,'reportBackdrop')">
@@ -930,240 +1553,138 @@
         </div>
     </div>
 
-    <div class="block-confirm-toast"
-         id="blockConfirmToast"
-         role="alertdialog"
-         aria-modal="true"
-         aria-labelledby="blockConfirmTitle">
-        <div class="block-confirm-title" id="blockConfirmTitle">
-            <i class="fa-solid fa-ban"></i>
-            Block this store?
-        </div>
+    <div class="block-confirm-toast" id="blockConfirmToast" role="alertdialog" aria-modal="true" aria-labelledby="blockConfirmTitle">
+        <div class="block-confirm-title" id="blockConfirmTitle"><i class="fa-solid fa-ban"></i> Block this store?</div>
         <p>You will stop seeing this store and it will also be removed from your following list.</p>
         <div class="block-confirm-actions">
-            <button type="button"
-                    class="block-confirm-cancel"
-                    onclick="hideBlockConfirmation()">
-                Cancel
-            </button>
-            <button type="button"
-                    class="block-confirm-submit"
-                    id="confirmBlockButton"
-                    onclick="submitBlockStore()">
-                Block
-            </button>
+            <button type="button" class="block-confirm-cancel" onclick="hideBlockConfirmation()">Cancel</button>
+            <button type="button" class="block-confirm-submit" id="confirmBlockButton" onclick="submitBlockStore()">Block</button>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <!-- Story data MUST be set before stories.js loads, exactly like _StoryBarCustomer.cshtml
-         does on the Feed page (its inline <script> block runs before CustomerFeed's own
-         <script src="~/js/stories.js"> tag further down the page). -->
+         does on the Feed page. -->
     <script>
             const storeName = @Html.Raw(JsonSerializer.Serialize(Model.Store.StoreName));
             const storeId = @Model.Store.StoreID;
 
-            // Single-store page: one story group only, same shape RealNestStories expects on the Feed -
-            // reuses the exact same JSON keys _StoryBarCustomer.cshtml embeds, so RealNestStories.open()
-            // (the same function the Feed calls) works identically here without any duplicate JS.
             window.realnestStoryGroups = [@Html.Raw(JsonSerializer.Serialize(new
                 {
-                            storeId = Model.Store.StoreID,
-                            storeName = Model.Store.StoreName,
-                            storeLogoUrl = storeLogo,
-                            hasUnviewedStories = Model.StoreStories.Any(s => !s.IsViewed),
-                            stories = Model.StoreStories.Select(s => new
+                                            storeId = Model.Store.StoreID,
+                                            storeName = Model.Store.StoreName,
+                                            storeLogoUrl = storeLogo,
+                                            hasUnviewedStories = Model.StoreStories.Any(s => !s.IsViewed),
+                                            stories = Model.StoreStories.Select(s => new
                     {
-                                    storyId = s.StoryID,
-                                    mediaType = s.MediaType,
-                                    imageUrl = s.ImageUrl,
-                                    videoUrl = s.VideoUrl,
-                                    durationSeconds = s.DurationSeconds,
-                                    caption = s.Caption,
-                                    createdAt = s.CreatedAt,
-                                    isViewed = s.IsViewed,
-                                    isLiked = s.IsLikedByCurrentCustomer
+                                                        storyId = s.StoryID,
+                                                        mediaType = s.MediaType,
+                                                        imageUrl = s.ImageUrl,
+                                                        videoUrl = s.VideoUrl,
+                                                        durationSeconds = s.DurationSeconds,
+                                                        caption = s.Caption,
+                                                        createdAt = s.CreatedAt,
+                                                        isViewed = s.IsViewed,
+                                                        isLiked = s.IsLikedByCurrentCustomer
                     })
                 }))];
     </script>
     <script src="~/js/stories.js"></script>
 
     <script>
-            let currentProduct = null;
-
-            const reviewsByProduct = {
-                    @foreach (var p in Model.Products)
-                {
-                    var reviews = p.Reviews?.Where(r => r.Status == "Approved").OrderByDescending(r => r.CreatedAt).Select(r => new
-                    {
-                                    customer = r.Customer?.User?.FullName ?? "Customer",
-                                    rating = r.Rating,
-                                    comment = r.Comment,
-                                    createdAt = r.CreatedAt.ToString("MMM d, yyyy")
-                            }).ToList() ?? new();
-                    <text>@p.ProductID: @Html.Raw(JsonSerializer.Serialize(reviews)),</text>
-            }
-                    };
-
-            const profileMenu = document.getElementById('profileMenu');
-            document.getElementById('profileMoreButton').addEventListener('click', e => { e.stopPropagation(); profileMenu.classList.toggle('open'); });
-            document.addEventListener('click', () => profileMenu.classList.remove('open'));
-            profileMenu.addEventListener('click', e => e.stopPropagation());
-
+            // ============ TOAST ============
             function toast(message, ok = true) {
                 Toastify({ text: message, duration: 2800, gravity: 'top', position: 'right', style: { background: ok ? '#16a34a' : '#dc2626' } }).showToast();
             }
 
+            // ============ GENERIC DROPDOWN MENUS ============
+            function closeAllMenus() {
+                document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+            }
+            function toggleMenu(btn) {
+                event.stopPropagation();
+                const dropdown = btn.nextElementSibling;
+                const willOpen = !dropdown.classList.contains('open');
+                closeAllMenus();
+                if (willOpen) dropdown.classList.add('open');
+            }
+            document.addEventListener('click', closeAllMenus);
+            document.querySelectorAll('.dropdown').forEach(d => d.addEventListener('click', e => e.stopPropagation()));
+
+            // ============ BLOCK STORE CONFIRMATION ============
             function showBlockConfirmation() {
-                profileMenu.classList.remove('open');
+                closeAllMenus();
                 document.getElementById('blockConfirmToast').classList.add('open');
             }
-
             function hideBlockConfirmation() {
                 document.getElementById('blockConfirmToast').classList.remove('open');
             }
-
             function submitBlockStore() {
                 const form = document.getElementById('blockStoreForm');
                 const button = document.getElementById('confirmBlockButton');
-
-                if (!form || !button)
-                    return;
-
+                if (!form || !button) return;
                 button.disabled = true;
                 button.textContent = 'Blocking...';
                 form.submit();
             }
-            function profileUrl() {
-                return `${window.location.origin}/StoreCustomerProfile?id=${storeId}`;
-            }
 
-            function productUrl(id) {
-                return `${window.location.origin}/StoreCustomerProfile?id=${storeId}#product-${id}`;
+            // ============ SHARE — PROFILE ============
+            function profileUrl() { return `${window.location.origin}/StoreCustomerProfile?id=${storeId}`; }
+            async function copyText(value, message) {
+                try { await navigator.clipboard.writeText(value); toast(message); }
+                catch { toast('Could not copy the link.', false); }
             }
-            async function copyText(value, message) { try { await navigator.clipboard.writeText(value); toast(message); } catch { toast('Could not copy the link.', false); } }
-            function copyCurrentUrl() {
-                copyText(profileUrl(), 'Profile link copied.');
-            }
+            function copyCurrentUrl() { copyText(profileUrl(), 'Profile link copied.'); }
             function shareProfileWhatsApp() {
-                const message =
-                    `🏪 ${storeName}\n` +
-                    `Store profile on realnest\n` +
-                    profileUrl();
-
-                window.open(
-                    'https://wa.me/?text=' + encodeURIComponent(message),
-                    '_blank',
-                    'noopener,noreferrer'
-                );
-            }
-            function shareProfile() {
-                shareProfileWhatsApp();
+                const message = `🏪 ${storeName}\nStore profile on realnest\n${profileUrl()}`;
+                window.open('https://wa.me/?text=' + encodeURIComponent(message), '_blank', 'noopener,noreferrer');
             }
 
-            function openProduct(el) {
-                currentProduct = { id: Number(el.dataset.productId), name: el.dataset.productName, description: el.dataset.description, price: el.dataset.price, quantity: Number(el.dataset.quantity), image: el.dataset.image };
-                document.getElementById('modalImage').src = currentProduct.image;
-                document.getElementById('modalName').textContent = currentProduct.name;
-                document.getElementById('modalPrice').textContent = '$' + currentProduct.price;
-                document.getElementById('modalDescription').textContent = currentProduct.description || 'No description.';
-                ['cartProductId', 'wishlistProductId', 'chatProductId', 'reviewProductId', 'reportProductId'].forEach(id => document.getElementById(id).value = currentProduct.id);
-                const cartButton = document.getElementById('cartButton');
-                cartButton.disabled = currentProduct.quantity <= 0;
-                cartButton.querySelector('span').textContent = currentProduct.quantity <= 0 ? 'Out of stock' : 'Add';
-                renderReviews(currentProduct.id);
-                updateRepostUi(currentProduct.id);
-                document.getElementById('productBackdrop').classList.add('open');
-                document.body.style.overflow = 'hidden';
-                history.replaceState(null, '', productUrl(currentProduct.id));
+            // ============ SHARE — PRODUCT ============
+            function productUrl(id) { return `${window.location.origin}/StoreCustomerProfile?id=${storeId}#product-${id}`; }
+            function closestFeedItem(btn) { return btn.closest('.product-feed-item'); }
+            function copyProductLink(btn) {
+                const item = closestFeedItem(btn);
+                copyText(productUrl(item.dataset.productId), 'Product link copied.');
             }
-            function renderReviews(id) {
-                const target = document.getElementById('modalReviews');
-                const reviews = reviewsByProduct[id] || [];
-                if (!reviews.length) { target.innerHTML = '<p style="color:#746d7f">No reviews yet.</p>'; return; }
-                target.innerHTML = reviews.map(r => `<div class="review"><div class="review-top"><strong>${escapeHtml(r.customer)}</strong><span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span></div><p>${escapeHtml(r.comment || '')}</p><small style="color:#8a8390">${escapeHtml(r.createdAt)}</small></div>`).join('');
+            function shareProductWhatsApp(btn) {
+                const item = closestFeedItem(btn);
+                const message = `🛍️ ${item.dataset.productName}\nPrice: $${item.dataset.price}\nStore: ${storeName}\n${productUrl(item.dataset.productId)}`;
+                window.open('https://wa.me/?text=' + encodeURIComponent(message), '_blank', 'noopener,noreferrer');
             }
-            function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c])); }
-            function closeProduct() { document.getElementById('productBackdrop').classList.remove('open'); document.body.style.overflow = ''; history.replaceState(null, '', window.location.pathname + '?id=' + storeId); }
-            function backdropClose(e, id) { if (e.target.id === id) { if (id === 'productBackdrop') closeProduct(); else document.getElementById(id).classList.remove('open'); } }
-            function currentShareData() {
-                return {
-                    title: currentProduct.name,
-                    text:
-                        `🛍️ ${currentProduct.name}\n` +
-                        `$${currentProduct.price}\n` +
-                        `From ${storeName}`,
-                    url: productUrl(currentProduct.id)
-                };
-            }
-            function shareCurrentProduct() {
-                shareCurrentProductWhatsApp();
-            }
-            function shareCurrentProductWhatsApp() {
-                if (!currentProduct)
-                    return;
 
-                const message =
-                    `🛍️ ${currentProduct.name}\n` +
-                    `Price: $${currentProduct.price}\n` +
-                    `Store: ${storeName}\n` +
-                    productUrl(currentProduct.id);
-
-                window.open(
-                    'https://wa.me/?text=' + encodeURIComponent(message),
-                    '_blank',
-                    'noopener,noreferrer'
-                );
-            }
-            function copyCurrentProductLink() { if (currentProduct) copyText(productUrl(currentProduct.id), 'Product link copied.'); }
+            // ============ REPOST (client-side) ============
             const repostStorageKey = 'realnest_reposted_products';
-
             function getRepostedProductIds() {
                 try {
                     const value = JSON.parse(localStorage.getItem(repostStorageKey) || '[]');
                     return Array.isArray(value) ? value.map(Number) : [];
-                } catch {
-                    return [];
-                }
+                } catch { return []; }
             }
-
             function saveRepostedProductIds(ids) {
                 localStorage.setItem(repostStorageKey, JSON.stringify([...new Set(ids.map(Number))]));
             }
-
-            function isProductReposted(productId) {
-                return getRepostedProductIds().includes(Number(productId));
-            }
-
-            function updateRepostUi(productId) {
+            function isProductReposted(productId) { return getRepostedProductIds().includes(Number(productId)); }
+            function updateRepostUiFor(productId) {
                 const reposted = isProductReposted(productId);
                 const badge = document.getElementById('repostBadge-' + productId);
                 if (badge) badge.classList.toggle('show', reposted);
-
-                if (currentProduct && Number(currentProduct.id) === Number(productId)) {
-                    const button = document.getElementById('repostButton');
-                    const text = document.getElementById('repostButtonText');
-                    if (button) button.classList.toggle('reposted', reposted);
-                    if (text) text.textContent = reposted ? 'Reposted' : 'Repost';
+                const item = document.querySelector(`.product-feed-item[data-product-id="${productId}"]`);
+                if (item) {
+                    const text = item.querySelector('.repost-item-text');
+                    if (text) text.textContent = reposted ? 'Remove repost' : 'Repost';
                 }
             }
-
             function refreshAllRepostBadges() {
-                document.querySelectorAll('[id^="repostBadge-"]').forEach(badge => {
-                    const productId = Number(badge.id.replace('repostBadge-', ''));
-                    updateRepostUi(productId);
-                });
+                document.querySelectorAll('.product-grid-item').forEach(el => updateRepostUiFor(Number(el.dataset.productId)));
             }
-
-            function repostCurrentProduct() {
-                if (!currentProduct) return;
-
-                const productId = Number(currentProduct.id);
+            function repostToggle(btn) {
+                const item = closestFeedItem(btn);
+                const productId = Number(item.dataset.productId);
                 const ids = getRepostedProductIds();
-                const alreadyReposted = ids.includes(productId);
-
-                if (alreadyReposted) {
+                const already = ids.includes(productId);
+                if (already) {
                     saveRepostedProductIds(ids.filter(id => id !== productId));
                     toast('Repost removed.');
                 } else {
@@ -1171,23 +1692,149 @@
                     saveRepostedProductIds(ids);
                     toast('Product reposted.');
                 }
-
-                updateRepostUi(productId);
+                updateRepostUiFor(productId);
+                closeAllMenus();
             }
-            function openReportDialog() { profileMenu.classList.remove('open'); document.getElementById('reportBackdrop').classList.add('open'); }
+
+            // ============ REPORT DIALOGS ============
+            function openReportDialog() { closeAllMenus(); document.getElementById('reportBackdrop').classList.add('open'); }
             function closeReportDialog() { document.getElementById('reportBackdrop').classList.remove('open'); }
-            function openProductReportDialog() { if (!currentProduct) return; document.getElementById('reportProductId').value = currentProduct.id; document.getElementById('productReportBackdrop').classList.add('open'); }
+            function openProductReportDialog(btn) {
+                const item = closestFeedItem(btn);
+                document.getElementById('reportProductId').value = item.dataset.productId;
+                closeAllMenus();
+                document.getElementById('productReportBackdrop').classList.add('open');
+            }
             function closeProductReportDialog() { document.getElementById('productReportBackdrop').classList.remove('open'); }
-            document.addEventListener('keydown', e => {
+            function backdropClose(e, id) { if (e.target.id === id) document.getElementById(id).classList.remove('open'); }
+
+            // ============ STAR PICKER ============
+            function pickStar(btn, value) {
+                const row = btn.closest('.star-pick-row');
+                row.querySelectorAll('.star-pick').forEach(b => b.classList.toggle('active', Number(b.dataset.star) <= value));
+                row.querySelector('span').textContent = value + ' star' + (value > 1 ? 's' : '');
+                row.closest('form').querySelector('.rating-input').value = value;
+            }
+
+            // ============ SHOW MORE / LESS REVIEWS ============
+            document.querySelectorAll('[data-toggle-reviews]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const box = btn.closest('.post-reviews');
+                    const expanded = btn.dataset.expanded === 'true';
+                    if (expanded) {
+                        box.querySelectorAll('.review-row').forEach((el, i) => { if (i >= 2) el.classList.add('review-hidden'); });
+                        btn.textContent = btn.dataset.showLabel;
+                        btn.dataset.expanded = 'false';
+                    } else {
+                        box.querySelectorAll('.review-row.review-hidden').forEach(el => el.classList.remove('review-hidden'));
+                        btn.textContent = 'Show less';
+                        btn.dataset.expanded = 'true';
+                    }
+                });
+            });
+
+            // ============ INSTAGRAM-STYLE FEED OVERLAY — open a post, then keep
+            // scrolling through the rest of the store's posts. ============
+            window.__initialProductId = @(Model.ProductId.HasValue ? Model.ProductId.Value.ToString() : "null");
+            const productOrder = [@Html.Raw(string.Join(",", Model.Products.Select(p => p.ProductID)))];
+            let currentProductId = null;
+            let lastFocusedElement = null;
+            const feedOverlay = document.getElementById('feedOverlay');
+
+            if (feedOverlay && feedOverlay.parentElement !== document.body) {
+                document.body.appendChild(feedOverlay);
+            }
+
+            function sectionFor(id) { return document.getElementById('feed-' + id); }
+
+            function openProductModal(id) {
+                if (!feedOverlay) return;
+                lastFocusedElement = document.activeElement;
+                feedOverlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+                currentProductId = id;
+
+                const sec = sectionFor(id);
+                if (!sec) return;
+
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() {
+                        sec.scrollIntoView({ behavior: 'auto', block: 'start' });
+                        const closeBtn = sec.querySelector('.post-close-btn');
+                        if (closeBtn) closeBtn.focus();
+                    });
+                });
+            }
+
+            function closeProductModal() {
+                if (!feedOverlay) return;
+                feedOverlay.classList.remove('open');
+                document.body.style.overflow = '';
+                currentProductId = null;
+                if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+                    lastFocusedElement.focus();
+                }
+            }
+
+            let scrollRAF = null;
+            if (feedOverlay) {
+                feedOverlay.addEventListener('scroll', function() {
+                    if (scrollRAF) return;
+                    scrollRAF = requestAnimationFrame(function() {
+                        scrollRAF = null;
+                        const scrollCenter = feedOverlay.scrollTop + feedOverlay.clientHeight / 2;
+                        let closestId = currentProductId;
+                        let closestDist = Infinity;
+                        productOrder.forEach(function(id) {
+                            const sec = sectionFor(id);
+                            if (!sec) return;
+                            const center = sec.offsetTop + sec.offsetHeight / 2;
+                            const dist = Math.abs(center - scrollCenter);
+                            if (dist < closestDist) { closestDist = dist; closestId = id; }
+                        });
+                        if (closestId !== currentProductId) currentProductId = closestId;
+                    });
+                });
+            }
+
+            function changeModalImage(productId, direction) {
+                const sec = sectionFor(productId);
+                if (!sec) return;
+                const imgs = sec.querySelectorAll('.post-media img');
+                const dots = sec.querySelectorAll('.gallery-dots span');
+                const media = sec.querySelector('.post-media');
+                const counter = sec.querySelector('.gallery-counter-current');
+                let current = parseInt(media.dataset.currentImage);
+                imgs[current].style.display = 'none';
+                if (dots[current]) dots[current].classList.remove('active');
+                current = (current + direction + imgs.length) % imgs.length;
+                imgs[current].style.display = 'block';
+                if (dots[current]) dots[current].classList.add('active');
+                if (counter) counter.textContent = current + 1;
+                media.dataset.currentImage = current;
+            }
+
+            document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
-                    closeProduct();
+                    if (currentProductId !== null) { closeProductModal(); }
                     closeReportDialog();
                     closeProductReportDialog();
                     hideBlockConfirmation();
+                    closeAllMenus();
+                    return;
                 }
+                if (currentProductId === null) return;
+                if (e.key === 'ArrowLeft') changeModalImage(currentProductId, -1);
+                if (e.key === 'ArrowRight') changeModalImage(currentProductId, 1);
             });
 
-            refreshAllRepostBadges();
+            document.addEventListener('DOMContentLoaded', function() {
+                const fallbackParam = new URLSearchParams(window.location.search).get('productId');
+                const hashMatch = window.location.hash.match(/^#product-(\d+)$/);
+                const productId = window.__initialProductId ?? (fallbackParam ? Number(fallbackParam) : (hashMatch ? Number(hashMatch[1]) : null));
+                if (productId) openProductModal(productId);
+                refreshAllRepostBadges();
+            });
 
             @if (TempData["Success"] != null)
                 {
@@ -1197,23 +1844,63 @@
                 {
                     <text>toast(@Html.Raw(JsonSerializer.Serialize(TempData["Error"]?.ToString())), false);</text>
             }
-                window.addEventListener('DOMContentLoaded', function() {
-                    const params = new URLSearchParams(window.location.search);
-                    const queryProductId = params.get('productId');
 
-                    const hashMatch = window.location.hash.match(/^#product-(\d+)$/);
-                    const productId = queryProductId || (hashMatch ? hashMatch[1] : null);
+                // Smooth mouse click-and-drag to move between posts (touch scrolls natively already).
+                (function() {
+                    let dragging = false;
+                    let startY = 0, startScrollTop = 0, velocity = 0, lastY = 0, lastTime = 0;
 
-                    if (!productId)
-                        return;
+                    function onPointerDown(e) {
+                        if (e.pointerType !== 'mouse') return;
+                        if (currentProductId === null) return;
+                        const mediaEl = e.target.closest('.post-media');
+                        if (!mediaEl) return;
+                        if (e.target.closest('.gallery-nav')) return;
 
-                    const productTile = document.querySelector(
-                        `.tile[data-product-id="${productId}"]`
-                    );
+                        dragging = true;
+                        startY = lastY = e.clientY;
+                        startScrollTop = feedOverlay.scrollTop;
+                        lastTime = performance.now();
+                        velocity = 0;
+                        feedOverlay.classList.add('dragging');
+                        mediaEl.setPointerCapture && mediaEl.setPointerCapture(e.pointerId);
+                    }
 
-                    if (productTile)
-                        openProduct(productTile);
-                });
+                    function onPointerMove(e) {
+                        if (!dragging) return;
+                        const now = performance.now();
+                        const dt = Math.max(now - lastTime, 1);
+                        velocity = (lastY - e.clientY) / dt;
+                        lastY = e.clientY;
+                        lastTime = now;
+                        const delta = e.clientY - startY;
+                        feedOverlay.scrollTop = startScrollTop - delta;
+                    }
+
+                    function onPointerUp() {
+                        if (!dragging) return;
+                        dragging = false;
+                        feedOverlay.classList.remove('dragging');
+
+                        const idx = productOrder.indexOf(currentProductId);
+                        if (Math.abs(velocity) > 0.5) {
+                            const dir = velocity > 0 ? 1 : -1;
+                            const newId = productOrder[idx + dir];
+                            if (newId != null) {
+                                const sec = sectionFor(newId);
+                                if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                return;
+                            }
+                        }
+                        const sec = sectionFor(currentProductId);
+                        if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+
+                    document.addEventListener('pointerdown', onPointerDown);
+                    document.addEventListener('pointermove', onPointerMove);
+                    document.addEventListener('pointerup', onPointerUp);
+                    document.addEventListener('pointercancel', onPointerUp);
+                })();
     </script>
 
     <partial name="_CustomerBottomNav" />
