@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Managers;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages
 {
@@ -17,16 +18,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     {
         private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
+        private readonly ReviewManager _reviewManager;
 
         public StoreViewCustomerModel(
             UserManager<User> userManager,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            ReviewManager reviewManager)
         {
             _userManager = userManager;
             _context = context;
+            _reviewManager = reviewManager;
         }
 
         public int CustomerId { get; set; }
+
+        // NEW — the store owner's own StoreID, needed to link a review row
+        // back to its place on the main Store Reviews page.
+        public int StoreId { get; set; }
+
+        // NEW — the customer's UserID (distinct from CustomerID), needed
+        // to route the "Message" button to /ChatConversation?userId=...
+        public int CustomerUserId { get; set; }
 
         public string CustomerFullName { get; set; } = string.Empty;
         public string CustomerEmail { get; set; } = string.Empty;
@@ -118,13 +130,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
 
             var storeId = GetSafeInt(myStore, new[] { "StoreID", "Id" }, 0);
+            StoreId = storeId;
 
             Customer? customer = null;
             try
             {
                 customer = await _context.Customers
                     .Include(c => c.User)
-                    .Include(c => c.Orders)
                     .Include(c => c.Reviews)
                         .ThenInclude(r => r.Product)
                     .Include(c => c.FollowedStores)
@@ -146,6 +158,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var user = customer.User ?? await _userManager.FindByIdAsync(customer.UserID.ToString());
 
+            CustomerUserId = customer.UserID;
+
             CustomerFullName = !string.IsNullOrWhiteSpace(user?.FullName)
                 ? user!.FullName
                 : user?.UserName ?? "Customer";
@@ -159,13 +173,30 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             CODBlocked = customer.CODBlocked;
             CreatedAt = customer.CreatedAt;
 
-            OrdersWithThisStore = (customer.Orders ?? new List<Order>())
-                .Where(o => GetSafeInt(o, new[] { "StoreID" }, -1) == storeId)
-                .ToList();
+            // FIX — "Orders With Your Store" was always empty. Order rows
+            // don't carry a StoreID themselves (only OrderItems do — that's
+            // how multi-vendor orders work), so the previous reflection
+            // lookup for o.StoreID always fell back to -1 and matched
+            // nothing. This now resolves store orders the same way the
+            // Store Owner's Orders/Index page already does: find every
+            // OrderID that has at least one OrderItem for this store, then
+            // load this customer's Orders that are in that set.
+            var storeOrderIdsQuery = _context.OrderItems
+                .Where(oi => oi.StoreID == storeId)
+                .Select(oi => oi.OrderID)
+                .Distinct();
+
+            OrdersWithThisStore = await _context.Orders
+                .AsNoTracking()
+                .Where(o => o.CustomerID == customerId && storeOrderIdsQuery.Contains(o.OrderID))
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
             OrdersWithThisStoreCount = OrdersWithThisStore.Count;
 
             ReviewsForThisStore = (customer.Reviews ?? new List<Review>())
                 .Where(r => r.StoreID == storeId)
+                .OrderByDescending(r => r.CreatedAt)
                 .ToList();
 
             IsFollowingThisStore = (customer.FollowedStores ?? new List<StoreFollow>())
@@ -287,6 +318,46 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             }
 
             TempData["Success"] = "Customer blocked.";
+            return RedirectToPage(new { customerId });
+        }
+
+        // ==========================================
+        // NEW — lets a store owner remove a review left on their store /
+        // their products, right from this customer profile (double-click
+        // or the trash icon on a review row). Scoped to reviews that
+        // actually belong to this store owner's store, so a store owner
+        // can't delete a review on a different store by guessing an id.
+        // Uses the same ReviewManager.DeleteReviewAsync path (with
+        // IP/User-Agent audit logging) as the main Store Reviews page.
+        // ==========================================
+        public async Task<IActionResult> OnPostDeleteReviewAsync(int customerId, int reviewId)
+        {
+            var storeOwnerUser = await _userManager.GetUserAsync(User);
+            if (storeOwnerUser == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var myStore = await GetMyStoreAsync(storeOwnerUser.Id);
+            if (myStore == null)
+                return RedirectToPage(new { customerId });
+
+            var storeId = GetSafeInt(myStore, new[] { "StoreID", "Id" }, 0);
+
+            var review = await _context.Reviews
+                .FirstOrDefaultAsync(r => r.ReviewID == reviewId && r.StoreID == storeId);
+
+            if (review == null)
+            {
+                TempData["Error"] = "That review couldn't be found on your store.";
+                return RedirectToPage(new { customerId });
+            }
+
+            await _reviewManager.DeleteReviewAsync(
+                reviewId,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                Request.Headers["User-Agent"].ToString()
+            );
+
+            TempData["Success"] = "Review deleted.";
             return RedirectToPage(new { customerId });
         }
     }

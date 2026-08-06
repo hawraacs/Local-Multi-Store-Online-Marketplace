@@ -10,10 +10,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
-                   ROOT VARIABLES — matching the Promotions page exactly, so
-                   this page reads as part of the same design system rather
-                   than a one-off purple-gradient banner.
-                   ============================================================ */
+                           ROOT VARIABLES — matching the Promotions page exactly, so
+                           this page reads as part of the same design system rather
+                           than a one-off purple-gradient banner.
+                           ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -44,8 +44,8 @@
         }
 
         /* ============================================================
-                   HEADER
-                   ============================================================ */
+                           HEADER
+                           ============================================================ */
         .reviews-header {
             display: flex;
             justify-content: space-between;
@@ -78,8 +78,8 @@
             }
 
         /* ============================================================
-                   STATS ROW
-                   ============================================================ */
+                           STATS ROW
+                           ============================================================ */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -130,8 +130,8 @@
             }
 
         /* ============================================================
-                   ALERTS
-                   ============================================================ */
+                           ALERTS
+                           ============================================================ */
         .alert {
             border-radius: var(--radius-md);
             padding: 14px 20px;
@@ -155,8 +155,8 @@
             }
 
         /* ============================================================
-                   CARD (reviews list wrapper)
-                   ============================================================ */
+                           CARD (reviews list wrapper)
+                           ============================================================ */
         .table-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -192,8 +192,8 @@
             }
 
         /* ============================================================
-                   REVIEW ROWS
-                   ============================================================ */
+                           REVIEW ROWS
+                           ============================================================ */
         .review-row {
             display: flex;
             align-items: flex-start;
@@ -201,7 +201,8 @@
             gap: 18px;
             padding: 22px;
             border-bottom: 1px solid var(--border-color);
-            transition: background-color 0.2s ease;
+            transition: background-color 0.4s ease;
+            scroll-margin-top: 90px;
         }
 
             .review-row:last-child {
@@ -210,6 +211,13 @@
 
             .review-row:hover {
                 background-color: var(--accent-light);
+            }
+
+            /* Briefly highlighted when arrived at via a deep-link
+                       (e.g. from the customer profile page's "view review" button). */
+            .review-row.just-arrived {
+                background-color: var(--accent-light);
+                box-shadow: inset 3px 0 0 var(--accent-color);
             }
 
         .review-row-main {
@@ -282,8 +290,8 @@
         }
 
         /* ----- Delete button — same circular icon-only style used for
-                   deleting a Promotion, for visual consistency across the
-                   store-owner section. ----- */
+                           deleting a Promotion, for visual consistency across the
+                           store-owner section. ----- */
         .btn-delete-review {
             width: 36px;
             height: 36px;
@@ -310,7 +318,7 @@
             }
 
         /* ----- "View N older reviews" — hides everything past the 5th
-                   review by default; the button reveals them via JS. ----- */
+                           review by default; the button reveals them via JS. ----- */
         .extra-review {
             display: none;
         }
@@ -336,8 +344,8 @@
 
 
         /* ============================================================
-                   EMPTY STATE — identical pattern to Promotions' empty state
-                   ============================================================ */
+                           EMPTY STATE — identical pattern to Promotions' empty state
+                           ============================================================ */
         .empty-state {
             padding: 60px 20px;
             text-align: center;
@@ -366,8 +374,8 @@
             }
 
         /* ============================================================
-                   ACCESSIBILITY
-                   ============================================================ */
+                           ACCESSIBILITY
+                           ============================================================ */
         a:focus-visible,
         button:focus-visible {
             outline: 2px solid var(--accent-color);
@@ -381,8 +389,8 @@
         }
 
         /* ============================================================
-                   RESPONSIVE
-                   ============================================================ */
+                           RESPONSIVE
+                           ============================================================ */
         @@media (max-width: 768px) {
             .reviews-header {
                 flex-direction: column;
@@ -477,7 +485,7 @@
         <div class="card-header">
             <i class="fas fa-comments"></i> Customer Reviews
         </div>
-        <div class="card-body">
+        <div class="card-body" id="reviewsCardBody">
             @if (!Model.Reviews.Any())
             {
                 <div class="empty-state">
@@ -499,7 +507,7 @@
                     var initial = customerName.Length > 0 ? customerName.Substring(0, 1).ToUpper() : "?";
                     var extraClass = reviewIndex >= 5 ? "extra-review" : "";
 
-                    <div class="review-row @extraClass">
+                    <div class="review-row @extraClass" id="review-@r.ReviewID">
                         <div class="review-row-main">
                             <div class="customer-avatar">@initial</div>
                             <div class="review-row-content">
@@ -564,4 +572,44 @@
         button.dataset.expanded = isExpanded ? 'false' : 'true';
         button.textContent = isExpanded ? button.dataset.moreLabel : 'Show fewer reviews';
     }
+
+    // ============================================
+    // Deep-link support — if we arrive with a #review-<id> hash (e.g. from
+    // the "view this review" link on a customer's profile page), expand
+    // the older-reviews list if needed, scroll to that exact row, and
+    // briefly highlight it so it's obvious which review sent us here.
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!window.location.hash) {
+            return;
+        }
+
+        var target;
+        try {
+            target = document.querySelector(window.location.hash);
+        } catch (e) {
+            return;
+        }
+
+        if (!target || !target.classList.contains('review-row')) {
+            return;
+        }
+
+        if (target.classList.contains('extra-review')) {
+            var card = target.closest('.table-card');
+            var moreBtn = card ? card.querySelector('.view-older-btn') : null;
+            if (moreBtn && moreBtn.dataset.expanded !== 'true') {
+                toggleOlderReviews(moreBtn);
+            }
+        }
+
+        window.setTimeout(function() {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            target.classList.add('just-arrived');
+
+            window.setTimeout(function() {
+                target.classList.remove('just-arrived');
+            }, 2000);
+        }, 50);
+    });
 </script>
