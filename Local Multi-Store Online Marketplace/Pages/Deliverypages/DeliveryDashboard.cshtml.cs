@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
 using System;
 using System.Collections.Generic;
@@ -19,15 +20,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
         private readonly DeliveryManager _deliveryManager;
+        private readonly MessagingManager _messagingManager;
 
         public DeliveryDashboardModel(
             ApplicationDbContext context,
             UserManager<User> userManager,
-            DeliveryManager deliveryManager)
+            DeliveryManager deliveryManager,
+            MessagingManager messagingManager)
         {
             _context = context;
             _userManager = userManager;
             _deliveryManager = deliveryManager;
+            _messagingManager = messagingManager;
         }
 
         public List<DeliveryAssignmentViewModel> Assignments { get; set; }
@@ -488,6 +492,31 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
             await _context.SaveChangesAsync();
 
+            // ==========================================
+            // NOTIFY CUSTOMER VIA EXISTING CHAT SYSTEM
+            // (only after Delivered is saved successfully;
+            // reuses the same MessagingManager.SendMessageAsync
+            // call already used by ChatConversation.cshtml.cs
+            // and by DeliveryOrderDetailsModel.OnPostMarkDeliveredAsync)
+            // ==========================================
+            var deliveryPersonForMessage =
+                await GetCurrentDeliveryPersonAsync();
+
+            var customerUserId =
+                assignment.Order.Customer?.User?.Id;
+
+            if (deliveryPersonForMessage != null &&
+                customerUserId.HasValue &&
+                customerUserId.Value > 0)
+            {
+                await _messagingManager.SendMessageAsync(new ChatMessageDTO
+                {
+                    SenderID = deliveryPersonForMessage.UserID,
+                    ReceiverID = customerUserId.Value,
+                    MessageText = $"Your order {assignment.Order.OrderNumber} has been delivered successfully."
+                }, "", "");
+            }
+
             TempData["Success"] =
                 "Order marked as delivered. Tracking stopped.";
 
@@ -512,6 +541,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
             return await _context.DeliveryAssignments
                 .Include(assignment =>
                     assignment.Order)
+                        .ThenInclude(order => order!.Customer)
+                            .ThenInclude(customer => customer.User)
                 .FirstOrDefaultAsync(
                     assignment =>
                         assignment.AssignmentID ==

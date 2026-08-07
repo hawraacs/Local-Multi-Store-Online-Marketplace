@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
+using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
 using System;
 using System.Collections.Generic;
@@ -19,15 +20,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
         private readonly DeliveryManager _deliveryManager;
+        private readonly MessagingManager _messagingManager;
 
         public DeliveryOrderDetailsModel(
             ApplicationDbContext context,
             UserManager<User> userManager,
-            DeliveryManager deliveryManager)
+            DeliveryManager deliveryManager,
+            MessagingManager messagingManager)
         {
             _context = context;
             _userManager = userManager;
             _deliveryManager = deliveryManager;
+            _messagingManager = messagingManager;
         }
 
         public OrderDetailsViewModel? Details { get; set; }
@@ -168,6 +172,51 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
             assignment.Order.Status = "Delivered";
 
             await _context.SaveChangesAsync();
+
+            // ==========================================
+            // NOTIFY CUSTOMER VIA EXISTING CHAT SYSTEM
+            // (only after Delivered is saved successfully;
+            // reuses the same MessagingManager.SendMessageAsync
+            // call already used by ChatConversation.cshtml.cs)
+            // ==========================================
+            var customerUserId = assignment.Order.Customer?.User?.Id;
+
+            // ===== TEMPORARY DEBUG - REMOVE AFTER TESTING =====
+            Console.WriteLine("[MARK-DELIVERED-DEBUG] Reached messaging block.");
+            Console.WriteLine($"[MARK-DELIVERED-DEBUG] deliveryPerson.UserID = {deliveryPerson.UserID}");
+            Console.WriteLine($"[MARK-DELIVERED-DEBUG] customerUserId = {(customerUserId.HasValue ? customerUserId.Value.ToString() : "NULL")}");
+            Console.WriteLine($"[MARK-DELIVERED-DEBUG] OrderNumber = {assignment.Order.OrderNumber}");
+            // ===== END TEMPORARY DEBUG =====
+
+            if (customerUserId.HasValue && customerUserId.Value > 0)
+            {
+                // ===== TEMPORARY DEBUG - REMOVE AFTER TESTING =====
+                Console.WriteLine("[MARK-DELIVERED-DEBUG] Entering SendMessageAsync call now...");
+                try
+                {
+                    var sentMessageId = await _messagingManager.SendMessageAsync(new ChatMessageDTO
+                    {
+                        SenderID = deliveryPerson.UserID,
+                        ReceiverID = customerUserId.Value,
+                        MessageText = $"Your order {assignment.Order.OrderNumber} has been delivered successfully."
+                    }, "", "");
+
+                    Console.WriteLine($"[MARK-DELIVERED-DEBUG] SendMessageAsync SUCCEEDED. MessageID = {sentMessageId}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[MARK-DELIVERED-DEBUG] SendMessageAsync THREW AN EXCEPTION:");
+                    Console.WriteLine(ex.ToString());
+                    throw;
+                }
+                // ===== END TEMPORARY DEBUG =====
+            }
+            else
+            {
+                // ===== TEMPORARY DEBUG - REMOVE AFTER TESTING =====
+                Console.WriteLine("[MARK-DELIVERED-DEBUG] SKIPPED SendMessageAsync — customerUserId was null or <= 0.");
+                // ===== END TEMPORARY DEBUG =====
+            }
 
             TempData["Success"] = "Order marked as delivered.";
             return RedirectToPage(new { assignmentId });
