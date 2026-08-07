@@ -13,6 +13,7 @@ using Multi_Store.Services.Email;
 using Multi_Store.Services.Managers;
 using Multi_Store.Infrastructure.Settings;
 using Multi_Store.Infrastructure.Services;
+using Local_Multi_Store_Online_Marketplace.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ===============================
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
+builder.Services.AddSignalR(); // added
 
 //adminlog
 builder.Services.AddHttpContextAccessor();
@@ -266,5 +268,6 @@ app.UseSession();
 app.MapRazorPages();
 app.MapControllers();
 app.MapDefaultControllerRoute();
+app.MapHub<OrderHub>("/orderHub"); // added
 
 app.Run();

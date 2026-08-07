@@ -12,6 +12,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
+using Local_Multi_Store_Online_Marketplace.Hubs;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
 {
@@ -20,11 +22,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
     {
         private readonly ApplicationDbContext _context;
         private readonly ICurrentStoreService _currentStoreService;
+        private readonly IHubContext<OrderHub> _hubContext; // added
 
-        public DetailsModel(ApplicationDbContext context, ICurrentStoreService currentStoreService)
+        public DetailsModel(ApplicationDbContext context, ICurrentStoreService currentStoreService, IHubContext<OrderHub> hubContext) // hubContext added
         {
             _context = context;
             _currentStoreService = currentStoreService;
+            _hubContext = hubContext; // added
         }
 
         public OrderDetailsViewModel? Order { get; set; }
@@ -234,6 +238,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
             }
 
             await _context.SaveChangesAsync();
+
+            // added — only reached if SaveChangesAsync above completed without throwing
+            Console.WriteLine($"[SignalR-DEBUG] About to send OrderStatusUpdated for OrderID={order.OrderID}, newStatus={newStatus}"); // temporary debug log
+            await _hubContext.Clients.All.SendAsync("OrderStatusUpdated", order.OrderID, newStatus);
+            Console.WriteLine($"[SignalR-DEBUG] SendAsync completed for OrderID={order.OrderID}"); // temporary debug log
 
             TempData["SuccessMessage"] = $"Order #{order.OrderNumber} status updated to {newStatus}.";
             return RedirectToPage(new { id = orderId });
