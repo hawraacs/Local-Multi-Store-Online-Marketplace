@@ -1,18 +1,8 @@
 ﻿/* =============================================================
    CUSTOMER FEED — CLIENT-SIDE BEHAVIOUR
    Local Multi-Store Online Marketplace ("realnest")
-   -------------------------------------------------------------
-   Responsibilities:
-     1. Collapsible "Filters" disclosure in the discovery bar
-     2. Per-post "..." overflow menu (open/close, click-outside)
-     3. Toast notification auto-dismiss
-     4. NEW — force the story ring color (orange = unviewed,
-        purple = viewed) via inline styles with !important priority,
-        so it can never lose a specificity fight against any rule
-        in stories.css, regardless of load order.
    ============================================================= */
 
-// Toggle the advanced filters panel open/closed.
 const filtersToggle = document.getElementById('filtersToggle');
 const advancedFilters = document.getElementById('advancedFilters');
 
@@ -26,31 +16,38 @@ if (filtersToggle && advancedFilters) {
 
 /**
  * Toggles the dropdown menu attached to a post's "..." button.
- * Closes any other open menu first so only one is visible at a time.
- * @param {HTMLElement} btn - The button element that was clicked.
  */
 function toggleMenu(btn) {
-    const menu = btn.nextElementSibling;
+    if (!btn) return;
 
-    document.querySelectorAll('.post-menu-dropdown').forEach((openMenu) => {
+    const wrapper = btn.closest('.menu-wrap, .post-menu');
+    const menu = wrapper
+        ? wrapper.querySelector('.dropdown, .post-menu-dropdown')
+        : btn.nextElementSibling;
+
+    if (!menu) return;
+
+    document.querySelectorAll('.post-menu-dropdown, .dropdown').forEach((openMenu) => {
         if (openMenu !== menu) {
             openMenu.style.display = 'none';
+            openMenu.classList.remove('open');
         }
     });
 
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    const isOpen = menu.style.display === 'block' || menu.classList.contains('open');
+    menu.style.display = isOpen ? 'none' : 'block';
+    menu.classList.toggle('open', !isOpen);
 }
 
-// Close any open post menu when the user clicks outside of it.
 document.addEventListener('click', (event) => {
-    if (!event.target.closest('.post-menu')) {
-        document.querySelectorAll('.post-menu-dropdown').forEach((menu) => {
+    if (!event.target.closest('.post-menu') && !event.target.closest('.menu-wrap')) {
+        document.querySelectorAll('.post-menu-dropdown, .dropdown').forEach((menu) => {
             menu.style.display = 'none';
+            menu.classList.remove('open');
         });
     }
 });
 
-// Auto-dismiss success/error toast notifications after a few seconds.
 window.addEventListener('DOMContentLoaded', () => {
     const TOAST_VISIBLE_MS = 4000;
     const TOAST_FADE_MS = 500;
@@ -67,15 +64,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 /* =============================================================
    PRODUCT REVIEW COMPOSER — star picker + show more/less reviews
-   -------------------------------------------------------------
-   Delegated on document so it works for every post's review form
-   and review list on the page without needing per-product IDs.
    ============================================================= */
 const STAR_RATING_LABELS = ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'];
 
 document.addEventListener('click', (event) => {
 
-    // ---- Star picker: tap a star to set the hidden rating value ----
     const starBtn = event.target.closest('.product-review-form-stars .star-pick');
     if (starBtn) {
         const picker = starBtn.closest('.product-review-form-stars');
@@ -107,7 +100,6 @@ document.addEventListener('click', (event) => {
         return;
     }
 
-    // ---- Show more / show less reviews (SHEIN-style disclosure) ----
     const toggleBtn = event.target.closest('[data-toggle-reviews]');
     if (toggleBtn) {
         const section = toggleBtn.closest('.comments-section');
@@ -127,7 +119,6 @@ document.addEventListener('click', (event) => {
     }
 });
 
-// ---- Require a star rating before letting the review form submit ----
 document.addEventListener('submit', (event) => {
     const form = event.target.closest('.product-review-form');
     if (!form) return;
@@ -147,11 +138,6 @@ document.addEventListener('submit', (event) => {
 
 /* =============================================================
    STORY RING — FORCED VIA JS
-   -------------------------------------------------------------
-   If stories.css (or anything else) is winning the CSS cascade
-   against customer-feed.css's .story-ring rules, this guarantees
-   the correct look anyway: inline styles set with "important"
-   priority beat any external stylesheet rule, full stop.
    ============================================================= */
 (function enforceStoryRingColors() {
     const UNVIEWED_GRADIENT =
@@ -164,13 +150,6 @@ document.addEventListener('submit', (event) => {
         const isViewed = ring.classList.contains('story-ring--viewed');
         const gradient = isViewed ? VIEWED_GRADIENT : UNVIEWED_GRADIENT;
 
-        // NOTE: this is now a safety net, not the primary fix. The real bug was
-        // that .story-ring (in stories.css) has a fixed 66px box while .story-img
-        // was forced to 118px, so the image overflowed past the ring and hid the
-        // colored border entirely. That's fixed directly in customer-feed.css by
-        // giving .story-ring an explicit width/height that matches the image size
-        // plus its padding. This JS just reinforces the background color in case
-        // anything else touches these elements later.
         ring.style.setProperty('background', gradient, 'important');
         ring.style.setProperty('border-radius', '50%', 'important');
         ring.style.setProperty('display', 'inline-flex', 'important');
@@ -182,18 +161,10 @@ document.addEventListener('submit', (event) => {
         document.querySelectorAll('#customerStoryBar .story-ring').forEach(styleRing);
     }
 
-    // Run as early as possible, then again once the DOM/page fully finish
-    // loading (covers scripts that render stories asynchronously).
     applyAll();
     document.addEventListener('DOMContentLoaded', applyAll);
     window.addEventListener('load', applyAll);
 
-    // IMPORTANT: watch the whole document body for ANY structural change
-    // (not just class changes on nodes that already exist). If stories.js
-    // tears down and rebuilds the story bar's HTML from
-    // window.realnestStoryGroups (a common pattern for interactive story
-    // viewers), a narrower observer would miss it entirely - this one
-    // re-applies the ring color immediately after every such rebuild.
     if (window.MutationObserver) {
         const observer = new MutationObserver(() => applyAll());
         observer.observe(document.body, {
@@ -204,3 +175,72 @@ document.addEventListener('submit', (event) => {
         });
     }
 })();
+
+/* =============================================================
+   NOT INTERESTED — AJAX (was a full-page RedirectToPage() that
+   silently dropped ViewMode/filters and made the action look like
+   it did nothing when you weren't on the default "Following" view)
+   ============================================================= */
+document.addEventListener('submit', async (event) => {
+    const form = event.target.closest('.ajax-not-interested-form');
+    if (!form) return;
+
+    event.preventDefault();
+
+    const post = form.closest('.post');
+    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+    const token = tokenInput ? tokenInput.value : '';
+
+    const body = new URLSearchParams();
+    body.set('productId', post ? post.dataset.productId : '');
+    body.set('__RequestVerificationToken', token);
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString()
+        });
+
+        const data = await response.json();
+
+        if (data && data.success && post) {
+            post.style.transition = 'opacity .25s ease, transform .25s ease';
+            post.style.opacity = '0';
+            post.style.transform = 'scale(0.97)';
+            setTimeout(() => post.remove(), 260);
+        }
+    } catch {
+        // silent fail — post simply stays visible
+    }
+
+    document.querySelectorAll('.post-menu-dropdown').forEach(menu => menu.style.display = 'none');
+});
+
+/* =============================================================
+   SHARE — WhatsApp / Copy link for feed posts
+   ============================================================= */
+function shareFeedProductWhatsApp(btn) {
+    const post = btn.closest('.post');
+    const name = post.dataset.productName;
+    const price = post.dataset.price;
+    const storeLink = post.querySelector('.store-name');
+    const storeId = storeLink ? storeLink.getAttribute('href').split('id=')[1] : '';
+    const url = `${window.location.origin}/StoreCustomerProfile?id=${storeId}#product-${post.dataset.productId}`;
+    const message = `🛍️ ${name}\nPrice: $${price}\n${url}`;
+
+    window.open('https://wa.me/?text=' + encodeURIComponent(message), '_blank', 'noopener,noreferrer');
+}
+
+async function copyFeedProductLink(btn) {
+    const post = btn.closest('.post');
+    const storeLink = post.querySelector('.store-name');
+    const storeId = storeLink ? storeLink.getAttribute('href').split('id=')[1] : '';
+    const url = `${window.location.origin}/StoreCustomerProfile?id=${storeId}#product-${post.dataset.productId}`;
+
+    try {
+        await navigator.clipboard.writeText(url);
+    } catch {
+        // silent fail
+    }
+}

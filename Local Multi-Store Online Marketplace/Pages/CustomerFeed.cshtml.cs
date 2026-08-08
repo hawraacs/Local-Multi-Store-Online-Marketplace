@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -244,9 +245,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .ToListAsync();
         }
 
-        // Returns the best available name to show the store owner in a
-        // notification: full name, falling back to username, falling back
-        // to a generic "A customer" if neither is set.
         private static string GetDisplayName(User user)
         {
             if (!string.IsNullOrWhiteSpace(user.FullName)) return user.FullName;
@@ -275,7 +273,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     FollowedAt = DateTime.UtcNow
                 });
 
-                // NEW — notify the store owner about the new follower.
                 var ownerUserId = await _context.Stores
                     .Where(s => s.StoreID == storeId)
                     .Select(s => (int?)s.OwnerUserID)
@@ -323,7 +320,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
-        // ================= BLOCK (FIXED) =================
+        // ================= BLOCK (auto-unfollows) =================
         public async Task<IActionResult> OnPostBlockPostAsync(int storeId)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -348,6 +345,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     BlockerRole = "Customer",
                     BlockedRole = "Store"
                 });
+
+                // Block always implies unfollow, and it stays unfollowed
+                // until the customer explicitly follows again.
+                var follow = await _context.StoreFollows.FirstOrDefaultAsync(f =>
+                    f.CustomerID == customer.CustomerID && f.StoreID == storeId);
+
+                if (follow != null)
+                    _context.StoreFollows.Remove(follow);
 
                 await _context.SaveChangesAsync();
             }
@@ -389,13 +394,28 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
+        // ================= NOT INTERESTED (AJAX) =================
         public async Task<IActionResult> OnPostNotInterestedAsync(int productId)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToPage();
+
+            if (user == null)
+            {
+                return new JsonResult(new { success = false, message = "Please login as a customer first." })
+                {
+                    StatusCode = StatusCodes.Status401Unauthorized
+                };
+            }
 
             var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
-            if (customer == null) return RedirectToPage();
+
+            if (customer == null)
+            {
+                return new JsonResult(new { success = false, message = "Customer account required." })
+                {
+                    StatusCode = StatusCodes.Status401Unauthorized
+                };
+            }
 
             var exists = await _context.ProductHides.AnyAsync(x =>
                 x.CustomerId == customer.CustomerID &&
@@ -413,8 +433,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 await _context.SaveChangesAsync();
             }
 
-            TempData["Success"] = "We will show fewer similar items.";
-            return RedirectToPage();
+            return new JsonResult(new { success = true, message = "We'll show fewer items like this." });
         }
 
         public IActionResult OnPostReportPost(int productId)
@@ -457,9 +476,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             };
 
             _context.Reviews.Add(review);
-            await _context.SaveChangesAsync(); // saved first so review.ReviewID is populated below
+            await _context.SaveChangesAsync();
 
-            // NEW — notify the store owner about the new review.
             var ownerUserId = await _context.Stores
                 .Where(s => s.StoreID == product.StoreID)
                 .Select(s => s.OwnerUserID)
@@ -483,7 +501,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
-        // ================= DELETE REVIEW (NEW) =================
+        // ================= DELETE REVIEW =================
         public async Task<IActionResult> OnPostDeleteReviewAsync(int reviewId)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -512,7 +530,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
-        // ================= STORY VIEWED (NEW) =================
+        // ================= STORY VIEWED =================
         public async Task<IActionResult> OnPostMarkStoryViewedAsync(int storyId)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -525,7 +543,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return new JsonResult(new { success = true });
         }
 
-        // ================= STORY LIKE / UNLIKE (NEW) =================
+        // ================= STORY LIKE / UNLIKE =================
         public async Task<IActionResult> OnPostToggleStoryLikeAsync(int storyId)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -546,12 +564,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             {
                 await _storyManager.LikeStoryAsync(storyId, customer.CustomerID);
 
-                // FIX: liking a story never notified the store owner — every
-                // other social action (Follow, Review, Comment, and now
-                // StoryReply below) creates a Notification at the point of
-                // the action, but this one didn't, so "StoryLike" rows never
-                // existed for the store owner's Report Updates page to show,
-                // even though "StoryLike" was already a recognized type there.
                 if (story != null && story.Store != null && story.Store.OwnerUserID != user.Id)
                 {
                     _context.Notifications.Add(new Notification
@@ -575,7 +587,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return new JsonResult(new { success = true, liked = !alreadyLiked, likeCount });
         }
 
-        // ================= STORY REPLY (parked — reuses the existing chat system) =================
+        // ================= STORY REPLY =================
         public async Task<IActionResult> OnPostReplyToStoryAsync(int storyId, string replyText)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -596,13 +608,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             await _messagingManager.SendStoryReplyAsync(user.Id, story.Store.OwnerUserID, storyId, replyText);
 
-            // FIX: this is the actual bug — every sibling action (Follow,
-            // Review, Comment, Like above) creates a Notification row right
-            // here at the handler, but this one only sent the chat message
-            // and returned. Since the store-owner Report Updates page reads
-            // exclusively from the Notifications table (not from chat), a
-            // "StoryReply" notification row needs to exist here or a reply
-            // will never show up there no matter how many customers send one.
             _context.Notifications.Add(new Notification
             {
                 UserID = story.Store.OwnerUserID,
@@ -632,5 +637,4 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public int StoreID { get; set; }
         public string StoreName { get; set; } = string.Empty;
     }
-
 }

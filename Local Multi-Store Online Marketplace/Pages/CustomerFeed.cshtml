@@ -215,7 +215,7 @@
                 var fullStars = (int)Math.Round(avgRating);
                 var visibleReviewCount = 2;
 
-                <article class="post">
+                <article class="post" data-product-id="@product.ProductID" data-product-name="@product.ProductName" data-price="@product.Price">
 
                     <!-- Post header: store identity + follow / overflow menu -->
                     <div class="post-header">
@@ -281,7 +281,12 @@
                                         <button type="submit">Report</button>
                                     </form>
 
-                                    <form method="post" asp-page-handler="NotInterested">
+                                    <!-- CHANGED — was a plain RedirectToPage() form, which
+                                         dropped ViewMode/filters and reloaded the whole page
+                                         (making the action look broken on any non-default
+                                         view). Now intercepted client-side in customer-feed.js
+                                         and posted via fetch; the card fades out in place. -->
+                                    <form method="post" asp-page-handler="NotInterested" class="ajax-not-interested-form">
                                         <input type="hidden" name="productId" value="@product.ProductID" />
                                         <button type="submit">Not Interested</button>
                                     </form>
@@ -363,15 +368,31 @@
                                 </button>
                             </form>
 
-                            <form method="post"
-                                  asp-page-handler="ShareToStore"
-                                  asp-route-productId="@product.ProductID"
-                                  asp-route-storeOwnerId="@product.Store.OwnerUserID"
-                                  style="margin: 0;">
-                                <button type="submit" class="btn-action btn-feed-share">
+                            <!-- CHANGED — was a single-click "Share" form that posted
+                                 straight to ShareToStore (chat only). Now a dropdown
+                                 matching StoreCustomerProfile's share menu: WhatsApp,
+                                 Send in chat, Copy link. -->
+                            <div class="menu-wrap feed-share-wrap">
+                                <button type="button" class="btn-action btn-feed-share" onclick="toggleMenu(this)">
                                     <i class="fa-regular fa-paper-plane"></i> Share
                                 </button>
-                            </form>
+
+                                <div class="dropdown post-menu-dropdown">
+                                    <button type="button" onclick="shareFeedProductWhatsApp(this)">
+                                        <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp
+                                    </button>
+
+                                    <form method="post" asp-page-handler="ShareToStore"
+                                          asp-route-productId="@product.ProductID"
+                                          asp-route-storeOwnerId="@product.Store.OwnerUserID">
+                                        <button type="submit"><i class="fa-regular fa-message"></i> Send in chat</button>
+                                    </form>
+
+                                    <button type="button" onclick="copyFeedProductLink(this)">
+                                        <i class="fa-regular fa-copy"></i> Copy link
+                                    </button>
+                                </div>
+                            </div>
 
                         </div>
 
@@ -531,7 +552,7 @@
             // MULTI-IMAGE CAROUSEL — swipe (native scroll-snap) + dot sync
             // + prev/next arrow buttons for products with more than one image.
             // =====================================================
-            (function() {
+            (function () {
                 function initCarousel(container) {
                     var track = container.querySelector('.post-image-track');
                     var dots = Array.from(container.querySelectorAll('.post-image-dot'));
@@ -545,22 +566,22 @@
 
                         var index = Math.round(track.scrollLeft / track.clientWidth);
 
-                        dots.forEach(function(dot, i) {
+                        dots.forEach(function (dot, i) {
                             dot.classList.toggle('active', i === index);
                         });
                     }
 
                     var scrollTimeout = null;
-                    track.addEventListener('scroll', function() {
+                    track.addEventListener('scroll', function () {
                         if (scrollTimeout) window.clearTimeout(scrollTimeout);
                         scrollTimeout = window.setTimeout(updateActiveDot, 60);
                     });
 
-                    prevBtn?.addEventListener('click', function() {
+                    prevBtn?.addEventListener('click', function () {
                         track.scrollBy({ left: -track.clientWidth, behavior: 'smooth' });
                     });
 
-                    nextBtn?.addEventListener('click', function() {
+                    nextBtn?.addEventListener('click', function () {
                         track.scrollBy({ left: track.clientWidth, behavior: 'smooth' });
                     });
                 }

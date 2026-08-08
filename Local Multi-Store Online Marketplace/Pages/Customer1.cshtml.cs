@@ -37,6 +37,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public List<ExploreGridItemViewModel> InitialItems { get; set; } = new();
 
+        public List<ExploreGridItemViewModel> TrendingItems { get; set; } = new();
+
         public List<string> NavbarCategories { get; set; } = new();
 
         public string? SelectedCategory { get; set; }
@@ -86,6 +88,43 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var blockedOwnerUserIds = await GetBlockedOwnerUserIdsAsync();
             var hiddenProductIds = await GetHiddenProductIdsAsync();
+            var hiddenPostIds = await GetHiddenPostIdsAsync();
+
+            // Instagram-style "trending" rail: top posts by engagement
+            // (likes + views), same visibility rules as the main grid.
+            TrendingItems = await _context.ExplorePosts
+                .AsNoTracking()
+                .Where(post =>
+                    post.IsActive &&
+                    post.Store != null &&
+                    post.Store.Status == "Approved" &&
+                    !blockedOwnerUserIds.Contains(post.Store.OwnerUserID) &&
+                    !hiddenPostIds.Contains(post.ExplorePostID) &&
+                    (!post.ProductID.HasValue || !hiddenProductIds.Contains(post.ProductID.Value)) &&
+                    post.Media.Any())
+                .OrderByDescending(post => post.Likes.Count + post.ViewCount)
+                .ThenByDescending(post => post.CreatedAt)
+                .Take(10)
+                .Select(post => new ExploreGridItemViewModel
+                {
+                    GridItemType = "Post",
+                    ExplorePostID = post.ExplorePostID,
+                    ProductID = post.ProductID,
+                    StoreID = post.StoreID,
+                    StoreName = post.Store.StoreName,
+                    StoreLogoUrl = post.Store.LogoURL,
+                    PostType = post.PostType,
+                    MediaType = post.Media.OrderBy(m => m.DisplayOrder).Select(m => m.MediaType).FirstOrDefault() ?? "Image",
+                    MediaUrl = post.Media.OrderBy(m => m.DisplayOrder).Select(m => m.MediaUrl).FirstOrDefault() ?? "/images/product-placeholder.svg",
+                    ThumbnailUrl = post.Media.OrderBy(m => m.DisplayOrder).Select(m => m.ThumbnailUrl).FirstOrDefault(),
+                    MediaCount = post.Media.Count,
+                    ProductName = post.Product != null && post.Product.IsActive ? post.Product.ProductName : null,
+                    ProductPrice = post.Product != null && post.Product.IsActive ? post.Product.Price : null,
+                    CategoryName = post.Product != null && post.Product.IsActive && post.Product.Category != null ? post.Product.Category.CategoryName : null,
+                    SortDate = post.CreatedAt,
+                    SortId = post.ExplorePostID
+                })
+                .ToListAsync();
 
             var pageResult = await LoadExplorePageAsync(
                 page: 1,
@@ -98,7 +137,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 maxPrice: MaxPrice,
                 typeFilter: TypeFilter,
                 blockedOwnerUserIds: blockedOwnerUserIds,
-                hiddenProductIds: hiddenProductIds);
+                hiddenProductIds: hiddenProductIds,
+                hiddenPostIds: hiddenPostIds);
 
             InitialItems = pageResult.Items;
             HasMoreItems = pageResult.HasMore;
@@ -122,16 +162,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         {
             if (pageNumber < 1) pageNumber = 1;
 
-            // FIX: infinite-scroll pages never filtered out blocked stores —
-            // only the very first page (OnGetAsync) had a chance to (and
-            // didn't, until now). A customer scrolling further would start
-            // seeing a blocked store's products/posts again a page or two in.
             var blockedOwnerUserIds = await GetBlockedOwnerUserIdsAsync();
             var hiddenProductIds = await GetHiddenProductIdsAsync();
+            var hiddenPostIds = await GetHiddenPostIdsAsync();
 
             var result = await LoadExplorePageAsync(
                 pageNumber, NormalizeCategory(category), searchTerm, categoryId,
-                storeId, area, minPrice, maxPrice, typeFilter, blockedOwnerUserIds, hiddenProductIds);
+                storeId, area, minPrice, maxPrice, typeFilter,
+                blockedOwnerUserIds, hiddenProductIds, hiddenPostIds);
 
             return new JsonResult(new
             {
@@ -159,9 +197,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 });
             }
 
-            // FIX: this search never excluded blocked stores at all — a
-            // customer could block a store from their feed and then just
-            // find it again immediately through the search box.
             var blockedOwnerUserIds = await GetBlockedOwnerUserIdsAsync();
 
             var stores = await _context.Stores
@@ -723,10 +758,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         // =====================================================
         // EXPLORE TILE 3-DOT MENU: NOT INTERESTED / BLOCK / REPORT
-        // (CustomerFeedModel already has equivalent handlers, but that's a
-        // different page — Explore's grid interactions are all AJAX/JSON,
-        // so these mirror the same logic but return JsonResult instead of
-        // redirecting, so the tile can be removed from the grid in place.)
         // =====================================================
         public async Task<IActionResult> OnPostExploreNotInterestedAsync(int? productId, int? postId)
         {
@@ -739,20 +770,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     StatusCodes.Status401Unauthorized);
             }
 
-            // Posts aren't always linked to a product (ProductID is
-            // nullable on ExploreGridItemViewModel). Hiding is keyed by
-            // ProductID (the same ProductHide table CustomerFeedModel
-            // already uses) — for a post with no linked product, there's
-            // nothing persistable to hide it by, so this just acknowledges
-            // and lets the tile disappear from the current view only.
             if (productId.HasValue && productId.Value > 0)
             {
-                var alreadyHidden = await _context.ProductHides
+                var alreadyHiddenProduct = await _context.ProductHides
                     .AnyAsync(x =>
                         x.CustomerId == customer.CustomerID &&
                         x.ProductId == productId.Value);
 
-                if (!alreadyHidden)
+                if (!alreadyHiddenProduct)
                 {
                     _context.ProductHides.Add(new ProductHide
                     {
@@ -760,10 +785,30 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         ProductId = productId.Value,
                         CreatedAt = DateTime.UtcNow
                     });
-
-                    await _context.SaveChangesAsync();
                 }
             }
+
+            // Persist a post-level hide too, so posts with no linked product
+            // (which have nothing else to key off of) actually stay hidden.
+            if (postId.HasValue && postId.Value > 0)
+            {
+                var alreadyHiddenPost = await _context.ExplorePostHides
+                    .AnyAsync(x =>
+                        x.CustomerId == customer.CustomerID &&
+                        x.ExplorePostId == postId.Value);
+
+                if (!alreadyHiddenPost)
+                {
+                    _context.ExplorePostHides.Add(new ExplorePostHide
+                    {
+                        CustomerId = customer.CustomerID,
+                        ExplorePostId = postId.Value,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
 
             return new JsonResult(new
             {
@@ -808,6 +853,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     BlockerRole = "Customer",
                     BlockedRole = "Store"
                 });
+
+                // Blocking always implies unfollowing, and it stays unfollowed
+                // (Instagram-style) until the customer explicitly follows
+                // again after unblocking.
+                var follow = await _context.StoreFollows
+                    .FirstOrDefaultAsync(f =>
+                        f.CustomerID == customer.CustomerID &&
+                        f.StoreID == storeId);
+
+                if (follow != null)
+                    _context.StoreFollows.Remove(follow);
 
                 await _context.SaveChangesAsync();
             }
@@ -917,111 +973,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 message = following
                     ? "Store followed successfully."
                     : "Store unfollowed successfully."
-            });
-        }
-
-        // =====================================================
-        // TILE "..." MENU — Not Interested / Block Store / Report
-        // (Instagram-style overflow menu on each Explore tile)
-        // =====================================================
-        public async Task<IActionResult> OnPostNotInterestedExploreAsync(int productId)
-        {
-            var customer = await GetCurrentCustomerAsync();
-
-            if (customer == null)
-            {
-                return JsonError(
-                    "Please login as a customer first.",
-                    StatusCodes.Status401Unauthorized);
-            }
-
-            if (productId <= 0)
-            {
-                return JsonError(
-                    "There's no product linked to this item to hide.",
-                    StatusCodes.Status400BadRequest);
-            }
-
-            var exists = await _context.ProductHides
-                .AnyAsync(x =>
-                    x.CustomerId == customer.CustomerID &&
-                    x.ProductId == productId);
-
-            if (!exists)
-            {
-                _context.ProductHides.Add(new ProductHide
-                {
-                    CustomerId = customer.CustomerID,
-                    ProductId = productId,
-                    CreatedAt = DateTime.UtcNow
-                });
-
-                await _context.SaveChangesAsync();
-            }
-
-            return new JsonResult(new
-            {
-                success = true,
-                message = "We'll show fewer things like this."
-            });
-        }
-
-        public async Task<IActionResult> OnPostBlockExploreStoreAsync(int storeId)
-        {
-            var customer = await GetCurrentCustomerAsync();
-
-            if (customer == null)
-            {
-                return JsonError(
-                    "Please login as a customer first.",
-                    StatusCodes.Status401Unauthorized);
-            }
-
-            var store = await _context.Stores
-                .FirstOrDefaultAsync(s => s.StoreID == storeId);
-
-            if (store == null)
-            {
-                return JsonError(
-                    "Store was not found.",
-                    StatusCodes.Status404NotFound);
-            }
-
-            var exists = await _context.BlockRelations
-                .AnyAsync(x =>
-                    x.BlockerUserId == customer.UserID &&
-                    x.BlockedUserId == store.OwnerUserID);
-
-            if (!exists)
-            {
-                _context.BlockRelations.Add(new BlockRelation
-                {
-                    BlockerUserId = customer.UserID,
-                    BlockedUserId = store.OwnerUserID,
-                    BlockerRole = "Customer",
-                    BlockedRole = "Store"
-                });
-
-                await _context.SaveChangesAsync();
-            }
-
-            return new JsonResult(new
-            {
-                success = true,
-                message = "Store blocked. You can unblock it later from your profile."
-            });
-        }
-
-        // NOTE: mirrors CustomerFeedModel.OnPostReportPost — that handler
-        // also doesn't persist a Report record (no Report entity was
-        // confirmed anywhere in this app), it just acknowledges the report.
-        // If a Reports table/entity gets added later, write it here too.
-        public IActionResult OnPostReportExploreItemAsync(int postId, int productId)
-        {
-            return new JsonResult(new
-            {
-                success = true,
-                message = "Report submitted. Our team will review it."
             });
         }
 
@@ -1197,16 +1148,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     StatusCodes.Status400BadRequest);
             }
 
-            // BUGFIX: was missing .Include(p => p.Store). p.Store.Status
-            // below only filters via a SQL join — it does NOT populate
-            // product.Store on the returned entity. Without this Include,
-            // product.Store was null, and the notification code further
-            // down threw a NullReferenceException on
-            // product.Store.OwnerUserID — AFTER the review had already been
-            // saved successfully. That's why review submissions looked like
-            // they silently failed: the row existed, but the request
-            // crashed with an unhandled 500 before returning success to
-            // the client, so the modal never updated.
             var product = await _context.Products
                 .Include(p => p.Store)
                 .FirstOrDefaultAsync(p =>
@@ -1473,6 +1414,42 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
+        // AJAX version of OnGetShareToStoreAsync for use from inside the
+        // Explore modal — returns JSON instead of redirecting, so the
+        // modal stays open.
+        public async Task<IActionResult> OnPostExploreShareToStoreAsync(int productId, int storeOwnerId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return JsonError(
+                    "Please login as a customer first.",
+                    StatusCodes.Status401Unauthorized);
+            }
+
+            var productExists = await _context.Products
+                .AnyAsync(p => p.ProductID == productId && p.IsActive);
+
+            var receiverExists = await _context.Users
+                .AnyAsync(u => u.Id == storeOwnerId);
+
+            if (!productExists || !receiverExists)
+            {
+                return JsonError(
+                    "Product or store owner was not found.",
+                    StatusCodes.Status404NotFound);
+            }
+
+            await _messagingManager.SendProductAsync(user.Id, storeOwnerId, productId);
+
+            return new JsonResult(new
+            {
+                success = true,
+                message = "Product shared in chat."
+            });
+        }
+
         // =====================================================
         // PAGINATED UNIFIED GRID
         // =====================================================
@@ -1481,13 +1458,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             int? storeId, string? area, decimal? minPrice, decimal? maxPrice,
             string? typeFilter = null,
             List<int>? blockedOwnerUserIds = null,
-            List<int>? hiddenProductIds = null)
+            List<int>? hiddenProductIds = null,
+            List<int>? hiddenPostIds = null)
         {
             var normalizedCategory = NormalizeCategory(category);
             var normalizedSearch = searchTerm?.Trim();
             var normalizedArea = area?.Trim();
             var blockedOwners = blockedOwnerUserIds ?? new List<int>();
             var hiddenProducts = hiddenProductIds ?? new List<int>();
+            var hiddenPosts = hiddenPostIds ?? new List<int>();
 
             var normalizedTypeFilter = typeFilter?.Trim();
             var includePosts = true;
@@ -1516,6 +1495,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     post.Store != null &&
                     post.Store.Status == "Approved" &&
                     !blockedOwners.Contains(post.Store.OwnerUserID) &&
+                    !hiddenPosts.Contains(post.ExplorePostID) &&
                     (!post.ProductID.HasValue || !hiddenProducts.Contains(post.ProductID.Value)) &&
                     post.Media.Any());
 
@@ -2045,6 +2025,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return await _context.ProductHides
                 .Where(x => x.CustomerId == customerId.Value)
                 .Select(x => x.ProductId)
+                .ToListAsync();
+        }
+
+        // Returns every ExplorePostID this customer has marked "Not
+        // Interested" on where no product was linked (ProductHides alone
+        // can't cover those — see ExplorePostHide).
+        private async Task<List<int>> GetHiddenPostIdsAsync()
+        {
+            var customerId = await GetCurrentCustomerIdAsync();
+
+            if (customerId == null)
+                return new List<int>();
+
+            return await _context.ExplorePostHides
+                .Where(x => x.CustomerId == customerId.Value)
+                .Select(x => x.ExplorePostId)
                 .ToListAsync();
         }
 

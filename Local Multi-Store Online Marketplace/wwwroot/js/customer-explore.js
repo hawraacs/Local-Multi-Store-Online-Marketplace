@@ -70,7 +70,6 @@
     const modalProductReviews = document.getElementById("modalProductReviews");
     const emptyProductReviews = document.getElementById("emptyProductReviews");
 
-    // Inline "write a review" composer (posts directly, no page redirect)
     const productReviewForm = document.getElementById("productReviewForm");
     const productReviewProductIdInput = document.getElementById("productReviewProductId");
     const productReviewRatingInput = document.getElementById("productReviewRatingInput");
@@ -565,7 +564,6 @@
 
                 if (entry.isIntersecting) {
                     video.play().catch(() => {
-                        // Browser can block autoplay; preview remains usable.
                     });
                 } else {
                     video.pause();
@@ -623,12 +621,26 @@
         }
     });
 
+    // Trending rail click handling (reuses the same open logic as the
+    // main grid; separate listener since the rail lives outside #exploreGrid).
+    document.querySelector(".trending-rail-track")?.addEventListener("click", event => {
+        const tile = event.target.closest("[data-grid-item]");
+        if (!tile) return;
+
+        const postType = String(tile.dataset.postType || "").toLowerCase();
+
+        if (postType === "reel" && tile.dataset.postId) {
+            openReelsPlayerFromTile(tile);
+            return;
+        }
+
+        if (tile.dataset.postId) {
+            openExplorePost(Number(tile.dataset.postId));
+        }
+    });
+
     // =========================================================
     // REELS PLAYER (full-screen, Instagram-Reels-style)
-    // Only Reel-type posts open here. Comment taps close this
-    // player and reopen the normal quick-view modal focused on the
-    // comment box, reusing all of its existing comment logic
-    // instead of duplicating a second comments UI.
     // =========================================================
     const reelsDetailsCache = new Map();
     let reelsMuted = true;
@@ -1001,8 +1013,6 @@
         });
     }
 
-    // Slide-up "buy it now" card for a Reel's linked product — opens over
-    // the bottom of the video without leaving the Reel or pausing it.
     function wireReelProductActions(slide, postId) {
         const chip = slide.querySelector(".reel-product-chip");
         const sheet = slide.querySelector(".reel-product-sheet");
@@ -1022,9 +1032,6 @@
             sheet?.classList.remove("open");
         });
 
-        // Opens the SAME in-app quick-view modal every other product tile on
-        // this page uses — not a separate page — so a Reel's linked product
-        // behaves identically to tapping a plain product tile in the grid.
         function openLinkedProductModal(event) {
             event.stopPropagation();
 
@@ -1112,10 +1119,6 @@
         });
     }
 
-    // Adds any freshly-loaded Reel grid items to an already-open Reels
-    // player's swipe queue, so scrolling the underlying grid (or the
-    // near-end trigger below) keeps the Reels player from running out of
-    // content before the grid itself would have.
     function appendReelsFromNewItems(newItems) {
         if (!reelsTrack || !reelsPlayer?.classList.contains("open")) {
             return;
@@ -1155,10 +1158,6 @@
 
         activeReelSlide = slide;
 
-        // Proactively ask the main grid for more content once we're near
-        // the end of what's currently in the Reels queue — same
-        // loadMoreItems() the grid's own infinite scroll uses, so it's
-        // naturally guarded against duplicate/overlapping calls.
         const slides = Array.from(reelsTrack?.children || []);
         const currentIndex = slides.indexOf(slide);
 
@@ -1304,8 +1303,6 @@
             return;
         }
 
-        // Basic focus trap: keep Tab cycling within the Reels player
-        // instead of leaking focus into the page behind it.
         if (event.key === "Tab") {
             const focusable = getReelsFocusableElements();
 
@@ -1466,6 +1463,11 @@
             content.productID !== null &&
             content.productID !== undefined;
 
+        // Bigger modal card whenever a product is being shown, whether
+        // it's a standalone product or a post's linked product.
+        document.querySelector(".explore-modal-card")
+            ?.classList.toggle("product-mode", hasProduct);
+
         modalStoreName.textContent = content.storeName || "Store";
         modalPostDate.textContent = isPost
             ? formatDate(content.createdAt)
@@ -1495,6 +1497,14 @@
         modalLikeButton?.classList.toggle("hidden", !isPost);
         focusCommentButton?.classList.toggle("hidden", !isPost);
         commentsSection?.classList.toggle("hidden", !isPost);
+
+        // Cart/wishlist icons only make sense when a product exists.
+        wishlistProductButton?.classList.toggle("hidden", !hasProduct);
+        cartProductButton?.classList.toggle("hidden", !hasProduct);
+
+        // "Send in chat" only works for a linked product.
+        document.getElementById("modalShareChatButton")
+            ?.classList.toggle("hidden", !hasProduct);
 
         if (isPost) {
             modalViewCount.textContent =
@@ -1566,12 +1576,12 @@
     }
 
     function setWishlistButtonState(saved) {
-        wishlistProductButton.classList.toggle("saved", saved);
+        wishlistProductButton.classList.toggle("liked", saved);
         wishlistProductButton.disabled = false;
 
         wishlistProductButton.innerHTML = saved
-            ? '<i class="fa-solid fa-heart"></i> Saved'
-            : '<i class="fa-regular fa-heart"></i> Save';
+            ? '<i class="fa-solid fa-heart"></i>'
+            : '<i class="fa-regular fa-heart"></i>';
 
         if (currentPost) {
             currentPost.isInWishlist = saved;
@@ -1612,8 +1622,6 @@
         productReviewCount.textContent =
             `${totalRatings.toLocaleString()} ${totalRatings === 1 ? "review" : "reviews"}`;
 
-        // Wire the inline review composer to this product and reset it
-        // for a fresh entry every time a different item is opened.
         if (productReviewProductIdInput) {
             productReviewProductIdInput.value = String(content.productID);
         }
@@ -1920,10 +1928,7 @@
             content.productID !== null &&
             content.productID !== undefined;
 
-        linkedProductSection.classList.toggle(
-            "hidden",
-            !hasProduct
-        );
+        linkedProductSection.classList.toggle("hidden", !hasProduct);
 
         if (!hasProduct) {
             return;
@@ -1934,11 +1939,6 @@
 
         linkedProductLabel.textContent =
             isProductOnly ? "Product details" : "Linked product";
-
-        linkedProductLink.href =
-            `/CustomerProductDetails?id=${encodeURIComponent(
-                content.productID
-            )}`;
 
         linkedProductImage.src =
             content.productImageUrl || "/images/product-placeholder.svg";
@@ -1955,11 +1955,8 @@
         linkedProductPrice.textContent =
             formatMoney(content.productPrice);
 
-        wishlistProductButton.dataset.productId =
-            String(content.productID);
-
-        cartProductButton.dataset.productId =
-            String(content.productID);
+        wishlistProductButton.dataset.productId = String(content.productID);
+        cartProductButton.dataset.productId = String(content.productID);
 
         setWishlistButtonState(content.isInWishlist === true);
 
@@ -1967,13 +1964,10 @@
 
         cartProductButton.disabled = isOutOfStock;
         cartProductButton.innerHTML = isOutOfStock
-            ? '<i class="fa-solid fa-ban"></i> Out of stock'
-            : '<i class="fa-solid fa-bag-shopping"></i> Add to cart';
+            ? '<i class="fa-solid fa-ban"></i>'
+            : '<i class="fa-solid fa-bag-shopping"></i>';
 
-        outOfStockMessage.classList.toggle(
-            "hidden",
-            !isOutOfStock
-        );
+        outOfStockMessage.classList.toggle("hidden", !isOutOfStock);
     }
 
     // =========================================================
@@ -2261,8 +2255,7 @@
                 { productId }
             );
 
-            cartProductButton.innerHTML =
-                '<i class="fa-solid fa-check"></i> Added';
+            cartProductButton.innerHTML = '<i class="fa-solid fa-check"></i>';
 
             showToast(data.message, "success");
 
@@ -2372,11 +2365,11 @@
     });
 
     // =========================================================
-    // SHARE
+    // SHARE — WhatsApp / Chat / Copy link dropdown
     // =========================================================
-    modalShareButton?.addEventListener("click", async () => {
+    function modalShareUrl() {
         if (!currentPost) {
-            return;
+            return window.location.origin + pageUrl;
         }
 
         const isPost =
@@ -2386,60 +2379,78 @@
             ? `post-${currentPost.explorePostID}`
             : `product-${currentPost.productID}`;
 
-        const shareUrl =
-            `${window.location.origin}${pageUrl}#${hash}`;
+        return `${window.location.origin}${pageUrl}#${hash}`;
+    }
 
-        const shareData = {
-            title: isPost
-                ? `${currentPost.storeName} on realnest`
-                : `${currentPost.productName} on realnest`,
-            text: currentPost.caption ||
-                currentPost.productDescription ||
-                "See this item on realnest.",
-            url: shareUrl
-        };
+    function closeModalShareDropdown() {
+        document.getElementById("modalShareDropdown")?.classList.remove("open");
+    }
 
-        try {
-            if (navigator.share) {
-                await navigator.share(shareData);
-                showShareConfirmation();
-                return;
-            }
+    window.toggleModalShareMenu = function () {
+        const dropdown = document.getElementById("modalShareDropdown");
+        if (!dropdown) return;
 
-            await navigator.clipboard.writeText(shareUrl);
-            showToast("Item link copied.", "success");
-            showShareConfirmation();
-        } catch (error) {
-            if (error?.name !== "AbortError") {
-                showToast(
-                    "The item link could not be shared.",
-                    "error"
-                );
-            }
+        const isOpen = dropdown.classList.contains("open");
+        document.querySelectorAll(".tile-menu-dropdown.open")
+            .forEach(d => d.classList.remove("open"));
+
+        if (!isOpen) dropdown.classList.add("open");
+    };
+
+    document.addEventListener("click", event => {
+        const dropdown = document.getElementById("modalShareDropdown");
+        const trigger = document.getElementById("modalShareButton");
+
+        if (dropdown && !dropdown.contains(event.target) && event.target !== trigger && !trigger?.contains(event.target)) {
+            dropdown.classList.remove("open");
         }
     });
 
-    // Briefly swaps the Share icon to a green checkmark to confirm the
-    // share/copy actually happened, then reverts it back automatically.
-    let shareConfirmationTimer = null;
+    window.shareModalWhatsApp = function () {
+        if (!currentPost) return;
 
-    function showShareConfirmation() {
-        const icon = modalShareButton?.querySelector("i");
+        const label = currentPost.productName || currentPost.storeName || "this item";
+        const message = `🛍️ ${label}\nStore: ${currentPost.storeName}\n${modalShareUrl()}`;
 
-        if (!icon) {
+        window.open(
+            "https://wa.me/?text=" + encodeURIComponent(message),
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+        closeModalShareDropdown();
+    };
+
+    window.copyModalLink = async function () {
+        try {
+            await navigator.clipboard.writeText(modalShareUrl());
+            showToast("Item link copied.", "success");
+        } catch {
+            showToast("Could not copy the link.", "error");
+        }
+
+        closeModalShareDropdown();
+    };
+
+    window.shareModalToChat = async function () {
+        closeModalShareDropdown();
+
+        if (!currentPost || currentPost.productID === null || currentPost.productID === undefined) {
+            showToast("Only items with a linked product can be sent in chat.", "error");
             return;
         }
 
-        window.clearTimeout(shareConfirmationTimer);
+        try {
+            const data = await postForm("ExploreShareToStore", {
+                productId: currentPost.productID,
+                storeOwnerId: currentPost.storeOwnerUserID
+            });
 
-        icon.className = "fa-solid fa-check";
-        modalShareButton.classList.add("shared");
-
-        shareConfirmationTimer = window.setTimeout(() => {
-            icon.className = "fa-regular fa-paper-plane";
-            modalShareButton.classList.remove("shared");
-        }, 1500);
-    }
+            showToast(data.message, "success");
+        } catch (error) {
+            showToast(error.message, "error");
+        }
+    };
 
     // =========================================================
     // OPTIONAL HASH SUPPORT

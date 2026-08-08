@@ -65,6 +65,7 @@ namespace Multi_Store.Infrastructure.Data
         public DbSet<Story> Stories { get; set; }
         public DbSet<StoryView> StoryViews { get; set; }
         public DbSet<StoryLike> StoryLikes { get; set; }
+        public DbSet<ExplorePostHide> ExplorePostHides { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
