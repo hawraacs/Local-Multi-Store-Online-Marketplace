@@ -13,6 +13,7 @@ namespace Multi_Store.Services.Dtos
         public string ProductName { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public string ImageUrl { get; set; } = "/images/no-image.png";
+        public int StoreID { get; set; }
         public string StoreName { get; set; } = string.Empty;
         public bool IsOutOfStock { get; set; }
     }

@@ -29,6 +29,7 @@ namespace Multi_Store.Services.Managers
 
                 ProductName = w.Product.ProductName,
                 Price = w.Product.Price,
+                StoreID = w.Product.StoreID,
                 StoreName = w.Product.Store.StoreName,
                 IsOutOfStock = w.Product.IsOutOfStock,
 

@@ -1818,6 +1818,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         ProductID =
                             item.ProductID,
 
+                        // NEW — needed so the cart's "View" link can
+                        // jump straight to this product inside the
+                        // StoreCustomerProfile page.
+                        StoreID =
+                            item.Product != null
+                                ? item.Product.StoreID
+                                : 0,
+
                         ProductName =
                             item.Product != null
                                 ? item.Product.ProductName
@@ -2019,6 +2027,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public int CartItemID { get; set; }
 
         public int ProductID { get; set; }
+
+        // NEW — needed so the cart's "View" link can jump straight
+        // to this product inside the StoreCustomerProfile page.
+        public int StoreID { get; set; }
 
         public string ProductName { get; set; }
             = string.Empty;
