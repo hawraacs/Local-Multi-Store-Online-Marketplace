@@ -49,10 +49,10 @@
             }
 
             /* ============================================================
-                                   BOTTOM NAV — rendered by the shared _CustomerBottomNav partial.
-                                   Styles below match every other customer page exactly (same
-                                   class names), so the partial renders identically here.
-                                   ============================================================ */
+                                               BOTTOM NAV — rendered by the shared _CustomerBottomNav partial.
+                                               Styles below match every other customer page exactly (same
+                                               class names), so the partial renders identically here.
+                                               ============================================================ */
             .mobile-bottom-nav {
                 display: flex !important;
                 position: fixed;
@@ -471,6 +471,29 @@
                     pointer-events: auto;
                 }
 
+            /* ============================================================
+                                   NOTIFICATION DEEP-LINK HIGHLIGHT (NEW) — briefly pulses
+                                   and scrolls to the promo card referenced by a clicked
+                                   Promotion notification (?highlightPromoId=).
+                                   ============================================================ */
+            @@keyframes promoHighlightPulse {
+                0% {
+                    box-shadow: 0 0 0 3px var(--accent-color), var(--shadow-md);
+                }
+
+                70% {
+                    box-shadow: 0 0 0 3px var(--accent-color), var(--shadow-md);
+                }
+
+                100% {
+                    box-shadow: var(--shadow-sm);
+                }
+            }
+
+            .promo-card-highlight {
+                animation: promoHighlightPulse 2.4s ease;
+            }
+
             @@media (max-width: 780px) {
                 .promotions-grid {
                     grid-template-columns: 1fr;
@@ -547,7 +570,7 @@
                 <div class="promotions-grid" id="promotionsGrid">
                     @foreach (var item in Model.Promotions)
                     {
-                        <div class="promo-card @(item.IsRead ? "" : "unread")" data-promo-id="@item.PromotionRecipientID" data-read="@item.IsRead.ToString().ToLower()">
+                        <div class="promo-card @(item.IsRead ? "" : "unread")" id="promo-@item.PromotionRecipientID" data-promo-id="@item.PromotionRecipientID" data-promotion-id="@item.Promotion?.PromotionID" data-read="@item.IsRead.ToString().ToLower()">
 
                             <div class="promo-header">
                                 <span class="promo-title">@item.Promotion?.Title</span>
@@ -703,6 +726,38 @@
                         });
                     });
                 });
+
+                // ============================================================
+                // NOTIFICATION DEEP-LINK (NEW) — if we arrived here from a
+                // Promotion notification (?highlightPromoId=123), scroll to
+                // that card and pulse it, then clean the URL.
+                // ============================================================
+                (function() {
+                    const params = new URLSearchParams(window.location.search);
+                    const highlightId = params.get('highlightPromoId');
+                    if (!highlightId) return;
+
+                    // Primary match: card's own PromotionRecipientID (the
+                    // intended id). Fallback: the underlying PromotionID,
+                    // in case the notification's ReferenceID was set to
+                    // that instead — this way the highlight still works
+                    // either way, no server-side change required.
+                    let card = document.getElementById('promo-' + highlightId);
+                    if (!card) {
+                        card = document.querySelector('.promo-card[data-promotion-id="' + highlightId + '"]');
+                    }
+                    if (!card) return;
+
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    card.classList.add('promo-card-highlight');
+                    setTimeout(function() { card.classList.remove('promo-card-highlight'); }, 2500);
+
+                    if (window.history.replaceState) {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('highlightPromoId');
+                        window.history.replaceState({}, '', url);
+                    }
+                })();
             })();
     </script>
 

@@ -93,7 +93,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                margin-bottom: 18px;
+                margin-bottom: 8px;
             }
 
             .back-btn {
@@ -117,9 +117,15 @@
 
             .profile-head {
                 display: grid;
-                grid-template-columns: 140px 1fr;
-                gap: 30px;
+                grid-template-columns: auto 1fr;
+                gap: 22px;
+                align-items: flex-start;
+            }
+
+            .avatar-with-back {
+                display: flex;
                 align-items: center;
+                gap: 14px;
             }
 
             .avatar-ring {
@@ -144,8 +150,8 @@
                 display: flex;
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 16px;
-                margin-top: 14px;
+                gap: 14px;
+                margin-top: 8px;
             }
 
             .name-row {
@@ -170,7 +176,7 @@
             .stats {
                 display: flex;
                 gap: 30px;
-                margin: 16px 0 14px;
+                margin: 10px 0 10px;
                 flex-wrap: wrap;
             }
 
@@ -543,10 +549,10 @@
             }
 
             /* ============================================================
-                                       INSTAGRAM-STYLE FEED OVERLAY — tap a post, then keep scrolling
-                                       vertically through the rest of the store's posts, same
-                                       experience as the store-owner home feed.
-                                       ============================================================ */
+                                                   INSTAGRAM-STYLE FEED OVERLAY — tap a post, then keep scrolling
+                                                   vertically through the rest of the store's posts, same
+                                                   experience as the store-owner home feed.
+                                                   ============================================================ */
             .feed-overlay {
                 display: none;
                 position: fixed;
@@ -584,20 +590,20 @@
                 box-sizing: border-box;
             }
 
-            /* ============ PRODUCT POST CARD — enlarged, Instagram-style
-                           side-by-side layout (image | details). Nothing scrolls except
-                           the review list, so price/description/action buttons are
-                           always visible without any inner scrolling. ============ */
+            /* ============ PRODUCT POST CARD — now a single vertical stack:
+                                       store header, then image, then action buttons,
+                                       then price/description (collapsible), then reviews.
+                                       Only the review list scrolls internally. ============ */
             .product-post-card {
                 background: var(--card-bg);
                 border-radius: 24px;
                 width: 100%;
-                max-width: 935px;
+                max-width: 560px;
                 height: 92vh;
-                max-height: 700px;
+                max-height: 800px;
                 box-shadow: 0 40px 100px rgba(0,0,0,.45);
                 display: flex;
-                flex-direction: row;
+                flex-direction: column;
                 overflow: hidden;
                 border: 1px solid rgba(255,255,255,.08);
             }
@@ -669,12 +675,11 @@
                     transform: rotate(90deg);
                 }
 
-            /* Image column — fills its half of the card at full height */
+            /* Image block — fixed height under the header, full width */
             .post-media {
                 background: #0d0b17;
-                width: 50%;
-                height: 100%;
-                aspect-ratio: unset;
+                width: 100%;
+                height: 300px;
                 flex-shrink: 0;
                 position: relative;
                 cursor: grab;
@@ -688,16 +693,18 @@
                 .post-media img {
                     width: 100%;
                     height: 100%;
-                    object-fit: cover;
+                    object-fit: contain;
                     object-position: center;
                     user-select: none;
                     -webkit-user-drag: none;
                 }
-            /* Right column — header on top, details + reviews below */
+
+            /* Everything below the image — buttons, price/description, reviews */
             .post-right {
-                width: 50%;
+                width: 100%;
                 min-width: 0;
-                height: 100%;
+                flex: 1;
+                min-height: 0;
                 display: flex;
                 flex-direction: column;
             }
@@ -789,15 +796,45 @@
                     background: rgba(245,158,11,.92);
                 }
 
-            /* Body holds the always-visible meta block plus the
-                           scrollable review list beneath it */
+            /* Body holds action buttons + price/description + the
+                                       scrollable review list beneath it */
             .post-body {
                 flex: 1;
                 min-height: 0;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
+                overflow-y: auto;
             }
+
+            .post-actions {
+                display: grid;
+                grid-template-columns: repeat(3,1fr);
+                gap: 8px;
+                padding: 16px 18px 0;
+                flex-shrink: 0;
+            }
+
+                .post-actions form {
+                    margin: 0;
+                }
+
+            .btn-action {
+                width: 100%;
+                min-height: 42px;
+                border: 1px solid var(--border-color);
+                background: #fff;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--text-primary);
+            }
+
+                .btn-action:disabled {
+                    opacity: .48;
+                    cursor: not-allowed;
+                }
 
             .post-meta {
                 padding: 16px 18px;
@@ -848,45 +885,29 @@
                 color: var(--text-secondary);
                 line-height: 1.65;
                 white-space: pre-line;
-                margin: 0 0 14px;
+                margin: 0 0 6px;
             }
 
-            .post-actions {
-                display: grid;
-                grid-template-columns: repeat(3,1fr);
-                gap: 8px;
-            }
-
-                .post-actions form {
-                    margin: 0;
+                .post-description.truncated {
+                    display: -webkit-box;
+                    -webkit-line-clamp: 3;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                    white-space: normal;
                 }
 
-            .btn-action {
-                width: 100%;
-                min-height: 42px;
-                border: 1px solid var(--border-color);
-                background: #fff;
-                border-radius: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 7px;
-                font-size: 12px;
+            .desc-toggle-btn {
+                border: 0;
+                background: transparent;
+                color: var(--accent-color);
                 font-weight: 700;
-                color: var(--text-primary);
+                font-size: 12.5px;
+                padding: 0 0 8px;
             }
-
-                .btn-action:disabled {
-                    opacity: .48;
-                    cursor: not-allowed;
-                }
 
             /* Only the review list scrolls internally — Instagram-style
-                           comment pane — everything above stays fixed in view */
+                                       comment pane — everything above stays fixed in view */
             .post-reviews {
-                flex: 1;
-                min-height: 0;
-                overflow-y: auto;
                 padding: 16px 18px 22px;
             }
 
@@ -1209,9 +1230,20 @@
                 }
 
                 .profile-head {
-                    grid-template-columns: 86px 1fr;
-                    gap: 14px;
+                    grid-template-columns: auto 1fr;
+                    gap: 12px;
+                    align-items: flex-start;
                 }
+
+                .avatar-with-back {
+                    gap: 10px;
+                }
+
+                    .avatar-with-back .back-btn {
+                        width: 34px;
+                        height: 34px;
+                        font-size: 13px;
+                    }
 
                 .avatar-ring {
                     width: 82px;
@@ -1250,28 +1282,18 @@
                 .product-feed-item {
                     padding: 0;
                 }
-                /* Mobile keeps the familiar full-screen stacked layout —
-                               image on top, scrollable details below */
+                /* Mobile keeps the same full-screen stacked layout —
+                                           header, image, buttons, details, reviews */
                 .product-post-card {
                     max-width: 100%;
                     max-height: 100%;
                     height: 100%;
                     border-radius: 0;
                     border: none;
-                    flex-direction: column;
                 }
 
                 .post-media {
-                    width: 100%;
-                    height: auto;
-                    aspect-ratio: 1/1;
-                }
-
-                .post-right {
-                    width: 100%;
-                    height: auto;
-                    flex: 1;
-                    min-height: 0;
+                    height: 260px;
                 }
 
                 .post-body {
@@ -1288,8 +1310,7 @@
 
             <!-- ============ PROFILE CARD ============ -->
             <section class="profile-card">
-                <div class="card-topline">
-                    <button type="button" class="back-btn" onclick="goBackSmart()" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></button>
+                <div class="card-topline" style="justify-content:flex-end;">
                     <div class="menu-wrap">
                         <button class="kebab-btn" type="button" onclick="toggleMenu(this)" aria-label="More options"><i class="fa-solid fa-ellipsis"></i></button>
                         <div class="dropdown">
@@ -1316,18 +1337,21 @@
                         var hasUnviewed = Model.StoreStories.Any(s => !s.IsViewed);
                         var ringClass = !hasActiveStories ? "" : (hasUnviewed ? "story-ring--active" : "story-ring--viewed");
                     }
-                    @if (hasActiveStories)
-                    {
-                        <div class="avatar-ring @ringClass" data-group-index="0" onclick="RealNestStories.open(0,0)" role="button" style="cursor:pointer;">
-                            <img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" />
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="avatar-ring" data-group-index="0">
-                            <img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" />
-                        </div>
-                    }
+                    <div class="avatar-with-back">
+                        <button type="button" class="back-btn" onclick="goBackSmart()" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></button>
+                        @if (hasActiveStories)
+                        {
+                            <div class="avatar-ring @ringClass" data-group-index="0" onclick="RealNestStories.open(0,0)" role="button" style="cursor:pointer;">
+                                <img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="avatar-ring" data-group-index="0">
+                                <img class="avatar" src="@storeLogo" alt="@Model.Store.StoreName" />
+                            </div>
+                        }
+                    </div>
                     <div>
                         <div class="name-row"><h1>@Model.Store.StoreName</h1><i class="fa-solid fa-circle-check verified" title="Approved store"></i></div>
                         <div class="stats">
@@ -1432,6 +1456,32 @@
                      data-price="@p.Price.ToString("0.00")">
                 <div class="product-post-card" role="dialog" aria-modal="true" aria-label="@p.ProductName details" tabindex="-1">
 
+                    <!-- 1. STORE NAME (header) -->
+                    <div class="post-header">
+                        <div class="post-header-store">
+                            <img src="@storeLogo" alt="@Model.Store.StoreName" />
+                            <div>
+                                <div class="post-header-store-name">@Model.Store.StoreName</div>
+                                <div class="post-header-store-sub">Official Store</div>
+                            </div>
+                        </div>
+                        <div class="post-header-actions">
+                            <div class="menu-wrap">
+                                <button class="kebab-btn" type="button" onclick="toggleMenu(this)" aria-label="More options"><i class="fa-solid fa-ellipsis"></i></button>
+                                <div class="dropdown">
+                                    <button type="button" class="repost-item" onclick="repostToggle(this)"><i class="fa-solid fa-retweet"></i> <span class="repost-item-text">Repost</span></button>
+                                    <form method="post" asp-page-handler="NotInterested">
+                                        <input type="hidden" name="productId" value="@p.ProductID" />
+                                        <button type="submit"><i class="fa-regular fa-eye-slash"></i> Not interested</button>
+                                    </form>
+                                    <button type="button" onclick="openProductReportDialog(this)"><i class="fa-regular fa-flag"></i> Report product</button>
+                                </div>
+                            </div>
+                            <button class="post-close-btn" onclick="closeProductModal()" aria-label="Close"><i class="fas fa-xmark"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- 2. PRODUCT IMAGE -->
                     <div class="post-media" data-current-image="0">
                         @if (images.Any())
                         {
@@ -1463,65 +1513,46 @@
                     </div>
 
                     <div class="post-right">
-                        <div class="post-header">
-                            <div class="post-header-store">
-                                <img src="@storeLogo" alt="@Model.Store.StoreName" />
-                                <div>
-                                    <div class="post-header-store-name">@Model.Store.StoreName</div>
-                                    <div class="post-header-store-sub">Official Store</div>
-                                </div>
-                            </div>
-                            <div class="post-header-actions">
+                        <div class="post-body">
+
+                            <!-- 3. BUTTONS -->
+                            <div class="post-actions">
+                                <form method="post" asp-page-handler="AddToCart">
+                                    <input type="hidden" name="productId" value="@p.ProductID" />
+                                    <button class="btn-action" type="submit" @(p.Quantity <= 0 ? "disabled" : "")>
+                                        <i class="fa-solid fa-bag-shopping"></i> @(p.Quantity <= 0 ? "Out of stock" : "Add")
+                                    </button>
+                                </form>
+                                <form method="post" asp-page-handler="AddWishlist">
+                                    <input type="hidden" name="productId" value="@p.ProductID" />
+                                    <button class="btn-action" type="submit"><i class="fa-regular fa-bookmark"></i> Save</button>
+                                </form>
                                 <div class="menu-wrap">
-                                    <button class="kebab-btn" type="button" onclick="toggleMenu(this)" aria-label="More options"><i class="fa-solid fa-ellipsis"></i></button>
+                                    <button class="btn-action" type="button" onclick="toggleMenu(this)" style="width:100%"><i class="fa-regular fa-paper-plane"></i> Share</button>
                                     <div class="dropdown">
-                                        <button type="button" class="repost-item" onclick="repostToggle(this)"><i class="fa-solid fa-retweet"></i> <span class="repost-item-text">Repost</span></button>
-                                        <form method="post" asp-page-handler="NotInterested">
+                                        <button type="button" onclick="shareProductWhatsApp(this)"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</button>
+                                        <button type="button" onclick="copyProductLink(this)"><i class="fa-regular fa-copy"></i> Copy link</button>
+                                        <form method="post" asp-page-handler="ShareToStore">
                                             <input type="hidden" name="productId" value="@p.ProductID" />
-                                            <button type="submit"><i class="fa-regular fa-eye-slash"></i> Not interested</button>
+                                            <input type="hidden" name="storeOwnerId" value="@Model.Store.OwnerUserID" />
+                                            <button type="submit"><i class="fa-regular fa-message"></i> Send in chat</button>
                                         </form>
-                                        <button type="button" onclick="openProductReportDialog(this)"><i class="fa-regular fa-flag"></i> Report product</button>
                                     </div>
                                 </div>
-                                <button class="post-close-btn" onclick="closeProductModal()" aria-label="Close"><i class="fas fa-xmark"></i></button>
                             </div>
-                        </div>
 
-                        <div class="post-body">
+                            <!-- 4. DETAILS: price + description (with view more) -->
                             <div class="post-meta">
                                 <h3>@p.ProductName</h3>
                                 <div class="post-price-row">
                                     <span class="post-price">$@p.Price.ToString("0.00")</span>
                                     <span class="post-stock-badge @stockCssClass">@stockLabel</span>
                                 </div>
-                                <p class="post-description">@p.Description</p>
-
-                                <div class="post-actions">
-                                    <form method="post" asp-page-handler="AddToCart">
-                                        <input type="hidden" name="productId" value="@p.ProductID" />
-                                        <button class="btn-action" type="submit" @(p.Quantity <= 0 ? "disabled" : "")>
-                                            <i class="fa-solid fa-bag-shopping"></i> @(p.Quantity <= 0 ? "Out of stock" : "Add")
-                                        </button>
-                                    </form>
-                                    <form method="post" asp-page-handler="AddWishlist">
-                                        <input type="hidden" name="productId" value="@p.ProductID" />
-                                        <button class="btn-action" type="submit"><i class="fa-regular fa-bookmark"></i> Save</button>
-                                    </form>
-                                    <div class="menu-wrap">
-                                        <button class="btn-action" type="button" onclick="toggleMenu(this)" style="width:100%"><i class="fa-regular fa-paper-plane"></i> Share</button>
-                                        <div class="dropdown">
-                                            <button type="button" onclick="shareProductWhatsApp(this)"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</button>
-                                            <button type="button" onclick="copyProductLink(this)"><i class="fa-regular fa-copy"></i> Copy link</button>
-                                            <form method="post" asp-page-handler="ShareToStore">
-                                                <input type="hidden" name="productId" value="@p.ProductID" />
-                                                <input type="hidden" name="storeOwnerId" value="@Model.Store.OwnerUserID" />
-                                                <button type="submit"><i class="fa-regular fa-message"></i> Send in chat</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
+                                <p class="post-description truncated" id="desc-@p.ProductID">@p.Description</p>
+                                <button type="button" class="desc-toggle-btn" id="descToggle-@p.ProductID" style="display:none" onclick="toggleDescription(this, @p.ProductID)">View more</button>
                             </div>
 
+                            <!-- 5. REVIEWS -->
                             <div class="post-reviews">
                                 <div class="post-reviews-title"><i class="fas fa-comments"></i> @reviewCount Review@(reviewCount != 1 ? "s" : "")</div>
 
@@ -1618,21 +1649,21 @@
 
             window.realnestStoryGroups = [@Html.Raw(JsonSerializer.Serialize(new
                 {
-                                                            storeId = Model.Store.StoreID,
-                                                            storeName = Model.Store.StoreName,
-                                                            storeLogoUrl = storeLogo,
-                                                            hasUnviewedStories = Model.StoreStories.Any(s => !s.IsViewed),
-                                                            stories = Model.StoreStories.Select(s => new
+                                                                            storeId = Model.Store.StoreID,
+                                                                            storeName = Model.Store.StoreName,
+                                                                            storeLogoUrl = storeLogo,
+                                                                            hasUnviewedStories = Model.StoreStories.Any(s => !s.IsViewed),
+                                                                            stories = Model.StoreStories.Select(s => new
                     {
-                                                                            storyId = s.StoryID,
-                                                                            mediaType = s.MediaType,
-                                                                            imageUrl = s.ImageUrl,
-                                                                            videoUrl = s.VideoUrl,
-                                                                            durationSeconds = s.DurationSeconds,
-                                                                            caption = s.Caption,
-                                                                            createdAt = s.CreatedAt,
-                                                                            isViewed = s.IsViewed,
-                                                                            isLiked = s.IsLikedByCurrentCustomer
+                                                                                                storyId = s.StoryID,
+                                                                                                mediaType = s.MediaType,
+                                                                                                imageUrl = s.ImageUrl,
+                                                                                                videoUrl = s.VideoUrl,
+                                                                                                durationSeconds = s.DurationSeconds,
+                                                                                                caption = s.Caption,
+                                                                                                createdAt = s.CreatedAt,
+                                                                                                isViewed = s.IsViewed,
+                                                                                                isLiked = s.IsLikedByCurrentCustomer
                     })
                 }))];
     </script>
@@ -1646,10 +1677,6 @@
 
             // ============ BACK BUTTON — go to the actual previous page ============
             function goBackSmart() {
-                // If we came from another page on this same site, just go back
-                // in history. Otherwise (e.g. opened this profile in a new tab,
-                // or arrived from an external link), fall back to the customer
-                // home feed.
                 const cameFromSameOrigin = document.referrer && document.referrer.startsWith(window.location.origin);
                 if (cameFromSameOrigin && window.history.length > 1) {
                     history.back();
@@ -1776,6 +1803,33 @@
                 row.closest('form').querySelector('.rating-input').value = value;
             }
 
+            // ============ VIEW MORE / VIEW LESS DESCRIPTION ============
+            function toggleDescription(btn, productId) {
+                const desc = document.getElementById('desc-' + productId);
+                if (!desc) return;
+                if (desc.classList.contains('truncated')) {
+                    desc.classList.remove('truncated');
+                    btn.textContent = 'View less';
+                } else {
+                    desc.classList.add('truncated');
+                    btn.textContent = 'View more';
+                }
+            }
+
+            // Only show "View more" when the text is actually clipped by the
+            // 3-line clamp — a character-count guess isn't reliable because
+            // the same text wraps differently depending on width/font, which
+            // is why the button used to be missing (or shown) incorrectly.
+            function refreshDescriptionToggles() {
+                document.querySelectorAll('.post-description').forEach(desc => {
+                    const productId = desc.id.replace('desc-', '');
+                    const btn = document.getElementById('descToggle-' + productId);
+                    if (!btn) return;
+                    const isOverflowing = desc.scrollHeight - desc.clientHeight > 2;
+                    btn.style.display = isOverflowing ? 'block' : 'none';
+                });
+            }
+
             // ============ SHOW MORE / LESS REVIEWS ============
             document.querySelectorAll('[data-toggle-reviews]').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -1822,6 +1876,7 @@
                         sec.scrollIntoView({ behavior: 'auto', block: 'start' });
                         const closeBtn = sec.querySelector('.post-close-btn');
                         if (closeBtn) closeBtn.focus();
+                        refreshDescriptionToggles();
                     });
                 });
             }
@@ -1894,6 +1949,7 @@
                 const productId = window.__initialProductId ?? (fallbackParam ? Number(fallbackParam) : (hashMatch ? Number(hashMatch[1]) : null));
                 if (productId) openProductModal(productId);
                 refreshAllRepostBadges();
+                refreshDescriptionToggles();
             });
 
             @if (TempData["Success"] != null)
