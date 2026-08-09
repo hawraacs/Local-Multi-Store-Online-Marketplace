@@ -57,7 +57,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         [BindProperty(SupportsGet = true)] public decimal? MaxPrice { get; set; }
 
         [BindProperty(SupportsGet = true)] public string? TypeFilter { get; set; }
-
+        [BindProperty(SupportsGet = true)]
+        public string FeedType { get; set; } = "ForYou";
         // =====================================================
         // INITIAL PAGE
         // =====================================================

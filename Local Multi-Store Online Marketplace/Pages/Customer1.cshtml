@@ -6,6 +6,31 @@
         || !string.IsNullOrEmpty(Model.Area) || Model.MinPrice.HasValue || Model.MaxPrice.HasValue;
 }
 
+@functions {
+    // Maps a category name to a Font Awesome icon for the sidebar / icon
+    // strip. Purely cosmetic — falls back to a generic tag icon for any
+    // category name that isn't explicitly mapped.
+    private static string GetCategoryIcon(string? name)
+    {
+        var key = (name ?? string.Empty).Trim().ToLowerInvariant();
+
+        return key switch
+        {
+            "women" => "fa-person-dress",
+            "men" => "fa-person",
+            "electronics" => "fa-tv",
+            "shoes" => "fa-shoe-prints",
+            "bags" => "fa-bag-shopping",
+            "beauty" => "fa-spray-can-sparkles",
+            "home" => "fa-house",
+            "kids" => "fa-child",
+            "accessories" => "fa-gem",
+            "sports" => "fa-futbol",
+            _ => "fa-tag"
+        };
+    }
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -242,8 +267,13 @@
             isolation: isolate;
             border-radius: 20px;
             padding: 36px 32px;
-            min-height: 300px;
+            min-height: 220px;
             background: #2a2140;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            flex-wrap: wrap;
         }
 
         .intro-slide {
@@ -269,7 +299,7 @@
             pointer-events: none;
         }
 
-        .explore-intro > div:first-child,
+        .explore-intro-copy,
         .explore-intro h1,
         .explore-intro p {
             position: relative;
@@ -277,6 +307,10 @@
             background: transparent !important;
             color: #ffffff !important;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+        }
+
+        .explore-intro-copy {
+            max-width: 640px;
         }
 
         .explore-intro .eyebrow {
@@ -317,6 +351,26 @@
                 color: #d8cef0 !important;
             }
 
+            .intro-stat-action {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 34px;
+                margin-top: 10px;
+                padding: 0 14px;
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.18);
+                color: #ffffff !important;
+                text-decoration: none;
+                font-size: 12px;
+                font-weight: 800;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+            }
+
+                .intro-stat-action:hover {
+                    background: rgba(255, 255, 255, 0.3);
+                }
+
         @@keyframes fadeSlideUp {
             from {
                 opacity: 0;
@@ -330,7 +384,7 @@
         }
 
         @@media (prefers-reduced-motion: reduce) {
-            .explore-intro, .category-chip, .explore-tile, .intro-stat, .intro-slide {
+            .explore-intro, .category-icon-chip, .explore-tile, .intro-stat, .intro-slide {
                 animation: none !important;
                 transition: none !important;
             }
@@ -345,33 +399,9 @@
             animation-delay: 0.1s;
         }
 
-        .category-chip {
+        .category-icon-chip {
             animation: fadeSlideUp 0.4s ease both;
         }
-
-            .category-chip:nth-child(1) {
-                animation-delay: 0.02s;
-            }
-
-            .category-chip:nth-child(2) {
-                animation-delay: 0.06s;
-            }
-
-            .category-chip:nth-child(3) {
-                animation-delay: 0.10s;
-            }
-
-            .category-chip:nth-child(4) {
-                animation-delay: 0.14s;
-            }
-
-            .category-chip:nth-child(5) {
-                animation-delay: 0.18s;
-            }
-
-            .category-chip:nth-child(6) {
-                animation-delay: 0.22s;
-            }
 
         .explore-tile {
             animation: fadeSlideUp 0.45s ease both;
@@ -467,10 +497,6 @@
         /* =====================================================
            DISCOVERY BAR (search toolbar + collapsible filters)
            ===================================================== */
-        .discovery-bar {
-            margin: 22px 0 16px;
-        }
-
         .discovery-search {
             position: relative;
             display: flex;
@@ -496,36 +522,6 @@
                 font-size: 14px;
                 color: var(--text-primary);
                 background: transparent;
-            }
-
-        .discovery-toggle {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            height: 36px;
-            padding: 0 14px;
-            border: 1px solid #ded8eb;
-            border-radius: 10px;
-            background: #fff;
-            color: #5f5870;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-            .discovery-toggle[aria-expanded="true"] {
-                border-color: var(--accent-color);
-                color: var(--accent-color);
-            }
-
-            .discovery-toggle i {
-                font-size: 11px;
-                transition: transform 0.2s ease;
-            }
-
-            .discovery-toggle[aria-expanded="true"] i {
-                transform: rotate(180deg);
             }
 
         .discovery-submit {
@@ -1248,6 +1244,10 @@
             aspect-ratio: 1 / 1.3;
         }
 
+            .trending-tile.explore-tile {
+                border-radius: 14px !important;
+            }
+
         @@media (max-width: 680px) {
             .trending-tile {
                 flex-basis: 108px;
@@ -1712,7 +1712,561 @@
             padding: 4px 0 0;
             cursor: pointer;
         }
-    </style>
+
+        /* =====================================================
+           ROWNIN-STYLE SHELL — sidebar + topbar layout, category
+           icon strip, tabs/pills row, and card-style grid tiles.
+           Visual layer only; all existing IDs, data-attributes,
+           and JS hooks used by customer-explore.js / the inline
+           scripts below are unchanged.
+           ===================================================== */
+        :root {
+            --sidebar-width: 232px;
+        }
+
+        .app-shell {
+            display: flex;
+            align-items: stretch;
+            min-height: 100vh;
+        }
+
+        .app-sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            padding: 22px 16px;
+            border-right: 1px solid #ece7f6;
+            background: #ffffff;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .app-sidebar-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-family: "Playfair Display", serif;
+            font-size: 21px;
+            font-weight: 700;
+        }
+
+            .app-sidebar-brand .brand-mark {
+                width: 34px;
+                height: 34px;
+                border-radius: 11px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 15px;
+            }
+
+        .app-sidebar-nav,
+        .app-sidebar-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .app-sidebar-heading {
+            margin: 6px 0 4px;
+            padding: 0 10px;
+            color: #a79fbb;
+            font-size: 10.5px;
+            font-weight: 900;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .app-sidebar-link,
+        .app-sidebar-category {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 10px 10px;
+            border-radius: 12px;
+            color: #4b4558;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 700;
+            transition: background-color .15s ease, color .15s ease;
+        }
+
+            .app-sidebar-link i,
+            .app-sidebar-category i {
+                width: 18px;
+                text-align: center;
+                font-size: 14px;
+                color: #9992ab;
+            }
+
+            .app-sidebar-link:hover,
+            .app-sidebar-category:hover {
+                background: var(--accent-light);
+                color: var(--accent-color);
+            }
+
+                .app-sidebar-link:hover i,
+                .app-sidebar-category:hover i {
+                    color: var(--accent-color);
+                }
+
+            .app-sidebar-link.active,
+            .app-sidebar-category.active {
+                color: var(--accent-color);
+                background: var(--accent-light);
+                font-weight: 800;
+            }
+
+                .app-sidebar-link.active i,
+                .app-sidebar-category.active i {
+                    color: var(--accent-color);
+                }
+
+        .app-sidebar-seller {
+            margin-top: auto;
+            padding: 16px;
+            border-radius: 18px;
+            background: var(--accent-light);
+        }
+
+            .app-sidebar-seller strong {
+                display: block;
+                margin-bottom: 6px;
+                color: var(--text-primary);
+                font-size: 13.5px;
+            }
+
+            .app-sidebar-seller p {
+                margin: 0 0 12px;
+                color: #6b6478;
+                font-size: 11.5px;
+                line-height: 1.5;
+            }
+
+            .app-sidebar-seller a {
+                display: inline-flex;
+                min-height: 36px;
+                padding: 0 14px;
+                border-radius: 10px;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                color: #fff;
+                background: var(--accent-gradient);
+                text-decoration: none;
+                font-size: 12px;
+                font-weight: 800;
+            }
+
+        .app-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .app-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 26px;
+            background: rgba(250, 249, 252, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid #ece7f6;
+        }
+
+        .app-topbar-search {
+            flex: 1;
+            min-width: 0;
+            margin: 0;
+        }
+
+        .app-topbar .discovery-search {
+            height: 46px;
+        }
+
+        .app-topbar-filters {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 46px;
+            padding: 0 16px;
+            border: 1px solid #ded8eb;
+            border-radius: 12px;
+            background: #fff;
+            color: #4b4558;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+            .app-topbar-filters[aria-expanded="true"] {
+                border-color: var(--accent-color);
+                color: var(--accent-color);
+            }
+
+        .app-topbar-icons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .app-topbar-icon {
+            width: 42px;
+            height: 42px;
+            border: 1px solid #ece7f6;
+            border-radius: 50%;
+            background: #fff;
+            color: #4b4558;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+            .app-topbar-icon:hover {
+                border-color: var(--accent-color);
+                color: var(--accent-color);
+            }
+
+        .app-topbar-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: var(--accent-gradient);
+            font-weight: 800;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .app-topbar-filterpanel {
+            margin: 0 26px !important;
+        }
+
+        /* ---- category icon strip ---- */
+        .category-icon-section {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 4px 2px 8px;
+            margin: 22px 0 6px;
+            scrollbar-width: none;
+        }
+
+            .category-icon-section::-webkit-scrollbar {
+                display: none;
+            }
+
+        .category-icon-chip {
+            flex: 0 0 auto;
+            width: 84px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 8px;
+            border: 1px solid #ece7f6;
+            border-radius: 16px;
+            background: #fff;
+            color: #4b4558;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 800;
+            text-align: center;
+            transition: all .18s ease;
+        }
+
+            .category-icon-chip i {
+                font-size: 17px;
+                color: #9992ab;
+            }
+
+            .category-icon-chip:hover {
+                border-color: var(--accent-color);
+                color: var(--accent-color);
+                transform: translateY(-2px);
+            }
+
+                .category-icon-chip:hover i {
+                    color: var(--accent-color);
+                }
+
+            .category-icon-chip.active {
+                color: #fff;
+                border-color: transparent;
+                background: var(--accent-gradient);
+            }
+
+                .category-icon-chip.active i {
+                    color: #fff;
+                }
+
+        /* ---- tabs + filter pills row ---- */
+        .app-tabs-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 6px 0 20px;
+        }
+
+        .app-view-tabs {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .app-view-tab {
+            padding: 6px 0;
+            border: none;
+            border-bottom: 2px solid transparent;
+            background: none;
+            color: #a79fbb;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: default;
+        }
+
+            .app-view-tab.active {
+                color: var(--text-primary);
+                border-bottom-color: var(--accent-color);
+            }
+
+        /* ---- Explore grid card redesign ---- */
+        .explore-tile {
+            display: flex !important;
+            flex-direction: column;
+            height: auto !important;
+            aspect-ratio: auto !important;
+            background: #fff !important;
+            border: 1px solid #ece7f6;
+            border-radius: 16px !important;
+        }
+
+        .tile-image-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .tile-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 10px 11px;
+        }
+
+        .tile-title {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text-primary);
+            font-size: 12.5px;
+            font-weight: 800;
+        }
+
+        .tile-icons {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .tile-heart,
+        .tile-bookmark {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            background: #f6f4fb;
+            color: #6b6478;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12.5px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+            .tile-heart:hover,
+            .tile-bookmark:hover {
+                background: var(--accent-light);
+                color: var(--accent-color);
+            }
+
+            .tile-heart.liked {
+                color: #ed4956 !important;
+                background: #fdeeef;
+            }
+
+        @@media (max-width: 920px) {
+            .app-sidebar {
+                display: none;
+            }
+
+            .app-topbar {
+                padding: 12px 16px;
+            }
+
+            .app-topbar-filterpanel {
+                margin: 0 16px !important;
+            }
+        }
+
+        @@media (min-width: 921px) {
+            .mobile-bottom-nav {
+                left: var(--sidebar-width);
+            }
+        }
+
+        @@media (max-width: 680px) {
+            .category-icon-chip {
+                width: 72px;
+                padding: 11px 6px;
+            }
+
+            .app-tabs-row {
+                justify-content: flex-start;
+            }
+
+            .app-topbar-icons .app-topbar-icon:nth-child(2),
+            .app-topbar-icons .app-topbar-icon:nth-child(3) {
+                display: none;
+            }
+        }
+
+
+
+/* =========================================================
+   FINAL EXPLORE CARD LAYOUT
+   VISUAL ONLY - DO NOT CHANGE FUNCTIONALITY
+   ========================================================= */
+
+#exploreGrid.explore-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    grid-auto-rows: auto !important;
+    gap: 24px !important;
+    align-items: start !important;
+    justify-items: stretch !important;
+    width: 100% !important;
+}
+
+#exploreGrid .explore-tile {
+    position: relative !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-self: start !important;
+    aspect-ratio: auto !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    border: 1px solid #ece7f6 !important;
+    border-radius: 16px !important;
+}
+
+#exploreGrid .explore-tile .tile-image-wrap {
+    position: relative !important;
+    width: 100% !important;
+    height: 280px !important;
+    min-height: 280px !important;
+    aspect-ratio: auto !important;
+    flex: 0 0 280px !important;
+    overflow: hidden !important;
+}
+
+#exploreGrid .explore-tile .tile-media {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+#exploreGrid .explore-tile .tile-media img,
+#exploreGrid .explore-tile .tile-media video {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+#exploreGrid .explore-tile .tile-footer {
+    position: relative !important;
+    width: 100% !important;
+    min-height: 54px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 12px !important;
+    box-sizing: border-box !important;
+}
+
+@@media (min-width: 1201px) {
+    #exploreGrid.explore-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
+
+@@media (min-width: 801px) and (max-width: 1200px) {
+    #exploreGrid.explore-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@@media (min-width: 521px) and (max-width: 800px) {
+    #exploreGrid.explore-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    #exploreGrid .explore-tile .tile-image-wrap {
+        height: 240px !important;
+        min-height: 240px !important;
+        flex-basis: 240px !important;
+    }
+}
+
+@@media (max-width: 520px) {
+    #exploreGrid.explore-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    #exploreGrid .explore-tile .tile-image-wrap {
+        height: 280px !important;
+        min-height: 280px !important;
+        flex-basis: 280px !important;
+    }
+}
+
+</style>
 </head>
 
 <body>
@@ -1721,83 +2275,126 @@
         @Html.AntiForgeryToken()
     </form>
 
-    <main id="exploreApp"
-          class="explore-page"
-          data-category="@(Model.SelectedCategory ?? string.Empty)"
-          data-search-term="@(Model.SearchTerm ?? string.Empty)"
-          data-category-id="@(Model.CategoryId?.ToString() ?? string.Empty)"
-          data-store-id="@(Model.StoreId?.ToString() ?? string.Empty)"
-          data-area="@(Model.Area ?? string.Empty)"
-          data-min-price="@(Model.MinPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
-          data-max-price="@(Model.MaxPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
-          data-type-filter="@(Model.TypeFilter ?? string.Empty)"
-          data-current-page="1"
-          data-has-more="@Model.HasMoreItems.ToString().ToLowerInvariant()">
-
-        <section class="explore-intro">
-
-            <div class="intro-slide active" style="background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Fashion_model_looking_at_the_camera.jpg');"></div>
-            <div class="intro-slide" style="background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Smartphone_in_Hand_(Unsplash).jpg');"></div>
-            <div class="intro-slide" style="background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Fondue_dish.jpg');"></div>
-
-            <div>
-                <span class="eyebrow">Discover local stores</span>
-
-                <h1>
-                    Shop local,
-                    <span>discover more.</span>
-                </h1>
-
-                <p>
-                    Every active product appears here automatically, together with any existing image, carousel or reel content.
-                    Open any item for details, reviews, wishlist, cart and familiar recommendations.
-                </p>
-            </div>
-
-            <div class="intro-stat">
-                <span class="stat-icon">
-                    <i class="fa-solid fa-infinity"></i>
-                </span>
-
-                <div>
-                    <strong>Infinite Explore</strong>
-                    <span>New items load automatically while you scroll.</span>
-                </div>
-            </div>
-        </section>
+    <div class="app-shell">
 
         <!-- =========================================================
-             DISCOVERY BAR — search toolbar (products + store name
-             autocomplete) with collapsible advanced filters
+             SIDEBAR — visual navigation only. "Explore" is the only
+             link wired to a real page (this one); the others are
+             placeholders (javascript:void(0)) until their routes
+             exist, so nothing here can 404.
              ========================================================= -->
-        <section class="discovery-bar">
+        <aside class="app-sidebar">
+            <a asp-page="/Customer1" class="app-sidebar-brand">
+               
+            </a>
+
+         <nav class="app-sidebar-nav">
+
+    <a asp-page="/Customer1"
+       class="app-sidebar-link active">
+        <i class="fa-solid fa-compass"></i>
+        Explore
+    </a>
+
+    <a asp-page="/CustomerWishlist"
+       class="app-sidebar-link">
+        <i class="fa-regular fa-heart"></i>
+        Wishlist
+    </a>
+
+    <a asp-page="/CustomerFeed"
+       class="app-sidebar-link">
+        <i class="fa-regular fa-bookmark"></i>
+        Following
+    </a>
+
+    <a asp-page="/CustomerCart"
+       class="app-sidebar-link">
+        <i class="fa-solid fa-store"></i>
+        Cart
+    </a>
+
+    <a asp-page="/CustomerPromotions"
+       class="app-sidebar-link">
+        <i class="fa-solid fa-grip"></i>
+        Offers
+    </a>
+
+</nav>
+
+            <div class="app-sidebar-categories">
+                <span class="app-sidebar-heading">Browse categories</span>
+
+                <a asp-page="/Customer1"
+                   class="app-sidebar-category @(string.IsNullOrWhiteSpace(Model.SelectedCategory) ? "active" : "")">
+                    <i class="fa-solid fa-layer-group"></i> All
+                </a>
+
+                @foreach (var category in Model.NavbarCategories)
+                {
+                    var isActive = string.Equals(Model.SelectedCategory, category, StringComparison.OrdinalIgnoreCase);
+
+                    <a asp-page="/Customer1"
+                       asp-route-category="@category"
+                       class="app-sidebar-category @(isActive ? "active" : "")">
+                        <i class="fa-solid @GetCategoryIcon(category)"></i> @category
+                    </a>
+                }
+            </div>
+
+            <div class="app-sidebar-seller">
+                <strong>Become a Seller</strong>
+                <p>Start your store and reach thousands of customers.</p>
+                <a href="javascript:void(0)">Get Started</a>
+            </div>
+        </aside>
+
+        <div class="app-content">
+
+            <!-- =====================================================
+                 TOPBAR — search + filters toggle live here now (same
+                 form / element IDs the inline script + JS file expect).
+                 ===================================================== -->
             <form method="get" asp-page="/Customer1" id="exploreDiscoveryForm">
                 <input type="hidden" name="category" value="@Model.SelectedCategory" />
 
-                <div class="discovery-search">
-                    <i class="fa-solid fa-magnifying-glass"></i>
+                <header class="app-topbar">
+                    <div class="app-topbar-search">
+                        <div class="discovery-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
 
-                    <input type="text"
-                           id="exploreStoreSearchInput"
-                           name="SearchTerm"
-                           value="@Model.SearchTerm"
-                           placeholder="Search products or stores by name"
-                           autocomplete="off" />
+                            <input type="text"
+                                   id="exploreStoreSearchInput"
+                                   name="SearchTerm"
+                                   value="@Model.SearchTerm"
+                                   placeholder="Search products, stores and more..."
+                                   autocomplete="off" />
 
-                    <div id="exploreStoreSearchResults" class="store-search-dropdown hidden"></div>
+                            <div id="exploreStoreSearchResults" class="store-search-dropdown hidden"></div>
 
-                    <button type="button" class="discovery-toggle" id="exploreFiltersToggle"
+                            <button type="submit" class="discovery-submit" aria-label="Search">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button" class="app-topbar-filters" id="exploreFiltersToggle"
                             aria-expanded="@(hasActiveExploreFilters ? "true" : "false")"
                             aria-controls="exploreAdvancedFilters">
-                        Filters <i class="fa-solid fa-chevron-down"></i>
+                        <i class="fa-solid fa-sliders"></i> Filters
                     </button>
 
-                    <button type="submit" class="discovery-submit" aria-label="Search">
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
+                    <div class="app-topbar-icons">
+                        <button type="button" class="app-topbar-icon" title="Wishlist"><i class="fa-regular fa-heart"></i></button>
+                        <button type="button" class="app-topbar-icon" title="Messages"><i class="fa-regular fa-comment"></i></button>
+                        <button type="button" class="app-topbar-icon" title="Notifications">
+                            <i class="fa-regular fa-bell"></i>
+                        </button>
+                        <span class="app-topbar-avatar">@(User.Identity?.Name?.Trim().Length > 0 ? User.Identity.Name.Trim().Substring(0, 1).ToUpper() : "U")</span>
+                    </div>
+                </header>
 
-                <div class="discovery-filters market-filter-panel @(hasActiveExploreFilters ? "" : "is-collapsed")" id="exploreAdvancedFilters">
+                <div class="discovery-filters market-filter-panel app-topbar-filterpanel @(hasActiveExploreFilters ? "" : "is-collapsed")" id="exploreAdvancedFilters">
 
                     <div class="market-filter-grid">
                         <div class="market-filter-field">
@@ -1862,355 +2459,464 @@
                     </div>
                 </div>
             </form>
-        </section>
 
-        <section class="category-section"
-                 aria-label="Product categories">
+            <main id="exploreApp"
+                  class="explore-page"
+                  data-category="@(Model.SelectedCategory ?? string.Empty)"
+                  data-search-term="@(Model.SearchTerm ?? string.Empty)"
+                  data-category-id="@(Model.CategoryId?.ToString() ?? string.Empty)"
+                  data-store-id="@(Model.StoreId?.ToString() ?? string.Empty)"
+                  data-area="@(Model.Area ?? string.Empty)"
+                  data-min-price="@(Model.MinPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
+                  data-max-price="@(Model.MaxPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
+                  data-type-filter="@(Model.TypeFilter ?? string.Empty)"
+                  data-current-page="1"
+                  data-has-more="@Model.HasMoreItems.ToString().ToLowerInvariant()">
 
-            <a asp-page="/Customer1"
-               asp-route-searchTerm="@Model.SearchTerm"
-               asp-route-storeId="@Model.StoreId"
-               asp-route-area="@Model.Area"
-               asp-route-minPrice="@Model.MinPrice"
-               asp-route-maxPrice="@Model.MaxPrice"
-               class="category-chip @(string.IsNullOrWhiteSpace(Model.SelectedCategory) ? "active" : string.Empty)">
-                All
-            </a>
+                <section class="explore-intro">
 
-            @foreach (var category in Model.NavbarCategories)
-            {
-                var isActive = string.Equals(
-                Model.SelectedCategory,
-                category,
-                StringComparison.OrdinalIgnoreCase);
+                    <div class="intro-slide active" style="background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Fashion_model_looking_at_the_camera.jpg');"></div>
+                    <div class="intro-slide" style="background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Smartphone_in_Hand_(Unsplash).jpg');"></div>
+                    <div class="intro-slide" style="background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Fondue_dish.jpg');"></div>
 
-                <a asp-page="/Customer1"
-                   asp-route-category="@category"
-                   asp-route-searchTerm="@Model.SearchTerm"
-                   asp-route-storeId="@Model.StoreId"
-                   asp-route-area="@Model.Area"
-                   asp-route-minPrice="@Model.MinPrice"
-                   asp-route-maxPrice="@Model.MaxPrice"
-                   class="category-chip @(isActive ? "active" : string.Empty)">
-                    @category
-                </a>
-            }
-        </section>
+                    <div class="explore-intro-copy">
+                        <span class="eyebrow">Discover · Shop · Support local</span>
 
-        @if (TempData["Success"] is string successMessage &&
-        !string.IsNullOrWhiteSpace(successMessage))
-        {
-            <div class="server-message success">
-                <i class="fa-solid fa-circle-check"></i>
-                @successMessage
-            </div>
-        }
+                        <h1>
+                            Shop local,
+                            <span>discover more.</span>
+                        </h1>
 
-        @if (TempData["Error"] is string errorMessage &&
-        !string.IsNullOrWhiteSpace(errorMessage))
-        {
-            <div class="server-message error">
-                <i class="fa-solid fa-circle-exclamation"></i>
-                @errorMessage
-            </div>
-        }
+                        <p>
+                            Every active product appears here automatically, together with any existing image, carousel or reel content.
+                            Open any item for details, reviews, wishlist, cart and familiar recommendations.
+                        </p>
+                    </div>
 
-        @if (Model.TrendingItems.Any())
-        {
-            <!-- =========================================================
-                 TRENDING RAIL — Instagram-style "most interested" strip,
-                 ranked by likes + views. Reuses the .explore-tile markup
-                 at a smaller size, so the same click handling / styling
-                 applies. Handled by a dedicated click listener in
-                 customer-explore.js since it lives outside #exploreGrid.
-                 ========================================================= -->
-            <section class="trending-rail" aria-label="Trending now">
-                <div class="trending-rail-heading">
-                    <i class="fa-solid fa-fire"></i>
-                    <h3>Trending now</h3>
-                </div>
-
-                <div class="trending-rail-track">
-                    @foreach (var item in Model.TrendingItems)
-                    {
-                        <button type="button"
-                                class="explore-tile trending-tile"
-                                data-grid-item
-                                data-item-type="@item.GridItemType"
-                                data-post-id="@item.ExplorePostID"
-                                data-post-type="@item.PostType"
-                                data-store-id="@item.StoreID"
-                                data-store-name="@item.StoreName">
-
-                            <span class="tile-media">
-                                <img src="@(string.Equals(item.MediaType, "Video", StringComparison.OrdinalIgnoreCase) ? (item.ThumbnailUrl ?? "/images/product-placeholder.svg") : item.MediaUrl)"
-                                     alt="@(item.ProductName ?? item.StoreName)"
-                                     loading="lazy"
-                                     onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
-                            </span>
-
-                            <span class="tile-gradient"></span>
-
-                            <span class="tile-top">
-                                <span class="tile-badge"><i class="fa-solid fa-fire"></i></span>
-
-                                @if (item.ProductPrice.HasValue)
-                                {
-                                    <span class="tile-price">$@item.ProductPrice.Value.ToString("N2")</span>
-                                }
-                            </span>
-
-                            <span class="tile-bottom">
-                                <span class="tile-store">
-                                    <span>@item.StoreName</span>
-                                </span>
-                            </span>
-                        </button>
-                    }
-                </div>
-            </section>
-        }
-
-        <section class="grid-heading">
-            <div>
-                <h2>
-                    @(string.IsNullOrWhiteSpace(Model.SelectedCategory)
-                        ? "Explore"
-                        : Model.SelectedCategory)
-                </h2>
-
-                <p>
-                    Click any item for a SHEIN-style quick view and familiar recommendations.
-                </p>
-            </div>
-
-            <div class="grid-legend">
-                <a asp-page="/Customer1"
-                   asp-route-category="@Model.SelectedCategory"
-                   asp-route-searchTerm="@Model.SearchTerm"
-                   asp-route-categoryId="@Model.CategoryId"
-                   asp-route-storeId="@Model.StoreId"
-                   asp-route-area="@Model.Area"
-                   asp-route-minPrice="@Model.MinPrice"
-                   asp-route-maxPrice="@Model.MaxPrice"
-                   class="legend-filter @(string.IsNullOrWhiteSpace(Model.TypeFilter) ? "active" : "")">
-                    <i class="fa-solid fa-layer-group"></i>
-                    All
-                </a>
-
-                <a asp-page="/Customer1"
-                   asp-route-category="@Model.SelectedCategory"
-                   asp-route-searchTerm="@Model.SearchTerm"
-                   asp-route-categoryId="@Model.CategoryId"
-                   asp-route-storeId="@Model.StoreId"
-                   asp-route-area="@Model.Area"
-                   asp-route-minPrice="@Model.MinPrice"
-                   asp-route-maxPrice="@Model.MaxPrice"
-                   asp-route-typeFilter="Reel"
-                   class="legend-filter @(string.Equals(Model.TypeFilter, "Reel", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-                    <i class="fa-solid fa-play"></i>
-                    Reel
-                </a>
-
-                <a asp-page="/Customer1"
-                   asp-route-category="@Model.SelectedCategory"
-                   asp-route-searchTerm="@Model.SearchTerm"
-                   asp-route-categoryId="@Model.CategoryId"
-                   asp-route-storeId="@Model.StoreId"
-                   asp-route-area="@Model.Area"
-                   asp-route-minPrice="@Model.MinPrice"
-                   asp-route-maxPrice="@Model.MaxPrice"
-                   asp-route-typeFilter="Carousel"
-                   class="legend-filter @(string.Equals(Model.TypeFilter, "Carousel", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-                    <i class="fa-regular fa-images"></i>
-                    Carousel
-                </a>
-
-                <a asp-page="/Customer1"
-                   asp-route-category="@Model.SelectedCategory"
-                   asp-route-searchTerm="@Model.SearchTerm"
-                   asp-route-categoryId="@Model.CategoryId"
-                   asp-route-storeId="@Model.StoreId"
-                   asp-route-area="@Model.Area"
-                   asp-route-minPrice="@Model.MinPrice"
-                   asp-route-maxPrice="@Model.MaxPrice"
-                   asp-route-typeFilter="Product"
-                   class="legend-filter @(string.Equals(Model.TypeFilter, "Product", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
-                    <i class="fa-solid fa-bag-shopping"></i>
-                    Product
-                </a>
-            </div>
-        </section>
-
-        <section id="exploreGrid"
-                 class="explore-grid"
-                 aria-live="polite">
-
-            @foreach (var item in Model.InitialItems)
-            {
-                var isPost = string.Equals(
-                item.GridItemType,
-                "Post",
-                StringComparison.OrdinalIgnoreCase);
-
-                var isVideo = string.Equals(
-                item.MediaType,
-                "Video",
-                StringComparison.OrdinalIgnoreCase);
-
-                var isReel = string.Equals(
-                item.PostType,
-                "Reel",
-                StringComparison.OrdinalIgnoreCase);
-
-                var isCarousel = string.Equals(
-                item.PostType,
-                "Carousel",
-                StringComparison.OrdinalIgnoreCase);
-
-                <button type="button"
-                        class="explore-tile"
-                        data-grid-item
-                        data-item-type="@item.GridItemType"
-                        data-post-id="@item.ExplorePostID"
-                        data-product-id="@item.ProductID"
-                        data-post-type="@item.PostType"
-                        data-store-id="@item.StoreID"
-                        data-store-name="@item.StoreName"
-                        aria-label="@(isPost
-                            ? $"Open post from {item.StoreName}"
-                            : $"Open product {item.ProductName}")">
-
-                    <span class="tile-media">
-                        @if (isVideo &&
-                       string.IsNullOrWhiteSpace(item.ThumbnailUrl))
-                        {
-                            <video muted
-                                   loop
-                                   playsinline
-                                   preload="metadata"
-                                   data-reel-preview>
-                                <source src="@item.MediaUrl" />
-                            </video>
-                        }
-                        else
-                        {
-                            <img src="@(isVideo
-                                    ? item.ThumbnailUrl
-                                    : item.MediaUrl)"
-                                 alt="@(item.ProductName ?? item.StoreName)"
-                                 loading="lazy"
-                                 onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
-                        }
-                    </span>
-
-                    <span class="tile-gradient"></span>
-
-                    <span class="tile-top">
-                        @if (item.IsBoosted)
-                        {
-                            <span class="tile-badge sponsored-badge">
-                                <i class="fa-solid fa-bolt"></i>
-                                Sponsored
-                            </span>
-                        }
-                        else if (isReel)
-                        {
-                            <span class="tile-badge">
-                                <i class="fa-solid fa-play"></i>
-                                Reel
-                            </span>
-                        }
-                        else if (isCarousel)
-                        {
-                            <span class="tile-badge">
-                                <i class="fa-regular fa-images"></i>
-                                @item.MediaCount
-                            </span>
-                        }
-                        else if (!isPost)
-                        {
-                            <span class="tile-badge">
-                                <i class="fa-solid fa-bag-shopping"></i>
-                                Product
-                            </span>
-                        }
-
-                        @if (item.ProductPrice.HasValue)
-                        {
-                            <span class="tile-price">
-                                $@item.ProductPrice.Value.ToString("N2")
-                            </span>
-                        }
-                    </span>
-
-                    <span class="tile-bottom">
-                        <span class="tile-store">
-                            @if (!string.IsNullOrWhiteSpace(item.StoreLogoUrl))
-                            {
-                                <img src="@item.StoreLogoUrl"
-                                     alt="@item.StoreName"
-                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-
-                                <span class="tile-store-fallback">
-                                    @(string.IsNullOrWhiteSpace(item.StoreName)
-                                        ? "S"
-                                        : item.StoreName.Substring(0, 1).ToUpper())
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="tile-store-fallback visible">
-                                    @(string.IsNullOrWhiteSpace(item.StoreName)
-                                        ? "S"
-                                        : item.StoreName.Substring(0, 1).ToUpper())
-                                </span>
-                            }
-
-                            <span>@item.StoreName</span>
+                    <div class="intro-stat">
+                        <span class="stat-icon">
+                            <i class="fa-solid fa-infinity"></i>
                         </span>
 
-                        @if (!string.IsNullOrWhiteSpace(item.ProductName))
-                        {
-                            <strong>@item.ProductName</strong>
-                        }
+                        <div>
+                            <strong>Infinite Explore</strong>
+                            <span>New arrivals added daily, just for you.</span>
+                            <a href="#exploreGrid" class="intro-stat-action">Discover Now</a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- =========================================================
+                     CATEGORY ICON STRIP — same category links/routes as
+                     before, just rendered as icon chips.
+                     ========================================================= -->
+                <section class="category-icon-section" aria-label="Product categories">
+
+                    <a asp-page="/Customer1"
+                       asp-route-searchTerm="@Model.SearchTerm"
+                       asp-route-storeId="@Model.StoreId"
+                       asp-route-area="@Model.Area"
+                       asp-route-minPrice="@Model.MinPrice"
+                       asp-route-maxPrice="@Model.MaxPrice"
+                       class="category-icon-chip @(string.IsNullOrWhiteSpace(Model.SelectedCategory) ? "active" : string.Empty)">
+                        <i class="fa-solid fa-grip"></i>
+                        All
+                    </a>
+
+                    @foreach (var category in Model.NavbarCategories)
+                    {
+                        var isActive = string.Equals(
+                        Model.SelectedCategory,
+                        category,
+                        StringComparison.OrdinalIgnoreCase);
+
+                        <a asp-page="/Customer1"
+                           asp-route-category="@category"
+                           asp-route-searchTerm="@Model.SearchTerm"
+                           asp-route-storeId="@Model.StoreId"
+                           asp-route-area="@Model.Area"
+                           asp-route-minPrice="@Model.MinPrice"
+                           asp-route-maxPrice="@Model.MaxPrice"
+                           class="category-icon-chip @(isActive ? "active" : string.Empty)">
+                            <i class="fa-solid @GetCategoryIcon(category)"></i>
+                            @category
+                        </a>
+                    }
+                </section>
+
+                @if (TempData["Success"] is string successMessage &&
+                !string.IsNullOrWhiteSpace(successMessage))
+                {
+                    <div class="server-message success">
+                        <i class="fa-solid fa-circle-check"></i>
+                        @successMessage
+                    </div>
+                }
+
+                @if (TempData["Error"] is string errorMessage &&
+                !string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="server-message error">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        @errorMessage
+                    </div>
+                }
+
+                <!-- =========================================================
+                     TABS + FILTER PILLS — "For You" is decorative (there is
+                     no separate "all stores" feed on the backend yet); the
+                     pills on the right are the existing Reel/Carousel/Product
+                     type-filter links, unchanged.
+                     ========================================================= -->
+                <section class="app-tabs-row">
+                  <div class="app-view-tabs">
+
+    <a asp-page="/Customer1"
+       asp-route-feedType="ForYou"
+       asp-route-category="@Model.SelectedCategory"
+       asp-route-searchTerm="@Model.SearchTerm"
+       asp-route-categoryId="@Model.CategoryId"
+       asp-route-storeId="@Model.StoreId"
+       asp-route-area="@Model.Area"
+       asp-route-minPrice="@Model.MinPrice"
+       asp-route-maxPrice="@Model.MaxPrice"
+       asp-route-typeFilter="@Model.TypeFilter"
+       class="app-view-tab @(Model.FeedType == "ForYou" ? "active" : "")">
+        For You
+    </a>
+
+    <a asp-page="/Customer1"
+       asp-route-feedType="AllStores"
+       asp-route-category="@Model.SelectedCategory"
+       asp-route-searchTerm="@Model.SearchTerm"
+       asp-route-categoryId="@Model.CategoryId"
+       asp-route-storeId="@Model.StoreId"
+       asp-route-area="@Model.Area"
+       asp-route-minPrice="@Model.MinPrice"
+       asp-route-maxPrice="@Model.MaxPrice"
+       asp-route-typeFilter="@Model.TypeFilter"
+       class="app-view-tab @(Model.FeedType == "AllStores" ? "active" : "")">
+        All Stores
+    </a>
+
+</div>
+
+                    <div class="grid-legend">
+                        <a asp-page="/Customer1"
+                           asp-route-category="@Model.SelectedCategory"
+                           asp-route-searchTerm="@Model.SearchTerm"
+                           asp-route-categoryId="@Model.CategoryId"
+                           asp-route-storeId="@Model.StoreId"
+                           asp-route-area="@Model.Area"
+                           asp-route-minPrice="@Model.MinPrice"
+                           asp-route-maxPrice="@Model.MaxPrice"
+                           class="legend-filter @(string.IsNullOrWhiteSpace(Model.TypeFilter) ? "active" : "")">
+                            <i class="fa-solid fa-layer-group"></i>
+                            All
+                        </a>
+
+                        <a asp-page="/Customer1"
+                           asp-route-category="@Model.SelectedCategory"
+                           asp-route-searchTerm="@Model.SearchTerm"
+                           asp-route-categoryId="@Model.CategoryId"
+                           asp-route-storeId="@Model.StoreId"
+                           asp-route-area="@Model.Area"
+                           asp-route-minPrice="@Model.MinPrice"
+                           asp-route-maxPrice="@Model.MaxPrice"
+                           asp-route-typeFilter="Reel"
+                           class="legend-filter @(string.Equals(Model.TypeFilter, "Reel", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                            <i class="fa-solid fa-play"></i>
+                            Reel
+                        </a>
+
+                        <a asp-page="/Customer1"
+                           asp-route-category="@Model.SelectedCategory"
+                           asp-route-searchTerm="@Model.SearchTerm"
+                           asp-route-categoryId="@Model.CategoryId"
+                           asp-route-storeId="@Model.StoreId"
+                           asp-route-area="@Model.Area"
+                           asp-route-minPrice="@Model.MinPrice"
+                           asp-route-maxPrice="@Model.MaxPrice"
+                           asp-route-typeFilter="Carousel"
+                           class="legend-filter @(string.Equals(Model.TypeFilter, "Carousel", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                            <i class="fa-regular fa-images"></i>
+                            Carousel
+                        </a>
+
+                        <a asp-page="/Customer1"
+                           asp-route-category="@Model.SelectedCategory"
+                           asp-route-searchTerm="@Model.SearchTerm"
+                           asp-route-categoryId="@Model.CategoryId"
+                           asp-route-storeId="@Model.StoreId"
+                           asp-route-area="@Model.Area"
+                           asp-route-minPrice="@Model.MinPrice"
+                           asp-route-maxPrice="@Model.MaxPrice"
+                           asp-route-typeFilter="Product"
+                           class="legend-filter @(string.Equals(Model.TypeFilter, "Product", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                            Product
+                        </a>
+                    </div>
+                </section>
+
+                <section class="grid-heading">
+                    <div>
+                        <h2>
+                            @(string.IsNullOrWhiteSpace(Model.SelectedCategory)
+                                ? "Explore"
+                                : Model.SelectedCategory)
+                        </h2>
+
+                        <p>
+                            Check out products available in our local stores and find your next favorite thing.
+                        </p>
+                    </div>
+                </section>
+
+                @if (Model.TrendingItems.Any())
+                {
+                    <!-- =========================================================
+                         TRENDING RAIL — Instagram-style "most interested" strip,
+                         ranked by likes + views. Reuses the .explore-tile markup
+                         at a smaller size, so the same click handling / styling
+                         applies. Handled by a dedicated click listener in
+                         customer-explore.js since it lives outside #exploreGrid.
+                         ========================================================= -->
+                    <section class="trending-rail" aria-label="Trending now">
+                        <div class="trending-rail-heading">
+                            <i class="fa-solid fa-fire"></i>
+                            <h3>Trending now</h3>
+                        </div>
+
+                        <div class="trending-rail-track">
+                            @foreach (var item in Model.TrendingItems)
+                            {
+                                <button type="button"
+                                        class="explore-tile trending-tile"
+                                        data-grid-item
+                                        data-item-type="@item.GridItemType"
+                                        data-post-id="@item.ExplorePostID"
+                                        data-post-type="@item.PostType"
+                                        data-store-id="@item.StoreID"
+                                        data-store-name="@item.StoreName">
+
+                                    <span class="tile-media">
+                                        <img src="@(string.Equals(item.MediaType, "Video", StringComparison.OrdinalIgnoreCase) ? (item.ThumbnailUrl ?? "/images/product-placeholder.svg") : item.MediaUrl)"
+                                             alt="@(item.ProductName ?? item.StoreName)"
+                                             loading="lazy"
+                                             onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
+                                    </span>
+
+                                    <span class="tile-gradient"></span>
+
+                                    <span class="tile-top">
+                                        <span class="tile-badge"><i class="fa-solid fa-fire"></i></span>
+
+                                        @if (item.ProductPrice.HasValue)
+                                        {
+                                            <span class="tile-price">$@item.ProductPrice.Value.ToString("N2")</span>
+                                        }
+                                    </span>
+
+                                    <span class="tile-bottom">
+                                        <span class="tile-store">
+                                            <span>@item.StoreName</span>
+                                        </span>
+                                    </span>
+                                </button>
+                            }
+                        </div>
+                    </section>
+                }
+
+                <section id="exploreGrid"
+                         class="explore-grid"
+                         aria-live="polite">
+
+                    @foreach (var item in Model.InitialItems)
+                    {
+                        var isPost = string.Equals(
+                        item.GridItemType,
+                        "Post",
+                        StringComparison.OrdinalIgnoreCase);
+
+                        var isVideo = string.Equals(
+                        item.MediaType,
+                        "Video",
+                        StringComparison.OrdinalIgnoreCase);
+
+                        var isReel = string.Equals(
+                        item.PostType,
+                        "Reel",
+                        StringComparison.OrdinalIgnoreCase);
+
+                        var isCarousel = string.Equals(
+                        item.PostType,
+                        "Carousel",
+                        StringComparison.OrdinalIgnoreCase);
+                        <div class="explore-tile"
+     role="button"
+     tabindex="0"
+     data-grid-item
+     data-item-type="@item.GridItemType"
+     data-post-id="@item.ExplorePostID"
+     data-product-id="@item.ProductID"
+     data-post-type="@item.PostType"
+     data-store-id="@item.StoreID"
+     data-store-name="@item.StoreName"
+     aria-label="@(isPost
+         ? $"Open post from {item.StoreName}"
+         : $"Open product {item.ProductName}")">
+
+
+                            <span class="tile-image-wrap">
+                                <span class="tile-media">
+                                    @if (isVideo &&
+                                   string.IsNullOrWhiteSpace(item.ThumbnailUrl))
+                                    {
+                                        <video muted
+                                               loop
+                                               playsinline
+                                               preload="metadata"
+                                               data-reel-preview>
+                                            <source src="@item.MediaUrl" />
+                                        </video>
+                                    }
+                                    else
+                                    {
+                                        <img src="@(isVideo
+                                                ? item.ThumbnailUrl
+                                                : item.MediaUrl)"
+                                             alt="@(item.ProductName ?? item.StoreName)"
+                                             loading="lazy"
+                                             onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
+                                    }
+                                </span>
+
+                                <span class="tile-gradient"></span>
+
+                                <span class="tile-top">
+                                    @if (item.IsBoosted)
+                                    {
+                                        <span class="tile-badge sponsored-badge">
+                                            <i class="fa-solid fa-bolt"></i>
+                                            Sponsored
+                                        </span>
+                                    }
+                                    else if (isReel)
+                                    {
+                                        <span class="tile-badge">
+                                            <i class="fa-solid fa-play"></i>
+                                            Reel
+                                        </span>
+                                    }
+                                    else if (isCarousel)
+                                    {
+                                        <span class="tile-badge">
+                                            <i class="fa-regular fa-images"></i>
+                                            @item.MediaCount
+                                        </span>
+                                    }
+                                    else if (!isPost)
+                                    {
+                                        <span class="tile-badge">
+                                            <i class="fa-solid fa-bag-shopping"></i>
+                                            Product
+                                        </span>
+                                    }
+
+                                    @if (item.ProductPrice.HasValue)
+                                    {
+                                        <span class="tile-price">
+                                            $@item.ProductPrice.Value.ToString("N2")
+                                        </span>
+                                    }
+                                </span>
+
+                                <span class="tile-bottom">
+                                    <span class="tile-store">
+                                        @if (!string.IsNullOrWhiteSpace(item.StoreLogoUrl))
+                                        {
+                                            <img src="@item.StoreLogoUrl"
+                                                 alt="@item.StoreName"
+                                                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+
+                                            <span class="tile-store-fallback">
+                                                @(string.IsNullOrWhiteSpace(item.StoreName)
+                                                    ? "S"
+                                                    : item.StoreName.Substring(0, 1).ToUpper())
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="tile-store-fallback visible">
+                                                @(string.IsNullOrWhiteSpace(item.StoreName)
+                                                    ? "S"
+                                                    : item.StoreName.Substring(0, 1).ToUpper())
+                                            </span>
+                                        }
+
+                                        <span>@item.StoreName</span>
+                                    </span>
+                                </span>
+                            </span>
+
+                            <span class="tile-footer">
+                                <strong class="tile-title">@(item.ProductName ?? (isPost ? "View post" : "View item"))</strong>
+
+                                <span class="tile-icons">
+                                    @if (item.ProductID.HasValue)
+                                    {
+                                        <button type="button"
+                                                class="tile-heart"
+                                                data-product-id="@item.ProductID"
+                                                aria-label="Save to wishlist">
+                                            <i class="fa-regular fa-heart"></i>
+                                        </button>
+                                    }
+                                    <button type="button" class="tile-bookmark" aria-label="Quick view">
+                                        <i class="fa-regular fa-bookmark"></i>
+                                    </button>
+                                </span>
+                            </span>
+                     </div>
+                    }
+                </section>
+
+                <div id="emptyExploreState"
+                     class="empty-explore @(Model.InitialItems.Any() ? "hidden" : string.Empty)">
+
+                    <span>
+                        <i class="fa-regular fa-compass"></i>
                     </span>
-                </button>
-            }
-        </section>
 
-        <div id="emptyExploreState"
-             class="empty-explore @(Model.InitialItems.Any() ? "hidden" : string.Empty)">
+                    <h3>No Explore items found</h3>
 
-            <span>
-                <i class="fa-regular fa-compass"></i>
-            </span>
+                    <p>
+                        Try another category or return later when stores publish new content.
+                    </p>
+                </div>
 
-            <h3>No Explore items found</h3>
+                <div id="infiniteLoader"
+                     class="infinite-loader @(Model.HasMoreItems ? string.Empty : "hidden")">
 
-            <p>
-                Try another category or return later when stores publish new content.
-            </p>
+                    <span class="loader-spinner"></span>
+                    <span>Loading more discoveries...</span>
+                </div>
+
+                <div id="infiniteSentinel"
+                     class="infinite-sentinel"
+                     aria-hidden="true"></div>
+
+                <div id="endOfFeed"
+                     class="end-of-feed @(!Model.HasMoreItems && Model.InitialItems.Any() ? string.Empty : "hidden")">
+
+                    <i class="fa-solid fa-circle-check"></i>
+                    You reached the end for now.
+                </div>
+            </main>
         </div>
-
-        <div id="infiniteLoader"
-             class="infinite-loader @(Model.HasMoreItems ? string.Empty : "hidden")">
-
-            <span class="loader-spinner"></span>
-            <span>Loading more discoveries...</span>
-        </div>
-
-        <div id="infiniteSentinel"
-             class="infinite-sentinel"
-             aria-hidden="true"></div>
-
-        <div id="endOfFeed"
-             class="end-of-feed @(!Model.HasMoreItems && Model.InitialItems.Any() ? string.Empty : "hidden")">
-
-            <i class="fa-solid fa-circle-check"></i>
-            You reached the end for now.
-        </div>
-    </main>
+    </div>
 
     <partial name="_CustomerBottomNav" />
 

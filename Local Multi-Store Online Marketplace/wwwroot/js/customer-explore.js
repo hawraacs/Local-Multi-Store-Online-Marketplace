@@ -263,6 +263,40 @@
     }
 
     // =========================================================
+    // GRID ITEM WISHLIST HEART (new card footer button — works for
+    // both server-rendered tiles and infinite-scroll tiles, since the
+    // click handler below is delegated on #exploreGrid).
+    // =========================================================
+    async function toggleGridTileWishlist(button) {
+        const productId = Number(button.dataset.productId);
+
+        if (!Number.isFinite(productId)) {
+            return;
+        }
+
+        button.disabled = true;
+
+        try {
+            const data = await postForm("ToggleExploreWishlist", { productId });
+            const saved = data.saved === true;
+
+            button.classList.toggle("liked", saved);
+
+            const icon = button.querySelector("i");
+
+            if (icon) {
+                icon.className = saved ? "fa-solid fa-heart" : "fa-regular fa-heart";
+            }
+
+            showToast(data.message, "success");
+        } catch (error) {
+            showToast(error.message, "error");
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    // =========================================================
     // GRID ITEM HTML
     // =========================================================
     function createGridItemElement(item) {
@@ -375,28 +409,51 @@
                 </span>
             `;
 
+        const heartMarkup = item.productID
+            ? `
+                <button type="button" class="tile-heart" data-product-id="${Number(item.productID)}" aria-label="Save to wishlist">
+                    <i class="fa-regular fa-heart"></i>
+                </button>
+            `
+            : "";
+
+        const titleText = item.productName || (isPost ? "View post" : "View item");
+
+        // NEW — card layout: the image + gradient + top badges + store
+        // chip stay wrapped in a fixed-aspect-ratio box (tile-image-wrap),
+        // and a plain white footer below it carries the title and the
+        // heart/bookmark actions (matches the server-rendered markup in
+        // Customer1.cshtml so infinite-scroll items look identical).
         button.innerHTML = `
-            <span class="tile-media">
-                ${mediaMarkup}
-            </span>
-
-            <span class="tile-gradient"></span>
-
-            <span class="tile-top">
-                ${badgeMarkup}
-                ${priceMarkup}
-            </span>
-
-            <span class="tile-bottom">
-                <span class="tile-store">
-                    ${storeLogoMarkup}
-                    <span>${escapeHtml(item.storeName || "Store")}</span>
+            <span class="tile-image-wrap">
+                <span class="tile-media">
+                    ${mediaMarkup}
                 </span>
 
-                ${item.productName
-                ? `<strong>${escapeHtml(item.productName)}</strong>`
-                : ""
-            }
+                <span class="tile-gradient"></span>
+
+                <span class="tile-top">
+                    ${badgeMarkup}
+                    ${priceMarkup}
+                </span>
+
+                <span class="tile-bottom">
+                    <span class="tile-store">
+                        ${storeLogoMarkup}
+                        <span>${escapeHtml(item.storeName || "Store")}</span>
+                    </span>
+                </span>
+            </span>
+
+            <span class="tile-footer">
+                <strong class="tile-title">${escapeHtml(titleText)}</strong>
+
+                <span class="tile-icons">
+                    ${heartMarkup}
+                    <button type="button" class="tile-bookmark" aria-label="Quick view">
+                        <i class="fa-regular fa-bookmark"></i>
+                    </button>
+                </span>
             </span>
         `;
 
@@ -592,6 +649,14 @@
     // GRID CLICK
     // =========================================================
     grid?.addEventListener("click", event => {
+        const heartButton = event.target.closest(".tile-heart");
+
+        if (heartButton) {
+            event.stopPropagation();
+            toggleGridTileWishlist(heartButton);
+            return;
+        }
+
         const tile = event.target.closest("[data-grid-item]");
 
         if (!tile) {
