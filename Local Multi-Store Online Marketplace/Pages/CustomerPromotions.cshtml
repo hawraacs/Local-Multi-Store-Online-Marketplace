@@ -2,1146 +2,1611 @@
 @model Local_Multi_Store_Online_Marketplace.Pages.CustomerPromotionsModel
 @using System.Text.RegularExpressions
 @using System.Linq
+
 @{
     Layout = null;
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>My Promotions</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    :root {
+        --bg-color: #faf9fc;
+        --card-bg: #ffffff;
+        --border-color: #ece8f6;
+        --text-primary: #1e1b2e;
+        --text-secondary: #6b6478;
+        --accent-color: #6d28d9;
+        --accent-hover: #5b21b6;
+        --accent-light: #f3effe;
+        --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+        --gold-color: #f59e0b;
+        --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-display: 'Playfair Display', Georgia, serif;
+        --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+        --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
+        --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
+        --radius-lg: 22px;
+    }
 
-    <style>
-        :root {
-            --bg-color: #faf9fc;
-            --card-bg: #ffffff;
-            --border-color: #ece8f6;
-            --text-primary: #1e1b2e;
-            --text-secondary: #6b6478;
-            --accent-color: #6d28d9;
-            --accent-hover: #5b21b6;
-            --accent-light: #f3effe;
-            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-            --success-color: #10b981;
-            --danger-color: #ef4444;
-            --gold-color: #f59e0b;
-            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --font-display: 'Playfair Display', Georgia, serif;
-            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
-            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
-            --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
-            --radius-lg: 22px;
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: var(--font-family);
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        padding-bottom: 120px;
+    }
+
+    /* ============================================================
+           BOTTOM NAV
+           ============================================================ */
+
+    .mobile-bottom-nav {
+        display: flex !important;
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 200;
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 22px;
+        justify-content: space-between;
+        gap: 2px;
+        padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+        overflow-x: auto;
+        box-shadow: 0 -6px 10px rgba(30, 27, 46, 0.02), 0 16px 40px rgba(109, 40, 217, 0.16);
+    }
+
+        .mobile-bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            flex: 1;
+            min-width: 60px;
+            padding: 4px 6px;
+            border-radius: 12px;
+            font-size: 10.5px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: var(--font-family);
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-            padding-bottom: 120px;
-        }
-
-        /* ============================================================
-                                                           BOTTOM NAV — rendered by the shared _CustomerBottomNav partial.
-                                                           Styles below match every other customer page exactly (same
-                                                           class names), so the partial renders identically here.
-                                                           Visual treatment upgraded to a floating premium bar; the
-                                                           structure/behaviour of the partial itself is untouched.
-                                                           ============================================================ */
-        .mobile-bottom-nav {
-            display: flex !important;
-            position: fixed;
-            left: 12px;
-            right: 12px;
-            bottom: 12px;
-            z-index: 200;
-            background: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 22px;
-            justify-content: space-between;
-            gap: 2px;
-            padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
-            overflow-x: auto;
-            box-shadow: 0 -6px 10px rgba(30, 27, 46, 0.02), 0 16px 40px rgba(109, 40, 217, 0.16);
-        }
-
-            .mobile-bottom-nav a {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            :root {
-                --bg-color: #faf9fc;
-                --card-bg: #ffffff;
-                --border-color: #ece8f6;
-                --text-primary: #1e1b2e;
-                --text-secondary: #6b6478;
-                --accent-color: #6d28d9;
-                --accent-hover: #5b21b6;
-                --accent-light: #f3effe;
-                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-                --success-color: #10b981;
-                --danger-color: #ef4444;
-                --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
-                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
-                --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
+            .mobile-bottom-nav a i {
+                font-size: 17px;
+                transition: transform 0.2s ease;
             }
 
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
+            .mobile-bottom-nav a:hover {
+                background: var(--accent-light);
+                color: var(--accent-color);
             }
 
-            body {
-                font-family: var(--font-family);
-                background-color: var(--bg-color);
-                color: var(--text-primary);
-                line-height: 1.6;
-                -webkit-font-smoothing: antialiased;
-                padding-bottom: 100px;
+            .mobile-bottom-nav a.active {
+                color: var(--accent-color) !important;
+                background: var(--accent-light) !important;
+                font-weight: 700;
+                transform: translateY(-2px);
             }
 
-            /* ============================================================
-                                               BOTTOM NAV — rendered by the shared _CustomerBottomNav partial.
-                                               Styles below match every other customer page exactly (same
-                                               class names), so the partial renders identically here.
-                                               ============================================================ */
-            .mobile-bottom-nav {
-                display: flex !important;
-                position: fixed;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 200;
-                background: #ffffff;
-                border-top: 1px solid #ece8f6;
-                justify-content: space-between;
-                gap: 2px;
-                font-size: 10.5px;
-                color: #6b6478;
-                text-decoration: none;
-                padding: 4px 6px;
-                flex-shrink: 0;
-                position: relative;
-                border-radius: 12px;
-                transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
-            }
-
-                .mobile-bottom-nav a i {
-                    font-size: 17px;
-                    transition: transform 0.2s ease;
+                .mobile-bottom-nav a.active i {
+                    transform: scale(1.12);
                 }
 
-                .mobile-bottom-nav a:hover {
-                    background: var(--accent-light);
-                    color: var(--accent-color);
-                }
+    /* Cart badge */
+    .unread-nav-badge {
+        position: absolute;
+        top: 2px;
+        right: 18px;
+        background: var(--accent-gradient);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 800;
+        min-width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+        box-shadow: 0 3px 8px rgba(109, 40, 217, 0.3);
+    }
 
-                .mobile-bottom-nav a.active {
-                    color: var(--accent-color) !important;
-                    background: var(--accent-light) !important;
-                    font-weight: 700;
-                    transform: translateY(-2px);
-                }
+    /* Chat unread dot */
+    .chat-icon-wrap {
+        position: relative;
+        display: inline-flex;
+    }
 
-                    .mobile-bottom-nav a.active i {
-                        transform: scale(1.12);
-                    }
-
-        /* Cart badge (used by _CartCountBadge partial inside _CustomerBottomNav) */
-        .unread-nav-badge {
+        .chat-icon-wrap .chat-nav-dot {
             position: absolute;
-            top: 2px;
-            right: 18px;
-            background: var(--accent-gradient);
-            color: #fff;
-            font-size: 10px;
-            font-weight: 800;
-            min-width: 16px;
-            height: 16px;
+            top: -2px;
+            right: -4px;
+            width: 9px;
+            height: 9px;
+            background: #ed4956;
+            border: 2px solid #fff;
             border-radius: 50%;
+            box-sizing: content-box;
+        }
+
+    /* ============================================================
+           PAGE SHELL
+           ============================================================ */
+
+    .promotions-page {
+        padding: 24px 20px 40px;
+        min-height: 100vh;
+    }
+
+    .promotions-box {
+        max-width: 1320px;
+        margin: 0 auto;
+    }
+
+    /* ============================================================
+           EMPTY STATE
+           ============================================================ */
+
+    .promotions-empty {
+        max-width: 700px;
+        margin: 20px auto;
+        background: var(--card-bg);
+        text-align: center;
+        color: var(--text-secondary);
+        padding: 60px 40px;
+        border-radius: 20px;
+        border: 2px dashed #ded4f5;
+        box-shadow: var(--shadow-sm);
+    }
+
+        .promotions-empty .empty-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 18px;
+            border-radius: 50%;
+            background: var(--accent-light);
+            color: var(--accent-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0 4px;
-            box-shadow: 0 3px 8px rgba(109, 40, 217, 0.3);
+            font-size: 26px;
         }
 
-        /* Chat unread dot (used inside _CustomerBottomNav) */
-        .chat-icon-wrap {
-            position: relative;
-            display: inline-flex;
-        }
-
-            .chat-icon-wrap .chat-nav-dot {
-                position: absolute;
-                top: -2px;
-                right: -4px;
-                width: 9px;
-                height: 9px;
-                background: #ed4956;
-                border: 2px solid #fff;
-                border-radius: 50%;
-                box-sizing: content-box;
-            }
-
-        /* ============================================================
-                                       PAGE SHELL
-                                       ============================================================ */
-        .promotions-page {
-            padding: 24px 20px 40px;
-            min-height: 100vh;
-        }
-
-        .promotions-box {
-            max-width: 1320px;
-            margin: 0 auto;
-        }
-
-        /* ============================================================
-                                       EMPTY STATE
-                                       ============================================================ */
-        .promotions-empty {
-            max-width: 700px;
-            margin: 20px auto;
-            background: var(--card-bg);
-            text-align: center;
-            color: var(--text-secondary);
-            padding: 60px 40px;
-            border-radius: 20px;
-            border: 2px dashed #ded4f5;
-            box-shadow: var(--shadow-sm);
-        }
-
-            .promotions-empty .empty-icon {
-                width: 64px;
-                height: 64px;
-                margin: 0 auto 18px;
-                border-radius: 50%;
-                background: var(--accent-light);
-                color: var(--accent-color);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 26px;
-            }
-
-            .promotions-empty h3 {
-                color: var(--text-primary);
-                font-size: 20px;
-                font-weight: 800;
-                margin-bottom: 8px;
-            }
-
-        /* ============================================================
-                                       PROMOTION CARDS
-                                       ============================================================ */
-        .promotions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
-            gap: 26px;
-            margin-top: 4px;
-            margin-bottom: 40px;
-        }
-
-        .promo-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: var(--shadow-sm);
-            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-        }
-
-            .promo-card:hover {
-                transform: translateY(-4px);
-                box-shadow: var(--shadow-md);
-            }
-
-            .promo-card.unread {
-                border-color: var(--accent-color);
-                box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.08), var(--shadow-sm);
-            }
-
-            .promo-card.is-hidden {
-                display: none;
-            }
-
-        /* Card top visual */
-        .promo-visual {
-            position: relative;
-            height: 200px;
-            overflow: hidden;
-            background: linear-gradient(135deg, #efeaf9 0%, #f7f4fc 100%);
-        }
-
-        .promo-visual-img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-        }
-
-        .promo-body {
-            padding: 22px 26px 26px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-
-        .promo-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 10px;
+        .promotions-empty h3 {
+            color: var(--text-primary);
+            font-size: 20px;
+            font-weight: 800;
             margin-bottom: 8px;
         }
 
-        .promo-title {
-            font-size: 20px;
+    /* ============================================================
+           PROMOTION CARDS
+           ============================================================ */
+
+    .promotions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+        gap: 26px;
+        margin-top: 4px;
+        margin-bottom: 40px;
+    }
+
+    .promo-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+        .promo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .promo-card.unread {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.08), var(--shadow-sm);
+        }
+
+        .promo-card.is-hidden {
+            display: none;
+        }
+
+    /* Card visual */
+
+    .promo-visual {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #efeaf9 0%, #f7f4fc 100%);
+    }
+
+    .promo-visual-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .promo-body {
+        padding: 22px 26px 26px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .promo-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    .promo-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .promo-new-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 3;
+        flex-shrink: 0;
+        background: var(--accent-gradient);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 5px 12px;
+        border-radius: 999px;
+        white-space: nowrap;
+        box-shadow: 0 6px 14px rgba(109, 40, 217, 0.35);
+    }
+
+    .promo-message {
+        font-size: 15.5px;
+        font-weight: 700;
+        color: var(--accent-color);
+        line-height: 1.5;
+        margin-bottom: 18px;
+    }
+
+    /* Coupon */
+
+    .promo-coupon {
+        position: relative;
+        background: #ecfdf5;
+        border: 1.5px dashed #a7f3d0;
+        color: var(--success-color);
+        padding: 12px 16px;
+        border-radius: 14px;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .promo-coupon-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .promo-coupon-icon {
+        flex-shrink: 0;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgba(16, 185, 129, 0.14);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+    }
+
+    .promo-coupon-text {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        overflow: hidden;
+        min-width: 0;
+    }
+
+        .promo-coupon-text .coupon-label {
+            font-size: 10.5px;
             font-weight: 800;
-            color: var(--text-primary);
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: #059669;
+            opacity: 0.75;
         }
 
-        .promo-new-badge {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            z-index: 3;
-            flex-shrink: 0;
-            background: var(--accent-gradient);
-            color: #fff;
-            font-size: 11px;
+        .promo-coupon-text .coupon-code {
+            font-size: 15px;
             font-weight: 800;
-            padding: 5px 12px;
-            border-radius: 999px;
-            white-space: nowrap;
-            box-shadow: 0 6px 14px rgba(109, 40, 217, 0.35);
-        }
-
-        .promo-message {
-            font-size: 15.5px;
-            font-weight: 700;
-            color: var(--accent-color);
-            line-height: 1.5;
-            margin-bottom: 18px;
-        }
-
-        .promo-coupon {
-            position: relative;
-            background: #ecfdf5;
-            border: 1.5px dashed #a7f3d0;
+            letter-spacing: 0.4px;
             color: var(--success-color);
-            padding: 12px 16px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .promo-coupon-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-
-        .promo-coupon-icon {
-            flex-shrink: 0;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: rgba(16, 185, 129, 0.14);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-        }
-
-        .promo-coupon-text {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
             overflow: hidden;
-            min-width: 0;
-        }
-
-            .promo-coupon-text .coupon-label {
-                font-size: 10.5px;
-                font-weight: 800;
-                letter-spacing: 0.6px;
-                text-transform: uppercase;
-                color: #059669;
-                opacity: 0.75;
-            }
-
-            .promo-coupon-text .coupon-code {
-                font-size: 15px;
-                font-weight: 800;
-                letter-spacing: 0.4px;
-                color: var(--success-color);
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-
-        .promo-coupon .copy-code-btn {
-            border: none;
-            background: rgba(16, 185, 129, 0.14);
-            color: var(--success-color);
-            font-size: 11.5px;
-            font-weight: 800;
-            padding: 7px 12px;
-            border-radius: 8px;
-            cursor: pointer;
+            text-overflow: ellipsis;
             white-space: nowrap;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            flex-shrink: 0;
-            transition: all 0.2s ease;
         }
 
-            .promo-coupon .copy-code-btn:hover {
-                background: var(--success-color);
-                color: #fff;
-            }
+    .promo-coupon .copy-code-btn {
+        border: none;
+        background: rgba(16, 185, 129, 0.14);
+        color: var(--success-color);
+        font-size: 11.5px;
+        font-weight: 800;
+        padding: 7px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+    }
 
-            .promo-coupon .copy-code-btn.copied {
-                background: var(--success-color);
-                color: #fff;
-            }
-
-        .promo-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-top: auto;
-            padding-top: 6px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 14px;
+        .promo-coupon .copy-code-btn:hover {
+            background: var(--success-color);
+            color: #fff;
         }
 
-        .promo-date {
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .promo-coupon .copy-code-btn.copied {
+            background: var(--success-color);
+            color: #fff;
+        }
+
+    /* Footer */
+
+    .promo-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: auto;
+        padding-top: 14px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .promo-date {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+        .promo-date i {
             font-size: 12px;
-            color: var(--text-secondary);
-            font-weight: 600;
+            color: #a49dbb;
         }
 
-            .promo-date i {
-                font-size: 12px;
-                color: #a49dbb;
-            }
+    .promo-mark-read-btn {
+        border: 1px solid var(--border-color);
+        background: var(--accent-light);
+        color: var(--accent-color);
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+    }
 
-        .promo-mark-read-btn {
-            border: 1px solid var(--border-color);
-            background: var(--accent-light);
+        .promo-mark-read-btn:hover:not(:disabled) {
+            background: var(--accent-color);
+            color: #ffffff;
+            border-color: var(--accent-color);
+        }
+
+        .promo-mark-read-btn:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+    /* ============================================================
+           TOAST
+           ============================================================ */
+
+    .promo-toast {
+        position: fixed;
+        left: 50%;
+        bottom: 100px;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--text-primary);
+        color: #fff;
+        font-size: 13.5px;
+        font-weight: 600;
+        padding: 12px 20px;
+        border-radius: 50px;
+        box-shadow: var(--shadow-lg);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        z-index: 300;
+    }
+
+        .promo-toast.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+
+    /* ============================================================
+           TOP HEADER
+           ============================================================ */
+
+    .promo-topbar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
+
+    .topbar-icon {
+        position: relative;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        font-size: 16px;
+        cursor: default;
+        transition: transform 0.15s ease, box-shadow 0.2s ease, color 0.2s ease;
+    }
+
+        .topbar-icon:hover {
             color: var(--accent-color);
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
         }
 
-            .promo-mark-read-btn:hover:not(:disabled) {
-                background: var(--accent-color);
-                color: #ffffff;
-                border-color: var(--accent-color);
-            }
+    /* ============================================================
+           HERO
+           ============================================================ */
 
-            .promo-mark-read-btn:disabled {
-                opacity: 0.6;
-                cursor: wait;
-            }
+    .promo-hero {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 26px;
+    }
 
-        /* Toast */
-        .promo-toast {
-            position: fixed;
-            left: 50%;
-            bottom: 100px;
-            transform: translateX(-50%) translateY(20px);
-            background: var(--text-primary);
-            color: #fff;
-            font-size: 13.5px;
-            font-weight: 600;
-            padding: 12px 20px;
-            border-radius: 50px;
-            box-shadow: var(--shadow-lg);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.25s ease, transform 0.25s ease;
-            z-index: 300;
+    .hero-badges {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 14px;
+    }
+
+    .gift-badge {
+        position: relative;
+        flex-shrink: 0;
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: var(--accent-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 28px;
+        box-shadow: 0 12px 28px rgba(109, 40, 217, 0.35), 0 0 0 8px rgba(124, 58, 237, 0.08);
+    }
+
+    .gift-badge-sparkle {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: var(--gold-color);
+        clip-path: polygon( 50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39% );
+    }
+
+        .gift-badge-sparkle.s1 {
+            top: -6px;
+            right: -4px;
+            width: 12px;
+            height: 12px;
         }
 
-            .promo-toast.visible {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-                pointer-events: auto;
-            }
-
-        /* ============================================================
-                                       TOP HEADER — trimmed down to just the chat icon
-                                       (search bar, notifications, wishlist, and profile removed)
-                                       ============================================================ */
-        .promo-topbar {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 20px;
+        .gift-badge-sparkle.s2 {
+            bottom: 2px;
+            left: -8px;
+            width: 7px;
+            height: 7px;
+            background: #a78bfa;
         }
 
-        .topbar-icon {
-            position: relative;
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            font-size: 16px;
-            cursor: default;
-            transition: transform 0.15s ease, box-shadow 0.2s ease, color 0.2s ease;
-        }
+    .promo-hero-title {
+        font-family: var(--font-display);
+        font-size: 36px;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1.15;
+    }
 
-            .topbar-icon:hover {
-                color: var(--accent-color);
-                transform: translateY(-2px);
-                box-shadow: var(--shadow-sm);
-            }
+    .promo-hero-subtitle {
+        margin-top: 6px;
+        font-size: 15px;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
 
-        /* ============================================================
-                                       HERO SECTION
-                                       ============================================================ */
-        .promo-hero {
-            display: grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            align-items: center;
-            gap: 24px;
-            margin-bottom: 26px;
-        }
+    .promotions-subtext {
+        color: var(--text-secondary);
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
 
-        .hero-badges {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            margin-bottom: 14px;
-        }
-
-        .gift-badge {
-            position: relative;
-            flex-shrink: 0;
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            background: var(--accent-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 28px;
-            box-shadow: 0 12px 28px rgba(109, 40, 217, 0.35), 0 0 0 8px rgba(124, 58, 237, 0.08);
-        }
-
-        .gift-badge-sparkle {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: var(--gold-color);
-            clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%);
-        }
-
-            .gift-badge-sparkle.s1 {
-                top: -6px;
-                right: -4px;
-                width: 12px;
-                height: 12px;
-            }
-
-            .gift-badge-sparkle.s2 {
-                bottom: 2px;
-                left: -8px;
-                width: 7px;
-                height: 7px;
-                background: #a78bfa;
-            }
-
-        .promo-hero-title {
-            font-family: var(--font-display);
-            font-size: 36px;
+        .promotions-subtext #unreadCount {
+            color: var(--accent-color);
             font-weight: 800;
-            color: var(--text-primary);
-            line-height: 1.15;
         }
 
-        .promo-hero-subtitle {
-            margin-top: 6px;
-            font-size: 15px;
+    .promo-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .mark-all-btn {
+        border: 1px solid var(--border-color);
+        background: var(--card-bg);
+        color: var(--accent-color);
+        padding: 9px 18px;
+        border-radius: 50px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+        margin-left: auto;
+    }
+
+        .mark-all-btn:hover:not(:disabled) {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+        }
+
+        .mark-all-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+    /* Filter tabs */
+
+    .promo-filter-tabs {
+        display: flex;
+        justify-content: flex-start;
+        gap: 12px;
+        overflow-x: auto;
+        padding: 4px 4px 4px 0;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+        .promo-filter-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .promo-filter-tabs button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-width: 130px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
             color: var(--text-secondary);
-            font-weight: 500;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 14px 22px;
+            border-radius: 18px;
+            cursor: pointer;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
         }
 
-        .promotions-subtext {
-            color: var(--text-secondary);
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-
-            .promotions-subtext #unreadCount {
+            .promo-filter-tabs button i {
+                font-size: 18px;
                 color: var(--accent-color);
-                font-weight: 800;
+                transition: color 0.2s ease;
             }
+
+            .promo-filter-tabs button .tab-count {
+                background: var(--accent-light);
+                color: var(--accent-color);
+                font-size: 11.5px;
+                font-weight: 800;
+                min-width: 20px;
+                height: 20px;
+                border-radius: 999px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 5px;
+            }
+
+            .promo-filter-tabs button:hover:not(.active) {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+                border-color: var(--accent-color);
+                color: var(--accent-color);
+            }
+
+            .promo-filter-tabs button.active {
+                background: var(--accent-gradient);
+                color: #fff;
+                border-color: transparent;
+                box-shadow: 0 8px 20px rgba(109, 40, 217, 0.28);
+            }
+
+                .promo-filter-tabs button.active i {
+                    color: #fff;
+                }
+
+                .promo-filter-tabs button.active .tab-count {
+                    background: rgba(255, 255, 255, 0.25);
+                    color: #fff;
+                }
+
+    /* Hero image */
+
+    .promo-hero-right {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .hero-illustration-img {
+        width: 100%;
+        max-width: 420px;
+        height: auto;
+        display: block;
+        object-fit: contain;
+        filter: drop-shadow(0 20px 30px rgba(109, 40, 217, 0.18));
+    }
+
+    /* ============================================================
+           NOTIFICATION DEEP-LINK HIGHLIGHT
+           ============================================================ */
+
+    @@keyframes promoHighlightPulse {
+        0% {
+            box-shadow: 0 0 0 3px var(--accent-color), var(--shadow-md);
+        }
+
+        70% {
+            box-shadow: 0 0 0 3px var(--accent-color), var(--shadow-md);
+        }
+
+        100% {
+            box-shadow: var(--shadow-sm);
+        }
+    }
+
+    .promo-card-highlight {
+        animation: promoHighlightPulse 2.4s ease;
+    }
+
+    /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+
+    @@media (max-width: 980px) {
+        .promo-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .promo-hero-right {
+            order: -1;
+            max-width: 280px;
+            margin: 0 auto 8px;
+        }
+    }
+
+    @@media (max-width: 780px) {
+        .promotions-grid {
+            grid-template-columns: 1fr;
+        }
 
         .promo-toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 16px;
-            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .mark-all-btn {
-            border: 1px solid var(--border-color);
-            background: var(--card-bg);
-            color: var(--accent-color);
-            padding: 9px 18px;
-            border-radius: 50px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            flex-shrink: 0;
-            white-space: nowrap;
-            transition: all 0.2s ease;
-            box-shadow: var(--shadow-sm);
-            margin-left: auto;
+            width: 100%;
+            justify-content: center;
+            margin-left: 0;
         }
-
-            .mark-all-btn:hover:not(:disabled) {
-                background: var(--accent-color);
-                color: #fff;
-                border-color: var(--accent-color);
-            }
-
-            .mark-all-btn:disabled {
-                opacity: 0.4;
-                cursor: not-allowed;
-            }
 
         .promo-filter-tabs {
-            display: flex;
-            justify-content: flex-start;
-            gap: 12px;
-            overflow-x: auto;
-            padding: 4px 4px 4px 0;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
+            width: 100%;
         }
-
-            .promo-filter-tabs::-webkit-scrollbar {
-                display: none;
-            }
 
             .promo-filter-tabs button {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 9px;
-                min-width: 130px;
-                border: 1px solid var(--border-color);
-                background: var(--card-bg);
-                color: var(--text-secondary);
-                font-family: inherit;
-                font-size: 14px;
-                font-weight: 700;
-                padding: 14px 22px;
-                border-radius: 18px;
-                cursor: pointer;
-                flex-shrink: 0;
-                box-shadow: var(--shadow-sm);
-                transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+                min-width: 110px;
+                padding: 13px 18px;
+                font-size: 13px;
+                flex: 1;
             }
+    }
 
-                .promo-filter-tabs button i {
-                    font-size: 18px;
-                    color: var(--accent-color);
-                    transition: color 0.2s ease;
-                }
-
-                .promo-filter-tabs button .tab-count {
-                    background: var(--accent-light);
-                    color: var(--accent-color);
-                    font-size: 11.5px;
-                    font-weight: 800;
-                    min-width: 20px;
-                    height: 20px;
-                    border-radius: 999px;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 0 5px;
-                }
-
-                .promo-filter-tabs button:hover:not(.active) {
-                    transform: translateY(-2px);
-                    box-shadow: var(--shadow-md);
-                    border-color: var(--accent-color);
-                    color: var(--accent-color);
-                }
-
-                .promo-filter-tabs button.active {
-                    background: var(--accent-gradient);
-                    color: #fff;
-                    border-color: transparent;
-                    box-shadow: 0 8px 20px rgba(109, 40, 217, 0.28);
-                }
-
-                    .promo-filter-tabs button.active i {
-                        color: #fff;
-                    }
-
-                    .promo-filter-tabs button.active .tab-count {
-                        background: rgba(255, 255, 255, 0.25);
-                        color: #fff;
-                    }
-
-        .promo-hero-right {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+    @@media (max-width: 560px) {
+        .promotions-page {
+            padding: 18px 14px 30px;
         }
 
-        .hero-illustration-img {
+        .promotions-grid {
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+
+        .promo-hero-title {
+            font-size: 28px;
+        }
+
+        .promo-hero-subtitle {
+            font-size: 13px;
+        }
+
+        .hero-badges {
+            gap: 14px;
+        }
+
+        .gift-badge {
+            width: 60px;
+            height: 60px;
+            font-size: 23px;
+        }
+
+        .promo-body {
+            padding: 18px 18px 20px;
+        }
+
+        .promo-visual {
+            height: 180px;
+        }
+
+        .promo-footer {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .promo-mark-read-btn {
             width: 100%;
-            max-width: 420px;
-            height: auto;
-            display: block;
-            object-fit: contain;
-            filter: drop-shadow(0 20px 30px rgba(109, 40, 217, 0.18));
+            justify-content: center;
         }
 
-        /* ============================================================
-                                       RESPONSIVE
-                                       ============================================================ */
-        @@media (max-width: 980px) {
-            .promo-hero {
-                grid-template-columns: 1fr;
-            }
-
-            .promo-hero-right {
-                order: -1;
-                max-width: 280px;
-                margin: 0 auto 8px;
-            }
+        .promotions-empty {
+            padding: 45px 22px;
         }
+    }
+</style>
 
-        @@media (max-width: 780px) {
-            .promotions-grid {
-                grid-template-columns: 1fr;
-            }
+<partial name="_CustomerBottomNav" />
 
-            .promo-toolbar {
-                justify-content: center;
-            }
-            /* ============================================================
-                                   NOTIFICATION DEEP-LINK HIGHLIGHT (NEW) — briefly pulses
-                                   and scrolls to the promo card referenced by a clicked
-                                   Promotion notification (?highlightPromoId=).
-                                   ============================================================ */
-            @@keyframes promoHighlightPulse {
-                0% {
-                    box-shadow: 0 0 0 3px var(--accent-color), var(--shadow-md);
-                }
+<form id="antiForgeryForm">
+    @Html.AntiForgeryToken()
+</form>
 
-                70% {
-                    box-shadow: 0 0 0 3px var(--accent-color), var(--shadow-md);
-                }
+<div class="promotions-page">
+    <div class="promotions-box">
 
-                100% {
-                    box-shadow: var(--shadow-sm);
-                }
-            }
+        <section class="promo-hero">
 
-            .promo-card-highlight {
-                animation: promoHighlightPulse 2.4s ease;
-            }
+            <div class="promo-hero-left">
 
-            @@media (max-width: 780px) {
-                .promotions-grid {
-                    grid-template-columns: 1fr;
-                }
+                <div class="hero-badges">
 
-            .mark-all-btn {
-                width: 100%;
-                justify-content: center;
-                margin-left: 0;
-            }
+                    <div class="gift-badge" aria-hidden="true">
+                        <i class="fa-solid fa-gift"></i>
 
-            .promo-filter-tabs {
-                width: 100%;
-            }
-
-                .promo-filter-tabs button {
-                    min-width: 110px;
-                    padding: 13px 18px;
-                    font-size: 13px;
-                    flex: 1;
-                }
-        }
-
-        @@media (max-width: 560px) {
-            .promo-hero-title {
-                font-size: 28px;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-    <partial name="_CustomerBottomNav" />
-
-    <form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
-
-    <div class="promotions-page">
-        <div class="promotions-box">
-
-            <section class="promo-hero">
-                <div class="promo-hero-left">
-
-                    <div class="hero-badges">
-                        <div class="gift-badge" aria-hidden="true">
-                            <i class="fa-solid fa-gift"></i>
-                            <span class="gift-badge-sparkle s1"></span>
-                            <span class="gift-badge-sparkle s2"></span>
-                        </div>
-                        <div>
-                            <h1 class="promo-hero-title">My Promotions</h1>
-                            <p class="promo-hero-subtitle">Exclusive offers just for you <span aria-hidden="true">✨</span></p>
-                        </div>
+                        <span class="gift-badge-sparkle s1"></span>
+                        <span class="gift-badge-sparkle s2"></span>
                     </div>
 
-                    @if (Model.Promotions != null && Model.Promotions.Any())
-                    {
-                        <p class="promotions-subtext" id="promoSubtext">
-                            <span id="unreadCount">@Model.Promotions.Count(p => !p.IsRead)</span> unread of @Model.Promotions.Count total offers
-                        </p>
+                    <div>
+                        <h1 class="promo-hero-title">
+                            My Promotions
+                        </h1>
 
-                        <div class="promo-toolbar">
-                            <div class="promo-filter-tabs">
-                                <button type="button" class="active" data-filter="all">
-                                    <i class="fa-solid fa-layer-group"></i>
-                                    <span>All</span>
-                                </button>
-                                <button type="button" data-filter="unread">
-                                    <i class="fa-solid fa-envelope"></i>
-                                    <span>Unread</span>
-                                    <span class="tab-count">@Model.Promotions.Count(p => !p.IsRead)</span>
-                                </button>
+                        <p class="promo-hero-subtitle">
+                            Exclusive offers just for you
+                            <span aria-hidden="true">✨</span>
+                        </p>
+                    </div>
+
+                </div>
+
+                @if (Model.Promotions != null && Model.Promotions.Any())
+                {
+                    <p class="promotions-subtext" id="promoSubtext">
+                        <span id="unreadCount">
+                            @Model.Promotions.Count(p => !p.IsRead)
+                        </span>
+                        unread of @Model.Promotions.Count total offers
+                    </p>
+
+                    <div class="promo-toolbar">
+
+                        <div class="promo-filter-tabs">
+
+                            <button type="button"
+                                    class="active"
+                                    data-filter="all">
+
+                                <i class="fa-solid fa-layer-group"></i>
+
+                                <span>All</span>
+
+                            </button>
+
+                            <button type="button"
+                                    data-filter="unread">
+
+                                <i class="fa-solid fa-envelope"></i>
+
+                                <span>Unread</span>
+
+                                <span class="tab-count">
+                                    @Model.Promotions.Count(p => !p.IsRead)
+                                </span>
+
+                            </button>
+
+                        </div>
+
+                        @if (Model.Promotions.Any(p => !p.IsRead))
+                        {
+                            <button type="button"
+                                    class="mark-all-btn"
+                                    id="markAllBtn">
+
+                                <i class="fa-solid fa-check-double"></i>
+
+                                Mark all as read
+
+                            </button>
+                        }
+
+                    </div>
+                }
+
+            </div>
+
+            <div class="promo-hero-right">
+
+                <img src="/images/promotions/hero-gift.png"
+                     alt=""
+                     class="hero-illustration-img"
+                     aria-hidden="true" />
+
+            </div>
+
+        </section>
+
+        @if (Model.Promotions == null || !Model.Promotions.Any())
+        {
+            <div class="promotions-empty">
+
+                <div class="empty-icon">
+                    <i class="fa-regular fa-bell"></i>
+                </div>
+
+                <h3>No promotions yet</h3>
+
+                <p>
+                    Offers and coupons from stores you follow will show up here.
+                </p>
+
+            </div>
+        }
+        else
+        {
+            <div class="promotions-grid"
+                 id="promotionsGrid">
+
+                @foreach (var item in Model.Promotions)
+                {
+                    string rawMsg = item.Promotion?.Message ?? "";
+
+                    var pctMatch = Regex.Match(
+                    rawMsg,
+                    "\\d{1,3}\\s*%"
+                    );
+
+                    string pctText = pctMatch.Success
+                    ? pctMatch.Value
+                    .Replace(" ", "")
+                    .Replace("%", "")
+                    : "";
+
+                    int[] supportedPercents =
+                    {
+            10,
+            20,
+            30,
+            40,
+            50,
+            60,
+            70,
+            80,
+            90,
+            100
+            };
+
+                    string promoImg;
+
+                    if (int.TryParse(pctText, out int pctNum)
+                    && supportedPercents.Contains(pctNum))
+                    {
+                        promoImg =
+                        "/images/promotions/promo-"
+                        + pctNum
+                        + ".png";
+                    }
+                    else
+                    {
+                        promoImg =
+                        "/images/promotions/promo-generic.png";
+                    }
+
+                    <div class="promo-card @(item.IsRead ? "" : "unread")"
+                         id="promo-@item.PromotionRecipientID"
+                         data-promo-id="@item.PromotionRecipientID"
+                         data-promotion-id="@item.Promotion?.PromotionID"
+                         data-read="@item.IsRead.ToString().ToLower()">
+
+                        <div class="promo-visual">
+
+                            @if (!item.IsRead)
+                            {
+                                <span class="promo-new-badge">
+                                    New
+                                </span>
+                            }
+
+                            <img src="@promoImg"
+                                 alt=""
+                                 class="promo-visual-img"
+                                 loading="lazy" />
+
+                        </div>
+
+                        <div class="promo-body">
+
+                            <div class="promo-header">
+
+                                <span class="promo-title">
+                                    @item.Promotion?.Title
+                                </span>
+
                             </div>
 
-                            @if (Model.Promotions.Any(p => !p.IsRead))
+                            <p class="promo-message">
+                                @item.Promotion?.Message
+                            </p>
+
+                            @if (!string.IsNullOrWhiteSpace(
+                           item.Promotion?.CouponCode))
                             {
-                                <button type="button" class="mark-all-btn" id="markAllBtn">
-                                    <i class="fa-solid fa-check-double"></i> Mark all as read
-                                </button>
+                                <div class="promo-coupon">
+
+                                    <div class="promo-coupon-left">
+
+                                        <span class="promo-coupon-icon">
+                                            <i class="fa-solid fa-ticket"></i>
+                                        </span>
+
+                                        <span class="promo-coupon-text">
+
+                                            <span class="coupon-label">
+                                                Coupon Code
+                                            </span>
+
+                                            <span class="coupon-code">
+                                                @item.Promotion.CouponCode
+                                            </span>
+
+                                        </span>
+
+                                    </div>
+
+                                    <button type="button"
+                                            class="copy-code-btn"
+                                            data-code="@item.Promotion.CouponCode">
+
+                                        <i class="fa-regular fa-copy"></i>
+
+                                        Copy
+
+                                    </button>
+
+                                </div>
                             }
-                        </div>
-                    }
-                </div>
 
-                <div class="promo-hero-right">
-                    <img src="/images/promotions/hero-gift.png" alt="" class="hero-illustration-img" aria-hidden="true" />
-                </div>
-            </section>
+                            <div class="promo-footer">
 
-            @if (Model.Promotions == null || !Model.Promotions.Any())
-            {
-                <div class="promotions-empty">
-                    <div class="empty-icon"><i class="fa-regular fa-bell"></i></div>
-                    <h3>No promotions yet</h3>
-                    <p>Offers and coupons from stores you follow will show up here.</p>
-                </div>
-            }
-            else
-            {
-                <div class="promotions-grid" id="promotionsGrid">
-                    @foreach (var item in Model.Promotions)
-                    {
-                        string rawMsg = item.Promotion?.Message ?? "";
+                                <small class="promo-date">
 
-                        // The artwork is selected ONLY by the percentage found in the existing
-                        // Message field - never by title, coupon code, or keywords.
-                        var pctMatch = Regex.Match(rawMsg, "\\d{1,3}\\s*%");
-                        string pctText = pctMatch.Success ? pctMatch.Value.Replace(" ", "").Replace("%", "") : "";
+                                    <i class="fa-regular fa-calendar"></i>
 
-                        int[] supportedPercents = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
-                        string promoImg;
-                        if (int.TryParse(pctText, out int pctNum) && supportedPercents.Contains(pctNum))
-                        {
-                            // Exact match only - an unsupported percentage must never be
-                            // mapped to a different one, since that would show the wrong number.
-                            promoImg = "/images/promotions/promo-" + pctNum + ".png";
-                        }
-                        else
-                        {
-                            promoImg = "/images/promotions/promo-generic.png";
-                        }
-                        <div class="promo-card @(item.IsRead ? "" : "unread")" data-promo-id="@item.PromotionRecipientID" data-read="@item.IsRead.ToString().ToLower()">
-                        <div class="promo-card @(item.IsRead ? "" : "unread")" id="promo-@item.PromotionRecipientID" data-promo-id="@item.PromotionRecipientID" data-promotion-id="@item.Promotion?.PromotionID" data-read="@item.IsRead.ToString().ToLower()">
+                                    Sent:
+                                    @item.CreatedAt
+                                    .ToLocalTime()
+                                    .ToString("yyyy-MM-dd HH:mm")
 
-                            <div class="promo-visual">
+                                </small>
 
                                 @if (!item.IsRead)
                                 {
-                                    <span class="promo-new-badge">New</span>
+                                    <button type="button"
+                                            class="promo-mark-read-btn"
+                                            data-id="@item.PromotionRecipientID">
+
+                                        <i class="fa-solid fa-check"></i>
+
+                                        Mark as read
+
+                                    </button>
                                 }
 
-                                <img src="@promoImg" alt="" class="promo-visual-img" loading="lazy" />
                             </div>
 
-                            <div class="promo-body">
-
-                                <div class="promo-header">
-                                    <span class="promo-title">@item.Promotion?.Title</span>
-                                </div>
-
-                                <p class="promo-message">@item.Promotion?.Message</p>
-
-                                @if (!string.IsNullOrWhiteSpace(item.Promotion?.CouponCode))
-                                {
-                                    <div class="promo-coupon">
-                                        <div class="promo-coupon-left">
-                                            <span class="promo-coupon-icon"><i class="fa-solid fa-ticket"></i></span>
-                                            <span class="promo-coupon-text">
-                                                <span class="coupon-label">Coupon Code</span>
-                                                <span class="coupon-code">@item.Promotion.CouponCode</span>
-                                            </span>
-                                        </div>
-                                        <button type="button" class="copy-code-btn" data-code="@item.Promotion.CouponCode">
-                                            <i class="fa-regular fa-copy"></i> Copy
-                                        </button>
-                                    </div>
-                                }
-
-                                <div class="promo-footer">
-                                    <small class="promo-date">
-                                        <i class="fa-regular fa-calendar"></i>
-                                        Sent: @item.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                                    </small>
-
-                                    @if (!item.IsRead)
-                                    {
-                                        <button type="button" class="promo-mark-read-btn" data-id="@item.PromotionRecipientID">
-                                            <i class="fa-solid fa-check"></i> Mark as read
-                                        </button>
-                                    }
-                                </div>
-                            </div>
                         </div>
-                    }
-                </div>
-            }
 
-        </div>
-    </div>
-
-    <div class="promo-toast" id="promoToast" role="status" aria-live="polite"></div>
-
-    <script>
-        (function() {
-            const grid = document.getElementById('promotionsGrid');
-            const toast = document.getElementById('promoToast');
-            const unreadCountEl = document.getElementById('unreadCount');
-            const markAllBtn = document.getElementById('markAllBtn');
-            const tokenInput = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
-
-            function showToast(message) {
-                if (!toast) return;
-                toast.textContent = message;
-                toast.classList.add('visible');
-                clearTimeout(showToast._t);
-                showToast._t = setTimeout(() => toast.classList.remove('visible'), 2200);
-            }
-
-            function updateUnreadCount(delta) {
-                if (!unreadCountEl) return;
-                const next = Math.max(0, parseInt(unreadCountEl.textContent, 10) + delta);
-                unreadCountEl.textContent = next;
-                const tabCountEl = document.querySelector('.promo-filter-tabs .tab-count');
-                if (tabCountEl) tabCountEl.textContent = next;
-                if (next === 0 && markAllBtn) markAllBtn.remove();
-            }
-
-            async function markAsRead(id, btn) {
-                if (!tokenInput) return false;
-                if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
-
-                try {
-                    const formData = new FormData();
-                    formData.append('__RequestVerificationToken', tokenInput.value);
-                    formData.append('promotionRecipientId', id);
-
-                    const response = await fetch('?handler=MarkAsRead', {
-                        method: 'POST',
-                        body: formData,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    });
-
-                    if (!response.ok) throw new Error('Request failed');
-                    return true;
-                } catch (err) {
-                    showToast('Could not update. Please try again.');
-                    if (btn) { btn.disabled = false; btn.textContent = 'Mark as read'; }
-                    return false;
+                    </div>
                 }
+
+            </div>
+        }
+
+    </div>
+</div>
+
+<div class="promo-toast"
+     id="promoToast"
+     role="status"
+     aria-live="polite">
+</div>
+
+<script>
+    (function () {
+
+        const grid = document.getElementById('promotionsGrid');
+        const toast = document.getElementById('promoToast');
+        const unreadCountEl = document.getElementById('unreadCount');
+        const markAllBtn = document.getElementById('markAllBtn');
+
+        const tokenInput =
+            document.querySelector(
+                '#antiForgeryForm input[name="__RequestVerificationToken"]'
+            );
+
+        function showToast(message) {
+
+            if (!toast) {
+                return;
             }
 
-            if (grid) {
-                grid.addEventListener('click', async function(e) {
-                    const copyBtn = e.target.closest('.copy-code-btn');
-                    if (copyBtn) {
-                        const code = copyBtn.dataset.code;
-                        try {
-                            await navigator.clipboard.writeText(code);
-                            showToast('Coupon code copied');
-                            const originalHtml = copyBtn.innerHTML;
-                            copyBtn.classList.add('copied');
-                            copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
-                            clearTimeout(copyBtn._resetT);
-                            copyBtn._resetT = setTimeout(() => {
-                                copyBtn.innerHTML = originalHtml;
-                                copyBtn.classList.remove('copied');
-                            }, 1600);
-                        } catch {
-                            showToast('Copy this code: ' + code);
+            toast.textContent = message;
+            toast.classList.add('visible');
+
+            clearTimeout(showToast._t);
+
+            showToast._t = setTimeout(
+                function () {
+                    toast.classList.remove('visible');
+                },
+                2200
+            );
+        }
+
+        function updateUnreadCount(delta) {
+
+            if (!unreadCountEl) {
+                return;
+            }
+
+            const current =
+                parseInt(
+                    unreadCountEl.textContent,
+                    10
+                ) || 0;
+
+            const next =
+                Math.max(
+                    0,
+                    current + delta
+                );
+
+            unreadCountEl.textContent = next;
+
+            const tabCountEl =
+                document.querySelector(
+                    '.promo-filter-tabs .tab-count'
+                );
+
+            if (tabCountEl) {
+                tabCountEl.textContent = next;
+            }
+
+            if (next === 0 && markAllBtn) {
+                markAllBtn.remove();
+            }
+        }
+
+        async function markAsRead(id, btn) {
+
+            if (!tokenInput) {
+                showToast(
+                    'Security token is missing. Please refresh the page.'
+                );
+
+                return false;
+            }
+
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Saving…';
+            }
+
+            try {
+
+                const formData = new FormData();
+
+                formData.append(
+                    '__RequestVerificationToken',
+                    tokenInput.value
+                );
+
+                formData.append(
+                    'promotionRecipientId',
+                    id
+                );
+
+                const response =
+                    await fetch(
+                        '?handler=MarkAsRead',
+                        {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With':
+                                    'XMLHttpRequest'
+                            }
                         }
+                    );
+
+                if (!response.ok) {
+                    throw new Error(
+                        'Request failed'
+                    );
+                }
+
+                return true;
+
+            }
+            catch (err) {
+
+                showToast(
+                    'Could not update. Please try again.'
+                );
+
+                if (btn) {
+
+                    btn.disabled = false;
+
+                    btn.innerHTML =
+                        '<i class="fa-solid fa-check"></i> Mark as read';
+                }
+
+                return false;
+            }
+        }
+
+        if (grid) {
+
+            grid.addEventListener(
+                'click',
+                async function (e) {
+
+                    /* ==================================================
+                       COPY COUPON CODE
+                       ================================================== */
+
+                    const copyBtn =
+                        e.target.closest(
+                            '.copy-code-btn'
+                        );
+
+                    if (copyBtn) {
+
+                        const code =
+                            copyBtn.dataset.code;
+
+                        try {
+
+                            await navigator.clipboard.writeText(
+                                code
+                            );
+
+                            showToast(
+                                'Coupon code copied'
+                            );
+
+                            const originalHtml =
+                                copyBtn.innerHTML;
+
+                            copyBtn.classList.add(
+                                'copied'
+                            );
+
+                            copyBtn.innerHTML =
+                                '<i class="fa-solid fa-check"></i> Copied';
+
+                            clearTimeout(
+                                copyBtn._resetT
+                            );
+
+                            copyBtn._resetT =
+                                setTimeout(
+                                    function () {
+
+                                        copyBtn.innerHTML =
+                                            originalHtml;
+
+                                        copyBtn.classList.remove(
+                                            'copied'
+                                        );
+
+                                    },
+                                    1600
+                                );
+
+                        }
+                        catch {
+
+                            showToast(
+                                'Copy this code: ' + code
+                            );
+                        }
+
                         return;
                     }
 
-                    const readBtn = e.target.closest('.promo-mark-read-btn');
+                    /* ==================================================
+                       MARK SINGLE PROMOTION AS READ
+                       ================================================== */
+
+                    const readBtn =
+                        e.target.closest(
+                            '.promo-mark-read-btn'
+                        );
+
                     if (readBtn) {
-                        const card = readBtn.closest('.promo-card');
-                        const id = readBtn.dataset.id;
-                        const ok = await markAsRead(id, readBtn);
+
+                        const card =
+                            readBtn.closest(
+                                '.promo-card'
+                            );
+
+                        const id =
+                            readBtn.dataset.id;
+
+                        const ok =
+                            await markAsRead(
+                                id,
+                                readBtn
+                            );
+
                         if (ok && card) {
-                            card.classList.remove('unread');
-                            card.dataset.read = 'true';
-                            const badge = card.querySelector('.promo-new-badge');
-                            if (badge) badge.remove();
+
+                            card.classList.remove(
+                                'unread'
+                            );
+
+                            card.dataset.read =
+                                'true';
+
+                            const badge =
+                                card.querySelector(
+                                    '.promo-new-badge'
+                                );
+
+                            if (badge) {
+                                badge.remove();
+                            }
+
                             readBtn.remove();
+
                             updateUnreadCount(-1);
-                            showToast('Marked as read');
+
+                            showToast(
+                                'Marked as read'
+                            );
                         }
                     }
-                });
-            }
 
-            if (markAllBtn) {
-                markAllBtn.addEventListener('click', async function() {
-                    const unreadButtons = Array.from(document.querySelectorAll('.promo-mark-read-btn'));
+                }
+            );
+        }
+
+        /* ============================================================
+           MARK ALL AS READ
+           ============================================================ */
+
+        if (markAllBtn) {
+
+            markAllBtn.addEventListener(
+                'click',
+                async function () {
+
+                    const unreadButtons =
+                        Array.from(
+                            document.querySelectorAll(
+                                '.promo-mark-read-btn'
+                            )
+                        );
+
                     markAllBtn.disabled = true;
-                    markAllBtn.textContent = 'Marking all…';
+
+                    markAllBtn.innerHTML =
+                        '<i class="fa-solid fa-spinner fa-spin"></i> Marking all…';
 
                     for (const btn of unreadButtons) {
-                        const card = btn.closest('.promo-card');
-                        const id = btn.dataset.id;
-                        const ok = await markAsRead(id, btn);
+
+                        const card =
+                            btn.closest(
+                                '.promo-card'
+                            );
+
+                        const id =
+                            btn.dataset.id;
+
+                        const ok =
+                            await markAsRead(
+                                id,
+                                btn
+                            );
+
                         if (ok && card) {
-                            card.classList.remove('unread');
-                            const badge = card.querySelector('.promo-new-badge');
-                            if (badge) badge.remove();
+
+                            card.classList.remove(
+                                'unread'
+                            );
+
+                            card.dataset.read =
+                                'true';
+
+                            const badge =
+                                card.querySelector(
+                                    '.promo-new-badge'
+                                );
+
+                            if (badge) {
+                                badge.remove();
+                            }
+
                             btn.remove();
                         }
                     }
-                    if (unreadCountEl) unreadCountEl.textContent = '0';
-                    const tabCountEl = document.querySelector('.promo-filter-tabs .tab-count');
-                    if (tabCountEl) tabCountEl.textContent = '0';
-                    showToast('All promotions marked as read');
-                });
+
+                    if (unreadCountEl) {
+                        unreadCountEl.textContent = '0';
+                    }
+
+                    const tabCountEl =
+                        document.querySelector(
+                            '.promo-filter-tabs .tab-count'
+                        );
+
+                    if (tabCountEl) {
+                        tabCountEl.textContent = '0';
+                    }
+
+                    markAllBtn.remove();
+
+                    showToast(
+                        'All promotions marked as read'
+                    );
+                }
+            );
+        }
+
+        /* ============================================================
+           FILTER TABS
+           ============================================================ */
+
+        const filterTabs =
+            document.querySelectorAll(
+                '.promo-filter-tabs button'
+            );
+
+        filterTabs.forEach(
+            function (tab) {
+
+                tab.addEventListener(
+                    'click',
+                    function () {
+
+                        filterTabs.forEach(
+                            function (t) {
+                                t.classList.remove(
+                                    'active'
+                                );
+                            }
+                        );
+
+                        tab.classList.add(
+                            'active'
+                        );
+
+                        const filter =
+                            tab.dataset.filter;
+
+                        document
+                            .querySelectorAll(
+                                '.promo-card'
+                            )
+                            .forEach(
+                                function (card) {
+
+                                    const isUnread =
+                                        card.dataset.read ===
+                                        'false';
+
+                                    card.classList.toggle(
+                                        'is-hidden',
+                                        filter === 'unread'
+                                        && !isUnread
+                                    );
+                                }
+                            );
+                    }
+                );
             }
+        );
 
-            const filterTabs = document.querySelectorAll('.promo-filter-tabs button');
-            filterTabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    filterTabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    const filter = tab.dataset.filter;
-                    document.querySelectorAll('.promo-card').forEach(card => {
-                        const isUnread = card.dataset.read === 'false';
-                        card.classList.toggle('is-hidden', filter === 'unread' && !isUnread);
-                    });
-                });
-            });
-        })();
+    })();
 
-                // ============================================================
-                // NOTIFICATION DEEP-LINK (NEW) — if we arrived here from a
-                // Promotion notification (?highlightPromoId=123), scroll to
-                // that card and pulse it, then clean the URL.
-                // ============================================================
-                (function() {
-                    const params = new URLSearchParams(window.location.search);
-                    const highlightId = params.get('highlightPromoId');
-                    if (!highlightId) return;
+    /* ================================================================
+       NOTIFICATION DEEP-LINK
 
-                    // Primary match: card's own PromotionRecipientID (the
-                    // intended id). Fallback: the underlying PromotionID,
-                    // in case the notification's ReferenceID was set to
-                    // that instead — this way the highlight still works
-                    // either way, no server-side change required.
-                    let card = document.getElementById('promo-' + highlightId);
-                    if (!card) {
-                        card = document.querySelector('.promo-card[data-promotion-id="' + highlightId + '"]');
-                    }
-                    if (!card) return;
+       If we arrived here from a Promotion notification:
+       ?highlightPromoId=123
 
-                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    card.classList.add('promo-card-highlight');
-                    setTimeout(function() { card.classList.remove('promo-card-highlight'); }, 2500);
+       The matching promotion card will be highlighted and the
+       query-string parameter will then be removed from the URL.
+       ================================================================ */
 
-                    if (window.history.replaceState) {
-                        const url = new URL(window.location.href);
-                        url.searchParams.delete('highlightPromoId');
-                        window.history.replaceState({}, '', url);
-                    }
-                })();
-            })();
-    </script>
+    (function () {
 
-</body>
-</html>
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+        const highlightId =
+            params.get(
+                'highlightPromoId'
+            );
+
+        if (!highlightId) {
+            return;
+        }
+
+        /*
+         * Primary match:
+         * PromotionRecipientID
+         */
+        let card =
+            document.getElementById(
+                'promo-' + highlightId
+            );
+
+        /*
+         * Fallback:
+         * PromotionID
+         */
+        if (!card) {
+
+            card =
+                document.querySelector(
+                    '.promo-card[data-promotion-id="' +
+                    highlightId +
+                    '"]'
+                );
+        }
+
+        if (!card) {
+            return;
+        }
+
+        card.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+
+        card.classList.add(
+            'promo-card-highlight'
+        );
+
+        setTimeout(
+            function () {
+
+                card.classList.remove(
+                    'promo-card-highlight'
+                );
+
+            },
+            2500
+        );
+
+        if (window.history.replaceState) {
+
+            const url =
+                new URL(
+                    window.location.href
+                );
+
+            url.searchParams.delete(
+                'highlightPromoId'
+            );
+
+            window.history.replaceState(
+                {},
+                '',
+                url
+            );
+        }
+
+    })();
+</script>
