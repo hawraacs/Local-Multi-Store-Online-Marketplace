@@ -10,7 +10,7 @@
 
 @if (Model.IsStoreOwner)
 {
-    @* StoreOwner branch: unchanged — untouched from the original file. *@
+    @* StoreOwner branch *@
     <style>
         :root {
             --accent-color: #6d28d9;
@@ -43,6 +43,7 @@
             margin-bottom: 28px;
         }
 
+        /* Back arrow — black */
         .back-btn-plain {
             width: 44px;
             height: 44px;
@@ -52,14 +53,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--accent-color);
+            color: #000;
             text-decoration: none;
             transition: var(--transition);
             flex-shrink: 0;
         }
 
             .back-btn-plain:hover {
-                background: var(--accent-color);
+                background: #000;
                 color: #ffffff;
             }
 
@@ -99,9 +100,15 @@
             padding: 20px 56px 20px 20px;
             cursor: pointer;
             text-align: left;
-            transition: var(--transition);
             border-radius: 12px;
+            transition: transform 0.15s ease, opacity 0.15s ease, background-color 0.25s ease;
         }
+
+            /* Instagram-style tap feedback */
+            .ig-notif-row.tapped {
+                transform: scale(0.97);
+                opacity: 0.7;
+            }
 
         .ig-notif-delete-form {
             margin: 0;
@@ -109,6 +116,15 @@
             top: 14px;
             right: 14px;
             z-index: 2;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        /* Trash bin only appears after a double-tap on the row */
+        .ig-notif-row-wrap.show-delete .ig-notif-delete-form {
+            opacity: 1;
+            pointer-events: auto;
         }
 
         .ig-notif-remove-btn {
@@ -279,7 +295,7 @@
 
     <div class="page-container">
         <div class="page-header">
-            <a href="@backUrl" class="back-btn-plain">
+            <a href="@backUrl" class="back-btn-plain" id="notifBackBtn">
                 <i class="fas fa-arrow-left"></i>
             </a>
             <h2><i class="fas fa-bell" style="margin-right:10px;"></i>Notifications</h2>
@@ -336,13 +352,55 @@
             }
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Back arrow: use browser history if we came from within the site, else fall back to href
+            var backBtn = document.getElementById('notifBackBtn');
+            if (backBtn) {
+                backBtn.addEventListener('click', function(e) {
+                    if (document.referrer && document.referrer.indexOf(window.location.origin) === 0) {
+                        e.preventDefault();
+                        window.history.back();
+                    }
+                });
+            }
+
+            // Row tap: single tap -> smooth navigate to the notification's source page
+            // double tap -> reveal the trash bin instead of navigating
+            document.querySelectorAll('.ig-notif-row-wrap').forEach(function(wrap) {
+                var row = wrap.querySelector('.ig-notif-row');
+                var form = wrap.querySelector('.ig-notif-form');
+                var timer = null;
+
+                row.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (timer === null) {
+                        timer = setTimeout(function() {
+                            timer = null;
+                            row.classList.add('tapped');
+                            setTimeout(function() { form.submit(); }, 150);
+                        }, 250);
+                    } else {
+                        clearTimeout(timer);
+                        timer = null;
+                        wrap.classList.toggle('show-delete');
+                    }
+                });
+            });
+
+            // Tapping anywhere else closes any open trash bin
+            document.addEventListener('click', function(e) {
+                document.querySelectorAll('.ig-notif-row-wrap.show-delete').forEach(function(wrap) {
+                    if (!wrap.contains(e.target)) wrap.classList.remove('show-delete');
+                });
+            });
+        });
+    </script>
 }
 else
 {
-    @* Delivery / Customer branch. Customer header now matches the
-       Wishlist page's look: centered Playfair Display title + subtitle,
-       same card/shadow language. Delivery keeps the original compact
-       header with back-button since only "customer side" was requested. *@
+    @* Delivery / Customer branch *@
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -388,8 +446,6 @@ else
                     -webkit-font-smoothing: antialiased;
                 }
 
-                /* Customer header — same visual language as Wishlist's
-                                   .wishlist-header (centered Playfair Display title). */
                 .notif-page-header {
                     text-align: center;
                     margin: 24px auto 28px;
@@ -421,6 +477,7 @@ else
                         font-weight: 500;
                     }
 
+                /* Back arrow — black */
                 .notif-back-btn {
                     position: absolute;
                     left: 16px;
@@ -433,19 +490,17 @@ else
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: var(--accent-color);
+                    color: #000;
                     text-decoration: none;
                     transition: var(--transition);
                     flex-shrink: 0;
                 }
 
                     .notif-back-btn:hover {
-                        background: var(--accent-color);
+                        background: #000;
                         color: #ffffff;
                     }
 
-                /* Page body / container — matches Wishlist's page padding
-                                   and max-width so the card sits in the same rhythm. */
                 .page-container {
                     max-width: 1100px;
                     margin: 0 auto;
@@ -479,10 +534,16 @@ else
                     padding: 20px 56px 20px 20px;
                     cursor: pointer;
                     text-align: left;
-                    transition: var(--transition);
                     border-radius: 12px;
                     font-family: var(--font-family);
+                    transition: transform 0.15s ease, opacity 0.15s ease, background-color 0.25s ease;
                 }
+
+                    /* Instagram-style tap feedback */
+                    .ig-notif-row.tapped {
+                        transform: scale(0.97);
+                        opacity: 0.7;
+                    }
 
                 .ig-notif-delete-form {
                     margin: 0;
@@ -490,6 +551,15 @@ else
                     top: 14px;
                     right: 14px;
                     z-index: 2;
+                    opacity: 0;
+                    pointer-events: none;
+                    transition: opacity 0.2s ease;
+                }
+
+                /* Trash bin only appears after a double-tap on the row */
+                .ig-notif-row-wrap.show-delete .ig-notif-delete-form {
+                    opacity: 1;
+                    pointer-events: auto;
                 }
 
                 .ig-notif-remove-btn {
@@ -583,8 +653,6 @@ else
                     box-shadow: 0 0 10px rgba(109, 40, 217, 0.4);
                 }
 
-                /* Empty state — same dashed-border card language as
-                                   Wishlist's .empty-wishlist */
                 .empty-state {
                     max-width: 700px;
                     margin: 40px auto;
@@ -644,7 +712,7 @@ else
         }
 
         <div class="notif-page-header">
-            <a href="@backUrl" class="notif-back-btn">
+            <a href="@backUrl" class="notif-back-btn" id="notifBackBtn">
                 <i class="fas fa-arrow-left"></i>
             </a>
             <h2><i class="fa-regular fa-bell"></i> Notifications</h2>
@@ -701,6 +769,51 @@ else
                 }
             </div>
         </div>
+
+        <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Back arrow: use browser history if we came from within the site, else fall back to href
+                    var backBtn = document.getElementById('notifBackBtn');
+                    if (backBtn) {
+                        backBtn.addEventListener('click', function(e) {
+                            if (document.referrer && document.referrer.indexOf(window.location.origin) === 0) {
+                                e.preventDefault();
+                                window.history.back();
+                            }
+                        });
+                    }
+
+                    // Row tap: single tap -> smooth navigate to the notification's source page
+                    // double tap -> reveal the trash bin instead of navigating
+                    document.querySelectorAll('.ig-notif-row-wrap').forEach(function(wrap) {
+                        var row = wrap.querySelector('.ig-notif-row');
+                        var form = wrap.querySelector('.ig-notif-form');
+                        var timer = null;
+
+                        row.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            if (timer === null) {
+                                timer = setTimeout(function() {
+                                    timer = null;
+                                    row.classList.add('tapped');
+                                    setTimeout(function() { form.submit(); }, 150);
+                                }, 250);
+                            } else {
+                                clearTimeout(timer);
+                                timer = null;
+                                wrap.classList.toggle('show-delete');
+                            }
+                        });
+                    });
+
+                    // Tapping anywhere else closes any open trash bin
+                    document.addEventListener('click', function(e) {
+                        document.querySelectorAll('.ig-notif-row-wrap.show-delete').forEach(function(wrap) {
+                            if (!wrap.contains(e.target)) wrap.classList.remove('show-delete');
+                        });
+                    });
+                });
+        </script>
 
     </body>
 </html>

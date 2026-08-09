@@ -81,6 +81,54 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+            :root {
+                --bg-color: #faf9fc;
+                --card-bg: #ffffff;
+                --border-color: #ece8f6;
+                --text-primary: #1e1b2e;
+                --text-secondary: #6b6478;
+                --accent-color: #6d28d9;
+                --accent-hover: #5b21b6;
+                --accent-light: #f3effe;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                --success-color: #10b981;
+                --danger-color: #ef4444;
+                --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
+                --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family: var(--font-family);
+                background-color: var(--bg-color);
+                color: var(--text-primary);
+                line-height: 1.6;
+                -webkit-font-smoothing: antialiased;
+                padding-bottom: 100px;
+            }
+
+            /* ============================================================
+                                               BOTTOM NAV — rendered by the shared _CustomerBottomNav partial.
+                                               Styles below match every other customer page exactly (same
+                                               class names), so the partial renders identically here.
+                                               ============================================================ */
+            .mobile-bottom-nav {
+                display: flex !important;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 200;
+                background: #ffffff;
+                border-top: 1px solid #ece8f6;
+                justify-content: space-between;
                 gap: 2px;
                 font-size: 10.5px;
                 color: #6b6478;
@@ -729,6 +777,33 @@
             .promo-toolbar {
                 justify-content: center;
             }
+            /* ============================================================
+                                   NOTIFICATION DEEP-LINK HIGHLIGHT (NEW) — briefly pulses
+                                   and scrolls to the promo card referenced by a clicked
+                                   Promotion notification (?highlightPromoId=).
+                                   ============================================================ */
+            @@keyframes promoHighlightPulse {
+                0% {
+                    box-shadow: 0 0 0 3px var(--accent-color), var(--shadow-md);
+                }
+
+                70% {
+                    box-shadow: 0 0 0 3px var(--accent-color), var(--shadow-md);
+                }
+
+                100% {
+                    box-shadow: var(--shadow-sm);
+                }
+            }
+
+            .promo-card-highlight {
+                animation: promoHighlightPulse 2.4s ease;
+            }
+
+            @@media (max-width: 780px) {
+                .promotions-grid {
+                    grid-template-columns: 1fr;
+                }
 
             .mark-all-btn {
                 width: 100%;
@@ -847,6 +922,7 @@
                             promoImg = "/images/promotions/promo-generic.png";
                         }
                         <div class="promo-card @(item.IsRead ? "" : "unread")" data-promo-id="@item.PromotionRecipientID" data-read="@item.IsRead.ToString().ToLower()">
+                        <div class="promo-card @(item.IsRead ? "" : "unread")" id="promo-@item.PromotionRecipientID" data-promo-id="@item.PromotionRecipientID" data-promotion-id="@item.Promotion?.PromotionID" data-read="@item.IsRead.ToString().ToLower()">
 
                             <div class="promo-visual">
 
@@ -1032,6 +1108,39 @@
                 });
             });
         })();
+
+                // ============================================================
+                // NOTIFICATION DEEP-LINK (NEW) — if we arrived here from a
+                // Promotion notification (?highlightPromoId=123), scroll to
+                // that card and pulse it, then clean the URL.
+                // ============================================================
+                (function() {
+                    const params = new URLSearchParams(window.location.search);
+                    const highlightId = params.get('highlightPromoId');
+                    if (!highlightId) return;
+
+                    // Primary match: card's own PromotionRecipientID (the
+                    // intended id). Fallback: the underlying PromotionID,
+                    // in case the notification's ReferenceID was set to
+                    // that instead — this way the highlight still works
+                    // either way, no server-side change required.
+                    let card = document.getElementById('promo-' + highlightId);
+                    if (!card) {
+                        card = document.querySelector('.promo-card[data-promotion-id="' + highlightId + '"]');
+                    }
+                    if (!card) return;
+
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    card.classList.add('promo-card-highlight');
+                    setTimeout(function() { card.classList.remove('promo-card-highlight'); }, 2500);
+
+                    if (window.history.replaceState) {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('highlightPromoId');
+                        window.history.replaceState({}, '', url);
+                    }
+                })();
+            })();
     </script>
 
 </body>

@@ -44,6 +44,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             "Follow"            // customer followed the store
         };
 
+        // Notification types that deep-link to a specific order row on
+        // CustomerOrders (ReferenceID must hold that order's OrderID).
+        // NOTE: "NewOrder" is the store-owner-side notification ("you got
+        // a new order") — it has nothing to do with the customer's own
+        // CustomerOrders page, so it's intentionally excluded here.
+        private static readonly string[] OrderLinkedTypes =
+        {
+            "OrderStatus"
+        };
+
         public ReportUpdatesModel(UserManager<User> userManager, ApplicationDbContext context)
         {
             _userManager = userManager;
@@ -81,10 +91,28 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             var notification = await _context.Notifications
                 .FirstOrDefaultAsync(n => n.NotificationID == notificationId && n.UserID == user.Id);
 
-            if (notification != null && !notification.IsRead)
+            if (notification == null)
+                return RedirectToPage();
+
+            if (!notification.IsRead)
             {
                 notification.IsRead = true;
                 await _context.SaveChangesAsync();
+            }
+
+            // Deep-link straight to the record this notification is about,
+            // instead of just re-showing the notification list.
+            if (notification.ReferenceID.HasValue)
+            {
+                if (OrderLinkedTypes.Contains(notification.Type))
+                {
+                    return RedirectToPage("/CustomerOrders", new { highlightOrderId = notification.ReferenceID.Value });
+                }
+
+                if (notification.Type == "Promotion")
+                {
+                    return RedirectToPage("/CustomerPromotions", new { highlightPromoId = notification.ReferenceID.Value });
+                }
             }
 
             return RedirectToPage();
