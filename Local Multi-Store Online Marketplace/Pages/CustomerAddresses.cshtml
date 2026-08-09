@@ -8,245 +8,550 @@
 <html>
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>My Addresses</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
+        :root {
+            --brand: #7c3aed;
+            --brand-dark: #5b21b6;
+            --brand-light: #f3edfd;
+            --brand-line: #ded2f7;
+            --ink: #111827;
+            --muted: #6b7280;
+            --line: #e5e7eb;
+            --surface: #ffffff;
+            --bg: #f5f5f9;
+            --success-bg: #dcfce7;
+            --success-text: #166534;
+            --success-border: #86efac;
+            --error-bg: #fee2e2;
+            --error-text: #991b1b;
+            --error-border: #fca5a5;
+            --danger-bg: #fee2e2;
+            --danger-text: #b91c1c;
+            --danger-border: #fecaca;
+        }
+
         * {
             box-sizing: border-box;
         }
 
         body {
             margin: 0;
-            background: #f4f6f9;
-            font-family: Arial, sans-serif;
-            color: #111827;
+            background: var(--bg);
+            font-family: 'Inter', Arial, sans-serif;
+            color: var(--ink);
+        }
+
+        .icon {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
         }
 
         .address-page {
             min-height: 100vh;
-            padding: 40px 20px;
+            padding-bottom: 40px;
         }
 
+        /* ---------- Top bar: back button + header ---------- */
+        .page-top {
+            display: grid;
+            grid-template-columns: 42px 1fr 42px;
+            align-items: start;
+            gap: 12px;
+            max-width: 1230px;
+            margin: 0 auto;
+            padding: 22px 24px 14px;
+        }
+
+        .back-circle {
+            grid-column: 1;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--brand-light);
+            color: var(--brand-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            flex-shrink: 0;
+            transition: background 0.15s ease;
+        }
+
+            .back-circle:hover {
+                background: var(--brand-line);
+            }
+
+            .back-circle .icon {
+                width: 19px;
+                height: 19px;
+            }
+
         .address-header {
+            grid-column: 2;
             text-align: center;
-            margin-bottom: 26px;
         }
 
             .address-header h2 {
-                font-size: 34px;
-                margin: 0 0 8px;
-                color: #111827;
+                font-size: 23px;
+                font-weight: 800;
+                margin: 4px 0 4px;
+                color: var(--ink);
+                letter-spacing: -0.01em;
             }
 
             .address-header p {
-                color: #6b7280;
-                font-size: 15px;
+                color: var(--muted);
+                font-size: 13.5px;
                 margin: 0;
+                line-height: 1.5;
             }
 
+        /* ---------- Notifications ---------- */
         .message {
-            max-width: 780px;
-            margin: 0 auto 20px auto;
-            padding: 14px 18px;
+            max-width: 1230px;
+            margin: 0 auto 16px auto;
+            padding: 12px 24px;
+        }
+
+        .message-inner {
+            padding: 12px 16px;
             border-radius: 12px;
-            font-weight: 700;
-            text-align: center;
-            font-size: 14px;
+            font-weight: 600;
+            font-size: 13.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .success-message {
-            background: #dcfce7;
-            color: #166534;
-            border: 1px solid #86efac;
+        .success-message .message-inner {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
         }
 
-        .error-message {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fca5a5;
+        .error-message .message-inner {
+            background: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid var(--error-border);
         }
 
+        /* ---------- Layout ---------- */
         .address-container {
-            max-width: 1120px;
+            max-width: 1230px;
             margin: auto;
+            padding: 0 24px;
             display: grid;
-            grid-template-columns: 440px 1fr;
-            gap: 25px;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+            gap: 20px;
             align-items: start;
         }
 
-        .address-form,
-        .address-list {
-            background: white;
-            border-radius: 18px;
-            padding: 22px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-            border: 1px solid #e5e7eb;
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 20px 22px;
+            box-shadow: 0 1px 2px rgba(17,24,39,0.04), 0 8px 24px rgba(17,24,39,0.05);
+            border: 1px solid var(--line);
         }
 
-            .address-form h3,
-            .address-list h3 {
-                margin: 0 0 18px;
-                color: #111827;
-                font-size: 22px;
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .card-header-title {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+        }
+
+        .card-header-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: var(--brand-light);
+            color: var(--brand-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+            .card-header-icon .icon {
+                width: 17px;
+                height: 17px;
             }
 
-        .map-tools {
-            margin-bottom: 16px;
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            padding: 14px;
-            border-radius: 16px;
+        .card-header h3 {
+            margin: 0 0 2px;
+            color: var(--ink);
+            font-size: 16px;
+            font-weight: 800;
         }
 
-        .detect-btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
+        .card-header .card-subtitle {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12.5px;
+            line-height: 1.5;
+        }
+
+        .count-pill {
+            background: var(--brand-light);
+            color: var(--brand-dark);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 11px;
+            border-radius: 999px;
+            white-space: nowrap;
+            margin-top: 2px;
+        }
+
+        /* ---------- Add Address: location tools ---------- */
+        .locate-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: var(--brand-light);
+            border: 1px solid var(--brand-line);
+            padding: 10px 12px;
             border-radius: 12px;
-            background: #111827;
+            margin-bottom: 12px;
+        }
+
+        .locate-row-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--brand-dark);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+            .locate-row-text .icon {
+                color: var(--brand);
+                width: 15px;
+                height: 15px;
+            }
+
+        .detect-btn {
+            padding: 9px 14px;
+            border: none;
+            border-radius: 9px;
+            background: var(--brand);
             color: white;
-            font-weight: 900;
+            font-weight: 700;
+            font-size: 12.5px;
             cursor: pointer;
-            margin-bottom: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: background 0.15s ease;
         }
 
             .detect-btn:hover {
-                background: #ff6b35;
+                background: var(--brand-dark);
             }
 
         #customerMap {
             width: 100%;
-            height: 285px;
-            border-radius: 14px;
-            border: 1px solid #d1d5db;
-            margin-bottom: 10px;
+            height: 230px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            margin-bottom: 8px;
             background: #e5e7eb;
         }
 
         .map-message {
-            display: block;
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
             color: #374151;
-            background: white;
-            border: 1px solid #e5e7eb;
-            padding: 10px;
-            border-radius: 10px;
+            background: #f9fafb;
+            border: 1px solid var(--line);
+            padding: 8px 10px;
+            border-radius: 9px;
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 500;
             line-height: 1.5;
         }
+
+            .map-message .icon {
+                width: 14px;
+                height: 14px;
+                margin-top: 1px;
+                color: var(--brand);
+            }
 
         .coordinate-box {
-            background: #eef2ff;
-            border: 1px solid #c7d2fe;
-            border-radius: 12px;
-            padding: 10px;
+            background: var(--brand-light);
+            border: 1px solid var(--brand-line);
+            border-radius: 9px;
+            padding: 8px 10px;
             font-size: 12px;
-            color: #3730a3;
-            margin-top: 10px;
+            color: var(--brand-dark);
+            margin-top: 8px;
             display: none;
-            font-weight: 700;
-        }
-
-        .manual-hint {
-            background: #fff7ed;
-            color: #9a3412;
-            border: 1px solid #fed7aa;
-            padding: 10px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-bottom: 14px;
-            line-height: 1.5;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
             font-weight: 600;
         }
 
-            .form-input:focus {
-                outline: none;
-                border-color: #111827;
-                box-shadow: 0 0 0 3px rgba(17,24,39,0.10);
-            }
-
-        .checkbox-row {
+        /* ---------- Address Details ---------- */
+        .section-divider {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin: 8px 0 15px;
-            color: #374151;
-            font-weight: 700;
-            font-size: 14px;
+            gap: 10px;
+            margin: 16px 0 12px;
         }
 
-        .add-btn {
+            .section-divider span {
+                font-size: 12.5px;
+                font-weight: 800;
+                color: var(--ink);
+                white-space: nowrap;
+            }
+
+            .section-divider::after {
+                content: "";
+                flex: 1;
+                height: 1px;
+                background: var(--line);
+            }
+
+        .field-group {
+            margin-bottom: 12px;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        label.field-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 5px;
+            white-space: nowrap;
+        }
+
+            label.field-label .required {
+                color: #dc2626;
+            }
+
+            label.field-label .optional {
+                color: var(--muted);
+                font-weight: 500;
+            }
+
+        .form-input {
             width: 100%;
-            padding: 13px;
-            background: #111827;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 900;
+            height: 42px;
+            padding: 0 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 13.5px;
+            font-family: inherit;
+            color: var(--ink);
+            background: white;
+        }
+
+            .form-input::placeholder {
+                color: #9ca3af;
+                font-weight: 400;
+            }
+
+            .form-input:focus {
+                outline: none;
+                border-color: var(--brand);
+                box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+            }
+
+        select.form-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 34px;
+        }
+
+        /* ---------- Default checkbox card ---------- */
+        .default-setting {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f9fafb;
+            border: 1px solid var(--line);
+            border-radius: 11px;
+            padding: 11px 13px;
+            margin: 2px 0 14px;
             cursor: pointer;
         }
 
-            .add-btn:hover {
-                background: #ff6b35;
+            .default-setting input[type="checkbox"] {
+                width: 17px;
+                height: 17px;
+                accent-color: var(--brand);
+                flex-shrink: 0;
+                cursor: pointer;
             }
 
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            background: #ff6b35;
+            .default-setting .default-setting-text strong {
+                display: block;
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--ink);
+            }
+
+            .default-setting .default-setting-text span {
+                font-size: 11.5px;
+                color: var(--muted);
+            }
+
+        /* ---------- Buttons ---------- */
+        .add-btn {
+            width: 100%;
+            height: 44px;
+            background: var(--brand);
             color: white;
-            padding: 12px 18px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 900;
+            border: none;
+            border-radius: 11px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.15s ease;
         }
 
-            .back-link:hover {
-                background: #111827;
+            .add-btn:hover {
+                background: var(--brand-dark);
             }
 
+        /* ---------- Saved Addresses ---------- */
         .address-card {
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 14px;
-            background: #f9fafb;
+            border: 1px solid var(--line);
+            border-radius: 13px;
+            padding: 14px;
+            margin-bottom: 10px;
+            background: white;
+            display: flex;
+            gap: 12px;
+            position: relative;
         }
+
+            .address-card:last-of-type {
+                margin-bottom: 0;
+            }
+
+            .address-card.is-default {
+                border-color: var(--brand-line);
+                background: #faf7fe;
+            }
+
+        .address-card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--brand-light);
+            color: var(--brand-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+            .address-card-icon .icon {
+                width: 17px;
+                height: 17px;
+            }
+
+        .address-card.is-default .address-card-icon {
+            background: white;
+            border: 1px solid var(--brand-line);
+        }
+
+        .address-card-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .default-flag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+        }
+
+            .default-flag span {
+                font-size: 11px;
+                font-weight: 800;
+                color: var(--brand-dark);
+                text-transform: uppercase;
+                letter-spacing: 0.02em;
+            }
 
         .address-main {
-            font-weight: 900;
-            color: #111827;
-            margin-bottom: 6px;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 2px;
             line-height: 1.4;
+            font-size: 14px;
+            word-break: break-word;
         }
 
         .address-sub {
-            color: #6b7280;
-            font-size: 14px;
-            margin-bottom: 10px;
+            color: var(--muted);
+            font-size: 12.5px;
+            margin-bottom: 2px;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .address-row-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
         }
 
         .badge {
-            display: inline-block;
-            padding: 5px 9px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
             border-radius: 999px;
-            font-size: 12px;
-            font-weight: 900;
-            margin-right: 5px;
-            margin-bottom: 5px;
+            font-size: 10.5px;
+            font-weight: 700;
         }
 
         .default-badge {
@@ -266,74 +571,137 @@
 
         .address-coordinates {
             color: #4b5563;
-            background: white;
-            border: 1px solid #e5e7eb;
-            padding: 8px;
-            border-radius: 10px;
-            font-size: 12px;
+            background: #f9fafb;
+            border: 1px solid var(--line);
+            padding: 6px 8px;
+            border-radius: 8px;
+            font-size: 11px;
             margin-top: 8px;
         }
 
         .actions {
             display: flex;
-            gap: 10px;
-            margin-top: 12px;
+            gap: 7px;
             flex-wrap: wrap;
         }
 
         .default-btn {
-            background: #222260;
-            color: white;
-            border: none;
-            padding: 9px 12px;
-            border-radius: 10px;
-            font-weight: 800;
+            background: white;
+            color: var(--ink);
+            border: 1px solid #d1d5db;
+            padding: 7px 11px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 11.5px;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
+
+            .default-btn:hover {
+                background: #f3f4f6;
+            }
 
         .delete-btn {
-            background: #fee2e2;
-            color: #991b1b;
-            border: none;
-            padding: 9px 12px;
-            border-radius: 10px;
-            font-weight: 800;
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            border: 1px solid var(--danger-border);
+            padding: 7px 11px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 11.5px;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
-            .default-btn:hover,
             .delete-btn:hover {
-                opacity: 0.85;
+                background: #fecaca;
             }
 
         .empty-box {
             text-align: center;
-            color: #6b7280;
-            padding: 30px;
+            color: var(--muted);
+            padding: 28px 20px;
+            border: 1.5px dashed var(--brand-line);
+            border-radius: 13px;
+            background: #fbf9fe;
         }
 
-            .empty-box h4 {
-                color: #111827;
-                margin-bottom: 8px;
+            .empty-box .empty-icon {
+                width: 38px;
+                height: 38px;
+                border-radius: 11px;
+                background: var(--brand-light);
+                color: var(--brand-dark);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 10px;
             }
 
-        @@media (max-width: 950px) {
+            .empty-box h4 {
+                color: var(--ink);
+                margin: 0 0 5px;
+                font-size: 14px;
+                font-weight: 700;
+            }
+
+            .empty-box p {
+                margin: 0;
+                font-size: 12.5px;
+                line-height: 1.5;
+            }
+
+        @@media (max-width: 980px) {
             .address-container {
                 grid-template-columns: 1fr;
             }
         }
 
-        @@media (max-width: 550px) {
-            .address-page {
-                padding: 22px 14px;
+        @@media (max-width: 560px) {
+            .page-top {
+                grid-template-columns: 40px 1fr;
+                padding: 18px 16px 10px;
+            }
+
+            .address-header {
+                grid-column: 2;
+            }
+
+            .message {
+                padding: 10px 16px;
+            }
+
+            .address-container {
+                padding: 0 16px;
+            }
+
+            .card {
+                padding: 16px;
             }
 
             .address-header h2 {
-                font-size: 28px;
+                font-size: 20px;
             }
 
             #customerMap {
-                height: 250px;
+                height: 200px;
+            }
+
+            .field-row {
+                grid-template-columns: 1fr;
+            }
+
+            .locate-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .detect-btn {
+                justify-content: center;
             }
         }
     </style>
@@ -342,47 +710,76 @@
 <body>
     <div class="address-page">
 
-        <div class="address-header">
-            <h2>📍 My Addresses</h2>
-            <p>Add a delivery address before checkout. Use the map or enter the address manually.</p>
+        <div class="page-top">
+            <a class="back-circle"
+               href="@(string.IsNullOrWhiteSpace(Model.ReturnUrl) ? "/CustomerCart" : Model.ReturnUrl)"
+               title="Back to Cart"
+               aria-label="Back to Cart">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
+            </a>
+
+            <div class="address-header">
+                <h2>📍 My Addresses</h2>
+                <p>Manage your delivery addresses for a faster and easier checkout experience.</p>
+            </div>
         </div>
 
         @if (TempData["Success"] != null)
         {
             <div class="message success-message">
-                @TempData["Success"]
+                <div class="message-inner">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></svg>
+                    @TempData["Success"]
+                </div>
             </div>
         }
 
         @if (TempData["Error"] != null)
         {
             <div class="message error-message">
-                @TempData["Error"]
+                <div class="message-inner">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                    @TempData["Error"]
+                </div>
             </div>
         }
 
         <div class="address-container">
 
-            <div class="address-form">
-                <h3>Add New Address</h3>
-
-                <div class="manual-hint">
-                    You can select your location on the map, use your current location, or type the address manually if location detection is unavailable.
+            <div class="card address-form">
+                <div class="card-header">
+                    <div class="card-header-title">
+                        <div class="card-header-icon">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                        </div>
+                        <div>
+                            <h3>Add New Address</h3>
+                            <p class="card-subtitle">Choose your location on the map or enter it manually.</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="map-tools">
+                <div class="locate-row">
+                    <div class="locate-row-text">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>
+                        <span>Use your current location for accurate delivery</span>
+                    </div>
                     <button type="button" class="detect-btn" onclick="useCustomerCurrentLocation()">
-                        Detect My Location
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                        Use My Location
                     </button>
-
-                    <div id="customerMap"></div>
-
-                    <span id="customerMapMessage" class="map-message">
-                        Click on the map, drag the marker, use your current location, or enter the address manually.
-                    </span>
-
-                    <div id="coordinateBox" class="coordinate-box"></div>
                 </div>
+
+                <div id="customerMap"></div>
+
+                <span id="customerMapMessage" class="map-message">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+                    <span>Click on the map, drag the marker, use your current location, or enter the address manually.</span>
+                </span>
+
+                <div id="coordinateBox" class="coordinate-box"></div>
+
+                <div class="section-divider"><span>Address Details</span></div>
 
                 <form method="post" asp-page-handler="Add">
                     <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
@@ -390,135 +787,192 @@
                     <input asp-for="NewAddress.Latitude" type="hidden" id="CustomerLatitude" />
                     <input asp-for="NewAddress.Longitude" type="hidden" id="CustomerLongitude" />
 
-                    <input asp-for="NewAddress.AddressLine1"
-                           class="form-input"
-                           id="CustomerAddressLine1"
-                           placeholder="Address line 1"
-                           required />
+                    <div class="field-group">
+                        <label class="field-label" for="CustomerAddressLine1">Address Line 1 <span class="required">*</span></label>
+                        <input asp-for="NewAddress.AddressLine1"
+                               class="form-input"
+                               id="CustomerAddressLine1"
+                               placeholder="Street, building, floor"
+                               required />
+                    </div>
 
-                    <input asp-for="NewAddress.AddressLine2"
-                           class="form-input"
-                           placeholder="Address line 2 optional" />
+                    <div class="field-group">
+                        <label class="field-label">Address Line 2 <span class="optional">(optional)</span></label>
+                        <input asp-for="NewAddress.AddressLine2"
+                               class="form-input"
+                               placeholder="Apartment, landmark" />
+                    </div>
 
-                    <input asp-for="NewAddress.City"
-                           class="form-input"
-                           id="CustomerCity"
-                           placeholder="City"
-                           required />
+                    <div class="field-group field-row">
+                        <div>
+                            <label class="field-label" for="CustomerCity">City <span class="required">*</span></label>
+                            <input asp-for="NewAddress.City"
+                                   class="form-input"
+                                   id="CustomerCity"
+                                   placeholder="City"
+                                   required />
+                        </div>
+                        <div>
+                            <label class="field-label" for="CustomerArea">Area <span class="required">*</span></label>
+                            <select asp-for="NewAddress.Area"
+                                    class="form-input"
+                                    id="CustomerArea"
+                                    required>
+                                <option value="">Select your area</option>
+                                <option value="Beirut">Beirut</option>
+                                <option value="Mount Lebanon">Mount Lebanon</option>
+                                <option value="Tripoli">Tripoli</option>
+                                <option value="Saida">Saida</option>
+                                <option value="Tyre">Tyre</option>
+                                <option value="Zahle">Zahle</option>
+                                <option value="Bekaa">Bekaa</option>
+                                <option value="Jounieh">Jounieh</option>
+                                <option value="Byblos">Byblos</option>
+                                <option value="Nabatieh">Nabatieh</option>
+                            </select>
+                        </div>
+                    </div>
 
-                    <select asp-for="NewAddress.Area"
-                            class="form-input"
-                            id="CustomerArea"
-                            required>
-                        <option value="">Select your area</option>
-                        <option value="Beirut">Beirut</option>
-                        <option value="Mount Lebanon">Mount Lebanon</option>
-                        <option value="Tripoli">Tripoli</option>
-                        <option value="Saida">Saida</option>
-                        <option value="Tyre">Tyre</option>
-                        <option value="Zahle">Zahle</option>
-                        <option value="Bekaa">Bekaa</option>
-                        <option value="Jounieh">Jounieh</option>
-                        <option value="Byblos">Byblos</option>
-                        <option value="Nabatieh">Nabatieh</option>
-                    </select>
+                    <div class="field-group">
+                        <label class="field-label">Postal Code <span class="optional">(optional)</span></label>
+                        <input asp-for="NewAddress.PostalCode"
+                               class="form-input"
+                               id="CustomerPostalCode"
+                               placeholder="Postal code" />
+                    </div>
 
-                    <input asp-for="NewAddress.PostalCode"
-                           class="form-input"
-                           id="CustomerPostalCode"
-                           placeholder="Postal code optional" />
-
-                    <label class="checkbox-row">
+                    <label class="default-setting">
                         <input asp-for="NewAddress.IsDefault" />
-                        Set as default address
+                        <span class="default-setting-text">
+                            <strong>Set as default address</strong>
+                            <span>Used automatically for checkout</span>
+                        </span>
                     </label>
 
                     <button type="submit" class="add-btn">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                         Add Address
                     </button>
                 </form>
-
-                <a href="@(string.IsNullOrWhiteSpace(Model.ReturnUrl) ? "/CustomerCart" : Model.ReturnUrl)" class="back-link">
-                    Back to Cart
-                </a>
             </div>
 
-            <div class="address-list">
-                <h3>Saved Addresses</h3>
+            <div class="card address-list">
+                <div class="card-header">
+                    <div class="card-header-title">
+                        <div class="card-header-icon">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8" /><path d="M1 3h22v5H1z" /><path d="M10 12h4" /></svg>
+                        </div>
+                        <div>
+                            <h3>Saved Addresses</h3>
+                            <p class="card-subtitle">Manage your delivery addresses</p>
+                        </div>
+                    </div>
+
+                    @{
+                        var addressCount = Model.Addresses?.Count ?? 0;
+                    }
+                    <span class="count-pill">@addressCount @(addressCount == 1 ? "Address" : "Addresses")</span>
+                </div>
 
                 @if (Model.Addresses == null || !Model.Addresses.Any())
                 {
                     <div class="empty-box">
+                        <div class="empty-icon">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                        </div>
                         <h4>No addresses yet</h4>
-                        <p>Add your first delivery address.</p>
+                        <p>Add your first delivery address using the form.</p>
                     </div>
                 }
                 else
                 {
                     @foreach (var item in Model.Addresses)
                     {
-                        <div class="address-card">
-                            <div class="address-main">
-                                @item.AddressLine1
+                        <div class="address-card@(item.IsDefault ? " is-default" : "")">
+                            <div class="address-card-icon">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
                             </div>
 
-                            @if (!string.IsNullOrWhiteSpace(item.AddressLine2))
-                            {
+                            <div class="address-card-body">
+                                @if (item.IsDefault)
+                                {
+                                    <div class="default-flag">
+                                        <svg class="icon" style="width:13px;height:13px;color:#166534" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.2 6.8.6-5.1 4.6 1.5 6.7L12 16.9 5.9 20.1l1.5-6.7-5.1-4.6 6.8-.6L12 2z" /></svg>
+                                        <span>Default Address</span>
+                                    </div>
+                                }
+
+                                <div class="address-main">
+                                    @item.AddressLine1
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(item.AddressLine2))
+                                {
+                                    <div class="address-sub">
+                                        @item.AddressLine2
+                                    </div>
+                                }
+
                                 <div class="address-sub">
-                                    @item.AddressLine2
+                                    @item.Area, @item.City
+                                    @if (!string.IsNullOrWhiteSpace(item.PostalCode))
+                                    {
+                                        <span>&nbsp;- @item.PostalCode</span>
+                                    }
                                 </div>
-                            }
 
-                            <div class="address-sub">
-                                @item.Area, @item.City
-                                @if (!string.IsNullOrWhiteSpace(item.PostalCode))
+                                @if (item.Latitude.HasValue && item.Longitude.HasValue)
                                 {
-                                    <span>- @item.PostalCode</span>
-                                }
-                            </div>
-
-                            @if (item.IsDefault)
-                            {
-                                <span class="badge default-badge">Default</span>
-                            }
-
-                            @if (item.IsActive)
-                            {
-                                <span class="badge active-badge">Active</span>
-                            }
-
-                            @if (item.Latitude.HasValue && item.Longitude.HasValue)
-                            {
-                                <span class="badge location-badge">Location Saved</span>
-
-                                <div class="address-coordinates">
-                                    Lat: @item.Latitude.Value.ToString("F6"),
-                                    Lng: @item.Longitude.Value.ToString("F6")
-                                </div>
-                            }
-
-                            <div class="actions">
-                                @if (!item.IsDefault)
-                                {
-                                    <form method="post" asp-page-handler="SetDefault">
-                                        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
-                                        <input type="hidden" name="addressId" value="@item.AddressID" />
-
-                                        <button type="submit" class="default-btn">
-                                            Set Default
-                                        </button>
-                                    </form>
+                                    <div class="address-coordinates">
+                                        Lat: @item.Latitude.Value.ToString("F6"),
+                                        Lng: @item.Longitude.Value.ToString("F6")
+                                    </div>
                                 }
 
-                                <form method="post" asp-page-handler="Delete">
-                                    <input type="hidden" name="addressId" value="@item.AddressID" />
+                                <div class="address-row-bottom">
+                                    <div class="badge-row">
+                                        @if (item.IsDefault)
+                                        {
+                                            <span class="badge default-badge">Default</span>
+                                        }
 
-                                    <button type="submit"
-                                            class="delete-btn"
-                                            onclick="return confirm('Delete this address?')">
-                                        Delete
-                                    </button>
-                                </form>
+                                        @if (item.IsActive)
+                                        {
+                                            <span class="badge active-badge">Active</span>
+                                        }
+
+                                        @if (item.Latitude.HasValue && item.Longitude.HasValue)
+                                        {
+                                            <span class="badge location-badge">Location Saved</span>
+                                        }
+                                    </div>
+
+                                    <div class="actions">
+                                        @if (!item.IsDefault)
+                                        {
+                                            <form method="post" asp-page-handler="SetDefault">
+                                                <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+                                                <input type="hidden" name="addressId" value="@item.AddressID" />
+
+                                                <button type="submit" class="default-btn">
+                                                    <svg class="icon" style="width:12px;height:12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.2 6.8.6-5.1 4.6 1.5 6.7L12 16.9 5.9 20.1l1.5-6.7-5.1-4.6 6.8-.6L12 2z" /></svg>
+                                                    Set as Default
+                                                </button>
+                                            </form>
+                                        }
+
+                                        <form method="post" asp-page-handler="Delete">
+                                            <input type="hidden" name="addressId" value="@item.AddressID" />
+
+                                            <button type="submit"
+                                                    class="delete-btn"
+                                                    onclick="return confirm('Delete this address?')">
+                                                <svg class="icon" style="width:12px;height:12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /></svg>
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     }
