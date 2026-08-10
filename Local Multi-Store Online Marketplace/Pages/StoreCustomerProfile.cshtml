@@ -83,6 +83,7 @@
             .profile-card {
                 background: var(--card-bg);
                 border: 1px solid var(--border-color);
+                border-top: 4px solid var(--accent-color);
                 border-radius: 20px;
                 padding: 26px 32px 30px;
                 box-shadow: var(--shadow-md);
@@ -200,6 +201,57 @@
                 line-height: 1.65;
                 margin: 0;
                 white-space: pre-line;
+            }
+
+            .eyebrow-label {
+                color: var(--accent-color);
+                font-size: 11.5px;
+                font-weight: 800;
+                letter-spacing: .8px;
+                text-transform: uppercase;
+                margin: 2px 0 6px;
+            }
+
+            .badges-row {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin: 2px 0 4px;
+            }
+
+            .badge-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 5px 13px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 700;
+            }
+
+            .badge-verified {
+                background: var(--success-bg);
+                color: var(--success-color);
+            }
+
+            .badge-active {
+                background: var(--accent-light);
+                color: var(--accent-color);
+            }
+
+            .avatar-online-dot {
+                position: absolute;
+                bottom: 6px;
+                right: 6px;
+                background: var(--success-color);
+                color: #fff;
+                font-size: 10px;
+                font-weight: 800;
+                padding: 3px 9px;
+                border-radius: 20px;
+                border: 2px solid #fff;
+                text-transform: uppercase;
+                letter-spacing: .3px;
             }
 
             /* ============ ACTION BUTTONS ============ */
@@ -335,41 +387,70 @@
 
             /* ============ TABS / FEED HEADING ============ */
             .profile-tabs {
-                display: flex;
-                justify-content: center;
-                gap: 28px;
-                margin: 26px 0 20px;
-                border-bottom: 1px solid var(--border-color);
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                align-items: center;
+                gap: 12px;
+                margin: 30px 0 18px;
+                padding-bottom: 12px;
+                border-bottom: 2px solid var(--border-color);
             }
 
             .tab-btn {
                 background: transparent;
                 border: none;
-                color: var(--text-muted);
+                color: var(--text-primary);
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                font-size: 12px;
-                font-weight: 700;
-                letter-spacing: .6px;
-                padding: 12px 2px;
+                gap: 9px;
+                font-size: 13px;
+                font-weight: 800;
+                letter-spacing: .8px;
+                padding: 0;
                 text-transform: uppercase;
                 position: relative;
+                justify-self: center;
+                grid-column: 2;
             }
 
-                .tab-btn.active {
-                    color: var(--text-primary);
+                .tab-btn i {
+                    color: var(--accent-color);
+                    font-size: 15px;
                 }
 
-                    .tab-btn.active::after {
-                        content: '';
-                        position: absolute;
-                        left: 0;
-                        right: 0;
-                        bottom: -1px;
-                        height: 2px;
-                        background: var(--accent-color);
-                    }
+                .tab-btn.active::after {
+                    content: '';
+                    position: absolute;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 40px;
+                    bottom: -14px;
+                    height: 2px;
+                    background: var(--accent-color);
+                }
+
+            .view-all-link {
+                grid-column: 3;
+                justify-self: end;
+                color: var(--accent-color);
+                font-size: 13px;
+                font-weight: 700;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: var(--accent-light);
+                padding: 8px 16px;
+                border-radius: 50px;
+                border: none;
+                cursor: pointer;
+                transition: all .2s ease;
+            }
+
+                .view-all-link:hover {
+                    background: var(--accent-color);
+                    color: #fff;
+                }
 
             /* ============ INSTAGRAM-STYLE GRID ============ */
             .instagram-grid {
@@ -416,7 +497,7 @@
 
             .image-count-badge {
                 position: absolute;
-                top: 12px;
+                bottom: 12px;
                 right: 12px;
                 background: rgba(23,24,29,.65);
                 color: #fff;
@@ -426,6 +507,50 @@
                 border-radius: 20px;
                 backdrop-filter: blur(3px);
             }
+
+            .new-badge {
+                position: absolute;
+                top: 12px;
+                left: 12px;
+                background: var(--accent-gradient);
+                color: #fff;
+                font-size: 10.5px;
+                font-weight: 800;
+                letter-spacing: .3px;
+                padding: 4px 11px;
+                border-radius: 20px;
+                z-index: 2;
+            }
+
+            .image-wrap form {
+                margin: 0;
+            }
+
+            .wishlist-heart-btn {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: rgba(255,255,255,.92);
+                color: var(--text-primary);
+                border: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 13.5px;
+                box-shadow: var(--shadow-sm);
+                z-index: 2;
+                transition: all .2s ease;
+                padding: 0;
+            }
+
+                .wishlist-heart-btn:hover {
+                    background: var(--accent-color);
+                    color: #fff;
+                    transform: scale(1.08);
+                }
 
             .repost-badge {
                 position: absolute;
@@ -549,10 +674,10 @@
             }
 
             /* ============================================================
-                                                   INSTAGRAM-STYLE FEED OVERLAY — tap a post, then keep scrolling
-                                                   vertically through the rest of the store's posts, same
-                                                   experience as the store-owner home feed.
-                                                   ============================================================ */
+                                                               INSTAGRAM-STYLE FEED OVERLAY — tap a post, then keep scrolling
+                                                               vertically through the rest of the store's posts, same
+                                                               experience as the store-owner home feed.
+                                                               ============================================================ */
             .feed-overlay {
                 display: none;
                 position: fixed;
@@ -591,9 +716,9 @@
             }
 
             /* ============ PRODUCT POST CARD — now a single vertical stack:
-                                       store header, then image, then action buttons,
-                                       then price/description (collapsible), then reviews.
-                                       Only the review list scrolls internally. ============ */
+                                                   store header, then image, then action buttons,
+                                                   then price/description (collapsible), then reviews.
+                                                   Only the review list scrolls internally. ============ */
             .product-post-card {
                 background: var(--card-bg);
                 border-radius: 24px;
@@ -797,7 +922,7 @@
                 }
 
             /* Body holds action buttons + price/description + the
-                                       scrollable review list beneath it */
+                                                   scrollable review list beneath it */
             .post-body {
                 flex: 1;
                 min-height: 0;
@@ -906,7 +1031,7 @@
             }
 
             /* Only the review list scrolls internally — Instagram-style
-                                       comment pane — everything above stays fixed in view */
+                                                   comment pane — everything above stays fixed in view */
             .post-reviews {
                 padding: 16px 18px 22px;
             }
@@ -1283,7 +1408,7 @@
                     padding: 0;
                 }
                 /* Mobile keeps the same full-screen stacked layout —
-                                           header, image, buttons, details, reviews */
+                                                       header, image, buttons, details, reviews */
                 .product-post-card {
                     max-width: 100%;
                     max-height: 100%;
@@ -1354,13 +1479,22 @@
                     </div>
                     <div>
                         <div class="name-row"><h1>@Model.Store.StoreName</h1><i class="fa-solid fa-circle-check verified" title="Approved store"></i></div>
+                        @{
+                            var totalReviewCount = Model.Products.Sum(p => p.Reviews?.Count(r => r.Status == "Approved") ?? 0);
+                        }
                         <div class="stats">
-                            <div class="stat"><strong>@Model.Products.Count</strong><span>posts</span></div>
-                            <div class="stat"><strong>@Model.FollowersCount</strong><span>followers</span></div>
-                            <div class="stat"><strong>@Model.Store.Rating.ToString("0.0")</strong><span>rating</span></div>
+                            <div class="stat"><strong>@Model.Products.Count</strong><span>Products</span></div>
+                            <div class="stat"><strong>@Model.FollowersCount</strong><span>Followers</span></div>
+                            <div class="stat"><strong>@totalReviewCount</strong><span>Reviews</span></div>
+                            <div class="stat"><strong>@Model.Store.Rating.ToString("0.0")</strong><span>Avg Rating</span></div>
                         </div>
+                        <div class="eyebrow-label">Official Store</div>
                         <div class="bio-actions-row">
                             <p class="bio">@Model.Store.Description</p>
+                            <div class="badges-row">
+                                <span class="badge-pill badge-verified"><i class="fa-solid fa-check"></i> Verified</span>
+                                <span class="badge-pill badge-active"><i class="fa-solid fa-bolt"></i> Active</span>
+                            </div>
                             <div class="profile-actions">
                                 @if (Model.IsFollowing)
                                 {
@@ -1379,7 +1513,11 @@
             </section>
 
             <div class="profile-tabs">
-                <button class="tab-btn active"><i class="fas fa-table-cells"></i> Posts</button>
+                <span class="tab-btn active"><i class="fa-solid fa-bag-shopping"></i> Products</span>
+                @if (Model.Products.Any())
+                {
+                    <button type="button" class="view-all-link" onclick="openProductModal(@Model.Products.First().ProductID)">View All Products <i class="fa-solid fa-arrow-right"></i></button>
+                }
             </div>
 
             @if (Model.Products.Any())
@@ -1394,11 +1532,20 @@
                         var reviewCount = p.Reviews?.Count(r => r.Status == "Approved") ?? 0;
                         var isOutOfStock = p.IsOutOfStock;
                         var isLowStock = !isOutOfStock && p.Quantity <= p.LowStockThreshold;
+                        var isNew = (DateTime.UtcNow - p.CreatedAt).TotalDays <= 7;
 
                         <div class="product-grid-item" data-product-id="@p.ProductID">
                             <div class="image-wrap" onclick="openProductModal(@p.ProductID)">
                                 <img src="@img" alt="@p.ProductName" loading="lazy" />
                                 <span class="repost-badge" id="repostBadge-@p.ProductID" title="Reposted"><i class="fa-solid fa-retweet"></i></span>
+                                @if (isNew)
+                                {
+                                    <span class="new-badge">New</span>
+                                }
+                                <form method="post" asp-page-handler="AddWishlist" onclick="event.stopPropagation();">
+                                    <input type="hidden" name="productId" value="@p.ProductID" />
+                                    <button type="submit" class="wishlist-heart-btn" aria-label="Save @p.ProductName to wishlist" title="Save to wishlist"><i class="fa-regular fa-heart"></i></button>
+                                </form>
                                 @if (imageCount > 1)
                                 {
                                     <span class="image-count-badge"><i class="fas fa-images"></i> @imageCount</span>
@@ -1409,11 +1556,6 @@
                                         @(isOutOfStock ? "Out of Stock" : $"Only {p.Quantity} left")
                                     </div>
                                 }
-                                <div class="product-quick-actions">
-                                    <button onclick="event.stopPropagation(); openProductModal(@p.ProductID)" title="Quick view" aria-label="Quick view @p.ProductName">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
                             </div>
                             <div class="product-details">
                                 <span class="product-name">@p.ProductName</span>
@@ -1649,21 +1791,21 @@
 
             window.realnestStoryGroups = [@Html.Raw(JsonSerializer.Serialize(new
                 {
-                                                                            storeId = Model.Store.StoreID,
-                                                                            storeName = Model.Store.StoreName,
-                                                                            storeLogoUrl = storeLogo,
-                                                                            hasUnviewedStories = Model.StoreStories.Any(s => !s.IsViewed),
-                                                                            stories = Model.StoreStories.Select(s => new
+                                                                                            storeId = Model.Store.StoreID,
+                                                                                            storeName = Model.Store.StoreName,
+                                                                                            storeLogoUrl = storeLogo,
+                                                                                            hasUnviewedStories = Model.StoreStories.Any(s => !s.IsViewed),
+                                                                                            stories = Model.StoreStories.Select(s => new
                     {
-                                                                                                storyId = s.StoryID,
-                                                                                                mediaType = s.MediaType,
-                                                                                                imageUrl = s.ImageUrl,
-                                                                                                videoUrl = s.VideoUrl,
-                                                                                                durationSeconds = s.DurationSeconds,
-                                                                                                caption = s.Caption,
-                                                                                                createdAt = s.CreatedAt,
-                                                                                                isViewed = s.IsViewed,
-                                                                                                isLiked = s.IsLikedByCurrentCustomer
+                                                                                                                    storyId = s.StoryID,
+                                                                                                                    mediaType = s.MediaType,
+                                                                                                                    imageUrl = s.ImageUrl,
+                                                                                                                    videoUrl = s.VideoUrl,
+                                                                                                                    durationSeconds = s.DurationSeconds,
+                                                                                                                    caption = s.Caption,
+                                                                                                                    createdAt = s.CreatedAt,
+                                                                                                                    isViewed = s.IsViewed,
+                                                                                                                    isLiked = s.IsLikedByCurrentCustomer
                     })
                 }))];
     </script>
