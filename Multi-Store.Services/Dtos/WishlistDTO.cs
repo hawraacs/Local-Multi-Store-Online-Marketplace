@@ -16,5 +16,9 @@ namespace Multi_Store.Services.Dtos
         public int StoreID { get; set; }
         public string StoreName { get; set; } = string.Empty;
         public bool IsOutOfStock { get; set; }
+
+        // Added for the Wishlist redesign — real category name from
+        // Product.Category, populated in WishlistManager below.
+        public string CategoryName { get; set; } = string.Empty;
     }
 }

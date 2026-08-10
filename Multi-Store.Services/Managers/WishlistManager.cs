@@ -33,6 +33,13 @@ namespace Multi_Store.Services.Managers
                 StoreName = w.Product.Store.StoreName,
                 IsOutOfStock = w.Product.IsOutOfStock,
 
+                // Real category name (Product.Category), added for the
+                // Wishlist redesign. Falls back to empty string if a
+                // product has no category assigned.
+                CategoryName = w.Product.Category != null
+                    ? w.Product.Category.CategoryName
+                    : string.Empty,
+
                 ImageUrl = w.Product.Images
                     .OrderByDescending(i => i.IsPrimary)
                     .ThenBy(i => i.DisplayOrder)
