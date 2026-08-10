@@ -80,21 +80,30 @@
 <script>
     // Feeds the viewer for this Store Owner's OWN story bar preview + Insights panel.
     window.realnestOwnStories = @Html.Raw(JsonSerializer.Serialize(
-                (Model ?? new List<Multi_Store.Services.Dtos.StoryDTO>())
-                        .Select(s => new
-                        {
-                                storyId = s.StoryID,
-                                mediaType = s.MediaType,
-                                imageUrl = s.ImageUrl,
-                                videoUrl = s.VideoUrl,
-                                durationSeconds = s.DurationSeconds,
-                                caption = s.Caption,
-                                createdAt = s.CreatedAt,
-                                viewCount = s.ViewCount,
-                                likeCount = s.LikeCount,
-                                replyCount = s.ReplyCount
-                        })
-        ));
+                                        (Model ?? new List<Multi_Store.Services.Dtos.StoryDTO>())
+                                                        .Select(s => new
+                                    {
+                                                                    storyId = s.StoryID,
+                                                                    mediaType = s.MediaType,
+                                                                    imageUrl = s.ImageUrl,
+                                                                    videoUrl = s.VideoUrl,
+                                                                    durationSeconds = s.DurationSeconds,
+                                                                    caption = s.Caption,
+                                                                    createdAt = s.CreatedAt,
+                                                                    viewCount = s.ViewCount,
+                                                                    likeCount = s.LikeCount,
+                                                                    replyCount = s.ReplyCount
+                                    })
+                ));
+
+    // Real store name/logo for the "preview own story" viewer header. Previously
+    // stories.js hardcoded these to '' / null for the own-story case (openOwn()),
+    // so the header always showed a blank store name and fell back to
+    // /images/store.png for the avatar - which shows as a broken image if that
+    // file doesn't actually exist in wwwroot/images. Passing the real values in
+    // here fixes the broken profile picture in the story viewer on this page.
+    window.realnestOwnStoreName = @Html.Raw(JsonSerializer.Serialize(ViewData["OwnerStoreName"] as string ?? ""));
+    window.realnestOwnStoreLogo = @Html.Raw(JsonSerializer.Serialize(ownerLogoOrDefault));
 
     // Endpoint the JS Insights panel fetches from (this exact page's OnGetStoryInsightsAsync).
     // Base URL only - stories.js appends "?handler=StoryInsights&storyId=..." itself.

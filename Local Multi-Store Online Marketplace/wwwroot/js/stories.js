@@ -289,8 +289,8 @@
     function openOwn(sIndex) {
         mode = 'own';
         groups = [{
-            storeName: '',
-            storeLogoUrl: null,
+            storeName: window.realnestOwnStoreName || '',
+            storeLogoUrl: window.realnestOwnStoreLogo || null,
             stories: window.realnestOwnStories || []
         }];
         groupIndex = 0;
