@@ -45,502 +45,657 @@
         }
     </div>
 
+    <!-- Mobile-only tab bar (hidden at desktop, see customer-feed.css §14) -->
     <partial name="_CustomerBottomNav" />
 
-    <!-- =========================================================
-         STORY BAR (only shown if the customer follows stores
-         that currently have active stories)
-         ========================================================= -->
-    @if (Model.FollowedStoryGroups.Any())
-    {
-        <partial name="_StoryBarCustomer" model="Model.FollowedStoryGroups" />
-        <partial name="_StoryViewer" />
-    }
-
-    <!-- =========================================================
-         DISCOVERY BAR — one-line search, filters tucked behind
-         a "Filters" toggle so the page opens uncluttered
-         ========================================================= -->
     @{
         var hasActiveFilters = Model.CategoryId.HasValue || Model.StoreId.HasValue
             || !string.IsNullOrEmpty(Model.Area) || Model.MinPrice.HasValue || Model.MaxPrice.HasValue;
     }
-    <section class="discovery-bar">
-        <form method="get" asp-page="/CustomerFeed">
-            <input type="hidden" name="ViewMode" value="@Model.ViewMode" />
-            <input type="hidden" name="category" value="@Model.SelectedCategory" />
 
-            <div class="discovery-search">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="feedSearch" name="SearchTerm" value="@Model.SearchTerm"
-                       placeholder="Search products or stores" />
-                <button type="button" class="discovery-toggle" id="filtersToggle"
+    <div class="app-shell">
+
+        <!-- =====================================================
+             LEFT SIDEBAR — logo, primary nav, categories, seller CTA
+             (hidden below 992px; bottom tab bar takes over there)
+             ===================================================== -->
+        <aside class="app-sidebar">
+
+            <a class="app-logo" asp-page="/CustomerFeed">
+               
+            </a>
+
+            <nav class="app-sidebar-nav" aria-label="Primary">
+                <a asp-page="/CustomerProfile" class="app-nav-link">
+                    <i class="fa-solid fa-house"></i> Home
+                </a>
+                <a asp-page="/CustomerFeed" asp-route-viewMode="Following"
+                   class="app-nav-link @(!Model.ShowingAllProducts ? "active" : "")">
+                    <i class="fa-regular fa-compass"></i> For You
+                </a>
+                <a asp-page="/Wishlist" class="app-nav-link">
+                    <i class="fa-regular fa-heart"></i> Wishlist
+                </a>
+            </nav>
+
+            <div class="app-sidebar-heading">Categories</div>
+            <div class="app-sidebar-categories">
+                <a asp-page="/CustomerFeed" asp-route-viewMode="@Model.ViewMode"
+                   class="app-sidebar-cat @(string.IsNullOrEmpty(Model.SelectedCategory) ? "active" : "")">
+                    <i class="fa-solid fa-border-all"></i> All
+                </a>
+                @foreach (var category in Model.NavbarCategories.Where(c => c != "All"))
+                {
+                    var isActive = Model.SelectedCategory == category;
+                    <a asp-page="/CustomerFeed"
+                       asp-route-category="@category"
+                       asp-route-viewMode="@Model.ViewMode"
+                       class="app-sidebar-cat @(isActive ? "active" : "")">
+                        <i class="fa-solid @GetCategoryIcon(category)"></i> @category
+                    </a>
+                }
+            </div>
+
+            <div class="app-seller-cta">
+                <div class="app-seller-cta-icon">🏬</div>
+                <h4>Become a Seller</h4>
+                <p>Start your store and reach thousands of customers.</p>
+                <!-- TODO: point at the real seller-onboarding page -->
+                <a href="#" class="app-seller-cta-btn">Get Started</a>
+            </div>
+
+        </aside>
+
+        <!-- =====================================================
+             MAIN COLUMN — top bar + content + right sidebar
+             ===================================================== -->
+        <div class="app-main">
+
+            <header class="app-topbar">
+                <form method="get" asp-page="/CustomerFeed" class="app-topbar-search">
+                    <input type="hidden" name="ViewMode" value="@Model.ViewMode" />
+                    <input type="hidden" name="category" value="@Model.SelectedCategory" />
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="feedSearch" name="SearchTerm" value="@Model.SearchTerm"
+                           placeholder="Search products or stores..." />
+                    <button type="submit"><span>Search</span></button>
+                </form>
+
+                <button type="button" class="app-topbar-filters" id="filtersToggle"
                         aria-expanded="@(hasActiveFilters ? "true" : "false")"
                         aria-controls="advancedFilters">
-                    Filters <i class="fa-solid fa-chevron-down"></i>
+                    <i class="fa-solid fa-sliders"></i> Filters
                 </button>
-                <button type="submit" class="discovery-submit" aria-label="Search">
-                    <i class="fa-solid fa-arrow-right"></i>
-                </button>
-            </div>
 
-            <div class="discovery-filters @(hasActiveFilters ? "" : "is-collapsed")" id="advancedFilters">
-
-                <div class="discovery-field">
-                    <label for="feedCategory">Category</label>
-                    <select id="feedCategory" name="CategoryId">
-                        <option value="">All categories</option>
-                        @foreach (var filterCategory in Model.FilterCategories)
-                        {
-                            <option value="@filterCategory.CategoryID"
-                                    selected="@(Model.CategoryId == filterCategory.CategoryID ? "selected" : null)">
-                                @filterCategory.CategoryName
-                            </option>
-                        }
-                    </select>
-                </div>
-
-                <div class="discovery-field">
-                    <label for="feedStore">Store</label>
-                    <select id="feedStore" name="StoreId">
-                        <option value="">All stores</option>
-                        @foreach (var filterStore in Model.FilterStores)
-                        {
-                            <option value="@filterStore.StoreID"
-                                    selected="@(Model.StoreId == filterStore.StoreID ? "selected" : null)">
-                                @filterStore.StoreName
-                            </option>
-                        }
-                    </select>
-                </div>
-
-                <div class="discovery-field">
-                    <label for="feedArea">Area</label>
-                    <select id="feedArea" name="Area">
-                        <option value="">All areas</option>
-                        @foreach (var filterArea in Model.FilterAreas)
-                        {
-                            <option value="@filterArea" selected="@(Model.Area == filterArea ? "selected" : null)">@filterArea</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="discovery-field">
-                    <label for="feedMinPrice">Price range</label>
-                    <div style="display:flex; gap:6px;">
-                        <input id="feedMinPrice" type="number" min="0" step="0.01"
-                               name="MinPrice" value="@Model.MinPrice" placeholder="Min" />
-                        <input id="feedMaxPrice" type="number" min="0" step="0.01"
-                               name="MaxPrice" value="@Model.MaxPrice" placeholder="Max" />
-                    </div>
-                </div>
-
-                <div class="discovery-actions">
-                    <span class="discovery-result-note">
-                        @(Model.ShowingAllProducts
-                            ? "Showing products from all approved stores, including stores you do not follow."
-                            : "Showing products from stores you follow.")
-                    </span>
-                    <a asp-page="/CustomerFeed" asp-route-viewMode="@Model.ViewMode" class="discovery-clear">
-                        <i class="fa-solid fa-rotate-left"></i> Clear filters
+                <div class="app-topbar-icons">
+                    <a asp-page="/Wishlist" class="app-topbar-icon-btn" aria-label="Wishlist">
+                        <i class="fa-regular fa-heart"></i>
+                    </a>
+                    <!-- TODO: wire to the real messaging/notifications pages -->
+                    <a href="#" class="app-topbar-icon-btn" aria-label="Messages">
+                        <i class="fa-regular fa-comment-dots"></i>
+                    </a>
+                    <a href="#" class="app-topbar-icon-btn" aria-label="Notifications">
+                        <i class="fa-regular fa-bell"></i>
+                    </a>
+                    <a asp-page="/Profile" class="app-topbar-avatar" aria-label="Your profile">
+                        <i class="fa-solid fa-user"></i>
                     </a>
                 </div>
+            </header>
 
-            </div>
-        </form>
-    </section>
+            <div class="app-body">
 
-    <!-- =========================================================
-         CATEGORY CHIPS (driven by admin-managed categories)
-         ========================================================= -->
-    <section class="category-section" aria-label="Product categories">
+                <!-- ================================================
+                     CENTER CONTENT — categories, tabs, stories,
+                     filters, feed
+                     ================================================ -->
+                <div class="app-content">
 
-        <a asp-page="/CustomerFeed"
-           asp-route-viewMode="@Model.ViewMode"
-           asp-route-searchTerm="@Model.SearchTerm"
-           asp-route-storeId="@Model.StoreId"
-           asp-route-area="@Model.Area"
-           asp-route-minPrice="@Model.MinPrice"
-           asp-route-maxPrice="@Model.MaxPrice"
-           class="category-chip @(string.IsNullOrEmpty(Model.SelectedCategory) ? "active" : "")">
-            All
-        </a>
-
-        @foreach (var category in Model.NavbarCategories.Where(c => c != "All"))
-        {
-            var isActive = Model.SelectedCategory == category;
-
-            <a asp-page="/CustomerFeed"
-               asp-route-category="@category"
-               asp-route-viewMode="@Model.ViewMode"
-               asp-route-searchTerm="@Model.SearchTerm"
-               asp-route-storeId="@Model.StoreId"
-               asp-route-area="@Model.Area"
-               asp-route-minPrice="@Model.MinPrice"
-               asp-route-maxPrice="@Model.MaxPrice"
-               class="category-chip @(isActive ? "active" : "")">
-                @category
-            </a>
-        }
-
-    </section>
-
-    <!-- =========================================================
-         PRODUCT FEED
-         ========================================================= -->
-    <div class="feed-container">
-
-        @if (Model.Products != null && Model.Products.Any())
-        {
-            foreach (var product in Model.Products)
-            {
-                // CHANGED — was Images?.FirstOrDefault(), which silently
-                // dropped every image after the first. Multi-image products
-                // now get all of them, in upload order, for the swipeable
-                // carousel below.
-                var productImages = (product.Images ?? new List<Multi_Store.Core.Entities.ProductImage>())
-                    .OrderBy(pi => pi.DisplayOrder)
-                    .ToList();
-                var isFollowing = Model.FollowingStoreIds.Contains(product.StoreID);
-                var isBoosted = Model.BoostedProductIds.Contains(product.ProductID);
-
-                // NEW — approved reviews, pre-sorted, used for both the summary
-                // stats and the show-more/less list below.
-                var approvedReviews = (product.Reviews ?? new List<Multi_Store.Core.Entities.Review>())
-                    .Where(r => r.Status == "Approved")
-                    .OrderByDescending(r => r.CreatedAt)
-                    .ToList();
-                var reviewCount = approvedReviews.Count;
-                var avgRating = reviewCount > 0 ? approvedReviews.Average(r => r.Rating) : 0;
-                var fullStars = (int)Math.Round(avgRating);
-                var visibleReviewCount = 2;
-
-                <article class="post" data-product-id="@product.ProductID" data-product-name="@product.ProductName" data-price="@product.Price">
-
-                    <!-- Post header: store identity + follow / overflow menu -->
-                    <div class="post-header">
-
-                        <div class="store-profile">
-                            <div class="store-avatar">
-                                <span>
-                                    @if (!string.IsNullOrEmpty(product.Store?.StoreName))
-                                    {
-                                        @product.Store.StoreName.Substring(0, 1).ToUpper()
-                                    }
-                                    else
-                                    {
-                                        @:S
-                                    }
-                                </span>
-                            </div>
-                            <a class="store-name"
-                               asp-page="/StoreCustomerProfile"
-                               asp-route-id="@product.StoreID">
-                                @product.Store?.StoreName
+                    <!-- Category icon row -->
+                    <section class="category-icon-row" aria-label="Browse by category">
+                        <a asp-page="/CustomerFeed" asp-route-viewMode="@Model.ViewMode"
+                           class="category-icon-chip @(string.IsNullOrEmpty(Model.SelectedCategory) ? "active" : "")">
+                            <span class="category-icon-circle"><i class="fa-solid fa-border-all"></i></span>
+                            <span class="category-icon-label">All</span>
+                        </a>
+                        @foreach (var category in Model.NavbarCategories.Where(c => c != "All"))
+                        {
+                            var isActive = Model.SelectedCategory == category;
+                            <a asp-page="/CustomerFeed"
+                               asp-route-category="@category"
+                               asp-route-viewMode="@Model.ViewMode"
+                               class="category-icon-chip @(isActive ? "active" : "")">
+                                <span class="category-icon-circle"><i class="fa-solid @GetCategoryIcon(category)"></i></span>
+                                <span class="category-icon-label">@category</span>
                             </a>
-                            @if (isBoosted)
-                            {
-                                <span class="boosted-badge"><i class="fa-solid fa-bolt"></i> Boosted</span>
-                            }
-                        </div>
-
-                        <div class="post-header-actions">
-
-                            @if (isFollowing)
-                            {
-                                <form method="post"
-                                      asp-page-handler="UnfollowStore"
-                                      asp-route-storeId="@product.StoreID"
-                                      style="margin: 0;">
-                                    <button class="btn-follow-action btn-unfollow">Following</button>
-                                </form>
-                            }
-                            else
-                            {
-                                <form method="post"
-                                      asp-page-handler="FollowStore"
-                                      asp-route-storeId="@product.StoreID"
-                                      style="margin: 0;">
-                                    <button class="btn-follow-action btn-follow">Follow</button>
-                                </form>
-                            }
-
-                            <div class="post-menu">
-                                <button type="button" class="post-menu-btn" onclick="toggleMenu(this)" aria-label="More options">
-                                    <i class="fa-solid fa-ellipsis-vertical"></i>
-                                </button>
-
-                                <div class="post-menu-dropdown">
-                                    <form method="post" asp-page-handler="BlockPost">
-                                        <input type="hidden" name="storeId" value="@product.StoreID" />
-                                        <button type="submit">Block Store</button>
-                                    </form>
-
-                                    <form method="post" asp-page-handler="ReportPost">
-                                        <input type="hidden" name="productId" value="@product.ProductID" />
-                                        <button type="submit">Report</button>
-                                    </form>
-
-                                    <!-- CHANGED — was a plain RedirectToPage() form, which
-                                         dropped ViewMode/filters and reloaded the whole page
-                                         (making the action look broken on any non-default
-                                         view). Now intercepted client-side in customer-feed.js
-                                         and posted via fetch; the card fades out in place. -->
-                                    <form method="post" asp-page-handler="NotInterested" class="ajax-not-interested-form">
-                                        <input type="hidden" name="productId" value="@product.ProductID" />
-                                        <button type="submit">Not Interested</button>
-                                    </form>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <!-- Post image(s) — swipeable carousel when a product has more than one -->
-                    <div class="post-image-container" data-carousel>
-                        <div class="post-image-track">
-                            @if (productImages.Any())
-                            {
-                                @foreach (var image in productImages)
-                                {
-                                    <div class="post-image-slide">
-                                        <img class="post-image" src="@image.ImageUrl" alt="@product.ProductName" loading="lazy"
-                                             onerror="this.onerror=null;this.src='/images/no-image.png';" />
-                                    </div>
-                                }
-                            }
-                            else
-                            {
-                                <div class="post-image-slide">
-                                    <img class="post-image" src="/images/no-image.png" alt="@product.ProductName" loading="lazy" />
-                                </div>
-                            }
-                        </div>
-
-                        @if (productImages.Count > 1)
-                        {
-                            <button type="button" class="post-image-nav prev" aria-label="Previous image">
-                                <i class="fa-solid fa-chevron-left"></i>
-                            </button>
-                            <button type="button" class="post-image-nav next" aria-label="Next image">
-                                <i class="fa-solid fa-chevron-right"></i>
-                            </button>
-
-                            <div class="post-image-dots">
-                                @for (var d = 0; d < productImages.Count; d++)
-                                {
-                                    <span class="post-image-dot @(d == 0 ? "active" : "")"></span>
-                                }
-                            </div>
                         }
+                    </section>
+
+                    <!-- For You / All Stores tabs -->
+                    <div class="feed-tabs">
+                        <a asp-page="/CustomerFeed" asp-route-viewMode="Following"
+                           asp-route-category="@Model.SelectedCategory"
+                           class="feed-tab @(!Model.ShowingAllProducts ? "active" : "")">
+                            For You
+                        </a>
+                        <a asp-page="/CustomerFeed" asp-route-viewMode="All"
+                           asp-route-category="@Model.SelectedCategory"
+                           class="feed-tab @(Model.ShowingAllProducts ? "active" : "")">
+                            All Stores
+                        </a>
                     </div>
 
-                    <div class="post-body">
+                    <!-- Story bar (only if the customer follows stores with active stories) -->
+                    @if (Model.FollowedStoryGroups.Any())
+                    {
+                        <partial name="_StoryBarCustomer" model="Model.FollowedStoryGroups" />
+                        <partial name="_StoryViewer" />
+                    }
 
-                        <!-- Product details -->
-                        <div class="product-meta">
-                            <div class="product-title-row">
-                                <span class="product-name">@product.ProductName</span>
-                                <span class="product-price">$@product.Price</span>
-                            </div>
-                            <p class="product-description">@product.Description</p>
-                        </div>
+                    <!-- Collapsible advanced filters (search box now lives in the top bar) -->
+                    <section class="discovery-bar">
+                        <form method="get" asp-page="/CustomerFeed">
+                            <input type="hidden" name="ViewMode" value="@Model.ViewMode" />
+                            <input type="hidden" name="category" value="@Model.SelectedCategory" />
+                            <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
 
-                        <!-- Actions: add to cart / wishlist / share -->
-                        <div class="actions">
+                            <div class="discovery-filters @(hasActiveFilters ? "" : "is-collapsed")" id="advancedFilters">
 
-                            <form method="post"
-                                  asp-page="/Customer1"
-                                  asp-page-handler="AddToCart"
-                                  asp-route-productId="@product.ProductID"
-                                  style="margin: 0;">
-                                <button class="btn-action btn-feed-cart">
-                                    <i class="fa-solid fa-bag-shopping"></i> Add to Cart
-                                </button>
-                            </form>
-
-                            <form method="post"
-                                  asp-page-handler="AddWishlist"
-                                  asp-route-productId="@product.ProductID"
-                                  style="margin: 0;">
-                                <button class="btn-action btn-feed-wishlist">
-                                    <i class="fa-regular fa-heart"></i> Wishlist
-                                </button>
-                            </form>
-
-                            <!-- CHANGED — was a single-click "Share" form that posted
-                                 straight to ShareToStore (chat only). Now a dropdown
-                                 matching StoreCustomerProfile's share menu: WhatsApp,
-                                 Send in chat, Copy link. -->
-                            <div class="menu-wrap feed-share-wrap">
-                                <button type="button" class="btn-action btn-feed-share" onclick="toggleMenu(this)">
-                                    <i class="fa-regular fa-paper-plane"></i> Share
-                                </button>
-
-                                <div class="dropdown post-menu-dropdown">
-                                    <button type="button" onclick="shareFeedProductWhatsApp(this)">
-                                        <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp
-                                    </button>
-
-                                    <form method="post" asp-page-handler="ShareToStore"
-                                          asp-route-productId="@product.ProductID"
-                                          asp-route-storeOwnerId="@product.Store.OwnerUserID">
-                                        <button type="submit"><i class="fa-regular fa-message"></i> Send in chat</button>
-                                    </form>
-
-                                    <button type="button" onclick="copyFeedProductLink(this)">
-                                        <i class="fa-regular fa-copy"></i> Copy link
-                                    </button>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <!-- ============================================================
-                             REVIEW SUMMARY (average rating + count) — same look as
-                             Customer1's Explore modal review summary.
-                             ============================================================ -->
-                        @if (reviewCount > 0)
-                        {
-                            <div class="product-review-summary">
-                                <strong>@avgRating.ToString("0.0")</strong>
-                                <span>
-                                    <span class="product-review-stars">
-                                        @for (var s = 0; s < 5; s++)
+                                <div class="discovery-field">
+                                    <label for="feedCategory">Category</label>
+                                    <select id="feedCategory" name="CategoryId">
+                                        <option value="">All categories</option>
+                                        @foreach (var filterCategory in Model.FilterCategories)
                                         {
-                                            if (s < fullStars)
+                                            <option value="@filterCategory.CategoryID"
+                                                    selected="@(Model.CategoryId == filterCategory.CategoryID ? "selected" : null)">
+                                                @filterCategory.CategoryName
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="discovery-field">
+                                    <label for="feedStore">Store</label>
+                                    <select id="feedStore" name="StoreId">
+                                        <option value="">All stores</option>
+                                        @foreach (var filterStore in Model.FilterStores)
+                                        {
+                                            <option value="@filterStore.StoreID"
+                                                    selected="@(Model.StoreId == filterStore.StoreID ? "selected" : null)">
+                                                @filterStore.StoreName
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="discovery-field">
+                                    <label for="feedArea">Area</label>
+                                    <select id="feedArea" name="Area">
+                                        <option value="">All areas</option>
+                                        @foreach (var filterArea in Model.FilterAreas)
+                                        {
+                                            <option value="@filterArea" selected="@(Model.Area == filterArea ? "selected" : null)">@filterArea</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="discovery-field">
+                                    <label for="feedMinPrice">Price range</label>
+                                    <div style="display:flex; gap:6px;">
+                                        <input id="feedMinPrice" type="number" min="0" step="0.01"
+                                               name="MinPrice" value="@Model.MinPrice" placeholder="Min" />
+                                        <input id="feedMaxPrice" type="number" min="0" step="0.01"
+                                               name="MaxPrice" value="@Model.MaxPrice" placeholder="Max" />
+                                    </div>
+                                </div>
+
+                                <div class="discovery-actions">
+                                    <span class="discovery-result-note">
+                                        @(Model.ShowingAllProducts
+                                            ? "Showing products from all approved stores, including stores you do not follow."
+                                            : "Showing products from stores you follow.")
+                                    </span>
+                                    <a asp-page="/CustomerFeed" asp-route-viewMode="@Model.ViewMode" class="discovery-clear">
+                                        <i class="fa-solid fa-rotate-left"></i> Clear filters
+                                    </a>
+                                </div>
+
+                            </div>
+                        </form>
+                    </section>
+
+                    <!-- =============================================
+                         PRODUCT FEED
+                         ============================================= -->
+                    <div class="feed-container">
+
+                        @if (Model.Products != null && Model.Products.Any())
+                        {
+                            foreach (var product in Model.Products)
+                            {
+                                var productImages = (product.Images ?? new List<Multi_Store.Core.Entities.ProductImage>())
+                                    .OrderBy(pi => pi.DisplayOrder)
+                                    .ToList();
+                                var isFollowing = Model.FollowingStoreIds.Contains(product.StoreID);
+                                var isBoosted = Model.BoostedProductIds.Contains(product.ProductID);
+
+                                var approvedReviews = (product.Reviews ?? new List<Multi_Store.Core.Entities.Review>())
+                                    .Where(r => r.Status == "Approved")
+                                    .OrderByDescending(r => r.CreatedAt)
+                                    .ToList();
+                                var reviewCount = approvedReviews.Count;
+                                var avgRating = reviewCount > 0 ? approvedReviews.Average(r => r.Rating) : 0;
+                                var fullStars = (int)Math.Round(avgRating);
+                                var visibleReviewCount = 2;
+
+                                <article class="post" data-product-id="@product.ProductID" data-product-name="@product.ProductName" data-price="@product.Price">
+
+                                    <!-- Post header: store identity + follow / overflow menu -->
+                                    <div class="post-header">
+
+                                        <div class="store-profile">
+                                            <div class="store-avatar">
+                                                <span>
+                                                    @if (!string.IsNullOrEmpty(product.Store?.StoreName))
+                                                    {
+                                                        @product.Store.StoreName.Substring(0, 1).ToUpper()
+                                                    }
+                                                    else
+                                                    {
+                                                        @:S
+                                                    }
+                                                </span>
+                                            </div>
+                                            <div class="store-name-row">
+                                                <a class="store-name"
+                                                   asp-page="/StoreCustomerProfile"
+                                                   asp-route-id="@product.StoreID">
+                                                    @product.Store?.StoreName
+                                                    <i class="fa-solid fa-circle-check" title="Approved store"></i>
+                                                    @if (isBoosted)
+                                                    {
+                                                        <span class="boosted-badge"><i class="fa-solid fa-bolt"></i> Boosted</span>
+                                                    }
+                                                </a>
+                                                <span class="post-timestamp">@GetRelativeTime(product.CreatedAt)</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="post-header-actions">
+
+                                            @if (isFollowing)
                                             {
-                                                <i class="fa-solid fa-star"></i>
+                                                <form method="post"
+                                                      asp-page-handler="UnfollowStore"
+                                                      asp-route-storeId="@product.StoreID"
+                                                      style="margin: 0;">
+                                                    <button class="btn-follow-action btn-unfollow">Following</button>
+                                                </form>
                                             }
                                             else
                                             {
-                                                <i class="fa-regular fa-star"></i>
+                                                <form method="post"
+                                                      asp-page-handler="FollowStore"
+                                                      asp-route-storeId="@product.StoreID"
+                                                      style="margin: 0;">
+                                                    <button class="btn-follow-action btn-follow">Follow</button>
+                                                </form>
                                             }
+
+                                            <div class="post-menu">
+                                                <button type="button" class="post-menu-btn" onclick="toggleMenu(this)" aria-label="More options">
+                                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                                </button>
+
+                                                <div class="post-menu-dropdown">
+                                                    <form method="post" asp-page-handler="BlockPost">
+                                                        <input type="hidden" name="storeId" value="@product.StoreID" />
+                                                        <button type="submit">Block Store</button>
+                                                    </form>
+
+                                                    <form method="post" asp-page-handler="ReportPost">
+                                                        <input type="hidden" name="productId" value="@product.ProductID" />
+                                                        <button type="submit">Report</button>
+                                                    </form>
+
+                                                    <form method="post" asp-page-handler="NotInterested" class="ajax-not-interested-form">
+                                                        <input type="hidden" name="productId" value="@product.ProductID" />
+                                                        <button type="submit">Not Interested</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <!-- Post image(s) — swipeable carousel when a product has more than one -->
+                                    <div class="post-image-container" data-carousel>
+                                        <div class="post-image-track">
+                                            @if (productImages.Any())
+                                            {
+                                                @foreach (var image in productImages)
+                                                {
+                                                    <div class="post-image-slide">
+                                                        <img class="post-image" src="@image.ImageUrl" alt="@product.ProductName" loading="lazy"
+                                                             onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <div class="post-image-slide">
+                                                    <img class="post-image" src="/images/no-image.png" alt="@product.ProductName" loading="lazy" />
+                                                </div>
+                                            }
+                                        </div>
+
+                                        @if (productImages.Count > 1)
+                                        {
+                                            <button type="button" class="post-image-nav prev" aria-label="Previous image">
+                                                <i class="fa-solid fa-chevron-left"></i>
+                                            </button>
+                                            <button type="button" class="post-image-nav next" aria-label="Next image">
+                                                <i class="fa-solid fa-chevron-right"></i>
+                                            </button>
+
+                                            <div class="post-image-dots">
+                                                @for (var d = 0; d < productImages.Count; d++)
+                                                {
+                                                    <span class="post-image-dot @(d == 0 ? "active" : "")"></span>
+                                                }
+                                            </div>
                                         }
-                                    </span>
-                                    <small>@reviewCount review@(reviewCount == 1 ? "" : "s")</small>
-                                </span>
+                                    </div>
+
+                                    <div class="post-body">
+
+                                        <!-- Product details -->
+                                        <div class="product-meta">
+                                            <div class="product-title-row">
+                                                <span class="product-name">@product.ProductName</span>
+                                                <span class="product-price">$@product.Price</span>
+                                            </div>
+                                            <p class="product-description">@product.Description</p>
+                                        </div>
+
+                                        <!-- Shop Now CTA row -->
+                                        <div class="post-cta-row">
+                                            <form method="post"
+                                                  asp-page="/Customer1"
+                                                  asp-page-handler="AddToCart"
+                                                  asp-route-productId="@product.ProductID"
+                                                  style="margin: 0;">
+                                                <button class="btn-shop-now">Shop Now</button>
+                                            </form>
+                                        </div>
+
+                                        <!-- Actions: wishlist / comments / share -->
+                                        <div class="actions">
+
+                                            <form method="post"
+                                                  asp-page-handler="AddWishlist"
+                                                  asp-route-productId="@product.ProductID"
+                                                  style="margin: 0;">
+                                                <button class="btn-action btn-feed-wishlist">
+                                                    <i class="fa-regular fa-heart"></i> Wishlist
+                                                </button>
+                                            </form>
+
+                                            <button type="button" class="btn-action btn-feed-comments" disabled>
+                                                <i class="fa-regular fa-comment"></i> @reviewCount
+                                            </button>
+
+                                            <div class="menu-wrap feed-share-wrap">
+                                                <button type="button" class="btn-action btn-feed-share" onclick="toggleMenu(this)">
+                                                    <i class="fa-regular fa-paper-plane"></i> Share
+                                                </button>
+
+                                                <div class="dropdown post-menu-dropdown">
+                                                    <button type="button" onclick="shareFeedProductWhatsApp(this)">
+                                                        <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp
+                                                    </button>
+
+                                                    <form method="post" asp-page-handler="ShareToStore"
+                                                          asp-route-productId="@product.ProductID"
+                                                          asp-route-storeOwnerId="@product.Store.OwnerUserID">
+                                                        <button type="submit"><i class="fa-regular fa-message"></i> Send in chat</button>
+                                                    </form>
+
+                                                    <button type="button" onclick="copyFeedProductLink(this)">
+                                                        <i class="fa-regular fa-copy"></i> Copy link
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="post-menu">
+                                                <span></span>
+                                            </div>
+
+                                        </div>
+
+                                        <!-- Review summary -->
+                                        @if (reviewCount > 0)
+                                        {
+                                            <div class="product-review-summary">
+                                                <strong>@avgRating.ToString("0.0")</strong>
+                                                <span>
+                                                    <span class="product-review-stars">
+                                                        @for (var s = 0; s < 5; s++)
+                                                        {
+                                                            if (s < fullStars)
+                                                            {
+                                                                <i class="fa-solid fa-star"></i>
+                                                            }
+                                                            else
+                                                            {
+                                                                <i class="fa-regular fa-star"></i>
+                                                            }
+                                                        }
+                                                    </span>
+                                                    <small>@reviewCount review@(reviewCount == 1 ? "" : "s")</small>
+                                                </span>
+                                            </div>
+                                        }
+
+                                        <!-- Review composer -->
+                                        <form method="post" asp-page-handler="AddReview" class="product-review-form">
+                                            <input type="hidden" name="productId" value="@product.ProductID" />
+                                            <input type="hidden" name="rating" value="0" class="product-review-rating-input" />
+
+                                            <span class="product-review-form-label">Write a review</span>
+
+                                            <div class="product-review-form-stars">
+                                                <button type="button" class="star-pick" data-star="1" aria-label="1 star">
+                                                    <i class="fa-regular fa-star"></i>
+                                                </button>
+                                                <button type="button" class="star-pick" data-star="2" aria-label="2 stars">
+                                                    <i class="fa-regular fa-star"></i>
+                                                </button>
+                                                <button type="button" class="star-pick" data-star="3" aria-label="3 stars">
+                                                    <i class="fa-regular fa-star"></i>
+                                                </button>
+                                                <button type="button" class="star-pick" data-star="4" aria-label="4 stars">
+                                                    <i class="fa-regular fa-star"></i>
+                                                </button>
+                                                <button type="button" class="star-pick" data-star="5" aria-label="5 stars">
+                                                    <i class="fa-regular fa-star"></i>
+                                                </button>
+                                                <span class="product-review-form-hint">Tap a star</span>
+                                            </div>
+
+                                            <div class="product-review-form-row">
+                                                <input type="text"
+                                                       name="comment"
+                                                       class="product-review-comment-input"
+                                                       placeholder="Share your thoughts about this product..."
+                                                       required />
+
+                                                <button type="submit" class="product-review-submit">
+                                                    <i class="fa-solid fa-paper-plane"></i> Post
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <!-- Reviews list -->
+                                        <div class="comments-section">
+                                            @if (reviewCount > 0)
+                                            {
+                                                <div class="comments-header-label">Reviews (@reviewCount)</div>
+
+                                                <div class="reviews-list" data-reviews-list>
+                                                    @for (var i = 0; i < approvedReviews.Count; i++)
+                                                    {
+                                                        var review = approvedReviews[i];
+
+                                                        <div class="comment @(i >= visibleReviewCount ? "review-hidden" : "")">
+                                                            <div class="comment-author-row">
+                                                                <div class="comment-author-meta">
+                                                                    <span class="comment-author">@review.Customer?.User?.FullName</span>
+                                                                    <span class="comment-stars">
+                                                                        @for (var s = 0; s < review.Rating; s++)
+                                                                        {
+                                                                            @:⭐
+                                                                        }
+                                                                    </span>
+                                                                </div>
+
+                                                                @if (review.CustomerID == Model.CurrentCustomerId)
+                                                                {
+                                                                    <form method="post"
+                                                                          asp-page-handler="DeleteReview"
+                                                                          class="review-delete-form"
+                                                                          onsubmit="return confirm('Delete your review? This cannot be undone.');">
+                                                                        <input type="hidden" name="reviewId" value="@review.ReviewID" />
+                                                                        <button type="submit" class="review-delete-btn" aria-label="Delete your review" title="Delete your review">
+                                                                            <i class="fa-solid fa-trash"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                }
+                                                            </div>
+                                                            <div class="comment-text">@review.Comment</div>
+                                                        </div>
+                                                    }
+                                                </div>
+
+                                                @if (reviewCount > visibleReviewCount)
+                                                {
+                                                    <button type="button"
+                                                            class="show-more-reviews-btn"
+                                                            data-toggle-reviews
+                                                            data-expanded="false"
+                                                            data-show-label="Show all @reviewCount reviews">
+                                                        Show all @reviewCount reviews
+                                                    </button>
+                                                }
+                                            }
+                                        </div>
+
+                                    </div>
+                                </article>
+                            }
+                        }
+                        else
+                        {
+                            <div class="empty-message">
+                                <div class="empty-icon">
+                                    <i class="fa-regular fa-folder-open"></i>
+                                </div>
+                                <h3>@(Model.ShowingAllProducts ? "No Products Found" : "Your Feed is Empty")</h3>
+                                <p>
+                                    @(Model.ShowingAllProducts
+                                        ? "Try changing the search term or clearing one of the filters."
+                                        : "Follow local stores, or open All Products to browse every approved store.")
+                                </p>
                             </div>
                         }
 
-                        <!-- ============================================================
-                             REVIEW COMPOSER — star picker instead of a plain number
-                             box, same interaction as Customer1's "write a review".
-                             ============================================================ -->
-                        <form method="post" asp-page-handler="AddReview" class="product-review-form">
-                            <input type="hidden" name="productId" value="@product.ProductID" />
-                            <input type="hidden" name="rating" value="0" class="product-review-rating-input" />
+                    </div>
 
-                            <span class="product-review-form-label">Write a review</span>
+                </div>
 
-                            <div class="product-review-form-stars">
-                                <button type="button" class="star-pick" data-star="1" aria-label="1 star">
-                                    <i class="fa-regular fa-star"></i>
-                                </button>
-                                <button type="button" class="star-pick" data-star="2" aria-label="2 stars">
-                                    <i class="fa-regular fa-star"></i>
-                                </button>
-                                <button type="button" class="star-pick" data-star="3" aria-label="3 stars">
-                                    <i class="fa-regular fa-star"></i>
-                                </button>
-                                <button type="button" class="star-pick" data-star="4" aria-label="4 stars">
-                                    <i class="fa-regular fa-star"></i>
-                                </button>
-                                <button type="button" class="star-pick" data-star="5" aria-label="5 stars">
-                                    <i class="fa-regular fa-star"></i>
-                                </button>
-                                <span class="product-review-form-hint">Tap a star</span>
+                <!-- ================================================
+                     RIGHT SIDEBAR — promo banner, Top Stores,
+                     Popular Now (hidden below 992px)
+                     ================================================ -->
+                <aside class="app-rightbar">
+
+                    <div class="promo-banner">
+                        <div class="promo-banner-eyebrow">Mega Sale</div>
+                        <h3>Up to 60% Off</h3>
+                        <p>on selected items from local stores</p>
+                        <a asp-page="/CustomerFeed" asp-route-viewMode="All" class="promo-banner-btn">Shop Now</a>
+                    </div>
+
+                    @if (Model.FilterStores.Any())
+                    {
+                        <div class="widget-card">
+                            <div class="widget-card-header">
+                                <h4>Top Stores</h4>
+                                <a asp-page="/CustomerFeed" asp-route-viewMode="All">View all</a>
                             </div>
-
-                            <div class="product-review-form-row">
-                                <input type="text"
-                                       name="comment"
-                                       class="product-review-comment-input"
-                                       placeholder="Share your thoughts about this product..."
-                                       required />
-
-                                <button type="submit" class="product-review-submit">
-                                    <i class="fa-solid fa-paper-plane"></i> Post
-                                </button>
-                            </div>
-                        </form>
-
-                        <!-- ============================================================
-                             REVIEWS LIST — first 2 shown, rest hidden behind a
-                             "Show all N reviews" / "Show less" toggle (SHEIN-style).
-                             ============================================================ -->
-                        <div class="comments-section">
-                            @if (reviewCount > 0)
+                            @foreach (var store in Model.FilterStores.Take(4))
                             {
-                                <div class="comments-header-label">Reviews (@reviewCount)</div>
-
-                                <div class="reviews-list" data-reviews-list>
-                                    @for (var i = 0; i < approvedReviews.Count; i++)
-                                    {
-                                        var review = approvedReviews[i];
-
-                                        <div class="comment @(i >= visibleReviewCount ? "review-hidden" : "")">
-                                            <div class="comment-author-row">
-                                                <div class="comment-author-meta">
-                                                    <span class="comment-author">@review.Customer?.User?.FullName</span>
-                                                    <span class="comment-stars">
-                                                        @for (var s = 0; s < review.Rating; s++)
-                                                        {
-                                                            @:⭐
-                                                        }
-                                                    </span>
-                                                </div>
-
-                                                @if (review.CustomerID == Model.CurrentCustomerId)
-                                                {
-                                                    <form method="post"
-                                                          asp-page-handler="DeleteReview"
-                                                          class="review-delete-form"
-                                                          onsubmit="return confirm('Delete your review? This cannot be undone.');">
-                                                        <input type="hidden" name="reviewId" value="@review.ReviewID" />
-                                                        <button type="submit" class="review-delete-btn" aria-label="Delete your review" title="Delete your review">
-                                                            <i class="fa-solid fa-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                }
-                                            </div>
-                                            <div class="comment-text">@review.Comment</div>
-                                        </div>
-                                    }
+                                var storeIsFollowing = Model.FollowingStoreIds.Contains(store.StoreID);
+                                <div class="top-store-row">
+                                    <span class="top-store-avatar">
+                                        @(string.IsNullOrEmpty(store.StoreName) ? "S" : store.StoreName.Substring(0, 1).ToUpper())
+                                    </span>
+                                    <a class="top-store-name" asp-page="/StoreCustomerProfile" asp-route-id="@store.StoreID">
+                                        @store.StoreName
+                                    </a>
+                                    <form method="post"
+                                          asp-page-handler="@(storeIsFollowing ? "UnfollowStore" : "FollowStore")"
+                                          asp-route-storeId="@store.StoreID"
+                                          style="margin:0;">
+                                        <button type="submit" class="top-store-follow-btn @(storeIsFollowing ? "is-following" : "")">
+                                            @(storeIsFollowing ? "Following" : "Follow")
+                                        </button>
+                                    </form>
                                 </div>
-
-                                @if (reviewCount > visibleReviewCount)
-                                {
-                                    <button type="button"
-                                            class="show-more-reviews-btn"
-                                            data-toggle-reviews
-                                            data-expanded="false"
-                                            data-show-label="Show all @reviewCount reviews">
-                                        Show all @reviewCount reviews
-                                    </button>
-                                }
                             }
                         </div>
+                    }
 
-                    </div>
-                </article>
-            }
-        }
-        else
-        {
-            <div class="empty-message">
-                <div class="empty-icon">
-                    <i class="fa-regular fa-folder-open"></i>
-                </div>
-                <h3>@(Model.ShowingAllProducts ? "No Products Found" : "Your Feed is Empty")</h3>
-                <p>
-                    @(Model.ShowingAllProducts
-                        ? "Try changing the search term or clearing one of the filters."
-                        : "Follow local stores, or open All Products to browse every approved store.")
-                </p>
+                    @{
+                        var popularProducts = Model.Products
+                            .OrderByDescending(p => Model.BoostedProductIds.Contains(p.ProductID))
+                            .ThenByDescending(p => p.CreatedAt)
+                            .Take(3)
+                            .ToList();
+                    }
+                    @if (popularProducts.Any())
+                    {
+                        <div class="widget-card">
+                            <div class="widget-card-header">
+                                <h4>Popular Now</h4>
+                            </div>
+                            <div class="popular-grid">
+                                @foreach (var product in popularProducts)
+                                {
+                                    var thumb = (product.Images ?? new List<Multi_Store.Core.Entities.ProductImage>())
+                                        .OrderBy(pi => pi.DisplayOrder)
+                                        .Select(pi => pi.ImageUrl)
+                                        .FirstOrDefault() ?? "/images/no-image.png";
+
+                                    <a class="popular-item" asp-page="/StoreCustomerProfile" asp-route-id="@product.StoreID">
+                                        <img class="popular-item-img" src="@thumb" alt="@product.ProductName"
+                                             onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                                        <span>
+                                            <span class="popular-item-name">@product.ProductName</span><br />
+                                            <span class="popular-item-price">$@product.Price</span>
+                                        </span>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                </aside>
+
             </div>
-        }
-
+        </div>
     </div>
 
     <!-- Page scripts -->
@@ -552,7 +707,7 @@
             // MULTI-IMAGE CAROUSEL — swipe (native scroll-snap) + dot sync
             // + prev/next arrow buttons for products with more than one image.
             // =====================================================
-            (function () {
+            (function() {
                 function initCarousel(container) {
                     var track = container.querySelector('.post-image-track');
                     var dots = Array.from(container.querySelectorAll('.post-image-dot'));
@@ -566,22 +721,22 @@
 
                         var index = Math.round(track.scrollLeft / track.clientWidth);
 
-                        dots.forEach(function (dot, i) {
+                        dots.forEach(function(dot, i) {
                             dot.classList.toggle('active', i === index);
                         });
                     }
 
                     var scrollTimeout = null;
-                    track.addEventListener('scroll', function () {
+                    track.addEventListener('scroll', function() {
                         if (scrollTimeout) window.clearTimeout(scrollTimeout);
                         scrollTimeout = window.setTimeout(updateActiveDot, 60);
                     });
 
-                    prevBtn?.addEventListener('click', function () {
+                    prevBtn?.addEventListener('click', function() {
                         track.scrollBy({ left: -track.clientWidth, behavior: 'smooth' });
                     });
 
-                    nextBtn?.addEventListener('click', function () {
+                    nextBtn?.addEventListener('click', function() {
                         track.scrollBy({ left: track.clientWidth, behavior: 'smooth' });
                     });
                 }
@@ -592,3 +747,36 @@
 
 </body>
 </html>
+
+@functions {
+    // Maps a category name to a Font Awesome glyph for the sidebar/icon-row.
+    // Falls back to a generic tag icon for categories not in this list.
+    string GetCategoryIcon(string name)
+    {
+        return name?.Trim().ToLowerInvariant() switch
+        {
+            "women" => "fa-person-dress",
+            "men" => "fa-person",
+            "electronics" => "fa-laptop",
+            "shoes" => "fa-shoe-prints",
+            "bags" => "fa-bag-shopping",
+            "beauty" => "fa-spa",
+            "home" => "fa-house",
+            "kids" => "fa-child-reaching",
+            "accessories" => "fa-glasses",
+            "sports" => "fa-dumbbell",
+            _ => "fa-tag"
+        };
+    }
+
+    // Lightweight "2h ago" style relative-time label for post timestamps.
+    string GetRelativeTime(DateTime createdAt)
+    {
+        var span = DateTime.UtcNow - createdAt.ToUniversalTime();
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+        if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
+        return createdAt.ToString("MMM d");
+    }
+}

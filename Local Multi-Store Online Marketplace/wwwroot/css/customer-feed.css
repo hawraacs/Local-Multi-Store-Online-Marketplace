@@ -1,37 +1,40 @@
 ﻿/* =============================================================
-   CUSTOMER FEED — STYLESHEET (v4 — professional, consistent w/
-   Wishlist/Customer1/Profile)
+   CUSTOMER FEED — STYLESHEET (v5 — desktop app-shell layout:
+   left sidebar nav, top search bar, center feed, right sidebar
+   widgets — matching the reference marketplace layout)
    Local Multi-Store Online Marketplace ("realnest")
    -------------------------------------------------------------
-   CHANGED FROM v3: the previous version leaned into an ornate
-   "boutique market" look — serif headlines, a dashed/rotated
-   amber price tag, 64px avatars, 130px story rings, 36px product
-   names. That reads as messy sitting next to the restrained,
-   consistent look every other customer page (Wishlist, Customer1,
-   Profile) already shares. This version keeps the exact same page
-   width (--page-max-width, now 680px) but brings every
-   token and size back in line with that shared design language:
-   the same purple palette (no amber), the same restrained type
-   scale, and the same plain-bold price treatment Wishlist uses
-   instead of a decorative price tag.
+   CHANGED FROM v4: v4 was a single scrolling mobile-style column
+   (story bar → discovery bar → category chips → feed) meant to sit
+   under a bottom tab bar. This version wraps that same column in a
+   three-region desktop shell — a fixed left sidebar (logo, nav,
+   categories, "become a seller"), a sticky top bar (search + quick
+   icons), and a right sidebar (promo banner, Top Stores, Popular
+   Now) — while keeping the bottom tab bar for narrow screens, where
+   the sidebar/rightbar collapse away and the feed reverts to the
+   v4 single-column behaviour. All v4 tokens, the post card, story
+   bar, carousel, and review composer are unchanged in spirit; only
+   their surrounding chrome and container widths moved.
 
    Sections:
      1. Design Tokens
      2. Base / Reset
-     3. Bottom Navigation
-     4. Story Bar
-     5. Discovery Bar (search + collapsible filters)
-     6. Category Tabs
-     7. Feed Post Card
-     8. Comments
-     9. Empty State
-    10. Toast Notifications
-    11. Image Carousel (multi-image posts)
-    12. Responsive Rules
+     3. Bottom Navigation (mobile only, <992px)
+     4. App Shell (sidebar / topbar / rightbar)
+     5. Story Bar
+     6. Category Icon Row + Feed Tabs
+     7. Discovery Bar (collapsible filters)
+     8. Feed Post Card
+     9. Comments
+    10. Empty State
+    11. Toast Notifications
+    12. Image Carousel (multi-image posts)
+    13. Right Sidebar Widgets
+    14. Responsive Rules
    ============================================================= */
 
 /* -------------------------------------------------------------
-   1. DESIGN TOKENS — matched to Wishlist's exact values
+   1. DESIGN TOKENS
    ------------------------------------------------------------- */
 :root {
     --bg-color: #faf9fc;
@@ -56,10 +59,13 @@
     --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
     --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
     --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
-    /* Unchanged — same shared page width as Wishlist/Customer1 */
-    --page-max-width: 1100px;
+    --page-max-width: 680px;
     --story-ring-unviewed: var(--accent-gradient);
     --story-ring-viewed: linear-gradient(135deg, #d7d7dc 0%, #b9b9c4 100%);
+    /* NEW — app shell dimensions */
+    --sidebar-width: 248px;
+    --rightbar-width: 300px;
+    --topbar-height: 72px;
 }
 
 /* -------------------------------------------------------------
@@ -77,11 +83,15 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    padding-bottom: 84px;
+    padding-bottom: 84px; /* mobile bottom nav clearance; removed at desktop, see §14 */
+}
+
+a {
+    color: inherit;
 }
 
 /* -------------------------------------------------------------
-   3. BOTTOM NAVIGATION
+   3. BOTTOM NAVIGATION (mobile only — hidden at desktop, §14)
    ------------------------------------------------------------- */
 .mobile-bottom-nav {
     display: flex !important;
@@ -171,23 +181,380 @@ body {
     }
 
 /* -------------------------------------------------------------
-   4. STORY BAR
+   4. APP SHELL — sidebar / topbar / rightbar
+   ------------------------------------------------------------- */
+.app-shell {
+    display: flex;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+/* ---- Left sidebar ---- */
+.app-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    border-right: 1px solid var(--border-color);
+    padding: 20px 16px 96px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.app-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    font-family: var(--font-family);
+    font-weight: 800;
+    font-size: 19px;
+    color: var(--text-primary);
+    padding: 4px 8px 20px;
+}
+
+.app-logo-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--accent-gradient);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    box-shadow: 0 4px 10px rgba(109, 40, 217, .25);
+}
+
+.app-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 18px;
+}
+
+.app-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: background-color .15s ease, color .15s ease;
+}
+
+    .app-nav-link i {
+        width: 18px;
+        text-align: center;
+        font-size: 15px;
+    }
+
+    .app-nav-link:hover {
+        background: var(--accent-light);
+        color: var(--accent-color);
+    }
+
+    .app-nav-link.active {
+        background: var(--accent-light);
+        color: var(--accent-color);
+        font-weight: 800;
+    }
+
+.app-sidebar-heading {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 10px 12px 8px;
+}
+
+.app-sidebar-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+}
+
+.app-sidebar-cat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: background-color .15s ease, color .15s ease;
+}
+
+    .app-sidebar-cat i {
+        width: 16px;
+        text-align: center;
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .app-sidebar-cat:hover {
+        background: var(--accent-light);
+        color: var(--accent-color);
+    }
+
+    .app-sidebar-cat.active {
+        color: var(--accent-color);
+        font-weight: 800;
+        background: var(--accent-light);
+    }
+
+        .app-sidebar-cat.active i {
+            color: var(--accent-color);
+        }
+
+.app-seller-cta {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: 16px;
+    background: linear-gradient(160deg, var(--accent-light) 0%, #ffffff 100%);
+    border: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.app-seller-cta-icon {
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+
+.app-seller-cta h4 {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.app-seller-cta p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.app-seller-cta-btn {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    padding: 9px 0;
+    border-radius: 10px;
+    background: var(--accent-gradient);
+    color: #fff !important;
+    font-weight: 800;
+    font-size: 12.5px;
+    text-decoration: none;
+}
+
+    .app-seller-cta-btn:hover {
+        opacity: .92;
+    }
+
+/* ---- Main column (topbar + body) ---- */
+.app-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 150;
+    height: var(--topbar-height);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 28px;
+    background: rgba(250, 249, 252, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.app-topbar-search {
+    flex: 1;
+    max-width: 520px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 0 8px 0 18px;
+    height: 44px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow .2s ease, border-color .2s ease;
+}
+
+    .app-topbar-search:focus-within {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 4px var(--accent-light);
+    }
+
+    .app-topbar-search i.fa-magnifying-glass {
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
+    .app-topbar-search input[type="text"] {
+        flex: 1;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-family: var(--font-family);
+        font-size: 13.5px;
+        color: var(--text-primary);
+        min-width: 0;
+    }
+
+    .app-topbar-search input::placeholder {
+        color: var(--text-muted);
+    }
+
+    .app-topbar-search button {
+        border: none;
+        background: var(--accent-gradient);
+        color: #fff;
+        font-weight: 800;
+        font-size: 12.5px;
+        padding: 0 18px;
+        height: 34px;
+        border-radius: 999px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+        .app-topbar-search button:hover {
+            opacity: .92;
+        }
+
+.app-topbar-filters {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--card-bg);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+
+    .app-topbar-filters i {
+        font-size: 11px;
+        transition: transform .2s ease;
+    }
+
+    .app-topbar-filters:hover {
+        background: var(--accent-light);
+        color: var(--accent-color);
+    }
+
+    .app-topbar-filters[aria-expanded="true"] {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: var(--accent-light);
+    }
+
+        .app-topbar-filters[aria-expanded="true"] i {
+            transform: rotate(180deg);
+        }
+
+.app-topbar-icons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.app-topbar-icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 15px;
+    text-decoration: none;
+    position: relative;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+    .app-topbar-icon-btn:hover {
+        background: var(--accent-light);
+        color: var(--accent-color);
+    }
+
+.app-topbar-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    text-decoration: none;
+}
+
+.app-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 28px 110px;
+}
+
+.app-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.app-rightbar {
+    width: var(--rightbar-width);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: sticky;
+    top: calc(var(--topbar-height) + 24px);
+}
+
+/* -------------------------------------------------------------
+   5. STORY BAR
    Matches _StoryBarCustomer.cshtml: .story-bar .story-circle
    .story-ring(--active|--viewed) .story-img .story-label
-
-   CHANGED — rings were 130px at desktop, noticeably larger than
-   anything else on the page or in the rest of the app. Sized back
-   down to a scale that reads as a supporting element, not the
-   dominant thing on the screen.
    ------------------------------------------------------------- */
 #customerStoryBar.story-bar {
     display: flex;
-    padding: 18px 24px 20px !important;
+    padding: 4px 0 20px;
     gap: 16px !important;
     overflow-x: auto;
     scrollbar-width: none;
-    max-width: var(--page-max-width);
-    margin: 0 auto;
+    margin: 0;
 }
 
     #customerStoryBar.story-bar::-webkit-scrollbar {
@@ -256,101 +623,115 @@ body {
 }
 
 /* -------------------------------------------------------------
-   5. DISCOVERY BAR — single-line search + collapsible filters
+   6. CATEGORY ICON ROW + FEED TABS
    ------------------------------------------------------------- */
-.discovery-bar {
-    max-width: var(--page-max-width);
-    margin: 6px auto 18px;
-    padding: 0 24px;
-}
-
-.discovery-search {
+.category-icon-row {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 999px;
-    padding: 0 10px 0 18px;
-    height: 48px;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow .2s ease, border-color .2s ease;
+    gap: 22px;
+    overflow-x: auto;
+    padding: 4px 2px 18px;
+    scrollbar-width: none;
 }
 
-    .discovery-search:focus-within {
-        border-color: var(--accent-color);
-        box-shadow: 0 0 0 4px var(--accent-light);
+    .category-icon-row::-webkit-scrollbar {
+        display: none;
     }
 
-    .discovery-search i.fa-magnifying-glass {
-        color: var(--text-muted);
-        font-size: 15px;
-    }
-
-    .discovery-search input[type="text"],
-    .discovery-search input:not([type]) {
-        flex: 1;
-        border: none;
-        outline: none;
-        background: transparent;
-        font-family: var(--font-family);
-        font-size: 14px;
-        color: var(--text-primary);
-        min-width: 0;
-    }
-
-    .discovery-search input::placeholder {
-        color: var(--text-muted);
-    }
-
-.discovery-toggle {
-    display: inline-flex;
+.category-icon-chip {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 6px;
-    border: none;
-    background: var(--accent-light);
-    color: var(--accent-color);
-    font-size: 13px;
-    font-weight: 800;
-    padding: 10px 14px;
-    border-radius: 999px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background .2s ease;
+    gap: 8px;
+    text-decoration: none;
+    flex-shrink: 0;
+    width: 64px;
 }
 
-    .discovery-toggle:hover {
-        background: var(--border-strong);
-    }
-
-    .discovery-toggle i {
-        transition: transform .2s ease;
-        font-size: 11px;
-    }
-
-    .discovery-toggle[aria-expanded="true"] i {
-        transform: rotate(180deg);
-    }
-
-.discovery-submit {
-    border: none;
-    width: 40px;
-    height: 40px;
+.category-icon-circle {
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
-    background: var(--accent-gradient);
-    color: #fff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    flex-shrink: 0;
-    font-size: 14px;
-    box-shadow: 0 4px 12px rgba(109, 40, 217, .28);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 18px;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
 }
 
-    .discovery-submit:hover {
-        opacity: .92;
+.category-icon-chip span.category-icon-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.category-icon-chip:hover .category-icon-circle {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.category-icon-chip.active .category-icon-circle {
+    background: var(--accent-gradient);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(109, 40, 217, .25);
+}
+
+.category-icon-chip.active span.category-icon-label {
+    color: var(--accent-color);
+}
+
+.feed-tabs {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 18px;
+}
+
+.feed-tab {
+    text-decoration: none;
+    padding: 4px 2px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    position: relative;
+}
+
+    .feed-tab::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        height: 2px;
+        border-radius: 2px;
+        background: transparent;
     }
+
+    .feed-tab:hover {
+        color: var(--text-primary);
+    }
+
+    .feed-tab.active {
+        color: var(--accent-color);
+    }
+
+        .feed-tab.active::after {
+            background: var(--accent-gradient);
+        }
+
+/* -------------------------------------------------------------
+   7. DISCOVERY BAR — collapsible filters (search now lives in
+   the top bar; this section only exposes category/store/area/
+   price refinement)
+   ------------------------------------------------------------- */
+.discovery-bar {
+    margin: 0 0 18px;
+}
 
 .discovery-filters {
     margin-top: 12px;
@@ -433,84 +814,11 @@ body {
     }
 
 /* -------------------------------------------------------------
-   6. CATEGORY TABS
+   8. FEED POST CARD
    ------------------------------------------------------------- */
-.category-section {
-    display: flex;
-    gap: 18px;
-    overflow-x: auto;
-    padding: 4px 24px 14px;
-    margin: 0 auto 6px;
-    max-width: var(--page-max-width);
-    scrollbar-width: none;
-    border-bottom: 1px solid var(--border-color);
-    -webkit-overflow-scrolling: touch;
-}
-
-    .category-section::-webkit-scrollbar {
-        display: none;
-    }
-
-.category-chip {
-    position: relative;
-    text-decoration: none;
-    padding: 6px 2px 12px;
-    color: var(--text-secondary);
-    font-size: 13px;
-    font-weight: 700;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: color .2s ease;
-}
-
-    .category-chip::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 2px;
-        background: transparent;
-        border-radius: 2px;
-        transition: background .2s ease;
-    }
-
-    .category-chip:hover {
-        color: var(--text-primary);
-    }
-
-    .category-chip.active {
-        color: var(--accent-color) !important;
-    }
-
-        .category-chip.active::after {
-            background: var(--accent-gradient);
-        }
-
-@media (prefers-reduced-motion: reduce) {
-    .category-chip {
-        transition: none !important;
-    }
-}
-
-/* -------------------------------------------------------------
-   7. FEED POST CARD
-
-   CHANGED — page width narrowed (--page-max-width is now 680px,
-   unchanged), but each card's internals are now sized and typed
-   consistently with every other page: no serif product names, no
-   decorative price tag, restrained avatar/type scale.
-   ------------------------------------------------------------- */
-/* CHANGED AGAIN — narrowing just this container (while the
-   discovery bar/story bar/category chips above stayed at the old
-   1100px) made the posts look small and mismatched sitting under
-   much wider bars. --page-max-width itself is now 680px, shared by
-   every section on this page, so the whole column — bars and posts
-   alike — is one consistent width instead of wide-then-narrow. */
 .feed-container {
     max-width: var(--page-max-width);
-    margin: 0 auto 60px auto;
-    padding: 0 24px;
+    margin: 0;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -583,6 +891,12 @@ body {
         color: var(--accent-color);
     }
 
+.store-name-row {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
 .store-name {
     font-family: var(--font-family);
     font-weight: 800;
@@ -590,11 +904,25 @@ body {
     color: var(--text-primary);
     text-decoration: none;
     transition: color .2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
 
     .store-name:hover {
         color: var(--accent-color);
     }
+
+    .store-name .fa-circle-check {
+        color: var(--accent-color);
+        font-size: 12px;
+    }
+
+.post-timestamp {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
 
 .boosted-badge {
     display: inline-flex;
@@ -647,11 +975,9 @@ body {
         color: var(--text-primary);
     }
 
-/* -------------------------------------------------------------
-   Post image — every product photo is a fixed 1080×1080 square at
-   upload time (CreateModel.SaveProductImages), so a locked 1:1
-   container displays every photo sharply with no crop mismatch.
-   ------------------------------------------------------------- */
+/* Post image — every product photo is a fixed 1080×1080 square at
+   upload time, so a locked 1:1 container displays every photo
+   sharply with no crop mismatch. */
 .post-image-container {
     width: 100%;
     aspect-ratio: 1 / 1;
@@ -689,10 +1015,6 @@ body {
     line-height: 1.3;
 }
 
-/* CHANGED — was a dashed, rotated "market price tag" (2px dashed
-   amber border, punch-hole, -2deg rotation). Replaced with the same
-   plain bold accent-colored price treatment Wishlist's .price-cell
-   uses, so pricing reads consistently across the app. */
 .product-price {
     flex-shrink: 0;
     font-family: var(--font-family);
@@ -708,6 +1030,33 @@ body {
     line-height: 1.55;
     margin-bottom: 14px;
 }
+
+/* -- Shop Now CTA row (image caption strip, like the reference) -- */
+.post-cta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 6px;
+}
+
+.btn-shop-now {
+    flex-shrink: 0;
+    border: none;
+    background: var(--accent-gradient);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(109, 40, 217, .2);
+}
+
+    .btn-shop-now:hover {
+        opacity: .92;
+    }
 
 /* -- Actions bar -- */
 .actions {
@@ -725,6 +1074,7 @@ body {
     display: flex;
     align-items: center;
 }
+
 .menu-wrap {
     position: relative;
     display: inline-flex;
@@ -833,62 +1183,11 @@ body {
 }
 
 /* -------------------------------------------------------------
-   8. COMMENTS
+   9. COMMENTS
    ------------------------------------------------------------- */
 .comment-form {
     padding-top: 2px;
 }
-
-.comment-inputs {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1.5px solid var(--border-color);
-    padding-bottom: 12px;
-}
-
-.rating-input {
-    width: 70px;
-    border: none;
-    border-right: 1.5px solid var(--border-color);
-    padding: 8px 12px 8px 0;
-    font-size: 14px;
-    text-align: center;
-    outline: none;
-    background: transparent;
-    font-family: var(--font-family);
-    font-weight: 700;
-    color: var(--star-color);
-}
-
-.comment-text-input {
-    flex-grow: 1;
-    border: none;
-    outline: none;
-    padding: 8px 0;
-    font-size: 14px;
-    font-family: var(--font-family);
-    background: transparent;
-}
-
-    .comment-text-input::placeholder {
-        color: var(--text-muted);
-    }
-
-.btn-post-comment {
-    background: transparent;
-    border: none;
-    color: var(--accent-color);
-    font-weight: 800;
-    font-size: 14px;
-    cursor: pointer;
-    padding: 0 8px;
-    transition: all .2s ease;
-}
-
-    .btn-post-comment:hover {
-        color: var(--accent-hover);
-    }
 
 .comments-section {
     margin-top: 14px;
@@ -968,7 +1267,7 @@ body {
 }
 
 /* -------------------------------------------------------------
-   8b. PRODUCT REVIEW COMPOSER (star picker) + SHOW MORE/LESS
+   9b. PRODUCT REVIEW COMPOSER (star picker) + SHOW MORE/LESS
    ------------------------------------------------------------- */
 .product-review-summary {
     display: flex;
@@ -1155,7 +1454,7 @@ body {
     }
 
 /* -------------------------------------------------------------
-   9. EMPTY STATE
+   10. EMPTY STATE
    ------------------------------------------------------------- */
 .empty-message {
     text-align: center;
@@ -1191,7 +1490,7 @@ body {
 }
 
 /* -------------------------------------------------------------
-   10. TOAST NOTIFICATIONS
+   11. TOAST NOTIFICATIONS
    ------------------------------------------------------------- */
 .toast-container {
     position: fixed;
@@ -1268,10 +1567,7 @@ body {
 }
 
 /* -------------------------------------------------------------
-   11. IMAGE CAROUSEL (multi-image posts)
-   Swipeable when a product has more than one photo — scroll-snap
-   track + dot indicators + hover-revealed prev/next arrows,
-   matching Instagram's carousel pattern.
+   12. IMAGE CAROUSEL (multi-image posts)
    ------------------------------------------------------------- */
 .post-image-track {
     display: flex;
@@ -1356,18 +1652,207 @@ body {
     }
 
 /* -------------------------------------------------------------
-   12. RESPONSIVE RULES
+   13. RIGHT SIDEBAR WIDGETS
    ------------------------------------------------------------- */
-@media (max-width: 768px) {
-    .feed-container {
-        padding: 0 12px;
+.promo-banner {
+    border-radius: 20px;
+    padding: 22px;
+    background: var(--accent-gradient);
+    color: #fff;
+    box-shadow: var(--shadow-md);
+}
+
+.promo-banner-eyebrow {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    opacity: .85;
+    margin-bottom: 8px;
+}
+
+.promo-banner h3 {
+    font-family: var(--font-family);
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: 4px;
+}
+
+.promo-banner p {
+    font-size: 13px;
+    opacity: .9;
+    margin-bottom: 16px;
+}
+
+.promo-banner-btn {
+    display: inline-block;
+    background: #fff;
+    color: var(--accent-color) !important;
+    font-weight: 800;
+    font-size: 12.5px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+    .promo-banner-btn:hover {
+        opacity: .92;
     }
 
-    .discovery-bar,
-    .category-section,
-    .story-bar {
-        padding-left: 12px;
-        padding-right: 12px;
+.widget-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.widget-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+    .widget-card-header h4 {
+        font-family: var(--font-family);
+        font-size: 14.5px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .widget-card-header a {
+        font-size: 11.5px;
+        font-weight: 800;
+        color: var(--accent-color);
+        text-decoration: none;
+    }
+
+        .widget-card-header a:hover {
+            text-decoration: underline;
+        }
+
+.top-store-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+}
+
+.top-store-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.top-store-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-decoration: none;
+}
+
+    .top-store-name:hover {
+        color: var(--accent-color);
+    }
+
+.top-store-follow-btn {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--accent-color);
+}
+
+    .top-store-follow-btn.is-following {
+        color: var(--text-secondary);
+        background: var(--accent-light);
+    }
+
+    .top-store-follow-btn:hover {
+        background: var(--accent-light);
+    }
+
+.popular-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.popular-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.popular-item-img {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: var(--accent-light);
+    flex-shrink: 0;
+}
+
+.popular-item-name {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.popular-item-price {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--accent-color);
+}
+
+/* -------------------------------------------------------------
+   14. RESPONSIVE RULES
+   ------------------------------------------------------------- */
+@media (min-width: 992px) {
+    /* Bottom nav stays visible at desktop (matches Customer1) but shifts
+       right so it never sits under the fixed sidebar. */
+    .mobile-bottom-nav {
+        left: var(--sidebar-width);
+    }
+}
+
+@media (max-width: 991px) {
+    .app-sidebar,
+    .app-rightbar {
+        display: none !important;
+    }
+
+    .app-topbar {
+        padding: 0 16px;
+        gap: 10px;
+    }
+
+    .app-body {
+        padding: 16px 12px 24px;
     }
 
     .post {
@@ -1421,7 +1906,6 @@ body {
         font-size: 12.5px;
     }
 
-
     .discovery-filters {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -1444,7 +1928,11 @@ body {
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 620px) {
+    .app-topbar-search button span {
+        display: none;
+    }
+
     .discovery-filters {
         grid-template-columns: 1fr;
     }
