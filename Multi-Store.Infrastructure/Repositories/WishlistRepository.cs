@@ -28,6 +28,8 @@ namespace Multi_Store.Infrastructure.Repositories
                     .ThenInclude(p => p.Images)
                 .Include(w => w.Product)
                     .ThenInclude(p => p.Store)
+                .Include(w => w.Product)
+                    .ThenInclude(p => p.Category)
                 .OrderByDescending(w => w.AddedAt)
                 .ToListAsync();
         }
