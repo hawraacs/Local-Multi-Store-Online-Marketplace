@@ -376,8 +376,8 @@
         }
 
         /* =====================================================
-                   ACTIVITY PANEL (who liked / what they commented)
-                   ===================================================== */
+                           ACTIVITY PANEL (who liked / what they commented)
+                           ===================================================== */
         .hidden {
             display: none !important;
         }
@@ -582,22 +582,6 @@
         </a>
     </div>
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="message message-success">
-            <i class="fas fa-circle-check"></i>
-            @TempData["SuccessMessage"]
-        </div>
-    }
-
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="message message-error">
-            <i class="fas fa-circle-exclamation"></i>
-            @TempData["ErrorMessage"]
-        </div>
-    }
-
     <div class="filter-card">
         <form method="get" class="filter-form">
 
@@ -774,8 +758,7 @@
                                   asp-route-postId="@post.ExplorePostID"
                                   asp-route-typeFilter="@Model.TypeFilter"
                                   asp-route-statusFilter="@Model.StatusFilter"
-                                  class="delete-form"
-                                  onsubmit="return confirm('Delete this Explore post permanently?');">
+                                  class="delete-form">
 
                                 <button type="submit"
                                         class="action-btn delete-btn"
@@ -898,11 +881,11 @@
 @section Scripts {
     <script>
         // Toggle each post's "View comments & likes" panel open/closed.
-        (function () {
-            document.querySelectorAll('[data-activity-toggle]').forEach(function (button) {
+        (function() {
+            document.querySelectorAll('[data-activity-toggle]').forEach(function(button) {
                 button.setAttribute('aria-expanded', 'false');
 
-                button.addEventListener('click', function () {
+                button.addEventListener('click', function() {
                     var panel = document.getElementById(
                         button.getAttribute('data-activity-toggle')
                     );
@@ -913,6 +896,20 @@
 
                     var isHidden = panel.classList.toggle('hidden');
                     button.setAttribute('aria-expanded', (!isHidden).toString());
+                });
+            });
+        })();
+
+        // Confirm before permanently deleting a post.
+        // (Wired up here instead of an inline onsubmit="" attribute, since
+        // inline event handlers can get silently blocked by CSP or other
+        // scripts on the page.)
+        (function() {
+            document.querySelectorAll('.delete-form').forEach(function(form) {
+                form.addEventListener('submit', function(e) {
+                    if (!confirm('Delete this Explore post permanently?')) {
+                        e.preventDefault();
+                    }
                 });
             });
         })();

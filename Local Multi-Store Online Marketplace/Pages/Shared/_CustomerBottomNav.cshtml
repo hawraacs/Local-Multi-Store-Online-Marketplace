@@ -28,7 +28,7 @@
         position: fixed !important;
         left: 50% !important;
         right: auto !important;
-        transform: translateX(-50%) !important;
+        transform: translate(-50%, 0) !important;
         width: 75vw !important;
         border-radius: 20px !important;
         border: 1px solid #ece8f6 !important;
@@ -41,7 +41,13 @@
         background: #ffffff;
         padding: 8px 16px !important;
         z-index: 999;
+        transition: transform .3s cubic-bezier(.4,0,.2,1) !important;
     }
+
+        /* Hidden state: slides straight down, out of view below the viewport */
+        nav.mobile-bottom-nav.nav-hidden {
+            transform: translate(-50%, calc(100% + 24px)) !important;
+        }
 
     /* ========== REUSABLE NAV ITEM (matching store‑owner rail-item) ========== */
     .mobile-bottom-nav .rail-item {
@@ -147,7 +153,7 @@
     }
 </style>
 
-<nav class="mobile-bottom-nav" aria-label="Customer navigation">
+<nav class="mobile-bottom-nav" id="customerBottomNav" aria-label="Customer navigation">
 
     <a href="/Customer1" class="rail-item @ActiveIf("/Customer1")">
         <i class="fa-solid fa-compass"></i>
@@ -245,4 +251,52 @@
                 });
         });
     });
+
+    // =========================
+    // AUTO-HIDE: bar slides down out of view after a period of
+    // inactivity, and slides back up on any interaction (tap,
+    // scroll, click) or when the user touches/hovers near the
+    // bottom edge of the screen.
+    // =========================
+    (function() {
+        var nav = document.getElementById('customerBottomNav');
+        if (!nav) return;
+
+        var HIDE_DELAY = 600; // ms of inactivity before it hides
+        var hideTimer;
+
+        function scheduleHide() {
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(function() {
+                nav.classList.add('nav-hidden');
+            }, HIDE_DELAY);
+        }
+
+        function showNav() {
+            clearTimeout(hideTimer);
+            nav.classList.remove('nav-hidden');
+            scheduleHide();
+        }
+
+        // Stay visible while directly interacting with the bar
+        nav.addEventListener('mouseenter', function() {
+            clearTimeout(hideTimer);
+            nav.classList.remove('nav-hidden');
+        });
+        nav.addEventListener('mouseleave', scheduleHide);
+        nav.addEventListener('click', showNav);
+        nav.addEventListener('touchstart', showNav, { passive: true });
+
+        // Any scroll or tap on the page brings it back (covers touch devices,
+        // where hovering isn't possible)
+        document.addEventListener('scroll', showNav, { passive: true });
+        document.addEventListener('touchstart', showNav, { passive: true });
+
+        // Desktop/mouse: hovering near the bottom edge brings it back
+        document.addEventListener('mousemove', function(e) {
+            if (window.innerHeight - e.clientY <= 20) showNav();
+        });
+
+        scheduleHide();
+    })();
 </script>
