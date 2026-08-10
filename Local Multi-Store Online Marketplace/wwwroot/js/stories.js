@@ -18,14 +18,38 @@
 
     function byId(id) { return document.getElementById(id); }
 
+    // Any ancestor with a transform (several elements on Home.cshtml use
+    // transform: translateY(...) for entrance animations, and it lingers on
+    // the element even after the animation ends) creates a new containing
+    // block for position:fixed descendants - so a fixed modal underneath one
+    // stops tracking the viewport and scrolls with the page instead. Moving
+    // the modal to be a direct child of <body> sidesteps that entirely,
+    // exactly like the product-feed overlay on Home.cshtml already does.
+    function escapeToBody(el) {
+        if (el && el.parentElement !== document.body) {
+            document.body.appendChild(el);
+        }
+    }
+
+    var openBackdropCount = 0;
+
     // ================= Modal open/close - this project's own convention =================
     function showBackdrop(id) {
         var el = byId(id);
-        if (el) el.classList.add('open');
+        if (!el) return;
+        escapeToBody(el);
+        el.classList.add('open');
+        openBackdropCount++;
+        document.body.classList.add('story-modal-open');
     }
     function hideBackdrop(id) {
         var el = byId(id);
-        if (el) el.classList.remove('open');
+        if (!el) return;
+        el.classList.remove('open');
+        openBackdropCount = Math.max(0, openBackdropCount - 1);
+        if (openBackdropCount === 0) {
+            document.body.classList.remove('story-modal-open');
+        }
     }
 
     function openUploadStoryModal() { showBackdrop('uploadStoryBackdrop'); }
