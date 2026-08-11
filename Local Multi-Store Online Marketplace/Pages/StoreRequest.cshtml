@@ -76,109 +76,164 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
 
-    <title>@pageTitle</title>
+    <title>@pageTitle | realnest</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    <!-- Google Fonts (matches Login / Delivery Request page) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap"
           rel="stylesheet" />
+
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
+            /* ============================================================
+                                   ROOT VARIABLES — same palette as the Login / Delivery page
+                                   ============================================================ */
+            :root {
+                /* -------- Brand colors (Purple / Indigo) -------- */
+                --accent-color: #6d28d9;
+                --accent-hover: #5b21b6;
+                --accent-light: #f3effe;
+                --accent-steel: #4f46e5;
+                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+                /* -------- Neutral palette -------- */
+                --bg-color: #f8f7fc;
+                --card-bg: #ffffff;
+                --text-primary: #1e1b2e;
+                --text-secondary: #6b6478;
+                --text-muted: #9691a4;
+                --border-color: #ece8f6;
+                --input-bg: #f8f7fc;
+                /* -------- Semantic -------- */
+                --success-color: #10b981;
+                --error-color: #dc2626;
+                /* -------- Shadows -------- */
+                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.06);
+                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.10);
+                --shadow-lg: 0 20px 50px rgba(30, 27, 46, 0.18);
+                /* -------- Typography -------- */
+                --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+
             * {
                 box-sizing: border-box;
             }
 
             body {
                 margin: 0;
-                font-family: Poppins, Arial, sans-serif;
-                background: #f4f4f7;
-                color: #111827;
-            }
-
-            .topbar {
-                background: #111827;
-                color: white;
-                padding: 20px 30px;
-                font-size: 20px;
-                font-weight: 700;
+                font-family: var(--font-family);
+                background: var(--bg-color);
+                background-image: radial-gradient(circle at 15% 0%, rgba(109, 40, 217, 0.05), transparent 40%);
+                color: var(--text-primary);
             }
 
             .page-wrapper {
-                min-height: calc(100vh - 65px);
+                min-height: 100vh;
                 display: flex;
-                align-items: center;
+                align-items: flex-start;
                 justify-content: center;
-                padding: 35px 15px;
+                padding: 50px 15px 60px;
             }
 
             .card {
-                background: white;
+                background: var(--card-bg);
                 width: 900px;
                 max-width: 100%;
-                padding: 34px;
-                border-radius: 18px;
-                box-shadow: 0 18px 45px rgba(15, 23, 42, .10);
-                border: 1px solid #e5e7eb;
+                padding: 42px 44px;
+                border-radius: 22px;
+                box-shadow: var(--shadow-lg);
+                border: 1px solid var(--border-color);
             }
 
+            /* -------- Header -------- */
             .header-box {
-                margin-bottom: 25px;
+                margin-bottom: 32px;
+                padding-bottom: 24px;
+                border-bottom: 1px solid var(--border-color);
             }
 
-                .header-box h1 {
-                    margin: 0 0 8px;
+                .header-box h2 {
+                    margin: 0 0 10px;
                     font-size: 26px;
-                    font-weight: 700;
+                    font-weight: 800;
+                    letter-spacing: -0.4px;
+                    color: var(--accent-color);
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .header-box .header-icon {
+                    font-size: 20px;
+                    width: 42px;
+                    height: 42px;
+                    flex-shrink: 0;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 12px;
+                    background: var(--accent-light);
+                    color: var(--accent-color);
                 }
 
                 .header-box p {
                     margin: 0;
-                    color: #6b7280;
-                    font-size: 14px;
-                    line-height: 1.6;
+                    color: var(--text-secondary);
+                    font-size: 13px;
+                    line-height: 1.7;
+                    max-width: 620px;
                 }
 
-            .message,
-            .validation-summary-errors {
-                padding: 12px 14px;
-                border-radius: 10px;
+            /* -------- Section blocks (organization) -------- */
+            .form-section {
+                margin-bottom: 28px;
+                padding-bottom: 26px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+                .form-section:last-of-type {
+                    border-bottom: none;
+                    margin-bottom: 0;
+                    padding-bottom: 0;
+                }
+
+            .section-heading {
+                display: flex;
+                align-items: center;
+                gap: 10px;
                 margin-bottom: 18px;
-                font-size: 14px;
-                font-weight: 600;
-                line-height: 1.5;
             }
 
-            .error-message,
-            .validation-summary-errors {
-                color: #991b1b;
-                background: #fee2e2;
-                border: 1px solid #fca5a5;
-            }
+                .section-heading .step-num {
+                    width: 26px;
+                    height: 26px;
+                    flex-shrink: 0;
+                    border-radius: 50%;
+                    background: var(--accent-light);
+                    color: var(--accent-color);
+                    font-size: 13px;
+                    font-weight: 800;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
 
-            .success-message {
-                color: #166534;
-                background: #dcfce7;
-                border: 1px solid #86efac;
-            }
+                .section-heading h3 {
+                    margin: 0;
+                    font-size: 15px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                    letter-spacing: 0.2px;
+                }
 
-            .validation-summary-errors ul {
-                margin: 0;
-                padding-left: 20px;
-            }
-
-            .validation-summary-valid,
-            .field-validation-valid {
-                display: none;
-            }
-
-            .field-validation-error {
-                display: block;
-                margin-top: 5px;
-                color: #b91c1c;
-                font-size: 12px;
-                font-weight: 600;
-            }
+                .section-heading .section-icon {
+                    color: var(--accent-color);
+                    font-size: 14px;
+                }
 
             .form-grid {
                 display: grid;
@@ -197,22 +252,25 @@
             label {
                 display: block;
                 margin-bottom: 7px;
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 600;
-                color: #374151;
+                color: var(--text-primary);
+                letter-spacing: 0.2px;
             }
 
             input,
             select,
             textarea {
                 width: 100%;
-                padding: 13px 14px;
-                border: 1px solid #d1d5db;
-                border-radius: 10px;
+                padding: 13px 16px;
+                border: 1.5px solid var(--border-color);
+                border-radius: 14px;
                 outline: none;
-                font-family: Poppins, Arial, sans-serif;
+                font-family: var(--font-family);
                 font-size: 14px;
-                background: white;
+                background: var(--input-bg);
+                color: var(--text-primary);
+                transition: all 0.2s ease;
             }
 
             textarea {
@@ -223,166 +281,105 @@
                 input:focus,
                 select:focus,
                 textarea:focus {
-                    border-color: #111827;
-                    box-shadow: 0 0 0 3px rgba(17, 24, 39, .10);
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.10);
+                    background: #ffffff;
+                }
+
+                input::placeholder,
+                textarea::placeholder {
+                    color: var(--text-muted);
                 }
 
             .hint {
                 display: block;
-                margin-top: 5px;
+                margin-top: 6px;
                 font-size: 12px;
-                color: #6b7280;
+                color: var(--text-muted);
                 line-height: 1.5;
             }
 
             .existing-file {
                 margin-top: 8px;
-                padding: 10px 12px;
-                background: #eff6ff;
-                border: 1px solid #bfdbfe;
-                border-radius: 10px;
+                padding: 10px 14px;
+                background: var(--accent-light);
+                border: 1px solid #ddd6fe;
+                border-radius: 12px;
                 font-size: 13px;
-                color: #1e40af;
+                color: var(--accent-hover);
             }
 
                 .existing-file a {
-                    color: #1d4ed8;
+                    color: var(--accent-color);
                     font-weight: 700;
                 }
 
-            .location-panel {
-                background: #f9fafb;
-                border: 1px solid #e5e7eb;
-                border-radius: 16px;
-                padding: 16px;
-            }
-
-            .location-actions {
-                display: flex;
-                gap: 10px;
-                flex-wrap: wrap;
-                margin-bottom: 12px;
-            }
-
-            .map-btn {
-                padding: 11px 14px;
-                border: none;
-                border-radius: 10px;
-                background: #111827;
-                color: white;
-                font-weight: 700;
-                cursor: pointer;
-                font-family: Poppins, Arial, sans-serif;
-            }
-
-                .map-btn:hover {
-                    background: #ff6b35;
-                }
-
-                .map-btn:disabled {
-                    opacity: .6;
-                    cursor: not-allowed;
-                }
-
-            #storeMap {
-                width: 100%;
-                height: 360px;
-                border-radius: 14px;
-                border: 1px solid #d1d5db;
-                background: #e5e7eb;
-            }
-
-            .map-message {
-                margin-top: 10px;
-                padding: 10px 12px;
-                border-radius: 10px;
-                background: white;
-                border: 1px solid #e5e7eb;
-                color: #374151;
+            /* -------- Validation -------- */
+            .validation-box,
+            .validation-summary-errors {
+                color: #991b1b;
+                background: #fef2f2;
+                border: 1px solid #fecaca;
+                padding: 13px 16px;
+                border-radius: 12px;
+                margin-bottom: 20px;
                 font-size: 13px;
+                font-weight: 600;
+                line-height: 1.5;
+            }
+
+                .validation-summary-errors ul {
+                    margin: 0;
+                    padding-left: 20px;
+                }
+
+            .validation-summary-valid,
+            .field-validation-valid {
+                display: none;
+            }
+
+            .field-validation-error {
+                display: block;
+                margin-top: 5px;
+                color: var(--error-color);
+                font-size: 12px;
                 font-weight: 600;
             }
 
-            .coordinate-box {
-                display: none;
-                margin-top: 10px;
-                padding: 10px 12px;
-                border-radius: 10px;
-                background: #eef2ff;
-                border: 1px solid #c7d2fe;
-                color: #3730a3;
-                font-size: 13px;
-                font-weight: 700;
+            /* -------- OTP -------- */
+            .otp-section {
+                margin-top: 12px;
             }
 
-            .confirmation {
-                display: flex;
-                align-items: flex-start;
-                gap: 10px;
-                padding: 14px;
-                border: 1px solid #d1d5db;
-                border-radius: 12px;
-                background: #f9fafb;
-            }
-
-                .confirmation input {
-                    width: 18px;
-                    height: 18px;
-                    margin-top: 2px;
-                    flex: 0 0 auto;
-                }
-
-                .confirmation label {
-                    margin: 0;
-                    line-height: 1.5;
-                }
-
-            .submit-btn {
-                margin-top: 25px;
-                width: 100%;
-                padding: 15px;
+            .otp-btn {
+                padding: 11px 16px;
                 border: none;
-                border-radius: 10px;
-                background: #111827;
+                border-radius: 12px;
+                background: var(--accent-gradient);
                 color: white;
-                font-size: 16px;
                 font-weight: 700;
+                font-size: 13px;
                 cursor: pointer;
-                transition: .2s ease;
+                font-family: var(--font-family);
+                box-shadow: 0 4px 16px rgba(109, 40, 217, 0.2);
+                transition: all 0.2s ease;
             }
 
-                .submit-btn:hover {
-                    background: #ff6b35;
+                .otp-btn:hover {
                     transform: translateY(-1px);
+                    box-shadow: 0 6px 20px rgba(109, 40, 217, 0.3);
                 }
 
-                .submit-btn:disabled {
-                    opacity: .65;
+                .otp-btn:disabled {
+                    opacity: .6;
                     cursor: not-allowed;
                     transform: none;
                 }
 
-            .back-link {
-                display: inline-block;
-                margin-top: 18px;
-                color: #374151;
-                text-decoration: none;
-                font-size: 14px;
-                font-weight: 600;
-            }
-
-                .back-link:hover {
-                    color: #ff6b35;
-                }
-
-            .otp-section {
-                margin-top: 10px;
-            }
-
             .otp-code-group {
                 display: none;
                 gap: 10px;
-                margin-top: 10px;
+                margin-top: 12px;
                 align-items: center;
             }
 
@@ -396,8 +393,174 @@
             }
 
                 .otp-status.verified {
-                    color: #166534;
+                    color: var(--success-color);
                     font-weight: 700;
+                }
+
+            /* -------- Location / Map -------- */
+            .location-panel {
+                background: var(--input-bg);
+                border: 1.5px solid var(--border-color);
+                border-radius: 16px;
+                padding: 18px;
+            }
+
+            .location-actions {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-bottom: 14px;
+            }
+
+            .map-btn {
+                padding: 11px 16px;
+                border: none;
+                border-radius: 12px;
+                background: var(--accent-gradient);
+                color: white;
+                font-weight: 700;
+                font-size: 13px;
+                cursor: pointer;
+                font-family: var(--font-family);
+                box-shadow: 0 4px 16px rgba(109, 40, 217, 0.2);
+                transition: all 0.2s ease;
+            }
+
+                .map-btn:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 6px 20px rgba(109, 40, 217, 0.3);
+                }
+
+                .map-btn:disabled {
+                    opacity: .6;
+                    cursor: not-allowed;
+                    transform: none;
+                }
+
+            #storeMap {
+                width: 100%;
+                height: 360px;
+                border-radius: 14px;
+                border: 1.5px solid var(--border-color);
+                background: #e5e7eb;
+            }
+
+            .map-message {
+                margin-top: 12px;
+                padding: 10px 14px;
+                border-radius: 12px;
+                background: #ffffff;
+                border: 1px solid var(--border-color);
+                color: var(--text-secondary);
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            .coordinate-box {
+                display: none;
+                margin-top: 10px;
+                padding: 10px 14px;
+                border-radius: 12px;
+                background: var(--accent-light);
+                border: 1px solid #ddd6fe;
+                color: var(--accent-hover);
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            /* -------- File upload -------- */
+            .file-drop {
+                border: 1.5px dashed var(--border-color);
+                border-radius: 14px;
+                padding: 18px;
+                background: var(--input-bg);
+                transition: all 0.2s ease;
+            }
+
+                .file-drop:focus-within {
+                    border-color: var(--accent-color);
+                    background: #ffffff;
+                }
+
+            /* -------- Confirmation -------- */
+            .confirmation {
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 16px;
+                border: 1.5px solid var(--border-color);
+                border-radius: 14px;
+                background: var(--input-bg);
+            }
+
+                .confirmation input {
+                    width: 18px;
+                    height: 18px;
+                    margin-top: 2px;
+                    flex: 0 0 auto;
+                }
+
+                .confirmation label {
+                    margin: 0;
+                    line-height: 1.6;
+                    font-weight: 500;
+                    color: var(--text-secondary);
+                }
+
+            /* -------- Submit -------- */
+            .submit-btn {
+                margin-top: 8px;
+                width: 100%;
+                padding: 16px;
+                border: none;
+                border-radius: 14px;
+                background: var(--accent-gradient);
+                color: #ffffff;
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+                letter-spacing: 0.3px;
+                box-shadow: 0 4px 20px rgba(109, 40, 217, 0.25);
+                transition: all 0.25s ease;
+                font-family: var(--font-family);
+            }
+
+                .submit-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 30px rgba(109, 40, 217, 0.35);
+                    background: linear-gradient(135deg, #5b21b6 0%, #6d28d9 55%, #4338ca 100%);
+                }
+
+                .submit-btn:active {
+                    transform: translateY(0);
+                }
+
+                .submit-btn:disabled {
+                    opacity: .65;
+                    cursor: not-allowed;
+                    transform: none;
+                }
+
+            /* -------- Back link -------- */
+            .back-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                margin-top: 24px;
+                padding: 10px 20px;
+                border-radius: 12px;
+                background: var(--accent-light);
+                color: var(--accent-color);
+                text-decoration: none;
+                font-size: 13px;
+                font-weight: 700;
+                transition: all 0.25s ease;
+            }
+
+                .back-link:hover {
+                    background: var(--accent-color);
+                    color: #ffffff;
+                    transform: translateX(-2px);
                 }
 
             @@media (max-width: 760px) {
@@ -406,7 +569,12 @@
                 }
 
                 .card {
-                    padding: 24px;
+                    padding: 26px;
+                    border-radius: 20px;
+                }
+
+                .header-box h2 {
+                    font-size: 24px;
                 }
 
                 #storeMap {
@@ -418,6 +586,7 @@
                 }
             }
 
+            /* -------- Toasts -------- */
             .toast-container {
                 position: fixed;
                 top: 22px;
@@ -437,7 +606,7 @@
                 padding: 15px 16px;
                 border-radius: 14px;
                 color: white;
-                box-shadow: 0 18px 45px rgba(15, 23, 42, .22);
+                box-shadow: var(--shadow-md);
                 transform: translateX(120%);
                 opacity: 0;
                 transition: transform .28s ease, opacity .28s ease;
@@ -450,11 +619,11 @@
                 }
 
             .toast-error {
-                background: #b91c1c;
+                background: var(--error-color);
             }
 
             .toast-success {
-                background: #15803d;
+                background: var(--success-color);
             }
 
             .toast-icon {
@@ -490,20 +659,16 @@
 
 <body>
 
-    <div class="topbar">
-        Store Owner Request
-    </div>
-
     <div class="page-wrapper">
         <div class="card">
 
             <div class="header-box">
-                <h1>@pageTitle 🏪</h1>
+                <h2><i class="fa-solid fa-store header-icon"></i> @pageTitle</h2>
 
                 <p>
                     Submit accurate business information, upload the business
-                    license, and select the exact store location. The admin
-                    will review the request before activating the store.
+                    license, and select the exact store location. Our admin
+                    team will review the request before activating the store.
                 </p>
             </div>
 
@@ -517,210 +682,251 @@
                   enctype="multipart/form-data"
                   id="storeRequestForm">
 
-                <div class="form-grid">
-
-                    <div class="form-group">
-                        <label asp-for="Input.StoreName">
-                            Store Name
-                        </label>
-
-                        <input asp-for="Input.StoreName"
-                               maxlength="100"
-                               placeholder="Example: Fatima Shop" />
-
-                        <span asp-validation-for="Input.StoreName"></span>
+                <!-- ============ SECTION 1: STORE INFORMATION ============ -->
+                <div class="form-section">
+                    <div class="section-heading">
+                        <span class="step-num">1</span>
+                        <i class="fa-solid fa-shop section-icon"></i>
+                        <h3>Store Information</h3>
                     </div>
 
-                    <div class="form-group">
-                        <label asp-for="Input.Email">
-                            Business Contact Email
-                        </label>
-
-                        <input asp-for="Input.Email"
-                               type="email"
-                               maxlength="150"
-                               autocomplete="email"
-                               placeholder="example@store.com" />
-
-                        <span asp-validation-for="Input.Email"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="Input.PhoneNumber">
-                            Business Phone Number
-                        </label>
-
-                        <input asp-for="Input.PhoneNumber"
-                               type="tel"
-                               maxlength="20"
-                               autocomplete="tel"
-                               placeholder="+96178123456" />
-
-                        <span asp-validation-for="Input.PhoneNumber"></span>
-
-                        <span class="hint">
-                            Accepted formats include 78123456,
-                            0096178123456, or +96178123456.
-                        </span>
-
-                        <div class="otp-section" id="otpSection">
-                            <button type="button"
-                                    class="map-btn"
-                                    id="sendOtpButton"
-                                    onclick="sendOtp()">
-                                Send Verification Code
-                            </button>
-
-                            <div class="otp-code-group" id="otpCodeGroup">
-                                <input type="text"
-                                       id="otpCodeInput"
-                                       class="otp-code-input"
-                                       maxlength="6"
-                                       inputmode="numeric"
-                                       placeholder="Enter 6-digit code" />
-
-                                <button type="button"
-                                        class="map-btn"
-                                        id="verifyOtpButton"
-                                        onclick="verifyOtp()">
-                                    Verify Code
-                                </button>
-                            </div>
-
-                            <div id="otpStatus"
-                                 class="hint otp-status @(isPhoneAlreadyVerified ? "verified" : "")">
-                                @(isPhoneAlreadyVerified
-                                    ? "✓ Phone number verified."
-                                    : "")
-                            </div>
-                        </div>
-
-                        <input type="hidden"
-                               id="PhoneVerifiedFlag"
-                               value="@(isPhoneAlreadyVerified ? "true" : "false")" />
-                    </div>
-
-                    <div class="form-group full">
-                        <label asp-for="Input.Description">
-                            Store Description
-                        </label>
-
-                        <textarea asp-for="Input.Description"
-                                  maxlength="1000"
-                                  placeholder="Describe the products and business activity..."></textarea>
-
-                        <span asp-validation-for="Input.Description"></span>
-                    </div>
-
-                    <div class="form-group full">
-                        <label asp-for="Input.AddressLine1">
-                            Store Address
-                        </label>
-
-                        <input asp-for="Input.AddressLine1"
-                               id="StoreAddress"
-                               maxlength="250"
-                               placeholder="Street, building, floor, nearby landmark" />
-
-                        <span asp-validation-for="Input.AddressLine1"></span>
-
-                        <span class="hint">
-                            Enter the address manually or select the exact
-                            location using the map.
-                        </span>
-                    </div>
-
-                    <input asp-for="Input.Latitude"
-                           type="hidden"
-                           id="StoreLatitude" />
-
-                    <input asp-for="Input.Longitude"
-                           type="hidden"
-                           id="StoreLongitude" />
-
-                    <div class="form-group">
-                        <label asp-for="Input.City">
-                            City
-                        </label>
-
-                        <select asp-for="Input.City"
-                                id="StoreCity">
-                            <option value="">Select city</option>
-                            <option value="Beirut">Beirut</option>
-                            <option value="Tripoli">Tripoli</option>
-                            <option value="Saida">Saida</option>
-                            <option value="Tyre">Tyre</option>
-                            <option value="Zahle">Zahle</option>
-                            <option value="Jounieh">Jounieh</option>
-                            <option value="Byblos">Byblos</option>
-                            <option value="Nabatieh">Nabatieh</option>
-                            <option value="Aley">Aley</option>
-                            <option value="Baabda">Baabda</option>
-                        </select>
-
-                        <span asp-validation-for="Input.City"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="Input.Area">
-                            Governorate / Area
-                        </label>
-
-                        <select asp-for="Input.Area"
-                                id="StoreArea"
-                                data-selected-area="@Model.Input.Area">
-                            <option value="">Select area</option>
-                        </select>
-
-                        <span asp-validation-for="Input.Area"></span>
-                    </div>
-
-                    <div class="form-group full">
-                        <label>Store Location on Map</label>
-
-                        <div class="location-panel">
-                            <div class="location-actions">
-                                <button type="button"
-                                        class="map-btn"
-                                        onclick="useCurrentStoreLocation()">
-                                    Use My Current Location
-                                </button>
-                            </div>
-
-                            <div id="storeMap"></div>
-
-                            <div id="storeMapMessage"
-                                 class="map-message">
-                                Click the map, drag the marker, or use
-                                your current location.
-                            </div>
-
-                            <div id="storeCoordinateBox"
-                                 class="coordinate-box">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group full">
-                        <div class="confirmation">
-                            <input asp-for="Input.ConfirmInformation"
-                                   type="checkbox" />
-
-                            <label asp-for="Input.ConfirmInformation">
-                                I confirm that the submitted store,
-                                contact, license, address, and location
-                                information is accurate.
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label asp-for="Input.StoreName">
+                                Store Name
                             </label>
+
+                            <input asp-for="Input.StoreName"
+                                   maxlength="100"
+                                   placeholder="Example: Fatima Shop" />
+
+                            <span asp-validation-for="Input.StoreName"></span>
                         </div>
 
-                        <span asp-validation-for="Input.ConfirmInformation"></span>
+                        <div class="form-group full">
+                            <label asp-for="Input.Description">
+                                Store Description
+                            </label>
+
+                            <textarea asp-for="Input.Description"
+                                      maxlength="1000"
+                                      placeholder="Describe the products and business activity..."></textarea>
+
+                            <span asp-validation-for="Input.Description"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============ SECTION 2: CONTACT & VERIFICATION ============ -->
+                <div class="form-section">
+                    <div class="section-heading">
+                        <span class="step-num">2</span>
+                        <i class="fa-solid fa-id-card section-icon"></i>
+                        <h3>Contact &amp; Verification</h3>
                     </div>
 
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label asp-for="Input.Email">
+                                Business Contact Email
+                            </label>
+
+                            <input asp-for="Input.Email"
+                                   type="email"
+                                   maxlength="150"
+                                   autocomplete="email"
+                                   placeholder="example@store.com" />
+
+                            <span asp-validation-for="Input.Email"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Input.PhoneNumber">
+                                Business Phone Number
+                            </label>
+
+                            <input asp-for="Input.PhoneNumber"
+                                   type="tel"
+                                   maxlength="20"
+                                   autocomplete="tel"
+                                   placeholder="+96178123456" />
+
+                            <span asp-validation-for="Input.PhoneNumber"></span>
+
+                            <span class="hint">
+                                Accepted formats include 78123456,
+                                0096178123456, or +96178123456.
+                            </span>
+
+                            <div class="otp-section" id="otpSection">
+                                <button type="button"
+                                        class="otp-btn"
+                                        id="sendOtpButton"
+                                        onclick="sendOtp()">
+                                    <i class="fa-solid fa-paper-plane" style="margin-right: 6px;"></i>Send Verification Code
+                                </button>
+
+                                <div class="otp-code-group" id="otpCodeGroup">
+                                    <input type="text"
+                                           id="otpCodeInput"
+                                           class="otp-code-input"
+                                           maxlength="6"
+                                           inputmode="numeric"
+                                           placeholder="Enter 6-digit code" />
+
+                                    <button type="button"
+                                            class="otp-btn"
+                                            id="verifyOtpButton"
+                                            onclick="verifyOtp()">
+                                        Verify Code
+                                    </button>
+                                </div>
+
+                                <div id="otpStatus"
+                                     class="hint otp-status @(isPhoneAlreadyVerified ? "verified" : "")">
+                                    @(isPhoneAlreadyVerified
+                                        ? "✓ Phone number verified."
+                                        : "")
+                                </div>
+                            </div>
+
+                            <input type="hidden"
+                                   id="PhoneVerifiedFlag"
+                                   value="@(isPhoneAlreadyVerified ? "true" : "false")" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============ SECTION 3: LOCATION ============ -->
+                <div class="form-section">
+                    <div class="section-heading">
+                        <span class="step-num">3</span>
+                        <i class="fa-solid fa-location-dot section-icon"></i>
+                        <h3>Store Location</h3>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label asp-for="Input.AddressLine1">
+                                Store Address
+                            </label>
+
+                            <input asp-for="Input.AddressLine1"
+                                   id="StoreAddress"
+                                   maxlength="250"
+                                   placeholder="Street, building, floor, nearby landmark" />
+
+                            <span asp-validation-for="Input.AddressLine1"></span>
+
+                            <span class="hint">
+                                Enter the address manually or select the exact
+                                location using the map.
+                            </span>
+                        </div>
+
+                        <input asp-for="Input.Latitude"
+                               type="hidden"
+                               id="StoreLatitude" />
+
+                        <input asp-for="Input.Longitude"
+                               type="hidden"
+                               id="StoreLongitude" />
+
+                        <div class="form-group">
+                            <label asp-for="Input.City">
+                                City
+                            </label>
+
+                            <select asp-for="Input.City"
+                                    id="StoreCity">
+                                <option value="">Select city</option>
+                                <option value="Beirut">Beirut</option>
+                                <option value="Tripoli">Tripoli</option>
+                                <option value="Saida">Saida</option>
+                                <option value="Tyre">Tyre</option>
+                                <option value="Zahle">Zahle</option>
+                                <option value="Jounieh">Jounieh</option>
+                                <option value="Byblos">Byblos</option>
+                                <option value="Nabatieh">Nabatieh</option>
+                                <option value="Aley">Aley</option>
+                                <option value="Baabda">Baabda</option>
+                            </select>
+
+                            <span asp-validation-for="Input.City"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Input.Area">
+                                Governorate / Area
+                            </label>
+
+                            <select asp-for="Input.Area"
+                                    id="StoreArea"
+                                    data-selected-area="@Model.Input.Area">
+                                <option value="">Select area</option>
+                            </select>
+
+                            <span asp-validation-for="Input.Area"></span>
+                        </div>
+
+                        <div class="form-group full">
+                            <label>Store Location on Map</label>
+
+                            <div class="location-panel">
+                                <div class="location-actions">
+                                    <button type="button"
+                                            class="map-btn"
+                                            onclick="useCurrentStoreLocation()">
+                                        <i class="fa-solid fa-location-crosshairs" style="margin-right: 6px;"></i>Use My Current Location
+                                    </button>
+                                </div>
+
+                                <div id="storeMap"></div>
+
+                                <div id="storeMapMessage"
+                                     class="map-message">
+                                    Click the map, drag the marker, or use
+                                    your current location.
+                                </div>
+
+                                <div id="storeCoordinateBox"
+                                     class="coordinate-box">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============ SECTION 4: CONFIRMATION ============ -->
+                <div class="form-section">
+                    <div class="section-heading">
+                        <span class="step-num">4</span>
+                        <i class="fa-solid fa-circle-check section-icon"></i>
+                        <h3>Confirmation</h3>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <div class="confirmation">
+                                <input asp-for="Input.ConfirmInformation"
+                                       type="checkbox" />
+
+                                <label asp-for="Input.ConfirmInformation">
+                                    I confirm that the submitted store,
+                                    contact, license, address, and location
+                                    information is accurate.
+                                </label>
+                            </div>
+
+                            <span asp-validation-for="Input.ConfirmInformation"></span>
+                        </div>
+                    </div>
                 </div>
 
                 <button type="submit"
                         class="submit-btn"
                         id="submitStoreRequestButton">
+                    <i class="fa-solid fa-paper-plane" style="margin-right: 8px;"></i>
                     @(Model.IsResubmission
                         ? "Update and Resubmit Store Request"
                         : "Submit Store Owner Request")
@@ -730,7 +936,7 @@
 
             <a href="/CustomerProfile"
                class="back-link">
-                ← Back to Profile
+                <i class="fa-solid fa-arrow-left-long"></i> Back to My Profile
             </a>
 
         </div>
@@ -740,9 +946,9 @@
 
     <script>
             const serverToasts =
-                    @Html.Raw(
-                                              JsonSerializer.Serialize(
-                                                      toastMessages));
+                                @Html.Raw(
+                                                                                    JsonSerializer.Serialize(
+                                                                                                    toastMessages));
 
             const cityAreaMap = {
                 "Beirut": "Beirut",
@@ -1131,7 +1337,7 @@
                 }
 
                 sendButton.disabled = true;
-                sendButton.textContent = "Sending...";
+                sendButton.innerHTML = "Sending...";
 
                 try {
                     const formData = new FormData();
@@ -1179,8 +1385,8 @@
                 }
                 finally {
                     sendButton.disabled = false;
-                    sendButton.textContent =
-                        "Send Verification Code";
+                    sendButton.innerHTML =
+                        '<i class="fa-solid fa-paper-plane" style="margin-right: 6px;"></i>Send Verification Code';
                 }
             }
 
@@ -1332,7 +1538,7 @@
                         submitButton.disabled =
                             true;
 
-                        submitButton.textContent =
+                        submitButton.innerHTML =
                             "Submitting Request...";
                     });
             }
