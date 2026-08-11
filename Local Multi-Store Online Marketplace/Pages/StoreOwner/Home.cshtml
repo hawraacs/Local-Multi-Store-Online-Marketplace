@@ -34,12 +34,12 @@
             --boost-hover: #d97706;
             --boost-light: #fef3c7;
             /* Display face for the store name and section headings — was referenced
-                               elsewhere in this file (.profile-username, .stat-count) but never
-                               actually defined, so it silently fell back to the body font. Fraunces
-                               pairs a storefront/boutique warmth with the existing Inter body copy. */
+                                       elsewhere in this file (.profile-username, .stat-count) but never
+                                       actually defined, so it silently fell back to the body font. Fraunces
+                                       pairs a storefront/boutique warmth with the existing Inter body copy. */
             --font-display: 'Fraunces', 'Georgia', serif;
             /* Signature "awning stripe" motif — used sparingly, only where it encodes
-                               something real (the storefront header, and stock-level flags). */
+                                       something real (the storefront header, and stock-level flags). */
             --awning-a: var(--accent);
             --awning-b: var(--accent-dark);
             --focus-ring: 0 0 0 3px rgba(109, 40, 217, 0.28);
@@ -56,9 +56,9 @@
         }
 
         /* Hide the store-owner bottom nav/toggle while the product feed overlay is
-                           open — it was rendering on top of the post card (stacking context issue).
-                           Targeting a few likely selectors since the exact bottom-nav class in
-                           _StoreOwnerLayout.cshtml wasn't confirmed; safe to trim once verified. */
+                                   open — it was rendering on top of the post card (stacking context issue).
+                                   Targeting a few likely selectors since the exact bottom-nav class in
+                                   _StoreOwnerLayout.cshtml wasn't confirmed; safe to trim once verified. */
         body.feed-open .mobile-bottom-nav,
         body.feed-open .owner-bottom-nav,
         body.feed-open .bottom-nav,
@@ -84,6 +84,33 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        /* NEW — pulse used to draw attention to whatever a notification
+                                   deep-link points at (a review, the followers stat, an order row). */
+        @@keyframes notifHighlightPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(109, 40, 217, 0.45);
+            }
+
+            70% {
+                box-shadow: 0 0 0 14px rgba(109, 40, 217, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(109, 40, 217, 0);
+            }
+        }
+
+        .review-row.notif-highlight {
+            border-color: var(--accent);
+            animation: notifHighlightPulse 1.4s ease-out 2;
+        }
+
+        .stat-item.notif-highlight {
+            color: var(--accent-hover);
+            animation: notifHighlightPulse 1.4s ease-out 2;
+            border-radius: var(--radius-sm);
         }
 
         .profile-header,
@@ -131,8 +158,8 @@
         }
 
         /* ============================================================
-                                   PAGE SHELL — main content + toggleable slide-in side panel
-                                   ============================================================ */
+                                           PAGE SHELL — main content + toggleable slide-in side panel
+                                           ============================================================ */
         .page-shell {
             max-width: 1010px;
             margin: 0 auto;
@@ -813,8 +840,8 @@
         }
 
         /* ============================================================
-                           INSTAGRAM-STYLE FEED — redesigned viewer
-                           ============================================================ */
+                                   INSTAGRAM-STYLE FEED — redesigned viewer
+                                   ============================================================ */
         .feed-overlay {
             display: none;
             position: fixed;
@@ -1082,8 +1109,8 @@
         }
 
             /* NEW: previously this badge always said "In Stock" regardless of real
-                               inventory. It now reflects Product.Quantity / LowStockThreshold /
-                               IsOutOfStock. */
+                                       inventory. It now reflects Product.Quantity / LowStockThreshold /
+                                       IsOutOfStock. */
             .post-stock-badge.low-stock {
                 color: var(--warning);
                 background: #fffbeb;
@@ -1236,11 +1263,11 @@
         }
 
         /* ============================================================
-                           STOCK FLAG — a strip across the bottom of the product image,
-                           shown only when a product needs attention (low/out of stock).
-                           Healthy stock gets no flag at all, so the signal stays meaningful
-                           instead of decorating every card. Colors echo the header stripe.
-                           ============================================================ */
+                                   STOCK FLAG — a strip across the bottom of the product image,
+                                   shown only when a product needs attention (low/out of stock).
+                                   Healthy stock gets no flag at all, so the signal stays meaningful
+                                   instead of decorating every card. Colors echo the header stripe.
+                                   ============================================================ */
         .stock-strip {
             position: absolute;
             left: 0;
@@ -1342,7 +1369,7 @@
                             <span class="stat-icon"><i class="fas fa-box"></i></span>
                             <span class="stat-count">@Model.Products.Count</span> products
                         </div>
-                        <div class="stat-item">
+                        <div class="stat-item" id="followersStat">
                             <span class="stat-icon"><i class="fas fa-user-friends"></i></span>
                             <span class="stat-count">@Model.FollowersCount</span> followers
                         </div>
@@ -1568,7 +1595,7 @@
                         {
                             @foreach (var review in p.Reviews.OrderByDescending(r => r.CreatedAt))
                             {
-                                <div class="review-row">
+                                <div class="review-row" data-review-id="@review.ReviewID">
                                     <div class="reviewer-info">
                                         <div class="reviewer-avatar">@review.Customer?.User?.FullName?.FirstOrDefault()</div>
                                         <strong>@review.Customer?.User?.FullName</strong>
@@ -1623,12 +1650,12 @@
 </script>
 
 <script>
-        // Server-rendered initial product id (from Model.ProductId) is more reliable
-        // than re-parsing the URL query string client-side — it falls back to the
-        // query string only if the server didn't bind a value.
-        window.__initialProductId = @(Model.ProductId.HasValue ? Model.ProductId.Value.ToString() : "null");
+    // Server-rendered initial product id (from Model.ProductId) is more reliable
+    // than re-parsing the URL query string client-side — it falls back to the
+    // query string only if the server didn't bind a value.
+    window.__initialProductId = @(Model.ProductId.HasValue ? Model.ProductId.Value.ToString() : "null");
 
-        const productOrder = [@Html.Raw(string.Join(",", Model.Products.Select(p => p.ProductID)))];
+    const productOrder = [@Html.Raw(string.Join(",", Model.Products.Select(p => p.ProductID)))];
     let currentProductId = null;
     let lastFocusedElement = null;
     const feedOverlay = document.getElementById('feedOverlay');
@@ -1641,107 +1668,107 @@
         document.body.appendChild(feedOverlay);
     }
 
-        function sectionFor(id) {
-            return document.getElementById('feed-' + id);
-        }
+    function sectionFor(id) {
+        return document.getElementById('feed-' + id);
+    }
 
-        function openProductModal(id) {
-            if (!feedOverlay) return;
-            lastFocusedElement = document.activeElement;
-            feedOverlay.classList.add('open');
-            document.body.style.overflow = 'hidden';
-            document.body.classList.add('feed-open');
-            currentProductId = id;
+    function openProductModal(id) {
+        if (!feedOverlay) return;
+        lastFocusedElement = document.activeElement;
+        feedOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('feed-open');
+        currentProductId = id;
 
-            const sec = sectionFor(id);
-            if (!sec) return;
+        const sec = sectionFor(id);
+        if (!sec) return;
 
-            // scrollIntoView is far more reliable than computing offsetTop manually —
-            // it always aligns to the actual rendered position, regardless of any
-            // layout timing quirks from the overlay just becoming visible.
-            requestAnimationFrame(function () {
-                requestAnimationFrame(function () {
-                    sec.scrollIntoView({ behavior: 'auto', block: 'start' });
-                    // Move focus into the opened dialog for keyboard/screen-reader users.
-                    const closeBtn = sec.querySelector('.post-close-btn');
-                    if (closeBtn) closeBtn.focus();
-                });
+        // scrollIntoView is far more reliable than computing offsetTop manually —
+        // it always aligns to the actual rendered position, regardless of any
+        // layout timing quirks from the overlay just becoming visible.
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                sec.scrollIntoView({ behavior: 'auto', block: 'start' });
+                // Move focus into the opened dialog for keyboard/screen-reader users.
+                const closeBtn = sec.querySelector('.post-close-btn');
+                if (closeBtn) closeBtn.focus();
             });
-        }
+        });
+    }
 
-        function closeProductModal() {
-            if (!feedOverlay) return;
-            feedOverlay.classList.remove('open');
-            document.body.style.overflow = '';
-            document.body.classList.remove('feed-open');
-            currentProductId = null;
-            if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
-                lastFocusedElement.focus();
-            }
+    function closeProductModal() {
+        if (!feedOverlay) return;
+        feedOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+        document.body.classList.remove('feed-open');
+        currentProductId = null;
+        if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+            lastFocusedElement.focus();
         }
+    }
 
-        // Keep currentProductId in sync as the user swipes/scrolls/drags
-        let scrollRAF = null;
-        if (feedOverlay) {
-            feedOverlay.addEventListener('scroll', function () {
-                if (scrollRAF) return;
-                scrollRAF = requestAnimationFrame(function () {
-                    scrollRAF = null;
-                    const scrollCenter = feedOverlay.scrollTop + feedOverlay.clientHeight / 2;
-                    let closestId = currentProductId;
-                    let closestDist = Infinity;
-                    productOrder.forEach(function (id) {
-                        const sec = sectionFor(id);
-                        if (!sec) return;
-                        const center = sec.offsetTop + sec.offsetHeight / 2;
-                        const dist = Math.abs(center - scrollCenter);
-                        if (dist < closestDist) { closestDist = dist; closestId = id; }
-                    });
-                    if (closestId !== currentProductId) {
-                        currentProductId = closestId;
-                    }
+    // Keep currentProductId in sync as the user swipes/scrolls/drags
+    let scrollRAF = null;
+    if (feedOverlay) {
+        feedOverlay.addEventListener('scroll', function() {
+            if (scrollRAF) return;
+            scrollRAF = requestAnimationFrame(function() {
+                scrollRAF = null;
+                const scrollCenter = feedOverlay.scrollTop + feedOverlay.clientHeight / 2;
+                let closestId = currentProductId;
+                let closestDist = Infinity;
+                productOrder.forEach(function(id) {
+                    const sec = sectionFor(id);
+                    if (!sec) return;
+                    const center = sec.offsetTop + sec.offsetHeight / 2;
+                    const dist = Math.abs(center - scrollCenter);
+                    if (dist < closestDist) { closestDist = dist; closestId = id; }
                 });
+                if (closestId !== currentProductId) {
+                    currentProductId = closestId;
+                }
             });
-        }
-
-        function changeModalImage(productId, direction) {
-            const sec = sectionFor(productId);
-            if (!sec) return;
-            const imgs = sec.querySelectorAll('.post-media img');
-            const dots = sec.querySelectorAll('.gallery-dots span');
-            const media = sec.querySelector('.post-media');
-            const counter = sec.querySelector('.gallery-counter-current');
-            let current = parseInt(media.dataset.currentImage);
-            imgs[current].style.display = 'none';
-            if (dots[current]) dots[current].classList.remove('active');
-            current = (current + direction + imgs.length) % imgs.length;
-            imgs[current].style.display = 'block';
-            if (dots[current]) dots[current].classList.add('active');
-            if (counter) counter.textContent = current + 1;
-            media.dataset.currentImage = current;
-        }
-
-        document.addEventListener('keydown', function (e) {
-            if (currentProductId === null) return;
-            if (e.key === 'Escape') { closeProductModal(); return; }
-            if (e.key === 'ArrowLeft') changeModalImage(currentProductId, -1);
-            if (e.key === 'ArrowRight') changeModalImage(currentProductId, 1);
         });
+    }
 
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && currentProductId === null) closeSidePanel();
-        });
+    function changeModalImage(productId, direction) {
+        const sec = sectionFor(productId);
+        if (!sec) return;
+        const imgs = sec.querySelectorAll('.post-media img');
+        const dots = sec.querySelectorAll('.gallery-dots span');
+        const media = sec.querySelector('.post-media');
+        const counter = sec.querySelector('.gallery-counter-current');
+        let current = parseInt(media.dataset.currentImage);
+        imgs[current].style.display = 'none';
+        if (dots[current]) dots[current].classList.remove('active');
+        current = (current + direction + imgs.length) % imgs.length;
+        imgs[current].style.display = 'block';
+        if (dots[current]) dots[current].classList.add('active');
+        if (counter) counter.textContent = current + 1;
+        media.dataset.currentImage = current;
+    }
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const fallbackParam = new URLSearchParams(window.location.search).get('productId');
-            const productId = window.__initialProductId ?? (fallbackParam ? Number(fallbackParam) : null);
-            if (productId) openProductModal(productId);
-        });
+    document.addEventListener('keydown', function(e) {
+        if (currentProductId === null) return;
+        if (e.key === 'Escape') { closeProductModal(); return; }
+        if (e.key === 'ArrowLeft') changeModalImage(currentProductId, -1);
+        if (e.key === 'ArrowRight') changeModalImage(currentProductId, 1);
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && currentProductId === null) closeSidePanel();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const fallbackParam = new URLSearchParams(window.location.search).get('productId');
+        const productId = window.__initialProductId ?? (fallbackParam ? Number(fallbackParam) : null);
+        if (productId) openProductModal(productId);
+    });
 </script>
 
 <script>
     // Smooth mouse click-and-drag to move between posts (touch scrolls natively already).
-    (function () {
+    (function() {
         let dragging = false;
         let startY = 0;
         let startScrollTop = 0;
@@ -1804,3 +1831,47 @@
     })();
 </script>
 <script src="~/js/stories.js"></script>
+
+<script>
+    // ========== NOTIFICATION DEEP-LINK HANDLING ==========
+    // Handles the query-string params set by ReportUpdatesModel.OnPostOpenNotificationAsync:
+    //   highlightReviewId  -> ProductReview notifications (product modal opens via the
+    //                          existing productId logic above; this scrolls to + highlights
+    //                          the specific review once that settles)
+    //   highlightFollowers -> Follow notifications
+    //   openStoryId        -> StoryLike / StoryReply notifications
+    document.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+
+        const highlightReviewId = params.get('highlightReviewId');
+        if (highlightReviewId) {
+            setTimeout(function() {
+                const reviewEl = document.querySelector('.review-row[data-review-id="' + highlightReviewId + '"]');
+                if (reviewEl) {
+                    reviewEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    reviewEl.classList.add('notif-highlight');
+                }
+            }, 350);
+        }
+
+        if (params.get('highlightFollowers')) {
+            const followersEl = document.getElementById('followersStat');
+            if (followersEl) {
+                followersEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                followersEl.classList.add('notif-highlight');
+            }
+        }
+
+        const openStoryId = params.get('openStoryId');
+        if (openStoryId && window.RealNestStories) {
+            // openOwn(index) opens by position in the story bar, not by story id.
+            // If stories.js exposes an "open by story id" helper, call that here
+            // instead — this is a best-effort fallback until that's confirmed.
+            if (typeof window.RealNestStories.openById === 'function') {
+                window.RealNestStories.openById(Number(openStoryId));
+            } else {
+                window.RealNestStories.openOwn(0);
+            }
+        }
+    });
+</script>

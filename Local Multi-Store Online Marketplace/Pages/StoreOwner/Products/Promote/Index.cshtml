@@ -376,8 +376,8 @@
         }
 
         /* =====================================================
-                           ACTIVITY PANEL (who liked / what they commented)
-                           ===================================================== */
+                                   ACTIVITY PANEL (who liked / what they commented)
+                                   ===================================================== */
         .hidden {
             display: none !important;
         }
@@ -557,6 +557,138 @@
                 width: 100%;
                 justify-content: center;
             }
+        }
+
+        /* =====================================================
+                                   DELETE CONFIRM TOAST
+                                   ===================================================== */
+        .toast-stack {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .confirm-toast {
+            pointer-events: auto;
+            width: 320px;
+            max-width: calc(100vw - 40px);
+            padding: 16px 18px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            animation: toast-in 0.2s ease;
+        }
+
+        @@keyframes toast-in {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .confirm-toast-body {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+            .confirm-toast-body i {
+                margin-top: 2px;
+                color: var(--error-color);
+                font-size: 16px;
+            }
+
+            .confirm-toast-body p {
+                margin: 0;
+                color: var(--text-primary);
+                font-size: 13.5px;
+                font-weight: 600;
+                line-height: 1.45;
+            }
+
+        .confirm-toast-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .confirm-toast-btn {
+            min-height: 36px;
+            padding: 0 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .confirm-toast-cancel {
+            background: var(--bg-color);
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border-color);
+        }
+
+            .confirm-toast-cancel:hover {
+                background: var(--border-color);
+            }
+
+        .confirm-toast-confirm {
+            background: var(--error-color);
+            color: white;
+        }
+
+            .confirm-toast-confirm:hover {
+                background: #b91c1c;
+            }
+
+        /* =====================================================
+                                   RESULT TOAST (success / error messages)
+                                   ===================================================== */
+        .result-toast {
+            pointer-events: auto;
+            width: 320px;
+            max-width: calc(100vw - 40px);
+            padding: 14px 17px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 13.5px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            box-shadow: var(--shadow-md);
+            animation: toast-in 0.2s ease;
+        }
+
+            .result-toast i {
+                margin-top: 1px;
+                font-size: 15px;
+            }
+
+        .result-toast-success {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .result-toast-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
         }
     </style>
 }
@@ -880,6 +1012,29 @@
 
 @section Scripts {
     <script>
+        // Shared toast stack, used both for the delete confirmation and
+        // for showing the TempData success/error message as a toast
+        // instead of a static banner.
+        var toastStack = document.createElement('div');
+        toastStack.className = 'toast-stack';
+        document.body.appendChild(toastStack);
+
+        function showResultToast(message, isSuccess) {
+            var toast = document.createElement('div');
+            toast.className = 'result-toast ' +
+                (isSuccess ? 'result-toast-success' : 'result-toast-error');
+            toast.innerHTML =
+                '<i class="fas ' + (isSuccess ? 'fa-circle-check' : 'fa-circle-exclamation') + '"></i>' +
+                '<span></span>';
+            toast.querySelector('span').textContent = message;
+
+            toastStack.appendChild(toast);
+
+            setTimeout(function() {
+                toast.remove();
+            }, 5000);
+        }
+
         // Toggle each post's "View comments & likes" panel open/closed.
         (function() {
             document.querySelectorAll('[data-activity-toggle]').forEach(function(button) {
@@ -900,18 +1055,72 @@
             });
         })();
 
-        // Confirm before permanently deleting a post.
-        // (Wired up here instead of an inline onsubmit="" attribute, since
-        // inline event handlers can get silently blocked by CSP or other
-        // scripts on the page.)
+        // Confirm before permanently deleting a post — via a toast
+        // instead of the native confirm() dialog.
         (function() {
+            function showDeleteConfirmToast(onConfirm) {
+                var toast = document.createElement('div');
+                toast.className = 'confirm-toast';
+                toast.innerHTML =
+                    '<div class="confirm-toast-body">' +
+                    '<i class="fas fa-triangle-exclamation"></i>' +
+                    '<p>Delete this Explore post permanently? This can\'t be undone.</p>' +
+                    '</div>' +
+                    '<div class="confirm-toast-actions">' +
+                    '<button type="button" class="confirm-toast-btn confirm-toast-cancel">Cancel</button>' +
+                    '<button type="button" class="confirm-toast-btn confirm-toast-confirm">Delete</button>' +
+                    '</div>';
+
+                toastStack.appendChild(toast);
+
+                var timeoutId = setTimeout(function() {
+                    toast.remove();
+                }, 8000);
+
+                toast.querySelector('.confirm-toast-cancel')
+                    .addEventListener('click', function() {
+                        clearTimeout(timeoutId);
+                        toast.remove();
+                    });
+
+                toast.querySelector('.confirm-toast-confirm')
+                    .addEventListener('click', function() {
+                        clearTimeout(timeoutId);
+                        toast.remove();
+                        onConfirm();
+                    });
+            }
+
             document.querySelectorAll('.delete-form').forEach(function(form) {
                 form.addEventListener('submit', function(e) {
-                    if (!confirm('Delete this Explore post permanently?')) {
-                        e.preventDefault();
+                    if (form.dataset.confirmed === 'true') {
+                        return;
                     }
+
+                    e.preventDefault();
+
+                    showDeleteConfirmToast(function() {
+                        form.dataset.confirmed = 'true';
+                        form.requestSubmit
+                            ? form.requestSubmit()
+                            : form.submit();
+                    });
                 });
             });
+        })();
+
+        // Show TempData success/error message (if any) as a toast on load.
+        (function() {
+            var successMessage = @Html.Raw(Json.Serialize(TempData["SuccessMessage"] as string));
+            var errorMessage = @Html.Raw(Json.Serialize(TempData["ErrorMessage"] as string));
+
+            if (successMessage) {
+                showResultToast(successMessage, true);
+            }
+
+            if (errorMessage) {
+                showResultToast(errorMessage, false);
+            }
         })();
     </script>
 }

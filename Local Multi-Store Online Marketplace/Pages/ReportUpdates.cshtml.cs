@@ -47,8 +47,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // Notification types that deep-link to a specific order row on
         // CustomerOrders (ReferenceID must hold that order's OrderID).
         // NOTE: "NewOrder" is the store-owner-side notification ("you got
-        // a new order") — it has nothing to do with the customer's own
-        // CustomerOrders page, so it's intentionally excluded here.
+        // a new order") — it routes to the StoreOwner Orders index instead,
+        // handled separately below.
         private static readonly string[] OrderLinkedTypes =
         {
             "OrderStatus"
@@ -104,14 +104,75 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             // instead of just re-showing the notification list.
             if (notification.ReferenceID.HasValue)
             {
+                var refId = notification.ReferenceID.Value;
+
+                // Customer side: order status changed -> customer's own orders page
                 if (OrderLinkedTypes.Contains(notification.Type))
                 {
-                    return RedirectToPage("/CustomerOrders", new { highlightOrderId = notification.ReferenceID.Value });
+                    return RedirectToPage("/CustomerOrders", new { highlightOrderId = refId });
+                }
+
+                // Store-owner side: "you got a new order" -> Orders index,
+                // with that row scrolled to and highlighted.
+                if (notification.Type == "NewOrder")
+                {
+                    return RedirectToPage("/StoreOwner/Order/Index", new { highlightOrderId = refId });
                 }
 
                 if (notification.Type == "Promotion")
                 {
-                    return RedirectToPage("/CustomerPromotions", new { highlightPromoId = notification.ReferenceID.Value });
+                    return RedirectToPage("/CustomerPromotions", new { highlightPromoId = refId });
+                }
+
+                // Story like / story reply -> Home page, open that story.
+                // Assumes ReferenceID holds the StoryID.
+                if (notification.Type == "StoryLike" || notification.Type == "StoryReply")
+                {
+                    return RedirectToPage("/StoreOwner/Home", new { openStoryId = refId });
+                }
+
+                // Follow -> Home page, highlight the followers stat.
+                if (notification.Type == "Follow")
+                {
+                    return RedirectToPage("/StoreOwner/Home", new { highlightFollowers = true });
+                }
+
+                // Product review -> Home page, open that exact product
+                // and highlight the specific review inside it.
+                // Assumes ReferenceID holds Review.ReviewID and Review has a ProductID FK.
+                if (notification.Type == "ProductReview")
+                {
+                    var productId = await _context.Reviews
+                        .Where(r => r.ReviewID == refId)
+                        .Select(r => (int?)r.ProductID)
+                        .FirstOrDefaultAsync();
+
+                    if (productId.HasValue)
+                    {
+                        return RedirectToPage("/StoreOwner/Home", new
+                        {
+                            productId = productId.Value,
+                            highlightReviewId = refId
+                        });
+                    }
+                }
+
+                // Store review -> /StoreReviews/{storeId}, scrolled to and
+                // highlighted via the page's own #review-<id> hash handling
+                // (see the DOMContentLoaded script at the bottom of that page).
+                // Same Reviews table as ProductReview above — a store review is
+                // just a row with StoreID set (and ProductID null).
+                if (notification.Type == "StoreReview")
+                {
+                    var storeId = await _context.Reviews
+                        .Where(r => r.ReviewID == refId)
+                        .Select(r => (int?)r.StoreID)
+                        .FirstOrDefaultAsync();
+
+                    if (storeId.HasValue)
+                    {
+                        return RedirectToPage("/StoreReviews", null, new { storeId = storeId.Value }, "review-" + refId);
+                    }
                 }
             }
 

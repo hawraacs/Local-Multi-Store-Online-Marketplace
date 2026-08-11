@@ -8,8 +8,8 @@
 @section Styles {
     <style>
         /* ============================================================
-                                                   ROOT VARIABLES — consistent brand palette
-                                                   ============================================================ */
+                                                           ROOT VARIABLES — consistent brand palette
+                                                           ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -39,8 +39,8 @@
         }
 
         /* ============================================================
-                                                   HEADER
-                                                   ============================================================ */
+                                                           HEADER
+                                                           ============================================================ */
         .orders-header {
             display: flex;
             justify-content: space-between;
@@ -70,8 +70,8 @@
             }
 
         /* ============================================================
-                                                   STATS ROW
-                                                   ============================================================ */
+                                                           STATS ROW
+                                                           ============================================================ */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -118,8 +118,8 @@
             }
 
         /* ============================================================
-                                                   CARD
-                                                   ============================================================ */
+                                                           CARD
+                                                           ============================================================ */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -156,8 +156,8 @@
         }
 
         /* ============================================================
-                                                   TABLE
-                                                   ============================================================ */
+                                                           TABLE
+                                                           ============================================================ */
         .table {
             font-size: 14px;
             color: var(--text-primary);
@@ -253,8 +253,28 @@
             }
 
         /* ============================================================
-                                                   RESPONSIVE
-                                                   ============================================================ */
+                                   NOTIFICATION HIGHLIGHT — the row a notification
+                                   deep-link (e.g. "NewOrder") points at gets a brief
+                                   pulse and tinted background so it's easy to spot.
+                                   ============================================================ */
+        @@keyframes orderHighlightPulse {
+            0% {
+                background-color: rgba(109, 40, 217, 0.18);
+            }
+
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        tr.notif-highlight td {
+            animation: orderHighlightPulse 2.5s ease-out;
+            background-color: rgba(109, 40, 217, 0.10) !important;
+        }
+
+        /* ============================================================
+                                                           RESPONSIVE
+                                                           ============================================================ */
         @@media (max-width: 768px) {
             .orders-header {
                 flex-direction: column;
@@ -350,7 +370,7 @@
             <tbody>
                 @foreach (var order in Model.Orders)
                 {
-                    <tr>
+                    <tr id="order-row-@order.OrderID">
                         <td><strong>@order.OrderNumber</strong></td>
                         <td>@order.CustomerName</td>
                         <td>@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
@@ -441,7 +461,7 @@
         }
     });
 
-    orderConnection.on("OrderStatusUpdated", function (orderId, newStatus) {
+    orderConnection.on("OrderStatusUpdated", function(orderId, newStatus) {
         console.log("[orderHub] OrderStatusUpdated received:", orderId, newStatus);
         const cell = document.getElementById("status-" + orderId);
         if (cell) {
@@ -455,4 +475,20 @@
     orderConnection.start()
         .then(() => console.log("[orderHub] connection started"))
         .catch(err => console.error("[orderHub] connection failed:", err.toString()));
+</script>
+
+<script>
+    // ========== NOTIFICATION DEEP-LINK HANDLING ==========
+    // "NewOrder" notifications route here with ?highlightOrderId=<id> so the
+    // store owner lands directly on the row for the order that was just placed.
+    document.addEventListener('DOMContentLoaded', function () {
+        const highlightOrderId = new URLSearchParams(window.location.search).get('highlightOrderId');
+        if (highlightOrderId) {
+            const row = document.getElementById('order-row-' + highlightOrderId);
+            if (row) {
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                row.classList.add('notif-highlight');
+            }
+        }
+    });
 </script>
