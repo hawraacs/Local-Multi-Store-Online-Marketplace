@@ -58,6 +58,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
         public int DeliveredAssignmentsCount { get; set; }
 
+        // Total earnings for this delivery person, all-time.
+        // Reuses the existing Order.DeliveryFee value (the same field
+        // already shown to the delivery person as "Delivery Fee" on
+        // DeliveryOrderDetails), summed across their Delivered
+        // assignments only. No new calculation or stored data — this
+        // is a read-only aggregation of an existing field.
+        public decimal TotalEarnings { get; set; }
+
         // =====================================================
         // LOAD DELIVERY DASHBOARD
         // =====================================================
@@ -130,6 +138,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
             DeliveredAssignmentsCount =
                 allAssignmentStatuses.Count(status =>
                     status == "Delivered");
+
+            // Total Earnings KPI: sum of Order.DeliveryFee for this
+            // delivery person's Delivered assignments only, same
+            // "Delivered" definition used by DeliveredAssignmentsCount
+            // above. Queried separately since allAssignmentStatuses
+            // above only selects Status, not the related Order.
+            TotalEarnings =
+                await _context.DeliveryAssignments
+                    .AsNoTracking()
+                    .Where(assignment =>
+                        assignment.DeliveryPersonID ==
+                            deliveryPerson.DeliveryPersonID &&
+                        assignment.Status == "Delivered" &&
+                        assignment.Order != null)
+                    .SumAsync(assignment =>
+                        (decimal?)assignment.Order!.DeliveryFee)
+                    ?? 0m;
 
             Assignments = rawAssignments
                 .Select(assignment => new DeliveryAssignmentViewModel
