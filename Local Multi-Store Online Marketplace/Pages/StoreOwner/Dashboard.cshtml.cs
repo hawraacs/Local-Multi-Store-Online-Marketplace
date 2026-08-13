@@ -86,7 +86,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 ViewData["StoreName"] = store.StoreName;
                 ViewData["StoreId"] = store.StoreID;
 
-                await LoadDashboardStats(store.StoreID);
+                await LoadDashboardStats(store);
                 await LoadRecentOrders(store.StoreID);
                 await LoadTopProducts(store.StoreID);
                 await LoadLowStockProducts(store.StoreID);
@@ -112,12 +112,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
             }
         }
 
-        private async Task LoadDashboardStats(int storeId)
+        private async Task LoadDashboardStats(Store store)
         {
+            var storeId = store.StoreID;
             var today = DateTime.UtcNow.Date;
             var weekAgo = today.AddDays(-7);
-            var store = await _context.Stores
-    .FirstAsync(s => s.StoreID == storeId);
 
             Stats.OutstandingBalance = store.OutstandingBalance;
             Stats.SubscriptionStatus = store.SubscriptionStatus;
@@ -221,12 +220,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     oi.Order.Status == "Delivered")
                 .ToListAsync();
 
+            // BUGFIX: this used to be (Product.Price - Product.OriginalPrice) * Quantity,
+            // i.e. entirely today's catalog prices. That meant profit on a past
+            // delivered order would silently change any time the product's price
+            // was edited later. oi.TotalPrice is what was actually charged and is
+            // locked in at order time, so we use that for the revenue side and only
+            // fall back to the current Product.OriginalPrice for cost (the schema
+            // doesn't capture a historical cost snapshot per order item — if one is
+            // added later, swap it in here for a fully historical figure).
             Stats.TotalProfit = deliveredOrderItems
                 .Where(oi =>
                     oi.Product != null &&
                     oi.Product.OriginalPrice.HasValue)
                 .Sum(oi =>
-                    (oi.Product.Price - oi.Product.OriginalPrice.Value) * oi.Quantity);
+                    oi.TotalPrice - (oi.Product.OriginalPrice.Value * oi.Quantity));
 
             // BUGFIX: previously this filtered on OriginalPrice > 0 but not Price > 0.
             // A product with Price == 0 (e.g. a free/giveaway item) would divide by
@@ -289,12 +296,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
 
         private async Task LoadRecentOrders(int storeId)
         {
-            RecentOrders = await _context.OrderItems
+            // BUGFIX: grouping directly in the EF query on a key built from a
+            // three-level navigation chain (Order.Customer.User.FullName) wrapped
+            // in a ternary is fragile to translate to SQL and can throw at runtime
+            // depending on the EF Core version/provider. Pull the flat rows down
+            // first, then group and shape them in memory instead.
+            var rows = await _context.OrderItems
                 .Include(oi => oi.Order)
                     .ThenInclude(o => o.Customer)
                         .ThenInclude(c => c.User)
                 .Where(oi => oi.StoreID == storeId && oi.Order != null)
-                .GroupBy(oi => new
+                .Select(oi => new
                 {
                     oi.OrderID,
                     oi.Order.OrderNumber,
@@ -305,6 +317,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                     oi.Order.Status,
                     oi.Order.OrderDate
                 })
+                .ToListAsync();
+
+            RecentOrders = rows
+                .GroupBy(r => new { r.OrderID, r.OrderNumber, r.CustomerName, r.TotalAmount, r.Status, r.OrderDate })
                 .Select(g => new RecentOrder
                 {
                     OrderID = g.Key.OrderID,
@@ -317,7 +333,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner
                 })
                 .OrderByDescending(o => o.OrderDate)
                 .Take(10)
-                .ToListAsync();
+                .ToList();
         }
 
         private async Task LoadTopProducts(int storeId)
