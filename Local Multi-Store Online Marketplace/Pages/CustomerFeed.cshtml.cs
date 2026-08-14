@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
+using Multi_Store.Core.Interfaces;
 using Multi_Store.Services.Managers;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services.Dtos;
@@ -22,6 +23,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly ApplicationDbContext _context;
         private readonly StoryManager _storyManager;
         private readonly BoostManager _boostManager;
+        // NEW — used to pull the customer's real promotions for the right
+        // sidebar banner (see FeaturedPromotion below), same source the
+        // CustomerPromotions page uses.
+        private readonly IPromotionManager _promotionManager;
 
         public CustomerFeedModel(
             StoreManager storeManager,
@@ -31,7 +36,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             WishlistManager wishlistManager,
             ApplicationDbContext context,
             StoryManager storyManager,
-            BoostManager boostManager)
+            BoostManager boostManager,
+            IPromotionManager promotionManager)
         {
             _storeManager = storeManager;
             _userManager = userManager;
@@ -41,6 +47,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _context = context;
             _storyManager = storyManager;
             _boostManager = boostManager;
+            _promotionManager = promotionManager;
         }
 
         public List<string> NavbarCategories { get; set; } = new();
@@ -57,6 +64,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public int CurrentCustomerId { get; set; }
 
         public List<StoryGroupDTO> FollowedStoryGroups { get; set; } = new();
+
+        // NEW — whether the current customer already owns a store, so the
+        // sidebar "Become a Seller" button can route to the seller
+        // dashboard instead of the signup/request page (mirrors Customer1).
+        public bool CustomerHasStore { get; set; }
+
+        // NEW — a real promotion to show in the right-sidebar banner
+        // instead of the old hardcoded "Up to 60% Off" placeholder.
+        // Picks the customer's most relevant unread promotion (falling
+        // back to the most recent one if everything is already read).
+        public PromotionRecipient? FeaturedPromotion { get; set; }
 
         [BindProperty(SupportsGet = true)] public string ViewMode { get; set; } = "Following";
         [BindProperty(SupportsGet = true)] public string? SearchTerm { get; set; }
@@ -77,6 +95,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (customer == null) return;
 
             CurrentCustomerId = customer.CustomerID;
+
+            // NEW — used by the sidebar "Become a Seller" button.
+            CustomerHasStore = await _context.Stores
+                .AnyAsync(s => s.OwnerUserID == user.Id);
+
+            // NEW — real promotion for the right-sidebar banner.
+            var customerPromotions = await _promotionManager.GetCustomerPromotionsAsync(user.Id);
+            FeaturedPromotion = customerPromotions
+                .OrderBy(p => p.IsRead)
+                .ThenByDescending(p => p.CreatedAt)
+                .FirstOrDefault();
 
             var followedStories = await _storyManager.GetFollowedStoriesAsync(customer.CustomerID);
             var viewedStoryIds = await _storyManager.GetViewedStoryIdsAsync(customer.CustomerID);
@@ -392,6 +421,83 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             TempData["Success"] = $"{product.ProductName} added to wishlist.";
             return RedirectToPage();
+        }
+
+        // ================= ADD TO CART (redirects to the cart page) =================
+        // NEW — previously this button posted to Customer1's AddToCart
+        // handler, which redirected back to Customer1. It now lives on
+        // this page and always lands the customer on /CustomerCart, since
+        // "Shop Now" should take them straight to checkout.
+        public async Task<IActionResult> OnPostAddToCartAsync(int productId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var customer = await _customerManager.GetCustomerByUserIdAsync(user.Id);
+            if (customer == null) return RedirectToPage();
+
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p =>
+                    p.ProductID == productId &&
+                    p.IsActive &&
+                    p.Store.Status == "Approved");
+
+            if (product == null)
+            {
+                TempData["Error"] = "Product is not available.";
+                return RedirectToPage();
+            }
+
+            if (product.Quantity <= 0)
+            {
+                TempData["Error"] = "This product is out of stock.";
+                return RedirectToPage();
+            }
+
+            var cart = await _context.Carts
+                .Include(c => c.CartItems)
+                .FirstOrDefaultAsync(c => c.CustomerID == customer.CustomerID);
+
+            if (cart == null)
+            {
+                cart = new Cart
+                {
+                    CustomerID = customer.CustomerID,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddDays(7)
+                };
+
+                _context.Carts.Add(cart);
+                await _context.SaveChangesAsync();
+            }
+
+            var existingItem = await _context.CartItems
+                .FirstOrDefaultAsync(item =>
+                    item.CartID == cart.CartID &&
+                    item.ProductID == productId);
+
+            if (existingItem == null)
+            {
+                _context.CartItems.Add(new CartItem
+                {
+                    CartID = cart.CartID,
+                    ProductID = productId,
+                    Quantity = 1,
+                    PriceAtAddTime = product.Price,
+                    AddedAt = DateTime.UtcNow
+                });
+
+                cart.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+            }
+
+            // Whether the item was newly added or was already in the cart,
+            // "Shop Now" means "take me to checkout" — always land on the
+            // cart page rather than bouncing back to the feed.
+            return RedirectToPage("/CustomerCart");
         }
 
         // ================= NOT INTERESTED (AJAX) =================

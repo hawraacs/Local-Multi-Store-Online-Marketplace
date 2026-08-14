@@ -19,6 +19,120 @@
     <link rel="stylesheet" href="~/css/stories.css" />
     <link rel="stylesheet" href="~/css/customer-feed.css" asp-append-version="true" />
 
+    <!-- NEW — styles for the avatar dropdown menu (My Profile / Logout)
+         and the back-arrow nav item. customer-feed.css doesn't define
+         these, so they're added inline here rather than editing a file
+         we don't have. -->
+    <style>
+            .menu-wrap {
+                position: relative;
+            }
+
+            .tile-menu-dropdown {
+                position: absolute;
+                top: 46px;
+                right: 0;
+                z-index: 300;
+                min-width: 190px;
+                background: #ffffff;
+                border: 1px solid var(--border-color, #ece8f6);
+                border-radius: 14px;
+                box-shadow: 0 16px 36px rgba(67, 46, 110, 0.18);
+                padding: 6px;
+                display: none;
+            }
+
+                .tile-menu-dropdown.open {
+                    display: block;
+                }
+
+            .tile-menu-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                width: 100%;
+                border: none;
+                background: transparent;
+                padding: 10px 12px;
+                border-radius: 10px;
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text-primary, #1e1b2e);
+                cursor: pointer;
+                text-align: left;
+                text-decoration: none;
+                font-family: inherit;
+            }
+
+                .tile-menu-item i {
+                    width: 16px;
+                    text-align: center;
+                    color: #8d859c;
+                    font-size: 13px;
+                }
+
+                .tile-menu-item:hover {
+                    background: var(--accent-light, #f3effe);
+                }
+
+                .tile-menu-item.danger {
+                    color: #dc2626;
+                }
+
+                    .tile-menu-item.danger i {
+                        color: #dc2626;
+                    }
+
+                    .tile-menu-item.danger:hover {
+                        background: #fdeeec;
+                    }
+
+            .avatar-menu-dropdown {
+                top: 50px;
+                right: 0;
+            }
+
+            .app-topbar-avatar {
+                border: none;
+                cursor: pointer;
+                font: inherit;
+            }
+
+            /* Icon-only back button, sits above the sidebar nav list. */
+            .app-nav-back-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                margin-bottom: 6px;
+                border: 1px solid var(--border-color, #ece8f6);
+                border-radius: 50%;
+                background: #ffffff;
+                color: var(--text-primary, #1e1b2e);
+                font-size: 14px;
+                cursor: pointer;
+            }
+
+                .app-nav-back-btn:hover {
+                    border-color: var(--accent-color, #6d28d9);
+                    color: var(--accent-color, #6d28d9);
+                }
+
+            /* Real-promotion banner extras not covered by the old
+                       "Up to 60% Off" markup. */
+            .promo-banner-code {
+                margin-top: 8px;
+                font-size: 12.5px;
+                font-weight: 700;
+                opacity: 0.9;
+            }
+
+            .promo-banner-empty {
+                font-size: 13px;
+                opacity: 0.85;
+            }
+    </style>
 </head>
 <body>
 
@@ -48,6 +162,11 @@
     <!-- Mobile-only tab bar (hidden at desktop, see customer-feed.css §14) -->
     <partial name="_CustomerBottomNav" />
 
+    <!-- NEW — hidden logout form, submitted from the avatar dropdown. -->
+    <form id="logoutForm" method="post" asp-page="/Account/Logout" asp-area="Identity" asp-route-returnUrl="/CustomerFeed">
+        @Html.AntiForgeryToken()
+    </form>
+
     @{
         var hasActiveFilters = Model.CategoryId.HasValue || Model.StoreId.HasValue
             || !string.IsNullOrEmpty(Model.Area) || Model.MinPrice.HasValue || Model.MaxPrice.HasValue;
@@ -62,19 +181,32 @@
         <aside class="app-sidebar">
 
             <a class="app-logo" asp-page="/CustomerFeed">
-               
+
             </a>
 
+            <!-- CHANGED — "For You" toggle removed; an icon-only back
+                 arrow now sits above the nav list so the customer can
+                 return to wherever they came from. The nav list itself
+                 now matches Customer1's sidebar exactly. -->
+            <button type="button" class="app-nav-back-btn" onclick="history.back()" aria-label="Go back">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+
             <nav class="app-sidebar-nav" aria-label="Primary">
-                <a asp-page="/CustomerProfile" class="app-nav-link">
-                    <i class="fa-solid fa-house"></i> Home
+                <a asp-page="/Customer1" class="app-nav-link">
+                    <i class="fa-solid fa-compass"></i> Explore
                 </a>
-                <a asp-page="/CustomerFeed" asp-route-viewMode="Following"
-                   class="app-nav-link @(!Model.ShowingAllProducts ? "active" : "")">
-                    <i class="fa-regular fa-compass"></i> For You
-                </a>
-                <a asp-page="/Wishlist" class="app-nav-link">
+                <a asp-page="/CustomerWishlist" class="app-nav-link">
                     <i class="fa-regular fa-heart"></i> Wishlist
+                </a>
+                <a asp-page="/CustomerFeed" class="app-nav-link active">
+                    <i class="fa-regular fa-bookmark"></i> Following
+                </a>
+                <a asp-page="/CustomerCart" class="app-nav-link">
+                    <i class="fa-solid fa-store"></i> Cart
+                </a>
+                <a asp-page="/CustomerPromotions" class="app-nav-link">
+                    <i class="fa-solid fa-grip"></i> Offers
                 </a>
             </nav>
 
@@ -96,12 +228,21 @@
                 }
             </div>
 
+            <!-- CHANGED — routes to the seller's own dashboard if they
+                 already own a store, otherwise to the seller signup /
+                 store-request flow (mirrors Customer1). -->
             <div class="app-seller-cta">
                 <div class="app-seller-cta-icon">🏬</div>
                 <h4>Become a Seller</h4>
                 <p>Start your store and reach thousands of customers.</p>
-                <!-- TODO: point at the real seller-onboarding page -->
-                <a href="#" class="app-seller-cta-btn">Get Started</a>
+                @if (Model.CustomerHasStore)
+                {
+                    <a asp-page="/StoreDashboard" class="app-seller-cta-btn">Go to My Store</a>
+                }
+                else
+                {
+                    <a asp-page="/StoreRequest" class="app-seller-cta-btn">Get Started</a>
+                }
             </div>
 
         </aside>
@@ -127,20 +268,45 @@
                     <i class="fa-solid fa-sliders"></i> Filters
                 </button>
 
+                <!-- CHANGED — Wishlist / Messages / Notifications now route
+                     to real pages, and the avatar is a dropdown trigger
+                     (My Profile / Logout) instead of a plain link. Matches
+                     Customer1's topbar. -->
                 <div class="app-topbar-icons">
-                    <a asp-page="/Wishlist" class="app-topbar-icon-btn" aria-label="Wishlist">
+                    <a asp-page="/CustomerWishlist" class="app-topbar-icon-btn" aria-label="Wishlist">
                         <i class="fa-regular fa-heart"></i>
                     </a>
-                    <!-- TODO: wire to the real messaging/notifications pages -->
-                    <a href="#" class="app-topbar-icon-btn" aria-label="Messages">
+
+                    <a asp-page="/Chat" class="app-topbar-icon-btn" aria-label="Messages">
                         <i class="fa-regular fa-comment-dots"></i>
                     </a>
-                    <a href="#" class="app-topbar-icon-btn" aria-label="Notifications">
+
+                    <a asp-page="/ReportUpdates" class="app-topbar-icon-btn" aria-label="Notifications">
                         <i class="fa-regular fa-bell"></i>
                     </a>
-                    <a asp-page="/Profile" class="app-topbar-avatar" aria-label="Your profile">
-                        <i class="fa-solid fa-user"></i>
-                    </a>
+
+                    <div class="menu-wrap avatar-menu-wrap">
+                        <button type="button"
+                                class="app-topbar-avatar"
+                                id="avatarMenuTrigger"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                onclick="event.stopPropagation(); toggleAvatarMenu()"
+                                aria-label="Your profile">
+                            <i class="fa-solid fa-user"></i>
+                        </button>
+
+                        <div class="tile-menu-dropdown avatar-menu-dropdown" id="avatarMenuDropdown">
+                            <a asp-page="/CustomerProfile" class="tile-menu-item">
+                                <i class="fa-regular fa-user"></i> My Profile
+                            </a>
+
+                            <button type="button" class="tile-menu-item danger"
+                                    onclick="event.stopPropagation(); document.getElementById('logoutForm').submit();">
+                                <i class="fa-solid fa-right-from-bracket"></i> Logout
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -172,20 +338,7 @@
                         }
                     </section>
 
-                    <!-- For You / All Stores tabs -->
-                    <div class="feed-tabs">
-                        <a asp-page="/CustomerFeed" asp-route-viewMode="Following"
-                           asp-route-category="@Model.SelectedCategory"
-                           class="feed-tab @(!Model.ShowingAllProducts ? "active" : "")">
-                            For You
-                        </a>
-                        <a asp-page="/CustomerFeed" asp-route-viewMode="All"
-                           asp-route-category="@Model.SelectedCategory"
-                           class="feed-tab @(Model.ShowingAllProducts ? "active" : "")">
-                            All Stores
-                        </a>
-                    </div>
-
+                    <!-- REMOVED — "For You" / "All Stores" tabs. -->
                     <!-- Story bar (only if the customer follows stores with active stories) -->
                     @if (Model.FollowedStoryGroups.Any())
                     {
@@ -420,10 +573,11 @@
                                             <p class="product-description">@product.Description</p>
                                         </div>
 
-                                        <!-- Shop Now CTA row -->
+                                        <!-- Shop Now CTA row — CHANGED: posts to this page's own
+                                             AddToCart handler, which always redirects to
+                                             /CustomerCart instead of bouncing back to Customer1. -->
                                         <div class="post-cta-row">
                                             <form method="post"
-                                                  asp-page="/Customer1"
                                                   asp-page-handler="AddToCart"
                                                   asp-route-productId="@product.ProductID"
                                                   style="margin: 0;">
@@ -616,24 +770,49 @@
                 </div>
 
                 <!-- ================================================
-                     RIGHT SIDEBAR — promo banner, Top Stores,
+                     RIGHT SIDEBAR — real promotion banner, Top Stores,
                      Popular Now (hidden below 992px)
                      ================================================ -->
                 <aside class="app-rightbar">
 
-                    <div class="promo-banner">
-                        <div class="promo-banner-eyebrow">Mega Sale</div>
-                        <h3>Up to 60% Off</h3>
-                        <p>on selected items from local stores</p>
-                        <a asp-page="/CustomerFeed" asp-route-viewMode="All" class="promo-banner-btn">Shop Now</a>
-                    </div>
+                    <!-- CHANGED — the old hardcoded "Mega Sale / Up to 60%
+                         Off" banner now shows a real promotion pulled from
+                         the customer's actual PromotionRecipient records
+                         (the same source CustomerPromotions.cshtml uses),
+                         picking the most relevant unread one first. -->
+                    @if (Model.FeaturedPromotion?.Promotion != null)
+                    {
+                        <div class="promo-banner">
+                            <div class="promo-banner-eyebrow">
+                                @(Model.FeaturedPromotion.Promotion.Store?.StoreName ?? "Special Offer")
+                            </div>
+                            <h3>@Model.FeaturedPromotion.Promotion.Title</h3>
+                            <p>@Model.FeaturedPromotion.Promotion.Message</p>
+                            @if (!string.IsNullOrWhiteSpace(Model.FeaturedPromotion.Promotion.CouponCode))
+                            {
+                                <p class="promo-banner-code">
+                                    Code: <strong>@Model.FeaturedPromotion.Promotion.CouponCode</strong>
+                                </p>
+                            }
+                            <a asp-page="/CustomerPromotions" class="promo-banner-btn">View Offer</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="promo-banner">
+                            <div class="promo-banner-eyebrow">Promotions</div>
+                            <h3>Nothing new yet</h3>
+                            <p class="promo-banner-empty">Follow local stores to start seeing their offers here.</p>
+                            <a asp-page="/CustomerPromotions" class="promo-banner-btn">View Offers</a>
+                        </div>
+                    }
 
                     @if (Model.FilterStores.Any())
                     {
                         <div class="widget-card">
                             <div class="widget-card-header">
                                 <h4>Top Stores</h4>
-                                <a asp-page="/CustomerFeed" asp-route-viewMode="All">View all</a>
+                                <a asp-page="/Customer1">View all</a>
                             </div>
                             @foreach (var store in Model.FilterStores.Take(4))
                             {
@@ -742,6 +921,30 @@
                 }
 
                 document.querySelectorAll('[data-carousel]').forEach(initCarousel);
+            })();
+    </script>
+
+    <script>
+            // =====================================================
+            // AVATAR DROPDOWN MENU (My Profile / Logout)
+            // =====================================================
+            (function() {
+                var trigger = document.getElementById('avatarMenuTrigger');
+                var dropdown = document.getElementById('avatarMenuDropdown');
+                if (!trigger || !dropdown) return;
+
+                window.toggleAvatarMenu = function() {
+                    var isOpen = dropdown.classList.contains('open');
+                    dropdown.classList.toggle('open', !isOpen);
+                    trigger.setAttribute('aria-expanded', (!isOpen).toString());
+                };
+
+                document.addEventListener('click', function(event) {
+                    if (!dropdown.contains(event.target) && event.target !== trigger) {
+                        dropdown.classList.remove('open');
+                        trigger.setAttribute('aria-expanded', 'false');
+                    }
+                });
             })();
     </script>
 
