@@ -49,6 +49,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public List<ExploreStoreFilterViewModel> FilterStores { get; set; } = new();
         public List<string> FilterAreas { get; set; } = new();
 
+        // NEW — whether the current customer already owns a store, so the
+        // sidebar "Become a Seller" button can route to the seller
+        // dashboard instead of the signup/request page.
+        public bool CustomerHasStore { get; set; }
+
         [BindProperty(SupportsGet = true)] public string? SearchTerm { get; set; }
         [BindProperty(SupportsGet = true)] public int? CategoryId { get; set; }
         [BindProperty(SupportsGet = true)] public int? StoreId { get; set; }
@@ -73,6 +78,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage(
                     "/Account/Login",
                     new { area = "Identity" });
+            }
+
+            // NEW — used by the sidebar "Become a Seller" button to decide
+            // whether to link to the seller signup flow or the seller's
+            // own store dashboard.
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            if (currentUser != null)
+            {
+                CustomerHasStore = await _context.Stores
+                    .AnyAsync(s => s.OwnerUserID == currentUser.Id);
             }
 
             SelectedCategory = NormalizeCategory(category);
@@ -137,6 +153,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 minPrice: MinPrice,
                 maxPrice: MaxPrice,
                 typeFilter: TypeFilter,
+                feedType: FeedType,
                 blockedOwnerUserIds: blockedOwnerUserIds,
                 hiddenProductIds: hiddenProductIds,
                 hiddenPostIds: hiddenPostIds);
@@ -159,7 +176,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             string? area = null,
             decimal? minPrice = null,
             decimal? maxPrice = null,
-            string? typeFilter = null)
+            string? typeFilter = null,
+            string? feedType = "ForYou")
         {
             if (pageNumber < 1) pageNumber = 1;
 
@@ -169,7 +187,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var result = await LoadExplorePageAsync(
                 pageNumber, NormalizeCategory(category), searchTerm, categoryId,
-                storeId, area, minPrice, maxPrice, typeFilter,
+                storeId, area, minPrice, maxPrice, typeFilter, feedType,
                 blockedOwnerUserIds, hiddenProductIds, hiddenPostIds);
 
             return new JsonResult(new
@@ -178,7 +196,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 items = result.Items,
                 hasMore = result.HasMore,
                 page = pageNumber,
-                typeFilter
+                typeFilter,
+                feedType
             });
         }
 
@@ -1452,12 +1471,58 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         // =====================================================
+        // "FOR YOU" INTEREST CATEGORIES
+        // =====================================================
+        // Builds the set of CategoryIDs the customer has shown interest in
+        // via recently-viewed products, liked Explore posts (with a linked
+        // product), and products sold by stores the customer follows.
+        // Used to narrow the "For You" tab; "All Stores" ignores this.
+        private async Task<List<int>> GetInterestedCategoryIdsAsync(int customerId)
+        {
+            // NOTE: RecentlyViewedProduct only stores a ProductID foreign
+            // key (no "Product" navigation property), so this looks the
+            // categories up via an explicit join instead of rv.Product.
+            var recentlyViewedProductIds = await _context.RecentlyViewedProducts
+                .Where(rv => rv.CustomerID == customerId)
+                .Select(rv => rv.ProductID)
+                .Distinct()
+                .ToListAsync();
+
+            var recentlyViewedCategoryIds = await _context.Products
+                .Where(p => recentlyViewedProductIds.Contains(p.ProductID))
+                .Select(p => p.CategoryID)
+                .Distinct()
+                .ToListAsync();
+
+            var likedPostCategoryIds = await _context.ExploreLikes
+                .Where(l => l.CustomerID == customerId && l.ExplorePost.Product != null)
+                .Select(l => l.ExplorePost.Product!.CategoryID)
+                .Distinct()
+                .ToListAsync();
+
+            var followedStoreCategoryIds = await _context.StoreFollows
+                .Where(f => f.CustomerID == customerId)
+                .SelectMany(f => f.Store.Products
+                    .Where(p => p.IsActive)
+                    .Select(p => p.CategoryID))
+                .Distinct()
+                .ToListAsync();
+
+            return recentlyViewedCategoryIds
+                .Concat(likedPostCategoryIds)
+                .Concat(followedStoreCategoryIds)
+                .Distinct()
+                .ToList();
+        }
+
+        // =====================================================
         // PAGINATED UNIFIED GRID
         // =====================================================
         private async Task<ExplorePageResult> LoadExplorePageAsync(
             int page, string? category, string? searchTerm, int? categoryId,
             int? storeId, string? area, decimal? minPrice, decimal? maxPrice,
             string? typeFilter = null,
+            string? feedType = "ForYou",
             List<int>? blockedOwnerUserIds = null,
             List<int>? hiddenProductIds = null,
             List<int>? hiddenPostIds = null)
@@ -1484,6 +1549,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             else if (string.Equals(normalizedTypeFilter, "Carousel", StringComparison.OrdinalIgnoreCase))
             {
                 includeProducts = false;
+            }
+
+            // NEW — "For You" narrows results to categories the customer has
+            // already shown interest in (recently viewed / liked / followed
+            // stores' products). If the customer has no signal yet, this
+            // falls back to showing everything so the feed isn't empty.
+            // "AllStores" (or anything else passed in) skips this filter
+            // entirely and shows every active post/product.
+            List<int>? interestedCategoryIds = null;
+
+            if (string.Equals(feedType, "ForYou", StringComparison.OrdinalIgnoreCase))
+            {
+                var currentCustomerId = await GetCurrentCustomerIdAsync();
+
+                if (currentCustomerId != null)
+                {
+                    var categories = await GetInterestedCategoryIdsAsync(currentCustomerId.Value);
+
+                    if (categories.Any())
+                        interestedCategoryIds = categories;
+                }
             }
 
             await _boostManager.ExpireDueBoostsAsync();
@@ -1534,6 +1620,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 postsQuery = postsQuery.Where(post => post.PostType == "Reel");
             else if (string.Equals(normalizedTypeFilter, "Carousel", StringComparison.OrdinalIgnoreCase))
                 postsQuery = postsQuery.Where(post => post.PostType == "Carousel");
+
+            // NEW — "For You" category narrowing (see comment above).
+            if (interestedCategoryIds != null)
+            {
+                postsQuery = postsQuery.Where(post =>
+                    post.Product != null &&
+                    interestedCategoryIds.Contains(post.Product.CategoryID));
+            }
 
             var postsProjected = postsQuery.Select(post => new ExploreGridItemViewModel
             {
@@ -1612,6 +1706,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 productsQuery = productsQuery.Where(product => product.Price >= minPrice.Value);
             if (maxPrice.HasValue)
                 productsQuery = productsQuery.Where(product => product.Price <= maxPrice.Value);
+
+            // NEW — "For You" category narrowing (see comment above).
+            if (interestedCategoryIds != null)
+            {
+                productsQuery = productsQuery.Where(product =>
+                    interestedCategoryIds.Contains(product.CategoryID));
+            }
 
             var productsProjected = productsQuery.Select(product => new ExploreGridItemViewModel
             {

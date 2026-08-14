@@ -1948,6 +1948,7 @@
             justify-content: center;
             cursor: pointer;
             font-size: 15px;
+            text-decoration: none;
         }
 
             .app-topbar-icon:hover {
@@ -1967,6 +1968,20 @@
             font-weight: 800;
             font-size: 14px;
             flex-shrink: 0;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* NEW — avatar dropdown menu (Logout / My Profile). Reuses the
+           same .tile-menu-dropdown / .tile-menu-item styling defined
+           above for the 3-dot menu and modal share menu. */
+        .avatar-menu-wrap {
+            position: relative;
+        }
+
+        .avatar-menu-dropdown {
+            top: 50px;
+            right: 0;
         }
 
         .app-topbar-filterpanel {
@@ -2291,6 +2306,11 @@
         @Html.AntiForgeryToken()
     </form>
 
+    <!-- NEW — hidden logout form, submitted from the avatar dropdown. -->
+    <form id="logoutForm" method="post" asp-page="/Account/Logout" asp-area="Identity" asp-route-returnUrl="/Customer1">
+        @Html.AntiForgeryToken()
+    </form>
+
     <div class="app-shell">
 
         <!-- =========================================================
@@ -2359,10 +2379,20 @@
                 }
             </div>
 
+            <!-- CHANGED — routes to the seller's own dashboard if they
+                 already own a store, otherwise to the seller signup /
+                 store-request flow. -->
             <div class="app-sidebar-seller">
                 <strong>Become a Seller</strong>
                 <p>Start your store and reach thousands of customers.</p>
-                <a href="javascript:void(0)">Get Started</a>
+                @if (Model.CustomerHasStore)
+                {
+                    <a asp-page="/StoreDashboard">Go to My Store</a>
+                }
+                else
+                {
+                    <a asp-page="/StoreRequest">Get Started</a>
+                }
             </div>
         </aside>
 
@@ -2401,13 +2431,43 @@
                         <i class="fa-solid fa-sliders"></i> Filters
                     </button>
 
+                    <!-- CHANGED — Wishlist / Messages / Notifications now
+                         route to real pages, and the avatar is a dropdown
+                         trigger (My Profile / Logout) instead of inert. -->
                     <div class="app-topbar-icons">
-                        <button type="button" class="app-topbar-icon" title="Wishlist"><i class="fa-regular fa-heart"></i></button>
-                        <button type="button" class="app-topbar-icon" title="Messages"><i class="fa-regular fa-comment"></i></button>
-                        <button type="button" class="app-topbar-icon" title="Notifications">
+                        <a asp-page="/CustomerWishlist" class="app-topbar-icon" title="Wishlist">
+                            <i class="fa-regular fa-heart"></i>
+                        </a>
+
+                        <a asp-page="/Chat" class="app-topbar-icon" title="Messages">
+                            <i class="fa-regular fa-comment"></i>
+                        </a>
+
+                        <a asp-page="/ReportUpdates" class="app-topbar-icon" title="Notifications">
                             <i class="fa-regular fa-bell"></i>
-                        </button>
-                        <span class="app-topbar-avatar">@(User.Identity?.Name?.Trim().Length > 0 ? User.Identity.Name.Trim().Substring(0, 1).ToUpper() : "U")</span>
+                        </a>
+
+                        <div class="menu-wrap avatar-menu-wrap">
+                            <button type="button"
+                                    class="app-topbar-avatar"
+                                    id="avatarMenuTrigger"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"
+                                    onclick="event.stopPropagation(); toggleAvatarMenu()">
+                                @(User.Identity?.Name?.Trim().Length > 0 ? User.Identity.Name.Trim().Substring(0, 1).ToUpper() : "U")
+                            </button>
+
+                            <div class="tile-menu-dropdown avatar-menu-dropdown" id="avatarMenuDropdown">
+                                <a asp-page="/CustomerProfile" class="tile-menu-item">
+                                    <i class="fa-regular fa-user"></i> My Profile
+                                </a>
+
+                                <button type="button" class="tile-menu-item danger"
+                                        onclick="event.stopPropagation(); document.getElementById('logoutForm').submit();">
+                                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </header>
 
@@ -2487,6 +2547,7 @@
                   data-min-price="@(Model.MinPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
                   data-max-price="@(Model.MaxPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
                   data-type-filter="@(Model.TypeFilter ?? string.Empty)"
+                  data-feed-type="@Model.FeedType"
                   data-current-page="1"
                   data-has-more="@Model.HasMoreItems.ToString().ToLowerInvariant()">
 
@@ -2580,10 +2641,12 @@
                 }
 
                 <!-- =========================================================
-                     TABS + FILTER PILLS — "For You" is decorative (there is
-                     no separate "all stores" feed on the backend yet); the
-                     pills on the right are the existing Reel/Carousel/Product
-                     type-filter links, unchanged.
+                     TABS + FILTER PILLS — "For You" now shows products only
+                     in categories the customer has already shown interest in
+                     (recently viewed / liked / followed stores' products);
+                     "All Stores" shows everything. The pills on the right
+                     are the existing Reel/Carousel/Product type-filter
+                     links, unchanged.
                      ========================================================= -->
                 <section class="app-tabs-row">
                   <div class="app-view-tabs">
@@ -2627,6 +2690,7 @@
                            asp-route-area="@Model.Area"
                            asp-route-minPrice="@Model.MinPrice"
                            asp-route-maxPrice="@Model.MaxPrice"
+                           asp-route-feedType="@Model.FeedType"
                            class="legend-filter @(string.IsNullOrWhiteSpace(Model.TypeFilter) ? "active" : "")">
                             <i class="fa-solid fa-layer-group"></i>
                             All
@@ -2640,6 +2704,7 @@
                            asp-route-area="@Model.Area"
                            asp-route-minPrice="@Model.MinPrice"
                            asp-route-maxPrice="@Model.MaxPrice"
+                           asp-route-feedType="@Model.FeedType"
                            asp-route-typeFilter="Reel"
                            class="legend-filter @(string.Equals(Model.TypeFilter, "Reel", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                             <i class="fa-solid fa-play"></i>
@@ -2654,6 +2719,7 @@
                            asp-route-area="@Model.Area"
                            asp-route-minPrice="@Model.MinPrice"
                            asp-route-maxPrice="@Model.MaxPrice"
+                           asp-route-feedType="@Model.FeedType"
                            asp-route-typeFilter="Carousel"
                            class="legend-filter @(string.Equals(Model.TypeFilter, "Carousel", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                             <i class="fa-regular fa-images"></i>
@@ -2668,6 +2734,7 @@
                            asp-route-area="@Model.Area"
                            asp-route-minPrice="@Model.MinPrice"
                            asp-route-maxPrice="@Model.MaxPrice"
+                           asp-route-feedType="@Model.FeedType"
                            asp-route-typeFilter="Product"
                            class="legend-filter @(string.Equals(Model.TypeFilter, "Product", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                             <i class="fa-solid fa-bag-shopping"></i>
@@ -3404,6 +3471,30 @@
             searchInput.addEventListener('focus', function () {
                 if (searchInput.value.trim().length > 0 && resultsBox.innerHTML) {
                     resultsBox.classList.remove('hidden');
+                }
+            });
+        })();
+    </script>
+
+    <script>
+        // =====================================================
+        // AVATAR DROPDOWN MENU (My Profile / Logout)
+        // =====================================================
+        (function () {
+            var trigger = document.getElementById('avatarMenuTrigger');
+            var dropdown = document.getElementById('avatarMenuDropdown');
+            if (!trigger || !dropdown) return;
+
+            window.toggleAvatarMenu = function () {
+                var isOpen = dropdown.classList.contains('open');
+                dropdown.classList.toggle('open', !isOpen);
+                trigger.setAttribute('aria-expanded', (!isOpen).toString());
+            };
+
+            document.addEventListener('click', function (event) {
+                if (!dropdown.contains(event.target) && event.target !== trigger) {
+                    dropdown.classList.remove('open');
+                    trigger.setAttribute('aria-expanded', 'false');
                 }
             });
         })();
