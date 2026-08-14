@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.DTOs;
 using Multi_Store.Core.Interfaces;
-using Multi_Store.Infrastructure.Data;
 using System.Security.Claims;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
@@ -13,29 +11,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
     public class CreateModel : PageModel
     {
         private readonly IPromotionManager _promotionManager;
-        private readonly ApplicationDbContext _context;
         private readonly ILogger<CreateModel> _logger;
 
         public CreateModel(
             IPromotionManager promotionManager,
-            ApplicationDbContext context,
             ILogger<CreateModel> logger)
         {
             _promotionManager = promotionManager;
-            _context = context;
             _logger = logger;
         }
 
         [BindProperty]
         public PromotionDTO Promotion { get; set; } = new();
 
-        // Products belonging to this store owner's store, for the "select a
-        // product" dropdown used by the no-coupon Automatic Sale path only.
-        public List<ProductOption> MyProducts { get; set; } = new();
-
         public string? ErrorMessage { get; set; }
 
-        public async Task OnGetAsync()
+        public void OnGet()
         {
             Promotion = new PromotionDTO
             {
@@ -48,8 +39,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
                 // "cannot be in the past" check below, which had the same issue).
                 CouponEndDate = DateTime.UtcNow.Date.AddDays(7)
             };
-
-            await LoadMyProductsAsync();
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -59,7 +48,6 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
                 ErrorMessage =
                     "Promotion information is missing.";
 
-                await LoadMyProductsAsync();
                 return Page();
             }
 
@@ -71,6 +59,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
                     Promotion.CouponCode
                         .Trim()
                         .ToUpperInvariant();
+            }
+
+            // A Promotion now always requires a coupon — the no-coupon
+            // "Automatic Sale" path has been removed. Checked up front and
+            // returns immediately, same pattern as the "Promotion == null"
+            // guard above, since this page has no validation-summary
+            // element for a keyless ModelState error to render into —
+            // Model.ErrorMessage is the one place on this page proven to
+            // actually display to the store owner.
+            if (!Promotion.CreateCoupon)
+            {
+                ErrorMessage =
+                    "A coupon is required to send a promotion.";
+
+                return Page();
             }
 
             // Validate coupon fields only when CreateCoupon is checked.
@@ -158,49 +161,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
                 Promotion.MinimumOrderAmount = null;
                 Promotion.MaximumDiscountAmount = null;
                 Promotion.UsageLimit = null;
-
-                if (Promotion.ProductID.HasValue)
-                {
-                    // Automatic sale path — same validation rigor as the
-                    // coupon path above. CouponEndDate is intentionally
-                    // NOT cleared here: it's reused as the sale's
-                    // (optional) end date.
-                    if (Promotion.DiscountValue <= 0)
-                    {
-                        ModelState.AddModelError(
-                            "Promotion.DiscountValue",
-                            "Discount value must be greater than zero.");
-                    }
-
-                    if (string.Equals(
-                            Promotion.DiscountType,
-                            "Percentage",
-                            StringComparison.OrdinalIgnoreCase) &&
-                        Promotion.DiscountValue > 100)
-                    {
-                        ModelState.AddModelError(
-                            "Promotion.DiscountValue",
-                            "Percentage discount cannot exceed 100%.");
-                    }
-
-                    if (Promotion.CouponEndDate.HasValue &&
-                        Promotion.CouponEndDate.Value.Date <
-                            DateTime.UtcNow.Date)
-                    {
-                        ModelState.AddModelError(
-                            "Promotion.CouponEndDate",
-                            "Sale end date cannot be in the past.");
-                    }
-                }
-                else
-                {
-                    Promotion.CouponEndDate = null;
-                }
+                Promotion.CouponEndDate = null;
             }
 
             if (!ModelState.IsValid)
             {
-                await LoadMyProductsAsync();
                 return Page();
             }
 
@@ -237,36 +202,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
                 ErrorMessage =
                     "Something went wrong while sending this promotion. Please try again.";
 
-                await LoadMyProductsAsync();
                 return Page();
             }
-        }
-
-        private async Task LoadMyProductsAsync()
-        {
-            var userId = GetCurrentUserId();
-
-            var storeId = await _context.Stores
-                .Where(s => s.OwnerUserID == userId)
-                .Select(s => (int?)s.StoreID)
-                .FirstOrDefaultAsync();
-
-            if (storeId == null)
-            {
-                MyProducts = new List<ProductOption>();
-                return;
-            }
-
-            MyProducts = await _context.Products
-                .Where(p => p.StoreID == storeId.Value && p.IsActive)
-                .OrderBy(p => p.ProductName)
-                .Select(p => new ProductOption
-                {
-                    ProductID = p.ProductID,
-                    ProductName = p.ProductName,
-                    Price = p.Price
-                })
-                .ToListAsync();
         }
 
         private int GetCurrentUserId()
@@ -292,14 +229,5 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Promotions
 
             return userId;
         }
-    }
-
-    public class ProductOption
-    {
-        public int ProductID { get; set; }
-
-        public string ProductName { get; set; } = string.Empty;
-
-        public decimal Price { get; set; }
     }
 }
