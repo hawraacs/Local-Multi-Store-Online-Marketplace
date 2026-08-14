@@ -17,7 +17,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
 
-        private static readonly string[] VisibleNotificationTypes =
+        // NOTE: "Promotion" notifications are customer-only (they deep-link
+        // to /CustomerPromotions, a customer page). This full list is the
+        // base set; GetVisibleTypesFor(...) below includes "Promotion" only
+        // for customers, so it never shows up — or opens — for store owners
+        // or delivery accounts. See the bugfix note on GetVisibleTypesFor.
+        private static readonly string[] AllNotificationTypes =
         {
             "ReportUpdate",
             "AdminWarning",
@@ -65,6 +70,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public bool IsStoreOwner { get; set; }
         public bool IsDeliveryPerson { get; set; }
 
+        // BUGFIX — "Promotion" is a customer-only notification (it deep-links
+        // to /CustomerPromotions). It's now included only when the viewer is
+        // a customer — not just "not a store owner" — so delivery accounts
+        // are covered by the same rule instead of only store owners.
+        private static List<string> GetVisibleTypesFor(bool isCustomer)
+        {
+            return isCustomer
+                ? AllNotificationTypes.ToList()
+                : AllNotificationTypes.Where(t => t != "Promotion").ToList();
+        }
+
         public async Task<IActionResult> OnGetAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -74,8 +90,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             IsStoreOwner = await _userManager.IsInRoleAsync(user, "StoreOwner");
             IsDeliveryPerson = await _userManager.IsInRoleAsync(user, "Delivery");
 
+            var isCustomer = !IsStoreOwner && !IsDeliveryPerson;
+            var visibleTypes = GetVisibleTypesFor(isCustomer);
+
             NotificationsList = await _context.Notifications
-                .Where(n => n.UserID == user.Id && VisibleNotificationTypes.Contains(n.Type))
+                .Where(n => n.UserID == user.Id && visibleTypes.Contains(n.Type))
                 .OrderByDescending(n => n.SentAt)
                 .ToListAsync();
 
@@ -88,11 +107,32 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (user == null)
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
 
+            var isStoreOwner = await _userManager.IsInRoleAsync(user, "StoreOwner");
+            var isDeliveryPerson = await _userManager.IsInRoleAsync(user, "Delivery");
+            var isCustomer = !isStoreOwner && !isDeliveryPerson;
+
             var notification = await _context.Notifications
                 .FirstOrDefaultAsync(n => n.NotificationID == notificationId && n.UserID == user.Id);
 
             if (notification == null)
                 return RedirectToPage();
+
+            // Defensive guard — a store owner or delivery account should
+            // never be able to open a "Promotion" notification (it's
+            // filtered out of their list on OnGetAsync already, but a
+            // forged/replayed form post could still hit this handler
+            // directly). Mark it read and send them to their own home page
+            // instead of following the customer-only redirect below.
+            if (!isCustomer && notification.Type == "Promotion")
+            {
+                if (!notification.IsRead)
+                {
+                    notification.IsRead = true;
+                    await _context.SaveChangesAsync();
+                }
+
+                return RedirectToPage(isStoreOwner ? "/StoreOwner/Home" : "/DeliveryProfile");
+            }
 
             if (!notification.IsRead)
             {
@@ -197,6 +237,35 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage();
         }
 
+        // NEW — "Mark all as read", scoped to whatever this role is allowed
+        // to see (so it can't quietly mark a store owner's hidden Promotion
+        // rows as read either — not that they'd see them to begin with).
+        public async Task<IActionResult> OnPostMarkAllAsReadAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var isStoreOwner = await _userManager.IsInRoleAsync(user, "StoreOwner");
+            var isDeliveryPerson = await _userManager.IsInRoleAsync(user, "Delivery");
+            var isCustomer = !isStoreOwner && !isDeliveryPerson;
+            var visibleTypes = GetVisibleTypesFor(isCustomer);
+
+            var unread = await _context.Notifications
+                .Where(n => n.UserID == user.Id && !n.IsRead && visibleTypes.Contains(n.Type))
+                .ToListAsync();
+
+            if (unread.Any())
+            {
+                foreach (var n in unread)
+                    n.IsRead = true;
+
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToPage();
+        }
+
         // Maps a Notification.Type to the icon (Font Awesome class) and
         // color-tint CSS class used in the store-owner notification list,
         // so replies, likes, comments, etc. are visually distinguishable
@@ -212,19 +281,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 "StoryLike" => ("fas fa-circle-play", "type-story-like"),
                 "StoryReply" => ("fas fa-reply", "type-story-reply"),
                 "Follow" => ("fas fa-user-plus", "type-follow"),
-                "AccountStatement" => ("fas fa-file-invoice-dollar", ""),
-                "OrderStatus" => ("fas fa-box", ""),
-                "NewOrder" => ("fas fa-box", ""),
-                "PaymentUpdate" => ("fas fa-credit-card", ""),
-                "DeliveryRequest" => ("fas fa-truck", ""),
-                "DeliveryAssignment" => ("fas fa-truck", ""),
+                "AccountStatement" => ("fas fa-file-invoice-dollar", "type-account"),
+                "OrderStatus" => ("fas fa-box", "type-order"),
+                "NewOrder" => ("fas fa-box", "type-order"),
+                "PaymentUpdate" => ("fas fa-credit-card", "type-account"),
+                "DeliveryRequest" => ("fas fa-truck", "type-order"),
+                "DeliveryAssignment" => ("fas fa-truck", "type-order"),
                 "DeliveryReview" => ("fas fa-star", "type-review"),
-                "DeliveryReadyForPickup" => ("fas fa-box-open", ""),
+                "DeliveryReadyForPickup" => ("fas fa-box-open", "type-order"),
                 "ComplaintUpdate" => ("fas fa-flag-checkered", "type-review"),
-                "Promotion" => ("fas fa-bullhorn", ""),
-                "StoreRequest" => ("fas fa-store", ""),
-                "AdminWarning" => ("fas fa-triangle-exclamation", ""),
-                "ReportUpdate" => ("fas fa-flag", ""),
+                "Promotion" => ("fas fa-bullhorn", "type-promotion"),
+                "StoreRequest" => ("fas fa-store", "type-order"),
+                "AdminWarning" => ("fas fa-triangle-exclamation", "type-warning"),
+                "ReportUpdate" => ("fas fa-flag", "type-warning"),
                 _ => ("fas fa-bell", "")
             };
         }
