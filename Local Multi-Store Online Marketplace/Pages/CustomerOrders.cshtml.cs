@@ -83,7 +83,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         .Select(orderItem => new CustomerOrderProductViewModel
                         {
                             ProductName = orderItem.ProductName,
-                            Quantity = orderItem.Quantity
+                            Quantity = orderItem.Quantity,
+
+                            // NEW — reuses the existing Product.Images relation
+                            // (ProductImage.ImageUrl) that's already used
+                            // elsewhere in the project. Picks the primary
+                            // image first, falling back to the lowest
+                            // DisplayOrder, and is null if the product has
+                            // no images — the view renders a placeholder
+                            // in that case. No new DB field, no migration.
+                            ImageUrl = orderItem.Product.Images
+                                .OrderByDescending(img => img.IsPrimary)
+                                .ThenBy(img => img.DisplayOrder)
+                                .Select(img => img.ImageUrl)
+                                .FirstOrDefault()
                         })
                         .ToList(),
 
@@ -417,6 +430,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             public string ProductName { get; set; } = string.Empty;
 
             public int Quantity { get; set; }
+
+            // NEW — existing Product.Images[].ImageUrl, resolved server-side.
+            // Null when the product has no image.
+            public string? ImageUrl { get; set; }
         }
     }
 }

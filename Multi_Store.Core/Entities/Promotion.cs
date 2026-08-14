@@ -26,6 +26,28 @@ namespace Multi_Store.Core.Entities
         [MaxLength(50)]
         public string? CouponCode { get; set; }
 
+        // ================= AUTOMATIC SALE (no-coupon promotions only) =================
+        // Populated only when this promotion was created WITHOUT a coupon and a
+        // specific product was selected for it. When CouponCode is set (the existing
+        // coupon-required flow), none of these are used — that flow is unchanged.
+        // Field names/semantics deliberately mirror Coupon.DiscountType/DiscountValue/
+        // IsActive so no new discount convention is introduced.
+        public int? ProductID { get; set; }
+
+        [MaxLength(20)]
+        public string? DiscountType { get; set; }
+
+        public decimal? DiscountValue { get; set; }
+
+        // Null = no end date (sale runs until IsActive is turned off).
+        public DateTime? SaleEndDate { get; set; }
+
+        // Mirrors Coupon.IsActive. Defaults true so promotions created before
+        // this feature existed (ProductID == null) are unaffected either way.
+        public bool IsActive { get; set; } = true;
+
+        public Product? Product { get; set; }
+
         public int RecipientCount { get; set; }
 
         public bool IsSent { get; set; } = true;

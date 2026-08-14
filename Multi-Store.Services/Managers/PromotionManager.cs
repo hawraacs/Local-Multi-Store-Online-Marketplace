@@ -5,7 +5,7 @@ using Multi_Store.Services.Managers;
 
 namespace Multi_Store.Core.Managers
 {
-    public class PromotionManager :IPromotionManager
+    public class PromotionManager : IPromotionManager
     {
         private readonly IPromotionRepository _promotionRepository;
         private readonly NotificationManager _notifications;
@@ -86,6 +86,40 @@ namespace Multi_Store.Core.Managers
                 await _promotionRepository.AddCouponAsync(coupon);
             }
 
+            // ================= AUTOMATIC SALE (no coupon, targets one product) =================
+            // Mirrors the coupon branch above but stores the discount directly on the
+            // Promotion row instead of a separate Coupon — same validation rigor, same
+            // DiscountType/DiscountValue fields the DTO/form already has. Only runs when
+            // a product was actually selected; a plain notification-only promotion
+            // (ProductID left unset) behaves exactly as it always has.
+            int? saleProductID = null;
+            string? saleDiscountType = null;
+            decimal? saleDiscountValue = null;
+            DateTime? saleEndDate = null;
+
+            if (!dto.CreateCoupon && dto.ProductID.HasValue)
+            {
+                if (dto.DiscountValue <= 0)
+                    throw new InvalidOperationException("Discount value must be greater than zero.");
+
+                if (dto.DiscountType != "Percentage" && dto.DiscountType != "Fixed")
+                    throw new InvalidOperationException("Invalid discount type.");
+
+                if (dto.DiscountType == "Percentage" && dto.DiscountValue > 100)
+                    throw new InvalidOperationException("Percentage discount cannot be greater than 100%.");
+
+                saleProductID = dto.ProductID;
+                saleDiscountType = dto.DiscountType;
+                saleDiscountValue = dto.DiscountValue;
+
+                // Reuses the same CouponEndDate input the coupon path already has —
+                // optional here (null = sale runs until turned off), unlike the
+                // coupon path where it's required.
+                saleEndDate = dto.CouponEndDate.HasValue
+                    ? dto.CouponEndDate.Value.Date.AddDays(1).AddTicks(-1)
+                    : (DateTime?)null;
+            }
+
             var promotion = new Promotion
             {
                 StoreID = storeId.Value,
@@ -94,6 +128,11 @@ namespace Multi_Store.Core.Managers
                 Message = dto.Message.Trim(),
                 AudienceType = dto.AudienceType,
                 CouponCode = cleanCouponCode,
+                ProductID = saleProductID,
+                DiscountType = saleDiscountType,
+                DiscountValue = saleDiscountValue,
+                SaleEndDate = saleEndDate,
+                IsActive = true,
                 RecipientCount = customerIds.Count,
                 IsSent = true,
                 Status = "Sent",

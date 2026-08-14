@@ -391,6 +391,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (customerId == null)
             {
+                if (IsAjaxRequest())
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "Please login as a customer first."
+                    })
+                    { StatusCode = StatusCodes.Status401Unauthorized };
+                }
+
                 TempData["Error"] =
                     "Please login as a customer first.";
 
@@ -401,6 +411,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (string.IsNullOrWhiteSpace(couponCode))
             {
+                if (IsAjaxRequest())
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "Please enter a coupon code."
+                    });
+                }
+
                 TempData["Error"] =
                     "Please enter a coupon code.";
 
@@ -420,6 +439,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 cart.CartItems == null ||
                 !cart.CartItems.Any())
             {
+                if (IsAjaxRequest())
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "Your cart is empty."
+                    });
+                }
+
                 TempData["Error"] =
                     "Your cart is empty.";
 
@@ -439,15 +467,57 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             if (!result.IsValid)
             {
+                if (IsAjaxRequest())
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = result.Message
+                    });
+                }
+
                 TempData["Error"] =
                     result.Message;
 
                 return RedirectToPage();
             }
 
-            TempData["Success"] =
+            var successMessage =
                 $"Coupon {cleanCode} applied successfully. " +
                 $"Discount: ${result.DiscountAmount:N2}.";
+
+            if (IsAjaxRequest())
+            {
+                // Reuse the exact same summary calculation logic used
+                // everywhere else (quantity update, page load) so every
+                // derived total stays perfectly in sync with the server.
+                // AppliedCouponCode is set here purely so LoadCartAsync
+                // (called below, in-process) picks up the just-applied
+                // code — the non-AJAX branch below is untouched and
+                // still gets the code from the redirect's query string
+                // exactly as before.
+                AppliedCouponCode = cleanCode;
+
+                await LoadCartAsync(customerId.Value);
+
+                return new JsonResult(new
+                {
+                    success = true,
+                    message = successMessage,
+                    appliedCouponCode = cleanCode,
+                    itemsCount = CartItems.Sum(item => item.Quantity),
+                    totalAmount = TotalAmount,
+                    hasActiveAddress = HasActiveAddress,
+                    estimatedDeliveryFee = EstimatedDeliveryFee,
+                    freeDeliveryApplied = TotalAmount > FreeDeliveryThreshold,
+                    discountAmount = DiscountAmount,
+                    couponMessage = CouponMessage,
+                    grandTotal = GrandTotal
+                });
+            }
+
+            TempData["Success"] =
+                successMessage;
 
             return RedirectToPage(
                 new
@@ -459,8 +529,45 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // =====================================================
         // REMOVE COUPON
         // =====================================================
-        public IActionResult OnPostRemoveCoupon()
+        public async Task<IActionResult> OnPostRemoveCoupon()
         {
+            if (IsAjaxRequest())
+            {
+                var customerId = await GetCurrentCustomerIdAsync();
+
+                if (customerId == null)
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "Please login as a customer first."
+                    })
+                    { StatusCode = StatusCodes.Status401Unauthorized };
+                }
+
+                // AppliedCouponCode defaults to null on this fresh
+                // model instance (no query string on an AJAX POST),
+                // so LoadCartAsync naturally recalculates with no
+                // coupon applied — identical end state to what the
+                // existing non-AJAX redirect below already produces.
+                await LoadCartAsync(customerId.Value);
+
+                return new JsonResult(new
+                {
+                    success = true,
+                    message = "Coupon removed.",
+                    appliedCouponCode = (string?)null,
+                    itemsCount = CartItems.Sum(item => item.Quantity),
+                    totalAmount = TotalAmount,
+                    hasActiveAddress = HasActiveAddress,
+                    estimatedDeliveryFee = EstimatedDeliveryFee,
+                    freeDeliveryApplied = TotalAmount > FreeDeliveryThreshold,
+                    discountAmount = DiscountAmount,
+                    couponMessage = CouponMessage,
+                    grandTotal = GrandTotal
+                });
+            }
+
             TempData["Success"] =
                 "Coupon removed.";
 

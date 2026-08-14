@@ -54,12 +54,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             await SaveRecentlyViewedAsync(customerId.Value, product.ProductID);
 
+            var activeSale = await PromotionPricingHelper.GetActiveSaleAsync(
+                _context,
+                product.ProductID);
+
+            var effectivePrice = PromotionPricingHelper.CalculateEffectivePrice(
+                product.Price,
+                activeSale);
+
             Product = new CustomerProductDetailsViewModel
             {
                 ProductID = product.ProductID,
                 ProductName = product.ProductName,
                 Description = product.Description,
-                Price = product.Price,
+                Price = effectivePrice,
+                OriginalPrice = activeSale != null ? product.Price : null,
+                SaleDiscountType = activeSale?.DiscountType,
+                SaleDiscountValue = activeSale?.DiscountValue,
                 Quantity = product.Quantity,
                 StoreName = product.Store != null ? product.Store.StoreName : "Unknown Store",
                 CategoryName = product.Category != null ? product.Category.CategoryName : "Uncategorized",
@@ -129,12 +140,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage(new { id = productId });
             }
 
+            var activeSale = await PromotionPricingHelper.GetActiveSaleAsync(
+                _context,
+                productId);
+
+            var effectivePrice = PromotionPricingHelper.CalculateEffectivePrice(
+                product.Price,
+                activeSale);
+
             var cartItem = new CartItem
             {
                 CartID = cart.CartID,
                 ProductID = productId,
                 Quantity = 1,
-                PriceAtAddTime = product.Price,
+                PriceAtAddTime = effectivePrice,
                 AddedAt = DateTime.UtcNow
             };
 
@@ -237,7 +256,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public string Description { get; set; } = string.Empty;
 
+        // Effective price — the sale price when an automatic sale is
+        // active, otherwise the normal Product.Price.
         public decimal Price { get; set; }
+
+        // Set only when an automatic sale is currently active. Null
+        // means "no sale" — show Price normally.
+        public decimal? OriginalPrice { get; set; }
+
+        public string? SaleDiscountType { get; set; }
+
+        public decimal? SaleDiscountValue { get; set; }
+
+        public bool IsOnSale => OriginalPrice.HasValue;
 
         public int Quantity { get; set; }
 

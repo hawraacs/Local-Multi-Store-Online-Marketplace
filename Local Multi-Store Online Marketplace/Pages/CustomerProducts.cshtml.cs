@@ -125,6 +125,32 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                         : "Uncategorized"
                 })
                 .ToListAsync();
+
+            // ================= AUTOMATIC SALE ENRICHMENT =================
+            // Kept as a separate post-processing step, same pattern already
+            // used elsewhere in this project for enriching a query result
+            // (one bulk lookup instead of a per-product query). Only touches
+            // Price/OriginalPrice/SaleDiscount* — nothing else above changes.
+            var productIds = Products
+                .Select(p => p.ProductID)
+                .ToList();
+
+            var activeSales = await PromotionPricingHelper.GetActiveSalesAsync(
+                _context,
+                productIds);
+
+            foreach (var product in Products)
+            {
+                if (activeSales.TryGetValue(product.ProductID, out var sale))
+                {
+                    product.OriginalPrice = product.Price;
+                    product.Price = PromotionPricingHelper.CalculateEffectivePrice(
+                        product.Price,
+                        sale);
+                    product.SaleDiscountType = sale.DiscountType;
+                    product.SaleDiscountValue = sale.DiscountValue;
+                }
+            }
         }
 
         public async Task<IActionResult> OnPostAddWishlistAsync(int productId)
@@ -232,12 +258,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     return RedirectToPage(GetCurrentFiltersRouteValues());
                 }
 
+                var activeSale = await PromotionPricingHelper.GetActiveSaleAsync(
+                    _context,
+                    productId);
+
+                var effectivePrice = PromotionPricingHelper.CalculateEffectivePrice(
+                    product.Price,
+                    activeSale);
+
                 var cartItem = new CartItem
                 {
                     CartID = cart.CartID,
                     ProductID = productId,
                     Quantity = 1,
-                    PriceAtAddTime = product.Price,
+                    PriceAtAddTime = effectivePrice,
                     AddedAt = DateTime.UtcNow
                 };
 
@@ -318,7 +352,21 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         public string ProductName { get; set; } = string.Empty;
 
+        // Effective price — the sale price when an automatic sale is
+        // active, otherwise the normal Product.Price. This is exactly
+        // the same value that gets captured into CartItem.PriceAtAddTime
+        // when this product is added to the cart.
         public decimal Price { get; set; }
+
+        // Set only when an automatic sale is currently active on this
+        // product. Null means "no sale" — show Price normally.
+        public decimal? OriginalPrice { get; set; }
+
+        public string? SaleDiscountType { get; set; }
+
+        public decimal? SaleDiscountValue { get; set; }
+
+        public bool IsOnSale => OriginalPrice.HasValue;
 
         public int Quantity { get; set; }
 

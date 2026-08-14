@@ -62,10 +62,10 @@
             }
 
         /* ============================================================
-                                               BOTTOM NAV — rendered by the shared _CustomerBottomNav
-                                               partial. Styles below match Customer1/Chat/CustomerFeed exactly
-                                               (same class names), so the partial renders identically here.
-                                               ============================================================ */
+                                                       BOTTOM NAV — rendered by the shared _CustomerBottomNav
+                                                       partial. Styles below match Customer1/Chat/CustomerFeed exactly
+                                                       (same class names), so the partial renders identically here.
+                                                       ============================================================ */
         .mobile-bottom-nav {
             display: flex !important;
             position: fixed;
@@ -220,12 +220,12 @@
         }
 
         /* ============================================================
-                       TWO-COLUMN CART LAYOUT — cart-main (products + upsell) on
-                       the left, order-summary-sidebar sticky on the right at
-                       desktop widths. On narrower viewports this collapses to a
-                       single column and stacks in natural DOM order: products,
-                       "You Might Also Like", then Order Summary.
-                       ============================================================ */
+                               TWO-COLUMN CART LAYOUT — cart-main (products + upsell) on
+                               the left, order-summary-sidebar sticky on the right at
+                               desktop widths. On narrower viewports this collapses to a
+                               single column and stacks in natural DOM order: products,
+                               "You Might Also Like", then Order Summary.
+                               ============================================================ */
         .cart-layout {
             max-width: var(--content-max-width);
             margin: 0 auto;
@@ -428,9 +428,9 @@
             }
 
         /* ============================================================
-                                               CART ITEM ROW — bigger single-row layout (checkbox,
-                                               thumbnail, info, qty, trash on the far right).
-                                               ============================================================ */
+                                                       CART ITEM ROW — bigger single-row layout (checkbox,
+                                                       thumbnail, info, qty, trash on the far right).
+                                                       ============================================================ */
         .cart-item {
             display: flex;
             align-items: flex-start;
@@ -483,8 +483,8 @@
             }
 
         /* FOOTER ROW — view / quantity stepper / remove, pinned under
-                       the item's info on their own row so the card reads like the
-                       reference design instead of a single dense line. */
+                               the item's info on their own row so the card reads like the
+                               reference design instead of a single dense line. */
         .item-footer-row {
             display: flex;
             align-items: center;
@@ -516,8 +516,8 @@
             }
 
         /* QUANTITY STEPPER — minus / number / plus, wraps the
-                       existing <input type="number"> so its name, min, max and
-                       change/input listeners are untouched. */
+                               existing <input type="number"> so its name, min, max and
+                               change/input listeners are untouched. */
         .qty-stepper {
             display: inline-flex;
             align-items: center;
@@ -656,7 +656,7 @@
         }
 
         /* Right-hand cluster: view + quantity input + trash icon,
-                                               pinned to the far right of the row */
+                                                       pinned to the far right of the row */
         .item-actions-inline {
             display: flex;
             align-items: center;
@@ -665,8 +665,8 @@
         }
 
         /* VIEW PRODUCT — jumps straight to this product on the
-                                               store profile (same round-icon style as remove-btn,
-                                               but in the accent palette instead of red) */
+                                                       store profile (same round-icon style as remove-btn,
+                                                       but in the accent palette instead of red) */
         .view-btn {
             background: var(--accent-light);
             color: var(--accent-color);
@@ -725,7 +725,7 @@
             }
 
         /* REMOVE ITEM — round trash-bin icon, always the last
-                                               element in the row (far right) */
+                                                       element in the row (far right) */
         .remove-btn {
             background: #fff5f5;
             color: var(--like-color);
@@ -807,11 +807,11 @@
         }
 
         /* ============================================================
-                       ORDER SUMMARY CARD (now a persistent sidebar card on
-                       desktop instead of a bottom-sheet modal, and an inline
-                       card after "You Might Also Like" on mobile). Reuses the
-                       exact same element IDs/handlers as before.
-                       ============================================================ */
+                               ORDER SUMMARY CARD (now a persistent sidebar card on
+                               desktop instead of a bottom-sheet modal, and an inline
+                               card after "You Might Also Like" on mobile). Reuses the
+                               exact same element IDs/handlers as before.
+                               ============================================================ */
         .order-summary-card {
             background: var(--card-bg);
             border-radius: 20px;
@@ -1170,10 +1170,10 @@
             }
 
         /* ============================================================
-                       "YOU MIGHT ALSO LIKE" — populated from the site's existing
-                       Explore product feed (same data source/handler Explore
-                       itself uses), never invented data.
-                       ============================================================ */
+                               "YOU MIGHT ALSO LIKE" — populated from the site's existing
+                               Explore product feed (same data source/handler Explore
+                               itself uses), never invented data.
+                               ============================================================ */
         .also-like-section {
             background: var(--card-bg);
             border-radius: 20px;
@@ -2025,7 +2025,8 @@
                         </div>
 
                         <!-- APPLY COUPON -->
-                        <form method="post"
+                        <form id="applyCouponForm"
+                              method="post"
                               asp-page-handler="ApplyCoupon"
                               class="coupon-form">
 
@@ -2036,6 +2037,7 @@
                             <div class="coupon-row">
 
                                 <input type="text"
+                                       id="couponCodeInput"
                                        name="couponCode"
                                        value="@Model.AppliedCouponCode"
                                        placeholder="Enter coupon code"
@@ -2048,19 +2050,23 @@
                             </div>
                         </form>
 
-                        <!-- REMOVE COUPON -->
-                        @if (!string.IsNullOrWhiteSpace(
-                       Model.AppliedCouponCode))
-                        {
-                            <form method="post"
-                                  asp-page-handler="RemoveCoupon">
+                        <!-- REMOVE COUPON — always rendered (instead of
+                             a server-side conditional) and shown/hidden
+                             via display, the same technique already used
+                             below for #summaryCouponMessage, so applying
+                             or removing a coupon via AJAX can toggle it
+                             without a page reload. Initial state on a
+                             normal page load is identical to before. -->
+                        <form id="removeCouponForm"
+                              method="post"
+                              asp-page-handler="RemoveCoupon"
+                              style="display:@(!string.IsNullOrWhiteSpace(Model.AppliedCouponCode) ? "block" : "none")">
 
-                                <button type="submit"
-                                        class="remove-coupon-btn">
-                                    Remove Coupon
-                                </button>
-                            </form>
-                        }
+                            <button type="submit"
+                                    class="remove-coupon-btn">
+                                Remove Coupon
+                            </button>
+                        </form>
 
                         <!-- COUPON MESSAGE -->
                         <div class="summary-free"
@@ -2125,6 +2131,7 @@
 
                             <input type="hidden"
                                    name="appliedCouponCode"
+                                   id="checkoutAppliedCouponInput"
                                    value="@Model.AppliedCouponCode" />
 
                             <input type="hidden"
@@ -2253,6 +2260,7 @@
                 initializeRemoveSelectedButton();
                 initializeCartFilterTabs();
                 initializeAlsoLike();
+                initializeCouponAjax();
             });
 
         // =====================================================
@@ -2881,6 +2889,34 @@
                             value = min;
                         }
 
+                        // NEW — decreasing past the minimum (quantity 1,
+                        // "-" pressed) removes the item instead of just
+                        // clamping at 1. Reuses the exact same per-item
+                        // Remove form/handler the trash-can button already
+                        // submits, so cart totals, the summary, and the
+                        // empty-cart state all update exactly as they do
+                        // today for a normal removal. The "+" path (delta
+                        // > 0) is completely untouched below.
+                        if (delta < 0 && value < min) {
+                            const cartItemEl =
+                                stepper.closest(".cart-item");
+
+                            const cartItemId = cartItemEl
+                                ? cartItemEl.dataset.cartItemId
+                                : null;
+
+                            const removeForm = cartItemId
+                                ? document.getElementById(
+                                    "removeForm-" + cartItemId)
+                                : null;
+
+                            if (removeForm) {
+                                removeForm.requestSubmit();
+                            }
+
+                            return;
+                        }
+
                         value = Math.max(min, value);
 
                         if (max !== null) {
@@ -3287,6 +3323,169 @@
                             600);
                     });
             });
+        }
+
+        // =====================================================
+        // COUPON (Apply / Remove) — AJAX, no page reload
+        //
+        // Previously these two forms were plain HTML posts: every
+        // Apply/Remove reloaded the whole page, and since the item
+        // checkboxes and #confirmCheckoutButton are rendered
+        // unchecked/disabled by default (nothing selected by
+        // default), the customer's selection and the Checkout
+        // button were silently wiped out by that reload. Submitting
+        // via fetch instead means the DOM — and the selection state
+        // living in it — is never rebuilt.
+        //
+        // The server remains the source of truth for validity,
+        // expiry, usage limits and the discount amount; this only
+        // changes how the existing ApplyCoupon/RemoveCoupon handlers'
+        // result reaches the page. Reuses applyCartSummary() (for the
+        // server-confirmed discount/delivery/coupon-message fields)
+        // and then updateSelectedSummary() (to recompute the
+        // selection-aware total from current checkbox state) exactly
+        // in the same order the quantity-update flow already does.
+        // =====================================================
+        function initializeCouponAjax() {
+            const applyForm =
+                document.getElementById("applyCouponForm");
+
+            const removeForm =
+                document.getElementById("removeCouponForm");
+
+            const couponInput =
+                document.getElementById("couponCodeInput");
+
+            const checkoutCouponInput =
+                document.getElementById(
+                    "checkoutAppliedCouponInput");
+
+            function syncAppliedCouponCode(code) {
+                const value = code || "";
+
+                if (checkoutCouponInput) {
+                    checkoutCouponInput.value = value;
+                }
+
+                // Every cart item's quantity-stepper form and
+                // remove-item form also carries its own hidden
+                // AppliedCouponCode field (used if THOSE forms ever
+                // fall back to a full-page submit) — keep all of
+                // them in sync too, or they'd still hold whatever
+                // coupon was applied at the last full page load.
+                document
+                    .querySelectorAll(
+                        'input[name="AppliedCouponCode"]')
+                    .forEach(function(input) {
+                        input.value = value;
+                    });
+
+                if (couponInput) {
+                    couponInput.value = value;
+                }
+
+                if (removeForm) {
+                    removeForm.style.display =
+                        value ? "block" : "none";
+                }
+            }
+
+            function submitCouponForm(form) {
+                if (!form) {
+                    return;
+                }
+
+                const submitBtn =
+                    form.querySelector('button[type="submit"]');
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                }
+
+                const formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: "POST",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: formData
+                })
+                    .then(function(response) {
+                        return response.json().then(
+                            function(data) {
+                                return {
+                                    ok: response.ok,
+                                    data: data
+                                };
+                            });
+                    })
+                    .then(function(result) {
+                        if (!result.data ||
+                            !result.data.success) {
+                            createToast(
+                                "error",
+                                "Unable to continue",
+                                (result.data &&
+                                    result.data.message) ||
+                                "Could not update the coupon.");
+
+                            return;
+                        }
+
+                        applyCartSummary(result.data);
+
+                        syncAppliedCouponCode(
+                            result.data.appliedCouponCode);
+
+                        // Recomputed AFTER applyCartSummary, same
+                        // order as the quantity-update flow: this
+                        // reads the just-updated discount/delivery
+                        // values back out of the DOM and combines
+                        // them with the CURRENT (untouched) checkbox
+                        // selection, so the Checkout button's
+                        // enabled/disabled state always matches
+                        // actual selection — never forced on.
+                        updateSelectedSummary();
+
+                        if (result.data.message) {
+                            createToast(
+                                "success",
+                                "Coupon updated",
+                                result.data.message);
+                        }
+                    })
+                    .catch(function() {
+                        createToast(
+                            "error",
+                            "Unable to continue",
+                            "Could not update the coupon. " +
+                            "Please check your connection.");
+                    })
+                    .finally(function() {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                        }
+                    });
+            }
+
+            if (applyForm) {
+                applyForm.addEventListener(
+                    "submit",
+                    function(event) {
+                        event.preventDefault();
+                        submitCouponForm(applyForm);
+                    });
+            }
+
+            if (removeForm) {
+                removeForm.addEventListener(
+                    "submit",
+                    function(event) {
+                        event.preventDefault();
+                        submitCouponForm(removeForm);
+                    });
+            }
         }
 
         // =====================================================
