@@ -12,1005 +12,1676 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>My Orders | realnest</title>
 
-    <!-- Google Fonts & FontAwesome Icons (Consistent with Customer Feed/Cart) -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Bootstrap — added for the Delivery Review modal only. This page
-         is Layout=null / a self-contained document, so this cannot
-         affect any other page in the app. -->
+    <!-- Bootstrap - used only for Delivery Review modal -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 
     <style>
-            :root {
-                --bg-color: #faf9fc;
-                --card-bg: #ffffff;
-                --border-color: #ece8f6;
-                --text-primary: #1e1b2e;
-                --text-secondary: #6b6478;
-                /* Purple / Indigo palette — same tokens as the Cart page */
-                --accent-color: #6d28d9;
-                --accent-hover: #5b21b6;
-                --accent-light: #f3effe;
-                --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
-                --like-color: #ef4444;
-                --success-color: #10b981;
-                --error-color: #dc2626;
-                --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
-                --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
-                --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
-            }
+        :root {
+            --bg-color: #faf9fc;
+            --card-bg: #ffffff;
+            --border-color: #ece8f6;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b6478;
+            --accent-color: #6d28d9;
+            --accent-hover: #5b21b6;
+            --accent-light: #f3effe;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%);
+            --like-color: #ef4444;
+            --success-color: #10b981;
+            --error-color: #dc2626;
+            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --shadow-sm: 0 4px 12px rgba(109, 40, 217, 0.04);
+            --shadow-md: 0 10px 30px rgba(109, 40, 217, 0.08);
+            --shadow-lg: 0 20px 40px rgba(109, 40, 217, 0.12);
+            --page-max-width: 1180px;
+        }
 
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-            }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-            body {
-                font-family: var(--font-family);
-                background-color: var(--bg-color);
-                color: var(--text-primary);
-                line-height: 1.6;
-                -webkit-font-smoothing: antialiased;
-                padding-bottom: 100px; /* Offset to prevent overlap with the bottom nav */
-            }
+        html {
+            scroll-behavior: smooth;
+        }
 
-            /* ============================================================
-                                                   BOTTOM NAV — rendered by the shared _CustomerBottomNav
-                                                   partial. Styles below match Customer1/Chat/Feed/Cart
-                                                   exactly (same class names).
-                                                   ============================================================ */
-            .mobile-bottom-nav {
-                display: flex !important;
-                position: fixed;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 200;
-                background: #ffffff;
-                border-top: 1px solid #ece8f6;
-                justify-content: space-between;
-                gap: 2px;
-                padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
-                overflow-x: auto;
-                box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
-            }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 100px;
+        }
 
-                .mobile-bottom-nav a {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 2px;
-                    font-size: 10.5px;
-                    color: #6b6478;
-                    text-decoration: none;
-                    padding: 4px 6px;
-                    flex-shrink: 0;
-                    position: relative;
-                    border-radius: 12px;
-                    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
-                }
+        button,
+        input,
+        textarea {
+            font-family: inherit;
+        }
 
-                    .mobile-bottom-nav a i {
-                        font-size: 17px;
-                        transition: transform 0.2s ease;
-                    }
+        /* ============================================================
+                           BOTTOM NAV
+                           ============================================================ */
 
-                    .mobile-bottom-nav a:hover {
-                        background: var(--accent-light);
-                        color: var(--accent-color);
-                    }
+        .mobile-bottom-nav {
+            display: flex !important;
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 200;
+            background: #ffffff;
+            border-top: 1px solid #ece8f6;
+            justify-content: space-between;
+            gap: 2px;
+            padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+            overflow-x: auto;
+            box-shadow: 0 -4px 20px rgba(30, 27, 46, 0.06);
+        }
 
-                    .mobile-bottom-nav a.active {
-                        color: var(--accent-color) !important;
-                        background: var(--accent-light) !important;
-                        font-weight: 700;
-                        transform: translateY(-2px);
-                    }
-
-                        .mobile-bottom-nav a.active i {
-                            transform: scale(1.12);
-                        }
-
-            /* Cart badge (used by _CartCountBadge partial inside _CustomerBottomNav) */
-            .unread-nav-badge {
-                position: absolute;
-                top: 2px;
-                right: 18px;
-                background: var(--accent-gradient);
-                color: #fff;
-                font-size: 10px;
-                font-weight: 800;
-                min-width: 16px;
-                height: 16px;
-                border-radius: 50%;
+            .mobile-bottom-nav a {
                 display: flex;
+                flex-direction: column;
                 align-items: center;
-                justify-content: center;
-                padding: 0 4px;
-                box-shadow: 0 3px 8px rgba(109, 40, 217, 0.3);
-            }
-
-            /* Chat unread dot (used inside _CustomerBottomNav) */
-            .chat-icon-wrap {
+                gap: 2px;
+                font-size: 10.5px;
+                color: #6b6478;
+                text-decoration: none;
+                padding: 4px 6px;
+                flex-shrink: 0;
                 position: relative;
-                display: inline-flex;
+                border-radius: 12px;
+                transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
             }
 
-                .chat-icon-wrap .chat-nav-dot {
-                    position: absolute;
-                    top: -2px;
-                    right: -4px;
-                    width: 9px;
-                    height: 9px;
-                    background: #ed4956;
-                    border: 2px solid #fff;
-                    border-radius: 50%;
-                    box-sizing: content-box;
+                .mobile-bottom-nav a i {
+                    font-size: 17px;
+                    transition: transform 0.2s ease;
                 }
 
-            /* PAGE CONTENT — header treatment matches the Cart page's
-                                           .cart-header (Playfair title + secondary subtitle). */
-            .orders-page {
-                min-height: 100vh;
-                padding: 32px 16px 20px;
-            }
-
-            .orders-header {
-                text-align: center;
-                margin-bottom: 20px;
-                max-width: 1100px;
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-                .orders-header h2 {
-                    font-family: 'Playfair Display', Georgia, serif;
-                    font-size: 34px;
-                    font-weight: 800;
-                    margin: 0 0 8px;
-                    color: var(--text-primary);
+                .mobile-bottom-nav a:hover {
+                    background: var(--accent-light);
+                    color: var(--accent-color);
                 }
 
-                .orders-header p {
-                    margin: 0;
-                    color: var(--text-secondary);
-                    font-size: 15px;
-                    font-weight: 500;
+                .mobile-bottom-nav a.active {
+                    color: var(--accent-color) !important;
+                    background: var(--accent-light) !important;
+                    font-weight: 700;
+                    transform: translateY(-2px);
                 }
 
-            .orders-box {
-                max-width: 1100px;
-                margin: auto;
-                padding: 28px;
-                background: var(--card-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 24px;
-                box-shadow: var(--shadow-lg);
+                    .mobile-bottom-nav a.active i {
+                        transform: scale(1.12);
+                    }
+
+        .unread-nav-badge {
+            position: absolute;
+            top: 2px;
+            right: 18px;
+            background: var(--accent-gradient);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            box-shadow: 0 3px 8px rgba(109, 40, 217, 0.3);
+        }
+
+        .chat-icon-wrap {
+            position: relative;
+            display: inline-flex;
+        }
+
+            .chat-icon-wrap .chat-nav-dot {
+                position: absolute;
+                top: -2px;
+                right: -4px;
+                width: 9px;
+                height: 9px;
+                background: #ed4956;
+                border: 2px solid #fff;
+                border-radius: 50%;
+                box-sizing: content-box;
             }
 
-            /* TABLES — a single, predictable grid: fixed column
-                                           widths (via <colgroup>), a sticky header so long order
-                                           histories stay readable, top-aligned cells so rows of
-                                           different heights (multi-product orders) still line up
-                                           cleanly, and subtle zebra striping to help the eye track
-                                           across a row. */
-            .table-wrapper {
-                width: 100%;
-                overflow: auto;
-                max-height: 640px;
-                border-radius: 16px;
-                border: 1px solid var(--border-color);
-            }
+        /* ============================================================
+                           PAGE HEADER
+                           ============================================================ */
 
-            table {
-                width: 100%;
-                min-width: 1320px;
-                border-collapse: separate;
-                border-spacing: 0;
-                table-layout: fixed;
-            }
+        .orders-page {
+            min-height: 100vh;
+            padding: 28px 16px 20px;
+        }
 
-            thead tr {
-                position: sticky;
-                top: 0;
-                z-index: 2;
-                background: var(--accent-gradient);
-            }
+        .orders-topbar {
+            max-width: var(--page-max-width);
+            margin: 0 auto 22px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+        }
 
-            th {
-                padding: 24px 12px;
-                background: transparent;
-                color: white;
-                font-size: 12px;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.6px;
-                text-align: left;
-                vertical-align: middle;
-                white-space: normal;
-                line-height: 1.35;
-                box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.15);
-            }
+        .back-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            font-size: 15px;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
 
-                th.col-status,
-                th.col-pay-status,
-                th.col-total,
-                th.col-tracking,
-                th.col-invoice {
-                    text-align: center;
-                }
-
-                th.col-total {
-                    text-align: right;
-                }
-
-            td {
-                padding: 16px;
-                border-bottom: 1px solid var(--border-color);
-                color: var(--text-secondary);
-                font-size: 13.5px;
-                vertical-align: top;
-            }
-
-            tbody tr:last-child td {
-                border-bottom: none;
-            }
-
-            tbody tr:nth-child(even) {
-                background: #fcfbff;
-            }
-
-            tbody tr:hover {
+            .back-btn:hover {
                 background: var(--accent-light);
+                color: var(--accent-color);
+                border-color: #ded4f5;
+                transform: translateX(-2px);
             }
 
-            /* Column widths — keeps every row aligned to the same grid
-                                           regardless of content length. Products is deliberately
-                                           narrower now; the space goes to Payment Method/Status so
-                                           values like "Cash On Delivery" have room to breathe. */
-            .col-order {
-                width: 11%;
+        .orders-title-block {
+            flex: 1;
+            min-width: 220px;
+            text-align: center;
+        }
+
+        .orders-brand-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .orders-logo-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25);
+            flex-shrink: 0;
+        }
+
+        .orders-title-block h2 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 32px;
+            font-weight: 800;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .orders-title-block p {
+            margin: 8px 0 0;
+            color: var(--text-secondary);
+            font-size: 14.5px;
+            font-weight: 500;
+        }
+
+        .orders-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .orders-search {
+            position: relative;
+        }
+
+            .orders-search i {
+                position: absolute;
+                left: 16px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-secondary);
+                font-size: 13px;
+                pointer-events: none;
             }
 
-            .col-store {
-                width: 9%;
+            .orders-search input {
+                width: 230px;
+                padding: 11px 16px 11px 40px;
+                border-radius: 50px;
+                border: 1px solid var(--border-color);
+                background: #ffffff;
+                font-size: 13.5px;
+                color: var(--text-primary);
+                box-shadow: var(--shadow-sm);
+                transition: all 0.2s ease;
             }
 
-            .col-products {
-                width: 13%;
+                .orders-search input::placeholder {
+                    color: #a8a1b8;
+                }
+
+                .orders-search input:focus {
+                    outline: none;
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 0 3px var(--accent-light);
+                }
+
+        .filters-btn-wrap {
+            position: relative;
+        }
+
+        .filters-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 18px;
+            border-radius: 50px;
+            border: 1px solid var(--border-color);
+            background: #ffffff;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 13.5px;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+            .filters-btn i {
+                font-size: 12.5px;
+                color: var(--accent-color);
             }
 
-            .col-date {
-                width: 9%;
+            .filters-btn:hover,
+            .filters-btn.active {
+                border-color: var(--accent-color);
+                color: var(--accent-color);
             }
 
-            .col-status {
-                width: 9%;
+        .filters-panel {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            padding: 16px;
+            min-width: 230px;
+            display: none;
+            z-index: 30;
+        }
+
+            .filters-panel.show {
+                display: block;
             }
 
-            .col-pay-method {
-                width: 12%;
+        .filters-panel-label {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .filters-chip-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-chip {
+            padding: 7px 13px;
+            border-radius: 50px;
+            border: 1px solid var(--border-color);
+            background: #fcfbff;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+            .filter-chip:hover {
+                border-color: var(--accent-color);
+                color: var(--accent-color);
             }
 
-            .col-pay-status {
-                width: 11%;
+            .filter-chip.active {
+                background: var(--accent-gradient);
+                color: #ffffff;
+                border-color: transparent;
             }
 
-            .col-total {
-                width: 9%;
+        /* ============================================================
+                           MAIN ORDERS BOX
+                           ============================================================ */
+
+        .orders-box {
+            max-width: var(--page-max-width);
+            margin: auto;
+            padding: 26px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* ============================================================
+                           STATUS TABS
+                           ============================================================ */
+
+        .status-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-bottom: 18px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .status-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 16px;
+            border-radius: 50px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+            .status-tab i {
+                font-size: 12px;
             }
 
-            .col-tracking {
-                width: 9%;
+            .status-tab:hover {
+                background: var(--accent-light);
+                color: var(--accent-color);
             }
 
-            .col-invoice {
-                width: 8%;
+            .status-tab.active {
+                background: var(--accent-gradient);
+                color: #ffffff;
+                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25);
             }
 
-            .order-number {
-                min-width: 120px;
+        .results-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2px 12px;
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+            .results-meta .count-highlight {
                 color: var(--accent-color);
                 font-weight: 800;
-                font-size: 14px;
-                word-break: break-word;
             }
 
-            .store-cell {
-                min-width: 120px;
+        /* ============================================================
+                           NO RESULTS
+                           ============================================================ */
+
+        .no-results-state {
+            display: none;
+            text-align: center;
+            padding: 60px 20px 30px;
+            color: var(--text-secondary);
+        }
+
+            .no-results-state.show {
+                display: block;
+            }
+
+            .no-results-state i {
+                font-size: 30px;
+                color: #ded4f5;
+                margin-bottom: 14px;
+                display: block;
+            }
+
+            .no-results-state h4 {
                 color: var(--text-primary);
-                font-weight: 700;
+                font-size: 16px;
+                font-weight: 800;
+                margin-bottom: 6px;
+            }
+
+            .no-results-state p {
                 font-size: 13px;
             }
 
-                .store-cell i {
-                    color: var(--accent-color);
-                    margin-right: 6px;
-                }
+        /* ============================================================
+                           TABLE
 
-            .products-cell {
-                min-width: 150px;
-            }
+                           IMPORTANT:
+                           All columns use percentages totaling exactly 100%.
+                           Delivery no longer has a fixed 240px width.
+                           ============================================================ */
 
-            .date-cell {
-                white-space: nowrap;
-                font-weight: 600;
-                color: var(--text-secondary);
-            }
+        .table-wrapper {
+            width: 100%;
+            overflow: auto;
+            max-height: 640px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            -webkit-overflow-scrolling: touch;
+        }
 
-            .pay-method-cell {
-                min-width: 115px;
-                font-weight: 600;
-                color: var(--text-primary);
-                word-break: break-word;
-            }
+        table {
+            width: 100%;
+            min-width: 1180px;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: fixed;
+        }
 
-            .product-line {
-                display: flex;
-                align-items: flex-start;
-                justify-content: space-between;
-                gap: 10px;
-                margin-bottom: 7px;
-                padding-bottom: 7px;
-                border-bottom: 1px dashed var(--border-color);
-            }
+        thead tr {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: var(--accent-gradient);
+        }
 
-                .product-line:last-child {
-                    margin-bottom: 0;
-                    padding-bottom: 0;
-                    border-bottom: none;
-                }
+        th {
+            padding: 24px 12px;
+            background: transparent;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            text-align: left;
+            vertical-align: middle;
+            white-space: normal;
+            line-height: 1.35;
+            box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.15);
+        }
 
-            .product-name {
-                color: var(--text-primary);
-                font-weight: 700;
-                line-height: 1.35;
-                word-break: break-word;
-            }
-
-            .product-quantity {
-                flex-shrink: 0;
-                padding: 2px 8px;
-                background: var(--accent-light);
-                color: var(--accent-color);
-                border-radius: 999px;
-                font-size: 11px;
-                font-weight: 800;
-                white-space: nowrap;
-            }
-
-            .no-products {
-                color: var(--text-secondary);
-                font-size: 12px;
-                font-weight: 600;
-            }
-
-            /* STATUS CELL */
-            .status-cell {
-                min-width: 100px;
+            th.col-status,
+            th.col-pay-status,
+            th.col-tracking,
+            th.col-invoice,
+            th.col-delivery {
                 text-align: center;
             }
 
-            /* BADGES — one consistent shape (pill) across the page,
-                                           but the COLOR now carries meaning: amber = waiting,
-                                           blue = in progress, purple = out for delivery,
-                                           green = completed/paid, red = cancelled/unpaid. This
-                                           keeps the palette purposeful instead of every status
-                                           looking the same. */
-            .status-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 6px 12px;
-                border-radius: 999px;
-                font-size: 11.5px;
-                font-weight: 800;
-                white-space: nowrap;
-                background: #f3effe;
-                color: var(--accent-color);
-                border: 1px solid #e4d9fb;
-            }
-
-                .status-badge.status-pending {
-                    background: #fff7ed;
-                    color: #c2410c;
-                    border-color: #fed7aa;
-                }
-
-                .status-badge.status-processing {
-                    background: #eff6ff;
-                    color: #1d4ed8;
-                    border-color: #bfdbfe;
-                }
-
-                .status-badge.status-outfordelivery {
-                    background: var(--accent-light);
-                    color: var(--accent-color);
-                    border-color: #e4d9fb;
-                }
-
-                .status-badge.status-delivered {
-                    background: #dcfce7;
-                    color: #166534;
-                    border-color: #86efac;
-                }
-
-                .status-badge.status-cancelled {
-                    background: #fef2f2;
-                    color: var(--error-color);
-                    border-color: #fee2e2;
-                }
-
-            .paid-badge {
-                display: inline-block;
-                padding: 5px 11px;
-                background: #dcfce7;
-                color: #166534;
-                border: 1px solid #86efac;
-                border-radius: 999px;
-                font-size: 11px;
-                font-weight: 800;
-                white-space: nowrap;
-            }
-
-            .pending-badge {
-                display: inline-block;
-                padding: 5px 11px;
-                background: #fef2f2;
-                color: var(--error-color);
-                border: 1px solid #fee2e2;
-                border-radius: 999px;
-                font-size: 11px;
-                font-weight: 800;
-                white-space: nowrap;
-            }
-
-            .pay-status-cell {
-                min-width: 110px;
-                text-align: center;
-            }
-
-            /* TOTAL CELL — right-aligned so figures line up like a
-                                           ledger, with the order's total emphasized. */
-            .total-cell {
-                min-width: 90px;
+            th.col-total {
                 text-align: right;
             }
 
-            .total-amount {
-                display: block;
-                color: var(--text-primary);
-                font-weight: 800;
-                font-size: 15px;
-                white-space: nowrap;
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 13.5px;
+            vertical-align: top;
+            overflow-wrap: anywhere;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fcfbff;
+        }
+
+        tbody tr:hover {
+            background: var(--accent-light);
+        }
+
+        /* ============================================================
+                           COLUMN WIDTHS
+
+                           TOTAL = 100%
+
+                           10 + 8 + 14 + 8 + 8 + 11 + 10 + 8 + 9 + 16 + 8 = 110%
+
+                           Therefore we intentionally use the corrected normalized set
+                           below that totals exactly 100%.
+                           ============================================================ */
+
+        .col-order {
+            width: 10%;
+        }
+
+        .col-store {
+            width: 8%;
+        }
+
+        .col-products {
+            width: 20%;
+        }
+
+        .col-date {
+            width: 8%;
+        }
+
+        .col-status {
+            width: 8%;
+        }
+
+        .col-pay-method {
+            width: 10%;
+        }
+
+        .col-pay-status {
+            width: 9%;
+        }
+
+        .col-total {
+            width: 8%;
+        }
+
+        .col-tracking {
+            width: 9%;
+        }
+
+        .col-delivery {
+            width: 17%;
+        }
+
+        .col-invoice {
+            width: 8%;
+        }
+
+        /* ============================================================
+                           ORDER / STORE / PRODUCTS
+                           ============================================================ */
+
+        /* ============================================================
+                           PRODUCT THUMBNAIL (inline, inside Products cell)
+                           ============================================================ */
+
+        .product-thumb-wrap,
+        .product-thumb,
+        .product-thumb-placeholder {
+            width: 68px;
+            height: 68px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .product-thumb-wrap {
+            display: inline-flex;
+        }
+
+        .product-thumb {
+            object-fit: cover;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .product-thumb-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fcfbff;
+            border: 1px dashed var(--border-color);
+            color: var(--text-secondary);
+            font-size: 22px;
+        }
+
+        .order-number {
+            min-width: 0;
+            color: var(--accent-color);
+            font-weight: 800;
+            font-size: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .order-id-sub {
+            display: block;
+            margin-top: 3px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 11px;
+            letter-spacing: 0.2px;
+        }
+
+        .store-cell {
+            min-width: 0;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+            .store-cell i {
+                color: var(--accent-color);
+                margin-right: 6px;
             }
 
-            /* TRACKING / INVOICE CELLS — centered single-action
-                                           columns matching the Cart page's pill buttons. */
-            .tracking-cell,
-            .invoice-cell {
-                min-width: 130px;
-                text-align: center;
+        .products-cell {
+            min-width: 0;
+        }
+
+        .date-cell {
+            white-space: nowrap;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .pay-method-cell {
+            min-width: 0;
+            font-weight: 600;
+            color: var(--text-primary);
+            overflow-wrap: anywhere;
+        }
+
+        .product-summary {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .product-summary-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .product-name {
+            color: var(--text-primary);
+            font-weight: 700;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+            min-width: 0;
+        }
+
+        .product-line-detail {
+            color: var(--text-secondary);
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        .product-more-badge {
+            display: inline-flex;
+            align-self: flex-start;
+            padding: 2px 8px;
+            background: var(--accent-light);
+            color: var(--accent-color);
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .no-products {
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* ============================================================
+                           STATUS
+                           ============================================================ */
+
+        .status-cell {
+            min-width: 0;
+            text-align: center;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 800;
+            white-space: nowrap;
+            background: #f3effe;
+            color: var(--accent-color);
+            border: 1px solid #e4d9fb;
+            max-width: 100%;
+        }
+
+            .status-badge.status-pending {
+                background: #fff7ed;
+                color: #c2410c;
+                border-color: #fed7aa;
             }
 
-            .track-btn,
-            .invoice-btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                width: 100%;
-                padding: 9px 14px;
+            .status-badge.status-processing {
+                background: #eff6ff;
+                color: #1d4ed8;
+                border-color: #bfdbfe;
+            }
+
+            .status-badge.status-outfordelivery {
                 background: var(--accent-light);
                 color: var(--accent-color);
-                border: 1px solid var(--border-color);
-                border-radius: 50px;
-                text-decoration: none;
-                font-size: 12.5px;
-                font-weight: 700;
-                white-space: nowrap;
-                transition: all 0.2s ease;
+                border-color: #e4d9fb;
             }
 
-            .invoice-btn {
-                background: var(--accent-gradient);
-                color: white;
-                border: none;
-                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.2);
+            .status-badge.status-delivered {
+                background: #dcfce7;
+                color: #166534;
+                border-color: #86efac;
             }
 
-            .track-btn:hover {
-                background: var(--accent-color);
-                color: white;
-                border-color: var(--accent-color);
-                transform: translateY(-1px);
-            }
-
-            .invoice-btn:hover {
-                opacity: 0.95;
-                box-shadow: 0 6px 14px rgba(109, 40, 217, 0.3);
-                transform: translateY(-1px);
-            }
-
-            .disabled-track {
-                display: block;
-                color: var(--text-secondary);
-                font-size: 11.5px;
-                font-weight: 700;
-                line-height: 1.4;
-                text-align: center;
-            }
-
-            /* EMPTY STATES — matches Cart's .empty-cart card exactly. */
-            .empty-box {
-                max-width: 700px;
-                margin: 40px auto 0;
-                padding: 60px 40px;
-                color: var(--text-secondary);
-                text-align: center;
-                border: 2px dashed #ded4f5;
-                border-radius: 20px;
-                background: var(--card-bg);
-                box-shadow: var(--shadow-sm);
-            }
-
-                .empty-box h3 {
-                    color: var(--text-primary);
-                    font-size: 22px;
-                    font-weight: 800;
-                    margin-bottom: 10px;
-                }
-
-            .shop-link {
-                display: inline-block;
-                margin-top: 20px;
-                padding: 12px 28px;
-                background: var(--accent-gradient);
-                color: white;
-                border-radius: 50px;
-                text-decoration: none;
-                font-weight: 800;
-                box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
-                transition: all 0.25s ease;
-            }
-
-                .shop-link:hover {
-                    opacity: 0.95;
-                    box-shadow: 0 6px 15px rgba(109, 40, 217, 0.35);
-                }
-
-            /* ALERTS */
-            .message {
-                max-width: 700px;
-                margin: 0 auto 25px auto;
-                padding: 14px 18px;
-                border-radius: 12px;
-                font-weight: 700;
-                text-align: center;
-                font-size: 14px;
-            }
-
-            .success-message {
-                background: #ecfdf5;
-                color: var(--success-color);
-                border: 1px solid #d1fae5;
-            }
-
-            .error-message {
+            .status-badge.status-cancelled {
                 background: #fef2f2;
                 color: var(--error-color);
-                border: 1px solid #fee2e2;
+                border-color: #fee2e2;
             }
 
-            @@media (max-width: 850px) {
-                .orders-page {
-                    padding: 20px 12px;
-                }
+        .paid-badge {
+            display: inline-block;
+            padding: 5px 9px;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
 
-                .orders-box {
-                    padding: 18px;
-                }
+        .pending-badge {
+            display: inline-block;
+            padding: 5px 9px;
+            background: #fef2f2;
+            color: var(--error-color);
+            border: 1px solid #fee2e2;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
 
-                table {
-                    min-width: 1470px; /* accommodates the redesigned Delivery card */
-                }
+        .pay-status-cell {
+            min-width: 0;
+            text-align: center;
+        }
 
-                .table-wrapper {
-                    max-height: 520px;
-                }
-            }
+        /* ============================================================
+                           TOTAL
+                           ============================================================ */
 
-            /* ============================================================
-                               DELIVERY REVIEW (NEW) — card inside the new "Delivery"
-                               column, rating modal, star picker, and toast. Uses only
-                               the CSS variables already defined at the top of this file.
-                               ============================================================ */
-            .col-delivery {
-                width: 240px;
-            }
+        .total-cell {
+            min-width: 0;
+            text-align: right;
+        }
 
-            .delivery-cell {
-                vertical-align: top;
-                padding: 12px 10px;
-            }
+        .total-amount {
+            display: block;
+            color: var(--text-primary);
+            font-weight: 800;
+            font-size: 15px;
+            white-space: nowrap;
+        }
 
-            /* Delivery Review card — a compact, self-contained "mini profile"
-                                           for the delivery partner. Sits inside the existing Delivery
-                                           cell only; every other column/cell is untouched. */
-            .delivery-card {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-                min-width: 196px;
-                max-width: 232px;
-                padding: 12px;
-                background: linear-gradient(180deg, #fdfcff 0%, #ffffff 100%);
-                border: 1px solid var(--border-color);
-                border-radius: 14px;
-                box-shadow: var(--shadow-sm);
-                transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-            }
+        /* ============================================================
+                           TRACKING / INVOICE
+                           ============================================================ */
 
-                .delivery-card:hover {
-                    border-color: #ded4f5;
-                    box-shadow: var(--shadow-md);
-                    transform: translateY(-1px);
-                }
+        .tracking-cell,
+        .invoice-cell {
+            min-width: 0;
+            text-align: center;
+        }
 
-            .delivery-card-top {
-                display: flex;
-                align-items: flex-start;
-                gap: 9px;
-            }
+        .track-btn,
+        .invoice-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 9px 10px;
+            background: var(--accent-light);
+            color: var(--accent-color);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
 
-            .driver-avatar-sm {
-                width: 36px;
-                height: 36px;
-                border-radius: 10px;
-                background: var(--accent-gradient);
-                color: #fff;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+        .invoice-btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 10px rgba(109, 40, 217, 0.2);
+        }
+
+        .track-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+
+        .invoice-btn:hover {
+            opacity: 0.95;
+            box-shadow: 0 6px 14px rgba(109, 40, 217, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .disabled-track {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 11.5px;
+            font-weight: 700;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        /* ============================================================
+                           EMPTY STATE
+                           ============================================================ */
+
+        .empty-box {
+            max-width: 700px;
+            margin: 40px auto 0;
+            padding: 60px 40px;
+            color: var(--text-secondary);
+            text-align: center;
+            border: 2px dashed #ded4f5;
+            border-radius: 20px;
+            background: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+        }
+
+            .empty-box h3 {
+                color: var(--text-primary);
+                font-size: 22px;
                 font-weight: 800;
+                margin-bottom: 10px;
+            }
+
+        .shop-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 28px;
+            background: var(--accent-gradient);
+            color: white;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 800;
+            box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
+            transition: all 0.25s ease;
+        }
+
+            .shop-link:hover {
+                opacity: 0.95;
+                box-shadow: 0 6px 15px rgba(109, 40, 217, 0.35);
+            }
+
+        /* ============================================================
+                           ALERTS
+                           ============================================================ */
+
+        .message {
+            max-width: 700px;
+            margin: 0 auto 25px auto;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #ecfdf5;
+            color: var(--success-color);
+            border: 1px solid #d1fae5;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: var(--error-color);
+            border: 1px solid #fee2e2;
+        }
+
+        /* ============================================================
+                           DELIVERY REVIEW
+                           ============================================================ */
+
+        .delivery-cell {
+            vertical-align: top;
+            padding: 12px 10px;
+        }
+
+        .delivery-card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            padding: 12px;
+            background: linear-gradient(180deg, #fdfcff 0%, #ffffff 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+
+            .delivery-card:hover {
+                border-color: #ded4f5;
+                box-shadow: var(--shadow-md);
+                transform: translateY(-1px);
+            }
+
+        .delivery-card-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+        }
+
+        .driver-avatar-sm {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--accent-gradient);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .delivery-card-identity {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .delivery-name {
+            font-weight: 800;
+            font-size: 13.5px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .delivery-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .delivery-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 7px;
+            background: var(--accent-light);
+            color: var(--accent-color);
+            border: 1px solid #e4d9fb;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+            .delivery-tag i {
+                font-size: 9px;
+                flex-shrink: 0;
+            }
+
+        .delivery-rating-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding-top: 2px;
+            flex-wrap: wrap;
+        }
+
+        .delivery-stars {
+            display: inline-flex;
+            gap: 1px;
+            font-size: 12px;
+            color: #f59e0b;
+            letter-spacing: 1px;
+        }
+
+        .delivery-rating-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            background: var(--accent-light);
+            color: var(--accent-color);
+            border: 1px solid #e4d9fb;
+            border-radius: 999px;
+            font-size: 10.5px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .delivery-review-count {
+            font-size: 10.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-top: -3px;
+        }
+
+        .delivery-no-rating {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .delivery-card-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 4px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .delivery-view-reviews-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 7px 10px;
+            background: #ffffff;
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            border-radius: 9px;
+            text-decoration: none;
+            font-size: 11.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+            .delivery-view-reviews-btn i {
+                font-size: 11px;
+            }
+
+            .delivery-view-reviews-btn:hover {
+                background: var(--accent-color);
+                color: #fff;
+                box-shadow: 0 4px 10px rgba(109, 40, 217, 0.22);
+                transform: translateY(-1px);
+            }
+
+        .delivery-rate-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            background: var(--accent-light);
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            padding: 7px 10px;
+            border-radius: 9px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+            .delivery-rate-btn:hover {
+                background: var(--accent-color);
+                color: #fff;
+            }
+
+        .delivery-reviewed-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            background: #ecfdf5;
+            color: var(--success-color);
+            border: 1px solid #d1fae5;
+            padding: 7px 10px;
+            border-radius: 9px;
+            font-size: 11.5px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .delivery-reviewed-stars i {
+            color: #f59e0b;
+            font-size: 10.5px;
+        }
+
+        .delivery-unassigned {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            min-width: 0;
+            padding: 12px;
+            background: #fcfbff;
+            border: 1px dashed var(--border-color);
+            border-radius: 14px;
+            color: var(--text-secondary);
+            font-size: 11.5px;
+            font-weight: 700;
+        }
+
+            .delivery-unassigned i {
+                color: var(--accent-color);
                 font-size: 14px;
                 flex-shrink: 0;
-                box-shadow: 0 3px 8px rgba(109, 40, 217, 0.25);
             }
 
-            .delivery-card-identity {
-                display: flex;
+        /* ============================================================
+                           REVIEW MODAL
+                           ============================================================ */
+
+        .star-rating-picker {
+            display: flex;
+            gap: 8px;
+            font-size: 30px;
+            color: #f59e0b;
+            cursor: pointer;
+            margin: 10px 0 4px;
+        }
+
+            .star-rating-picker i {
+                transition: transform 0.15s ease;
+            }
+
+                .star-rating-picker i:hover {
+                    transform: scale(1.15);
+                }
+
+        .delivery-review-hint {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .delivery-review-partner-name {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+            .delivery-review-partner-name strong {
+                color: var(--text-primary);
+            }
+
+        .delivery-review-comment {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 13.5px;
+            resize: vertical;
+        }
+
+            .delivery-review-comment:focus {
+                outline: none;
+                border-color: var(--accent-color);
+            }
+
+        .delivery-review-error {
+            margin-top: 10px;
+            background: #fef2f2;
+            color: var(--error-color);
+            border: 1px solid #fee2e2;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 12.5px;
+        }
+
+        .delivery-review-modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-cancel-review {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .btn-submit-review {
+            background: var(--accent-gradient);
+            border: none;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+            .btn-submit-review:disabled {
+                opacity: 0.7;
+            }
+
+        /* ============================================================
+                           TOAST
+                           ============================================================ */
+
+        .delivery-toast {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            background: var(--success-color);
+            color: #fff;
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 13.5px;
+            box-shadow: var(--shadow-md);
+            z-index: 99999;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+            .delivery-toast.show {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+        /* ============================================================
+                           NOTIFICATION HIGHLIGHT
+                           ============================================================ */
+
+        @@keyframes orderHighlightPulse {
+            0% {
+                background: var(--accent-light);
+                box-shadow: inset 0 0 0 2px var(--accent-color);
+            }
+
+            70% {
+                background: var(--accent-light);
+                box-shadow: inset 0 0 0 2px var(--accent-color);
+            }
+
+            100% {
+                background: transparent;
+                box-shadow: none;
+            }
+        }
+
+        .order-row-highlight {
+            animation: orderHighlightPulse 2.4s ease;
+        }
+
+        /* ============================================================
+                           DESKTOP / TABLET HEADER
+                           ============================================================ */
+
+        @@media (max-width: 1000px) {
+            .orders-topbar {
+                flex-wrap: wrap;
+            }
+
+            .orders-title-block {
+                order: 1;
+                flex-basis: calc(100% - 70px);
+            }
+
+            .orders-controls {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .orders-search {
+                flex: 1;
+                max-width: 420px;
+            }
+
+                .orders-search input {
+                    width: 100%;
+                }
+        }
+
+        /* ============================================================
+                           MOBILE / TABLET CARD BREAKPOINT
+
+                           768px portrait tablets now use cards instead of a
+                           horizontally scrolling table.
+                           ============================================================ */
+
+        @@media (max-width: 850px) {
+            .orders-page {
+                padding: 20px 12px;
+            }
+
+            .orders-box {
+                padding: 18px;
+                border-radius: 20px;
+            }
+
+            .orders-topbar {
                 flex-direction: column;
-                gap: 4px;
+                align-items: stretch;
+                gap: 14px;
+            }
+
+            .orders-title-block {
+                order: initial;
                 min-width: 0;
             }
 
-            .delivery-name {
-                font-weight: 800;
-                font-size: 13.5px;
-                color: var(--text-primary);
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 150px;
-            }
-
-            .delivery-card-tags {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 4px;
-            }
-
-            .delivery-tag {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                padding: 2px 7px;
-                background: var(--accent-light);
-                color: var(--accent-color);
-                border: 1px solid #e4d9fb;
-                border-radius: 999px;
-                font-size: 10px;
-                font-weight: 700;
-                white-space: nowrap;
-                max-width: 120px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-                .delivery-tag i {
-                    font-size: 9px;
-                    flex-shrink: 0;
+                .orders-title-block h2 {
+                    font-size: 28px;
                 }
 
-            /* Rating — five clear star icons plus an at-a-glance
-                                           numeric badge, e.g. "2.0 / 5". */
-            .delivery-rating-row {
-                display: flex;
-                align-items: center;
-                gap: 7px;
-                padding-top: 2px;
+                .orders-title-block p {
+                    font-size: 13px;
+                }
+
+            .back-btn {
+                align-self: flex-start;
             }
 
-            .delivery-stars {
-                display: inline-flex;
-                gap: 1px;
-                font-size: 12px;
-                color: #f59e0b;
-                letter-spacing: 1px;
-            }
-
-            .delivery-rating-badge {
-                display: inline-flex;
-                align-items: center;
-                padding: 2px 8px;
-                background: var(--accent-light);
-                color: var(--accent-color);
-                border: 1px solid #e4d9fb;
-                border-radius: 999px;
-                font-size: 10.5px;
-                font-weight: 800;
-                white-space: nowrap;
-            }
-
-            .delivery-review-count {
-                font-size: 10.5px;
-                color: var(--text-secondary);
-                font-weight: 600;
-                margin-top: -3px;
-            }
-
-            .delivery-no-rating {
-                font-size: 11px;
-                color: var(--text-secondary);
-                font-weight: 600;
-                font-style: italic;
-            }
-
-            .delivery-card-actions {
-                display: flex;
+            .orders-controls {
                 flex-direction: column;
-                gap: 6px;
+                align-items: stretch;
+                width: 100%;
+            }
+
+                .orders-controls .orders-search {
+                    max-width: none;
+                    width: 100%;
+                }
+
+                    .orders-controls .orders-search input {
+                        width: 100%;
+                    }
+
+            .filters-btn-wrap {
+                width: 100%;
+            }
+
+            .filters-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .filters-panel {
+                left: 0;
+                right: 0;
+                min-width: 0;
+                width: 100%;
+            }
+
+            .status-tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 12px;
+                scrollbar-width: none;
+            }
+
+                .status-tabs::-webkit-scrollbar {
+                    display: none;
+                }
+
+            .status-tab {
+                flex-shrink: 0;
+            }
+
+            .table-wrapper {
+                border: none;
+                background: transparent;
+                box-shadow: none;
+                max-height: none;
+                overflow: visible;
+            }
+
+            table {
+                min-width: 0;
+                width: 100%;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tbody,
+            tr,
+            td {
+                display: block;
+                width: 100%;
+            }
+
+                tbody tr {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    column-gap: 14px;
+                    background: #ffffff;
+                    border: 1px solid var(--border-color);
+                    border-radius: 18px;
+                    padding: 16px;
+                    margin-bottom: 14px;
+                    box-shadow: var(--shadow-sm);
+                }
+
+                    tbody tr:nth-child(even) {
+                        background: #ffffff;
+                    }
+
+                    tbody tr:hover {
+                        background: #ffffff;
+                    }
+
+            td {
+                border-bottom: none;
+                padding: 8px 0;
+                min-width: 0 !important;
+            }
+
+                td[data-label]::before {
+                    content: attr(data-label);
+                    display: block;
+                    font-size: 10px;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    letter-spacing: 0.6px;
+                    color: var(--text-secondary);
+                    margin-bottom: 5px;
+                }
+
+                td.order-number {
+                    grid-column: 1 / -1;
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    gap: 12px;
+                    padding-bottom: 12px;
+                    margin-bottom: 6px;
+                    border-bottom: 1px solid var(--border-color);
+                    overflow-wrap: anywhere;
+                }
+
+                    td.order-number::before {
+                        display: none;
+                    }
+
+                td.store-cell,
+                td.products-cell,
+                td.tracking-cell,
+                td.delivery-cell,
+                td.invoice-cell {
+                    grid-column: 1 / -1;
+                }
+
+                td.store-cell {
+                    padding-top: 0;
+                }
+
+                td.date-cell,
+                td.status-cell,
+                td.pay-method-cell,
+                td.pay-status-cell,
+                td.total-cell {
+                    text-align: left;
+                }
+
+            .status-cell,
+            .pay-status-cell {
+                text-align: left;
+            }
+
+            td.tracking-cell,
+            td.invoice-cell {
+                text-align: left;
                 margin-top: 4px;
-                padding-top: 8px;
-                border-top: 1px dashed var(--border-color);
             }
 
-            /* "View Reviews" — reuses the existing DeliveryCustomerProfile
-                                           route/anchor from before; only its look changed, styled
-                                           as a proper button in line with Track/Invoice pills. */
-            .delivery-view-reviews-btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
+            .tracking-cell .track-btn,
+            .invoice-cell .invoice-btn {
                 width: 100%;
-                padding: 7px 10px;
-                background: #ffffff;
-                color: var(--accent-color);
-                border: 1px solid var(--accent-color);
-                border-radius: 9px;
-                text-decoration: none;
-                font-size: 11.5px;
-                font-weight: 700;
-                white-space: nowrap;
-                transition: all 0.2s ease;
             }
 
-                .delivery-view-reviews-btn i {
-                    font-size: 11px;
-                }
-
-                .delivery-view-reviews-btn:hover {
-                    background: var(--accent-color);
-                    color: #fff;
-                    box-shadow: 0 4px 10px rgba(109, 40, 217, 0.22);
-                    transform: translateY(-1px);
-                }
-
-            .delivery-rate-btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
+            .delivery-card {
                 width: 100%;
-                background: var(--accent-light);
-                color: var(--accent-color);
-                border: 1px solid var(--accent-color);
-                padding: 7px 10px;
-                border-radius: 9px;
-                font-size: 11.5px;
-                font-weight: 700;
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
-
-                .delivery-rate-btn:hover {
-                    background: var(--accent-color);
-                    color: #fff;
-                }
-
-            .delivery-reviewed-badge {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                width: 100%;
-                background: #ecfdf5;
-                color: var(--success-color);
-                border: 1px solid #d1fae5;
-                padding: 7px 10px;
-                border-radius: 9px;
-                font-size: 11.5px;
-                font-weight: 700;
-                white-space: nowrap;
-            }
-
-            .delivery-reviewed-stars i {
-                color: #f59e0b;
-                font-size: 10.5px;
+                max-width: none;
             }
 
             .delivery-unassigned {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                min-width: 196px;
-                padding: 12px;
-                background: #fcfbff;
-                border: 1px dashed var(--border-color);
-                border-radius: 14px;
-                color: var(--text-secondary);
-                font-size: 11.5px;
-                font-weight: 700;
-            }
-
-                .delivery-unassigned i {
-                    color: var(--accent-color);
-                    font-size: 14px;
-                }
-
-            /* --- Star picker (interactive, inside the modal) --- */
-            .star-rating-picker {
-                display: flex;
-                gap: 8px;
-                font-size: 30px;
-                color: #f59e0b;
-                cursor: pointer;
-                margin: 10px 0 4px;
-            }
-
-                .star-rating-picker i {
-                    transition: transform 0.15s ease;
-                }
-
-                    .star-rating-picker i:hover {
-                        transform: scale(1.15);
-                    }
-
-            .delivery-review-hint {
-                font-size: 12.5px;
-                color: var(--text-secondary);
-                font-weight: 600;
-                margin-bottom: 14px;
-            }
-
-            .delivery-review-partner-name {
-                font-size: 14px;
-                color: var(--text-secondary);
-                margin-bottom: 4px;
-            }
-
-                .delivery-review-partner-name strong {
-                    color: var(--text-primary);
-                }
-
-            .delivery-review-comment {
                 width: 100%;
-                border: 1px solid var(--border-color);
-                border-radius: 12px;
-                padding: 10px 12px;
-                font-family: var(--font-family);
-                font-size: 13.5px;
-                resize: vertical;
             }
 
-                .delivery-review-comment:focus {
-                    outline: none;
-                    border-color: var(--accent-color);
-                }
-
-            .delivery-review-error {
-                margin-top: 10px;
-                background: #fef2f2;
-                color: var(--error-color);
-                border: 1px solid #fee2e2;
-                padding: 8px 12px;
-                border-radius: 10px;
-                font-size: 12.5px;
+            .date-cell {
+                white-space: normal;
             }
 
-            .delivery-review-modal-content {
-                border-radius: 20px;
-                border: none;
-                box-shadow: var(--shadow-lg);
+            .total-cell {
+                text-align: left;
             }
 
-            .btn-cancel-review {
-                background: transparent;
-                border: 1px solid var(--border-color);
-                color: var(--text-secondary);
-                padding: 8px 18px;
-                border-radius: 10px;
-                font-weight: 700;
+            .total-amount {
+                text-align: left;
+            }
+        }
+
+        /* ============================================================
+                           SMALL PHONES
+                           ============================================================ */
+
+        @@media (max-width: 480px) {
+            body {
+                padding-bottom: 92px;
+            }
+
+            .orders-page {
+                padding: 14px 10px 18px;
+            }
+
+            .orders-box {
+                padding: 14px;
+                border-radius: 18px;
+            }
+
+            .orders-title-block h2 {
+                font-size: 25px;
+            }
+
+            .orders-title-block p {
+                font-size: 12px;
+                line-height: 1.5;
+            }
+
+            .orders-logo-badge {
+                width: 29px;
+                height: 29px;
+                border-radius: 9px;
+                font-size: 12px;
+            }
+
+            tbody tr {
+                padding: 14px;
+                border-radius: 16px;
+            }
+
+            td.order-number {
+                display: block;
+            }
+
+            .order-id-sub {
+                margin-top: 4px;
+            }
+
+            .product-summary {
+                gap: 8px;
+            }
+
+            .product-thumb-wrap,
+            .product-thumb,
+            .product-thumb-placeholder {
+                width: 56px;
+                height: 56px;
+            }
+
+            .delivery-card {
+                padding: 11px;
+            }
+
+            .delivery-name {
                 font-size: 13px;
             }
 
-            .btn-submit-review {
-                background: var(--accent-gradient);
-                border: none;
-                color: #fff;
-                padding: 8px 20px;
-                border-radius: 10px;
-                font-weight: 700;
-                font-size: 13px;
+            .empty-box {
+                padding: 45px 20px;
             }
 
-                .btn-submit-review:disabled {
-                    opacity: 0.7;
-                }
-
-            /* --- Toast (self-contained, scoped to this feature) --- */
             .delivery-toast {
-                position: fixed;
-                top: 25px;
-                right: 25px;
-                background: var(--success-color);
-                color: #fff;
-                padding: 14px 22px;
-                border-radius: 12px;
-                font-weight: 600;
-                font-size: 13.5px;
-                box-shadow: var(--shadow-md);
-                z-index: 99999;
-                opacity: 0;
-                transform: translateY(-8px);
-                transition: opacity 0.25s ease, transform 0.25s ease;
+                left: 15px;
+                right: 15px;
+                top: 15px;
+                text-align: center;
             }
-
-                .delivery-toast.show {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-
-            /* ============================================================
-                               NOTIFICATION DEEP-LINK HIGHLIGHT (NEW) — briefly pulses
-                               and scrolls to the order row referenced by a clicked
-                               OrderStatus/NewOrder notification (?highlightOrderId=).
-                               ============================================================ */
-            @@keyframes orderHighlightPulse {
-                0% {
-                    background: var(--accent-light);
-                    box-shadow: inset 0 0 0 2px var(--accent-color);
-                }
-
-                70% {
-                    background: var(--accent-light);
-                    box-shadow: inset 0 0 0 2px var(--accent-color);
-                }
-
-                100% {
-                    background: transparent;
-                    box-shadow: none;
-                }
-            }
-
-            .order-row-highlight {
-                animation: orderHighlightPulse 2.4s ease;
-            }
+        }
     </style>
 </head>
 
@@ -1020,13 +1691,100 @@
 
     <div class="orders-page">
 
-        <div class="orders-header">
-            <h2>📦 My Orders</h2>
+        <div class="orders-topbar">
 
-            <p>
-                Track deliveries, payments, and invoices for
-                everything you've ordered.
-            </p>
+            <button type="button"
+                    class="back-btn"
+                    onclick="window.history.back()"
+                    aria-label="Go back">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+
+            <div class="orders-title-block">
+
+                <div class="orders-brand-row">
+
+                    <span class="orders-logo-badge">
+                        <i class="fa-solid fa-cube"></i>
+                    </span>
+
+                    <h2>My Orders</h2>
+
+                </div>
+
+                <p>
+                    Track deliveries, payments, and invoices for
+                    everything you've ordered.
+                </p>
+
+            </div>
+
+            <div class="orders-controls">
+
+                <div class="orders-search">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input type="text"
+                           id="orderSearchInput"
+                           placeholder="Search orders..."
+                           autocomplete="off" />
+
+                </div>
+
+                <div class="filters-btn-wrap">
+
+                    <button type="button"
+                            class="filters-btn"
+                            id="filtersBtn">
+
+                        <i class="fa-solid fa-sliders"></i>
+
+                        Filters
+
+                    </button>
+
+                    <div class="filters-panel"
+                         id="filtersPanel">
+
+                        <div class="filters-panel-label">
+                            Payment Status
+                        </div>
+
+                        <div class="filters-chip-group">
+
+                            <button type="button"
+                                    class="filter-chip active"
+                                    data-payment="all">
+                                All Payments
+                            </button>
+
+                            <button type="button"
+                                    class="filter-chip"
+                                    data-payment="paid">
+                                Paid
+                            </button>
+
+                            <button type="button"
+                                    class="filter-chip"
+                                    data-payment="pending">
+                                Pending
+                            </button>
+
+                            <button type="button"
+                                    class="filter-chip"
+                                    data-payment="refunded">
+                                Refunded
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
 
         @if (TempData["Success"] != null)
@@ -1046,6 +1804,7 @@
         @if (Model.Orders == null || !Model.Orders.Any())
         {
             <div class="empty-box">
+
                 <h3>No orders yet</h3>
 
                 <p>
@@ -1056,14 +1815,96 @@
                    class="shop-link">
                     Start Shopping
                 </a>
+
             </div>
         }
         else
         {
             <div class="orders-box">
+
+                <div class="status-tabs">
+
+                    <button type="button"
+                            class="status-tab active"
+                            data-group="all">
+
+                        <i class="fa-solid fa-bag-shopping"></i>
+
+                        All Orders
+
+                    </button>
+
+                    <button type="button"
+                            class="status-tab"
+                            data-group="processing">
+
+                        <i class="fa-regular fa-clock"></i>
+
+                        Processing
+
+                    </button>
+
+                    <button type="button"
+                            class="status-tab"
+                            data-group="shipped">
+
+                        <i class="fa-solid fa-truck-fast"></i>
+
+                        Shipped
+
+                    </button>
+
+                    <button type="button"
+                            class="status-tab"
+                            data-group="delivered">
+
+                        <i class="fa-solid fa-circle-check"></i>
+
+                        Delivered
+
+                    </button>
+
+                    <button type="button"
+                            class="status-tab"
+                            data-group="cancelled">
+
+                        <i class="fa-solid fa-circle-xmark"></i>
+
+                        Cancelled
+
+                    </button>
+
+                    <button type="button"
+                            class="status-tab"
+                            data-group="returned">
+
+                        <i class="fa-solid fa-rotate-left"></i>
+
+                        Returned
+
+                    </button>
+
+                </div>
+
+                <div class="results-meta">
+
+                    <span>
+                        Showing
+                        <span class="count-highlight"
+                              id="resultsCount">
+                            @Model.Orders.Count
+                        </span>
+                        of @Model.Orders.Count orders
+                    </span>
+
+                </div>
+
                 <div class="table-wrapper">
+
                     <table>
+
                         <colgroup>
+
                             <col class="col-order" />
                             <col class="col-store" />
                             <col class="col-products" />
@@ -1075,25 +1916,63 @@
                             <col class="col-tracking" />
                             <col class="col-delivery" />
                             <col class="col-invoice" />
+
                         </colgroup>
 
                         <thead>
+
                             <tr>
-                                <th class="col-order">Order Number</th>
-                                <th class="col-store">Store</th>
-                                <th class="col-products">Products</th>
-                                <th class="col-date">Date</th>
-                                <th class="col-status">Status</th>
-                                <th class="col-pay-method">Payment Method</th>
-                                <th class="col-pay-status">Payment Status</th>
-                                <th class="col-total">Total</th>
-                                <th class="col-tracking">Tracking</th>
-                                <th class="col-delivery">Delivery</th>
-                                <th class="col-invoice">Invoice</th>
+
+                                <th class="col-order">
+                                    Order Number
+                                </th>
+
+                                <th class="col-store">
+                                    Store
+                                </th>
+
+                                <th class="col-products">
+                                    Products
+                                </th>
+
+                                <th class="col-date">
+                                    Date
+                                </th>
+
+                                <th class="col-status">
+                                    Status
+                                </th>
+
+                                <th class="col-pay-method">
+                                    Payment Method
+                                </th>
+
+                                <th class="col-pay-status">
+                                    Payment Status
+                                </th>
+
+                                <th class="col-total">
+                                    Total
+                                </th>
+
+                                <th class="col-tracking">
+                                    Tracking
+                                </th>
+
+                                <th class="col-delivery">
+                                    Delivery
+                                </th>
+
+                                <th class="col-invoice">
+                                    Invoice
+                                </th>
+
                             </tr>
+
                         </thead>
 
                         <tbody>
+
                             @foreach (var order in Model.Orders)
                             {
                                 var paymentClass =
@@ -1104,7 +1983,8 @@
                                 ? "paid-badge"
                                 : "pending-badge";
 
-                                var statusClass = (order.Status?.Trim().ToLowerInvariant()) switch
+                                var statusClass =
+                                (order.Status?.Trim().ToLowerInvariant()) switch
                                 {
                                     "pending" => "status-pending",
                                     "processing" => "status-processing",
@@ -1118,31 +1998,124 @@
                                     _ => ""
                                 };
 
-                                <tr id="order-row-@order.OrderID">
-                                    <td class="order-number">
+                                var statusGroup =
+                                (order.Status?.Trim().ToLowerInvariant()) switch
+                                {
+                                    "pending" => "processing",
+                                    "processing" => "processing",
+                                    "confirmed" => "processing",
+                                    "assigned" => "processing",
+                                    "out for delivery" => "shipped",
+                                    "delivered" => "delivered",
+                                    "cancelled" => "cancelled",
+                                    "failed" => "cancelled",
+                                    "refunded" => "returned",
+                                    _ => "processing"
+                                };
+
+                                var paymentStatusKey =
+                                (order.PaymentStatus?.Trim().ToLowerInvariant()) ?? "";
+
+                                var productNameBlob =
+                                order.Products != null
+                                ? string.Join(
+                                " ",
+                                order.Products.Select(p => p.ProductName))
+                                : "";
+
+                                var searchBlob =
+                                $"{order.OrderNumber} {order.StoreName} {productNameBlob}"
+                                .ToLowerInvariant();
+
+                                <tr id="order-row-@order.OrderID"
+                                    data-order-row
+                                    data-status-group="@statusGroup"
+                                    data-payment-status="@paymentStatusKey"
+                                    data-search="@searchBlob">
+
+                                    <td class="order-number"
+                                        data-label="Order">
+
                                         @order.OrderNumber
+
+                                        <span class="order-id-sub">
+                                            ID #@order.OrderID
+                                        </span>
+
                                     </td>
 
-                                    <td class="store-cell">
-                                        <i class="fa-solid fa-store"></i>@(string.IsNullOrWhiteSpace(order.StoreName) ? "—" : order.StoreName)
+                                    <td class="store-cell"
+                                        data-label="Store">
+
+                                        <i class="fa-solid fa-store"></i>
+
+                                        @(string.IsNullOrWhiteSpace(order.StoreName)
+                                            ? "—"
+                                            : order.StoreName)
+
                                     </td>
 
-                                    <td class="products-cell">
+                                    <td class="products-cell"
+                                        data-label="Products">
+
                                         @if (order.Products != null &&
                                        order.Products.Count > 0)
                                         {
-                                            @foreach (var product in order.Products)
-                                            {
-                                                <div class="product-line">
+                                            var mainProduct = order.Products[0];
+                                            var extraProductCount = order.Products.Count - 1;
+
+                                            <div class="product-summary">
+
+                                                @if (!string.IsNullOrWhiteSpace(mainProduct.ImageUrl))
+                                                {
+                                                    <span class="product-thumb-wrap"
+                                                          title="@mainProduct.ProductName">
+
+                                                        <img class="product-thumb"
+                                                             src="@mainProduct.ImageUrl"
+                                                             alt="@mainProduct.ProductName"
+                                                             loading="lazy"
+                                                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+
+                                                        <span class="product-thumb-placeholder"
+                                                              style="display:none;">
+
+                                                            <i class="fa-solid fa-image"></i>
+
+                                                        </span>
+
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="product-thumb-placeholder"
+                                                          title="@mainProduct.ProductName">
+
+                                                        <i class="fa-solid fa-image"></i>
+
+                                                    </span>
+                                                }
+
+                                                <div class="product-summary-info">
+
                                                     <span class="product-name">
-                                                        @product.ProductName
+                                                        @mainProduct.ProductName
                                                     </span>
 
-                                                    <span class="product-quantity">
-                                                        ×@product.Quantity
+                                                    <span class="product-line-detail">
+                                                        ×@mainProduct.Quantity
                                                     </span>
+
+                                                    @if (extraProductCount > 0)
+                                                    {
+                                                        <span class="product-more-badge">
+                                                            +@extraProductCount more
+                                                        </span>
+                                                    }
+
                                                 </div>
-                                            }
+
+                                            </div>
                                         }
                                         else
                                         {
@@ -1150,41 +2123,62 @@
                                                 No products
                                             </span>
                                         }
+
                                     </td>
 
-                                    <td class="date-cell">
+                                    <td class="date-cell"
+                                        data-label="Date">
+
                                         @order.OrderDate.ToString("dd MMM yyyy")
+
                                     </td>
 
-                                    <td class="status-cell">
+                                    <td class="status-cell"
+                                        data-label="Status">
+
                                         <span class="status-badge @statusClass">
                                             @order.Status
                                         </span>
+
                                     </td>
 
-                                    <td class="pay-method-cell">
+                                    <td class="pay-method-cell"
+                                        data-label="Payment Method">
+
                                         @order.PaymentMethod
+
                                     </td>
 
-                                    <td class="pay-status-cell">
+                                    <td class="pay-status-cell"
+                                        data-label="Payment Status">
+
                                         <span class="@paymentClass">
                                             @order.PaymentStatus
                                         </span>
+
                                     </td>
 
-                                    <td class="total-cell">
+                                    <td class="total-cell"
+                                        data-label="Total">
+
                                         <span class="total-amount">
                                             $@order.TotalAmount.ToString("N2")
                                         </span>
+
                                     </td>
 
-                                    <td class="tracking-cell">
+                                    <td class="tracking-cell"
+                                        data-label="Tracking">
+
                                         @if (order.CanTrack)
                                         {
                                             <a class="track-btn"
                                                href="/TrackDelivery?OrderId=@order.OrderID">
+
                                                 <i class="fa-solid fa-truck"></i>
+
                                                 Track Delivery
+
                                             </a>
                                         }
                                         else
@@ -1193,36 +2187,72 @@
                                                 @order.TrackingMessage
                                             </span>
                                         }
+
                                     </td>
 
-                                    <td class="delivery-cell">
+                                    <td class="delivery-cell"
+                                        data-label="Delivery">
+
                                         @if (order.DeliveryPersonID.HasValue)
                                         {
-                                            <div class="delivery-card" data-order-id="@order.OrderID">
+                                            <div class="delivery-card"
+                                                 data-order-id="@order.OrderID">
+
                                                 <div class="delivery-card-top">
-                                                    <div class="driver-avatar-sm">@order.DeliveryPersonInitial</div>
+
+                                                    <div class="driver-avatar-sm">
+                                                        @order.DeliveryPersonInitial
+                                                    </div>
+
                                                     <div class="delivery-card-identity">
-                                                        <span class="delivery-name" title="@order.DeliveryPersonName">@order.DeliveryPersonName</span>
+
+                                                        <span class="delivery-name"
+                                                              title="@order.DeliveryPersonName">
+                                                            @order.DeliveryPersonName
+                                                        </span>
 
                                                         <div class="delivery-card-tags">
+
                                                             @if (!string.IsNullOrWhiteSpace(order.DeliveryPersonVehicleType))
                                                             {
-                                                                <span class="delivery-tag" title="@order.DeliveryPersonVehicleType"><i class="fa-solid fa-truck"></i>@order.DeliveryPersonVehicleType</span>
+                                                                <span class="delivery-tag"
+                                                                      title="@order.DeliveryPersonVehicleType">
+
+                                                                    <i class="fa-solid fa-truck"></i>
+
+                                                                    @order.DeliveryPersonVehicleType
+
+                                                                </span>
                                                             }
+
                                                             @if (!string.IsNullOrWhiteSpace(order.DeliveryPersonArea))
                                                             {
-                                                                <span class="delivery-tag" title="@order.DeliveryPersonArea"><i class="fa-solid fa-location-dot"></i>@order.DeliveryPersonArea</span>
+                                                                <span class="delivery-tag"
+                                                                      title="@order.DeliveryPersonArea">
+
+                                                                    <i class="fa-solid fa-location-dot"></i>
+
+                                                                    @order.DeliveryPersonArea
+
+                                                                </span>
                                                             }
+
                                                         </div>
+
                                                     </div>
+
                                                 </div>
 
                                                 @if (order.DeliveryPersonAverageRating.HasValue)
                                                 {
-                                                    var filledStars = (int)(order.DeliveryPersonAverageRating.Value + 0.5m);
+                                                    var filledStars =
+                                                    (int)(order.DeliveryPersonAverageRating.Value + 0.5m);
 
                                                     <div class="delivery-rating-row">
-                                                        <span class="delivery-stars" aria-label="@order.DeliveryPersonAverageRating.Value.ToString("0.0") out of 5 stars">
+
+                                                        <span class="delivery-stars"
+                                                              aria-label="@order.DeliveryPersonAverageRating.Value.ToString("0.0") out of 5 stars">
+
                                                             @for (var s = 1; s <= 5; s++)
                                                             {
                                                                 if (s <= filledStars)
@@ -1234,26 +2264,47 @@
                                                                     <i class="fa-regular fa-star"></i>
                                                                 }
                                                             }
+
                                                         </span>
-                                                        <span class="delivery-rating-badge">@order.DeliveryPersonAverageRating.Value.ToString("0.0") / 5</span>
+
+                                                        <span class="delivery-rating-badge">
+                                                            @order.DeliveryPersonAverageRating.Value.ToString("0.0") / 5
+                                                        </span>
+
                                                     </div>
-                                                    <span class="delivery-review-count">(@order.DeliveryPersonReviewCount review@(order.DeliveryPersonReviewCount == 1 ? "" : "s"))</span>
+
+                                                    <span class="delivery-review-count">
+                                                        (@order.DeliveryPersonReviewCount review@(order.DeliveryPersonReviewCount == 1 ? "" : "s"))
+                                                    </span>
                                                 }
                                                 else
                                                 {
-                                                    <span class="delivery-no-rating">No ratings yet</span>
+                                                    <span class="delivery-no-rating">
+                                                        No ratings yet
+                                                    </span>
                                                 }
 
                                                 <div class="delivery-card-actions">
-                                                    <a class="delivery-view-reviews-btn" href="/DeliveryCustomerProfile?id=@order.DeliveryPersonID">
-                                                        <i class="fa-solid fa-star-half-stroke"></i> View Reviews
+
+                                                    <a class="delivery-view-reviews-btn"
+                                                       href="/DeliveryCustomerProfile?id=@order.DeliveryPersonID">
+
+                                                        <i class="fa-solid fa-star-half-stroke"></i>
+
+                                                        View Reviews
+
                                                     </a>
 
                                                     @if (order.IsDeliveryReviewed)
                                                     {
                                                         <span class="delivery-reviewed-badge">
-                                                            <i class="fa-solid fa-circle-check"></i> Delivery Rated
+
+                                                            <i class="fa-solid fa-circle-check"></i>
+
+                                                            Delivery Rated
+
                                                             <span class="delivery-reviewed-stars">
+
                                                                 @for (var s = 0; s < 5; s++)
                                                                 {
                                                                     if (s < (order.MyDeliveryReviewRating ?? 0))
@@ -1265,7 +2316,9 @@
                                                                         <i class="fa-regular fa-star"></i>
                                                                     }
                                                                 }
+
                                                             </span>
+
                                                         </span>
                                                     }
                                                     else if (order.CanReviewDelivery)
@@ -1275,27 +2328,43 @@
                                                                 data-rate-delivery
                                                                 data-order-id="@order.OrderID"
                                                                 data-delivery-name="@order.DeliveryPersonName">
-                                                            <i class="fa-regular fa-star"></i> Rate Delivery
+
+                                                            <i class="fa-regular fa-star"></i>
+
+                                                            Rate Delivery
+
                                                         </button>
                                                     }
+
                                                 </div>
+
                                             </div>
                                         }
                                         else
                                         {
                                             <div class="delivery-unassigned">
-                                                <i class="fa-solid fa-truck-fast"></i> Not yet assigned
+
+                                                <i class="fa-solid fa-truck-fast"></i>
+
+                                                Not yet assigned
+
                                             </div>
                                         }
+
                                     </td>
 
-                                    <td class="invoice-cell">
+                                    <td class="invoice-cell"
+                                        data-label="Invoice">
+
                                         @if (order.CanViewInvoice)
                                         {
                                             <a class="invoice-btn"
                                                href="/Invoice?orderId=@order.OrderID">
+
                                                 <i class="fa-solid fa-file-invoice"></i>
+
                                                 View Invoice
+
                                             </a>
                                         }
                                         else
@@ -1304,265 +2373,898 @@
                                                 Available after payment
                                             </span>
                                         }
+
                                     </td>
+
                                 </tr>
                             }
+
                         </tbody>
+
                     </table>
+
                 </div>
+
+                <div class="no-results-state"
+                     id="noResultsState">
+
+                    <i class="fa-solid fa-inbox"></i>
+
+                    <h4>
+                        No orders match your search
+                    </h4>
+
+                    <p>
+                        Try a different keyword or clear your filters.
+                    </p>
+
+                </div>
+
             </div>
         }
+
     </div>
 
     <!-- ============================================================
-         DELIVERY REVIEW MODAL (NEW) — one shared instance, reused for
-         whichever order's "Rate Delivery" button was clicked.
+         DELIVERY REVIEW MODAL
          ============================================================ -->
-    <div class="modal fade" id="deliveryReviewModal" tabindex="-1" aria-hidden="true">
+
+    <div class="modal fade"
+         id="deliveryReviewModal"
+         tabindex="-1"
+         aria-hidden="true">
+
         <div class="modal-dialog modal-dialog-centered">
+
             <div class="modal-content delivery-review-modal-content">
+
                 <div class="modal-header">
-                    <h5 class="modal-title">Rate your delivery experience</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                    <h5 class="modal-title">
+                        Rate your delivery experience
+                    </h5>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close">
+                    </button>
+
                 </div>
+
                 <div class="modal-body">
+
                     <p class="delivery-review-partner-name">
-                        Delivery partner: <strong id="deliveryReviewPartnerName">—</strong>
+
+                        Delivery partner:
+                        <strong id="deliveryReviewPartnerName">
+                            —
+                        </strong>
+
                     </p>
 
-                    <div class="star-rating-picker" id="deliveryStarPicker">
-                        <i class="fa-regular fa-star" data-star="1"></i>
-                        <i class="fa-regular fa-star" data-star="2"></i>
-                        <i class="fa-regular fa-star" data-star="3"></i>
-                        <i class="fa-regular fa-star" data-star="4"></i>
-                        <i class="fa-regular fa-star" data-star="5"></i>
+                    <div class="star-rating-picker"
+                         id="deliveryStarPicker">
+
+                        <i class="fa-regular fa-star"
+                           data-star="1"></i>
+
+                        <i class="fa-regular fa-star"
+                           data-star="2"></i>
+
+                        <i class="fa-regular fa-star"
+                           data-star="3"></i>
+
+                        <i class="fa-regular fa-star"
+                           data-star="4"></i>
+
+                        <i class="fa-regular fa-star"
+                           data-star="5"></i>
+
                     </div>
-                    <div class="delivery-review-hint" id="deliveryReviewHint">Tap a star</div>
+
+                    <div class="delivery-review-hint"
+                         id="deliveryReviewHint">
+                        Tap a star
+                    </div>
 
                     <textarea id="deliveryReviewComment"
                               class="delivery-review-comment"
                               rows="3"
                               placeholder="Optional comment about your delivery..."></textarea>
 
-                    <div id="deliveryReviewError" class="delivery-review-error" style="display:none;"></div>
+                    <div id="deliveryReviewError"
+                         class="delivery-review-error"
+                         style="display:none;">
+                    </div>
+
                 </div>
+
                 <div class="modal-footer">
-                    <button type="button" class="btn-cancel-review" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn-submit-review" id="deliveryReviewSubmitBtn">Submit</button>
+
+                    <button type="button"
+                            class="btn-cancel-review"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="button"
+                            class="btn-submit-review"
+                            id="deliveryReviewSubmitBtn">
+                        Submit
+                    </button>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
 
-    <!-- Antiforgery token for the AJAX submit below — rendered outside
-         a visible form since this page has no other forms/scripts. -->
-    <form id="deliveryReviewAntiforgeryForm" style="display:none;">
+    <!-- Antiforgery token -->
+    <form id="deliveryReviewAntiforgeryForm"
+          style="display:none;">
+
         @Html.AntiForgeryToken()
+
     </form>
 
-    <!-- Bootstrap JS — only for the modal above. -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-            // ============================================================
-            // DELIVERY REVIEW (NEW) — self-contained, scoped to this page.
-            // Two small pieces: (1) the interactive star picker, (2) the
-            // modal wiring + AJAX submit + no-reload UI update.
-            // ============================================================
-            (function() {
-                var picker = document.getElementById('deliveryStarPicker');
-                var stars = picker.querySelectorAll('i');
-                var hint = document.getElementById('deliveryReviewHint');
-                var hintLabels = { 1: 'Poor', 2: 'Fair', 3: 'Good', 4: 'Very Good', 5: 'Excellent' };
-                var selectedRating = 0;
 
-                function paintStars(uptoValue) {
-                    stars.forEach(function(star) {
-                        var starValue = parseInt(star.getAttribute('data-star'), 10);
-                        if (starValue <= uptoValue) {
-                            star.classList.remove('fa-regular');
-                            star.classList.add('fa-solid');
-                        } else {
-                            star.classList.remove('fa-solid');
-                            star.classList.add('fa-regular');
-                        }
-                    });
-                }
+        /* ============================================================
+           DELIVERY STAR PICKER
+           ============================================================ */
 
-                stars.forEach(function(star) {
-                    star.addEventListener('mouseenter', function() {
-                        var hoverValue = parseInt(star.getAttribute('data-star'), 10);
-                        paintStars(hoverValue);
-                        hint.textContent = hintLabels[hoverValue] || 'Tap a star';
-                    });
+        (function () {
 
-                    star.addEventListener('click', function() {
-                        selectedRating = parseInt(star.getAttribute('data-star'), 10);
-                        paintStars(selectedRating);
-                        hint.textContent = hintLabels[selectedRating] || 'Tap a star';
-                    });
+            var picker = document.getElementById('deliveryStarPicker');
+
+            if (!picker) {
+                return;
+            }
+
+            var stars = picker.querySelectorAll('i');
+
+            var hint =
+                document.getElementById('deliveryReviewHint');
+
+            var hintLabels = {
+                1: 'Poor',
+                2: 'Fair',
+                3: 'Good',
+                4: 'Very Good',
+                5: 'Excellent'
+            };
+
+            var selectedRating = 0;
+
+            function paintStars(uptoValue) {
+
+                stars.forEach(function (star) {
+
+                    var starValue =
+                        parseInt(
+                            star.getAttribute('data-star'),
+                            10
+                        );
+
+                    if (starValue <= uptoValue) {
+
+                        star.classList.remove('fa-regular');
+                        star.classList.add('fa-solid');
+
+                    }
+                    else {
+
+                        star.classList.remove('fa-solid');
+                        star.classList.add('fa-regular');
+
+                    }
+
                 });
 
-                picker.addEventListener('mouseleave', function() {
+            }
+
+            stars.forEach(function (star) {
+
+                star.addEventListener('mouseenter', function () {
+
+                    var hoverValue =
+                        parseInt(
+                            star.getAttribute('data-star'),
+                            10
+                        );
+
+                    paintStars(hoverValue);
+
+                    hint.textContent =
+                        hintLabels[hoverValue] || 'Tap a star';
+
+                });
+
+                star.addEventListener('click', function () {
+
+                    selectedRating =
+                        parseInt(
+                            star.getAttribute('data-star'),
+                            10
+                        );
+
                     paintStars(selectedRating);
-                    hint.textContent = selectedRating > 0
+
+                    hint.textContent =
+                        hintLabels[selectedRating] || 'Tap a star';
+
+                });
+
+            });
+
+            picker.addEventListener('mouseleave', function () {
+
+                paintStars(selectedRating);
+
+                hint.textContent =
+                    selectedRating > 0
                         ? (hintLabels[selectedRating] || 'Tap a star')
                         : 'Tap a star';
-                });
 
-                window.getSelectedDeliveryRating = function() {
-                    return selectedRating;
-                };
+            });
 
-                window.resetDeliveryStarPicker = function() {
-                    selectedRating = 0;
-                    paintStars(0);
-                    hint.textContent = 'Tap a star';
-                };
-            })();
+            window.getSelectedDeliveryRating = function () {
+                return selectedRating;
+            };
 
-            (function() {
-                var currentOrderId = null;
-                var modalEl = document.getElementById('deliveryReviewModal');
-                var bsModal = new bootstrap.Modal(modalEl);
-                var partnerNameEl = document.getElementById('deliveryReviewPartnerName');
-                var commentEl = document.getElementById('deliveryReviewComment');
-                var errorEl = document.getElementById('deliveryReviewError');
-                var submitBtn = document.getElementById('deliveryReviewSubmitBtn');
+            window.resetDeliveryStarPicker = function () {
 
-                document.querySelectorAll('[data-rate-delivery]').forEach(function(btn) {
-                    btn.addEventListener('click', function() {
-                        currentOrderId = btn.getAttribute('data-order-id');
-                        partnerNameEl.textContent = btn.getAttribute('data-delivery-name') || 'your delivery partner';
+                selectedRating = 0;
+
+                paintStars(0);
+
+                hint.textContent = 'Tap a star';
+
+            };
+
+        })();
+
+
+        /* ============================================================
+           DELIVERY REVIEW MODAL + AJAX
+           ============================================================ */
+
+        (function () {
+
+            var currentOrderId = null;
+
+            var modalEl =
+                document.getElementById('deliveryReviewModal');
+
+            if (!modalEl) {
+                return;
+            }
+
+            var bsModal =
+                new bootstrap.Modal(modalEl);
+
+            var partnerNameEl =
+                document.getElementById(
+                    'deliveryReviewPartnerName'
+                );
+
+            var commentEl =
+                document.getElementById(
+                    'deliveryReviewComment'
+                );
+
+            var errorEl =
+                document.getElementById(
+                    'deliveryReviewError'
+                );
+
+            var submitBtn =
+                document.getElementById(
+                    'deliveryReviewSubmitBtn'
+                );
+
+
+            document
+                .querySelectorAll('[data-rate-delivery]')
+                .forEach(function (btn) {
+
+                    btn.addEventListener('click', function () {
+
+                        currentOrderId =
+                            btn.getAttribute('data-order-id');
+
+                        partnerNameEl.textContent =
+                            btn.getAttribute(
+                                'data-delivery-name'
+                            ) || 'your delivery partner';
+
                         commentEl.value = '';
+
                         errorEl.style.display = 'none';
+
                         window.resetDeliveryStarPicker();
+
                         bsModal.show();
+
                     });
+
                 });
 
-                submitBtn.addEventListener('click', function() {
-                    var rating = window.getSelectedDeliveryRating();
 
-                    if (!rating) {
-                        errorEl.textContent = 'Please select a star rating.';
-                        errorEl.style.display = 'block';
-                        return;
-                    }
+            submitBtn.addEventListener('click', function () {
 
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = 'Submitting...';
+                var rating =
+                    window.getSelectedDeliveryRating();
 
-                    var token = document
-                        .querySelector('#deliveryReviewAntiforgeryForm input[name="__RequestVerificationToken"]')
-                        .value;
+                if (!rating) {
 
-                    var formData = new FormData();
-                    formData.append('orderId', currentOrderId);
-                    formData.append('rating', rating);
-                    formData.append('comment', commentEl.value);
-                    formData.append('__RequestVerificationToken', token);
+                    errorEl.textContent =
+                        'Please select a star rating.';
 
-                    fetch('/CustomerOrders?handler=SubmitDeliveryReview', {
-                        method: 'POST',
-                        body: formData
-                    })
-                        .then(function(response) {
-                            return response.json().then(function(data) {
-                                return { ok: response.ok, data: data };
-                            });
-                        })
-                        .then(function(result) {
-                            if (!result.ok || !result.data.success) {
-                                errorEl.textContent = result.data.message || 'Something went wrong. Please try again.';
-                                errorEl.style.display = 'block';
-                                submitBtn.disabled = false;
-                                submitBtn.textContent = 'Submit';
-                                return;
-                            }
+                    errorEl.style.display = 'block';
 
-                            bsModal.hide();
-                            showDeliveryReviewToast(result.data.message || 'Thanks for your review!');
-                            replaceRateButtonWithBadge(currentOrderId, result.data.rating);
+                    return;
+                }
 
-                            submitBtn.disabled = false;
-                            submitBtn.textContent = 'Submit';
-                        })
-                        .catch(function() {
-                            errorEl.textContent = 'Network error. Please try again.';
-                            errorEl.style.display = 'block';
-                            submitBtn.disabled = false;
-                            submitBtn.textContent = 'Submit';
-                        });
-                });
+                submitBtn.disabled = true;
 
-                function replaceRateButtonWithBadge(orderId, rating) {
-                    var btn = document.querySelector(
-                        '[data-rate-delivery][data-order-id="' + orderId + '"]'
+                submitBtn.textContent =
+                    'Submitting...';
+
+
+                var tokenInput =
+                    document.querySelector(
+                        '#deliveryReviewAntiforgeryForm input[name="__RequestVerificationToken"]'
                     );
 
-                    if (!btn) {
-                        return;
-                    }
+                if (!tokenInput) {
 
-                    var starsHtml = '';
-                    for (var i = 1; i <= 5; i++) {
-                        starsHtml += i <= rating
-                            ? '<i class="fa-solid fa-star"></i>'
-                            : '<i class="fa-regular fa-star"></i>';
-                    }
+                    errorEl.textContent =
+                        'Security token is missing. Please refresh the page and try again.';
 
-                    var badge = document.createElement('span');
-                    badge.className = 'delivery-reviewed-badge';
-                    badge.innerHTML =
-                        '<i class="fa-solid fa-circle-check"></i> Delivery Rated' +
-                        '<span class="delivery-reviewed-stars">' + starsHtml + '</span>';
+                    errorEl.style.display = 'block';
 
-                    btn.replaceWith(badge);
+                    submitBtn.disabled = false;
+
+                    submitBtn.textContent =
+                        'Submit';
+
+                    return;
                 }
 
-                function showDeliveryReviewToast(message) {
-                    var toast = document.createElement('div');
-                    toast.className = 'delivery-toast';
-                    toast.textContent = message;
-                    document.body.appendChild(toast);
 
-                    requestAnimationFrame(function() {
-                        toast.classList.add('show');
+                var token = tokenInput.value;
+
+                var formData = new FormData();
+
+                formData.append(
+                    'orderId',
+                    currentOrderId
+                );
+
+                formData.append(
+                    'rating',
+                    rating
+                );
+
+                formData.append(
+                    'comment',
+                    commentEl.value
+                );
+
+                formData.append(
+                    '__RequestVerificationToken',
+                    token
+                );
+
+
+                fetch(
+                    '/CustomerOrders?handler=SubmitDeliveryReview',
+                    {
+                        method: 'POST',
+                        body: formData
+                    }
+                )
+                    .then(function (response) {
+
+                        return response.json()
+                            .then(function (data) {
+
+                                return {
+                                    ok: response.ok,
+                                    data: data
+                                };
+
+                            });
+
+                    })
+                    .then(function (result) {
+
+                        if (!result.ok ||
+                            !result.data.success) {
+
+                            errorEl.textContent =
+                                result.data.message ||
+                                'Something went wrong. Please try again.';
+
+                            errorEl.style.display =
+                                'block';
+
+                            submitBtn.disabled =
+                                false;
+
+                            submitBtn.textContent =
+                                'Submit';
+
+                            return;
+                        }
+
+                        bsModal.hide();
+
+                        showDeliveryReviewToast(
+                            result.data.message ||
+                            'Thanks for your review!'
+                        );
+
+                        replaceRateButtonWithBadge(
+                            currentOrderId,
+                            result.data.rating
+                        );
+
+                        submitBtn.disabled =
+                            false;
+
+                        submitBtn.textContent =
+                            'Submit';
+
+                    })
+                    .catch(function () {
+
+                        errorEl.textContent =
+                            'Network error. Please try again.';
+
+                        errorEl.style.display =
+                            'block';
+
+                        submitBtn.disabled =
+                            false;
+
+                        submitBtn.textContent =
+                            'Submit';
+
                     });
 
-                    setTimeout(function() {
-                        toast.classList.remove('show');
-                        setTimeout(function() {
-                            toast.remove();
-                        }, 300);
-                    }, 3000);
+            });
+
+
+            function replaceRateButtonWithBadge(
+                orderId,
+                rating
+            ) {
+
+                var btn =
+                    document.querySelector(
+                        '[data-rate-delivery][data-order-id="' +
+                        orderId +
+                        '"]'
+                    );
+
+                if (!btn) {
+                    return;
                 }
-            })();
 
-            // ============================================================
-            // NOTIFICATION DEEP-LINK (NEW) — if we arrived here from an
-            // OrderStatus/NewOrder notification (?highlightOrderId=123),
-            // scroll to that row and pulse it, then clean the URL.
-            // ============================================================
-            (function() {
-                var params = new URLSearchParams(window.location.search);
-                var highlightId = params.get('highlightOrderId');
-                if (!highlightId) return;
+                var starsHtml = '';
 
-                var row = document.getElementById('order-row-' + highlightId);
-                if (!row) return;
+                for (var i = 1; i <= 5; i++) {
 
-                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                row.classList.add('order-row-highlight');
-                setTimeout(function() { row.classList.remove('order-row-highlight'); }, 2500);
+                    starsHtml +=
+                        i <= rating
+                            ? '<i class="fa-solid fa-star"></i>'
+                            : '<i class="fa-regular fa-star"></i>';
 
-                if (window.history.replaceState) {
-                    var url = new URL(window.location.href);
-                    url.searchParams.delete('highlightOrderId');
-                    window.history.replaceState({}, '', url);
                 }
-            })();
+
+                var badge =
+                    document.createElement('span');
+
+                badge.className =
+                    'delivery-reviewed-badge';
+
+                badge.innerHTML =
+                    '<i class="fa-solid fa-circle-check"></i>' +
+                    ' Delivery Rated' +
+                    '<span class="delivery-reviewed-stars">' +
+                    starsHtml +
+                    '</span>';
+
+                btn.replaceWith(badge);
+
+            }
+
+
+            function showDeliveryReviewToast(message) {
+
+                var toast =
+                    document.createElement('div');
+
+                toast.className =
+                    'delivery-toast';
+
+                toast.textContent =
+                    message;
+
+                document.body.appendChild(toast);
+
+                requestAnimationFrame(function () {
+
+                    toast.classList.add('show');
+
+                });
+
+                setTimeout(function () {
+
+                    toast.classList.remove('show');
+
+                    setTimeout(function () {
+
+                        toast.remove();
+
+                    }, 300);
+
+                }, 3000);
+
+            }
+
+        })();
+
+
+        /* ============================================================
+           NOTIFICATION DEEP-LINK
+           ============================================================ */
+
+        (function () {
+
+            var params =
+                new URLSearchParams(
+                    window.location.search
+                );
+
+            var highlightId =
+                params.get('highlightOrderId');
+
+            if (!highlightId) {
+                return;
+            }
+
+            var row =
+                document.getElementById(
+                    'order-row-' + highlightId
+                );
+
+            if (!row) {
+                return;
+            }
+
+            row.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+
+            row.classList.add(
+                'order-row-highlight'
+            );
+
+            setTimeout(function () {
+
+                row.classList.remove(
+                    'order-row-highlight'
+                );
+
+            }, 2500);
+
+
+            if (window.history.replaceState) {
+
+                var url =
+                    new URL(
+                        window.location.href
+                    );
+
+                url.searchParams.delete(
+                    'highlightOrderId'
+                );
+
+                window.history.replaceState(
+                    {},
+                    '',
+                    url
+                );
+
+            }
+
+        })();
+
+
+        /* ============================================================
+           SEARCH + FILTER
+           ============================================================ */
+
+        (function () {
+
+            var rows =
+                Array.prototype.slice.call(
+                    document.querySelectorAll(
+                        'tbody tr[data-order-row]'
+                    )
+                );
+
+            if (rows.length === 0) {
+                return;
+            }
+
+            var searchInput =
+                document.getElementById(
+                    'orderSearchInput'
+                );
+
+            var statusTabs =
+                document.querySelectorAll(
+                    '.status-tab'
+                );
+
+            var filterChips =
+                document.querySelectorAll(
+                    '.filter-chip'
+                );
+
+            var noResultsState =
+                document.getElementById(
+                    'noResultsState'
+                );
+
+            var resultsCount =
+                document.getElementById(
+                    'resultsCount'
+                );
+
+            var tableWrapper =
+                document.querySelector(
+                    '.table-wrapper'
+                );
+
+            var state = {
+                group: 'all',
+                payment: 'all',
+                search: ''
+            };
+
+
+            function applyFilters() {
+
+                var visible = 0;
+
+                rows.forEach(function (row) {
+
+                    var matchesGroup =
+                        state.group === 'all' ||
+                        row.getAttribute(
+                            'data-status-group'
+                        ) === state.group;
+
+                    var matchesPayment =
+                        state.payment === 'all' ||
+                        row.getAttribute(
+                            'data-payment-status'
+                        ) === state.payment;
+
+                    var searchData =
+                        row.getAttribute(
+                            'data-search'
+                        ) || '';
+
+                    var matchesSearch =
+                        !state.search ||
+                        searchData.indexOf(
+                            state.search
+                        ) !== -1;
+
+                    var show =
+                        matchesGroup &&
+                        matchesPayment &&
+                        matchesSearch;
+
+                    row.style.display =
+                        show ? '' : 'none';
+
+                    if (show) {
+                        visible++;
+                    }
+
+                });
+
+
+                if (resultsCount) {
+
+                    resultsCount.textContent =
+                        visible;
+
+                }
+
+
+                var noOrdersMatch =
+                    visible === 0;
+
+
+                if (noResultsState) {
+
+                    noResultsState.classList.toggle(
+                        'show',
+                        noOrdersMatch
+                    );
+
+                }
+
+
+                if (tableWrapper) {
+
+                    tableWrapper.style.display =
+                        noOrdersMatch
+                            ? 'none'
+                            : '';
+
+                }
+
+            }
+
+
+            if (searchInput) {
+
+                searchInput.addEventListener(
+                    'input',
+                    function () {
+
+                        state.search =
+                            this.value
+                                .trim()
+                                .toLowerCase();
+
+                        applyFilters();
+
+                    }
+                );
+
+            }
+
+
+            statusTabs.forEach(function (tab) {
+
+                tab.addEventListener(
+                    'click',
+                    function () {
+
+                        statusTabs.forEach(
+                            function (t) {
+                                t.classList.remove(
+                                    'active'
+                                );
+                            }
+                        );
+
+                        tab.classList.add(
+                            'active'
+                        );
+
+                        state.group =
+                            tab.getAttribute(
+                                'data-group'
+                            );
+
+                        applyFilters();
+
+                    }
+                );
+
+            });
+
+
+            filterChips.forEach(function (chip) {
+
+                chip.addEventListener(
+                    'click',
+                    function () {
+
+                        filterChips.forEach(
+                            function (c) {
+                                c.classList.remove(
+                                    'active'
+                                );
+                            }
+                        );
+
+                        chip.classList.add(
+                            'active'
+                        );
+
+                        state.payment =
+                            chip.getAttribute(
+                                'data-payment'
+                            );
+
+                        applyFilters();
+
+                    }
+                );
+
+            });
+
+
+            var filtersBtn =
+                document.getElementById(
+                    'filtersBtn'
+                );
+
+            var filtersPanel =
+                document.getElementById(
+                    'filtersPanel'
+                );
+
+
+            if (filtersBtn &&
+                filtersPanel) {
+
+                filtersBtn.addEventListener(
+                    'click',
+                    function (e) {
+
+                        e.stopPropagation();
+
+                        filtersPanel.classList.toggle(
+                            'show'
+                        );
+
+                        filtersBtn.classList.toggle(
+                            'active'
+                        );
+
+                    }
+                );
+
+
+                document.addEventListener(
+                    'click',
+                    function (e) {
+
+                        if (
+                            !filtersPanel.contains(
+                                e.target
+                            ) &&
+                            e.target !== filtersBtn
+                        ) {
+
+                            filtersPanel.classList.remove(
+                                'show'
+                            );
+
+                            filtersBtn.classList.remove(
+                                'active'
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+
+        })();
+
     </script>
+
 </body>
 </html>

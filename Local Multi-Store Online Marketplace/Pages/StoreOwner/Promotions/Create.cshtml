@@ -9,8 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
-                   ROOT VARIABLES — consistent brand palette
-                   ============================================================ */
+                           ROOT VARIABLES — consistent brand palette
+                           ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -48,8 +48,8 @@
         }
 
         /* ============================================================
-                   HEADER
-                   ============================================================ */
+                           HEADER
+                           ============================================================ */
         .page-heading {
             margin-bottom: 28px;
         }
@@ -77,8 +77,8 @@
             }
 
         /* ============================================================
-                   ALERT
-                   ============================================================ */
+                           ALERT
+                           ============================================================ */
         .alert {
             border-radius: var(--radius-md);
             padding: 14px 20px;
@@ -102,8 +102,8 @@
             }
 
         /* ============================================================
-                   GRID
-                   ============================================================ */
+                           GRID
+                           ============================================================ */
         .promotion-grid {
             display: grid;
             grid-template-columns: 1.6fr 0.9fr;
@@ -112,8 +112,8 @@
         }
 
         /* ============================================================
-                   MAIN CARD
-                   ============================================================ */
+                           MAIN CARD
+                           ============================================================ */
         .promo-card {
             background: var(--card-bg);
             border-radius: var(--radius-lg);
@@ -151,8 +151,8 @@
         }
 
         /* ============================================================
-                   FORM SECTIONS
-                   ============================================================ */
+                           FORM SECTIONS
+                           ============================================================ */
         .form-section {
             margin-bottom: 30px;
         }
@@ -192,8 +192,8 @@
         }
 
         /* ============================================================
-                   FORM FIELDS
-                   ============================================================ */
+                           FORM FIELDS
+                           ============================================================ */
         .form-group {
             margin-bottom: 18px;
         }
@@ -261,8 +261,8 @@
         }
 
         /* ============================================================
-                   COUPON BOX
-                   ============================================================ */
+                           COUPON BOX
+                           ============================================================ */
         .coupon-box {
             border: 1.5px solid #e0d4fb;
             background: var(--accent-light);
@@ -309,9 +309,9 @@
             }
 
         /* BUGFIX (design/UX): previously every coupon field below the toggle was
-                   always visible and enabled regardless of the checkbox — confusing, since
-                   the checkbox's whole label implies it gates them. Wrapped in a
-                   collapsible container the script below actually shows/hides. */
+                           always visible and enabled regardless of the checkbox — confusing, since
+                           the checkbox's whole label implies it gates them. Wrapped in a
+                           collapsible container the script below actually shows/hides. */
         .coupon-fields {
             overflow: hidden;
             max-height: 0;
@@ -331,9 +331,30 @@
             margin-top: 4px;
         }
 
+        /* Mirrors .coupon-fields/.coupon-grid above — same collapsible
+                           pattern, used by the "no coupon" Automatic Sale block instead. */
+        .sale-fields {
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transition: max-height 0.3s ease, opacity 0.2s ease;
+        }
+
+            .sale-fields.expanded {
+                max-height: 900px;
+                opacity: 1;
+            }
+
+        .sale-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 4px;
+        }
+
         /* ============================================================
-                   ACTION BUTTONS
-                   ============================================================ */
+                           ACTION BUTTONS
+                           ============================================================ */
         .action-row {
             display: flex;
             gap: 12px;
@@ -391,8 +412,8 @@
             }
 
         /* ============================================================
-                   SIDE CARD (Preview & Tips)
-                   ============================================================ */
+                           SIDE CARD (Preview & Tips)
+                           ============================================================ */
         .side-card {
             background: var(--card-bg);
             border-radius: var(--radius-lg);
@@ -494,8 +515,8 @@
             }
 
         /* ============================================================
-                   ACCESSIBILITY
-                   ============================================================ */
+                           ACCESSIBILITY
+                           ============================================================ */
         a:focus-visible,
         button:focus-visible,
         input:focus-visible,
@@ -512,8 +533,8 @@
         }
 
         /* ============================================================
-                   RESPONSIVE
-                   ============================================================ */
+                           RESPONSIVE
+                           ============================================================ */
         @@media (max-width: 992px) {
             .promotion-grid {
                 grid-template-columns: 1fr;
@@ -551,6 +572,11 @@
                 gap: 14px;
             }
 
+            .sale-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
             .action-row {
                 flex-direction: column;
             }
@@ -582,10 +608,10 @@
         }
 
         /* ============================================================
-                   SEND CONFIRMATION MODAL — replaces the native confirm() dialog
-                   with a styled, on-brand modal. Same Send/Cancel decision,
-                   just restyled to match the rest of the page.
-                   ============================================================ */
+                           SEND CONFIRMATION MODAL — replaces the native confirm() dialog
+                           with a styled, on-brand modal. Same Send/Cancel decision,
+                           just restyled to match the rest of the page.
+                           ============================================================ */
         .confirm-modal-overlay {
             position: fixed;
             inset: 0;
@@ -756,11 +782,11 @@
 
                         <div class="section-divider"></div>
 
-                        <!-- Section 2: Coupon Settings -->
+                        <!-- Section 2: Coupon Settings / Automatic Sale -->
                         <div class="form-section">
                             <div class="section-title">
                                 <span class="section-badge">2</span>
-                                Coupon Settings
+                                Coupon or Automatic Sale
                             </div>
 
                             <div class="coupon-box">
@@ -772,6 +798,8 @@
                                         </label>
                                         <small>
                                             When enabled, customers will receive a unique coupon code they can use at checkout.
+                                            When left unchecked, you can instead pick a product below for an automatic sale —
+                                            customers see the discounted price right away, with no coupon needed.
                                         </small>
                                     </div>
                                 </div>
@@ -850,6 +878,54 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- AUTOMATIC SALE — shown when "Create a coupon" is OFF.
+                                     Reuses Promotion.DiscountType/DiscountValue/CouponEndDate,
+                                     the same properties the coupon fields above use, since a
+                                     promotion only ever uses one or the other. The script below
+                                     disables whichever set of inputs is currently hidden so only
+                                     one set is ever submitted. -->
+                                <div class="sale-fields" id="saleFields">
+                                    <div class="form-group">
+                                        <label asp-for="Promotion.ProductID" class="form-label">
+                                            Product <span class="required">*</span>
+                                        </label>
+                                        <select asp-for="Promotion.ProductID" class="form-select">
+                                            <option value="">Select a product...</option>
+                                            @foreach (var product in Model.MyProducts)
+                                            {
+                                                <option value="@product.ProductID">@product.ProductName ($@product.Price.ToString("N2"))</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="Promotion.ProductID" class="text-danger"></span>
+                                        <div class="help-text">Customers will automatically see the discounted price on this product — no coupon needed.</div>
+                                    </div>
+
+                                    <div class="sale-grid">
+                                        <div class="form-group">
+                                            <label for="saleDiscountType" class="form-label">
+                                                Discount Type <span class="required">*</span>
+                                            </label>
+                                            <select id="saleDiscountType" name="Promotion.DiscountType" class="form-select" disabled>
+                                                <option value="Percentage" selected="@(Model.Promotion.DiscountType != "Fixed")">Percentage (%)</option>
+                                                <option value="Fixed" selected="@(Model.Promotion.DiscountType == "Fixed")">Fixed Amount ($)</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="saleDiscountValue" class="form-label">
+                                                Discount Value <span class="required">*</span>
+                                            </label>
+                                            <input id="saleDiscountValue" name="Promotion.DiscountValue" class="form-control" placeholder="e.g. 20" value="@(Model.Promotion.DiscountValue > 0 ? Model.Promotion.DiscountValue.ToString() : "")" disabled />
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="saleEndDate" class="form-label">Sale End Date</label>
+                                            <input id="saleEndDate" name="Promotion.CouponEndDate" type="date" class="form-control" value="@(Model.Promotion.ProductID.HasValue ? Model.Promotion.CouponEndDate?.ToString("yyyy-MM-dd") : null)" disabled />
+                                            <div class="help-text">Optional: Leave blank for the sale to run until you delete the promotion.</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -923,14 +999,41 @@
 
     <script>
         (function() {
-            /* ── Coupon fields show/hide ──────────────────────────────── */
+            /* ── Coupon fields / Automatic Sale fields show/hide ─────────
+               Exactly one of these two is visible at a time, mirroring
+               the CreateCoupon toggle. The two duplicate input sets both
+               ultimately bind to the same Promotion.DiscountType/
+               DiscountValue/CouponEndDate properties, so whichever set
+               is hidden is also disabled — disabled inputs are not
+               submitted, guaranteeing only one set of values reaches
+               the server no matter which mode is active. ──────────── */
             const couponToggle = document.getElementById('createCouponToggle');
             const couponFields = document.getElementById('couponFields');
+            const saleFields = document.getElementById('saleFields');
             const previewCoupon = document.getElementById('previewCoupon');
+
+            const couponDiscountType = document.getElementById('Promotion_DiscountType');
+            const couponDiscountValue = document.getElementById('Promotion_DiscountValue');
+            const couponEndDate = document.getElementById('Promotion_CouponEndDate');
+
+            const saleDiscountType = document.getElementById('saleDiscountType');
+            const saleDiscountValue = document.getElementById('saleDiscountValue');
+            const saleEndDate = document.getElementById('saleEndDate');
 
             function syncCouponVisibility() {
                 const isOn = couponToggle.checked;
+
                 couponFields.classList.toggle('expanded', isOn);
+                if (saleFields) saleFields.classList.toggle('expanded', !isOn);
+
+                if (couponDiscountType) couponDiscountType.disabled = !isOn;
+                if (couponDiscountValue) couponDiscountValue.disabled = !isOn;
+                if (couponEndDate) couponEndDate.disabled = !isOn;
+
+                if (saleDiscountType) saleDiscountType.disabled = isOn;
+                if (saleDiscountValue) saleDiscountValue.disabled = isOn;
+                if (saleEndDate) saleEndDate.disabled = isOn;
+
                 // BUGFIX: the live preview always showed a coupon line even when
                 // "Create a coupon" was unchecked, implying the customer message
                 // would include one when it wouldn't.

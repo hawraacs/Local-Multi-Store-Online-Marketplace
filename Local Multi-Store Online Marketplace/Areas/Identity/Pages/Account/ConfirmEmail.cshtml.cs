@@ -22,7 +22,7 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
         public ConfirmEmailModel(UserManager<User> userManager)
         {
             _userManager = userManager;
-        }
+          }
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
