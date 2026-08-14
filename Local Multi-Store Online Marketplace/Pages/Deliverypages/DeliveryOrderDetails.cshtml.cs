@@ -299,7 +299,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
                 NeedsCashCollection =
                     isCod &&
-                    !order.PaymentStatus.Equals("Paid", StringComparison.OrdinalIgnoreCase)
+                    !order.PaymentStatus.Equals("Paid", StringComparison.OrdinalIgnoreCase),
+
+                // "Your Earnings" reuses the existing Order.DeliveryFee
+                // value already shown above as "Delivery Fee" — no new
+                // calculation. Only shown once the assignment is
+                // actually Delivered, matching the Dashboard's
+                // Total Earnings KPI (Delivered-only).
+                IsDelivered = string.Equals(
+                    assignment.Status, "Delivered", StringComparison.OrdinalIgnoreCase),
+
+                YourEarnings = order.DeliveryFee
             };
         }
 
@@ -357,6 +367,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
         public bool IsCashOnDelivery { get; set; }
         public bool NeedsCashCollection { get; set; }
+
+        public bool IsDelivered { get; set; }
+        public decimal YourEarnings { get; set; }
     }
 
     public class ProductLineViewModel

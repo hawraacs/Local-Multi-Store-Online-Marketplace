@@ -1270,6 +1270,28 @@
             }
         }
 
+        /* Trending rail lives outside #exploreGrid, so it never picked up
+           the #exploreGrid-scoped .tile-media img/video sizing fix below —
+           that's why trending images/video previews were rendering blank
+           or falling back to the placeholder graphic. Mirror the same
+           absolute-fill / object-fit rules here. */
+        .trending-rail .explore-tile .tile-media {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+            .trending-rail .explore-tile .tile-media img,
+            .trending-rail .explore-tile .tile-media video {
+                position: absolute !important;
+                inset: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+                display: block !important;
+            }
+
         /* =====================================================
            REELS PLAYER (full-screen, Instagram-Reels-style)
            ===================================================== */
@@ -2775,26 +2797,50 @@
                         <div class="trending-rail-track">
                             @foreach (var item in Model.TrendingItems)
                             {
+                                var trendingIsVideo = string.Equals(item.MediaType, "Video", StringComparison.OrdinalIgnoreCase);
+                                var trendingIsReel = string.Equals(item.PostType, "Reel", StringComparison.OrdinalIgnoreCase);
+
                                 <button type="button"
                                         class="explore-tile trending-tile"
                                         data-grid-item
                                         data-item-type="@item.GridItemType"
                                         data-post-id="@item.ExplorePostID"
+                                        data-product-id="@item.ProductID"
                                         data-post-type="@item.PostType"
                                         data-store-id="@item.StoreID"
                                         data-store-name="@item.StoreName">
 
                                     <span class="tile-media">
-                                        <img src="@(string.Equals(item.MediaType, "Video", StringComparison.OrdinalIgnoreCase) ? (item.ThumbnailUrl ?? "/images/product-placeholder.svg") : item.MediaUrl)"
-                                             alt="@(item.ProductName ?? item.StoreName)"
-                                             loading="lazy"
-                                             onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
+                                        @if (trendingIsVideo && string.IsNullOrWhiteSpace(item.ThumbnailUrl))
+                                        {
+                                            <video muted
+                                                   loop
+                                                   playsinline
+                                                   preload="metadata"
+                                                   data-reel-preview>
+                                                <source src="@item.MediaUrl" />
+                                            </video>
+                                        }
+                                        else
+                                        {
+                                            <img src="@(trendingIsVideo ? item.ThumbnailUrl : item.MediaUrl)"
+                                                 alt="@(item.ProductName ?? item.StoreName)"
+                                                 loading="lazy"
+                                                 onerror="this.onerror=null;this.src='/images/product-placeholder.svg';" />
+                                        }
                                     </span>
 
                                     <span class="tile-gradient"></span>
 
                                     <span class="tile-top">
-                                        <span class="tile-badge"><i class="fa-solid fa-fire"></i></span>
+                                        @if (trendingIsReel)
+                                        {
+                                            <span class="tile-badge"><i class="fa-solid fa-play"></i></span>
+                                        }
+                                        else
+                                        {
+                                            <span class="tile-badge"><i class="fa-solid fa-fire"></i></span>
+                                        }
 
                                         @if (item.ProductPrice.HasValue)
                                         {
