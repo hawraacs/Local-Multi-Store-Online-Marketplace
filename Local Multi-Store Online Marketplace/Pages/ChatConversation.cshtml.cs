@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
+using Local_Multi_Store_Online_Marketplace.Hubs;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,6 +26,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly IWebHostEnvironment _environment;
         private readonly NotificationManager _notificationManager;
         private readonly Multi_Store.Core.Reposinterface.IChatMessageRepository _chatMessageRepository;
+        private readonly IHubContext<AppHub> _hub; // NEW — pushes chat messages live via SignalR
 
         public ChatConversationModel(
             UserManager<User> userManager,
@@ -32,7 +35,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             ProductManager productManager,
             IWebHostEnvironment environment,
             NotificationManager notificationManager,
-            Multi_Store.Core.Reposinterface.IChatMessageRepository chatMessageRepository)
+            Multi_Store.Core.Reposinterface.IChatMessageRepository chatMessageRepository,
+            IHubContext<AppHub> hub) // NEW
         {
             _userManager = userManager;
             _messagingManager = messagingManager;
@@ -41,6 +45,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _environment = environment;
             _notificationManager = notificationManager;
             _chatMessageRepository = chatMessageRepository;
+            _hub = hub; // NEW
         }
 
         public List<ChatMessageDTO> Messages { get; set; } = new();
@@ -167,6 +172,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     MessageText = finalMessageText,
                     ImageUrl = fileUrl
                 }, "", "");
+
+                // NEW — push the message live to both sides of the
+                // conversation via the shared AppHub SignalR connection.
+                // The receiver sees it appear instantly with no refresh;
+                // the sender's own page also gets it in case they have
+                // this same conversation open in another tab/device.
+                await BroadcastChatMessageAsync(user, receiverId, finalMessageText, fileUrl);
             }
 
             await _sessionManager.TouchAsync(user.Id);
@@ -216,7 +228,61 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 receiverId,
                 productId);
 
+            // NEW — notify both sides live that a product was shared.
+            // The client-side listener reloads the conversation on
+            // receiving isProduct=true, since rendering the full product
+            // card needs image/price/description this lightweight
+            // broadcast doesn't carry.
+            try
+            {
+                var payload = new
+                {
+                    senderId = user.Id,
+                    receiverId = receiverId,
+                    isProduct = true
+                };
+
+                await _hub.Clients.User(receiverId.ToString()).SendAsync("ReceiveChatMessage", payload);
+                await _hub.Clients.User(user.Id.ToString()).SendAsync("ReceiveChatMessage", payload);
+            }
+            catch
+            {
+                // Never let a broadcast failure break product sharing —
+                // the message itself is already saved at this point.
+            }
+
             return RedirectToPage(new { userId = receiverId });
+        }
+
+        /// <summary>
+        /// Broadcasts a newly sent chat message to both the sender and
+        /// receiver via AppHub. Wrapped in try/catch so a hub/connection
+        /// failure never breaks sending the message itself — the message
+        /// is already safely saved by the time this runs.
+        /// </summary>
+        private async Task BroadcastChatMessageAsync(User sender, int receiverId, string messageText, string? imageUrl)
+        {
+            try
+            {
+                var senderDisplayName = sender.FullName ?? sender.UserName ?? "User";
+
+                var payload = new
+                {
+                    senderId = sender.Id,
+                    receiverId = receiverId,
+                    senderName = senderDisplayName,
+                    messageText = messageText,
+                    imageUrl = imageUrl,
+                    sentAt = DateTime.UtcNow.ToString("o") // ISO 8601 — matches data-utc on the client
+                };
+
+                await _hub.Clients.User(receiverId.ToString()).SendAsync("ReceiveChatMessage", payload);
+                await _hub.Clients.User(sender.Id.ToString()).SendAsync("ReceiveChatMessage", payload);
+            }
+            catch
+            {
+                // Swallow — live push is a nice-to-have, not critical path.
+            }
         }
 
         private async Task<ChatSavedFile> SaveChatFileAsync(IFormFile file)
