@@ -1,8 +1,10 @@
 using java.awt;
+using Local_Multi_Store_Online_Marketplace.Hubs;
 using Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
@@ -22,6 +24,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
         private readonly IConfiguration _configuration;
         private readonly IAuditLogRepository _auditLogRepository;
         private readonly ILogger<CreateModel> _logger;
+        private readonly IHubContext<AppHub> _hub; // NEW — pushes new products live to Explore
 
         private const long MaxImageSizeBytes = 5 * 1024 * 1024; // 5 MB per image
         private const int MaxImageCount = 5;
@@ -38,7 +41,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
             IWebHostEnvironment webHostEnvironment,
             IConfiguration configuration,
             IAuditLogRepository auditLogRepository,
-            ILogger<CreateModel> logger)
+            ILogger<CreateModel> logger,
+            IHubContext<AppHub> hub) // NEW
         {
             _context = context;
             _currentStoreService = currentStoreService;
@@ -46,6 +50,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
             _configuration = configuration;
             _auditLogRepository = auditLogRepository;
             _logger = logger;
+            _hub = hub; // NEW
         }
 
         [BindProperty]
@@ -252,6 +257,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
                     }
                 }
 
+                // NEW — broadcast the new product live to every customer
+                // currently browsing Explore (Customer1.cshtml), via the
+                // shared AppHub SignalR connection. No page refresh needed
+                // on their end.
+                await BroadcastNewProductAsync(product, store, category);
+
                 TempData["SuccessMessage"] = $"Product '{product.ProductName}' has been created successfully!";
                 return RedirectToPage("/StoreOwner/Products/Index");
             }
@@ -267,6 +278,42 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Products
         // =============================================================
         // HELPER METHODS
         // =============================================================
+
+        /// <summary>
+        /// Broadcasts a newly created product to every connected client via
+        /// AppHub, so Customer1.cshtml (Explore) can prepend it to the grid
+        /// live without a page refresh. Wrapped in try/catch so a hub/
+        /// connection failure never breaks product creation itself — the
+        /// product is already safely saved by the time this runs.
+        /// </summary>
+        private async Task BroadcastNewProductAsync(Product product, Store store, Category category)
+        {
+            try
+            {
+                var primaryImageUrl = await _context.ProductImages
+                    .Where(i => i.ProductID == product.ProductID)
+                    .OrderByDescending(i => i.IsPrimary)
+                    .ThenBy(i => i.DisplayOrder)
+                    .Select(i => i.ImageUrl)
+                    .FirstOrDefaultAsync() ?? "/images/product-placeholder.svg";
+
+                await _hub.Clients.All.SendAsync("NewProductAdded", new
+                {
+                    productId = product.ProductID,
+                    productName = product.ProductName,
+                    price = product.Price,
+                    imageUrl = primaryImageUrl,
+                    storeId = store.StoreID,
+                    storeName = store.StoreName,
+                    storeLogoUrl = store.LogoURL,
+                    categoryName = category.CategoryName
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Product {ProductId} was created but the live SignalR broadcast failed.", product.ProductID);
+            }
+        }
 
         /// <summary>
         /// Builds the real category tree (parents with their children nested

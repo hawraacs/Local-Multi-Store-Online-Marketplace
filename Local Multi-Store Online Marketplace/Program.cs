@@ -1,6 +1,8 @@
 using AutoMapper;
+using Local_Multi_Store_Online_Marketplace.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Core.Interfaces;
@@ -8,12 +10,11 @@ using Multi_Store.Core.Managers;
 using Multi_Store.Core.Reposinterface;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Infrastructure.Repositories;
+using Multi_Store.Infrastructure.Services;
+using Multi_Store.Infrastructure.Settings;
 using Multi_Store.Services;
 using Multi_Store.Services.Email;
 using Multi_Store.Services.Managers;
-using Multi_Store.Infrastructure.Settings;
-using Multi_Store.Infrastructure.Services;
-using Local_Multi_Store_Online_Marketplace.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 builder.Services.AddSignalR(); // added
+builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
 
 //adminlog
 builder.Services.AddHttpContextAccessor();
@@ -268,6 +270,7 @@ app.UseSession();
 app.MapRazorPages();
 app.MapControllers();
 app.MapDefaultControllerRoute();
+app.MapHub<AppHub>("/apphub");
 app.MapHub<OrderHub>("/orderHub"); // added
 
 app.Run();
