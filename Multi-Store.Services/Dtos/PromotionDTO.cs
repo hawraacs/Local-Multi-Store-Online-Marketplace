@@ -25,10 +25,6 @@ namespace Multi_Store.Core.DTOs
         [StringLength(50)]
         public string? CouponCode { get; set; }
 
-        // Selected product for the no-coupon "automatic sale" path only.
-        // Not used, and not required, when CreateCoupon is true.
-        public int? ProductID { get; set; }
-
         public int RecipientCount { get; set; }
 
         public bool IsSent { get; set; }

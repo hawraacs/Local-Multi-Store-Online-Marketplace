@@ -1581,16 +1581,6 @@ namespace Multi_Store.Infrastructure.Migrations
                     b.Property<int>("CreatedByUserID")
                         .HasColumnType("int");
 
-                    b.Property<string>("DiscountType")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<decimal?>("DiscountValue")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsSent")
                         .HasColumnType("bit");
 
@@ -1599,14 +1589,8 @@ namespace Multi_Store.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<int?>("ProductID")
-                        .HasColumnType("int");
-
                     b.Property<int>("RecipientCount")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("SaleEndDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("SentAt")
                         .HasColumnType("datetime2");
@@ -1625,8 +1609,6 @@ namespace Multi_Store.Infrastructure.Migrations
                         .HasColumnType("nvarchar(150)");
 
                     b.HasKey("PromotionID");
-
-                    b.HasIndex("ProductID");
 
                     b.HasIndex("StoreID");
 
@@ -2957,17 +2939,11 @@ namespace Multi_Store.Infrastructure.Migrations
 
             modelBuilder.Entity("Multi_Store.Core.Entities.Promotion", b =>
                 {
-                    b.HasOne("Multi_Store.Core.Entities.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductID");
-
                     b.HasOne("Multi_Store.Core.Entities.Store", "Store")
                         .WithMany()
                         .HasForeignKey("StoreID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Product");
 
                     b.Navigation("Store");
                 });

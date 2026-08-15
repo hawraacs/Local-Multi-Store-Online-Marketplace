@@ -3738,5 +3738,95 @@
             };
         })();
     </script>
+
+    <script>
+        // =====================================================
+        // LIVE PRODUCT FEED — SignalR (AppHub)
+        // New products created by any store owner appear here
+        // instantly, at the top of the grid, with no page refresh.
+        // window.appHub / window.appHubReady come from _AppHubScript,
+        // which is included inside the _CustomerBottomNav partial
+        // rendered above — so no extra <script> tag is needed here
+        // to open the connection itself.
+        // =====================================================
+        (function () {
+            if (!window.appHubReady) return;
+
+            window.appHubReady.then(function () {
+                window.appHub.on("NewProductAdded", function (p) {
+                    var grid = document.getElementById('exploreGrid');
+                    if (!grid) return;
+
+                    // Respect the customer's active category filter/tab:
+                    // if they've picked a specific category and this new
+                    // product belongs to a different one, don't inject it
+                    // into a view where it doesn't belong.
+                    var exploreApp = document.getElementById('exploreApp');
+                    var activeCategory = exploreApp ? exploreApp.dataset.category : '';
+                    if (activeCategory && p.categoryName &&
+                        activeCategory.toLowerCase() !== p.categoryName.toLowerCase()) {
+                        return;
+                    }
+
+                    // Avoid duplicate tiles if this exact product somehow
+                    // already exists in the grid (e.g. two tabs open).
+                    if (grid.querySelector('.explore-tile[data-product-id="' + p.productId + '"]')) {
+                        return;
+                    }
+
+                    var storeInitial = (p.storeName || 'S').charAt(0).toUpperCase();
+                    var storeAvatarHtml = p.storeLogoUrl
+                        ? '<img src="' + p.storeLogoUrl + '" alt="' + p.storeName + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
+                          '<span class="tile-store-fallback">' + storeInitial + '</span>'
+                        : '<span class="tile-store-fallback visible">' + storeInitial + '</span>';
+
+                    var tile = document.createElement('div');
+                    tile.className = 'explore-tile';
+                    tile.setAttribute('role', 'button');
+                    tile.setAttribute('tabindex', '0');
+                    tile.setAttribute('data-grid-item', '');
+                    tile.setAttribute('data-item-type', 'Product');
+                    tile.setAttribute('data-product-id', p.productId);
+                    tile.setAttribute('data-post-type', 'Product');
+                    tile.setAttribute('data-store-id', p.storeId);
+                    tile.setAttribute('data-store-name', p.storeName);
+                    tile.setAttribute('aria-label', 'Open product ' + p.productName);
+
+                    tile.innerHTML =
+                        '<span class="tile-image-wrap">' +
+                            '<span class="tile-media">' +
+                                '<img src="' + p.imageUrl + '" alt="' + p.productName + '" loading="lazy" ' +
+                                     'onerror="this.onerror=null;this.src=\'/images/product-placeholder.svg\';" />' +
+                            '</span>' +
+                            '<span class="tile-gradient"></span>' +
+                            '<span class="tile-top">' +
+                                '<span class="tile-badge"><i class="fa-solid fa-bag-shopping"></i> Product</span>' +
+                                '<span class="tile-price">$' + Number(p.price).toFixed(2) + '</span>' +
+                            '</span>' +
+                            '<span class="tile-bottom">' +
+                                '<span class="tile-store">' + storeAvatarHtml + '<span>' + p.storeName + '</span></span>' +
+                            '</span>' +
+                        '</span>' +
+                        '<span class="tile-footer">' +
+                            '<strong class="tile-title">' + p.productName + '</strong>' +
+                            '<span class="tile-icons">' +
+                                '<button type="button" class="tile-heart" data-product-id="' + p.productId + '" aria-label="Save to wishlist">' +
+                                    '<i class="fa-regular fa-heart"></i>' +
+                                '</button>' +
+                                '<button type="button" class="tile-bookmark" aria-label="Quick view">' +
+                                    '<i class="fa-regular fa-bookmark"></i>' +
+                                '</button>' +
+                            '</span>' +
+                        '</span>';
+
+                    grid.prepend(tile);
+
+                    // Hide the "no items" empty state if it was showing.
+                    var emptyState = document.getElementById('emptyExploreState');
+                    if (emptyState) emptyState.classList.add('hidden');
+                });
+            });
+        })();
+    </script>
 </body>
 </html>
