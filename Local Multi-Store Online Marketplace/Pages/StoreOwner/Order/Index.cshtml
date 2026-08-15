@@ -455,6 +455,60 @@
 </script>
 
 <script>
+    // =====================================================
+    // LIVE NEW ORDERS — when a customer checks out and places
+    // an order on this store, it appears at the top of the
+    // table instantly, no refresh. Same shared AppHub
+    // connection as the OrderStatusUpdated listener above.
+    // =====================================================
+    (function() {
+        if (!window.appHubReady) return;
+
+        window.appHubReady.then(function() {
+            window.appHub.on("NewOrderPlaced", function(o) {
+                var tbody = document.querySelector('.table tbody');
+                if (!tbody) return;
+
+                // Avoid duplicates if this row somehow already exists.
+                if (document.getElementById('order-row-' + o.orderId)) return;
+
+                var row = document.createElement('tr');
+                row.id = 'order-row-' + o.orderId;
+
+                row.innerHTML =
+                    '<td><strong>' + o.orderNumber + '</strong></td>' +
+                    '<td>' + o.customerName + '</td>' +
+                    '<td>' + o.orderDate + '</td>' +
+                    '<td>' + o.itemCount + '</td>' +
+                    '<td><strong>$' + Number(o.totalAmount).toFixed(2) + '</strong></td>' +
+                    '<td id="status-' + o.orderId + '">' +
+                    '<form method="post" action="?handler=UpdateStatus" class="d-inline">' +
+                    '<input type="hidden" name="orderId" value="' + o.orderId + '" />' +
+                    '<select name="newStatus" class="status-select" onchange="this.form.submit()">' +
+                    '<option value="Pending" selected disabled>Pending</option>' +
+                    '<option value="Confirmed">Confirmed</option>' +
+                    '<option value="Cancelled">Cancelled</option>' +
+                    '<option value="Preparing" disabled>Preparing</option>' +
+                    '<option value="OutForDelivery" disabled>Out For Delivery</option>' +
+                    '<option value="Delivered" disabled>Delivered</option>' +
+                    '</select>' +
+                    '</form>' +
+                    '</td>' +
+                    '<td class="text-center">' +
+                    '<a href="/StoreOwner/Order/Details?id=' + o.orderId + '" class="btn-view">' +
+                    '<i class="fas fa-eye"></i> View' +
+                    '</a>' +
+                    '</td>';
+
+                tbody.prepend(row);
+                row.classList.add('notif-highlight');
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        });
+    })();
+</script>
+
+<script>
     // ========== NOTIFICATION DEEP-LINK HANDLING ==========
     // "NewOrder" notifications route here with ?highlightOrderId=<id> so the
     // store owner lands directly on the row for the order that was just placed.

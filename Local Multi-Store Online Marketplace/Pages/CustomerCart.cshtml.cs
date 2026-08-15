@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services;
+using Local_Multi_Store_Online_Marketplace.Hubs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +24,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
         private readonly SubscriptionService _subscriptionService;
+        private readonly IHubContext<AppHub> _hub; // NEW — pushes new orders live to Order/Index
 
         private const decimal FreeDeliveryThreshold = 50m;
         private const decimal BaseDeliveryFee = 2.00m;
@@ -48,11 +51,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public CustomerCartModel(
             ApplicationDbContext context,
             UserManager<User> userManager,
-            SubscriptionService subscriptionService)
+            SubscriptionService subscriptionService,
+            IHubContext<AppHub> hub) // NEW
         {
             _context = context;
             _userManager = userManager;
             _subscriptionService = subscriptionService;
+            _hub = hub; // NEW
         }
 
         // =====================================================
@@ -694,8 +699,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             var paymentRecordStatus = "Pending";
 
+            // CHANGED — added .Include(c => c.User) so the customer's
+            // display name is available for the live-order broadcast
+            // below, without an extra round trip.
             var customer = await _context.Customers
                 .Include(c => c.Addresses)
+                .Include(c => c.User)
                 .FirstOrDefaultAsync(c =>
                     c.CustomerID == customerId);
 
@@ -1101,12 +1110,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             // Only stores present in the CHECKED-OUT items get
             // notified — stores whose items were left in the cart
             // are not.
+            //
+            // NEW — each involved store also gets a live "NewOrderPlaced"
+            // broadcast via the shared AppHub, so the store owner's
+            // Order/Index page can show the new order instantly without
+            // a refresh, the same way notifications already do — just
+            // without needing to visit ReportUpdates first.
             // =================================================
             var involvedStoreIds = itemsToCheckout
                 .Where(item => item.Product != null)
                 .Select(item => item.Product!.StoreID)
                 .Distinct()
                 .ToList();
+
+            var customerDisplayName =
+                customer.User?.FullName ??
+                customer.User?.UserName ??
+                "Customer";
 
             foreach (var storeId in involvedStoreIds)
             {
@@ -1116,11 +1136,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 if (involvedStore != null)
                 {
-                    var itemCountForStore = itemsToCheckout
+                    var itemsForStore = itemsToCheckout
                         .Where(item =>
                             item.Product != null &&
                             item.Product.StoreID == storeId)
-                        .Sum(item => item.Quantity);
+                        .ToList();
+
+                    var itemCountForStore =
+                        itemsForStore.Sum(item => item.Quantity);
+
+                    var totalAmountForStore =
+                        itemsForStore.Sum(item =>
+                            item.PriceAtAddTime * item.Quantity);
 
                     _context.Notifications.Add(new Notification
                     {
@@ -1142,6 +1169,31 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                         SentVia = "System"
                     });
+
+                    // NEW — live push to Order/Index for this store owner.
+                    try
+                    {
+                        await _hub.Clients.All.SendAsync("NewOrderPlaced", new
+                        {
+                            orderId = order.OrderID,
+                            orderNumber = order.OrderNumber,
+                            storeId = involvedStore.StoreID,
+                            customerName = customerDisplayName,
+                            orderDate = order.OrderDate.ToString("yyyy-MM-dd HH:mm"),
+                            itemCount = itemCountForStore,
+
+                            // Store-scoped total (just this store's items
+                            // within the order), matching what Order/Index
+                            // already shows per row — not the full
+                            // multi-vendor order.TotalAmount.
+                            totalAmount = totalAmountForStore
+                        });
+                    }
+                    catch
+                    {
+                        // Never let a broadcast failure break checkout —
+                        // the order is already safely saved at this point.
+                    }
                 }
             }
 
