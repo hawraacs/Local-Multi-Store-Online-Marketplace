@@ -19,13 +19,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
     {
         private readonly ApplicationDbContext _context;
         private readonly ICurrentStoreService _currentStoreService;
-        private readonly IHubContext<OrderHub> _hubContext; // added
+        private readonly IHubContext<AppHub> _hubContext; // CHANGED — was IHubContext<OrderHub>
 
-        public IndexModel(ApplicationDbContext context, ICurrentStoreService currentStoreService, IHubContext<OrderHub> hubContext) // hubContext added
+        public IndexModel(ApplicationDbContext context, ICurrentStoreService currentStoreService, IHubContext<AppHub> hubContext) // CHANGED
         {
             _context = context;
             _currentStoreService = currentStoreService;
-            _hubContext = hubContext; // added
+            _hubContext = hubContext;
         }
 
         public List<OrderViewModel> Orders { get; set; } = new();
@@ -262,10 +262,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
 
             await _context.SaveChangesAsync();
 
-            // added — only reached if SaveChangesAsync above completed without throwing
-            Console.WriteLine($"[SignalR-DEBUG] About to send OrderStatusUpdated for OrderID={order.OrderID}, newStatus={newStatus}"); // temporary debug log
-            await _hubContext.Clients.All.SendAsync("OrderStatusUpdated", order.OrderID, newStatus);
-            Console.WriteLine($"[SignalR-DEBUG] SendAsync completed for OrderID={order.OrderID}"); // temporary debug log
+            // CHANGED — now broadcasts via the shared AppHub, same
+            // connection used by Explore's live product feed and chat,
+            // instead of a separate dedicated OrderHub connection.
+            try
+            {
+                await _hubContext.Clients.All.SendAsync("OrderStatusUpdated", order.OrderID, newStatus);
+            }
+            catch
+            {
+                // Never let a broadcast failure break the status update
+                // itself — the order is already safely saved above.
+            }
 
             TempData["SuccessMessage"] = $"Order #{order.OrderNumber} status updated to {newStatus}.";
             return RedirectToPage(new { pageIndex = PageIndex, statusFilter = StatusFilter, searchTerm = SearchTerm });

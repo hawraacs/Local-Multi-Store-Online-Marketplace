@@ -8,8 +8,8 @@
 @section Styles {
     <style>
         /* ============================================================
-                                                           ROOT VARIABLES — consistent brand palette
-                                                           ============================================================ */
+                                                                   ROOT VARIABLES — consistent brand palette
+                                                                   ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -39,8 +39,8 @@
         }
 
         /* ============================================================
-                                                           HEADER
-                                                           ============================================================ */
+                                                                   HEADER
+                                                                   ============================================================ */
         .orders-header {
             display: flex;
             justify-content: space-between;
@@ -70,8 +70,8 @@
             }
 
         /* ============================================================
-                                                           STATS ROW
-                                                           ============================================================ */
+                                                                   STATS ROW
+                                                                   ============================================================ */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -118,8 +118,8 @@
             }
 
         /* ============================================================
-                                                           CARD
-                                                           ============================================================ */
+                                                                   CARD
+                                                                   ============================================================ */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -156,8 +156,8 @@
         }
 
         /* ============================================================
-                                                           TABLE
-                                                           ============================================================ */
+                                                                   TABLE
+                                                                   ============================================================ */
         .table {
             font-size: 14px;
             color: var(--text-primary);
@@ -253,10 +253,10 @@
             }
 
         /* ============================================================
-                                   NOTIFICATION HIGHLIGHT — the row a notification
-                                   deep-link (e.g. "NewOrder") points at gets a brief
-                                   pulse and tinted background so it's easy to spot.
-                                   ============================================================ */
+                                           NOTIFICATION HIGHLIGHT — the row a notification
+                                           deep-link (e.g. "NewOrder") points at gets a brief
+                                           pulse and tinted background so it's easy to spot.
+                                           ============================================================ */
         @@keyframes orderHighlightPulse {
             0% {
                 background-color: rgba(109, 40, 217, 0.18);
@@ -273,8 +273,8 @@
         }
 
         /* ============================================================
-                                                           RESPONSIVE
-                                                           ============================================================ */
+                                                                   RESPONSIVE
+                                                                   ============================================================ */
         @@media (max-width: 768px) {
             .orders-header {
                 flex-direction: column;
@@ -432,56 +432,33 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
 <script>
-    const orderConnection = new signalR.HubConnectionBuilder()
-        .withUrl("/orderHub")
-        .withAutomaticReconnect([0, 2000, 5000, 10000, 20000])
-        .configureLogging(signalR.LogLevel.Information)
-        .build();
+    // =====================================================
+    // LIVE ORDER STATUS — uses the shared AppHub connection
+    // (window.appHub / window.appHubReady), opened by the
+    // _AppHubScript partial already included via
+    // _StoreOwnerLayout.cshtml. No separate hub/connection
+    // needed here anymore (previously used a dedicated OrderHub).
+    // =====================================================
+    (function() {
+        if (!window.appHubReady) return;
 
-    orderConnection.onreconnecting((err) => {
-        console.warn("[orderHub] reconnecting...", err);
-    });
-
-    orderConnection.onreconnected((id) => {
-        console.log("[orderHub] reconnected", id);
-    });
-
-    orderConnection.onclose(async (err) => {
-        console.warn("[orderHub] connection closed", err);
-        while (true) {
-            try {
-                await orderConnection.start();
-                console.log("[orderHub] reconnected after close");
-                break;
-            } catch {
-                await new Promise(resolve => setTimeout(resolve, 5000));
-            }
-        }
-    });
-
-    orderConnection.on("OrderStatusUpdated", function(orderId, newStatus) {
-        console.log("[orderHub] OrderStatusUpdated received:", orderId, newStatus);
-        const cell = document.getElementById("status-" + orderId);
-        if (cell) {
-            cell.innerHTML = '<span class="status-text">' + newStatus + '</span>';
-            console.log("[orderHub] updated cell status-" + orderId);
-        } else {
-            console.warn("[orderHub] no cell found for status-" + orderId);
-        }
-    });
-
-    orderConnection.start()
-        .then(() => console.log("[orderHub] connection started"))
-        .catch(err => console.error("[orderHub] connection failed:", err.toString()));
+        window.appHubReady.then(function() {
+            window.appHub.on("OrderStatusUpdated", function(orderId, newStatus) {
+                const cell = document.getElementById("status-" + orderId);
+                if (cell) {
+                    cell.innerHTML = '<span class="status-text">' + newStatus + '</span>';
+                }
+            });
+        });
+    })();
 </script>
 
 <script>
     // ========== NOTIFICATION DEEP-LINK HANDLING ==========
     // "NewOrder" notifications route here with ?highlightOrderId=<id> so the
     // store owner lands directly on the row for the order that was just placed.
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const highlightOrderId = new URLSearchParams(window.location.search).get('highlightOrderId');
         if (highlightOrderId) {
             const row = document.getElementById('order-row-' + highlightOrderId);
