@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services.Managers;
+using Local_Multi_Store_Online_Marketplace.Hubs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +18,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     public class AdminAssignDeliveryModel : PageModel
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHubContext<AppHub> _hub; // NEW — pushes the Preparing status live
 
         // Stateless helper with no dependencies of its own, so it's
         // instantiated directly here rather than requiring a DI
@@ -24,9 +27,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             new AreaProximityService();
 
         public AdminAssignDeliveryModel(
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            IHubContext<AppHub> hub) // NEW
         {
             _context = context;
+            _hub = hub; // NEW
         }
 
         // Every order has its own eligible delivery list.
@@ -39,6 +44,70 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public async Task OnGetAsync()
         {
             await LoadDataAsync();
+        }
+
+        // ==========================================
+        // NEW — LIVE ROW DATA FOR A SINGLE ORDER
+        //
+        // Called by the client when it receives an "OrderStatusUpdated"
+        // SignalR event (via AppHub) with newStatus == "Confirmed". Once
+        // a store owner confirms an order, it becomes eligible for
+        // delivery assignment, so this returns exactly the same shaped
+        // data LoadDataAsync() already builds for that one order, so
+        // the admin page can insert a live row without a refresh.
+        //
+        // Returns success:false (not an error status code) if the order
+        // is no longer eligible by the time this runs — e.g. another
+        // admin already assigned it in the few seconds since the
+        // broadcast — so the client simply skips inserting a row.
+        // ==========================================
+        public async Task<IActionResult> OnGetOrderRowDataAsync(int orderId)
+        {
+            var deliveryPeople =
+                await _context.DeliveryPersons
+                    .AsNoTracking()
+                    .Where(d =>
+                        d.IsActive &&
+                        d.Status == "Approved")
+                    .OrderBy(d =>
+                        d.FullName)
+                    .ToListAsync();
+
+            var order =
+                await _context.Orders
+                    .AsNoTracking()
+                    .Include(o => o.Customer)
+                        .ThenInclude(c => c.User)
+                    .Include(o => o.DeliveryAssignment)
+                    .Include(o => o.OrderItems)
+                    .Include(o => o.Address)
+                    .FirstOrDefaultAsync(o => o.OrderID == orderId);
+
+            var isEligible =
+                order != null &&
+                order.Customer != null &&
+                order.Customer.User != null &&
+                order.DeliveryAssignment == null &&
+                (
+                    order.Status == "Pending" ||
+                    order.Status == "Pending Confirmation" ||
+                    order.Status == "Confirmed" ||
+                    order.Status == "Preparing" ||
+                    order.Status == "Ready for Pickup"
+                );
+
+            if (!isEligible)
+            {
+                return new JsonResult(new { success = false });
+            }
+
+            var viewModel = BuildOrderViewModel(order!, deliveryPeople);
+
+            return new JsonResult(new
+            {
+                success = true,
+                order = viewModel
+            });
         }
 
         // ==========================================
@@ -271,6 +340,24 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage();
             }
 
+            // NEW — push the "Preparing" status live to the customer's
+            // CustomerOrders page (which already listens for this same
+            // "OrderStatusUpdated" event from Order/Index.cshtml.cs),
+            // and to the store owner's Order/Index page too, so both
+            // update instantly with no manual refresh.
+            try
+            {
+                await _hub.Clients.All.SendAsync(
+                    "OrderStatusUpdated",
+                    order.OrderID,
+                    order.Status);
+            }
+            catch
+            {
+                // Never let a broadcast failure break the assignment —
+                // the order is already safely saved at this point.
+            }
+
             TempData["Success"] =
                 $"Delivery person {deliveryPerson.FullName} " +
                 $"was assigned successfully to order " +
@@ -322,129 +409,143 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 .Where(order =>
                     order.Customer != null &&
                     order.Customer.User != null)
-                .Select(order =>
-                    new AdminAssignOrderViewModel
-                    {
-                        OrderID =
-                            order.OrderID,
-
-                        OrderNumber =
-                            order.OrderNumber,
-
-                        OrderDate =
-                            order.OrderDate,
-
-                        Status =
-                            order.Status,
-
-                        TotalAmount =
-                            order.TotalAmount,
-
-                        CustomerID =
-                            order.CustomerID,
-
-                        CustomerUserID =
-                            order.Customer.UserID,
-
-                        // Reuses the User.FullName property already
-                        // loaded via the existing Customer -> User
-                        // Include above. No new query needed.
-                        CustomerName =
-                            string.IsNullOrWhiteSpace(
-                                order.Customer.User.FullName)
-                                ? "N/A"
-                                : order.Customer.User.FullName,
-
-                        // ==================================
-                        // PRODUCTS FOR THIS ORDER
-                        //
-                        // Same mapping already used by
-                        // CustomerOrders.cshtml.cs (OrderItems ->
-                        // ProductName / Quantity), reused here so the
-                        // admin can see what's in the order.
-                        // ==================================
-                        Products =
-                            order.OrderItems
-                                .OrderBy(orderItem =>
-                                    orderItem.OrderItemID)
-                                .Select(orderItem =>
-                                    new AdminAssignProductViewModel
-                                    {
-                                        ProductName =
-                                            orderItem.ProductName,
-
-                                        Quantity =
-                                            orderItem.Quantity
-                                    })
-                                .ToList(),
-
-                        // ==================================
-                        // DELIVERY REGION FOR THIS ORDER
-                        //
-                        // Reuses the same Order.Address.Area field
-                        // already used elsewhere (e.g. delivery order
-                        // details) to represent the delivery region.
-                        // ==================================
-                        DeliveryRegion =
-                            order.Address != null &&
-                            !string.IsNullOrWhiteSpace(order.Address.Area)
-                                ? order.Address.Area
-                                : "N/A",
-
-                        // ==================================
-                        // DELIVERY LIST FOR THIS ORDER
-                        //
-                        // Ranked Same Area (3) / Nearby (2) / Far (1)
-                        // via AreaProximityService, so the most
-                        // suitable delivery person shows first.
-                        //
-                        // Also keeps the existing rule that prevents a
-                        // customer from delivering their own order.
-                        // ==================================
-                        AvailableDeliveryPeople =
-                            deliveryPeople
-                                .Where(delivery =>
-                                    !delivery.RequestedByUserID.HasValue ||
-                                    delivery.RequestedByUserID.Value != order.Customer.UserID)
-                                .Select(delivery => new
-                                {
-                                    delivery,
-                                    priority = _areaProximityService.GetPriority(
-                                        order.Address?.Area,
-                                        delivery.Area)
-                                })
-                                .OrderByDescending(x => x.priority)
-                                .ThenBy(x => x.delivery.FullName)
-                                .Select(x =>
-                                    new AdminAssignDeliveryPersonViewModel
-                                    {
-                                        DeliveryPersonID =
-                                            x.delivery.DeliveryPersonID,
-
-                                        RequestedByUserID =
-                                            x.delivery.RequestedByUserID,
-
-                                        FullName =
-                                            x.delivery.FullName,
-
-                                        PhoneNumber =
-                                            x.delivery.PhoneNumber,
-
-                                        Area =
-                                            x.delivery.Area,
-
-                                        VehicleType =
-                                            x.delivery.VehicleType,
-
-                                        AreaPriority =
-                                            x.priority,
-
-                                        AreaLabel =
-                                            _areaProximityService.GetLabel(x.priority)
-                                    })
-                                .ToList()
-                    })
+                .Select(order => BuildOrderViewModel(order, deliveryPeople))
                 .ToList();
+        }
+
+        // ==========================================
+        // BUILD ONE ORDER'S VIEW MODEL
+        //
+        // Extracted from LoadDataAsync's per-order Select(...) so the
+        // exact same mapping (products, region, ranked delivery people)
+        // can be reused by OnGetOrderRowDataAsync for a single live
+        // order without duplicating the logic.
+        // ==========================================
+        private AdminAssignOrderViewModel BuildOrderViewModel(
+            Order order,
+            List<DeliveryPerson> deliveryPeople)
+        {
+            return new AdminAssignOrderViewModel
+            {
+                OrderID =
+                    order.OrderID,
+
+                OrderNumber =
+                    order.OrderNumber,
+
+                OrderDate =
+                    order.OrderDate,
+
+                Status =
+                    order.Status,
+
+                TotalAmount =
+                    order.TotalAmount,
+
+                CustomerID =
+                    order.CustomerID,
+
+                CustomerUserID =
+                    order.Customer.UserID,
+
+                // Reuses the User.FullName property already
+                // loaded via the existing Customer -> User
+                // Include above. No new query needed.
+                CustomerName =
+                    string.IsNullOrWhiteSpace(
+                        order.Customer.User.FullName)
+                        ? "N/A"
+                        : order.Customer.User.FullName,
+
+                // ==================================
+                // PRODUCTS FOR THIS ORDER
+                //
+                // Same mapping already used by
+                // CustomerOrders.cshtml.cs (OrderItems ->
+                // ProductName / Quantity), reused here so the
+                // admin can see what's in the order.
+                // ==================================
+                Products =
+                    order.OrderItems
+                        .OrderBy(orderItem =>
+                            orderItem.OrderItemID)
+                        .Select(orderItem =>
+                            new AdminAssignProductViewModel
+                            {
+                                ProductName =
+                                    orderItem.ProductName,
+
+                                Quantity =
+                                    orderItem.Quantity
+                            })
+                        .ToList(),
+
+                // ==================================
+                // DELIVERY REGION FOR THIS ORDER
+                //
+                // Reuses the same Order.Address.Area field
+                // already used elsewhere (e.g. delivery order
+                // details) to represent the delivery region.
+                // ==================================
+                DeliveryRegion =
+                    order.Address != null &&
+                    !string.IsNullOrWhiteSpace(order.Address.Area)
+                        ? order.Address.Area
+                        : "N/A",
+
+                // ==================================
+                // DELIVERY LIST FOR THIS ORDER
+                //
+                // Ranked Same Area (3) / Nearby (2) / Far (1)
+                // via AreaProximityService, so the most
+                // suitable delivery person shows first.
+                //
+                // Also keeps the existing rule that prevents a
+                // customer from delivering their own order.
+                // ==================================
+                AvailableDeliveryPeople =
+                    deliveryPeople
+                        .Where(delivery =>
+                            !delivery.RequestedByUserID.HasValue ||
+                            delivery.RequestedByUserID.Value != order.Customer.UserID)
+                        .Select(delivery => new
+                        {
+                            delivery,
+                            priority = _areaProximityService.GetPriority(
+                                order.Address?.Area,
+                                delivery.Area)
+                        })
+                        .OrderByDescending(x => x.priority)
+                        .ThenBy(x => x.delivery.FullName)
+                        .Select(x =>
+                            new AdminAssignDeliveryPersonViewModel
+                            {
+                                DeliveryPersonID =
+                                    x.delivery.DeliveryPersonID,
+
+                                RequestedByUserID =
+                                    x.delivery.RequestedByUserID,
+
+                                FullName =
+                                    x.delivery.FullName,
+
+                                PhoneNumber =
+                                    x.delivery.PhoneNumber,
+
+                                Area =
+                                    x.delivery.Area,
+
+                                VehicleType =
+                                    x.delivery.VehicleType,
+
+                                AreaPriority =
+                                    x.priority,
+
+                                AreaLabel =
+                                    _areaProximityService.GetLabel(x.priority)
+                            })
+                        .ToList()
+            };
         }
 
         // ==========================================
