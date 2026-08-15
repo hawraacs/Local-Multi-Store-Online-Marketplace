@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services.Managers;
+using sun.java2d;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -152,7 +153,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 }
 
                 var payment = await _context.Payments
-                    .FirstOrDefaultAsync(p => p.OrderID == complaint.OrderID.Value);
+                    .Where(p => p.OrderID == complaint.OrderID.Value)
+                    .OrderByDescending(p => p.PaymentID)
+                    .FirstOrDefaultAsync();
 
                 if (payment == null)
                 {
@@ -161,9 +164,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     return RedirectToPage();
                 }
 
-                if (string.Equals(payment.Status, "Refunded", StringComparison.OrdinalIgnoreCase))
+                // Payment.RefundAmount accumulates prior refunds (full or
+                // partial), so the true refundable balance is what's left
+                // after those — not the original Amount. Status=="Refunded"
+                // is kept as a belt-and-suspenders check in case a row is
+                // ever marked Refunded without RefundAmount being fully
+                // populated.
+                var alreadyRefunded = payment.RefundAmount ?? 0m;
+                var remainingRefundable = payment.Amount - alreadyRefunded;
+
+                if (string.Equals(payment.Status, "Refunded", StringComparison.OrdinalIgnoreCase)
+                    || remainingRefundable <= 0)
                 {
-                    TempData["Info"] = $"The payment for complaint #{complaintId} has already been refunded.";
+                    TempData["Info"] = $"The payment for complaint #{complaintId} has already been fully refunded.";
                     await transaction.RollbackAsync();
                     return RedirectToPage();
                 }
@@ -175,14 +188,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     return RedirectToPage();
                 }
 
-                // Default to a full refund unless the admin entered a lesser amount.
+                // Default to a full (remaining) refund unless the admin entered a lesser amount.
                 var amountToRefund = (refundAmount.HasValue && refundAmount.Value > 0)
                     ? refundAmount.Value
-                    : payment.Amount;
+                    : remainingRefundable;
 
-                if (amountToRefund > payment.Amount)
+                if (amountToRefund > remainingRefundable)
                 {
-                    TempData["Error"] = $"The refund amount cannot exceed the original payment of ${payment.Amount:N2}.";
+                    TempData["Error"] = $"The refund amount cannot exceed the remaining refundable balance of ${remainingRefundable:N2}.";
                     await transaction.RollbackAsync();
                     return RedirectToPage();
                 }
@@ -208,26 +221,101 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 // ------------------------------------------------------------
                 // Liability routing.
+                //
+                // Complaint category picks the liable party for the three
+                // explicit cases below. But for orders paid COD / at
+                // pickup, the customer's money went straight to the store
+                // (or was collected by the courier) — it never passed
+                // through the platform's payment gateway. So if none of
+                // the explicit categories apply, the fallback can't be
+                // "Platform": the platform has no funds from this order to
+                // absorb a refund from. It falls back to "Store" instead
+                // whenever the payment was collected directly rather than
+                // paid online, since the store is the only party that
+                // actually holds that cash.
                 // ------------------------------------------------------------
+                var wasPaidOnCollection = IsPayOnCollectionMethod(payment.PaymentMethod);
+
                 var faultParty = complaint.ComplaintType?.Trim() switch
                 {
                     "Store service" => "Store",
                     "Order problem" => "Store",
                     "Delivery issue" => "Delivery",
-                    _ => "Platform"
+                    _ => wasPaidOnCollection ? "Store" : "Platform"
                 };
 
                 if (faultParty == "Store" && complaint.StoreID.HasValue)
                 {
-                    _context.StorePayments.Add(new StorePayment
+                    var storeEntity = await _context.Stores
+                        .FirstOrDefaultAsync(s => s.StoreID == complaint.StoreID.Value);
+
+                    if (storeEntity != null)
                     {
-                        StoreId = complaint.StoreID.Value,
-                        Amount = -amountToRefund,
-                        Description = $"Chargeback for refund on complaint #{complaintId} (Order #{complaint.OrderID}).",
-                        DueDate = DateTime.UtcNow,
-                        Status = "Pending",
-                        CreatedAt = DateTime.UtcNow
-                    });
+                        // StorePayment in this app is a bill the STORE owes
+                        // the PLATFORM (subscription fees, boost fees) —
+                        // the store pays it off themselves via
+                        // StoreOwnerPayment.cshtml, and everything in that
+                        // flow (CheckStripeBalance, the "insufficient
+                        // funds" check, etc.) assumes Amount is positive.
+                        // A negative Amount here would be meaningless to
+                        // that flow, so this must add to what's owed, not
+                        // subtract from it.
+                        _context.StorePayments.Add(new StorePayment
+                        {
+                            StoreId = storeEntity.StoreID,
+                            Amount = amountToRefund,
+                            Description = $"Refund chargeback for complaint #{complaintId} (Order #{complaint.OrderID}).",
+                            DueDate = DateTime.UtcNow,
+                            Status = "Pending",
+                            CreatedAt = DateTime.UtcNow
+                        });
+
+                        // Dashboard.cshtml.cs reads Store.OutstandingBalance
+                        // directly (Stats.OutstandingBalance = store.OutstandingBalance),
+                        // not a sum of StorePayments — so without this line,
+                        // the number the store actually sees on their own
+                        // dashboard would never move, even though a
+                        // StorePayment row was created behind the scenes.
+                        storeEntity.OutstandingBalance += amountToRefund;
+
+                        _context.Notifications.Add(new Notification
+                        {
+                            UserID = storeEntity.OwnerUserID,
+                            Title = "Refund added to your outstanding balance",
+                            Message = $"${amountToRefund:N2} has been added to your outstanding balance and refunded to the customer for complaint #{complaintId} (Order #{complaint.OrderID}).",
+                            Type = "PaymentUpdate",
+                            ReferenceID = complaintId,
+                            IsRead = false,
+                            SentAt = DateTime.UtcNow,
+                            SentVia = "System"
+                        });
+                    }
+                    else
+                    {
+                        _logger.LogWarning(
+                            "Complaint {ComplaintId}: StoreID {StoreId} on the complaint did not resolve to a Store row — chargeback skipped.",
+                            complaintId, complaint.StoreID.Value);
+                    }
+                }
+                else if (faultParty == "Store" && !complaint.StoreID.HasValue)
+                {
+                    // The order spanned multiple stores (or the store could
+                    // never be resolved), so there's no single StoreID to
+                    // charge back. The customer refund still goes through —
+                    // this just falls through instead of silently doing
+                    // nothing. Surface it for manual review, same as the
+                    // Delivery branch does for its own gap.
+                    _logger.LogWarning(
+                        "Complaint {ComplaintId}: refund issued but no StoreID was resolvable — chargeback skipped.",
+                        complaintId);
+
+                    TempData["Warning"] = wasPaidOnCollection
+                        // Paid on collection: no store to bill AND no
+                        // platform funds to absorb it from either — this
+                        // needs a human to figure out who actually holds
+                        // the ${amountToRefund:N2} and recover it.
+                        ? $"Refund issued, but this order was paid on collection and no single store could be identified — the ${amountToRefund:N2} is NOT yet recovered from anyone and needs manual follow-up."
+                        : $"Refund issued, but no single store could be charged back (order spanned multiple stores) — the platform absorbed the ${amountToRefund:N2}.";
                 }
                 else if (faultParty == "Delivery")
                 {
@@ -294,7 +382,39 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         // =====================================================
-        // NOTIFY CUSTOMER — surfaces the complaint outcome on the
+        // PAY-ON-COLLECTION DETECTION
+        //
+        // Orders paid this way never route money through the platform's
+        // payment gateway — the customer hands cash to the store (pickup)
+        // or the courier (COD delivery) directly. That matters for refund
+        // liability: if a refund's fault party would otherwise default to
+        // "Platform", the platform actually has nothing to absorb it
+        // from here, so liability falls back to the store instead.
+        //
+        // NOTE: matched values are a best guess based on common naming
+        // ("COD", "Cash on Delivery", "Cash on Pickup", "Pay on Delivery",
+        // "Pay at Pickup", "Cash"). If PaymentMethod uses different
+        // literal strings in this app, update the list below to match.
+        // =====================================================
+        private static readonly string[] PayOnCollectionMethods =
+        {
+            "COD",
+            "Cash on Delivery",
+            "Cash on Pickup",
+            "Pay on Delivery",
+            "Pay at Pickup",
+            "Cash"
+        };
+
+        private static bool IsPayOnCollectionMethod(string? paymentMethod)
+        {
+            if (string.IsNullOrWhiteSpace(paymentMethod))
+                return false;
+
+            return PayOnCollectionMethods.Any(m =>
+                string.Equals(m, paymentMethod.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+
         // customer's Report Updates page (Type = "ComplaintUpdate",
         // now included in ReportUpdatesModel.VisibleNotificationTypes).
         // Looks up the customer's UserID via Customer.CustomerID, since
@@ -343,12 +463,12 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private async Task LoadComplaintsAsync()
         {
             var payments = await _context.Payments
-                .Select(p => new { p.OrderID, p.Amount, p.Status })
+                .Select(p => new { p.PaymentID, p.OrderID, p.Amount, p.Status, p.RefundAmount })
                 .ToListAsync();
 
             var paymentsByOrder = payments
                 .GroupBy(p => p.OrderID)
-                .ToDictionary(g => g.Key, g => g.First());
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.PaymentID).First());
 
             Complaints = await _context.Complaints
                 .AsNoTracking()
@@ -386,6 +506,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 {
                     complaint.PaymentAmount = payment.Amount;
                     complaint.PaymentStatus = payment.Status;
+                    complaint.PaymentRemainingRefundable = payment.Amount - (payment.RefundAmount ?? 0m);
                 }
             }
         }
@@ -407,5 +528,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // Populated from the linked Payment, when one exists.
         public decimal? PaymentAmount { get; set; }
         public string? PaymentStatus { get; set; }
+
+        // Amount - any prior RefundAmount. What a new refund can actually
+        // still draw against; null if there's no payment at all.
+        public decimal? PaymentRemainingRefundable { get; set; }
     }
 }

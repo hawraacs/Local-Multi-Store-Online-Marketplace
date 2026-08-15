@@ -459,8 +459,8 @@
                         var refundFormId =
                             $"refundForm-{complaint.ComplaintId}";
 
-                        var paymentAmount =
-                            complaint.PaymentAmount ?? 0m;
+                        var refundableAmount =
+                            complaint.PaymentRemainingRefundable ?? 0m;
 
                         <tr data-status="@filterStatus" data-complaint-id="@complaint.ComplaintId">
 
@@ -532,7 +532,9 @@
                                             </button>
                                         </form>
 
-                                        @if (complaint.OrderId.HasValue)
+                                        @if (complaint.OrderId.HasValue &&
+                                             complaint.PaymentRemainingRefundable.HasValue &&
+                                             complaint.PaymentRemainingRefundable.Value > 0)
                                         {
                                             <form id="@refundFormId"
                                                   method="post"
@@ -546,11 +548,14 @@
                                                 <input type="hidden"
                                                        name="refundAmount"
                                                        id="refundAmountInput-@complaint.ComplaintId"
-                                                       value="@paymentAmount" />
+                                                       value="@refundableAmount" />
 
                                                 <button type="button"
-                                                        class="btn-refund"
-                                                        onclick="openRefundConfirmation('@refundFormId', @complaint.ComplaintId, @paymentAmount, '@complaint.Type')">
+                                                        class="btn-refund js-refund-btn"
+                                                        data-form-id="@refundFormId"
+                                                        data-complaint-id="@complaint.ComplaintId"
+                                                        data-order-amount="@refundableAmount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+                                                        data-complaint-type="@complaint.Type">
                                                     <i class="fas fa-dollar-sign"></i>
                                                     Refund
                                                 </button>
@@ -737,13 +742,31 @@
             }
         }
 
+        // Delegated click handler for every "Refund" button. Reads the
+        // target details from data-* attributes rather than having the
+        // server interpolate complaint.Type (customer-controlled free
+        // text) straight into an inline onclick="...('...')" JS string —
+        // that pattern let a crafted complaint category break out of the
+        // string literal and run arbitrary JS on this admin page.
+        document.addEventListener("click", function (event) {
+            const btn = event.target.closest(".js-refund-btn");
+            if (!btn) return;
+
+            openRefundConfirmation(
+                btn.dataset.formId,
+                btn.dataset.complaintId,
+                parseFloat(btn.dataset.orderAmount),
+                btn.dataset.complaintType
+            );
+        });
+
         function openRefundConfirmation(formId, complaintId, orderAmount, complaintType) {
             activeRefundFormId = formId;
             activeRefundComplaintId = complaintId;
             activeRefundCap = orderAmount;
 
             document.getElementById("refundModalSubtitle").textContent =
-                `Complaint #${complaintId} — original payment: $${orderAmount.toFixed(2)}`;
+                `Complaint #${complaintId} — remaining refundable: $${orderAmount.toFixed(2)}`;
 
             const amountField = document.getElementById("refundAmountField");
             amountField.value = orderAmount.toFixed(2);

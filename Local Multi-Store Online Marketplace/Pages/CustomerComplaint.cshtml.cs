@@ -86,6 +86,29 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 return RedirectToPage();
             }
 
+            // The form only ever posts one of these five values (see the
+            // radio buttons in CustomerComplaint.cshtml), but nothing
+            // stops a direct POST from sending arbitrary text. Two things
+            // downstream depend on this being one of the exact strings
+            // below: AdminComplaints' refund-liability switch (falls back
+            // to "Platform" for anything else, silently under-charging
+            // the real liable party) and the admin page's inline refund
+            // button, which renders this value into a data attribute.
+            var allowedCategories = new[]
+            {
+                "Store service",
+                "Delivery issue",
+                "Order problem",
+                "Website or app issue",
+                "Other"
+            };
+
+            if (!allowedCategories.Contains(category))
+            {
+                TempData["Error"] = "Please choose a valid category from the list.";
+                return RedirectToPage();
+            }
+
             int? resolvedStoreId = null;
 
             if (orderId.HasValue)
@@ -123,7 +146,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 OrderID = orderId,
                 ComplaintType = category,
                 Description = description.Trim(),
-                Status = "Pending Review",
+                Status = "Pending",
                 CreatedAt = DateTime.UtcNow
             };
 
