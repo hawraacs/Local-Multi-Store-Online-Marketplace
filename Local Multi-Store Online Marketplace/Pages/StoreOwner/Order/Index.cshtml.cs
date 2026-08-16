@@ -113,6 +113,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                     .Distinct()
                     .CountAsync();
 
+                // Fix: Online Payment orders (single-store) reach "Preparing"
+                // directly after payment instead of "Confirmed" — see
+                // IsAwaitingFirstOnlinePaymentConfirmationAsync above. Only
+                // relevant for single-vendor orders, since Online Payment
+                // never sets the shared Order.Status to "Preparing" for a
+                // multi-vendor order (that path uses StoreResponseStatus).
+                var awaitingOnlinePaymentConfirmation = distinctStoreCount <= 1 &&
+                    await IsAwaitingFirstOnlinePaymentConfirmationAsync(
+                        order.OrderID, order.PaymentMethod, order.Status);
+
                 Orders.Add(new OrderViewModel
                 {
                     OrderID = order.OrderID,
@@ -126,11 +136,44 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                     // Single-vendor orders: this store's response IS the
                     // order's status, exactly as before. Multi-vendor
                     // orders: this store's own per-store response.
-                    StoreStatus = distinctStoreCount > 1 ? thisStoreStatus : order.Status
+                    StoreStatus = distinctStoreCount > 1 ? thisStoreStatus : order.Status,
+                    AwaitingOnlinePaymentConfirmation = awaitingOnlinePaymentConfirmation
                 });
             }
 
             return Page();
+        }
+
+        // =====================================================
+        // Fix: Order.Status "Preparing" is now reached two different
+        // ways: (a) a single-store Online Payment order lands here
+        // straight from "Pending"/"Pending Confirmation" right after a
+        // successful Stripe charge (see OnlinePayment.cshtml.cs),
+        // awaiting the Store Owner's first Confirm/Cancel, and (b) the
+        // pre-existing case where a Store Owner already Confirmed the
+        // order and later moved it to "Preparing" themselves while
+        // getting it ready for delivery. Both look identical as just
+        // Status == "Preparing", so this looks at the order's own
+        // OrderStatusHistories (already written, no schema change) to
+        // tell them apart: only case (a) is eligible for Confirm/Cancel.
+        // =====================================================
+        private async Task<bool> IsAwaitingFirstOnlinePaymentConfirmationAsync(
+            int orderId, string? paymentMethod, string? currentStatus)
+        {
+            if (!string.Equals(currentStatus, "Preparing", StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(paymentMethod, "Online Payment", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var latestPreparingHistory = await _context.OrderStatusHistories
+                .Where(h => h.OrderID == orderId && h.NewStatus == "Preparing")
+                .OrderByDescending(h => h.ChangedAt)
+                .FirstOrDefaultAsync();
+
+            return latestPreparingHistory != null &&
+                (string.Equals(latestPreparingHistory.PreviousStatus, "Pending", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(latestPreparingHistory.PreviousStatus, "Pending Confirmation", StringComparison.OrdinalIgnoreCase));
         }
 
         public async Task<IActionResult> OnPostUpdateStatusAsync(int orderId, string newStatus)
@@ -522,10 +565,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
 
             if (order.Status == "Preparing")
             {
-                TempData["ErrorMessage"] =
-                    "This order is waiting for admin delivery assignment.";
+                // Fix: an Online Payment order sitting in "Preparing" that
+                // has never actually been Confirmed yet (see
+                // IsAwaitingFirstOnlinePaymentConfirmationAsync above) must
+                // still let the Store Owner Confirm or Cancel it here. Any
+                // other "Preparing" order (already Confirmed earlier, now
+                // being prepared for delivery) keeps the original behavior
+                // exactly as before.
+                var isAwaitingFirstConfirmation =
+                    await IsAwaitingFirstOnlinePaymentConfirmationAsync(
+                        orderId, order.PaymentMethod, order.Status);
 
-                return RedirectToPage();
+                var isConfirmOrCancel =
+                    newStatus == "Confirmed" || newStatus == "Cancelled";
+
+                if (!isAwaitingFirstConfirmation || !isConfirmOrCancel)
+                {
+                    TempData["ErrorMessage"] =
+                        "This order is waiting for admin delivery assignment.";
+
+                    return RedirectToPage();
+                }
             }
 
 
@@ -598,5 +658,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
         // its part of the order ("Pending"/"Confirmed"/"Cancelled"). For
         // single-vendor orders this always mirrors Status.
         public string StoreStatus { get; set; } = string.Empty;
+
+        // Fix: true only for a single-vendor Online Payment order that is
+        // "Preparing" but has never actually been Confirmed by this Store
+        // Owner yet — lets the view show Confirm/Cancel instead of plain
+        // status text for that specific case.
+        public bool AwaitingOnlinePaymentConfirmation { get; set; }
     }
 }
