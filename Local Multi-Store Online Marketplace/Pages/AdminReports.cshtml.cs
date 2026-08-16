@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -17,11 +18,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
     {
         private readonly ApplicationDbContext _context;
         private readonly NotificationManager _notifications;
+        private readonly UserManager<User> _userManager;
 
-        public AdminReportsModel(ApplicationDbContext context, NotificationManager notifications)
+        public AdminReportsModel(ApplicationDbContext context, NotificationManager notifications, UserManager<User> userManager)
         {
             _context = context;
             _notifications = notifications;
+            _userManager = userManager;
         }
 
         [BindProperty(SupportsGet = true)]
@@ -150,6 +153,154 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage(new { StatusFilter });
         }
 
+        // =====================================================
+        // DEACTIVATE REPORTED USER (Instagram-style suspension)
+        // =====================================================
+        public async Task<IActionResult> OnPostDeactivateUserAsync(int reportId)
+        {
+            var report = await _context.Reports.FirstOrDefaultAsync(r => r.ReportID == reportId);
+            if (report == null)
+            {
+                TempData["Error"] = "Report not found.";
+                return RedirectToPage(new { StatusFilter });
+            }
+
+            var targetUserId = await GetTargetUserIdAsync(report);
+            if (!targetUserId.HasValue)
+            {
+                TempData["Error"] = "Could not determine which account to deactivate.";
+                return RedirectToPage(new { StatusFilter });
+            }
+
+            var user = await _context.Users.FindAsync(targetUserId.Value);
+            if (user == null)
+            {
+                TempData["Error"] = "User account not found.";
+                return RedirectToPage(new { StatusFilter });
+            }
+
+            if (!user.IsActive)
+            {
+                TempData["Error"] = "This account is already deactivated.";
+                return RedirectToPage(new { StatusFilter });
+            }
+
+            user.IsActive = false;
+
+            var stamp = $"[Account deactivated {DateTime.UtcNow:dd MMM yyyy HH:mm} UTC]";
+            report.AdminNotes = string.IsNullOrWhiteSpace(report.AdminNotes)
+                ? stamp
+                : $"{report.AdminNotes}\n{stamp}";
+
+            await _context.SaveChangesAsync();
+
+            await _notifications.SendAsync(
+                userId: user.Id,
+                title: "Your account has been deactivated",
+                message: "Your account was deactivated by our team following a report review. Contact support if you believe this is a mistake.",
+                type: "AccountDeactivated",
+                referenceId: report.ReportID,
+                sentVia: "System");
+
+            TempData["Success"] = "Account deactivated.";
+            return RedirectToPage(new { StatusFilter });
+        }
+
+        public async Task<IActionResult> OnPostReactivateUserAsync(int reportId)
+        {
+            var report = await _context.Reports.FirstOrDefaultAsync(r => r.ReportID == reportId);
+            if (report == null)
+            {
+                TempData["Error"] = "Report not found.";
+                return RedirectToPage(new { StatusFilter });
+            }
+
+            var targetUserId = await GetTargetUserIdAsync(report);
+            if (!targetUserId.HasValue)
+            {
+                TempData["Error"] = "Could not determine which account to reactivate.";
+                return RedirectToPage(new { StatusFilter });
+            }
+
+            var user = await _context.Users.FindAsync(targetUserId.Value);
+            if (user == null)
+            {
+                TempData["Error"] = "User account not found.";
+                return RedirectToPage(new { StatusFilter });
+            }
+
+            user.IsActive = true;
+
+            var stamp = $"[Account reactivated {DateTime.UtcNow:dd MMM yyyy HH:mm} UTC]";
+            report.AdminNotes = string.IsNullOrWhiteSpace(report.AdminNotes)
+                ? stamp
+                : $"{report.AdminNotes}\n{stamp}";
+
+            await _context.SaveChangesAsync();
+
+            await _notifications.SendAsync(
+                userId: user.Id,
+                title: "Your account has been reactivated",
+                message: "Your account is active again.",
+                type: "AccountReactivated",
+                referenceId: report.ReportID,
+                sentVia: "System");
+
+            TempData["Success"] = "Account reactivated.";
+            return RedirectToPage(new { StatusFilter });
+        }
+
+        // =====================================================
+        // PERMANENTLY DELETE REPORTED USER
+        // =====================================================
+        public async Task<IActionResult> OnPostDeleteUserAsync(int reportId)
+        {
+            var report = await _context.Reports.FirstOrDefaultAsync(r => r.ReportID == reportId);
+            if (report == null)
+            {
+                TempData["Error"] = "Report not found.";
+                return RedirectToPage(new { StatusFilter });
+            }
+
+            var targetUserId = await GetTargetUserIdAsync(report);
+            if (!targetUserId.HasValue)
+            {
+                TempData["Error"] = "Could not determine which account to delete.";
+                return RedirectToPage(new { StatusFilter });
+            }
+
+            var user = await _userManager.FindByIdAsync(targetUserId.Value.ToString());
+            if (user == null)
+            {
+                TempData["Error"] = "User account not found.";
+                return RedirectToPage(new { StatusFilter });
+            }
+
+            try
+            {
+                var result = await _userManager.DeleteAsync(user);
+                if (!result.Succeeded)
+                {
+                    TempData["Error"] = "Could not delete account: " + string.Join(" ", result.Errors.Select(e => e.Description));
+                    return RedirectToPage(new { StatusFilter });
+                }
+            }
+            catch (DbUpdateException)
+            {
+                TempData["Error"] = "This account can't be deleted because it still has linked stores, products, or orders. Deactivate it instead.";
+                return RedirectToPage(new { StatusFilter });
+            }
+
+            var stamp = $"[Account permanently deleted {DateTime.UtcNow:dd MMM yyyy HH:mm} UTC]";
+            report.AdminNotes = string.IsNullOrWhiteSpace(report.AdminNotes)
+                ? stamp
+                : $"{report.AdminNotes}\n{stamp}";
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Account permanently deleted.";
+            return RedirectToPage(new { StatusFilter });
+        }
+
         // Resolves which User account owns the thing that was reported (Product -> Store owner,
         // Store -> owner, Customer -> that customer's user account).
         private async Task<int?> GetTargetUserIdAsync(Report r)
@@ -233,6 +384,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 _ => "Unknown"
             };
 
+            var targetUserId = await GetTargetUserIdAsync(r);
+            bool? targetUserIsActive = null;
+            if (targetUserId.HasValue)
+            {
+                targetUserIsActive = (await _context.Users.FindAsync(targetUserId.Value))?.IsActive;
+            }
+
             return new ReportRow
             {
                 ReportID = r.ReportID,
@@ -244,7 +402,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 Status = string.IsNullOrWhiteSpace(r.Status) ? "Pending Review" : r.Status,
                 AdminNotes = r.AdminNotes,
                 CreatedAt = r.CreatedAt,
-                ResolvedAt = r.ResolvedAt
+                ResolvedAt = r.ResolvedAt,
+                TargetUserId = targetUserId,
+                TargetUserIsActive = targetUserIsActive
             };
         }
     }
@@ -261,5 +421,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public string? AdminNotes { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? ResolvedAt { get; set; }
+        public int? TargetUserId { get; set; }
+        public bool? TargetUserIsActive { get; set; }
     }
 }

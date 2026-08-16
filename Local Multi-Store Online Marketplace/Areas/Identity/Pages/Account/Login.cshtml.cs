@@ -158,6 +158,15 @@ namespace Local_Multi_Store_Online_Marketplace.Areas.Identity.Pages.Account
                 return Page();
             }
 
+            // Password was correct — but block sign-in if the account has been deactivated.
+            if (!user.IsActive)
+            {
+                await _signInManager.SignOutAsync();
+                ModelState.AddModelError(string.Empty,
+                    "This account has been deactivated. Contact support if you believe this is a mistake.");
+                return Page();
+            }
+
             user.LastLoginAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 

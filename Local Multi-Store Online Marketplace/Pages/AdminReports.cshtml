@@ -258,6 +258,70 @@
             margin-bottom: 14px;
         }
 
+        .report-account-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+
+        .account-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .account-active { color: var(--positive-txt); }
+        .account-inactive { color: var(--danger-txt); }
+
+        .account-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+            .account-actions form {
+                margin: 0;
+            }
+
+        .action-deactivate {
+            background: var(--warning-bg);
+            color: var(--warning-txt);
+        }
+
+            .action-deactivate:hover {
+                background: var(--warning);
+                color: #fff;
+            }
+
+        .action-reactivate {
+            background: var(--positive-bg);
+            color: var(--positive-txt);
+        }
+
+            .action-reactivate:hover {
+                background: var(--positive);
+                color: #fff;
+            }
+
+        .action-delete {
+            background: var(--danger-bg);
+            color: var(--danger-txt);
+        }
+
+            .action-delete:hover {
+                background: var(--danger);
+                color: #fff;
+            }
+
         .report-admin-notes {
             font-size: 12.5px;
             color: var(--text-secondary);
@@ -479,6 +543,43 @@
                 </div>
 
                 <div class="report-description">"@r.Description"</div>
+
+                @if (r.TargetUserId.HasValue)
+                {
+                    <div class="report-account-row">
+                        <span class="account-status-badge @(r.TargetUserIsActive == true ? "account-active" : "account-inactive")">
+                            <i class="fas @(r.TargetUserIsActive == true ? "fa-circle-check" : "fa-ban")"></i>
+                            @(r.TargetUserIsActive == true ? "Reported account is active" : "Reported account is deactivated")
+                        </span>
+
+                        <div class="account-actions">
+                            @if (r.TargetUserIsActive == true)
+                            {
+                                <form method="post" asp-page-handler="DeactivateUser" asp-route-reportId="@r.ReportID"
+                                      onsubmit="return confirm('Deactivate this account? The user will be blocked from logging in until reactivated.');">
+                                    <button type="submit" class="action-btn action-deactivate">
+                                        <i class="fas fa-user-slash"></i> Deactivate
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form method="post" asp-page-handler="ReactivateUser" asp-route-reportId="@r.ReportID">
+                                    <button type="submit" class="action-btn action-reactivate">
+                                        <i class="fas fa-user-check"></i> Reactivate
+                                    </button>
+                                </form>
+                            }
+
+                            <form method="post" asp-page-handler="DeleteUser" asp-route-reportId="@r.ReportID"
+                                  onsubmit="return confirm('Permanently delete this account? This cannot be undone.');">
+                                <button type="submit" class="action-btn action-delete">
+                                    <i class="fas fa-trash"></i> Delete Account
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
 
                 @if (!string.IsNullOrWhiteSpace(r.AdminNotes))
                 {
