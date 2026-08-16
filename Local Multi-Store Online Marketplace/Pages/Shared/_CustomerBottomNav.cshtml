@@ -264,19 +264,32 @@
         if (!nav) return;
 
         var HIDE_DELAY = 600; // ms of inactivity before it hides
+        // A physical mouse wheel fires one scroll event per notch, with a
+        // natural pause between notches that is often longer than 600ms.
+        // Reusing the short HIDE_DELAY for scroll caused the bar to hide
+        // itself in between wheel ticks, which looked like it was sliding
+        // off-screen *during* scrolling. Scroll gets its own, longer grace
+        // period so normal wheel-scroll pauses don't trigger the hide.
+        var SCROLL_HIDE_DELAY = 3000; // ms of no scrolling before it hides
         var hideTimer;
 
-        function scheduleHide() {
+        function scheduleHide(delay) {
             clearTimeout(hideTimer);
             hideTimer = setTimeout(function() {
                 nav.classList.add('nav-hidden');
-            }, HIDE_DELAY);
+            }, delay || HIDE_DELAY);
         }
 
         function showNav() {
             clearTimeout(hideTimer);
             nav.classList.remove('nav-hidden');
-            scheduleHide();
+            scheduleHide(HIDE_DELAY);
+        }
+
+        function showNavOnScroll() {
+            clearTimeout(hideTimer);
+            nav.classList.remove('nav-hidden');
+            scheduleHide(SCROLL_HIDE_DELAY);
         }
 
         // Stay visible while directly interacting with the bar
@@ -284,13 +297,16 @@
             clearTimeout(hideTimer);
             nav.classList.remove('nav-hidden');
         });
-        nav.addEventListener('mouseleave', scheduleHide);
+        nav.addEventListener('mouseleave', function() { scheduleHide(HIDE_DELAY); });
         nav.addEventListener('click', showNav);
         nav.addEventListener('touchstart', showNav, { passive: true });
 
         // Any scroll or tap on the page brings it back (covers touch devices,
-        // where hovering isn't possible)
-        document.addEventListener('scroll', showNav, { passive: true });
+        // where hovering isn't possible). capture:true also catches scrolling
+        // that happens inside a nested scrollable container, not just
+        // document/window scrolling.
+        document.addEventListener('scroll', showNavOnScroll, { passive: true, capture: true });
+        window.addEventListener('scroll', showNavOnScroll, { passive: true, capture: true });
         document.addEventListener('touchstart', showNav, { passive: true });
 
         // Desktop/mouse: hovering near the bottom edge brings it back
@@ -298,6 +314,6 @@
             if (window.innerHeight - e.clientY <= 20) showNav();
         });
 
-        scheduleHide();
+        scheduleHide(HIDE_DELAY);
     })();
 </script>
