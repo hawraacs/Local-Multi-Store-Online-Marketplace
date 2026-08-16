@@ -224,7 +224,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     (currentOrderStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ||
                      currentOrderStatus.Equals("Pending Confirmation", StringComparison.OrdinalIgnoreCase)))
                 {
-                    order.Status = "Confirmed";
+                    order.Status = "Preparing";
                 }
 
                 var latestPayment = await _context.Payments

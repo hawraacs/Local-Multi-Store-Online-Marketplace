@@ -8,8 +8,8 @@
 @section Styles {
     <style>
         /* ============================================================
-                                                                           ROOT VARIABLES — consistent brand palette
-                                                                           ============================================================ */
+                                                                                   ROOT VARIABLES — consistent brand palette
+                                                                                   ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -39,8 +39,8 @@
         }
 
         /* ============================================================
-                                                                           HEADER
-                                                                           ============================================================ */
+                                                                                   HEADER
+                                                                                   ============================================================ */
         .orders-header {
             display: flex;
             justify-content: space-between;
@@ -70,8 +70,8 @@
             }
 
         /* ============================================================
-                                                                           STATS ROW
-                                                                           ============================================================ */
+                                                                                   STATS ROW
+                                                                                   ============================================================ */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -118,8 +118,8 @@
             }
 
         /* ============================================================
-                                                                           CARD
-                                                                           ============================================================ */
+                                                                                   CARD
+                                                                                   ============================================================ */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -156,8 +156,8 @@
         }
 
         /* ============================================================
-                                                                           TABLE
-                                                                           ============================================================ */
+                                                                                   TABLE
+                                                                                   ============================================================ */
         .table {
             font-size: 14px;
             color: var(--text-primary);
@@ -253,10 +253,10 @@
             }
 
         /* ============================================================
-                                                   NOTIFICATION HIGHLIGHT — the row a notification
-                                                   deep-link (e.g. "NewOrder") points at gets a brief
-                                                   pulse and tinted background so it's easy to spot.
-                                                   ============================================================ */
+                                                           NOTIFICATION HIGHLIGHT — the row a notification
+                                                           deep-link (e.g. "NewOrder") points at gets a brief
+                                                           pulse and tinted background so it's easy to spot.
+                                                           ============================================================ */
         @@keyframes orderHighlightPulse {
             0% {
                 background-color: rgba(109, 40, 217, 0.18);
@@ -273,8 +273,8 @@
         }
 
         /* ============================================================
-                                                                           RESPONSIVE
-                                                                           ============================================================ */
+                                                                                   RESPONSIVE
+                                                                                   ============================================================ */
         @@media (max-width: 768px) {
             .orders-header {
                 flex-direction: column;
@@ -400,7 +400,7 @@
                                store already responded. For single-vendor orders
                                StoreStatus always mirrors Status, so behavior is
                                unchanged there. *@
-                            @if (order.StoreStatus == "Pending")
+                            @if (order.StoreStatus == "Pending" || order.AwaitingOnlinePaymentConfirmation)
                             {
                                 <form method="post" asp-page-handler="UpdateStatus" class="d-inline">
                                     <input type="hidden" name="orderId" value="@order.OrderID" />
@@ -409,9 +409,23 @@
                                             class="status-select"
                                             onchange="this.form.submit()">
 
-                                        <option value="Pending" selected disabled>
-                                            Pending
-                                        </option>
+                                        @* Fix: an Online Payment order already sits at
+                                           "Preparing" (not "Pending") when it first
+                                           reaches the Store Owner, so the placeholder
+                                           option here reflects that instead of forcing
+                                           a mismatched "Pending" placeholder. *@
+                                        @if (order.AwaitingOnlinePaymentConfirmation)
+                                        {
+                                            <option value="Preparing" selected disabled>
+                                                Preparing
+                                            </option>
+                                        }
+                                        else
+                                        {
+                                            <option value="Pending" selected disabled>
+                                                Pending
+                                            </option>
+                                        }
 
                                         <option value="Confirmed">
                                             Confirmed
@@ -421,9 +435,12 @@
                                             Cancelled
                                         </option>
 
-                                        <option value="Preparing" disabled>
-                                            Preparing
-                                        </option>
+                                        @if (!order.AwaitingOnlinePaymentConfirmation)
+                                        {
+                                            <option value="Preparing" disabled>
+                                                Preparing
+                                            </option>
+                                        }
 
                                         <option value="OutForDelivery" disabled>
                                             Out For Delivery
