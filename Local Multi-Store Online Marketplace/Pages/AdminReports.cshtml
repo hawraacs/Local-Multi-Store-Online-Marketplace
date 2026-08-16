@@ -460,6 +460,45 @@
             border-color: var(--brand-light);
         }
 
+        /* ── Custom confirm modal (replaces window.confirm) ── */
+        .confirm-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .confirm-modal-overlay.open {
+            display: flex;
+        }
+
+        .confirm-modal-box {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 24px;
+            max-width: 380px;
+            width: 100%;
+        }
+
+        .confirm-modal-box p {
+            font-size: 14px;
+            color: var(--text);
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+
+        .confirm-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
         @@media (max-width: 700px) {
             .report-footer {
                 flex-direction: column;
@@ -556,7 +595,7 @@
                             @if (r.TargetUserIsActive == true)
                             {
                                 <form method="post" asp-page-handler="DeactivateUser" asp-route-reportId="@r.ReportID"
-                                      onsubmit="return confirm('Deactivate this account? The user will be blocked from logging in until reactivated.');">
+                                      class="confirm-form" data-confirm-message="Deactivate this account? The user will be blocked from logging in until reactivated.">
                                     <button type="submit" class="action-btn action-deactivate">
                                         <i class="fas fa-user-slash"></i> Deactivate
                                     </button>
@@ -572,7 +611,7 @@
                             }
 
                             <form method="post" asp-page-handler="DeleteUser" asp-route-reportId="@r.ReportID"
-                                  onsubmit="return confirm('Permanently delete this account? This cannot be undone.');">
+                                  class="confirm-form" data-confirm-message="Permanently delete this account? This cannot be undone.">
                                 <button type="submit" class="action-btn action-delete">
                                     <i class="fas fa-trash"></i> Delete Account
                                 </button>
@@ -635,25 +674,74 @@
         }
     }
 
+    <div class="confirm-modal-overlay" id="confirmModal">
+        <div class="confirm-modal-box">
+            <p id="confirmModalMessage"></p>
+            <div class="confirm-modal-actions">
+                <button type="button" class="action-btn action-reopen" id="confirmModalCancel">Cancel</button>
+                <button type="button" class="action-btn action-delete" id="confirmModalConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    // ── Deep link: ?id=123 scrolls to and highlights that report's card.
-    // The page model already forces StatusFilter=All when ?id= is present
-    // and no explicit StatusFilter was given, so the card is guaranteed
-    // to be in this list regardless of its current status.
     document.addEventListener('DOMContentLoaded', function () {
+        // ── Deep link: ?id=123 scrolls to and highlights that report's card.
+        // The page model already forces StatusFilter=All when ?id= is present
+        // and no explicit StatusFilter was given, so the card is guaranteed
+        // to be in this list regardless of its current status.
         const params = new URLSearchParams(window.location.search);
         const targetId = params.get('id');
-        if (!targetId) return;
+        if (targetId) {
+            const targetCard = document.querySelector('.report-card[data-report-id="' + targetId + '"]');
+            if (targetCard) {
+                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetCard.classList.add('deep-link-highlight');
+                setTimeout(function () {
+                    targetCard.classList.remove('deep-link-highlight');
+                }, 3500);
+            }
+        }
 
-        const targetCard = document.querySelector('.report-card[data-report-id="' + targetId + '"]');
-        if (!targetCard) return;
+        // ── Custom confirm modal (replaces window.confirm for destructive actions) ──
+        const modal = document.getElementById('confirmModal');
+        const modalMessage = document.getElementById('confirmModalMessage');
+        const modalConfirmBtn = document.getElementById('confirmModalConfirm');
+        const modalCancelBtn = document.getElementById('confirmModalCancel');
+        let pendingForm = null;
 
-        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        targetCard.classList.add('deep-link-highlight');
-        setTimeout(function () {
-            targetCard.classList.remove('deep-link-highlight');
-        }, 3500);
+        document.querySelectorAll('form.confirm-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                pendingForm = form;
+                modalMessage.textContent = form.dataset.confirmMessage || 'Are you sure?';
+                modal.classList.add('open');
+            });
+        });
+
+        modalCancelBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) closeModal();
+        });
+
+        modalConfirmBtn.addEventListener('click', function () {
+            if (pendingForm) {
+                pendingForm.submit();
+            }
+            closeModal();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && modal.classList.contains('open')) {
+                closeModal();
+            }
+        });
+
+        function closeModal() {
+            modal.classList.remove('open');
+            pendingForm = null;
+        }
     });
 </script>
