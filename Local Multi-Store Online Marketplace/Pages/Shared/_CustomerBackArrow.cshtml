@@ -1,0 +1,105 @@
+﻿@{
+    // Optional: pass a custom fallback route from the page that includes
+    // this partial, e.g.:
+    //   <partial name="_CustomerBackArrow" view-data='@(new ViewDataDictionary(ViewData) { ["BackFallbackUrl"] = "/CustomerFeed" })' />
+    // If not set, defaults to /CustomerFeed.
+    var backFallbackUrl = ViewData["BackFallbackUrl"] as string ?? "/CustomerFeed";
+}
+
+<style>
+    /* ============================================================
+                   SHARED BACK ARROW — same button, same place, same
+                   behavior on every page that includes this partial.
+                   Uses the app's design tokens where available, with
+                   literal fallbacks so it still looks right even on a
+                   page that hasn't defined them.
+                   ============================================================ */
+    .back-arrow-btn {
+        /* Fixed to the same spot on every page — same idea as the
+               bottom nav always being pinned to the bottom, regardless
+               of what each individual page's layout looks like. */
+        position: fixed;
+        top: 24px;
+        left: 24px;
+        z-index: 250;
+        width: 46px;
+        height: 46px;
+        flex-shrink: 0;
+        border-radius: 14px;
+        border: 1px solid var(--border-color, #ece8f6);
+        background: var(--card-bg, #ffffff);
+        color: var(--text-secondary, #6b6478);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: var(--shadow-md, 0 10px 30px rgba(109, 40, 217, 0.08));
+        transition: all 0.2s ease;
+    }
+
+        .back-arrow-btn:hover {
+            border-color: var(--accent-color, #6d28d9);
+            color: var(--accent-color, #6d28d9);
+            background: var(--accent-light, #f3effe);
+            transform: translateX(-2px);
+        }
+
+    @@media (max-width: 560px) {
+        .back-arrow-btn {
+            top: 16px;
+            left: 16px;
+            width: 40px;
+            height: 40px;
+            font-size: 15px;
+            border-radius: 12px;
+        }
+    }
+</style>
+
+<button type="button"
+        class="back-arrow-btn"
+        id="customerBackArrowBtn"
+        data-fallback-url="@backFallbackUrl"
+        aria-label="Go back">
+    <i class="fa-solid fa-arrow-left"></i>
+</button>
+
+<script>
+    // =====================================================
+    // Shared by every page that includes _CustomerBackArrow.
+    // Wired with addEventListener (not inline onclick) so it
+    // isn't blocked by a CSP that disallows inline handlers.
+    // Self-initializes, so it works regardless of whether the
+    // host page fires its own DOMContentLoaded listeners.
+    //
+    // Behavior: goes to the real previous page in browser
+    // history. Falls back to data-fallback-url (or /CustomerFeed)
+    // only when there's no history to go back to (page opened
+    // directly, new tab, bookmark, etc.).
+    // =====================================================
+    (function() {
+        function wireBackArrow() {
+            var btn = document.getElementById("customerBackArrowBtn");
+            if (!btn || btn.dataset.wired === "true") return;
+            btn.dataset.wired = "true";
+
+            var fallbackUrl = btn.getAttribute("data-fallback-url") || "/CustomerFeed";
+
+            btn.addEventListener("click", function() {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = fallbackUrl;
+                }
+            });
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", wireBackArrow);
+        } else {
+            wireBackArrow();
+        }
+    })();
+</script>
