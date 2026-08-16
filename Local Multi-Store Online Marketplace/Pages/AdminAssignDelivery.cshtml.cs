@@ -139,6 +139,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             .ThenInclude(c => c.User)
         .Include(o => o.DeliveryAssignment)
         .Include(o => o.Address)
+        .Include(o => o.OrderItems)
+            .ThenInclude(i => i.Store)
         .FirstOrDefaultAsync(o =>
             o.OrderID == orderId);
 
@@ -351,6 +353,57 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     "OrderStatusUpdated",
                     order.OrderID,
                     order.Status);
+            }
+            catch
+            {
+                // Never let a broadcast failure break the assignment —
+                // the order is already safely saved at this point.
+            }
+
+            // NEW — push the full assignment straight to this delivery
+            // person's own connection, so their DeliveryDashboard can
+            // insert the new assignment card live, with no refresh.
+            // Uses Clients.User(...), which AppHub already routes by
+            // ClaimTypes.NameIdentifier via NameIdentifierUserIdProvider
+            // (the same routing used for chat messages).
+            try
+            {
+                var storeNames = order.OrderItems != null
+                    ? string.Join(", ",
+                        order.OrderItems
+                            .Where(i => i.Store != null)
+                            .Select(i => i.Store!.StoreName)
+                            .Distinct())
+                    : string.Empty;
+
+                var productSummary = order.OrderItems != null
+                    ? string.Join(", ",
+                        order.OrderItems.Select(i => $"{i.ProductName} x{i.Quantity}"))
+                    : string.Empty;
+
+                var customerAddress = order.Address != null
+                    ? $"{order.Address.AddressLine1}, {order.Address.Area}, {order.Address.City}"
+                    : "No address";
+
+                await _hub.Clients.User(deliveryPerson.UserID.ToString())
+                    .SendAsync("NewDeliveryAssignment", new
+                    {
+                        assignmentId = assignment.AssignmentID,
+                        orderId = order.OrderID,
+                        orderNumber = order.OrderNumber,
+                        orderStatus = order.Status,
+                        assignmentStatus = assignment.Status,
+                        customerName = order.Customer.User.FullName ?? "N/A",
+                        customerPhone = order.Customer.User.PhoneNumber ?? "N/A",
+                        customerAddress = customerAddress,
+                        storeNames = storeNames,
+                        productSummary = productSummary,
+                        totalAmount = order.TotalAmount,
+                        orderDate = order.OrderDate.ToString("yyyy-MM-ddTHH:mm:ss"),
+                        paymentMethod = order.PaymentMethod ?? "N/A",
+                        paymentStatus = order.PaymentStatus ?? "N/A",
+                        assignedAt = assignment.AssignedAt.ToString("yyyy-MM-ddTHH:mm:ss")
+                    });
             }
             catch
             {

@@ -1147,18 +1147,19 @@
                         </span>
                     </div>
 
-                    @if (Model.Assignments == null ||
-                    !Model.Assignments.Any())
-                    {
-                        <div class="empty">
-                            <h3>No active assignments</h3>
-                            <p>Your assigned deliveries will appear here.</p>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="assignments-list" id="assignmentsList">
+                    <div id="assignmentsEmptyState"
+                         class="empty"
+                         style="display:@(Model.Assignments == null || !Model.Assignments.Any() ? "block" : "none");">
+                        <h3>No active assignments</h3>
+                        <p>Your assigned deliveries will appear here.</p>
+                    </div>
 
+                    <div class="assignments-list"
+                         id="assignmentsList"
+                         style="display:@(Model.Assignments != null && Model.Assignments.Any() ? "grid" : "none");">
+
+                        @if (Model.Assignments != null)
+                        {
                             @foreach (var item in Model.Assignments)
                             {
                                 var badgeClass =
@@ -1315,16 +1316,16 @@
 
                                 </div>
                             }
+                        }
 
-                        </div>
+                    </div>
 
-                        <div class="empty"
-                             id="assignmentSearchEmpty"
-                             style="display:none;">
-                            <h3>No matching orders</h3>
-                            <p>Try a different order number or address.</p>
-                        </div>
-                    }
+                    <div class="empty"
+                         id="assignmentSearchEmpty"
+                         style="display:none;">
+                        <h3>No matching orders</h3>
+                        <p>Try a different order number or address.</p>
+                    </div>
 
                 </div>
 
@@ -1359,7 +1360,7 @@
                                     <span class="kpi-mini-dot total"></span>
                                     <span class="kpi-mini-label">Total</span>
                                 </div>
-                                <span class="kpi-mini-value">@totalAssignments</span>
+                                <span class="kpi-mini-value" id="kpiTotal">@totalAssignments</span>
                             </div>
 
                             <div class="kpi-mini-row">
@@ -1367,7 +1368,7 @@
                                     <span class="kpi-mini-dot assigned"></span>
                                     <span class="kpi-mini-label">Assigned</span>
                                 </div>
-                                <span class="kpi-mini-value">@assignedCount</span>
+                                <span class="kpi-mini-value" id="kpiAssigned">@assignedCount</span>
                             </div>
 
                             <div class="kpi-mini-row">
@@ -1375,7 +1376,7 @@
                                     <span class="kpi-mini-dot out"></span>
                                     <span class="kpi-mini-label">Out for Delivery</span>
                                 </div>
-                                <span class="kpi-mini-value">@outForDeliveryCount</span>
+                                <span class="kpi-mini-value" id="kpiOutForDelivery">@outForDeliveryCount</span>
                             </div>
 
                             <div class="kpi-mini-row">
@@ -1383,7 +1384,7 @@
                                     <span class="kpi-mini-dot delivered"></span>
                                     <span class="kpi-mini-label">Delivered</span>
                                 </div>
-                                <span class="kpi-mini-value">@deliveredCount</span>
+                                <span class="kpi-mini-value" id="kpiDelivered">@deliveredCount</span>
                             </div>
 
                             <div class="kpi-mini-row">
@@ -1391,7 +1392,7 @@
                                     <span class="kpi-mini-dot earnings"></span>
                                     <span class="kpi-mini-label">Total Earnings</span>
                                 </div>
-                                <span class="kpi-mini-value">$@totalEarnings.ToString("0.00")</span>
+                                <span class="kpi-mini-value" id="kpiEarnings">$@totalEarnings.ToString("0.00")</span>
                             </div>
 
                         </div>
@@ -1907,6 +1908,123 @@
                     "GPS is off. Location update temporarily unavailable.";
             }
         }
+    </script>
+
+    <script>
+        // =====================================================
+        // LIVE NEW ASSIGNMENT — when an admin assigns this delivery
+        // person to an order (AdminAssignDelivery.cshtml.cs), the new
+        // assignment card appears here instantly at the top of Active
+        // Assignments, KPI counts update, and the empty-state message
+        // is hidden if it was showing. Uses the shared AppHub
+        // connection opened by the _AppHubScript partial included in
+        // _DeliveryNav above. The event is sent only to this specific
+        // delivery person via Clients.User(...), so no filtering by
+        // recipient is needed on this end.
+        // =====================================================
+        (function () {
+            if (!window.appHubReady) return;
+
+            function escapeHtml(value) {
+                var div = document.createElement('div');
+                div.textContent = value == null ? '' : String(value);
+                return div.innerHTML;
+            }
+
+            function formatDate(iso, withTime) {
+                var d = new Date(iso);
+                if (isNaN(d.getTime())) return '';
+                var datePart = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                if (!withTime) return datePart;
+                var timePart = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                return datePart + ' ' + timePart;
+            }
+
+            function bumpKpi(id, delta) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                var current = parseInt(el.textContent, 10) || 0;
+                el.textContent = String(current + delta);
+            }
+
+            function buildAssignmentCardHtml(a) {
+                var badgeClass = 'badge-assigned';
+                var paymentBadgeClass = (a.paymentStatus || '').toLowerCase() === 'paid' ? 'badge-paid' : 'badge-pending-pay';
+
+                var searchData = (escapeHtml(a.orderNumber) + ' ' + escapeHtml(a.customerAddress)).toLowerCase();
+
+                return (
+                    '<div class="assignment" id="order_' + a.orderID + '" data-search="' + searchData + '">' +
+                        '<div class="assignment-top">' +
+                            '<div class="assignment-id-group">' +
+                                '<div class="assignment-icon">📦</div>' +
+                                '<div class="assignment-order-no">Order ' + escapeHtml(a.orderNumber) + '</div>' +
+                            '</div>' +
+                            '<div class="assignment-badges">' +
+                                '<span class="badge ' + badgeClass + '">' + escapeHtml(a.assignmentStatus) + '</span>' +
+                                '<span class="badge badge-default">' + escapeHtml(a.orderStatus) + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="assignment-details">' +
+                            '<div class="assignment-detail-item"><span>Customer</span><strong>' + escapeHtml(a.customerName) + '</strong></div>' +
+                            '<div class="assignment-detail-item"><span>Phone</span><strong>' + escapeHtml(a.customerPhone) + '</strong></div>' +
+                            '<div class="assignment-detail-item"><span>Address</span><strong>' + escapeHtml(a.customerAddress) + '</strong></div>' +
+                            '<div class="assignment-detail-item"><span>Store</span><strong>' + escapeHtml(a.storeNames || 'N/A') + '</strong></div>' +
+                            '<div class="assignment-detail-item"><span>Products</span><strong>' + escapeHtml(a.productSummary || 'N/A') + '</strong></div>' +
+                            '<div class="assignment-detail-item"><span>Order Date</span><strong>' + formatDate(a.orderDate, false) + '</strong></div>' +
+                            '<div class="assignment-detail-item"><span>Total Amount</span><strong>$' + Number(a.totalAmount).toFixed(2) + '</strong></div>' +
+                            '<div class="assignment-detail-item"><span>Assigned</span><strong>' + formatDate(a.assignedAt, true) + '</strong></div>' +
+                        '</div>' +
+                        '<div class="assignment-meta-row">' +
+                            '<span class="meta-chip">' + escapeHtml(a.paymentMethod) + '</span>' +
+                            '<span class="meta-chip ' + paymentBadgeClass + '">' + escapeHtml(a.paymentStatus) + '</span>' +
+                        '</div>' +
+                        '<div class="actions">' +
+                            '<a class="details-link" href="/DeliveryOrderDetails?assignmentId=' + a.assignmentID + '">View Details</a>' +
+                            '<form method="post" action="?handler=StartDelivery">' +
+                                '<input type="hidden" name="assignmentId" value="' + a.assignmentID + '" />' +
+                                '<button type="submit" class="start-btn">Start Delivery</button>' +
+                            '</form>' +
+                        '</div>' +
+                    '</div>'
+                );
+            }
+
+            window.appHubReady.then(function () {
+                window.appHub.on("NewDeliveryAssignment", function (assignment) {
+                    var list = document.getElementById('assignmentsList');
+                    if (!list) return;
+
+                    // Avoid duplicates if this card somehow already exists.
+                    if (document.getElementById('order_' + assignment.orderID)) return;
+
+                    var wrapper = document.createElement('div');
+                    wrapper.innerHTML = buildAssignmentCardHtml(assignment);
+                    var card = wrapper.firstElementChild;
+
+                    list.prepend(card);
+                    list.style.display = 'grid';
+
+                    var emptyState = document.getElementById('assignmentsEmptyState');
+                    if (emptyState) emptyState.style.display = 'none';
+
+                    card.classList.add('highlight');
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(function () {
+                        card.classList.remove('highlight');
+                    }, 3500);
+
+                    bumpKpi('kpiTotal', 1);
+                    bumpKpi('kpiAssigned', 1);
+
+                    var visibleCountLabel = document.getElementById('assignmentVisibleCount');
+                    if (visibleCountLabel) {
+                        var totalCards = document.querySelectorAll('#assignmentsList .assignment').length;
+                        visibleCountLabel.textContent = totalCards + ' total';
+                    }
+                });
+            });
+        })();
     </script>
 
 </body>
