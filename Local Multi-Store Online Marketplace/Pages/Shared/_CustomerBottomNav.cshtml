@@ -36,13 +36,25 @@
         box-shadow: 0 6px 24px rgba(30, 27, 46, 0.12) !important;
         display: flex !important;
         justify-content: center !important;
+        justify-content: safe center !important;
         align-items: center !important;
-        gap: clamp(4px, 2vw, 28px) !important;
+        gap: clamp(6px, 2.6vw, 32px) !important;
         background: #ffffff;
-        padding: 8px 16px !important;
+        padding: 10px 20px !important;
         z-index: 999;
         transition: transform .3s cubic-bezier(.4,0,.2,1) !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: none !important; /* Firefox: keep the pill clean, no visible scrollbar */
+        -ms-overflow-style: none !important;
     }
+
+        /* Chrome / Safari / Edge: hide the scrollbar so the bar still looks
+               like a clean pill even if it ever needs to scroll on a very
+               narrow screen — this is a safety net, not the primary layout. */
+        nav.mobile-bottom-nav::-webkit-scrollbar {
+            display: none;
+        }
 
         /* Hidden state: slides straight down, out of view below the viewport */
         nav.mobile-bottom-nav.nav-hidden {
@@ -52,17 +64,17 @@
     /* ========== REUSABLE NAV ITEM (matching store‑owner rail-item) ========== */
     .mobile-bottom-nav .rail-item {
         position: relative;
-        min-width: 60px;
-        height: 60px;
+        min-width: 64px;
+        height: 62px;
         border-radius: 10px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 3px;
+        gap: 4px;
         color: #7A73A0; /* default icon colour */
         text-decoration: none;
-        padding: 6px 8px;
+        padding: 8px 10px;
         border: none;
         background: none;
         font-family: inherit;
@@ -72,7 +84,7 @@
     }
 
         .mobile-bottom-nav .rail-item i {
-            font-size: 21px;
+            font-size: 26px;
             line-height: 1;
         }
 
@@ -130,11 +142,31 @@
         border: 1.5px solid white;
     }
 
+    /* ========== TABLET RESPONSIVE ========== */
+    @@media (max-width: 900px) {
+        nav.mobile-bottom-nav {
+            width: 82vw !important;
+            gap: clamp(4px, 1.8vw, 20px) !important;
+            padding: 8px 14px !important;
+        }
+
+        .mobile-bottom-nav .rail-item {
+            min-width: 54px;
+            height: 54px;
+            padding: 6px 6px;
+        }
+
+            .mobile-bottom-nav .rail-item i {
+                font-size: 23px;
+            }
+    }
+
     /* ========== MOBILE RESPONSIVE ========== */
     @@media (max-width: 560px) {
         nav.mobile-bottom-nav {
-            gap: 2px;
-            padding: 4px 6px !important;
+            width: 94vw !important;
+            gap: clamp(2px, 1.4vw, 10px) !important;
+            padding: 6px 8px !important;
         }
 
         .mobile-bottom-nav .rail-item {
@@ -144,7 +176,7 @@
         }
 
             .mobile-bottom-nav .rail-item i {
-                font-size: 18px;
+                font-size: 21px;
             }
 
         .mobile-bottom-nav .rail-label {
