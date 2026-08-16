@@ -268,7 +268,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                 Area = order.Address?.Area ?? string.Empty,
                 City = order.Address?.City ?? string.Empty,
 
+                // Fix for multi-store confirmation: items belonging to a
+                // store that cancelled its part are excluded here, so the
+                // delivery person never sees or picks up cancelled items.
                 Products = order.OrderItems
+                    .Where(i => !string.Equals(i.StoreResponseStatus, "Cancelled", StringComparison.OrdinalIgnoreCase))
                     .Select(i => new ProductLineViewModel
                     {
                         ProductName = i.ProductName,
@@ -281,6 +285,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
                 StoreNames = string.Join(", ",
                     order.OrderItems
+                        .Where(i => !string.Equals(i.StoreResponseStatus, "Cancelled", StringComparison.OrdinalIgnoreCase))
                         .Where(i => i.Store != null)
                         .Select(i => i.Store.StoreName)
                         .Distinct()),

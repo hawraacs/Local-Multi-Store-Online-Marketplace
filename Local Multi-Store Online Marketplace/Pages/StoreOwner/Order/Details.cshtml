@@ -8,8 +8,8 @@
 @section Styles {
     <style>
         /* ============================================================
-                   ROOT VARIABLES — consistent brand palette
-                   ============================================================ */
+                           ROOT VARIABLES — consistent brand palette
+                           ============================================================ */
         :root {
             --accent-color: #6d28d9;
             --accent-hover: #5b21b6;
@@ -39,8 +39,8 @@
         }
 
         /* ============================================================
-                   HEADER
-                   ============================================================ */
+                           HEADER
+                           ============================================================ */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -159,8 +159,8 @@
         }
 
         /* ============================================================
-                   ALERTS
-                   ============================================================ */
+                           ALERTS
+                           ============================================================ */
         .alert {
             border-radius: var(--radius-md);
             padding: 14px 18px;
@@ -187,8 +187,8 @@
         }
 
         /* ============================================================
-                   CARDS
-                   ============================================================ */
+                           CARDS
+                           ============================================================ */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -246,8 +246,8 @@
             }
 
         /* ============================================================
-                   TABLE
-                   ============================================================ */
+                           TABLE
+                           ============================================================ */
         .table-wrap {
             overflow-x: auto;
         }
@@ -298,8 +298,8 @@
         }
 
         /* ============================================================
-                   STATUS UPDATE FORM
-                   ============================================================ */
+                           STATUS UPDATE FORM
+                           ============================================================ */
         .status-form {
             display: flex;
             flex-wrap: wrap;
@@ -377,8 +377,8 @@
             }
 
         /* ============================================================
-                   RESPONSIVE
-                   ============================================================ */
+                           RESPONSIVE
+                           ============================================================ */
         @@media (max-width: 768px) {
             .page-header {
                 flex-direction: column;
@@ -427,6 +427,12 @@
         @if (Model.Order != null)
         {
             <span class="order-status-badge status-@Model.Order.Status.ToLower()">@Model.Order.Status</span>
+            @if (Model.Order.IsMultiVendor)
+            {
+                <span class="order-status-badge status-@Model.Order.StoreStatus.ToLower()" style="margin-left:6px;" title="This store's own response to its part of this order">
+                    Your store: @Model.Order.StoreStatus
+                </span>
+            }
         }
     </h1>
     <div>
@@ -519,6 +525,19 @@
 <div class="card">
     <div class="card-header"><i class="fas fa-cog"></i> Update Status</div>
     <div class="card-body">
+        @if (Model.Order?.IsMultiVendor == true)
+        {
+            <p class="text-muted" style="font-size:13px;">
+                This order includes items from other stores. Setting
+                <strong>Confirmed</strong> or <strong>Cancelled</strong> here only
+                applies to your store's items — the order moves to delivery once
+                every store has responded, and at least one store confirmed.
+                @if (Model.Order?.StoreStatus != "Pending")
+                {
+                    <text> Your store has already responded: <strong>@Model.Order?.StoreStatus</strong>.</text>
+                }
+            </p>
+        }
         <form method="post" asp-page-handler="UpdateStatus">
             <input type="hidden" name="orderId" value="@Model.Order?.OrderID" />
             <div class="status-form">

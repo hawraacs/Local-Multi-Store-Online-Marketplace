@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
 {
@@ -44,5 +45,37 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
 
         public static bool IsTerminal(string? status) =>
             !string.IsNullOrWhiteSpace(status) && TerminalValues.Contains(status.Trim());
+
+        // Fix for multi-store order confirmation. Given one representative
+        // OrderItem.StoreResponseStatus per participating store, decides
+        // what the shared Order.Status should become right now.
+        //
+        // Rule: "An order becomes ready for delivery once ALL participating
+        // stores have responded (Confirmed or Cancelled), AND at least one
+        // store has Confirmed."
+        //   - any store still Pending             -> null  (keep waiting)
+        //   - all responded, at least one Confirmed -> "Confirmed"
+        //   - all responded, all Cancelled          -> "Cancelled"
+        //
+        // Returns null when the shared Order.Status must NOT change yet —
+        // callers should leave it as "Pending" in that case.
+        public static string? ComputeOverallStatus(IEnumerable<string> storeResponseStatuses)
+        {
+            var statuses = storeResponseStatuses.ToList();
+
+            if (statuses.Count == 0)
+                return null;
+
+            var anyPending = statuses.Any(s =>
+                string.Equals(s, "Pending", StringComparison.OrdinalIgnoreCase));
+
+            if (anyPending)
+                return null;
+
+            var anyConfirmed = statuses.Any(s =>
+                string.Equals(s, "Confirmed", StringComparison.OrdinalIgnoreCase));
+
+            return anyConfirmed ? "Confirmed" : "Cancelled";
+        }
     }
 }

@@ -202,8 +202,27 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 order.PaymentStatus = "Paid";
 
-                if (currentOrderStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ||
-                    currentOrderStatus.Equals("Pending Confirmation", StringComparison.OrdinalIgnoreCase))
+                // Fix: PaymentStatus and Order.Status/StoreResponseStatus are
+                // separate concepts. Paying online means the customer has
+                // paid — it does NOT mean every store has accepted the
+                // order. For a multi-store order, Order.Status must only
+                // ever be advanced by ComputeOverallStatus, once every
+                // participating store has individually Confirmed/Cancelled
+                // via StoreOwner/Order/Index.cshtml.cs (or Details.cshtml.cs).
+                // So this now only auto-confirms on payment for a genuinely
+                // single-store order, preserving that existing behavior
+                // exactly. For a multi-store order, Order.Status is left
+                // untouched here (it stays "Pending", exactly as it started)
+                // and each store still needs to respond independently.
+                var distinctStoreCountForOrder = await _context.OrderItems
+                    .Where(orderItem => orderItem.OrderID == order.OrderID)
+                    .Select(orderItem => orderItem.StoreID)
+                    .Distinct()
+                    .CountAsync();
+
+                if (distinctStoreCountForOrder <= 1 &&
+                    (currentOrderStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ||
+                     currentOrderStatus.Equals("Pending Confirmation", StringComparison.OrdinalIgnoreCase)))
                 {
                     order.Status = "Confirmed";
                 }
@@ -256,10 +275,9 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return RedirectToPage("/PaymentSuccess", new
+                return RedirectToPage("/Invoice", new
                 {
-                    orderId = order.OrderID,
-                    transactionId = intent.Id
+                    orderId = order.OrderID
                 });
             }
             catch (Exception exception)
