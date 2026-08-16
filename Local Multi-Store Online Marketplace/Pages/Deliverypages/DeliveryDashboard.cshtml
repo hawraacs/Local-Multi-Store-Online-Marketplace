@@ -1,6 +1,7 @@
 ﻿@page "/DeliveryDashboard"
 @model Local_Multi_Store_Online_Marketplace.Pages.Deliverypages.DeliveryDashboardModel
 @using System.Linq
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 
 @{
     Layout = null;
@@ -18,6 +19,15 @@
     var deliveredCount = Model.DeliveredAssignmentsCount;
 
     var totalEarnings = Model.TotalEarnings;
+
+    // Fix for Start Delivery HTTP 400 on assignment cards that arrive live
+    // via SignalR (see "LIVE NEW ASSIGNMENT" script below). Server-rendered
+    // forms get their antiforgery token automatically from the <form> tag
+    // helper (asp-page-handler="StartDelivery"), but the JS-built form used
+    // for cards injected live has no such token, so its POST to
+    // ?handler=StartDelivery fails antiforgery validation with HTTP 400.
+    // Exposing the page's token here lets that same JS form include it.
+    var antiForgeryToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
 }
 
 <!DOCTYPE html>
@@ -1466,6 +1476,15 @@
     </div>
 
     <script>
+        // Antiforgery token for POST forms built dynamically in JS
+        // (e.g. the Start Delivery form on cards injected live via
+        // SignalR). Server-rendered <form asp-page-handler="..."> forms
+        // already carry their own token automatically; this is only
+        // needed for the JS-built equivalent below.
+        window.__antiForgeryToken = "@antiForgeryToken";
+    </script>
+
+    <script>
         /* ================= SEARCH FILTER (new, additive, client-side only) ================= */
         function filterAssignments(rawQuery) {
             const query = (rawQuery || "").trim().toLowerCase();
@@ -1982,6 +2001,7 @@
                         '<div class="actions">' +
                             '<a class="details-link" href="/DeliveryOrderDetails?assignmentId=' + a.assignmentID + '">View Details</a>' +
                             '<form method="post" action="?handler=StartDelivery">' +
+                                '<input type="hidden" name="__RequestVerificationToken" value="' + escapeHtml(window.__antiForgeryToken || '') + '" />' +
                                 '<input type="hidden" name="assignmentId" value="' + a.assignmentID + '" />' +
                                 '<button type="submit" class="start-btn">Start Delivery</button>' +
                             '</form>' +
