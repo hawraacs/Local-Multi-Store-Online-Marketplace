@@ -397,7 +397,7 @@
         }
 
         /* NEW — brief highlight pulse for a row inserted live via
-                   SignalR (a store owner just confirmed this order). */
+                           SignalR (a store owner just confirmed this order). */
         @@keyframes assignRowHighlightPulse {
             0% {
                 background-color: rgba(99, 102, 241, 0.16);
@@ -413,6 +413,18 @@
             background-color: rgba(99, 102, 241, 0.08) !important;
         }
 
+        /* ── Responsive: laptop / tablet ──
+                   Desktop layout/design is untouched above 1024px. Between
+                   1024px and 641px we only tighten spacing a little and keep
+                   the existing "scroll the table horizontally inside its own
+                   panel" behavior (the table never forces the whole page to
+                   scroll sideways, only the .table-responsive box does). */
+        @@media (max-width: 1024px) {
+            .assign-page {
+                padding: 0 16px 40px;
+            }
+        }
+
         @@media (max-width: 850px) {
             .assign-page {
                 padding: 0 12px 32px;
@@ -420,6 +432,140 @@
 
             table {
                 min-width: 1050px;
+            }
+        }
+
+        /* ── Responsive: mobile ──
+                   Below 640px a 9-column table can't be scaled down without
+                   either shrinking text unreadably or scrolling sideways, so
+                   instead each row is presented as a stacked "card" (labels
+                   come from the data-label attribute already mirrored onto
+                   every <td>, both server-rendered and the ones inserted live
+                   via SignalR). This keeps every field visible with no
+                   horizontal scrolling, without touching any functionality,
+                   IDs, forms, or JS logic. */
+        @@media (max-width: 640px) {
+            .assign-page {
+                padding: 0 12px 28px;
+            }
+
+            .page-header {
+                padding: 20px 2px 18px;
+            }
+
+                .page-header h1 {
+                    font-size: 20px;
+                }
+
+            .top-links {
+                width: 100%;
+            }
+
+            .link-btn {
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+
+            .panel {
+                padding: 6px;
+            }
+
+            .table-responsive {
+                overflow-x: hidden;
+            }
+
+            #assignTable {
+                min-width: 0;
+                width: 100%;
+            }
+
+                #assignTable thead,
+                #assignTable tbody,
+                #assignTable tr,
+                #assignTable th,
+                #assignTable td {
+                    display: block;
+                    width: 100%;
+                }
+                    /* Column-title row is redundant once each cell shows
+                           its own data-label, so it's hidden (not removed —
+                           still in the DOM, still fine for screen readers
+                           navigating the table semantics on larger screens). */
+                    #assignTable thead tr:first-child {
+                        display: none;
+                    }
+
+                    #assignTable thead tr.filter-row {
+                        background: var(--surface-2);
+                        border: 1px solid var(--border);
+                        border-radius: var(--radius);
+                        padding: 10px;
+                        margin-bottom: 14px;
+                    }
+
+                        #assignTable thead tr.filter-row th {
+                            padding: 6px 2px;
+                            border-bottom: none;
+                        }
+
+                    #assignTable tbody tr {
+                        background: var(--surface);
+                        border: 1px solid var(--border);
+                        border-radius: var(--radius);
+                        box-shadow: var(--shadow);
+                        padding: 6px 12px;
+                        margin-bottom: 14px;
+                    }
+
+                        #assignTable tbody tr:last-child {
+                            margin-bottom: 0;
+                        }
+
+                        #assignTable tbody tr:hover td {
+                            background: transparent;
+                        }
+
+                    #assignTable tbody td {
+                        padding: 10px 2px;
+                        border-bottom: 1px dashed var(--border);
+                        min-width: 0;
+                        max-width: none;
+                    }
+
+                        #assignTable tbody td:last-child {
+                            border-bottom: none;
+                        }
+
+                        #assignTable tbody td::before {
+                            content: attr(data-label);
+                            display: block;
+                            font-size: 10px;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            letter-spacing: 0.06em;
+                            color: var(--muted);
+                            margin-bottom: 5px;
+                        }
+
+            select {
+                min-width: 0;
+                max-width: 100%;
+            }
+            /* Safety net so unusually long region names or product
+                       lines can never push a card wider than the viewport. */
+            .region-badge {
+                white-space: normal;
+                word-break: break-word;
+            }
+
+            .products-cell,
+            .region-cell {
+                min-width: 0;
+                max-width: 100%;
+            }
+
+            .product-line {
+                flex-wrap: wrap;
             }
         }
     </style>
@@ -590,32 +736,32 @@
                                 data-delivery-people="@deliveryPeopleSearchText.ToLower()"
                                 data-date="@order.OrderDate.ToString("yyyy-MM-dd")"
                                 data-total="@order.TotalAmount.ToString(System.Globalization.CultureInfo.InvariantCulture)">
-                                <td>
+                                <td data-label="Order Number">
                                     <span class="order-number">
                                         @order.OrderNumber
                                     </span>
                                 </td>
 
-                                <td>
+                                <td data-label="Customer">
                                     @order.CustomerName
                                     <span class="customer-info">
                                         ID: @order.CustomerID
                                     </span>
                                 </td>
 
-                                <td>
+                                <td data-label="Date">
                                     @order.OrderDate.ToString("dd MMM yyyy HH:mm")
                                 </td>
 
-                                <td>
+                                <td data-label="Status">
                                     @order.Status
                                 </td>
 
-                                <td>
+                                <td data-label="Total">
                                     $@order.TotalAmount.ToString("N2")
                                 </td>
 
-                                <td class="products-cell">
+                                <td class="products-cell" data-label="Product">
                                     @if (order.Products != null &&
                                    order.Products.Count > 0)
                                     {
@@ -640,13 +786,13 @@
                                     }
                                 </td>
 
-                                <td class="region-cell">
+                                <td class="region-cell" data-label="Delivery Region">
                                     <span class="region-badge">
                                         @order.DeliveryRegion
                                     </span>
                                 </td>
 
-                                <td>
+                                <td data-label="Assign Delivery Person">
                                     @if (order.AvailableDeliveryPeople != null &&
                                    order.AvailableDeliveryPeople.Any())
                                     {
@@ -698,7 +844,7 @@
                                     }
                                 </td>
 
-                                <td>
+                                <td data-label="Action">
                                     @if (order.AvailableDeliveryPeople != null &&
                                    order.AvailableDeliveryPeople.Any())
                                     {
@@ -981,19 +1127,19 @@
             row.setAttribute('data-total', String(order.totalAmount));
 
             row.innerHTML =
-                '<td>' +
+                '<td data-label="Order Number">' +
                 '<span class="order-number">' + escapeHtml(order.orderNumber) + '</span>' +
                 '</td>' +
-                '<td>' + escapeHtml(order.customerName) +
+                '<td data-label="Customer">' + escapeHtml(order.customerName) +
                 '<span class="customer-info">ID: ' + escapeHtml(order.customerID) + '</span>' +
                 '</td>' +
-                '<td>' + escapeHtml(dateDisplay) + '</td>' +
-                '<td>' + escapeHtml(order.status) + '</td>' +
-                '<td>$' + Number(order.totalAmount).toFixed(2) + '</td>' +
-                '<td class="products-cell">' + buildProductsHtml(order.products) + '</td>' +
-                '<td class="region-cell"><span class="region-badge">' + escapeHtml(order.deliveryRegion) + '</span></td>' +
-                '<td>' + buildDeliverySelectHtml(order.orderID, order.availableDeliveryPeople) + '</td>' +
-                '<td>' +
+                '<td data-label="Date">' + escapeHtml(dateDisplay) + '</td>' +
+                '<td data-label="Status">' + escapeHtml(order.status) + '</td>' +
+                '<td data-label="Total">$' + Number(order.totalAmount).toFixed(2) + '</td>' +
+                '<td class="products-cell" data-label="Product">' + buildProductsHtml(order.products) + '</td>' +
+                '<td class="region-cell" data-label="Delivery Region"><span class="region-badge">' + escapeHtml(order.deliveryRegion) + '</span></td>' +
+                '<td data-label="Assign Delivery Person">' + buildDeliverySelectHtml(order.orderID, order.availableDeliveryPeople) + '</td>' +
+                '<td data-label="Action">' +
                 (hasDeliveryPeople
                     ? '<button type="submit" form="assignForm_' + order.orderID + '">Assign</button>'
                     : '<button type="button" disabled>Unavailable</button>') +
