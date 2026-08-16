@@ -249,6 +249,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                                 ? string.Join(", ",
                                     a.Order.OrderItems
                                         .Where(i => i != null && i.Store != null)
+                                        .Where(i => !string.Equals(i.StoreResponseStatus, "Cancelled", StringComparison.OrdinalIgnoreCase))
                                         .Select(i => i.Store.StoreName)
                                         .Distinct())
                                 : "N/A"

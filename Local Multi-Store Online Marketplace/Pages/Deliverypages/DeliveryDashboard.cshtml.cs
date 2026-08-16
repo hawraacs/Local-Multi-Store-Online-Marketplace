@@ -194,6 +194,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                         assignment.Order?.OrderItems != null
                             ? string.Join(", ",
                                 assignment.Order.OrderItems
+                                    .Where(i => !string.Equals(i.StoreResponseStatus, "Cancelled", StringComparison.OrdinalIgnoreCase))
                                     .Where(i => i.Store != null)
                                     .Select(i => i.Store.StoreName)
                                     .Distinct())
@@ -203,6 +204,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                         assignment.Order?.OrderItems != null
                             ? string.Join(", ",
                                 assignment.Order.OrderItems
+                                    .Where(i => !string.Equals(i.StoreResponseStatus, "Cancelled", StringComparison.OrdinalIgnoreCase))
                                     .Select(i => $"{i.ProductName} x{i.Quantity}"))
                             : string.Empty,
 

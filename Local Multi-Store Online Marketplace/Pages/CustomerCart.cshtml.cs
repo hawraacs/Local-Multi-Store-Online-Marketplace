@@ -1587,7 +1587,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // =====================================================
         // CALCULATE DELIVERY FEE
         // =====================================================
-        private async Task<decimal>
+        private Task<decimal>
             CalculateDeliveryFeeAsync(
                 List<CartItem> cartItems,
                 CustomerAddress customerAddress,
@@ -1596,97 +1596,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (subtotal >
                 FreeDeliveryThreshold)
             {
-                return 0m;
+                return Task.FromResult(0m);
             }
 
-            var storeIds = cartItems
-                .Where(item =>
-                    item.Product != null)
-                .Select(item =>
-                    item.Product.StoreID)
-                .Distinct()
-                .ToList();
-
-            if (!storeIds.Any())
-            {
-                return DefaultDeliveryFeePerStore;
-            }
-
-            var stores =
-                await _context.Stores
-                    .Where(store =>
-                        storeIds.Contains(
-                            store.StoreID))
-                    .ToListAsync();
-
-            var totalDeliveryFee = 0m;
-
-            foreach (var store in stores)
-            {
-                if (store.HasFixedDeliveryFee &&
-                    store.FixedDeliveryFee.HasValue)
-                {
-                    totalDeliveryFee +=
-                        store.FixedDeliveryFee.Value;
-
-                    continue;
-                }
-
-                if (store.Latitude == 0 ||
-                    store.Longitude == 0 ||
-                    !customerAddress.Latitude.HasValue ||
-                    !customerAddress.Longitude.HasValue)
-                {
-                    totalDeliveryFee +=
-                        DefaultDeliveryFeePerStore;
-
-                    continue;
-                }
-
-                var distanceKm =
-                    await TryGetDrivingDistanceKmAsync(
-                        Convert.ToDouble(
-                            store.Latitude),
-
-                        Convert.ToDouble(
-                            store.Longitude),
-
-                        customerAddress
-                            .Latitude
-                            .Value,
-
-                        customerAddress
-                            .Longitude
-                            .Value);
-
-                if (distanceKm == null ||
-                    distanceKm <= 0)
-                {
-                    totalDeliveryFee +=
-                        DefaultDeliveryFeePerStore;
-
-                    continue;
-                }
-
-                var storeDeliveryFee =
-                    BaseDeliveryFee +
-                    RatePerKm *
-                    (decimal)distanceKm.Value;
-
-                totalDeliveryFee +=
-                    Math.Round(
-                        storeDeliveryFee,
-                        2);
-            }
-
-            if (totalDeliveryFee < 0)
-            {
-                return DefaultDeliveryFeePerStore;
-            }
-
-            return Math.Round(
-                totalDeliveryFee,
-                2);
+            // Fix: delivery fee is a single flat fee for the WHOLE order,
+            // not per store. Previously this looped over every distinct
+            // store in the cart and added a fee (fixed, default, or
+            // distance-based) for EACH one, so a 2-store order became
+            // $6, a 3-store order $9, etc. Business rule: 1 store, 2
+            // stores, 10 stores — always exactly DefaultDeliveryFeePerStore
+            // ($3) total for the order. cartItems/customerAddress are no
+            // longer used here, but the parameters are left unchanged so
+            // no caller needs to be touched. async/await removed since
+            // this no longer awaits anything — Task.FromResult keeps the
+            // exact same Task<decimal> signature every existing
+            // "await CalculateDeliveryFeeAsync(...)" call site expects.
+            return Task.FromResult(DefaultDeliveryFeePerStore);
         }
 
         // =====================================================

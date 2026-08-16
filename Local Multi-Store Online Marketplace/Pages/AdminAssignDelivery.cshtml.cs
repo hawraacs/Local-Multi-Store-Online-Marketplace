@@ -368,9 +368,17 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             // (the same routing used for chat messages).
             try
             {
+                // Fix for multi-store confirmation: a store that cancelled
+                // its part of this order must not appear in what the
+                // delivery person sees. All other assignment/delivery
+                // logic here is unchanged.
+                var activeOrderItems = order.OrderItems != null
+                    ? order.OrderItems.Where(i => !string.Equals(i.StoreResponseStatus, "Cancelled", StringComparison.OrdinalIgnoreCase))
+                    : Enumerable.Empty<OrderItem>();
+
                 var storeNames = order.OrderItems != null
                     ? string.Join(", ",
-                        order.OrderItems
+                        activeOrderItems
                             .Where(i => i.Store != null)
                             .Select(i => i.Store!.StoreName)
                             .Distinct())
@@ -378,7 +386,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 var productSummary = order.OrderItems != null
                     ? string.Join(", ",
-                        order.OrderItems.Select(i => $"{i.ProductName} x{i.Quantity}"))
+                        activeOrderItems.Select(i => $"{i.ProductName} x{i.Quantity}"))
                     : string.Empty;
 
                 var customerAddress = order.Address != null
@@ -517,9 +525,15 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 // CustomerOrders.cshtml.cs (OrderItems ->
                 // ProductName / Quantity), reused here so the
                 // admin can see what's in the order.
+                //
+                // Fix for multi-store confirmation: items belonging to a
+                // store that cancelled its part are excluded here, so
+                // they never reach delivery assignment/pickup.
                 // ==================================
                 Products =
                     order.OrderItems
+                        .Where(orderItem =>
+                            !string.Equals(orderItem.StoreResponseStatus, "Cancelled", StringComparison.OrdinalIgnoreCase))
                         .OrderBy(orderItem =>
                             orderItem.OrderItemID)
                         .Select(orderItem =>
