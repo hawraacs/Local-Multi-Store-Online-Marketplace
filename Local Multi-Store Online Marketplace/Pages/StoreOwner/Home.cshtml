@@ -34,12 +34,12 @@
             --boost-hover: #d97706;
             --boost-light: #fef3c7;
             /* Display face for the store name and section headings — was referenced
-                                       elsewhere in this file (.profile-username, .stat-count) but never
-                                       actually defined, so it silently fell back to the body font. Fraunces
-                                       pairs a storefront/boutique warmth with the existing Inter body copy. */
+                                               elsewhere in this file (.profile-username, .stat-count) but never
+                                               actually defined, so it silently fell back to the body font. Fraunces
+                                               pairs a storefront/boutique warmth with the existing Inter body copy. */
             --font-display: 'Fraunces', 'Georgia', serif;
             /* Signature "awning stripe" motif — used sparingly, only where it encodes
-                                       something real (the storefront header, and stock-level flags). */
+                                               something real (the storefront header, and stock-level flags). */
             --awning-a: var(--accent);
             --awning-b: var(--accent-dark);
             --focus-ring: 0 0 0 3px rgba(109, 40, 217, 0.28);
@@ -56,9 +56,9 @@
         }
 
         /* Hide the store-owner bottom nav/toggle while the product feed overlay is
-                                   open — it was rendering on top of the post card (stacking context issue).
-                                   Targeting a few likely selectors since the exact bottom-nav class in
-                                   _StoreOwnerLayout.cshtml wasn't confirmed; safe to trim once verified. */
+                                           open — it was rendering on top of the post card (stacking context issue).
+                                           Targeting a few likely selectors since the exact bottom-nav class in
+                                           _StoreOwnerLayout.cshtml wasn't confirmed; safe to trim once verified. */
         body.feed-open .mobile-bottom-nav,
         body.feed-open .owner-bottom-nav,
         body.feed-open .bottom-nav,
@@ -87,7 +87,7 @@
         }
 
         /* NEW — pulse used to draw attention to whatever a notification
-                                   deep-link points at (a review, the followers stat, an order row). */
+                                           deep-link points at (a review, the followers stat, an order row). */
         @@keyframes notifHighlightPulse {
             0% {
                 box-shadow: 0 0 0 0 rgba(109, 40, 217, 0.45);
@@ -158,8 +158,8 @@
         }
 
         /* ============================================================
-                                           PAGE SHELL — main content + toggleable slide-in side panel
-                                           ============================================================ */
+                                                   PAGE SHELL — main content + toggleable slide-in side panel
+                                                   ============================================================ */
         .page-shell {
             max-width: 1010px;
             margin: 0 auto;
@@ -840,8 +840,8 @@
         }
 
         /* ============================================================
-                                   INSTAGRAM-STYLE FEED — redesigned viewer
-                                   ============================================================ */
+                                           INSTAGRAM-STYLE FEED — redesigned viewer
+                                           ============================================================ */
         .feed-overlay {
             display: none;
             position: fixed;
@@ -1109,8 +1109,8 @@
         }
 
             /* NEW: previously this badge always said "In Stock" regardless of real
-                                       inventory. It now reflects Product.Quantity / LowStockThreshold /
-                                       IsOutOfStock. */
+                                               inventory. It now reflects Product.Quantity / LowStockThreshold /
+                                               IsOutOfStock. */
             .post-stock-badge.low-stock {
                 color: var(--warning);
                 background: #fffbeb;
@@ -1195,6 +1195,22 @@
             flex-shrink: 0;
         }
 
+        /* NEW — clickable reviewer name, linking to the store-owner's
+                   customer-profile page for that reviewer. Keeps the same visual
+                   weight as the plain <strong> it replaces; only adds an
+                   underline on hover so it still reads as part of the row. */
+        .reviewer-name-link {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+            .reviewer-name-link:hover {
+                text-decoration: underline;
+                color: var(--accent-hover);
+            }
+
         .review-row p {
             font-size: 12.5px;
             color: var(--text-secondary);
@@ -1263,11 +1279,11 @@
         }
 
         /* ============================================================
-                                   STOCK FLAG — a strip across the bottom of the product image,
-                                   shown only when a product needs attention (low/out of stock).
-                                   Healthy stock gets no flag at all, so the signal stays meaningful
-                                   instead of decorating every card. Colors echo the header stripe.
-                                   ============================================================ */
+                                           STOCK FLAG — a strip across the bottom of the product image,
+                                           shown only when a product needs attention (low/out of stock).
+                                           Healthy stock gets no flag at all, so the signal stays meaningful
+                                           instead of decorating every card. Colors echo the header stripe.
+                                           ============================================================ */
         .stock-strip {
             position: absolute;
             left: 0;
@@ -1598,7 +1614,9 @@
                                 <div class="review-row" data-review-id="@review.ReviewID">
                                     <div class="reviewer-info">
                                         <div class="reviewer-avatar">@review.Customer?.User?.FullName?.FirstOrDefault()</div>
-                                        <strong>@review.Customer?.User?.FullName</strong>
+                                        <a asp-page="/StoreViewCustomer"
+                                           asp-route-customerId="@review.CustomerID"
+                                           class="reviewer-name-link">@review.Customer?.User?.FullName</a>
                                     </div>
                                     <p>@review.Comment</p>
                                     <form method="post"

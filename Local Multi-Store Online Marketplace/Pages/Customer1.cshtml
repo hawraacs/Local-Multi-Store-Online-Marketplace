@@ -2207,6 +2207,24 @@
             }
         }
 
+        /* NEW — clickable store-name link inside tile-store (grid tiles,
+           trending rail tiles, and the SignalR-injected new-product
+           tiles). Keeps the same visual weight as the previous plain
+           <span>; only adds underline-on-hover so it still reads as
+           part of the tile at a glance. */
+        .tile-store-link {
+            color: inherit !important;
+            text-decoration: none;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+            .tile-store-link:hover {
+                text-decoration: underline;
+            }
+
 
 
 /* =========================================================
@@ -2850,7 +2868,9 @@
 
                                     <span class="tile-bottom">
                                         <span class="tile-store">
-                                            <span>@item.StoreName</span>
+                                            <a href="/StoreCustomerProfile?id=@item.StoreID"
+                                               class="tile-store-link"
+                                               onclick="event.stopPropagation();">@item.StoreName</a>
                                         </span>
                                     </span>
                                 </button>
@@ -2986,7 +3006,9 @@
                                             </span>
                                         }
 
-                                        <span>@item.StoreName</span>
+                                        <a href="/StoreCustomerProfile?id=@item.StoreID"
+                                           class="tile-store-link"
+                                           onclick="event.stopPropagation();">@item.StoreName</a>
                                     </span>
                                 </span>
                             </span>
@@ -3804,7 +3826,7 @@
                                 '<span class="tile-price">$' + Number(p.price).toFixed(2) + '</span>' +
                             '</span>' +
                             '<span class="tile-bottom">' +
-                                '<span class="tile-store">' + storeAvatarHtml + '<span>' + p.storeName + '</span></span>' +
+                                '<span class="tile-store">' + storeAvatarHtml + '<a href="/StoreCustomerProfile?id=' + p.storeId + '" class="tile-store-link" onclick="event.stopPropagation();">' + p.storeName + '</a></span>' +
                             '</span>' +
                         '</span>' +
                         '<span class="tile-footer">' +
