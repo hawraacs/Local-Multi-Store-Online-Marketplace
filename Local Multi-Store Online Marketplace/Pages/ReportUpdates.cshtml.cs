@@ -74,7 +74,13 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         // to /CustomerPromotions). It's now included only when the viewer is
         // a customer — not just "not a store owner" — so delivery accounts
         // are covered by the same rule instead of only store owners.
-        private static List<string> GetVisibleTypesFor(bool isCustomer)
+        //
+        // NOTE: made public so navbar partials (_CustomerBottomNav,
+        // _DeliveryNav, _StoreOwnerLayout) can reuse this exact same rule
+        // to compute unread notification badge counts, instead of each
+        // partial re-implementing (and risking drifting from) the same
+        // per-role visibility logic used on this page.
+        public static List<string> GetVisibleTypesFor(bool isCustomer)
         {
             return isCustomer
                 ? AllNotificationTypes.ToList()

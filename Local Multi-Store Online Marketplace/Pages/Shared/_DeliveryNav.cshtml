@@ -1,4 +1,9 @@
 ﻿@using System
+@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@using Multi_Store.Infrastructure.Data
+@using Local_Multi_Store_Online_Marketplace.Pages
+@inject ApplicationDbContext DbContext
 @{
     var currentPath = Context.Request.Path.Value ?? "";
 
@@ -6,9 +11,34 @@
         currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase)
             ? "bottom-link active"
             : "bottom-link";
+
+    // Computed here, in the file's single top-level code block, rather than
+    // in a second @{ } block opened later inside the markup below — nesting
+    // a fresh @{ } inside an @if's markup body is what triggered the
+    // "Unexpected '{' after '@' character" Razor parse error.
+    var isDeliveryUser = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Delivery");
+    int unreadNotificationCount = 0;
+
+    if (isDeliveryUser)
+    {
+        int currentUserId = 0;
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int.TryParse(userIdClaim, out currentUserId);
+
+        if (currentUserId > 0)
+        {
+            // Delivery is treated as non-customer, same as store owner (no
+            // "Promotion" type) — same rule ReportUpdates itself uses, so
+            // this badge count can never disagree with what actually shows
+            // up on that page.
+            var visibleTypes = ReportUpdatesModel.GetVisibleTypesFor(isCustomer: false);
+            unreadNotificationCount = await DbContext.Notifications
+                .CountAsync(n => n.UserID == currentUserId && !n.IsRead && visibleTypes.Contains(n.Type));
+        }
+    }
 }
 
-@if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Delivery"))
+@if (isDeliveryUser)
 {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -146,6 +176,30 @@
             padding-bottom: 110px !important;
         }
 
+        /* ========== NOTIFICATION COUNT BADGE ========== */
+        .notif-icon-wrap {
+            position: relative;
+            display: inline-flex;
+        }
+
+        .notif-count-badge {
+            position: absolute;
+            top: -6px;
+            right: -10px;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 4px;
+            background: #ef4444;
+            color: #ffffff;
+            border-radius: 999px;
+            font-size: 9px;
+            font-weight: 700;
+            line-height: 16px;
+            text-align: center;
+            border: 1.5px solid #1E1240;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
         @@media (max-width: 560px) {
             .bottom-nav-bar {
                 padding: 10px 12px;
@@ -161,6 +215,15 @@
                 .logout-btn .bottom-icon {
                     font-size: 19px;
                 }
+
+            .notif-count-badge {
+                top: -5px;
+                right: -8px;
+                min-width: 14px;
+                height: 14px;
+                font-size: 8px;
+                line-height: 14px;
+            }
         }
     </style>
 
@@ -182,7 +245,13 @@
         </a>
 
         <a href="/ReportUpdates" class="@NavActiveClass("/ReportUpdates")">
-            <span class="bottom-icon">🔔</span>
+            <span class="notif-icon-wrap">
+                <span class="bottom-icon">🔔</span>
+                @if (unreadNotificationCount > 0)
+                {
+                    <span class="notif-count-badge">@(unreadNotificationCount > 99 ? "99+" : unreadNotificationCount.ToString())</span>
+                }
+            </span>
             <span class="label">Notifications</span>
         </a>
 

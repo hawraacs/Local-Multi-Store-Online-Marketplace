@@ -1,7 +1,11 @@
 ﻿@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@using Multi_Store.Infrastructure.Data
 @using Multi_Store.Services.Managers
+@using Local_Multi_Store_Online_Marketplace.Pages
 @inject Multi_Store.Services.Managers.UserManager UserManagerService
 @inject Multi_Store.Services.Managers.MessagingManager MessagingManagerService
+@inject ApplicationDbContext DbContext
 @{
     var currentPath = ViewContext.HttpContext.Request.Path.Value ?? string.Empty;
 
@@ -13,12 +17,20 @@
     int.TryParse(userIdClaim, out currentUserId);
 
     bool hasChatUnread = false;
+    int unreadNotificationCount = 0;
 
     if (currentUserId > 0)
     {
         var myMessages = await MessagingManagerService.GetMessagesForUserAsync(currentUserId);
         hasChatUnread = myMessages != null &&
                         myMessages.Any(m => m.ReceiverID == currentUserId && !m.IsRead);
+
+        // Customer-visible notification types (includes "Promotion") — same
+        // rule ReportUpdates itself uses, so this badge count can never
+        // disagree with what actually shows up on that page.
+        var visibleTypes = ReportUpdatesModel.GetVisibleTypesFor(isCustomer: true);
+        unreadNotificationCount = await DbContext.Notifications
+            .CountAsync(n => n.UserID == currentUserId && !n.IsRead && visibleTypes.Contains(n.Type));
     }
 }
 
@@ -50,8 +62,8 @@
     }
 
         /* Chrome / Safari / Edge: hide the scrollbar so the bar still looks
-               like a clean pill even if it ever needs to scroll on a very
-               narrow screen — this is a safety net, not the primary layout. */
+                   like a clean pill even if it ever needs to scroll on a very
+                   narrow screen — this is a safety net, not the primary layout. */
         nav.mobile-bottom-nav::-webkit-scrollbar {
             display: none;
         }
@@ -142,6 +154,30 @@
         border: 1.5px solid white;
     }
 
+    /* ========== NOTIFICATION COUNT BADGE ========== */
+    .notif-icon-wrap {
+        position: relative;
+        display: inline-flex;
+    }
+
+    .notif-count-badge {
+        position: absolute;
+        top: -6px;
+        right: -10px;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        background: #ef4444;
+        color: #ffffff;
+        border-radius: 999px;
+        font-size: 9px;
+        font-weight: 700;
+        line-height: 16px;
+        text-align: center;
+        border: 1.5px solid #ffffff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
     /* ========== TABLET RESPONSIVE ========== */
     @@media (max-width: 900px) {
         nav.mobile-bottom-nav {
@@ -182,6 +218,15 @@
         .mobile-bottom-nav .rail-label {
             font-size: 8px;
         }
+
+        .notif-count-badge {
+            top: -5px;
+            right: -8px;
+            min-width: 14px;
+            height: 14px;
+            font-size: 8px;
+            line-height: 14px;
+        }
     }
 </style>
 
@@ -219,7 +264,13 @@
     </a>
 
     <a href="/ReportUpdates" class="rail-item @ActiveIf("/ReportUpdates")">
-        <i class="fa-solid fa-bell"></i>
+        <span class="notif-icon-wrap">
+            <i class="fa-solid fa-bell"></i>
+            @if (unreadNotificationCount > 0)
+            {
+                <span class="notif-count-badge">@(unreadNotificationCount > 99 ? "99+" : unreadNotificationCount.ToString())</span>
+            }
+        </span>
         <span class="rail-label">Notifications</span>
     </a>
 

@@ -1,9 +1,13 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
 @using Multi_Store.Core.Entities
+@using Multi_Store.Infrastructure.Data
 @using Multi_Store.Services.Dtos
 @using Multi_Store.Services.Managers
+@using Local_Multi_Store_Online_Marketplace.Pages
 @inject UserManager<User> UserManager
 @inject StoreManager StoreManager
+@inject ApplicationDbContext DbContext
 @{
     var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
     string ActiveIf(string pageName) =>
@@ -13,6 +17,7 @@
     string? storeLogoUrl = null;
     string? storeName = null;
     int? currentStoreId = null;
+    int unreadNotificationCount = 0;
 
     // BUGFIX: this is the shared layout for every page in the Store Owner
     // section — previously there was no try/catch at all around these two DB
@@ -32,6 +37,14 @@
                 storeLogoUrl = store.LogoURL;
                 storeName = store.StoreName;
             }
+
+            // Store owner is treated as non-customer, same as delivery (no
+            // "Promotion" type) — same rule ReportUpdates itself uses, so
+            // this badge count can never disagree with what actually shows
+            // up on that page.
+            var visibleTypes = ReportUpdatesModel.GetVisibleTypesFor(isCustomer: false);
+            unreadNotificationCount = await DbContext.Notifications
+                .CountAsync(n => n.UserID == currentUser.Id && !n.IsRead && visibleTypes.Contains(n.Type));
         }
     }
     catch
@@ -117,18 +130,18 @@
                 gap: 4px;
                 transition: transform 0.25s var(--ease), box-shadow 0.2s var(--ease);
                 /* BUGFIX: the rail is `position: fixed`, so it overlaps whatever page
-                               content happens to be in that spot on screen — including on the
-                               very first paint, with zero scrolling involved, if the viewport is
-                               tall enough to show both the rail and a chunk of the content behind
-                               it at once (this is exactly what was happening: row 1's buttons sat
-                               right underneath the rail immediately on page load). A scroll-based
-                               show/hide can't fix that, since no scroll event ever fires until the
-                               user actually scrolls. Instead, the rail now starts translated fully
-                               off-screen (below the viewport) and only slides into view when the
-                               mouse is actually near the bottom edge of the screen — see the
-                               .rail-visible class and the mousemove listener at the bottom of this
-                               file. That guarantees it never sits on top of something you're
-                               trying to click unless you've moved your cursor toward it on purpose. */
+                                           content happens to be in that spot on screen — including on the
+                                           very first paint, with zero scrolling involved, if the viewport is
+                                           tall enough to show both the rail and a chunk of the content behind
+                                           it at once (this is exactly what was happening: row 1's buttons sat
+                                           right underneath the rail immediately on page load). A scroll-based
+                                           show/hide can't fix that, since no scroll event ever fires until the
+                                           user actually scrolls. Instead, the rail now starts translated fully
+                                           off-screen (below the viewport) and only slides into view when the
+                                           mouse is actually near the bottom edge of the screen — see the
+                                           .rail-visible class and the mousemove listener at the bottom of this
+                                           file. That guarantees it never sits on top of something you're
+                                           trying to click unless you've moved your cursor toward it on purpose. */
                 transform: translateX(-50%) translateY(140%);
             }
 
@@ -137,9 +150,9 @@
                 }
 
             /* Touch devices have no hover/mouse-proximity concept, so keep the
-                               original always-visible behavior there — this is the normal,
-                               expected pattern for a bottom tab bar on mobile, and there's no
-                               "hover near the bottom" gesture to reveal it with. */
+                                           original always-visible behavior there — this is the normal,
+                                           expected pattern for a bottom tab bar on mobile, and there's no
+                                           "hover near the bottom" gesture to reveal it with. */
             @@media (hover: none), (pointer: coarse) {
                 .pro-rail {
                     transform: translateX(-50%) translateY(0);
@@ -294,6 +307,30 @@
                 }
             }
 
+            /* ========== NOTIFICATION COUNT BADGE ========== */
+            .notif-icon-wrap {
+                position: relative;
+                display: inline-flex;
+            }
+
+            .notif-count-badge {
+                position: absolute;
+                top: -4px;
+                right: -8px;
+                min-width: 14px;
+                height: 14px;
+                padding: 0 3px;
+                background: #ef4444;
+                color: #ffffff;
+                border-radius: 999px;
+                font-size: 8px;
+                font-weight: 700;
+                line-height: 14px;
+                text-align: center;
+                border: 1.5px solid #ffffff;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            }
+
             @@media (max-width: 768px) {
                 .store-main-content {
                     padding: 0 16px 40px;
@@ -397,7 +434,13 @@
                         <span class="rail-label">Chat</span>
                     </a>
                     <a href="/ReportUpdates" class="rail-item @ActiveIf("ReportUpdates")" aria-current="@(ActiveIf("ReportUpdates") == "active" ? "page" : null)" title="Notifications">
-                        <i class="fas fa-bell"></i>
+                        <span class="notif-icon-wrap">
+                            <i class="fas fa-bell"></i>
+                            @if (unreadNotificationCount > 0)
+                            {
+                                <span class="notif-count-badge">@(unreadNotificationCount > 99 ? "99+" : unreadNotificationCount.ToString())</span>
+                            }
+                        </span>
                         <span class="rail-label">Notifications</span>
                     </a>
                 </nav>
