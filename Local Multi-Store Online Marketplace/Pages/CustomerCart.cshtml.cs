@@ -98,6 +98,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         [BindProperty(SupportsGet = true)]
         public string? SelectedCartItemIds { get; set; }
 
+        // NEW — JSON map of { "cartItemId": "note text" } for the
+        // items being checked out. Carried the same way as
+        // SelectedCartItemIds so it survives the address round-trip.
+        // Notes themselves are NOT stored on CartItem/OrderItem — they
+        // live in the separate CartItemNotes / OrderItemNotes tables.
+        [BindProperty(SupportsGet = true)]
+        public string? ItemNotesJson { get; set; }
+
         // =====================================================
         // GET CART
         // =====================================================
@@ -123,7 +131,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     customerId.Value,
                     AppliedCouponCode,
                     PaymentMethod,
-                    SelectedCartItemIds);
+                    SelectedCartItemIds,
+                    ItemNotesJson);
             }
 
             await LoadCartAsync(customerId.Value);
@@ -263,6 +272,120 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         }
 
         // =====================================================
+        // UPDATE NOTE — stored in the separate CartItemNotes
+        // table, not on CartItem itself. No entity/migration
+        // changes to CartItem or OrderItem.
+        // =====================================================
+        public async Task<IActionResult> OnPostUpdateNoteAsync(
+            int cartItemId,
+            string? note)
+        {
+            var customerId = await GetCurrentCustomerIdAsync();
+
+            if (customerId == null)
+            {
+                if (IsAjaxRequest())
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "Please login as a customer first."
+                    })
+                    { StatusCode = StatusCodes.Status401Unauthorized };
+                }
+
+                TempData["Error"] =
+                    "Please login as a customer first.";
+
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity" });
+            }
+
+            // Ownership check — confirm this cart item really
+            // belongs to the logged-in customer before writing a note.
+            var ownsCartItem = await _context.CartItems
+                .Include(ci => ci.Cart)
+                .AnyAsync(ci =>
+                    ci.CartItemID == cartItemId &&
+                    ci.Cart.CustomerID == customerId.Value);
+
+            if (!ownsCartItem)
+            {
+                if (IsAjaxRequest())
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "Cart item not found."
+                    });
+                }
+
+                TempData["Error"] =
+                    "Cart item not found.";
+
+                return RedirectToPage(
+                    new { AppliedCouponCode });
+            }
+
+            const int maxNoteLength = 200;
+
+            var trimmedNote =
+                string.IsNullOrWhiteSpace(note)
+                    ? null
+                    : note.Trim();
+
+            if (trimmedNote != null &&
+                trimmedNote.Length > maxNoteLength)
+            {
+                trimmedNote = trimmedNote[..maxNoteLength];
+            }
+
+            var existingNote = await _context.CartItemNotes
+                .FirstOrDefaultAsync(n =>
+                    n.CartItemID == cartItemId);
+
+            if (trimmedNote == null)
+            {
+                if (existingNote != null)
+                {
+                    _context.CartItemNotes.Remove(existingNote);
+                }
+            }
+            else if (existingNote != null)
+            {
+                existingNote.Note = trimmedNote;
+                existingNote.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                _context.CartItemNotes.Add(new CartItemNote
+                {
+                    CartItemID = cartItemId,
+                    Note = trimmedNote,
+                    UpdatedAt = DateTime.UtcNow
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            if (IsAjaxRequest())
+            {
+                return new JsonResult(new
+                {
+                    success = true,
+                    cartItemId,
+                    note = trimmedNote
+                });
+            }
+
+            TempData["Success"] = "Note saved.";
+
+            return RedirectToPage(
+                new { AppliedCouponCode });
+        }
+
+        // =====================================================
         // AJAX REQUEST DETECTION
         // =====================================================
         private bool IsAjaxRequest()
@@ -329,6 +452,16 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
             _context.CartItems.Remove(cartItem);
 
+            // NEW — clean up any note tied to this cart item so
+            // CartItemNotes doesn't accumulate orphaned rows.
+            var noteToRemove = await _context.CartItemNotes
+                .FirstOrDefaultAsync(n => n.CartItemID == cartItemId);
+
+            if (noteToRemove != null)
+            {
+                _context.CartItemNotes.Remove(noteToRemove);
+            }
+
             await _context.SaveChangesAsync();
 
             if (IsAjaxRequest())
@@ -371,6 +504,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             if (cart == null)
             {
                 return RedirectToPage();
+            }
+
+            // NEW — clean up notes for every cleared cart item.
+            var clearedCartItemIds = cart.CartItems
+                .Select(ci => ci.CartItemID)
+                .ToList();
+
+            if (clearedCartItemIds.Any())
+            {
+                var notesToRemove = await _context.CartItemNotes
+                    .Where(n => clearedCartItemIds.Contains(n.CartItemID))
+                    .ToListAsync();
+
+                _context.CartItemNotes.RemoveRange(notesToRemove);
             }
 
             _context.CartItems.RemoveRange(
@@ -585,7 +732,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         public async Task<IActionResult> OnPostCheckoutAsync(
             string? appliedCouponCode,
             string? paymentMethod,
-            string? selectedCartItemIds)
+            string? selectedCartItemIds,
+            string? itemNotesJson)
         {
             var customerId = await GetCurrentCustomerIdAsync();
 
@@ -603,7 +751,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 customerId.Value,
                 appliedCouponCode,
                 paymentMethod,
-                selectedCartItemIds);
+                selectedCartItemIds,
+                itemNotesJson);
         }
 
         // =====================================================
@@ -647,7 +796,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             int customerId,
             string? appliedCouponCode,
             string? paymentMethod,
-            string? selectedCartItemIds)
+            string? selectedCartItemIds,
+            string? itemNotesJson)
         {
             var cleanPaymentMethod =
                 string.IsNullOrWhiteSpace(paymentMethod)
@@ -758,6 +908,18 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     });
             }
 
+            // NEW — load any per-item notes for the items being
+            // checked out, from the separate CartItemNotes table.
+            var checkoutCartItemIds = itemsToCheckout
+                .Select(item => item.CartItemID)
+                .ToList();
+
+            var checkoutNotesByCartItemId = checkoutCartItemIds.Any()
+                ? await _context.CartItemNotes
+                    .Where(n => checkoutCartItemIds.Contains(n.CartItemID))
+                    .ToDictionaryAsync(n => n.CartItemID, n => n.Note)
+                : new Dictionary<int, string>();
+
             var address = customer.Addresses
                 .FirstOrDefault(addressItem =>
                     addressItem.IsDefault &&
@@ -788,6 +950,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                             itemsToCheckout.Select(
                                 item => item.CartItemID)));
 
+                var encodedItemNotesJson =
+                    Uri.EscapeDataString(
+                        itemNotesJson ?? string.Empty);
+
                 return RedirectToPage(
                     "/CustomerAddresses",
                     new
@@ -797,7 +963,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                             $"?CheckoutAfterAddress=true" +
                             $"&AppliedCouponCode={encodedCoupon}" +
                             $"&PaymentMethod={encodedPayment}" +
-                            $"&SelectedCartItemIds={encodedSelectedIds}"
+                            $"&SelectedCartItemIds={encodedSelectedIds}" +
+                            $"&ItemNotesJson={encodedItemNotesJson}"
                     });
             }
 
@@ -1040,6 +1207,23 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
                 _context.OrderItems.Add(orderItem);
 
+                // NEW — carry the cart-item note over to the
+                // separate OrderItemNotes table, keyed by
+                // OrderID + ProductID.
+                if (checkoutNotesByCartItemId.TryGetValue(
+                        item.CartItemID,
+                        out var itemNote) &&
+                    !string.IsNullOrWhiteSpace(itemNote))
+                {
+                    _context.OrderItemNotes.Add(new OrderItemNote
+                    {
+                        OrderID = order.OrderID,
+                        ProductID = item.ProductID,
+                        Note = itemNote,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+
                 item.Product.Quantity -= item.Quantity;
 
                 if (item.Product.Quantity < 0)
@@ -1204,6 +1388,19 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             // =================================================
             _context.CartItems.RemoveRange(
                 itemsToCheckout);
+
+            // NEW — clean up notes for the checked-out cart items
+            // now that they no longer exist as cart items (the note
+            // has already been copied into OrderItemNotes above).
+            if (checkoutNotesByCartItemId.Any())
+            {
+                var noteRowsToRemove = await _context.CartItemNotes
+                    .Where(n =>
+                        checkoutCartItemIds.Contains(n.CartItemID))
+                    .ToListAsync();
+
+                _context.CartItemNotes.RemoveRange(noteRowsToRemove);
+            }
 
             cart.UpdatedAt = DateTime.UtcNow;
 
@@ -1956,6 +2153,30 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     })
                 .ToList();
 
+            // NEW — load notes for these cart items from the
+            // separate CartItemNotes table (Note does NOT live
+            // on CartItem itself).
+            var cartItemIdsForNotes = CartItems
+                .Select(item => item.CartItemID)
+                .ToList();
+
+            if (cartItemIdsForNotes.Any())
+            {
+                var notesByCartItemId = await _context.CartItemNotes
+                    .Where(n => cartItemIdsForNotes.Contains(n.CartItemID))
+                    .ToDictionaryAsync(n => n.CartItemID, n => n.Note);
+
+                foreach (var cartItem in CartItems)
+                {
+                    if (notesByCartItemId.TryGetValue(
+                            cartItem.CartItemID,
+                            out var note))
+                    {
+                        cartItem.Note = note;
+                    }
+                }
+            }
+
             TotalAmount =
                 CartItems.Sum(item =>
                     item.TotalPrice);
@@ -2139,6 +2360,10 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
 
         // Drives the "Almost Out of Stock" filter chip on the cart page.
         public bool IsAlmostOutOfStock { get; set; }
+
+        // NEW — loaded from the separate CartItemNotes table.
+        // Not a column on CartItem itself.
+        public string? Note { get; set; }
     }
 
     // =========================================================

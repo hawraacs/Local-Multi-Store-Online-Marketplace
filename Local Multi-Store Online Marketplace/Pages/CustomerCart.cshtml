@@ -463,6 +463,39 @@
                     font-size: 7px;
                 }
 
+            /* NEW — free-text note input on each cart item
+                           (e.g. "Red, size M") since there's no color/size
+                           variant system. Saved server-side via the separate
+                           CartItemNotes table, no schema change to CartItem. */
+            .item-note-wrap {
+                width: 100%;
+                margin-top: 8px;
+            }
+
+            .item-note-input {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid var(--border-color);
+                border-radius: 10px;
+                font-family: var(--font-family);
+                font-size: 12.5px;
+                font-weight: 600;
+                color: var(--text-primary);
+                background: var(--bg-color);
+                outline: none;
+                transition: all 0.2s ease;
+            }
+
+                .item-note-input:focus {
+                    border-color: var(--accent-color);
+                    background: #ffffff;
+                }
+
+                .item-note-input::placeholder {
+                    color: var(--text-secondary);
+                    font-weight: 500;
+                }
+
             .item-footer-row {
                 display: flex;
                 align-items: center;
@@ -1790,6 +1823,15 @@
                                             <i class="fa-solid fa-circle"></i>
                                             @(item.IsAlmostOutOfStock ? "Almost Out of Stock" : "In Stock")
                                         </div>
+
+                                        <div class="item-note-wrap">
+                                            <input type="text"
+                                                   class="item-note-input"
+                                                   data-cart-item-id="@item.CartItemID"
+                                                   placeholder="Add a note (e.g. color, size)"
+                                                   value="@item.Note"
+                                                   maxlength="200" />
+                                        </div>
                                     </div>
 
                                     <div class="item-footer-row">
@@ -2052,6 +2094,11 @@
                                    id="selectedCartItemIdsInput"
                                    value="" />
 
+                            <input type="hidden"
+                                   name="itemNotesJson"
+                                   id="itemNotesJsonInput"
+                                   value="" />
+
                             <div class="payment-section">
 
                                 <label for="paymentMethodSelect"
@@ -2167,6 +2214,7 @@
                     initializeCheckoutModal();
                     initializeRemoveModal();
                     initializeAutoUpdateQuantity();
+                    initializeAutoUpdateNote();
                     initializeQuantitySteppers();
                     initializeItemSelection();
                     initializeRemoveSelectedButton();
@@ -2903,6 +2951,14 @@
                 checkoutForm.addEventListener(
                     "submit",
                     function() {
+                        const notesInput =
+                            document.getElementById("itemNotesJsonInput");
+
+                        if (notesInput) {
+                            notesInput.value =
+                                buildSelectedItemNotesJson();
+                        }
+
                         confirmButton.disabled = true;
 
                         confirmButton.innerHTML =
@@ -3155,6 +3211,115 @@
                                 600);
                         });
                 });
+            }
+
+            // NEW — auto-saves each item's note to the server via
+            // OnPostUpdateNoteAsync (?handler=UpdateNote), debounced
+            // while typing and also flushed on blur.
+            function initializeAutoUpdateNote() {
+                document.querySelectorAll(".item-note-input").forEach(
+                    function(input) {
+                        let debounceTimer = null;
+                        let lastSentValue = input.value;
+                        let isSubmitting = false;
+
+                        function submitNote() {
+                            const value = input.value;
+
+                            if (value === lastSentValue || isSubmitting) {
+                                return;
+                            }
+
+                            isSubmitting = true;
+
+                            const body = new URLSearchParams();
+                            body.set(
+                                "cartItemId",
+                                input.dataset.cartItemId);
+                            body.set("note", value);
+
+                            const token = getAntiForgeryTokenValue();
+
+                            if (token) {
+                                body.set(
+                                    "__RequestVerificationToken",
+                                    token);
+                            }
+
+                            fetch("?handler=UpdateNote", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type":
+                                        "application/x-www-form-urlencoded",
+                                    "X-Requested-With": "XMLHttpRequest"
+                                },
+                                body: body.toString()
+                            })
+                                .then(function(res) {
+                                    return res.json();
+                                })
+                                .then(function(result) {
+                                    if (result && result.success) {
+                                        lastSentValue = value;
+                                    } else {
+                                        createToast(
+                                            "error",
+                                            "Unable to continue",
+                                            (result &&
+                                                result.message) ||
+                                            "Could not save the note.");
+                                    }
+                                })
+                                .catch(function() {
+                                    createToast(
+                                        "error",
+                                        "Unable to continue",
+                                        "Could not save the note. " +
+                                        "Please check your connection.");
+                                })
+                                .finally(function() {
+                                    isSubmitting = false;
+                                });
+                        }
+
+                        input.addEventListener("blur", submitNote);
+
+                        input.addEventListener("input", function() {
+                            window.clearTimeout(debounceTimer);
+                            debounceTimer =
+                                window.setTimeout(submitNote, 700);
+                        });
+                    });
+            }
+
+            // NEW — collects the notes for only the currently
+            // SELECTED items right before checkout submits, so the
+            // server can copy them into OrderItemNotes for this order.
+            function buildSelectedItemNotesJson() {
+                const selected = {};
+
+                getItemCheckboxes()
+                    .filter(function(checkbox) {
+                        return checkbox.checked;
+                    })
+                    .forEach(function(checkbox) {
+                        const cartItemEl =
+                            checkbox.closest(".cart-item");
+
+                        if (!cartItemEl) {
+                            return;
+                        }
+
+                        const noteInput =
+                            cartItemEl.querySelector(".item-note-input");
+
+                        if (noteInput && noteInput.value.trim()) {
+                            selected[checkbox.dataset.cartItemId] =
+                                noteInput.value.trim().slice(0, 200);
+                        }
+                    });
+
+                return JSON.stringify(selected);
             }
 
             function initializeCouponAjax() {

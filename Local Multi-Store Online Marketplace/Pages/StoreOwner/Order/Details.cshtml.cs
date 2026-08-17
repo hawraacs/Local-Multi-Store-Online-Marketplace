@@ -118,13 +118,26 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
                 StoreStatus = distinctStoreCount > 1 ? thisStoreStatus : order.Status
             };
 
+            // NEW — load any customer notes for this store's items in
+            // this order, from the separate OrderItemNotes table
+            // (no schema change to OrderItem itself). Keyed by ProductID
+            // since OrderItemNotes doesn't reference OrderItemID.
+            var orderItemNotes = await _context.OrderItemNotes
+                .AsNoTracking()
+                .Where(n => n.OrderID == id)
+                .ToDictionaryAsync(n => n.ProductID, n => n.Note);
+
             OrderItems = items.Select(i => new OrderItemViewModel
             {
+                ProductID = i.ProductID,
                 ProductName = i.ProductName,
                 Quantity = i.Quantity,
                 // If you have UnitPrice or Price, use it; otherwise calculate
                 Price = i.TotalPrice / i.Quantity,
-                TotalPrice = i.TotalPrice
+                TotalPrice = i.TotalPrice,
+                Note = orderItemNotes.TryGetValue(i.ProductID, out var note)
+                    ? note
+                    : null
             }).ToList();
 
             return Page();
@@ -514,9 +527,14 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.StoreOwner.Order
 
     public class OrderItemViewModel
     {
+        public int ProductID { get; set; }
         public string ProductName { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public decimal Price { get; set; }
         public decimal TotalPrice { get; set; }
+
+        // NEW — loaded from the separate OrderItemNotes table.
+        // Not a column on OrderItem itself.
+        public string? Note { get; set; }
     }
 }
