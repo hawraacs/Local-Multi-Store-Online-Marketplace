@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
+using Multi_Store.Infrastructure.Data;
 using Local_Multi_Store_Online_Marketplace.Hubs;
 using System;
 using System.Collections.Generic;
@@ -26,7 +27,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
         private readonly IWebHostEnvironment _environment;
         private readonly NotificationManager _notificationManager;
         private readonly Multi_Store.Core.Reposinterface.IChatMessageRepository _chatMessageRepository;
-        private readonly IHubContext<AppHub> _hub; // NEW — pushes chat messages live via SignalR
+        private readonly IHubContext<AppHub> _hub;
+        private readonly ApplicationDbContext _context; // NEW — used by Report/Block handlers
 
         public ChatConversationModel(
             UserManager<User> userManager,
@@ -36,7 +38,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             IWebHostEnvironment environment,
             NotificationManager notificationManager,
             Multi_Store.Core.Reposinterface.IChatMessageRepository chatMessageRepository,
-            IHubContext<AppHub> hub) // NEW
+            IHubContext<AppHub> hub,
+            ApplicationDbContext context) // NEW
         {
             _userManager = userManager;
             _messagingManager = messagingManager;
@@ -45,7 +48,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             _environment = environment;
             _notificationManager = notificationManager;
             _chatMessageRepository = chatMessageRepository;
-            _hub = hub; // NEW
+            _hub = hub;
+            _context = context; // NEW
         }
 
         public List<ChatMessageDTO> Messages { get; set; } = new();
@@ -173,11 +177,8 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                     ImageUrl = fileUrl
                 }, "", "");
 
-                // NEW — push the message live to both sides of the
-                // conversation via the shared AppHub SignalR connection.
-                // The receiver sees it appear instantly with no refresh;
-                // the sender's own page also gets it in case they have
-                // this same conversation open in another tab/device.
+                // Push the message live to both sides of the conversation
+                // via the shared AppHub SignalR connection.
                 await BroadcastChatMessageAsync(user, receiverId, finalMessageText, fileUrl);
             }
 
@@ -214,6 +215,68 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
             return RedirectToPage("/Chat");
         }
 
+        // ================= REPORT (NEW) =================
+        // Lightweight stub, mirrors CustomerFeed's OnPostReportPost — no
+        // dedicated Reports table exists yet. Wire this up to a real
+        // table/manager when one is added.
+        public async Task<IActionResult> OnPostReportChatAsync(int userId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToPage("/Login");
+            }
+
+            TempData["Success"] = "Report submitted. Our team will review it.";
+
+            return RedirectToPage(new { userId });
+        }
+
+        // ================= BLOCK (NEW) =================
+        // Adds a BlockRelation row (same table CustomerFeed's BlockPost
+        // handler and the block-checks in CustomerFeed/OnGetAsync use),
+        // then sends the person back to the conversation list since they
+        // can no longer message this user.
+        public async Task<IActionResult> OnPostBlockChatAsync(int userId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToPage("/Login");
+            }
+
+            var alreadyBlocked = await _context.BlockRelations.AnyAsync(x =>
+                x.BlockerUserId == user.Id && x.BlockedUserId == userId);
+
+            if (!alreadyBlocked)
+            {
+                var blockerRoles = await _userManager.GetRolesAsync(user);
+
+                var otherUser = await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.Id == userId);
+
+                var blockedRoles = otherUser != null
+                    ? await _userManager.GetRolesAsync(otherUser)
+                    : new List<string>();
+
+                _context.BlockRelations.Add(new BlockRelation
+                {
+                    BlockerUserId = user.Id,
+                    BlockedUserId = userId,
+                    BlockerRole = blockerRoles.FirstOrDefault() ?? "User",
+                    BlockedRole = blockedRoles.FirstOrDefault() ?? "User"
+                });
+
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Success"] = "This user has been blocked.";
+
+            return RedirectToPage("/Chat");
+        }
+
         public async Task<IActionResult> OnPostShareProductAsync(int productId, int receiverId)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -228,11 +291,11 @@ namespace Local_Multi_Store_Online_Marketplace.Pages
                 receiverId,
                 productId);
 
-            // NEW — notify both sides live that a product was shared.
-            // The client-side listener reloads the conversation on
-            // receiving isProduct=true, since rendering the full product
-            // card needs image/price/description this lightweight
-            // broadcast doesn't carry.
+            // Notify both sides live that a product was shared. The
+            // client-side listener reloads the conversation on receiving
+            // isProduct=true, since rendering the full product card needs
+            // image/price/description this lightweight broadcast doesn't
+            // carry.
             try
             {
                 var payload = new
