@@ -1,7 +1,6 @@
 ﻿@page "/DeliveryDashboard"
 @model Local_Multi_Store_Online_Marketplace.Pages.Deliverypages.DeliveryDashboardModel
 @using System.Linq
-@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 
 @{
     Layout = null;
@@ -19,15 +18,6 @@
     var deliveredCount = Model.DeliveredAssignmentsCount;
 
     var totalEarnings = Model.TotalEarnings;
-
-    // Fix for Start Delivery HTTP 400 on assignment cards that arrive live
-    // via SignalR (see "LIVE NEW ASSIGNMENT" script below). Server-rendered
-    // forms get their antiforgery token automatically from the <form> tag
-    // helper (asp-page-handler="StartDelivery"), but the JS-built form used
-    // for cards injected live has no such token, so its POST to
-    // ?handler=StartDelivery fails antiforgery validation with HTTP 400.
-    // Exposing the page's token here lets that same JS form include it.
-    var antiForgeryToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
 }
 
 <!DOCTYPE html>
@@ -41,968 +31,968 @@
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --primary: #6D28D9;
-            --primary-hover: #4C1D95;
-            --primary-light: #EDE9FE;
-            --secondary: #8B5CF6;
-            --success: #22c55e;
-            --success-bg: #dcfce7;
-            --warning: #f59e0b;
-            --warning-bg: #fef3c7;
-            --danger: #ef4444;
-            --danger-bg: #fee2e2;
-            --info: #7C3AED;
-            --bg: #f8fafc;
-            --bg-2: #eef2f7;
-            --surface: #ffffff;
-            --ink-900: #0f172a;
-            --ink-600: #64748b;
-            --ink-400: #94a3b8;
-            --border: #e2e8f0;
-            --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
-            --shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.14);
-        }
+            :root {
+                --primary: #6D28D9;
+                --primary-hover: #4C1D95;
+                --primary-light: #EDE9FE;
+                --secondary: #8B5CF6;
+                --success: #22c55e;
+                --success-bg: #dcfce7;
+                --warning: #f59e0b;
+                --warning-bg: #fef3c7;
+                --danger: #ef4444;
+                --danger-bg: #fee2e2;
+                --info: #7C3AED;
+                --bg: #f8fafc;
+                --bg-2: #eef2f7;
+                --surface: #ffffff;
+                --ink-900: #0f172a;
+                --ink-600: #64748b;
+                --ink-400: #94a3b8;
+                --border: #e2e8f0;
+                --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+                --shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.05);
+                --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.08);
+                --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.14);
+            }
 
-        * {
-            box-sizing: border-box;
-        }
+            * {
+                box-sizing: border-box;
+            }
 
-        body {
-            margin: 0;
-            background: var(--bg);
-            font-family: 'Inter', Arial, sans-serif;
-            color: var(--ink-900);
-        }
+            body {
+                margin: 0;
+                background: var(--bg);
+                font-family: 'Inter', Arial, sans-serif;
+                color: var(--ink-900);
+            }
 
-        .page {
-            padding: 24px 24px 60px;
-            min-height: 100vh;
-        }
+            .page {
+                padding: 24px 24px 60px;
+                min-height: 100vh;
+            }
 
-        .shell {
-            max-width: 1220px;
-            margin: auto;
-        }
+            .shell {
+                max-width: 1220px;
+                margin: auto;
+            }
 
-        /* ================= TOP UTILITY BAR ================= */
-        .util-bar {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 22px;
-            flex-wrap: wrap;
-        }
+            /* ================= TOP UTILITY BAR ================= */
+            .util-bar {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                margin-bottom: 22px;
+                flex-wrap: wrap;
+            }
 
-        .search-box {
-            flex: 1;
-            min-width: 220px;
-            position: relative;
-        }
+            .search-box {
+                flex: 1;
+                min-width: 220px;
+                position: relative;
+            }
 
-            .search-box input {
-                width: 100%;
-                padding: 13px 16px 13px 42px;
+                .search-box input {
+                    width: 100%;
+                    padding: 13px 16px 13px 42px;
+                    border-radius: 999px;
+                    border: 1px solid var(--border);
+                    background: var(--surface);
+                    font-family: 'Inter', sans-serif;
+                    font-size: 13.5px;
+                    outline: none;
+                    box-shadow: var(--shadow-xs);
+                    transition: all .16s ease;
+                }
+
+                    .search-box input:focus {
+                        border-color: var(--primary);
+                        box-shadow: 0 0 0 3px var(--primary-light);
+                    }
+
+                .search-box .search-icon {
+                    position: absolute;
+                    left: 15px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: var(--ink-400);
+                    font-size: 14px;
+                    pointer-events: none;
+                }
+
+            .notification-wrapper {
+                position: relative;
+            }
+
+            .notification-bell {
+                width: 46px;
+                height: 46px;
                 border-radius: 999px;
                 border: 1px solid var(--border);
                 background: var(--surface);
-                font-family: 'Inter', sans-serif;
-                font-size: 13.5px;
-                outline: none;
+                color: var(--ink-900);
+                cursor: pointer;
+                font-size: 18px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 box-shadow: var(--shadow-xs);
+                position: relative;
                 transition: all .16s ease;
             }
 
-                .search-box input:focus {
+                .notification-bell:hover {
                     border-color: var(--primary);
-                    box-shadow: 0 0 0 3px var(--primary-light);
+                    box-shadow: var(--shadow-sm);
                 }
 
-            .search-box .search-icon {
+            .notification-count {
                 position: absolute;
-                left: 15px;
-                top: 50%;
-                transform: translateY(-50%);
-                color: var(--ink-400);
-                font-size: 14px;
-                pointer-events: none;
-            }
-
-        .notification-wrapper {
-            position: relative;
-        }
-
-        .notification-bell {
-            width: 46px;
-            height: 46px;
-            border-radius: 999px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            color: var(--ink-900);
-            cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: var(--shadow-xs);
-            position: relative;
-            transition: all .16s ease;
-        }
-
-            .notification-bell:hover {
-                border-color: var(--primary);
-                box-shadow: var(--shadow-sm);
-            }
-
-        .notification-count {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--danger);
-            color: white;
-            min-width: 18px;
-            height: 18px;
-            border-radius: 999px;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            border: 2px solid var(--surface);
-        }
-
-        .notification-dropdown {
-            display: none;
-            position: absolute;
-            top: 54px;
-            right: 0;
-            width: 360px;
-            max-height: 400px;
-            overflow-y: auto;
-            background: var(--surface);
-            border-radius: 18px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-lg);
-            z-index: 100;
-        }
-
-            .notification-dropdown.show {
-                display: block;
-            }
-
-        .notification-head {
-            padding: 16px 18px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--surface);
-            position: sticky;
-            top: 0;
-            border-radius: 18px 18px 0 0;
-        }
-
-            .notification-head h4 {
-                margin: 0;
-                font-size: 14px;
-                font-family: 'Sora', sans-serif;
-                font-weight: 700;
-            }
-
-        .notification-pill {
-            background: var(--danger-bg);
-            color: #991b1b;
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 10.5px;
-            font-weight: 700;
-        }
-
-        .notification-item {
-            padding: 15px 18px;
-            background: #fbfcfe;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .notification-title {
-            font-size: 13px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .notification-dot {
-            width: 7px;
-            height: 7px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 0 3px var(--primary-light);
-        }
-
-        .notification-message {
-            margin: 0;
-            color: var(--ink-600);
-            font-size: 12.5px;
-            line-height: 1.5;
-        }
-
-        .notification-time {
-            display: block;
-            margin-top: 8px;
-            color: var(--ink-400);
-            font-size: 11px;
-            font-weight: 600;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .notification-link {
-            display: inline-block;
-            margin-top: 10px;
-            background: var(--ink-900);
-            color: white;
-            padding: 7px 12px;
-            border-radius: 9px;
-            text-decoration: none;
-            font-size: 11.5px;
-            font-weight: 700;
-            transition: background .16s ease;
-        }
-
-            .notification-link:hover {
-                background: var(--primary);
-            }
-
-        .notification-empty {
-            padding: 28px 15px;
-            text-align: center;
-            color: var(--ink-400);
-            font-weight: 600;
-            font-size: 13px;
-        }
-
-        /* ================= HERO BANNER ================= */
-        .hero-banner {
-            background: linear-gradient(120deg, var(--primary), #4C1D95 120%);
-            border-radius: 26px;
-            padding: 32px 34px;
-            margin-bottom: 22px;
-            position: relative;
-            overflow: hidden;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-            .hero-banner::before {
-                content: "";
-                position: absolute;
-                top: -80px;
-                right: -60px;
-                width: 260px;
-                height: 260px;
-                border-radius: 50%;
-                background: rgba(255, 255, 255, 0.08);
-            }
-
-            .hero-banner::after {
-                content: "";
-                position: absolute;
-                bottom: -100px;
-                right: 120px;
-                width: 200px;
-                height: 200px;
-                border-radius: 50%;
-                background: rgba(139, 92, 246, 0.18);
-            }
-
-        .hero-text {
-            position: relative;
-            z-index: 1;
-            max-width: 460px;
-        }
-
-            .hero-text h1 {
-                margin: 0 0 10px;
-                font-family: 'Sora', sans-serif;
-                font-weight: 700;
-                font-size: 25px;
-                letter-spacing: -0.3px;
-                line-height: 1.3;
-            }
-
-            .hero-text p {
-                margin: 0;
-                color: #EDE9FE;
-                font-size: 13.5px;
-                line-height: 1.6;
-            }
-
-        .hero-illustration {
-            position: relative;
-            z-index: 1;
-            width: 120px;
-            height: 90px;
-            flex-shrink: 0;
-        }
-
-            .hero-illustration .van-body {
-                width: 100px;
-                height: 56px;
-                background: #ffffff;
-                border-radius: 14px 14px 6px 6px;
-                position: relative;
-                box-shadow: 0 10px 24px rgba(0,0,0,0.18);
-            }
-
-                .hero-illustration .van-body::before {
-                    content: "";
-                    position: absolute;
-                    top: 10px;
-                    left: 12px;
-                    width: 30px;
-                    height: 22px;
-                    background: var(--secondary);
-                    border-radius: 6px;
-                }
-
-            .hero-illustration .van-wheel {
-                width: 18px;
+                top: -5px;
+                right: -5px;
+                background: var(--danger);
+                color: white;
+                min-width: 18px;
                 height: 18px;
-                background: #0f172a;
-                border-radius: 50%;
-                position: absolute;
-                bottom: -6px;
-                border: 3px solid #cbd5e1;
-            }
-
-                .hero-illustration .van-wheel.left {
-                    left: 12px;
-                }
-
-                .hero-illustration .van-wheel.right {
-                    right: 20px;
-                }
-
-        /* ================= LAYOUT GRID ================= */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1.7fr 1fr;
-            gap: 20px;
-            align-items: start;
-        }
-
-        /* ================= MESSAGES ================= */
-        .message {
-            padding: 13px 16px;
-            border-radius: 14px;
-            margin-bottom: 16px;
-            font-weight: 700;
-            text-align: center;
-            font-size: 13.5px;
-        }
-
-        .success {
-            background: var(--success-bg);
-            color: #166534;
-            border: 1px solid #86efac;
-        }
-
-        .error {
-            background: var(--danger-bg);
-            color: #991b1b;
-            border: 1px solid #fca5a5;
-        }
-
-        /* ================= SECTION HEADER ================= */
-        .section-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-        }
-
-            .section-head h2 {
-                margin: 0;
-                font-family: 'Sora', sans-serif;
+                border-radius: 999px;
+                font-size: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 font-weight: 700;
-                font-size: 16.5px;
+                border: 2px solid var(--surface);
             }
 
-        .section-count {
-            background: var(--bg-2);
-            color: var(--ink-600);
-            padding: 5px 12px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        /* ================= ASSIGNMENT CARDS ================= */
-        .assignments-list {
-            display: grid;
-            gap: 12px;
-        }
-
-        .assignment {
-            border: 1px solid var(--border);
-            background: var(--surface);
-            padding: 18px 20px;
-            border-radius: 18px;
-            transition: all .18s ease;
-            position: relative;
-            box-shadow: var(--shadow-xs);
-        }
-
-            .assignment:hover {
-                box-shadow: var(--shadow-sm);
-                border-color: #cbd5e1;
-            }
-
-            .assignment.highlight {
-                border-color: var(--primary);
-                box-shadow: 0 0 0 4px var(--primary-light);
-            }
-
-            .assignment.search-hidden {
+            .notification-dropdown {
                 display: none;
+                position: absolute;
+                top: 54px;
+                right: 0;
+                width: 360px;
+                max-height: 400px;
+                overflow-y: auto;
+                background: var(--surface);
+                border-radius: 18px;
+                border: 1px solid var(--border);
+                box-shadow: var(--shadow-lg);
+                z-index: 100;
             }
 
-        .assignment-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 14px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px dashed var(--border);
-        }
+                .notification-dropdown.show {
+                    display: block;
+                }
 
-        .assignment-id-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+            .notification-head {
+                padding: 16px 18px;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: var(--surface);
+                position: sticky;
+                top: 0;
+                border-radius: 18px 18px 0 0;
+            }
 
-        .assignment-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 11px;
-            background: var(--primary-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
+                .notification-head h4 {
+                    margin: 0;
+                    font-size: 14px;
+                    font-family: 'Sora', sans-serif;
+                    font-weight: 700;
+                }
 
-        .assignment-order-no {
-            font-family: 'Sora', sans-serif;
-            font-weight: 700;
-            font-size: 14.5px;
-        }
-
-        .assignment-badges {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .assignment-details {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-
-        .assignment-detail-item {
-            background: var(--bg);
-            border: 1px solid #eef2f7;
-            padding: 9px 12px;
-            border-radius: 12px;
-        }
-
-            .assignment-detail-item span {
-                display: block;
-                color: var(--ink-400);
+            .notification-pill {
+                background: var(--danger-bg);
+                color: #991b1b;
+                padding: 4px 10px;
+                border-radius: 999px;
                 font-size: 10.5px;
-                font-weight: 600;
-                margin-bottom: 4px;
+                font-weight: 700;
             }
 
-            .assignment-detail-item strong {
-                color: var(--ink-900);
+            .notification-item {
+                padding: 15px 18px;
+                background: #fbfcfe;
+                border-bottom: 1px solid #f1f5f9;
+            }
+
+            .notification-title {
+                font-size: 13px;
+                font-weight: 700;
+                margin-bottom: 6px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .notification-dot {
+                width: 7px;
+                height: 7px;
+                background: var(--primary);
+                border-radius: 50%;
+                display: inline-block;
+                box-shadow: 0 0 0 3px var(--primary-light);
+            }
+
+            .notification-message {
+                margin: 0;
+                color: var(--ink-600);
                 font-size: 12.5px;
+                line-height: 1.5;
+            }
+
+            .notification-time {
+                display: block;
+                margin-top: 8px;
+                color: var(--ink-400);
+                font-size: 11px;
+                font-weight: 600;
                 font-family: 'JetBrains Mono', monospace;
             }
 
-        .badge {
-            display: inline-block;
-            padding: 5px 11px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: 0.2px;
-        }
-
-        .badge-assigned {
-            background: var(--warning-bg);
-            color: #92400e;
-        }
-
-        .badge-out {
-            background: #F3E8FF;
-            color: #7C3AED;
-        }
-
-        .badge-delivered {
-            background: var(--success-bg);
-            color: #166534;
-        }
-
-        .badge-default {
-            background: var(--bg-2);
-            color: var(--ink-600);
-        }
-
-        .actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            border: none;
-            border-radius: 12px;
-            padding: 10px 17px;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 13px;
-            font-family: 'Inter', sans-serif;
-            transition: all .16s ease;
-        }
-
-        .start-btn {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 6px 16px rgba(109, 40, 217, 0.25);
-        }
-
-            .start-btn:hover {
-                background: var(--primary-hover);
-                transform: translateY(-1px);
+            .notification-link {
+                display: inline-block;
+                margin-top: 10px;
+                background: var(--ink-900);
+                color: white;
+                padding: 7px 12px;
+                border-radius: 9px;
+                text-decoration: none;
+                font-size: 11.5px;
+                font-weight: 700;
+                transition: background .16s ease;
             }
 
-        .done-btn {
-            background: var(--success-bg);
-            color: #166534;
-        }
+                .notification-link:hover {
+                    background: var(--primary);
+                }
 
-            .done-btn:hover {
-                background: #bbf7d0;
+            .notification-empty {
+                padding: 28px 15px;
+                text-align: center;
+                color: var(--ink-400);
+                font-weight: 600;
+                font-size: 13px;
             }
 
-        .empty {
-            text-align: center;
-            color: var(--ink-400);
-            padding: 50px 20px;
-            background: var(--surface);
-            border: 1px dashed var(--border);
-            border-radius: 20px;
-        }
-
-            .empty h3 {
-                font-family: 'Sora', sans-serif;
-                color: var(--ink-900);
-                margin: 0 0 8px;
+            /* ================= HERO BANNER ================= */
+            .hero-banner {
+                background: linear-gradient(120deg, var(--primary), #4C1D95 120%);
+                border-radius: 26px;
+                padding: 32px 34px;
+                margin-bottom: 22px;
+                position: relative;
+                overflow: hidden;
+                color: white;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 20px;
+                flex-wrap: wrap;
             }
 
-        .gps-good {
-            color: var(--success);
-        }
+                .hero-banner::before {
+                    content: "";
+                    position: absolute;
+                    top: -80px;
+                    right: -60px;
+                    width: 260px;
+                    height: 260px;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.08);
+                }
 
-        .gps-bad {
-            color: var(--danger);
-        }
+                .hero-banner::after {
+                    content: "";
+                    position: absolute;
+                    bottom: -100px;
+                    right: 120px;
+                    width: 200px;
+                    height: 200px;
+                    border-radius: 50%;
+                    background: rgba(139, 92, 246, 0.18);
+                }
 
-        /* ================= SIDE PANEL (ASIDE) ================= */
-        .side-col {
-            position: sticky;
-            top: 20px;
-            display: grid;
-            gap: 16px;
-        }
+            .hero-text {
+                position: relative;
+                z-index: 1;
+                max-width: 460px;
+            }
 
-        .panel-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 22px;
-            box-shadow: var(--shadow-sm);
-            overflow: hidden;
-        }
+                .hero-text h1 {
+                    margin: 0 0 10px;
+                    font-family: 'Sora', sans-serif;
+                    font-weight: 700;
+                    font-size: 25px;
+                    letter-spacing: -0.3px;
+                    line-height: 1.3;
+                }
 
-        .panel-card-head {
-            padding: 16px 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-bottom: 1px solid var(--border);
-            background: var(--bg-2);
-        }
+                .hero-text p {
+                    margin: 0;
+                    color: #EDE9FE;
+                    font-size: 13.5px;
+                    line-height: 1.6;
+                }
 
-            .panel-card-head .icon-box {
-                width: 32px;
-                height: 32px;
-                border-radius: 10px;
+            .hero-illustration {
+                position: relative;
+                z-index: 1;
+                width: 120px;
+                height: 90px;
+                flex-shrink: 0;
+            }
+
+                .hero-illustration .van-body {
+                    width: 100px;
+                    height: 56px;
+                    background: #ffffff;
+                    border-radius: 14px 14px 6px 6px;
+                    position: relative;
+                    box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+                }
+
+                    .hero-illustration .van-body::before {
+                        content: "";
+                        position: absolute;
+                        top: 10px;
+                        left: 12px;
+                        width: 30px;
+                        height: 22px;
+                        background: var(--secondary);
+                        border-radius: 6px;
+                    }
+
+                .hero-illustration .van-wheel {
+                    width: 18px;
+                    height: 18px;
+                    background: #0f172a;
+                    border-radius: 50%;
+                    position: absolute;
+                    bottom: -6px;
+                    border: 3px solid #cbd5e1;
+                }
+
+                    .hero-illustration .van-wheel.left {
+                        left: 12px;
+                    }
+
+                    .hero-illustration .van-wheel.right {
+                        right: 20px;
+                    }
+
+            /* ================= LAYOUT GRID ================= */
+            .content-grid {
+                display: grid;
+                grid-template-columns: 1.7fr 1fr;
+                gap: 20px;
+                align-items: start;
+            }
+
+            /* ================= MESSAGES ================= */
+            .message {
+                padding: 13px 16px;
+                border-radius: 14px;
+                margin-bottom: 16px;
+                font-weight: 700;
+                text-align: center;
+                font-size: 13.5px;
+            }
+
+            .success {
+                background: var(--success-bg);
+                color: #166534;
+                border: 1px solid #86efac;
+            }
+
+            .error {
+                background: var(--danger-bg);
+                color: #991b1b;
+                border: 1px solid #fca5a5;
+            }
+
+            /* ================= SECTION HEADER ================= */
+            .section-head {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 14px;
+            }
+
+                .section-head h2 {
+                    margin: 0;
+                    font-family: 'Sora', sans-serif;
+                    font-weight: 700;
+                    font-size: 16.5px;
+                }
+
+            .section-count {
+                background: var(--bg-2);
+                color: var(--ink-600);
+                padding: 5px 12px;
+                border-radius: 999px;
+                font-size: 12px;
+                font-weight: 700;
+            }
+
+            /* ================= ASSIGNMENT CARDS ================= */
+            .assignments-list {
+                display: grid;
+                gap: 12px;
+            }
+
+            .assignment {
+                border: 1px solid var(--border);
+                background: var(--surface);
+                padding: 18px 20px;
+                border-radius: 18px;
+                transition: all .18s ease;
+                position: relative;
+                box-shadow: var(--shadow-xs);
+            }
+
+                .assignment:hover {
+                    box-shadow: var(--shadow-sm);
+                    border-color: #cbd5e1;
+                }
+
+                .assignment.highlight {
+                    border-color: var(--primary);
+                    box-shadow: 0 0 0 4px var(--primary-light);
+                }
+
+                .assignment.search-hidden {
+                    display: none;
+                }
+
+            .assignment-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 14px;
+                flex-wrap: wrap;
+                margin-bottom: 12px;
+                padding-bottom: 12px;
+                border-bottom: 1px dashed var(--border);
+            }
+
+            .assignment-id-group {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .assignment-icon {
+                width: 38px;
+                height: 38px;
+                border-radius: 11px;
                 background: var(--primary-light);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 15px;
+                font-size: 16px;
+                flex-shrink: 0;
             }
 
-            .panel-card-head h3 {
-                margin: 0;
-                font-size: 13.5px;
+            .assignment-order-no {
                 font-family: 'Sora', sans-serif;
                 font-weight: 700;
+                font-size: 14.5px;
             }
 
-        .panel-card-body {
-            padding: 18px;
-        }
-
-        .location-live-dot {
-            width: 9px;
-            height: 9px;
-            min-width: 9px;
-            border-radius: 50%;
-            background: var(--primary);
-            box-shadow: 0 0 0 0 rgba(109, 40, 217, 0.5);
-            animation: livePulse 1.6s infinite;
-            display: inline-block;
-            margin-right: 8px;
-        }
-
-        @@keyframes livePulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(109, 40, 217, 0.5);
-            }
-
-            70% {
-                box-shadow: 0 0 0 9px rgba(109, 40, 217, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(109, 40, 217, 0);
-            }
-        }
-
-        .location-status {
-            font-weight: 600;
-            color: var(--ink-600);
-            font-size: 12.5px;
-            font-family: 'JetBrains Mono', monospace;
-            line-height: 1.6;
-        }
-
-        .kpi-mini-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-            .kpi-mini-row:last-child {
-                border-bottom: none;
-                padding-bottom: 0;
-            }
-
-            .kpi-mini-row:first-child {
-                padding-top: 0;
-            }
-
-        .kpi-mini-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .kpi-mini-dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-        }
-
-            .kpi-mini-dot.total {
-                background: var(--ink-400);
-            }
-
-            .kpi-mini-dot.assigned {
-                background: var(--warning);
-            }
-
-            .kpi-mini-dot.out {
-                background: var(--info);
-            }
-
-            .kpi-mini-dot.delivered {
-                background: var(--success);
-            }
-
-            .kpi-mini-dot.earnings {
-                background: var(--success);
-            }
-
-        .kpi-mini-label {
-            font-size: 12.5px;
-            font-weight: 600;
-            color: var(--ink-600);
-        }
-
-        .kpi-mini-value {
-            font-family: 'Sora', sans-serif;
-            font-weight: 700;
-            font-size: 16px;
-        }
-
-        /* ================= PAYMENT / DETAILS ADDITIONS ================= */
-        .assignment-meta-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 10px 0 4px;
-        }
-
-        .meta-chip {
-            background: var(--bg-2);
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            padding: 5px 12px;
-            font-size: 11.5px;
-            font-weight: 600;
-            color: var(--ink-600);
-        }
-
-        .badge-paid {
-            background: var(--success-bg);
-            color: #166534;
-        }
-
-        .badge-pending-pay {
-            background: var(--warning-bg);
-            color: #92400e;
-        }
-
-        .collect-btn {
-            background: var(--warning);
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            padding: 11px 18px;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all .15s ease;
-        }
-
-            .collect-btn:hover {
-                filter: brightness(0.95);
-            }
-
-        .details-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12.5px;
-            font-weight: 700;
-            color: var(--primary);
-            text-decoration: none;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            transition: all .15s ease;
-        }
-
-            .details-link:hover {
-                border-color: var(--primary);
-                background: var(--primary-light);
-            }
-
-        /* ================= DELIVERED MODAL ================= */
-        .delivery-modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            padding: 20px;
-            background: rgba(15, 23, 42, 0.5);
-            backdrop-filter: blur(6px);
-            align-items: center;
-            justify-content: center;
-            z-index: 999999;
-        }
-
-            .delivery-modal-overlay.show {
+            .assignment-badges {
                 display: flex;
-            }
-
-        .delivery-modal-card {
-            width: min(440px, 100%);
-            background: var(--surface);
-            border-radius: 24px;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            animation: deliveryModalOpen 0.2s ease;
-        }
-
-        @@keyframes deliveryModalOpen {
-            from {
-                opacity: 0;
-                transform: translateY(16px) scale(0.96);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .delivery-modal-header {
-            padding: 28px 24px 14px;
-            text-align: center;
-        }
-
-        .delivery-modal-icon {
-            width: 58px;
-            height: 58px;
-            margin: 0 auto 14px;
-            border-radius: 50%;
-            background: var(--success-bg);
-            color: #166534;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            font-weight: 700;
-        }
-
-        .delivery-modal-title {
-            margin: 0;
-            font-size: 19px;
-            font-weight: 700;
-            font-family: 'Sora', sans-serif;
-        }
-
-        .delivery-modal-body {
-            padding: 0 24px 24px;
-            text-align: center;
-        }
-
-        .delivery-modal-message {
-            margin: 0;
-            color: var(--ink-600);
-            font-size: 13.5px;
-            line-height: 1.6;
-        }
-
-        .delivery-modal-order {
-            display: block;
-            margin-top: 10px;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12.5px;
-        }
-
-        .delivery-modal-actions {
-            display: flex;
-            gap: 10px;
-            padding: 18px 24px 26px;
-        }
-
-        .delivery-modal-button {
-            flex: 1;
-            border: none;
-            border-radius: 13px;
-            padding: 13px 16px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 13.5px;
-            transition: all .16s ease;
-        }
-
-        .delivery-modal-cancel {
-            background: var(--bg-2);
-            color: var(--ink-600);
-        }
-
-            .delivery-modal-cancel:hover {
-                background: #e2e8f0;
-            }
-
-        .delivery-modal-confirm {
-            background: var(--success);
-            color: white;
-        }
-
-            .delivery-modal-confirm:hover {
-                background: #16a34a;
-            }
-
-            .delivery-modal-confirm:disabled {
-                cursor: wait;
-                opacity: 0.7;
-            }
-
-        @@media (max-width: 980px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .side-col {
-                position: static;
-            }
-        }
-
-        @@media (max-width: 650px) {
-            .page {
-                padding: 16px 14px;
-            }
-
-            .hero-banner {
-                padding: 24px 22px;
-            }
-
-            .hero-illustration {
-                display: none;
+                gap: 8px;
+                flex-wrap: wrap;
             }
 
             .assignment-details {
-                grid-template-columns: 1fr;
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                margin-bottom: 12px;
             }
 
-            .notification-dropdown {
-                width: 300px;
-                right: -5px;
+            .assignment-detail-item {
+                background: var(--bg);
+                border: 1px solid #eef2f7;
+                padding: 9px 12px;
+                border-radius: 12px;
+            }
+
+                .assignment-detail-item span {
+                    display: block;
+                    color: var(--ink-400);
+                    font-size: 10.5px;
+                    font-weight: 600;
+                    margin-bottom: 4px;
+                }
+
+                .assignment-detail-item strong {
+                    color: var(--ink-900);
+                    font-size: 12.5px;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+
+            .badge {
+                display: inline-block;
+                padding: 5px 11px;
+                border-radius: 999px;
+                font-size: 11px;
+                font-weight: 700;
+                font-family: 'JetBrains Mono', monospace;
+                letter-spacing: 0.2px;
+            }
+
+            .badge-assigned {
+                background: var(--warning-bg);
+                color: #92400e;
+            }
+
+            .badge-out {
+                background: #F3E8FF;
+                color: #7C3AED;
+            }
+
+            .badge-delivered {
+                background: var(--success-bg);
+                color: #166534;
+            }
+
+            .badge-default {
+                background: var(--bg-2);
+                color: var(--ink-600);
+            }
+
+            .actions {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            button {
+                border: none;
+                border-radius: 12px;
+                padding: 10px 17px;
+                font-weight: 700;
+                cursor: pointer;
+                font-size: 13px;
+                font-family: 'Inter', sans-serif;
+                transition: all .16s ease;
+            }
+
+            .start-btn {
+                background: var(--primary);
+                color: white;
+                box-shadow: 0 6px 16px rgba(109, 40, 217, 0.25);
+            }
+
+                .start-btn:hover {
+                    background: var(--primary-hover);
+                    transform: translateY(-1px);
+                }
+
+            .done-btn {
+                background: var(--success-bg);
+                color: #166534;
+            }
+
+                .done-btn:hover {
+                    background: #bbf7d0;
+                }
+
+            .empty {
+                text-align: center;
+                color: var(--ink-400);
+                padding: 50px 20px;
+                background: var(--surface);
+                border: 1px dashed var(--border);
+                border-radius: 20px;
+            }
+
+                .empty h3 {
+                    font-family: 'Sora', sans-serif;
+                    color: var(--ink-900);
+                    margin: 0 0 8px;
+                }
+
+            .gps-good {
+                color: var(--success);
+            }
+
+            .gps-bad {
+                color: var(--danger);
+            }
+
+            /* ================= SIDE PANEL (ASIDE) ================= */
+            .side-col {
+                position: sticky;
+                top: 20px;
+                display: grid;
+                gap: 16px;
+            }
+
+            .panel-card {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 22px;
+                box-shadow: var(--shadow-sm);
+                overflow: hidden;
+            }
+
+            .panel-card-head {
+                padding: 16px 18px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                border-bottom: 1px solid var(--border);
+                background: var(--bg-2);
+            }
+
+                .panel-card-head .icon-box {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 10px;
+                    background: var(--primary-light);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 15px;
+                }
+
+                .panel-card-head h3 {
+                    margin: 0;
+                    font-size: 13.5px;
+                    font-family: 'Sora', sans-serif;
+                    font-weight: 700;
+                }
+
+            .panel-card-body {
+                padding: 18px;
+            }
+
+            .location-live-dot {
+                width: 9px;
+                height: 9px;
+                min-width: 9px;
+                border-radius: 50%;
+                background: var(--primary);
+                box-shadow: 0 0 0 0 rgba(109, 40, 217, 0.5);
+                animation: livePulse 1.6s infinite;
+                display: inline-block;
+                margin-right: 8px;
+            }
+
+            @@keyframes livePulse {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(109, 40, 217, 0.5);
+                }
+
+                70% {
+                    box-shadow: 0 0 0 9px rgba(109, 40, 217, 0);
+                }
+
+                100% {
+                    box-shadow: 0 0 0 0 rgba(109, 40, 217, 0);
+                }
+            }
+
+            .location-status {
+                font-weight: 600;
+                color: var(--ink-600);
+                font-size: 12.5px;
+                font-family: 'JetBrains Mono', monospace;
+                line-height: 1.6;
+            }
+
+            .kpi-mini-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 0;
+                border-bottom: 1px solid #f1f5f9;
+            }
+
+                .kpi-mini-row:last-child {
+                    border-bottom: none;
+                    padding-bottom: 0;
+                }
+
+                .kpi-mini-row:first-child {
+                    padding-top: 0;
+                }
+
+            .kpi-mini-left {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .kpi-mini-dot {
+                width: 9px;
+                height: 9px;
+                border-radius: 50%;
+            }
+
+                .kpi-mini-dot.total {
+                    background: var(--ink-400);
+                }
+
+                .kpi-mini-dot.assigned {
+                    background: var(--warning);
+                }
+
+                .kpi-mini-dot.out {
+                    background: var(--info);
+                }
+
+                .kpi-mini-dot.delivered {
+                    background: var(--success);
+                }
+
+                .kpi-mini-dot.earnings {
+                    background: var(--success);
+                }
+
+            .kpi-mini-label {
+                font-size: 12.5px;
+                font-weight: 600;
+                color: var(--ink-600);
+            }
+
+            .kpi-mini-value {
+                font-family: 'Sora', sans-serif;
+                font-weight: 700;
+                font-size: 16px;
+            }
+
+            /* ================= PAYMENT / DETAILS ADDITIONS ================= */
+            .assignment-meta-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin: 10px 0 4px;
+            }
+
+            .meta-chip {
+                background: var(--bg-2);
+                border: 1px solid var(--border);
+                border-radius: 999px;
+                padding: 5px 12px;
+                font-size: 11.5px;
+                font-weight: 600;
+                color: var(--ink-600);
+            }
+
+            .badge-paid {
+                background: var(--success-bg);
+                color: #166534;
+            }
+
+            .badge-pending-pay {
+                background: var(--warning-bg);
+                color: #92400e;
+            }
+
+            .collect-btn {
+                background: var(--warning);
+                color: #fff;
+                border: none;
+                border-radius: 12px;
+                padding: 11px 18px;
+                font-weight: 700;
+                font-size: 13px;
+                cursor: pointer;
+                transition: all .15s ease;
+            }
+
+                .collect-btn:hover {
+                    filter: brightness(0.95);
+                }
+
+            .details-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 12.5px;
+                font-weight: 700;
+                color: var(--primary);
+                text-decoration: none;
+                padding: 10px 14px;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                transition: all .15s ease;
+            }
+
+                .details-link:hover {
+                    border-color: var(--primary);
+                    background: var(--primary-light);
+                }
+
+            /* ================= DELIVERED MODAL ================= */
+            .delivery-modal-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                padding: 20px;
+                background: rgba(15, 23, 42, 0.5);
+                backdrop-filter: blur(6px);
+                align-items: center;
+                justify-content: center;
+                z-index: 999999;
+            }
+
+                .delivery-modal-overlay.show {
+                    display: flex;
+                }
+
+            .delivery-modal-card {
+                width: min(440px, 100%);
+                background: var(--surface);
+                border-radius: 24px;
+                box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                animation: deliveryModalOpen 0.2s ease;
+            }
+
+            @@keyframes deliveryModalOpen {
+                from {
+                    opacity: 0;
+                    transform: translateY(16px) scale(0.96);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+
+            .delivery-modal-header {
+                padding: 28px 24px 14px;
+                text-align: center;
+            }
+
+            .delivery-modal-icon {
+                width: 58px;
+                height: 58px;
+                margin: 0 auto 14px;
+                border-radius: 50%;
+                background: var(--success-bg);
+                color: #166534;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 26px;
+                font-weight: 700;
+            }
+
+            .delivery-modal-title {
+                margin: 0;
+                font-size: 19px;
+                font-weight: 700;
+                font-family: 'Sora', sans-serif;
+            }
+
+            .delivery-modal-body {
+                padding: 0 24px 24px;
+                text-align: center;
+            }
+
+            .delivery-modal-message {
+                margin: 0;
+                color: var(--ink-600);
+                font-size: 13.5px;
+                line-height: 1.6;
+            }
+
+            .delivery-modal-order {
+                display: block;
+                margin-top: 10px;
+                font-weight: 700;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 12.5px;
             }
 
             .delivery-modal-actions {
-                flex-direction: column-reverse;
+                display: flex;
+                gap: 10px;
+                padding: 18px 24px 26px;
             }
 
             .delivery-modal-button {
-                width: 100%;
+                flex: 1;
+                border: none;
+                border-radius: 13px;
+                padding: 13px 16px;
+                cursor: pointer;
+                font-weight: 700;
+                font-size: 13.5px;
+                transition: all .16s ease;
             }
-        }
+
+            .delivery-modal-cancel {
+                background: var(--bg-2);
+                color: var(--ink-600);
+            }
+
+                .delivery-modal-cancel:hover {
+                    background: #e2e8f0;
+                }
+
+            .delivery-modal-confirm {
+                background: var(--success);
+                color: white;
+            }
+
+                .delivery-modal-confirm:hover {
+                    background: #16a34a;
+                }
+
+                .delivery-modal-confirm:disabled {
+                    cursor: wait;
+                    opacity: 0.7;
+                }
+
+            @@media (max-width: 980px) {
+                .content-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .side-col {
+                    position: static;
+                }
+            }
+
+            @@media (max-width: 650px) {
+                .page {
+                    padding: 16px 14px;
+                }
+
+                .hero-banner {
+                    padding: 24px 22px;
+                }
+
+                .hero-illustration {
+                    display: none;
+                }
+
+                .assignment-details {
+                    grid-template-columns: 1fr;
+                }
+
+                .notification-dropdown {
+                    width: 300px;
+                    right: -5px;
+                }
+
+                .delivery-modal-actions {
+                    flex-direction: column-reverse;
+                }
+
+                .delivery-modal-button {
+                    width: 100%;
+                }
+            }
     </style>
 </head>
 
@@ -1313,8 +1303,8 @@
                                                     <button type="button"
                                                             class="done-btn"
                                                             onclick="openDeliveredModal(
-                                                                'markDeliveredForm_@item.AssignmentID',
-                                                                '@item.OrderNumber')">
+                                                        'markDeliveredForm_@item.AssignmentID',
+                                                        '@item.OrderNumber')">
                                                         Mark Delivered
                                                     </button>
 
@@ -1476,575 +1466,591 @@
     </div>
 
     <script>
-        // Antiforgery token for POST forms built dynamically in JS
-        // (e.g. the Start Delivery form on cards injected live via
-        // SignalR). Server-rendered <form asp-page-handler="..."> forms
-        // already carry their own token automatically; this is only
-        // needed for the JS-built equivalent below.
-        window.__antiForgeryToken = "@antiForgeryToken";
-    </script>
+            /* ================= SEARCH FILTER (new, additive, client-side only) ================= */
+            function filterAssignments(rawQuery) {
+                const query = (rawQuery || "").trim().toLowerCase();
 
-    <script>
-        /* ================= SEARCH FILTER (new, additive, client-side only) ================= */
-        function filterAssignments(rawQuery) {
-            const query = (rawQuery || "").trim().toLowerCase();
+                const cards =
+                    document.querySelectorAll(
+                        "#assignmentsList .assignment");
 
-            const cards =
-                document.querySelectorAll(
-                    "#assignmentsList .assignment");
+                const emptyState =
+                    document.getElementById(
+                        "assignmentSearchEmpty");
 
-            const emptyState =
-                document.getElementById(
-                    "assignmentSearchEmpty");
+                const visibleCountLabel =
+                    document.getElementById(
+                        "assignmentVisibleCount");
 
-            const visibleCountLabel =
-                document.getElementById(
-                    "assignmentVisibleCount");
+                let visibleCount = 0;
 
-            let visibleCount = 0;
+                cards.forEach(function(card) {
+                    const haystack =
+                        card.getAttribute("data-search") || "";
 
-            cards.forEach(function (card) {
-                const haystack =
-                    card.getAttribute("data-search") || "";
+                    const matches =
+                        query === "" ||
+                        haystack.includes(query);
 
-                const matches =
-                    query === "" ||
-                    haystack.includes(query);
+                    card.classList.toggle(
+                        "search-hidden",
+                        !matches);
 
-                card.classList.toggle(
-                    "search-hidden",
-                    !matches);
-
-                if (matches) {
-                    visibleCount++;
-                }
-            });
-
-            if (emptyState) {
-                emptyState.style.display =
-                    (cards.length > 0 && visibleCount === 0)
-                        ? "block"
-                        : "none";
-            }
-
-            if (visibleCountLabel) {
-                visibleCountLabel.textContent =
-                    query === ""
-                        ? cards.length + " total"
-                        : visibleCount + " match" + (visibleCount === 1 ? "" : "es");
-            }
-        }
-
-        let pendingDeliveredFormId = null;
-
-        function openDeliveredModal(
-            formId,
-            orderNumber) {
-
-            const modal =
-                document.getElementById(
-                    "deliveredModal");
-
-            const orderText =
-                document.getElementById(
-                    "deliveredModalOrder");
-
-            const confirmButton =
-                document.getElementById(
-                    "confirmDeliveredButton");
-
-            const form =
-                document.getElementById(
-                    formId);
-
-            if (!modal ||
-                !form) {
-
-                return;
-            }
-
-            pendingDeliveredFormId =
-                formId;
-
-            if (orderText) {
-                orderText.textContent =
-                    "Order: " +
-                    orderNumber;
-            }
-
-            if (confirmButton) {
-                confirmButton.disabled =
-                    false;
-
-                confirmButton.textContent =
-                    "Confirm Delivered";
-            }
-
-            modal.classList.add(
-                "show");
-
-            document.body.style.overflow =
-                "hidden";
-        }
-
-        function closeDeliveredModal() {
-            const modal =
-                document.getElementById(
-                    "deliveredModal");
-
-            if (modal) {
-                modal.classList.remove(
-                    "show");
-            }
-
-            pendingDeliveredFormId =
-                null;
-
-            document.body.style.overflow =
-                "";
-        }
-
-        function submitDeliveredForm() {
-            if (!pendingDeliveredFormId) {
-                return;
-            }
-
-            const form =
-                document.getElementById(
-                    pendingDeliveredFormId);
-
-            const confirmButton =
-                document.getElementById(
-                    "confirmDeliveredButton");
-
-            if (!form) {
-                closeDeliveredModal();
-                return;
-            }
-
-            if (confirmButton) {
-                confirmButton.disabled =
-                    true;
-
-                confirmButton.textContent =
-                    "Updating...";
-            }
-
-            form.submit();
-        }
-
-        const deliveredModal =
-            document.getElementById(
-                "deliveredModal");
-
-        if (deliveredModal) {
-            deliveredModal.addEventListener(
-                "click",
-                function (event) {
-                    if (event.target === deliveredModal) {
-                        closeDeliveredModal();
+                    if (matches) {
+                        visibleCount++;
                     }
                 });
-        }
 
-        document.addEventListener(
-            "keydown",
-            function (event) {
-                if (event.key === "Escape") {
-                    closeDeliveredModal();
+                if (emptyState) {
+                    emptyState.style.display =
+                        (cards.length > 0 && visibleCount === 0)
+                            ? "block"
+                            : "none";
                 }
-            });
 
-        function toggleNotifications() {
-            const dropdown =
-                document.getElementById(
-                    "notificationDropdown");
-
-            if (dropdown) {
-                dropdown.classList.toggle(
-                    "show");
-            }
-        }
-
-        function highlightOrder(orderId) {
-            const dropdown =
-                document.getElementById(
-                    "notificationDropdown");
-
-            if (dropdown) {
-                dropdown.classList.remove(
-                    "show");
+                if (visibleCountLabel) {
+                    visibleCountLabel.textContent =
+                        query === ""
+                            ? cards.length + " total"
+                            : visibleCount + " match" + (visibleCount === 1 ? "" : "es");
+                }
             }
 
-            setTimeout(
-                function () {
-                    const orderCard =
-                        document.getElementById(
-                            "order_" + orderId);
+            let pendingDeliveredFormId = null;
 
-                    if (orderCard) {
-                        document
-                            .querySelectorAll(
-                                ".assignment")
-                            .forEach(
-                                function (card) {
-                                    card.classList.remove(
-                                        "highlight");
-                                });
+            function openDeliveredModal(
+                formId,
+                orderNumber) {
 
-                        orderCard.classList.add(
-                            "highlight");
-
-                        setTimeout(
-                            function () {
-                                orderCard.classList.remove(
-                                    "highlight");
-                            },
-                            3500);
-                    }
-                },
-                150);
-        }
-
-        document.addEventListener(
-            "click",
-            function (event) {
-                const wrapper =
-                    document.querySelector(
-                        ".notification-wrapper");
-
-                const dropdown =
+                const modal =
                     document.getElementById(
-                        "notificationDropdown");
+                        "deliveredModal");
 
-                if (wrapper &&
-                    dropdown &&
-                    !wrapper.contains(event.target)) {
+                const orderText =
+                    document.getElementById(
+                        "deliveredModalOrder");
 
-                    dropdown.classList.remove(
-                        "show");
-                }
-            });
+                const confirmButton =
+                    document.getElementById(
+                        "confirmDeliveredButton");
 
-        document.addEventListener(
-            "DOMContentLoaded",
-            function () {
-                startWatchingMyLocation();
-            });
+                const form =
+                    document.getElementById(
+                        formId);
 
-        window.addEventListener(
-            "beforeunload",
-            function () {
-                stopWatchingMyLocation();
-            });
-
-        let myLocationWatchId = null;
-        let isSendingLocationUpdate = false;
-        let lastLocationSendAttempt = 0;
-        const LOCATION_SEND_MIN_INTERVAL_MS = 1000;
-
-        function startWatchingMyLocation() {
-            const status =
-                document.getElementById(
-                    "locationStatus");
-
-            if (!status) {
-                return;
-            }
-
-            if (!navigator.geolocation) {
-                status.className =
-                    "location-status gps-bad";
-
-                status.innerText =
-                    "GPS is not supported on this device.";
-
-                return;
-            }
-
-            status.className =
-                "location-status";
-
-            status.innerText =
-                "Getting GPS location...";
-
-            myLocationWatchId =
-                navigator.geolocation.watchPosition(
-                    function (position) {
-                        handleLocationUpdate(position, status);
-                    },
-
-                    function (error) {
-                        handleLocationError(error, status);
-                    },
-
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 15000,
-                        maximumAge: 500
-                    });
-        }
-
-        function stopWatchingMyLocation() {
-            if (myLocationWatchId !== null &&
-                navigator.geolocation) {
-
-                navigator.geolocation.clearWatch(
-                    myLocationWatchId);
-
-                myLocationWatchId = null;
-            }
-        }
-
-        async function handleLocationUpdate(position, status) {
-            const now = Date.now();
-
-            if (isSendingLocationUpdate) {
-                return;
-            }
-
-            if (now - lastLocationSendAttempt <
-                LOCATION_SEND_MIN_INTERVAL_MS) {
-                return;
-            }
-
-            lastLocationSendAttempt = now;
-            isSendingLocationUpdate = true;
-
-            const lat =
-                position.coords.latitude;
-
-            const lng =
-                position.coords.longitude;
-
-            const accuracy =
-                position.coords.accuracy;
-
-            try {
-                const response =
-                    await fetch(
-                        "/api/delivery-tracking/update-location",
-                        {
-                            method: "POST",
-
-                            credentials:
-                                "same-origin",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body:
-                                JSON.stringify({
-                                    latitude: lat,
-                                    longitude: lng
-                                })
-                        });
-
-                let data = null;
-
-                try {
-                    data =
-                        await response.json();
-                }
-                catch {
-                    data = null;
-                }
-
-                if (!response.ok) {
-                    status.className =
-                        "location-status gps-bad";
-
-                    status.innerText =
-                        data?.message ||
-                        "Could not update location. Please login as approved delivery staff.";
+                if (!modal ||
+                    !form) {
 
                     return;
                 }
 
-                if (data &&
-                    data.success) {
+                pendingDeliveredFormId =
+                    formId;
 
-                    status.className =
-                        "location-status gps-good";
-
-                    status.innerText =
-                        "Location updated: " +
-                        lat.toFixed(6) +
-                        ", " +
-                        lng.toFixed(6) +
-                        " | Accuracy: " +
-                        Math.round(accuracy) +
-                        "m | Time: " +
-                        (data.updatedAt || "now");
+                if (orderText) {
+                    orderText.textContent =
+                        "Order: " +
+                        orderNumber;
                 }
-                else {
+
+                if (confirmButton) {
+                    confirmButton.disabled =
+                        false;
+
+                    confirmButton.textContent =
+                        "Confirm Delivered";
+                }
+
+                modal.classList.add(
+                    "show");
+
+                document.body.style.overflow =
+                    "hidden";
+            }
+
+            function closeDeliveredModal() {
+                const modal =
+                    document.getElementById(
+                        "deliveredModal");
+
+                if (modal) {
+                    modal.classList.remove(
+                        "show");
+                }
+
+                pendingDeliveredFormId =
+                    null;
+
+                document.body.style.overflow =
+                    "";
+            }
+
+            function submitDeliveredForm() {
+                if (!pendingDeliveredFormId) {
+                    return;
+                }
+
+                const form =
+                    document.getElementById(
+                        pendingDeliveredFormId);
+
+                const confirmButton =
+                    document.getElementById(
+                        "confirmDeliveredButton");
+
+                if (!form) {
+                    closeDeliveredModal();
+                    return;
+                }
+
+                if (confirmButton) {
+                    confirmButton.disabled =
+                        true;
+
+                    confirmButton.textContent =
+                        "Updating...";
+                }
+
+                form.submit();
+            }
+
+            const deliveredModal =
+                document.getElementById(
+                    "deliveredModal");
+
+            if (deliveredModal) {
+                deliveredModal.addEventListener(
+                    "click",
+                    function(event) {
+                        if (event.target === deliveredModal) {
+                            closeDeliveredModal();
+                        }
+                    });
+            }
+
+            document.addEventListener(
+                "keydown",
+                function(event) {
+                    if (event.key === "Escape") {
+                        closeDeliveredModal();
+                    }
+                });
+
+            function toggleNotifications() {
+                const dropdown =
+                    document.getElementById(
+                        "notificationDropdown");
+
+                if (dropdown) {
+                    dropdown.classList.toggle(
+                        "show");
+                }
+            }
+
+            function highlightOrder(orderId) {
+                const dropdown =
+                    document.getElementById(
+                        "notificationDropdown");
+
+                if (dropdown) {
+                    dropdown.classList.remove(
+                        "show");
+                }
+
+                setTimeout(
+                    function() {
+                        const orderCard =
+                            document.getElementById(
+                                "order_" + orderId);
+
+                        if (orderCard) {
+                            document
+                                .querySelectorAll(
+                                    ".assignment")
+                                .forEach(
+                                    function(card) {
+                                        card.classList.remove(
+                                            "highlight");
+                                    });
+
+                            orderCard.classList.add(
+                                "highlight");
+
+                            setTimeout(
+                                function() {
+                                    orderCard.classList.remove(
+                                        "highlight");
+                                },
+                                3500);
+                        }
+                    },
+                    150);
+            }
+
+            document.addEventListener(
+                "click",
+                function(event) {
+                    const wrapper =
+                        document.querySelector(
+                            ".notification-wrapper");
+
+                    const dropdown =
+                        document.getElementById(
+                            "notificationDropdown");
+
+                    if (wrapper &&
+                        dropdown &&
+                        !wrapper.contains(event.target)) {
+
+                        dropdown.classList.remove(
+                            "show");
+                    }
+                });
+
+            document.addEventListener(
+                "DOMContentLoaded",
+                function() {
+                    startWatchingMyLocation();
+                });
+
+            window.addEventListener(
+                "beforeunload",
+                function() {
+                    stopWatchingMyLocation();
+                });
+
+            let myLocationWatchId = null;
+            let isSendingLocationUpdate = false;
+            let lastLocationSendAttempt = 0;
+            const LOCATION_SEND_MIN_INTERVAL_MS = 1000;
+
+            function startWatchingMyLocation() {
+                const status =
+                    document.getElementById(
+                        "locationStatus");
+
+                if (!status) {
+                    return;
+                }
+
+                if (!navigator.geolocation) {
                     status.className =
                         "location-status gps-bad";
 
                     status.innerText =
-                        data?.message ||
-                        "Could not update location.";
+                        "GPS is not supported on this device.";
+
+                    return;
+                }
+
+                status.className =
+                    "location-status";
+
+                status.innerText =
+                    "Getting GPS location...";
+
+                myLocationWatchId =
+                    navigator.geolocation.watchPosition(
+                        function(position) {
+                            handleLocationUpdate(position, status);
+                        },
+
+                        function(error) {
+                            handleLocationError(error, status);
+                        },
+
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 15000,
+                            maximumAge: 500
+                        });
+            }
+
+            function stopWatchingMyLocation() {
+                if (myLocationWatchId !== null &&
+                    navigator.geolocation) {
+
+                    navigator.geolocation.clearWatch(
+                        myLocationWatchId);
+
+                    myLocationWatchId = null;
                 }
             }
-            catch {
+
+            async function handleLocationUpdate(position, status) {
+                const now = Date.now();
+
+                if (isSendingLocationUpdate) {
+                    return;
+                }
+
+                if (now - lastLocationSendAttempt <
+                    LOCATION_SEND_MIN_INTERVAL_MS) {
+                    return;
+                }
+
+                lastLocationSendAttempt = now;
+                isSendingLocationUpdate = true;
+
+                const lat =
+                    position.coords.latitude;
+
+                const lng =
+                    position.coords.longitude;
+
+                const accuracy =
+                    position.coords.accuracy;
+
+                try {
+                    const response =
+                        await fetch(
+                            "/api/delivery-tracking/update-location",
+                            {
+                                method: "POST",
+
+                                credentials:
+                                    "same-origin",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify({
+                                        latitude: lat,
+                                        longitude: lng
+                                    })
+                            });
+
+                    let data = null;
+
+                    try {
+                        data =
+                            await response.json();
+                    }
+                    catch {
+                        data = null;
+                    }
+
+                    if (!response.ok) {
+                        status.className =
+                            "location-status gps-bad";
+
+                        status.innerText =
+                            data?.message ||
+                            "Could not update location. Please login as approved delivery staff.";
+
+                        return;
+                    }
+
+                    if (data &&
+                        data.success) {
+
+                        status.className =
+                            "location-status gps-good";
+
+                        status.innerText =
+                            "Location updated: " +
+                            lat.toFixed(6) +
+                            ", " +
+                            lng.toFixed(6) +
+                            " | Accuracy: " +
+                            Math.round(accuracy) +
+                            "m | Time: " +
+                            (data.updatedAt || "now");
+                    }
+                    else {
+                        status.className =
+                            "location-status gps-bad";
+
+                        status.innerText =
+                            data?.message ||
+                            "Could not update location.";
+                    }
+                }
+                catch {
+                    status.className =
+                        "location-status gps-bad";
+
+                    status.innerText =
+                        "Could not update location. Check your connection.";
+                }
+                finally {
+                    isSendingLocationUpdate = false;
+                }
+            }
+
+            function handleLocationError(error, status) {
                 status.className =
                     "location-status gps-bad";
 
-                status.innerText =
-                    "Could not update location. Check your connection.";
-            }
-            finally {
-                isSendingLocationUpdate = false;
-            }
-        }
+                if (error.code ===
+                    error.PERMISSION_DENIED) {
 
-        function handleLocationError(error, status) {
-            status.className =
-                "location-status gps-bad";
+                    status.innerText =
+                        "GPS permission denied. Click the lock icon near the URL and allow Location.";
+                }
+                else if (error.code ===
+                    error.POSITION_UNAVAILABLE) {
 
-            if (error.code ===
-                error.PERMISSION_DENIED) {
+                    status.innerText =
+                        "GPS position unavailable. Enable device location and try again.";
+                }
+                else if (error.code ===
+                    error.TIMEOUT) {
 
-                status.innerText =
-                    "GPS permission denied. Click the lock icon near the URL and allow Location.";
+                    status.innerText =
+                        "GPS timeout. Retrying automatically...";
+                }
+                else {
+                    status.innerText =
+                        "GPS is off. Location update temporarily unavailable.";
+                }
             }
-            else if (error.code ===
-                     error.POSITION_UNAVAILABLE) {
-
-                status.innerText =
-                    "GPS position unavailable. Enable device location and try again.";
-            }
-            else if (error.code ===
-                     error.TIMEOUT) {
-
-                status.innerText =
-                    "GPS timeout. Retrying automatically...";
-            }
-            else {
-                status.innerText =
-                    "GPS is off. Location update temporarily unavailable.";
-            }
-        }
     </script>
 
     <script>
-        // =====================================================
-        // LIVE NEW ASSIGNMENT — when an admin assigns this delivery
-        // person to an order (AdminAssignDelivery.cshtml.cs), the new
-        // assignment card appears here instantly at the top of Active
-        // Assignments, KPI counts update, and the empty-state message
-        // is hidden if it was showing. Uses the shared AppHub
-        // connection opened by the _AppHubScript partial included in
-        // _DeliveryNav above. The event is sent only to this specific
-        // delivery person via Clients.User(...), so no filtering by
-        // recipient is needed on this end.
-        // =====================================================
-        (function () {
-            if (!window.appHubReady) return;
+            // =====================================================
+            // LIVE NEW ASSIGNMENT — when an admin assigns this delivery
+            // person to an order (AdminAssignDelivery.cshtml.cs), the new
+            // assignment card appears here instantly at the top of Active
+            // Assignments, KPI counts update, and the empty-state message
+            // is hidden if it was showing. Uses the shared AppHub
+            // connection opened by the _AppHubScript partial included in
+            // _DeliveryNav above. The event is sent only to this specific
+            // delivery person via Clients.User(...), so no filtering by
+            // recipient is needed on this end.
+            // =====================================================
+            (function() {
+                if (!window.appHubReady) return;
 
-            function escapeHtml(value) {
-                var div = document.createElement('div');
-                div.textContent = value == null ? '' : String(value);
-                return div.innerHTML;
-            }
+                function escapeHtml(value) {
+                    var div = document.createElement('div');
+                    div.textContent = value == null ? '' : String(value);
+                    return div.innerHTML;
+                }
 
-            function formatDate(iso, withTime) {
-                var d = new Date(iso);
-                if (isNaN(d.getTime())) return '';
-                var datePart = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-                if (!withTime) return datePart;
-                var timePart = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                return datePart + ' ' + timePart;
-            }
+                function formatDate(iso, withTime) {
+                    var d = new Date(iso);
+                    if (isNaN(d.getTime())) return '';
+                    var datePart = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                    if (!withTime) return datePart;
+                    var timePart = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    return datePart + ' ' + timePart;
+                }
 
-            function bumpKpi(id, delta) {
-                var el = document.getElementById(id);
-                if (!el) return;
-                var current = parseInt(el.textContent, 10) || 0;
-                el.textContent = String(current + delta);
-            }
+                function bumpKpi(id, delta) {
+                    var el = document.getElementById(id);
+                    if (!el) return;
+                    var current = parseInt(el.textContent, 10) || 0;
+                    el.textContent = String(current + delta);
+                }
 
-            function buildAssignmentCardHtml(a) {
-                var badgeClass = 'badge-assigned';
-                var paymentBadgeClass = (a.paymentStatus || '').toLowerCase() === 'paid' ? 'badge-paid' : 'badge-pending-pay';
+                function buildAssignmentCardHtml(a) {
+                    var badgeClass = 'badge-assigned';
+                    var paymentBadgeClass = (a.paymentStatus || '').toLowerCase() === 'paid' ? 'badge-paid' : 'badge-pending-pay';
 
-                var searchData = (escapeHtml(a.orderNumber) + ' ' + escapeHtml(a.customerAddress)).toLowerCase();
+                    var searchData = (escapeHtml(a.orderNumber) + ' ' + escapeHtml(a.customerAddress)).toLowerCase();
 
-                return (
-                    '<div class="assignment" id="order_' + a.orderID + '" data-search="' + searchData + '">' +
+                    return (
+                        '<div class="assignment" id="order_' + a.orderID + '" data-search="' + searchData + '">' +
                         '<div class="assignment-top">' +
-                            '<div class="assignment-id-group">' +
-                                '<div class="assignment-icon">📦</div>' +
-                                '<div class="assignment-order-no">Order ' + escapeHtml(a.orderNumber) + '</div>' +
-                            '</div>' +
-                            '<div class="assignment-badges">' +
-                                '<span class="badge ' + badgeClass + '">' + escapeHtml(a.assignmentStatus) + '</span>' +
-                                '<span class="badge badge-default">' + escapeHtml(a.orderStatus) + '</span>' +
-                            '</div>' +
+                        '<div class="assignment-id-group">' +
+                        '<div class="assignment-icon">📦</div>' +
+                        '<div class="assignment-order-no">Order ' + escapeHtml(a.orderNumber) + '</div>' +
+                        '</div>' +
+                        '<div class="assignment-badges">' +
+                        '<span class="badge ' + badgeClass + '">' + escapeHtml(a.assignmentStatus) + '</span>' +
+                        '<span class="badge badge-default">' + escapeHtml(a.orderStatus) + '</span>' +
+                        '</div>' +
                         '</div>' +
                         '<div class="assignment-details">' +
-                            '<div class="assignment-detail-item"><span>Customer</span><strong>' + escapeHtml(a.customerName) + '</strong></div>' +
-                            '<div class="assignment-detail-item"><span>Phone</span><strong>' + escapeHtml(a.customerPhone) + '</strong></div>' +
-                            '<div class="assignment-detail-item"><span>Address</span><strong>' + escapeHtml(a.customerAddress) + '</strong></div>' +
-                            '<div class="assignment-detail-item"><span>Store</span><strong>' + escapeHtml(a.storeNames || 'N/A') + '</strong></div>' +
-                            '<div class="assignment-detail-item"><span>Products</span><strong>' + escapeHtml(a.productSummary || 'N/A') + '</strong></div>' +
-                            '<div class="assignment-detail-item"><span>Order Date</span><strong>' + formatDate(a.orderDate, false) + '</strong></div>' +
-                            '<div class="assignment-detail-item"><span>Total Amount</span><strong>$' + Number(a.totalAmount).toFixed(2) + '</strong></div>' +
-                            '<div class="assignment-detail-item"><span>Assigned</span><strong>' + formatDate(a.assignedAt, true) + '</strong></div>' +
+                        '<div class="assignment-detail-item"><span>Customer</span><strong>' + escapeHtml(a.customerName) + '</strong></div>' +
+                        '<div class="assignment-detail-item"><span>Phone</span><strong>' + escapeHtml(a.customerPhone) + '</strong></div>' +
+                        '<div class="assignment-detail-item"><span>Address</span><strong>' + escapeHtml(a.customerAddress) + '</strong></div>' +
+                        '<div class="assignment-detail-item"><span>Store</span><strong>' + escapeHtml(a.storeNames || 'N/A') + '</strong></div>' +
+                        '<div class="assignment-detail-item"><span>Products</span><strong>' + escapeHtml(a.productSummary || 'N/A') + '</strong></div>' +
+                        '<div class="assignment-detail-item"><span>Order Date</span><strong>' + formatDate(a.orderDate, false) + '</strong></div>' +
+                        '<div class="assignment-detail-item"><span>Total Amount</span><strong>$' + Number(a.totalAmount).toFixed(2) + '</strong></div>' +
+                        '<div class="assignment-detail-item"><span>Assigned</span><strong>' + formatDate(a.assignedAt, true) + '</strong></div>' +
                         '</div>' +
                         '<div class="assignment-meta-row">' +
-                            '<span class="meta-chip">' + escapeHtml(a.paymentMethod) + '</span>' +
-                            '<span class="meta-chip ' + paymentBadgeClass + '">' + escapeHtml(a.paymentStatus) + '</span>' +
+                        '<span class="meta-chip">' + escapeHtml(a.paymentMethod) + '</span>' +
+                        '<span class="meta-chip ' + paymentBadgeClass + '">' + escapeHtml(a.paymentStatus) + '</span>' +
                         '</div>' +
                         '<div class="actions">' +
-                            '<a class="details-link" href="/DeliveryOrderDetails?assignmentId=' + a.assignmentID + '">View Details</a>' +
-                            '<form method="post" action="?handler=StartDelivery">' +
-                                '<input type="hidden" name="__RequestVerificationToken" value="' + escapeHtml(window.__antiForgeryToken || '') + '" />' +
-                                '<input type="hidden" name="assignmentId" value="' + a.assignmentID + '" />' +
-                                '<button type="submit" class="start-btn">Start Delivery</button>' +
-                            '</form>' +
+                        '<a class="details-link" href="/DeliveryOrderDetails?assignmentId=' + a.assignmentID + '">View Details</a>' +
+                        '<form method="post" action="?handler=StartDelivery">' +
+                        '<input type="hidden" name="assignmentId" value="' + a.assignmentID + '" />' +
+                        '<button type="submit" class="start-btn">Start Delivery</button>' +
+                        '</form>' +
                         '</div>' +
-                    '</div>'
-                );
-            }
+                        '</div>'
+                    );
+                }
 
-            window.appHubReady.then(function () {
-                window.appHub.on("NewDeliveryAssignment", function (assignment) {
-                    var list = document.getElementById('assignmentsList');
-                    if (!list) return;
+                window.appHubReady.then(function() {
+                    window.appHub.on("NewDeliveryAssignment", function(assignment) {
+                        var list = document.getElementById('assignmentsList');
+                        if (!list) return;
 
-                    // Avoid duplicates if this card somehow already exists.
-                    if (document.getElementById('order_' + assignment.orderID)) return;
+                        // Avoid duplicates if this card somehow already exists.
+                        if (document.getElementById('order_' + assignment.orderID)) return;
 
-                    var wrapper = document.createElement('div');
-                    wrapper.innerHTML = buildAssignmentCardHtml(assignment);
-                    var card = wrapper.firstElementChild;
+                        var wrapper = document.createElement('div');
+                        wrapper.innerHTML = buildAssignmentCardHtml(assignment);
+                        var card = wrapper.firstElementChild;
 
-                    list.prepend(card);
-                    list.style.display = 'grid';
+                        list.prepend(card);
+                        list.style.display = 'grid';
 
-                    var emptyState = document.getElementById('assignmentsEmptyState');
-                    if (emptyState) emptyState.style.display = 'none';
+                        var emptyState = document.getElementById('assignmentsEmptyState');
+                        if (emptyState) emptyState.style.display = 'none';
 
-                    card.classList.add('highlight');
-                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    setTimeout(function () {
-                        card.classList.remove('highlight');
-                    }, 3500);
+                        card.classList.add('highlight');
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(function() {
+                            card.classList.remove('highlight');
+                        }, 3500);
 
-                    bumpKpi('kpiTotal', 1);
-                    bumpKpi('kpiAssigned', 1);
+                        bumpKpi('kpiTotal', 1);
+                        bumpKpi('kpiAssigned', 1);
 
-                    var visibleCountLabel = document.getElementById('assignmentVisibleCount');
-                    if (visibleCountLabel) {
-                        var totalCards = document.querySelectorAll('#assignmentsList .assignment').length;
-                        visibleCountLabel.textContent = totalCards + ' total';
-                    }
+                        var visibleCountLabel = document.getElementById('assignmentVisibleCount');
+                        if (visibleCountLabel) {
+                            var totalCards = document.querySelectorAll('#assignmentsList .assignment').length;
+                            visibleCountLabel.textContent = totalCards + ' total';
+                        }
+                    });
                 });
-            });
-        })();
+            })();
+    </script>
+
+    <script>
+            // =====================================================
+            // LIVE STATUS ON THIS DASHBOARD — reflects order status
+            // changes instantly (Assigned -> OutForDelivery -> Delivered)
+            // on this delivery person's own cards, in case the redirect
+            // from Start Delivery / Mark Delivered hasn't landed yet, or
+            // this page is open in a second tab. Purely additive — does
+            // not touch the existing forms/handlers/redirect flow.
+            // =====================================================
+            (function() {
+                if (!window.appHubReady) return;
+
+                window.appHubReady.then(function() {
+                    window.appHub.on("OrderStatusUpdated", function(orderId, newStatus) {
+                        var card = document.getElementById('order_' + orderId);
+                        if (!card) return;
+
+                        var badges = card.querySelectorAll('.assignment-badges .badge');
+                        if (badges.length >= 2) {
+                            badges[1].textContent = newStatus; // second badge = order status
+                        }
+                    });
+                });
+            })();
     </script>
 
 </body>

@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Multi_Store.Core.Entities;
 using Multi_Store.Infrastructure.Data;
 using Multi_Store.Services.Dtos;
 using Multi_Store.Services.Managers;
+using Local_Multi_Store_Online_Marketplace.Hubs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,17 +23,20 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         private readonly UserManager<User> _userManager;
         private readonly DeliveryManager _deliveryManager;
         private readonly MessagingManager _messagingManager;
+        private readonly IHubContext<AppHub> _hub; // NEW — pushes live order status updates
 
         public DeliveryDashboardModel(
             ApplicationDbContext context,
             UserManager<User> userManager,
             DeliveryManager deliveryManager,
-            MessagingManager messagingManager)
+            MessagingManager messagingManager,
+            IHubContext<AppHub> hub) // NEW
         {
             _context = context;
             _userManager = userManager;
             _deliveryManager = deliveryManager;
             _messagingManager = messagingManager;
+            _hub = hub; // NEW
         }
 
         public List<DeliveryAssignmentViewModel> Assignments { get; set; }
@@ -62,7 +67,7 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
         // Reuses the existing Order.DeliveryFee value (the same field
         // already shown to the delivery person as "Delivery Fee" on
         // DeliveryOrderDetails), summed across their Delivered
-        // assignments only. No new calculation or stored data — this
+        // assignments only. No new calculation or stored data ? this
         // is a read-only aggregation of an existing field.
         public decimal TotalEarnings { get; set; }
 
@@ -409,6 +414,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
 
             await _context.SaveChangesAsync();
 
+            // NEW — push the "Out for Delivery" status live to
+            // CustomerOrders and Order/Index, which already listen
+            // for this exact "OrderStatusUpdated" event.
+            try
+            {
+                await _hub.Clients.All.SendAsync(
+                    "OrderStatusUpdated",
+                    assignment.Order.OrderID,
+                    assignment.Order.Status);
+            }
+            catch
+            {
+                // Never let a broadcast failure break the status
+                // update — it's already safely saved at this point.
+            }
+
             TempData["Success"] =
                 "Delivery started. Customer can now track your movement.";
 
@@ -518,6 +539,22 @@ namespace Local_Multi_Store_Online_Marketplace.Pages.Deliverypages
                 "Delivered";
 
             await _context.SaveChangesAsync();
+
+            // NEW — push the "Delivered" status live to CustomerOrders
+            // and Order/Index, which already listen for this exact
+            // "OrderStatusUpdated" event.
+            try
+            {
+                await _hub.Clients.All.SendAsync(
+                    "OrderStatusUpdated",
+                    assignment.Order.OrderID,
+                    assignment.Order.Status);
+            }
+            catch
+            {
+                // Never let a broadcast failure break the status
+                // update — it's already safely saved at this point.
+            }
 
             // ==========================================
             // NOTIFY CUSTOMER VIA EXISTING CHAT SYSTEM
