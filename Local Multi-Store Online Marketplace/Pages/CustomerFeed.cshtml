@@ -19,10 +19,9 @@
     <link rel="stylesheet" href="~/css/stories.css" />
     <link rel="stylesheet" href="~/css/customer-feed.css" asp-append-version="true" />
 
-    <!-- NEW — styles for the avatar dropdown menu (My Profile / Logout)
-         and the back-arrow nav item. customer-feed.css doesn't define
-         these, so they're added inline here rather than editing a file
-         we don't have. -->
+    <!-- NEW — styles for the avatar dropdown menu (My Profile / Logout).
+         customer-feed.css doesn't define these, so they're added inline
+         here rather than editing a file we don't have. -->
     <style>
             .menu-wrap {
                 position: relative;
@@ -98,29 +97,8 @@
                 font: inherit;
             }
 
-            /* Icon-only back button, sits above the sidebar nav list. */
-            .app-nav-back-btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                width: 36px;
-                height: 36px;
-                margin-bottom: 6px;
-                border: 1px solid var(--border-color, #ece8f6);
-                border-radius: 50%;
-                background: #ffffff;
-                color: var(--text-primary, #1e1b2e);
-                font-size: 14px;
-                cursor: pointer;
-            }
-
-                .app-nav-back-btn:hover {
-                    border-color: var(--accent-color, #6d28d9);
-                    color: var(--accent-color, #6d28d9);
-                }
-
             /* Real-promotion banner extras not covered by the old
-                       "Up to 60% Off" markup. */
+                                   "Up to 60% Off" markup. */
             .promo-banner-code {
                 margin-top: 8px;
                 font-size: 12.5px;
@@ -131,6 +109,16 @@
             .promo-banner-empty {
                 font-size: 13px;
                 opacity: 0.85;
+            }
+
+            /* The floating back arrow is only needed on mobile here —
+                           at desktop widths the sidebar is visible and renders its
+                           own inline back arrow instead, so the floating one would
+                           otherwise sit on top of the sidebar's own content. */
+            @@media (min-width: 992px) {
+                .back-arrow-btn:not(.back-arrow-btn--inline) {
+                    display: none;
+                }
             }
     </style>
 </head>
@@ -162,6 +150,9 @@
     <!-- Mobile-only tab bar (hidden at desktop, see customer-feed.css §14) -->
     <partial name="_CustomerBottomNav" />
 
+    <!-- BACK ARROW — shared partial, fixed to the same screen spot on every page -->
+    <partial name="_CustomerBackArrow" />
+
     <!-- NEW — hidden logout form, submitted from the avatar dropdown. -->
     <form id="logoutForm" method="post" asp-page="/Account/Logout" asp-area="Identity" asp-route-returnUrl="/CustomerFeed">
         @Html.AntiForgeryToken()
@@ -184,13 +175,10 @@
 
             </a>
 
-            <!-- CHANGED — "For You" toggle removed; an icon-only back
-                 arrow now sits above the nav list so the customer can
-                 return to wherever they came from. The nav list itself
-                 now matches Customer1's sidebar exactly. -->
-            <button type="button" class="app-nav-back-btn" onclick="history.back()" aria-label="Go back">
-                <i class="fa-solid fa-arrow-left"></i>
-            </button>
+            <!-- Inline back arrow — sits in the sidebar's own flow at
+                 desktop widths, instead of the floating fixed button
+                 (which is hidden here via CSS once the sidebar shows). -->
+            <partial name="_CustomerBackArrow" view-data='@(new ViewDataDictionary(ViewData) { ["BackArrowInline"] = true })' />
 
             <nav class="app-sidebar-nav" aria-label="Primary">
                 <a asp-page="/Customer1" class="app-nav-link">
