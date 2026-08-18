@@ -5,6 +5,11 @@
     ViewData["Title"] = "Assign Delivery";
 }
 
+@* Hidden token used by JS-built forms below (live SignalR rows),
+   since those forms are built as raw HTML strings and don't get
+   the antiforgery token that asp-page-handler forms get automatically. *@
+@Html.AntiForgeryToken()
+
 @section Styles {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -929,8 +934,19 @@
 
             var formId = 'assignForm_' + orderId;
 
+            // NEW — include the antiforgery token (rendered once into the
+            // page via @Html.AntiForgeryToken() above) so this JS-built
+            // form isn't rejected with HTTP 400 by Razor Pages' automatic
+            // antiforgery validation, the way asp-page-handler forms
+            // already are.
+            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenHtml = tokenInput
+                ? '<input type="hidden" name="__RequestVerificationToken" value="' + escapeHtml(tokenInput.value) + '" />'
+                : '';
+
             return (
                 '<form method="post" action="?handler=Assign" id="' + formId + '">' +
+                tokenHtml +
                 '<input type="hidden" name="orderId" value="' + orderId + '" />' +
                 '<select name="deliveryPersonId" required>' + optionsHtml + '</select>' +
                 '</form>'
